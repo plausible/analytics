@@ -29,26 +29,27 @@ function toJourney(steps) {
   return steps.map((s) => ({ name: s.name, pathname: s.pathname }))
 }
 
-function fetchColumnData(site, dashboardState, steps, filter, direction) {
-  // Page filters only apply to the first step — strip them for subsequent columns
+function fetchNextWithFunnel(
+  site,
+  dashboardState,
+  steps,
+  filter,
+  direction,
+  includeFunnel
+) {
   const stateToUse = stateWithApplicableFilters(dashboardState, steps)
   const journey = toJourney(steps)
 
-  return api.post(url.apiPath(site, '/exploration/next'), stateToUse, {
-    journey: JSON.stringify(journey),
-    search_term: filter,
-    direction
-  })
-}
-
-function fetchFunnelData(site, dashboardState, steps, direction) {
-  const stateToUse = stateWithApplicableFilters(dashboardState, steps)
-  const journey = toJourney(steps)
-
-  return api.post(url.apiPath(site, '/exploration/funnel'), stateToUse, {
-    journey: JSON.stringify(journey),
-    direction
-  })
+  return api.post(
+    url.apiPath(site, '/exploration/next-with-funnel'),
+    stateToUse,
+    {
+      journey: JSON.stringify(journey),
+      search_term: filter,
+      direction,
+      include_funnel: includeFunnel
+    }
+  )
 }
 
 function fetchSuggestedJourney(site, dashboardState) {
@@ -65,70 +66,21 @@ function isSameStep(step, otherStep) {
 
 function ExplorationColumn({
   header,
-  steps,
+  // null means column should not be rendered (no preceding step selected)
+  active,
+  results,
+  loading,
   maxVisitors,
   selected,
   selectedVisitors,
   selectedConversionRate,
   onSelect,
-  dashboardState,
-  direction
+  onFilterChange,
+  filter
 }) {
-  const site = useSiteContext()
-  const [loading, setLoading] = useState(steps !== null && !selected)
-  const [results, setResults] = useState([])
-  const [filter, setFilter] = useState('')
-  const stepsFingerprint =
-    steps === null
-      ? null
-      : steps.map((step) => `${step.name}:${step.pathname}`).join(';')
-
-  const debouncedOnSearchInputChange = useDebounce((event) =>
-    setFilter(event.target.value)
+  const debouncedOnFilterChange = useDebounce((event) =>
+    onFilterChange(event.target.value)
   )
-
-  useEffect(() => {
-    if (steps === null) {
-      setFilter('')
-      setResults([])
-      setLoading(false)
-      return
-    }
-
-    if (selected) {
-      // When a step is already selected (pre-populated by "Suggest a journey"),
-      // fetch is unnecessary
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setResults([])
-
-    let cancelled = false
-
-    fetchColumnData(site, dashboardState, steps, filter, direction)
-      .then((response) => {
-        if (!cancelled) {
-          setResults(response || [])
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setResults([])
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardState, stepsFingerprint, filter, direction, site, selected])
 
   const stepMaxVisitors = maxVisitors || results[0]?.visitors
 
@@ -154,13 +106,13 @@ function ExplorationColumn({
         <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
           {header}
         </span>
-        {!selected && steps !== null && (
+        {!selected && active && (
           <input
             data-testid="search-input"
             type="text"
             defaultValue={filter}
             placeholder="Search"
-            onChange={debouncedOnSearchInputChange}
+            onChange={debouncedOnFilterChange}
             className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
@@ -182,7 +134,7 @@ function ExplorationColumn({
         </div>
       ) : results.length === 0 && !selected ? (
         <div className="h-108 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
-          {steps === null ? 'Select an event to continue' : 'No data'}
+          {!active ? 'Select an event to continue' : 'No data'}
         </div>
       ) : (
         <ul className="flex flex-col gap-y-0.5 px-1.5 pb-1.5 h-108 overflow-y-auto">
@@ -259,10 +211,24 @@ export function FunnelExploration() {
   const [steps, setSteps] = useState([])
   const [direction, setDirection] = useState(EXPLORATION_DIRECTIONS.FORWARD)
   const [funnel, setFunnel] = useState([])
+  // Results for the active (last, unselected) column
+  const [activeColumnResults, setActiveColumnResults] = useState([])
+  const [activeColumnFilter, setActiveColumnFilter] = useState('')
+  const [activeColumnLoading, setActiveColumnLoading] = useState(false)
+  // Initial visitor/bar data for a newly selected step, held until
+  // real funnel response arrives. Prevents from flashing "0 visitors"
+  // during the loading window.
+  const [provisionalFunnelEntries, setProvisionalFunnelEntries] = useState({})
   // track in flight "Suggest a journey" request
   const [isSuggestingJourney, setIsSuggestingJourney] = useState(false)
   // counter to detect and discard stale suggestion responses
   const suggestionRequestIdRef = useRef(0)
+  // Tracks the steps/direction/dashboardState values from the previous effect
+  // run so we can distinguish a journey change (needs funnel) from a
+  // filter only change (next steps only, no funnel).
+  const prevStepsRef = useRef(steps)
+  const prevDirectionRef = useRef(direction)
+  const prevDashboardStateRef = useRef(dashboardState)
 
   function cancelPendingSuggestion() {
     suggestionRequestIdRef.current += 1
@@ -302,9 +268,38 @@ export function FunnelExploration() {
       cancelPendingSuggestion()
     }
 
+    // Reset the active-column filter whenever the journey changes
+    setActiveColumnFilter('')
+
     if (selected === null) {
+      setProvisionalFunnelEntries({})
+      setActiveColumnResults([])
+      setActiveColumnLoading(true)
       setSteps(steps.slice(0, columnIndex))
     } else {
+      // Snapshot the clicked step's visitor count from the current results so
+      // the column can display a sensible value immediately, before the funnel
+      // API response arrives. The bar width is computed relative to the first
+      // step's visitor count (same baseline the real funnel uses).
+      const match = activeColumnResults.find(({ step }) =>
+        isSameStep(step, selected)
+      )
+      if (match) {
+        const firstStepVisitors = funnel[0]?.visitors ?? match.visitors
+        const conversionRate = Math.round(
+          (match.visitors / firstStepVisitors) * 100
+        )
+        setProvisionalFunnelEntries({
+          [columnIndex]: {
+            visitors: match.visitors,
+            conversion_rate: conversionRate
+          }
+        })
+      } else {
+        setProvisionalFunnelEntries({})
+      }
+      setActiveColumnResults([])
+      setActiveColumnLoading(true)
       setSteps([...steps.slice(0, columnIndex), selected])
     }
   }
@@ -319,34 +314,68 @@ export function FunnelExploration() {
     setDirection(nextDirection)
     setSteps([])
     setFunnel([])
+    setActiveColumnResults([])
+    setActiveColumnFilter('')
+    setProvisionalFunnelEntries({})
   }
 
+  // Fetch next step suggestions (and funnel, if the journey changed) whenever
+  // the journey, direction, dashboard filters, or search term change.
+  // Funnel is only re-fetched when steps or direction/dashboardState change,
+  // search doesn't affect it.
   useEffect(() => {
-    if (steps.length === 0) {
+    setActiveColumnLoading(true)
+    setActiveColumnResults([])
+
+    const stepsChanged = prevStepsRef.current !== steps
+    const contextChanged =
+      prevDirectionRef.current !== direction ||
+      prevDashboardStateRef.current !== dashboardState
+
+    prevStepsRef.current = steps
+    prevDirectionRef.current = direction
+    prevDashboardStateRef.current = dashboardState
+
+    const includeFunnel = (stepsChanged || contextChanged) && steps.length > 0
+
+    if ((stepsChanged || contextChanged) && steps.length === 0) {
       setFunnel([])
-      return
     }
 
     let cancelled = false
 
-    fetchFunnelData(site, dashboardState, steps, direction)
+    fetchNextWithFunnel(
+      site,
+      dashboardState,
+      steps,
+      activeColumnFilter,
+      direction,
+      includeFunnel
+    )
       .then((response) => {
-        if (!cancelled) {
-          setFunnel(response || [])
+        if (cancelled) return
+        setActiveColumnResults(response?.next || [])
+        if (includeFunnel) {
+          setFunnel(response?.funnel || [])
+          setProvisionalFunnelEntries({})
         }
       })
       .catch(() => {
-        if (!cancelled) {
-          setFunnel([])
-        }
+        if (cancelled) return
+        setActiveColumnResults([])
+        if (includeFunnel) setFunnel([])
+      })
+      .finally(() => {
+        if (!cancelled) setActiveColumnLoading(false)
       })
 
     return () => {
       cancelled = true
     }
-  }, [site, dashboardState, steps, direction])
+  }, [site, dashboardState, steps, direction, activeColumnFilter])
 
   const numColumns = Math.max(steps.length + 1, 3)
+  const activeColumnIndex = steps.length
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -407,20 +436,39 @@ export function FunnelExploration() {
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto -mx-5 px-5 -mb-3 pb-3"
       >
-        {Array.from({ length: numColumns }, (_, i) => (
-          <ExplorationColumn
-            key={i}
-            header={columnHeader(i, direction)}
-            steps={steps.length >= i ? steps.slice(0, i) : null}
-            selected={steps[i] || null}
-            selectedVisitors={funnel[i]?.visitors ?? null}
-            selectedConversionRate={funnel[i]?.conversion_rate ?? null}
-            maxVisitors={funnel[0]?.visitors ?? null}
-            onSelect={(selected) => handleSelect(i, selected)}
-            dashboardState={dashboardState}
-            direction={direction}
-          />
-        ))}
+        {Array.from({ length: numColumns }, (_, i) => {
+          const isActive = i === activeColumnIndex
+          const isReachable = steps.length >= i
+
+          return (
+            <ExplorationColumn
+              key={i}
+              header={columnHeader(i, direction)}
+              active={isReachable}
+              // Active column gets live results; selected columns show a single
+              // item sourced from funnel data (passed as selectedVisitors /
+              // selectedConversionRate) so they need no results of their own.
+              results={isActive ? activeColumnResults : []}
+              loading={isActive ? activeColumnLoading : false}
+              selected={steps[i] || null}
+              selectedVisitors={
+                funnel[i]?.visitors ??
+                provisionalFunnelEntries[i]?.visitors ??
+                null
+              }
+              selectedConversionRate={
+                funnel[i]?.conversion_rate ??
+                provisionalFunnelEntries[i]?.conversion_rate ??
+                null
+              }
+              maxVisitors={funnel[0]?.visitors ?? null}
+              onSelect={(selected) => handleSelect(i, selected)}
+              onFilterChange={isActive ? setActiveColumnFilter : () => {}}
+              filter={isActive ? activeColumnFilter : ''}
+              direction={direction}
+            />
+          )
+        })}
       </div>
     </div>
   )

@@ -284,6 +284,7 @@ defmodule PlausibleWeb.Router do
 
       post "/:domain/exploration/next", StatsController, :exploration_next
       post "/:domain/exploration/funnel", StatsController, :exploration_funnel
+      post "/:domain/exploration/next-with-funnel", StatsController, :exploration_next_with_funnel
 
       post "/:domain/exploration/interesting-funnel",
            StatsController,
