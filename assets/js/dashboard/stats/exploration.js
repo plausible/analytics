@@ -224,8 +224,8 @@ export function FunnelExploration() {
   // counter to detect and discard stale suggestion responses
   const suggestionRequestIdRef = useRef(0)
   // Tracks the steps/direction/dashboardState values from the previous effect
-  // run so we can distinguish a journey change (needs funnel) from a
-  // filter only change (next steps only, no funnel).
+  // run so we can tell whether the journey changed (needs funnel) or only the
+  // search filter changed (next steps only, no funnel).
   const prevStepsRef = useRef(steps)
   const prevDirectionRef = useRef(direction)
   const prevDashboardStateRef = useRef(dashboardState)
@@ -327,8 +327,8 @@ export function FunnelExploration() {
     setActiveColumnLoading(true)
     setActiveColumnResults([])
 
-    const stepsChanged = prevStepsRef.current !== steps
-    const contextChanged =
+    const journeyChanged =
+      prevStepsRef.current !== steps ||
       prevDirectionRef.current !== direction ||
       prevDashboardStateRef.current !== dashboardState
 
@@ -336,9 +336,9 @@ export function FunnelExploration() {
     prevDirectionRef.current = direction
     prevDashboardStateRef.current = dashboardState
 
-    const includeFunnel = (stepsChanged || contextChanged) && steps.length > 0
+    const includeFunnel = journeyChanged && steps.length > 0
 
-    if ((stepsChanged || contextChanged) && steps.length === 0) {
+    if (journeyChanged && steps.length === 0) {
       setFunnel([])
     }
 
