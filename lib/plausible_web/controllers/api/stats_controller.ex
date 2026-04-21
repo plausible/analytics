@@ -188,23 +188,23 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, journey} <- parse_journey(steps),
          {:ok, direction} <- parse_exploration_direction(params["direction"]),
          query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction) do
-      funnel =
-        if include_funnel? do
-          case Exploration.journey_funnel(query, journey, direction) do
-            {:ok, funnel_data} -> funnel_data
-            {:error, :empty_journey} -> []
-          end
-        else
-          []
-        end
-
-      json(conn, %{next: next_steps, funnel: funnel})
+         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction),
+           funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
+             json(conn, %{next: next_steps, funnel: funnel})
     else
       _ ->
         bad_request(conn, "There was an error with your request")
     end
   end
+
+  defp maybe_include_funnel(true, query, journey, direction) do
+    case Exploration.journey_funnel(query, journey, direction) do
+      {:ok, funnel_data} -> funnel_data
+      {:error, :empty_journey} -> []
+    end
+  end
+
+  defp maybe_include_funnel(false, _, _, _), do: []
 
   defp parse_journey(input) when is_binary(input) do
     input
