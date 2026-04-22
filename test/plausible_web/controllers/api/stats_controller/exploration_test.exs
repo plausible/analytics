@@ -2,8 +2,6 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible
 
-  @moduletag :ee_only
-
   on_ee do
     setup [:create_user, :log_in, :create_site]
 
