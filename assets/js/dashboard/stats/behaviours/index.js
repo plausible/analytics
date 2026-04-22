@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import Properties from './props'
-import { FunnelExploration } from '../exploration'
 import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
   hasConversionGoalFilter,
@@ -42,7 +41,17 @@ function maybeRequire() {
   }
 }
 
+function maybeRequireExploration() {
+  if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../../extra/exploration')
+  } else {
+    return { FunnelExploration: null }
+  }
+}
+
 const Funnel = maybeRequire().default
+const { FunnelExploration } = maybeRequireExploration()
 
 function singleGoalFilterApplied(dashboardState) {
   const goalFilter = getGoalFilter(dashboardState)
@@ -292,6 +301,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   }
 
   function renderExploration() {
+    if (FunnelExploration === null) {
+      return featureUnavailable()
+    }
     return <FunnelExploration />
   }
 

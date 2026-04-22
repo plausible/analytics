@@ -9,7 +9,6 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats.{
     Query,
     Comparisons,
-    Exploration,
     Filters,
     TableDecider,
     Dashboard,
@@ -25,13 +24,15 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
-  plug PlausibleWeb.SuperAdminOnlyPlug
-       when action in [
-              :exploration_next,
-              :exploration_funnel,
-              :exploration_next_with_funnel,
-              :exploration_interesting_funnel
-            ]
+  on_ee do
+    plug PlausibleWeb.SuperAdminOnlyPlug
+         when action in [
+                :exploration_next,
+                :exploration_funnel,
+                :exploration_next_with_funnel,
+                :exploration_interesting_funnel
+              ]
+  end
 
   plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
@@ -135,91 +136,96 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def exploration_next(conn, %{"journey" => steps} = params) do
-    site = conn.assigns.site
-    search_term = params["search_term"] || ""
+  on_ee do
+    def exploration_next(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
+      search_term = params["search_term"] || ""
 
-    with {:ok, journey} <- parse_journey(steps),
-         {:ok, direction} <- parse_exploration_direction(params["direction"]),
-         query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction) do
-      json(conn, next_steps)
-    else
-      _ ->
-        bad_request(conn, "There was an error with your request")
+      with {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           {:ok, next_steps} <-
+             Plausible.Stats.Exploration.next_steps(query, journey, search_term, direction) do
+        json(conn, next_steps)
+      else
+        _ ->
+          bad_request(conn, "There was an error with your request")
+      end
     end
-  end
 
-  def exploration_funnel(conn, %{"journey" => steps} = params) do
-    site = conn.assigns.site
+    def exploration_funnel(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
 
-    with {:ok, journey} <- parse_journey(steps),
-         {:ok, direction} <- parse_exploration_direction(params["direction"]),
-         query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, funnel} <- Exploration.journey_funnel(query, journey, direction) do
-      json(conn, funnel)
-    else
-      {:error, :empty_journey} ->
-        bad_request(
-          conn,
-          "We are unable to show funnels when journey is empty",
-          %{
-            level: :normal
-          }
-        )
+      with {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           {:ok, funnel} <-
+             Plausible.Stats.Exploration.journey_funnel(query, journey, direction) do
+        json(conn, funnel)
+      else
+        {:error, :empty_journey} ->
+          bad_request(
+            conn,
+            "We are unable to show funnels when journey is empty",
+            %{
+              level: :normal
+            }
+          )
+      end
     end
-  end
 
-  def exploration_interesting_funnel(conn, params) do
-    site = conn.assigns.site
-    query = Query.from(site, params, debug_metadata: debug_metadata(conn))
+    def exploration_interesting_funnel(conn, params) do
+      site = conn.assigns.site
+      query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-    case Exploration.interesting_funnel(query) do
-      {:ok, funnel} -> json(conn, funnel)
-      {:error, :not_found} -> json(conn, [])
+      case Plausible.Stats.Exploration.interesting_funnel(query) do
+        {:ok, funnel} -> json(conn, funnel)
+        {:error, :not_found} -> json(conn, [])
+      end
     end
-  end
 
-  def exploration_next_with_funnel(conn, %{"journey" => steps} = params) do
-    site = conn.assigns.site
-    search_term = params["search_term"] || ""
-    include_funnel? = params["include_funnel"] == true
+    def exploration_next_with_funnel(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
+      search_term = params["search_term"] || ""
+      include_funnel? = params["include_funnel"] == true
 
-    with {:ok, journey} <- parse_journey(steps),
-         {:ok, direction} <- parse_exploration_direction(params["direction"]),
-         query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
-         {:ok, next_steps} <- Exploration.next_steps(query, journey, search_term, direction),
-         funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
-      json(conn, %{next: next_steps, funnel: funnel})
-    else
-      _ ->
-        bad_request(conn, "There was an error with your request")
+      with {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           {:ok, next_steps} <-
+             Plausible.Stats.Exploration.next_steps(query, journey, search_term, direction),
+           funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
+        json(conn, %{next: next_steps, funnel: funnel})
+      else
+        _ ->
+          bad_request(conn, "There was an error with your request")
+      end
     end
-  end
 
-  defp maybe_include_funnel(true, query, journey, direction) do
-    case Exploration.journey_funnel(query, journey, direction) do
-      {:ok, funnel_data} -> funnel_data
-      {:error, :empty_journey} -> []
+    defp maybe_include_funnel(true, query, journey, direction) do
+      case Plausible.Stats.Exploration.journey_funnel(query, journey, direction) do
+        {:ok, funnel_data} -> funnel_data
+        {:error, :empty_journey} -> []
+      end
     end
+
+    defp maybe_include_funnel(false, _, _, _), do: []
+
+    defp parse_journey(input) when is_binary(input) do
+      input
+      |> Jason.decode!()
+      |> Enum.map(&parse_journey_step/1)
+      |> then(&{:ok, &1})
+    end
+
+    defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
+      Plausible.Stats.Exploration.Journey.Step.new(name, pathname)
+    end
+
+    defp parse_exploration_direction("backward"), do: {:ok, :backward}
+    defp parse_exploration_direction("forward"), do: {:ok, :forward}
+    defp parse_exploration_direction(_), do: {:ok, :forward}
   end
-
-  defp maybe_include_funnel(false, _, _, _), do: []
-
-  defp parse_journey(input) when is_binary(input) do
-    input
-    |> Jason.decode!()
-    |> Enum.map(&parse_journey_step/1)
-    |> then(&{:ok, &1})
-  end
-
-  defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
-    Exploration.Journey.Step.new(name, pathname)
-  end
-
-  defp parse_exploration_direction("backward"), do: {:ok, :backward}
-  defp parse_exploration_direction("forward"), do: {:ok, :forward}
-  defp parse_exploration_direction(_), do: {:ok, :forward}
 
   on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do

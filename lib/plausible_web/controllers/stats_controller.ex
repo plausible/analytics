@@ -63,7 +63,8 @@ defmodule PlausibleWeb.StatsController do
 
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
-    exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+    exploration_available? =
+      on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
 
     consolidated_view_available? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
@@ -474,7 +475,8 @@ defmodule PlausibleWeb.StatsController do
 
         flags = get_flags(current_user, shared_link.site)
 
-        exploration_available? = Plausible.Auth.is_super_admin?(current_user)
+        exploration_available? =
+          on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
 
         limited_to_segment_id =
           if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do

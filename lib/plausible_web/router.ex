@@ -280,15 +280,18 @@ defmodule PlausibleWeb.Router do
     scope "/stats", PlausibleWeb.Api do
       on_ee do
         get "/:domain/funnels/:id", StatsController, :funnel
+
+        post "/:domain/exploration/next", StatsController, :exploration_next
+        post "/:domain/exploration/funnel", StatsController, :exploration_funnel
+
+        post "/:domain/exploration/next-with-funnel",
+             StatsController,
+             :exploration_next_with_funnel
+
+        post "/:domain/exploration/interesting-funnel",
+             StatsController,
+             :exploration_interesting_funnel
       end
-
-      post "/:domain/exploration/next", StatsController, :exploration_next
-      post "/:domain/exploration/funnel", StatsController, :exploration_funnel
-      post "/:domain/exploration/next-with-funnel", StatsController, :exploration_next_with_funnel
-
-      post "/:domain/exploration/interesting-funnel",
-           StatsController,
-           :exploration_interesting_funnel
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query

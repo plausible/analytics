@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.ExplorationTest do
   use Plausible.DataCase
 
+  @moduletag :ee_only
+
   alias Plausible.Stats.Exploration
   alias Plausible.Stats.QueryBuilder
 
