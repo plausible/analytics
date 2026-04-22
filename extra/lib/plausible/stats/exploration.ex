@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Exploration do
     @spec new(String.t(), String.t()) :: t()
     def new(name, pathname) do
       %__MODULE__{
-        label: if(name == "pageview", do: "Visit", else: name) <> " " <> pathname,
+        label: if(name == "pageview", do: "", else: name <> " ") <> pathname,
         name: name,
         pathname: pathname
       }
@@ -32,6 +32,7 @@ defmodule Plausible.Stats.Exploration do
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
+  alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
   @type journey() :: [Journey.Step.t()]
@@ -154,6 +155,13 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname("/"), do: "/"
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
+  @wildcard_array_join """
+  arrayFold(
+    acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
+    arraySlice(splitByChar('/', ?) AS split_pathname, 3), 
+    arraySlice(split_pathname, 2, 1))
+  """
+
   defp next_steps_query(query, steps, search_term, direction, max_candidates)
        when is_direction(direction) do
     next_step_idx = length(steps) + 1
@@ -162,58 +170,92 @@ defmodule Plausible.Stats.Exploration do
     next_name = :"name#{next_step_idx}"
     next_pathname = :"pathname#{next_step_idx}"
 
-    q_next =
+    q_exact_matches =
       from(s in subquery(q_steps),
-        where: selected_as(:next_name) != "",
+        where: selected_as(:name) != "",
         select: %{
-          step: %Journey.Step{
-            label:
-              selected_as(
-                fragment(
-                  "concat(CASE WHEN ? = ? THEN ? ELSE ? END, ' ', ?)",
-                  selected_as(:next_name),
-                  "pageview",
-                  "Visit",
-                  selected_as(:next_name),
-                  selected_as(:next_pathname)
-                ),
-                :next_label
-              ),
-            name: selected_as(field(s, ^next_name), :next_name),
-            pathname: selected_as(field(s, ^next_pathname), :next_pathname)
-          },
-          visitors: selected_as(scale_sample(fragment("uniq(?)", s.user_id)), :count)
+          name: selected_as(field(s, ^next_name), :name),
+          pathname: selected_as(field(s, ^next_pathname), :pathname),
+          visitors: scale_sample(fragment("uniq(?)", s.user_id))
         },
-        group_by: [selected_as(:next_name), selected_as(:next_pathname)],
-        order_by: [
-          desc: selected_as(:count),
-          asc: selected_as(:next_pathname),
-          asc: selected_as(:next_name)
-        ],
-        limit: ^max_candidates
+        group_by: [selected_as(:name), selected_as(:pathname)]
       )
-      |> maybe_search(search_term)
 
-    steps
-    |> Enum.with_index()
-    |> Enum.reduce(q_next, fn {step, idx}, q ->
-      name = :"name#{idx + 1}"
-      pathname = :"pathname#{idx + 1}"
+    q_exact_matches =
+      steps
+      |> Enum.with_index()
+      |> Enum.reduce(q_exact_matches, fn {step, idx}, q ->
+        step_condition = step_condition(step, idx + 1)
 
-      from(s in q,
-        where: field(s, ^name) == ^step.name and field(s, ^pathname) == ^step.pathname
+        from(s in q, where: ^step_condition)
+      end)
+
+    q_wildcard_matches =
+      from(em in subquery(q_exact_matches),
+        join: pname in fragment(@wildcard_array_join, em.pathname),
+        on: true,
+        hints: "ARRAY",
+        where: selected_as(:pathname) != "/*",
+        select: %{
+          name: em.name,
+          pathname: selected_as(fragment("concat('/', ?, '*')", pname), :pathname),
+          pathname_plain: selected_as(fragment("concat('/', ?)", pname), :pathname_plain),
+          visitors: selected_as(sum(em.visitors), :visitors)
+        },
+        group_by: [em.name, fragment("?", pname)]
       )
-    end)
+
+    q_wildcard_filtered_matches =
+      from(wm in subquery(q_wildcard_matches),
+        left_join: emx in subquery(q_exact_matches),
+        on: emx.name == wm.name and emx.pathname == wm.pathname_plain,
+        where: is_nil(emx.name) or wm.visitors != emx.visitors,
+        select: %{
+          name: wm.name,
+          pathname: wm.pathname,
+          visitors: wm.visitors
+        }
+      )
+
+    q_all_matches =
+      q_exact_matches
+      |> union_all(^q_wildcard_filtered_matches)
+
+    from(m in subquery(q_all_matches),
+      select: %{
+        step: %Journey.Step{
+          label:
+            selected_as(
+              fragment(
+                "if(? != ?, concat(?, ' ', ?), ?)",
+                m.name,
+                "pageview",
+                m.name,
+                m.pathname,
+                m.pathname
+              ),
+              :label
+            ),
+          name: m.name,
+          pathname: m.pathname
+        },
+        visitors: m.visitors
+      },
+      order_by: [
+        desc: m.visitors,
+        asc: m.pathname,
+        asc: m.name
+      ],
+      limit: ^max_candidates
+    )
+    |> maybe_search(search_term)
   end
 
   defp journey_funnel_query(query, steps, direction) do
     q_steps = steps_query(query, length(steps), direction)
 
-    [first_step | steps] = steps
-
     q_funnel =
       from(s in subquery(q_steps),
-        where: s.name1 == ^first_step.name and s.pathname1 == ^first_step.pathname,
         select: %{
           1 => scale_sample(fragment("uniq(?)", s.user_id))
         }
@@ -221,21 +263,30 @@ defmodule Plausible.Stats.Exploration do
 
     steps
     |> Enum.with_index()
-    |> Enum.reduce(q_funnel, fn {_step, idx}, q ->
-      current_steps = Enum.take(steps, idx + 1)
+    |> Enum.reduce(q_funnel, fn
+      {step, 0}, q ->
+        step_condition = step_condition(step, 1)
 
-      step_conditions =
-        current_steps
-        |> Enum.with_index()
-        |> Enum.reduce(dynamic(true), fn {step, idx}, acc ->
-          step_condition = step_condition(step, idx + 2)
-          dynamic([q], fragment("? and ?", ^acc, ^step_condition))
-        end)
+        from(e in q,
+          select_merge: %{1 => scale_sample(fragment("uniq(?)", e.user_id))},
+          where: ^step_condition
+        )
 
-      step_count =
-        dynamic([e], scale_sample(fragment("uniqIf(?, ?)", e.user_id, ^step_conditions)))
+      {_step, idx}, q ->
+        current_steps = Enum.take(steps, idx + 1)
 
-      from(e in q, select_merge: ^%{(idx + 2) => step_count})
+        step_conditions =
+          current_steps
+          |> Enum.with_index()
+          |> Enum.reduce(dynamic(true), fn {step, idx}, acc ->
+            step_condition = step_condition(step, idx + 1)
+            dynamic([q], fragment("? and ?", ^acc, ^step_condition))
+          end)
+
+        step_count =
+          dynamic([e], scale_sample(fragment("uniqIf(?, ?)", e.user_id, ^step_conditions)))
+
+        from(e in q, select_merge: ^%{(idx + 1) => step_count})
     end)
   end
 
@@ -322,17 +373,29 @@ defmodule Plausible.Stats.Exploration do
   end
 
   defp step_condition(step, count) do
-    dynamic(
-      [s],
-      field(s, ^:"name#{count}") == ^step.name and
-        field(s, ^:"pathname#{count}") == ^step.pathname
-    )
+    if String.contains?(step.pathname, "*") do
+      escaped = Filters.Utils.page_regex(step.pathname)
+
+      pattern = "^#{escaped}$"
+
+      dynamic(
+        [s],
+        field(s, ^:"name#{count}") == ^step.name and
+          fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
+      )
+    else
+      dynamic(
+        [s],
+        field(s, ^:"name#{count}") == ^step.name and
+          field(s, ^:"pathname#{count}") == ^step.pathname
+      )
+    end
   end
 
   defp maybe_search(query, search_term) do
     case String.trim(search_term) do
       term when byte_size(term) > 2 ->
-        from(s in query, where: ilike(selected_as(:next_label), ^"%#{term}%"))
+        from(s in query, where: ilike(selected_as(:label), ^"%#{term}%"))
 
       _ ->
         query
