@@ -49,6 +49,17 @@ export enum ComparisonMode {
   custom = 'custom'
 }
 
+export type DashboardTimeSettings = {
+  site: Pick<PlausibleSite, 'offset' | 'statsBegin'>
+  date: DashboardState['date']
+  period: DashboardState['period']
+  from: DashboardState['from']
+  to: DashboardState['to']
+  comparison: DashboardState['comparison']
+  compare_from: DashboardState['compare_from']
+  compare_to: DashboardState['compare_to']
+}
+
 export const COMPARISON_MODES = {
   [ComparisonMode.off]: 'Disable comparison',
   [ComparisonMode.previous_period]: 'Previous period',
@@ -72,6 +83,41 @@ const COMPARISON_DISABLED_PERIODS = [
   DashboardPeriod.realtime,
   DashboardPeriod.all
 ]
+
+const PERIODS_EXCLUDING_NOW = [
+  DashboardPeriod['7d'],
+  DashboardPeriod['28d'],
+  DashboardPeriod['30d'],
+  DashboardPeriod['91d'],
+  DashboardPeriod['6mo'],
+  DashboardPeriod['12mo']
+]
+
+export function isHistoricalPeriod({
+  site,
+  date,
+  period,
+  from,
+  to,
+  comparison,
+  compare_from,
+  compare_to
+}: DashboardTimeSettings) {
+  const startOfDay = nowForSite(site).startOf('day')
+
+  const mainPeriodIncludesToday =
+    period === DashboardPeriod.custom && to && from
+      ? !to.isBefore(startOfDay)
+      : !(date?.isBefore(startOfDay) || PERIODS_EXCLUDING_NOW.includes(period))
+
+  const comparisonPeriodIncludesToday =
+    comparison === ComparisonMode.custom &&
+    compare_to &&
+    compare_from &&
+    !compare_to.isBefore(startOfDay)
+
+  return !(mainPeriodIncludesToday || comparisonPeriodIncludesToday)
+}
 
 export const isComparisonForbidden = ({
   period,

@@ -16,8 +16,8 @@ const INTERVAL_LABELS: Record<Interval, string> = {
   [Interval.month]: 'Months'
 }
 
-function getStoredInterval(period: string, domain: string): string | null {
-  const stored = storage.getItem(`interval__${period}__${domain}`)
+function getStoredInterval(storageKey: string): string | null {
+  const stored = storage.getItem(storageKey)
 
   if (stored === 'date') {
     return 'day'
@@ -26,15 +26,14 @@ function getStoredInterval(period: string, domain: string): string | null {
   }
 }
 
-function storeInterval(
-  period: string,
-  domain: string,
-  interval: Interval
-): void {
-  storage.setItem(`interval__${period}__${domain}`, interval)
+function storeInterval(storageKey: string, interval: Interval): void {
+  storage.setItem(storageKey, interval)
 }
 
-export const useStoredInterval = (props: GetIntervalProps) => {
+export const useStoredInterval = (
+  storageKey: string,
+  props: GetIntervalProps
+) => {
   const { period, from, to, site, comparison, compare_from, compare_to } = props
 
   // Dayjs objects are new references on every render, so we
@@ -77,7 +76,7 @@ export const useStoredInterval = (props: GetIntervalProps) => {
     [storableIntervals]
   )
 
-  const storedInterval = getStoredInterval(period, site.domain)
+  const storedInterval = getStoredInterval(storageKey)
 
   const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
 
@@ -88,11 +87,11 @@ export const useStoredInterval = (props: GetIntervalProps) => {
   const onIntervalClick = useCallback(
     (interval: Interval) => {
       if (isStorable(interval)) {
-        storeInterval(period, site.domain, interval)
+        storeInterval(storageKey, interval)
       }
       setSelectedInterval(interval)
     },
-    [period, site, isStorable]
+    [storageKey, isStorable]
   )
 
   return {

@@ -21,9 +21,10 @@ export function GraphIntervalProvider({
 }) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const intervalStorageKey = `interval__${dashboardState.period}__${site.domain}`
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
-    useStoredInterval({
+    useStoredInterval(intervalStorageKey, {
       site,
       to: dashboardState.to,
       from: dashboardState.from,

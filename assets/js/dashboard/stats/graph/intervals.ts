@@ -1,7 +1,9 @@
-import { PlausibleSite } from '../../site-context'
-import { DashboardState } from '../../dashboard-state'
 import { Dayjs } from 'dayjs'
-import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
+import {
+  ComparisonMode,
+  DashboardPeriod,
+  DashboardTimeSettings
+} from '../../dashboard-time-periods'
 import { dateForSite, nowForSite } from '../../util/date'
 
 export enum Interval {
@@ -12,10 +14,7 @@ export enum Interval {
   month = 'month'
 }
 
-export type GetIntervalProps = { site: PlausibleSite } & Pick<
-  DashboardState,
-  'period' | 'to' | 'from' | 'comparison' | 'compare_to' | 'compare_from'
->
+export type GetIntervalProps = Omit<DashboardTimeSettings, 'date'>
 
 type DayjsRange = { from: Dayjs; to: Dayjs }
 
@@ -117,7 +116,7 @@ function coarser(a: Interval[], b: Interval[]): Interval[] {
 }
 
 function validIntervalsForMainPeriod(
-  site: PlausibleSite,
+  site: DashboardTimeSettings['site'],
   period: DashboardPeriod,
   from: Dayjs | null,
   to: Dayjs | null
@@ -143,7 +142,7 @@ function validIntervalsForCustomComparison(
 }
 
 function defaultForMainPeriod(
-  site: PlausibleSite,
+  site: DashboardTimeSettings['site'],
   period: DashboardPeriod,
   from: Dayjs | null,
   to: Dayjs | null
@@ -191,7 +190,9 @@ function validIntervalsForCustomPeriod({ to, from }: DayjsRange): Interval[] {
   return [Interval.week, Interval.month]
 }
 
-function validIntervalsForAllTimePeriod(site: PlausibleSite): Interval[] {
+function validIntervalsForAllTimePeriod(
+  site: DashboardTimeSettings['site']
+): Interval[] {
   const to = nowForSite(site)
   const from = site.statsBegin ? dateForSite(site.statsBegin, site) : to
 
