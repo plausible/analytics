@@ -45,12 +45,14 @@ export function usePaginatedGetAPI<
   TResponse extends { results: unknown[] },
   TKey extends PaginatedQueryKeyBase = PaginatedQueryKeyBase
 >({
+  site,
   key,
   getRequestParams,
   afterFetchData,
   afterFetchNextPage,
   initialPageParam = 1
 }: {
+  site: DashboardTimeSettings['site']
   key: TKey
   getRequestParams: GetRequestParams<TKey>
   afterFetchData?: (response: TResponse) => void
@@ -99,6 +101,10 @@ export function usePaginatedGetAPI<
       return lastPageResults.length === PAGINATION_LIMIT
         ? lastPageIndex + 1
         : null
+    },
+    staleTime: ({ queryKey }) => {
+      const [_, opts] = queryKey
+      return getStaleTime({ site, ...opts.dashboardState })
     },
     initialPageParam,
     placeholderData: (previousData) => previousData
