@@ -219,8 +219,7 @@ jobs:
 
       - name: Install E2E Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: ./e2e
-        run: npx playwright install --with-deps chromium
+        run: npx --prefix ./e2e playwright install --with-deps chromium
 
       - name: Run E2E Playwright tests
         run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
@@ -229,8 +228,10 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: e2e-blob-report-${{ matrix.shardIndex }}
-          path: e2e/blob-report
+          name: e2e-report-${{ matrix.shardIndex }}
+          path: |
+            e2e/blob-report
+            e2e/test-results
           retention-days: 1
 
   merge-sharded-e2e-test-report:
@@ -251,13 +252,11 @@ jobs:
       - name: Download blob reports from GitHub Actions Artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          path: all-e2e-blob-reports
-          pattern: e2e-blob-report-*
-          merge-multiple: true
-
-      - name: Merge into list report
-        working-directory: ./e2e
-        run: npx playwright merge-reports --reporter list ../all-e2e-blob-reports
+          path: all-e2e-reports
+          pattern: e2e-report-*
+          merge-multiple: true 
+      - name: Group blob reports and merge into list report
+        run: ls all-e2e-reports/** && npx --prefix ./e2e playwright merge-reports all-e2e-reports --reporter list
 
   static:
     name: Static checks (format, credo, dialyzer)

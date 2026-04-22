@@ -20,6 +20,7 @@ export default defineConfig({
   reporter: 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    screenshot: 'on-first-failure',
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL,
 
