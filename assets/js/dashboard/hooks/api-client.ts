@@ -19,10 +19,10 @@ import {
 } from '../stats/graph/intervals'
 
 // define (in ms) when query API responses should become stale
-const CACHE_TTL_REALTIME = REALTIME_UPDATE_TIME_MS
-const CACHE_TTL_SHORT_ONGOING = 5 * 60 * 1000 // 5 minutes
-const CACHE_TTL_LONG_ONGOING = 60 * 60 * 1000 // 1 hour
-const CACHE_TTL_HISTORICAL = 12 * 60 * 60 * 1000 // 12 hours
+export const CACHE_TTL_REALTIME = REALTIME_UPDATE_TIME_MS
+export const CACHE_TTL_SHORT_ONGOING = 5 * 60 * 1000 // 5 minutes
+export const CACHE_TTL_LONG_ONGOING = 60 * 60 * 1000 // 1 hour
+export const CACHE_TTL_HISTORICAL = 12 * 60 * 60 * 1000 // 12 hours
 
 // how many items per page for breakdown modals
 const PAGINATION_LIMIT = 100
