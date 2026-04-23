@@ -196,6 +196,7 @@ defmodule Plausible.Stats.Exploration do
         on: true,
         hints: "ARRAY",
         where: selected_as(:pathname) != "*" and selected_as(:pathname) != "/*",
+        where: em.name == "pageview",
         select: %{
           name: em.name,
           pathname: selected_as(fragment("concat(?, '*')", pname), :pathname),
