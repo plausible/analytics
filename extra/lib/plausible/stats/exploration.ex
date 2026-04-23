@@ -158,8 +158,8 @@ defmodule Plausible.Stats.Exploration do
   @wildcard_array_join """
   arrayFold(
     acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
-    arraySlice(splitByChar('/', ?) AS split_pathname, 3), 
-    arraySlice(split_pathname, 2, 1))
+    arraySlice(splitByChar('/', ?) AS split_pathname, 2), 
+    arraySlice(split_pathname, 1, 1))
   """
 
   defp next_steps_query(query, steps, search_term, direction, max_candidates)
@@ -198,9 +198,9 @@ defmodule Plausible.Stats.Exploration do
         where: selected_as(:pathname) != "/*",
         select: %{
           name: em.name,
-          pathname: selected_as(fragment("concat('/', ?, '*')", pname), :pathname),
-          pathname_plain: selected_as(fragment("concat('/', ?)", pname), :pathname_plain),
-          visitors: selected_as(sum(em.visitors), :visitors)
+          pathname: selected_as(fragment("concat(?, '*')", pname), :pathname),
+          pathname_plain: selected_as(fragment("?", pname), :pathname_plain),
+          visitors: selected_as(fragment("sum(?)", em.visitors), :visitors)
         },
         group_by: [em.name, fragment("?", pname)]
       )
