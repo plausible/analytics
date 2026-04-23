@@ -268,7 +268,7 @@ defmodule Plausible.Stats.Exploration do
         step_condition = step_condition(step, 1)
 
         from(e in q,
-          select_merge: %{1 => scale_sample(fragment("uniq(?)", e.user_id))},
+          select_merge: %{1 => scale_sample(fragment("uniq(?, ?)", e.user_id, e.pathname1))},
           where: ^step_condition
         )
 
@@ -284,7 +284,17 @@ defmodule Plausible.Stats.Exploration do
           end)
 
         step_count =
-          dynamic([e], scale_sample(fragment("uniqIf(?, ?)", e.user_id, ^step_conditions)))
+          dynamic(
+            [e],
+            scale_sample(
+              fragment(
+                "uniqIf(?, ?, ?)",
+                e.user_id,
+                field(e, ^:"pathname#{idx + 1}"),
+                ^step_conditions
+              )
+            )
+          )
 
         from(e in q, select_merge: ^%{(idx + 1) => step_count})
     end)
