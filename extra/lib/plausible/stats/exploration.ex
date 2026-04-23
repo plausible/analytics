@@ -104,7 +104,7 @@ defmodule Plausible.Stats.Exploration do
   ## Options
 
     * `:max_steps` - maximum number of funnel steps to build (default: `6`)
-    * `:max_candidates` - passed to `next_steps/3` as `:max_candidates`, limiting
+    * `:max_candidates` - passed to `next_steps/3`, limiting
       how many candidate next steps are fetched per step (default: `10`)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
