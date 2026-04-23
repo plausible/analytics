@@ -1,41 +1,29 @@
 import React, { useState, Dispatch, SetStateAction } from 'react'
-import { act, render, waitFor } from '@testing-library/react'
-import {
-  mockAnimationsApi,
-  mockResizeObserver,
-  mockIntersectionObserver
-} from 'jsdom-testing-mocks'
+import { act, render, screen } from '@testing-library/react'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import PagesModal from './pages'
+import { MockAPI } from '../../../../test-utils/mock-api'
 
-mockAnimationsApi()
-mockResizeObserver()
-mockIntersectionObserver()
+const domain = 'dummy.site'
 
-const fetchMock = jest.fn()
+let mockAPI: MockAPI
 
 beforeAll(() => {
-  globalThis.fetch = fetchMock
+  mockAPI = new MockAPI().start()
+})
+
+afterAll(() => {
+  mockAPI.stop()
+})
+
+beforeEach(() => {
+  mockAPI.clear()
 })
 
 beforeEach(() => {
   const modalRoot = document.createElement('div')
   modalRoot.setAttribute('id', 'modal_root')
   document.body.appendChild(modalRoot)
-
-  fetchMock.mockImplementation((url: string) => {
-    if (url.includes('/pages/')) {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          results: [],
-          meta: { date_range_label: 'Last 30 days', metric_warnings: undefined }
-        })
-      })
-    }
-    throw new Error(`Unmocked request: ${url}`)
-  })
 })
 
 afterEach(() => {
@@ -44,27 +32,42 @@ afterEach(() => {
 
 describe('BreakdownModal', () => {
   test('opening the modal for a second time with the same dashboardState gets response from cache', async () => {
+    const response = {
+      results: [],
+      meta: { date_range_label: 'Last 30 days', metric_warnings: undefined }
+    }
+
+    const pagesHandler = mockAPI.get(`/api/stats/${domain}/pages/`, response)
+
     let setOpen: Dispatch<SetStateAction<boolean>>
 
     function ToggleableModal() {
-      const [open, s] = useState(true)
+      const [open, s] = useState(false)
       setOpen = s
       return open ? <PagesModal /> : null
     }
 
     render(
-      <TestContextProviders>
+      <TestContextProviders siteOptions={{ domain }}>
         <ToggleableModal />
       </TestContextProviders>
     )
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(pagesHandler).toHaveBeenCalledTimes(0)
+    act(() => setOpen(true))
+    expect(screen.getByText('Top pages')).toBeVisible()
+    expect(pagesHandler).toHaveBeenCalledTimes(1)
+    expect(pagesHandler).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('order_by=%5B%5B%22visitors%22%2C%22desc%22%5D%5D&limit=100&page=1'),
+      expect.anything()
+    )
 
     act(() => setOpen(false))
+    expect(screen.queryByText('Top pages')).not.toBeInTheDocument()
     act(() => setOpen(true))
+    expect(screen.getByText('Top pages')).toBeVisible()
 
-    await act(async () => {})
-
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(pagesHandler).toHaveBeenCalledTimes(1)
   })
 })
