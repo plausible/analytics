@@ -441,6 +441,18 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step3.visitors == 1
       end
 
+      test "respects max_candidates", %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        ]
+
+        assert {:ok, [%{step: %{pathname: "/docs"}}]} =
+          Exploration.next_steps(query, journey, max_candidates: 1)
+      end
+
       test "suggests the first step in the journey", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 

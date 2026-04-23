@@ -60,9 +60,7 @@ defmodule Plausible.Stats.Exploration do
     opts = Keyword.merge(@next_steps_defaults, opts)
     direction = Keyword.fetch!(opts, :direction)
     search_term = Keyword.fetch!(opts, :search_term)
-    max_candidates = Keyword.fetch!(opts, :max_candidates)
-
-    true = is_direction(direction)
+    max_candidates = min(Keyword.fetch!(opts, :max_candidates), 20)
 
     query
     |> Base.base_event_query()
@@ -156,7 +154,7 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname("/"), do: "/"
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
-  defp next_steps_query(query, steps, search_term, direction, max_candidates) do
+  defp next_steps_query(query, steps, search_term, direction, max_candidates) when is_direction(direction) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx, direction)
 
