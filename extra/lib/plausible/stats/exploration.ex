@@ -411,7 +411,7 @@ defmodule Plausible.Stats.Exploration do
         |> String.trim_trailing("...")
         |> Regex.escape()
 
-      pattern = "^#{escaped}($|/.*)$"
+      pattern = "^#{escaped}(/.*)?$"
 
       dynamic(
         [s],
