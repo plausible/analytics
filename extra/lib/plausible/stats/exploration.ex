@@ -228,7 +228,7 @@ defmodule Plausible.Stats.Exploration do
         where: wm.unique_paths > 1 and (is_nil(emx.name) or wm.visitors != emx.visitors),
         select: %{
           name: wm.name,
-          pathname: wm.pathname,
+          pathname: fragment("concat(?, '...')", wm.pathname),
           visitors: wm.visitors,
           include_subpaths: type(^true, :boolean),
           subpaths_count: wm.unique_paths
@@ -406,7 +406,12 @@ defmodule Plausible.Stats.Exploration do
 
   defp step_condition(step, count) do
     if step.include_subpaths do
-      pattern = "^#{Regex.escape(step.pathname)}($|/.*)$"
+      escaped =
+        step.pathname
+        |> String.trim_trailing("...")
+        |> Regex.escape()
+
+      pattern = "^#{escaped}($|/.*)$"
 
       dynamic(
         [s],

@@ -911,9 +911,9 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:ok,
               [
-                %{step: %{label: "/a (4 pages)"}, visitors: 10},
+                %{step: %{label: "/a... (4 pages)"}, visitors: 10},
                 %{step: %{label: "/a"}, visitors: 5},
-                %{step: %{label: "/a/b (2 pages)"}, visitors: 3},
+                %{step: %{label: "/a/b... (2 pages)"}, visitors: 3},
                 %{step: %{label: "/a/b"}, visitors: 2},
                 %{step: %{label: "/a/d"}, visitors: 2},
                 %{step: %{label: "/a/b/c"}, visitors: 1},
@@ -923,7 +923,7 @@ defmodule Plausible.Stats.ExplorationTest do
       journey = [
         %Exploration.Journey.Step{
           name: "pageview",
-          pathname: "/a",
+          pathname: "/a...",
           include_subpaths: true,
           subpaths_count: 4
         }
@@ -931,7 +931,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
 
-      assert step1.step.label == "/a (4 pages)"
+      assert step1.step.label == "/a... (4 pages)"
       assert step1.visitors == 10
     end
   end
