@@ -324,7 +324,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:ok, funnel} = Exploration.interesting_funnel(query)
 
         pathnames = Enum.map(funnel, & &1.step.pathname)
-        assert pathnames == ["/about*", "/contact"]
+        assert pathnames == ["/about", "/contact"]
       end
 
       test "stops when no more unseen steps are available" do
@@ -607,17 +607,13 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok,
                 [
-                  %{step: %{pathname: "/:dashboard*"}},
-                  %{step: %{pathname: "/:dashboard"}},
-                  %{step: %{pathname: "/:dashboard/"}}
+                  %{step: %{pathname: "/:dashboard"}}
                 ]} =
                  Exploration.next_steps(query, journey, search_term: "", direction: :forward)
 
         assert {:ok,
                 [
-                  %{step: %{pathname: "/:dashboard*"}},
-                  %{step: %{pathname: "/:dashboard"}},
-                  %{step: %{pathname: "/:dashboard/"}}
+                  %{step: %{pathname: "/:dashboard"}}
                 ]} =
                  Exploration.next_steps(query, journey, search_term: "", direction: :backward)
       end
@@ -917,6 +913,15 @@ defmodule Plausible.Stats.ExplorationTest do
                 %{step: %{label: "/a/d"}, visitors: 2},
                 %{step: %{label: "/a/b/c"}, visitors: 1}
               ]} = Exploration.next_steps(query, [])
+
+      journey = [
+        %Exploration.Journey.Step{name: "pageview", pathname: "/a*"}
+      ]
+
+      assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
+
+      assert step1.step.pathname == "/a*"
+      assert step1.visitors == 10
     end
   end
 end
