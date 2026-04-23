@@ -106,32 +106,32 @@ defmodule Plausible.Stats.Exploration do
   ## Options
 
     * `:max_steps` - maximum number of funnel steps to build (default: `6`)
-    * `:steps_limit` - passed to `next_steps/3` as `:max_candidates`, limiting
+    * `:max_candidates` - passed to `next_steps/3` as `:max_candidates`, limiting
       how many candidate next steps are fetched per step (default: `10`)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
           {:ok, [funnel_step()]} | {:error, :not_found}
   def interesting_funnel(query, opts \\ []) do
-    max_steps = Keyword.get(opts, :max_steps, 6)
-    steps_limit = Keyword.get(opts, :steps_limit, 10)
+    max_steps = min(Keyword.get(opts, :max_steps, 6), 20)
+    max_candidates = min(Keyword.get(opts, :max_candidates, 10), 20)
 
-    case build_interesting_journey(query, max_steps, steps_limit) do
+    case build_interesting_journey(query, max_steps, max_candidates) do
       [] -> {:error, :not_found}
       journey -> journey_funnel(query, journey)
     end
   end
 
-  defp build_interesting_journey(query, max_steps, steps_limit) do
-    do_build_journey(query, [], MapSet.new(), max_steps, steps_limit)
+  defp build_interesting_journey(query, max_steps, max_candidates) do
+    do_build_journey(query, [], MapSet.new(), max_steps, max_candidates)
   end
 
-  defp do_build_journey(_query, journey, _seen, max_steps, _steps_limit)
+  defp do_build_journey(_query, journey, _seen, max_steps, _max_candidates)
        when length(journey) >= max_steps do
     journey
   end
 
-  defp do_build_journey(query, journey, seen, max_steps, steps_limit) do
-    {:ok, candidates} = next_steps(query, journey, max_candidates: steps_limit)
+  defp do_build_journey(query, journey, seen, max_steps, max_candidates) do
+    {:ok, candidates} = next_steps(query, journey, max_candidates: max_candidates)
 
     case find_unseen_step(candidates, seen) do
       nil ->
@@ -139,7 +139,7 @@ defmodule Plausible.Stats.Exploration do
 
       step ->
         new_seen = MapSet.put(seen, normalize_step_key(step))
-        do_build_journey(query, journey ++ [step], new_seen, max_steps, steps_limit)
+        do_build_journey(query, journey ++ [step], new_seen, max_steps, max_candidates)
     end
   end
 
