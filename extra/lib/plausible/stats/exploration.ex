@@ -195,7 +195,7 @@ defmodule Plausible.Stats.Exploration do
         join: pname in fragment(@wildcard_array_join, em.pathname),
         on: true,
         hints: "ARRAY",
-        where: selected_as(:pathname) != "/*",
+        where: selected_as(:pathname) != "*",
         select: %{
           name: em.name,
           pathname: selected_as(fragment("concat(?, '*')", pname), :pathname),
