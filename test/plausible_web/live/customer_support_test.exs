@@ -186,7 +186,9 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
 
       test "search sites by tracker script ID", %{conn: conn} do
         site = new_site()
-        tracker_script_configuration = PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
+
+        tracker_script_configuration =
+          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
 
         {:ok, lv, _html} = live(conn, @cs_index)
 
