@@ -374,9 +374,7 @@ defmodule Plausible.Stats.Exploration do
 
   defp step_condition(step, count) do
     if String.contains?(step.pathname, "*") do
-      escaped = Filters.Utils.page_regex(step.pathname)
-
-      pattern = "^#{escaped}$"
+      pattern = Filters.Utils.page_regex(step.pathname)
 
       dynamic(
         [s],
