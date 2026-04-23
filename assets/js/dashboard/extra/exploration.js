@@ -26,7 +26,12 @@ function stateWithApplicableFilters(dashboardState, steps) {
 }
 
 function toJourney(steps) {
-  return steps.map((s) => ({ name: s.name, pathname: s.pathname }))
+  return steps.map((s) => ({
+    name: s.name,
+    pathname: s.pathname,
+    include_subpaths: s.include_subpaths,
+    subpaths_count: s.subpaths_count
+  }))
 }
 
 function fetchNextWithFunnel(

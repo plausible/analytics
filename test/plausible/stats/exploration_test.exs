@@ -845,11 +845,16 @@ defmodule Plausible.Stats.ExplorationTest do
       end
     end
 
-    test "implicit wildcard path visitors computation is correct" do
+    test "implicit wildcard path visitors computation is correct and consistent between next_step and journey_funnel" do
       now = DateTime.utc_now()
       site = new_site()
 
       populate_stats(site, [
+        build(:pageview,
+          user_id: 122,
+          pathname: "/aa",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
         build(:pageview,
           user_id: 123,
           pathname: "/a",
@@ -906,21 +911,27 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:ok,
               [
-                %{step: %{label: "/a*"}, visitors: 10},
+                %{step: %{label: "/a (4 pages)"}, visitors: 10},
                 %{step: %{label: "/a"}, visitors: 5},
-                %{step: %{label: "/a/b*"}, visitors: 3},
+                %{step: %{label: "/a/b (2 pages)"}, visitors: 3},
                 %{step: %{label: "/a/b"}, visitors: 2},
                 %{step: %{label: "/a/d"}, visitors: 2},
-                %{step: %{label: "/a/b/c"}, visitors: 1}
+                %{step: %{label: "/a/b/c"}, visitors: 1},
+                %{step: %{label: "/aa"}, visitors: 1}
               ]} = Exploration.next_steps(query, [])
 
       journey = [
-        %Exploration.Journey.Step{name: "pageview", pathname: "/a*"}
+        %Exploration.Journey.Step{
+          name: "pageview",
+          pathname: "/a",
+          include_subpaths: true,
+          subpaths_count: 4
+        }
       ]
 
       assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
 
-      assert step1.step.pathname == "/a*"
+      assert step1.step.label == "/a (4 pages)"
       assert step1.visitors == 10
     end
   end

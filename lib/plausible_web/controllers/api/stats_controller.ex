@@ -227,8 +227,18 @@ defmodule PlausibleWeb.Api.StatsController do
       |> then(&{:ok, &1})
     end
 
-    defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
-      Plausible.Stats.Exploration.Journey.Step.new(name, pathname)
+    defp parse_journey_step(%{
+           "name" => name,
+           "pathname" => pathname,
+           "include_subpaths" => include_subpaths,
+           "subpaths_count" => subpaths_count
+         }) do
+      Plausible.Stats.Exploration.Journey.Step.new(
+        name,
+        pathname,
+        include_subpaths,
+        subpaths_count
+      )
     end
 
     defp parse_exploration_direction("backward"), do: {:ok, :backward}

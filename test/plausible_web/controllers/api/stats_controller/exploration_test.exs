@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
   use Plausible
 
   on_ee do
+    alias Plausible.Stats.Exploration.Journey
+
     setup [:create_user, :log_in, :create_site]
 
     setup %{user: user, site: site} do
@@ -65,8 +67,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "it works", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -92,8 +94,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "it filters", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -111,7 +113,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       end
 
       test "it supports backward direction", %{conn: conn, site: site} do
-        journey = Jason.encode!([%{name: "pageview", pathname: "/logout"}])
+        journey = Jason.encode!([Journey.Step.new("pageview", "/logout")])
 
         resp =
           conn
@@ -134,9 +136,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "it works", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/logout"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/logout")
           ])
 
         resp =
@@ -175,9 +177,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "it supports backward direction", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/logout"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/home"}
+            Journey.Step.new("pageview", "/logout"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/home")
           ])
 
         resp =
@@ -216,8 +218,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "returns next steps without funnel by default", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -245,8 +247,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "filters next steps by search_term", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -265,7 +267,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       end
 
       test "supports backward direction for next steps", %{conn: conn, site: site} do
-        journey = Jason.encode!([%{name: "pageview", pathname: "/logout"}])
+        journey = Jason.encode!([Journey.Step.new("pageview", "/logout")])
 
         resp =
           conn
@@ -287,9 +289,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "includes funnel when include_funnel is true", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/logout"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/logout")
           ])
 
         resp =
@@ -332,9 +334,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       } do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/logout"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/home"}
+            Journey.Step.new("pageview", "/logout"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/home")
           ])
 
         resp =
