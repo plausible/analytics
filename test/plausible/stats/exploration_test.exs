@@ -450,7 +450,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [%{step: %{pathname: "/docs"}}]} =
-          Exploration.next_steps(query, journey, max_candidates: 1)
+                 Exploration.next_steps(query, journey, max_candidates: 1)
       end
 
       test "suggests the first step in the journey", %{site: site} do

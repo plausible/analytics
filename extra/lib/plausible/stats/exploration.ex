@@ -154,7 +154,8 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname("/"), do: "/"
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
-  defp next_steps_query(query, steps, search_term, direction, max_candidates) when is_direction(direction) do
+  defp next_steps_query(query, steps, search_term, direction, max_candidates)
+       when is_direction(direction) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx, direction)
 

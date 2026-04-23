@@ -181,7 +181,10 @@ defmodule PlausibleWeb.Api.StatsController do
       site = conn.assigns.site
       query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      case Plausible.Stats.Exploration.interesting_funnel(query, max_steps: params["max_steps"], max_candidates: params["max_candidates"]) do
+      case Plausible.Stats.Exploration.interesting_funnel(query,
+             max_steps: params["max_steps"],
+             max_candidates: params["max_candidates"]
+           ) do
         {:ok, funnel} -> json(conn, funnel)
         {:error, :not_found} -> json(conn, [])
       end
