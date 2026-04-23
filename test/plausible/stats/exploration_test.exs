@@ -848,5 +848,75 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.visitors == 2
       end
     end
+
+    test "implicit wildcard path visitors computation is correct" do
+      now = DateTime.utc_now()
+      site = new_site()
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 125,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 127,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a/b",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/a/b",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/a/d",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 127,
+          pathname: "/a/d",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a/b/c",
+          timestamp: DateTime.shift(now, minute: -240)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      assert {:ok,
+              [
+                %{step: %{label: "/a*"}, visitors: 10},
+                %{step: %{label: "/a"}, visitors: 5},
+                %{step: %{label: "/a/b*"}, visitors: 3},
+                %{step: %{label: "/a/b"}, visitors: 2},
+                %{step: %{label: "/a/d"}, visitors: 2},
+                %{step: %{label: "/a/b/c"}, visitors: 1}
+              ]} = Exploration.next_steps(query, [])
+    end
   end
 end
