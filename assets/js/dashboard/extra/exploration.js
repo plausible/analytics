@@ -52,11 +52,11 @@ function fetchNextWithFunnel(
   )
 }
 
-function fetchSuggestedJourney(site, dashboardState) {
+function fetchInterestingFunnel(site, dashboardState) {
   return api.post(
     url.apiPath(site, '/exploration/interesting-funnel'),
     dashboardState,
-    {}
+    { max_steps: 2, max_candidates: 6 }
   )
 }
 
@@ -219,55 +219,16 @@ export function FunnelExploration() {
   // real funnel response arrives. Prevents from flashing "0 visitors"
   // during the loading window.
   const [provisionalFunnelEntries, setProvisionalFunnelEntries] = useState({})
-  // track in flight "Suggest a journey" request
-  const [isSuggestingJourney, setIsSuggestingJourney] = useState(false)
-  // counter to detect and discard stale suggestion responses
-  const suggestionRequestIdRef = useRef(0)
   // Tracks the steps/direction/dashboardState values from the previous effect
   // run so we can tell whether the journey changed (needs funnel) or only the
   // search filter changed (next steps only, no funnel).
   const prevStepsRef = useRef(steps)
   const prevDirectionRef = useRef(direction)
   const prevDashboardStateRef = useRef(dashboardState)
-
-  function cancelPendingSuggestion() {
-    suggestionRequestIdRef.current += 1
-    setIsSuggestingJourney(false)
-  }
-
-  function handleSuggestJourney() {
-    if (isSuggestingJourney) {
-      return
-    }
-
-    const requestId = ++suggestionRequestIdRef.current
-    setIsSuggestingJourney(true)
-
-    fetchSuggestedJourney(site, dashboardState)
-      .then((response) => {
-        // newer request (or an explicit cancel)
-        if (suggestionRequestIdRef.current !== requestId) {
-          return
-        }
-
-        if (response && response.length > 0) {
-          setSteps(response.map(({ step }) => step))
-          setFunnel(response)
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (suggestionRequestIdRef.current === requestId) {
-          setIsSuggestingJourney(false)
-        }
-      })
-  }
+  const preloadFiredRef = useRef(false)
+  const funnelFromPreloadRef = useRef(false)
 
   function handleSelect(columnIndex, selected) {
-    if (isSuggestingJourney) {
-      cancelPendingSuggestion()
-    }
-
     // Reset the active-column filter whenever the journey changes
     setActiveColumnFilter('')
 
@@ -307,10 +268,6 @@ export function FunnelExploration() {
   function handleDirectionSelect(nextDirection) {
     if (nextDirection === direction) return
 
-    if (isSuggestingJourney) {
-      cancelPendingSuggestion()
-    }
-
     setDirection(nextDirection)
     setSteps(steps.toReversed())
     setFunnel([])
@@ -319,14 +276,13 @@ export function FunnelExploration() {
     setProvisionalFunnelEntries({})
   }
 
-  // Fetch next step suggestions (and funnel, if the journey changed) whenever
-  // the journey, direction, dashboard filters, or search term change.
-  // Funnel is only re-fetched when steps or direction/dashboardState change,
-  // search doesn't affect it.
+  // On first render fire the interesting-funnel preload and skip the normal
+  // next-with-funnel fetch. Once the preload resolves it sets steps
+  // and funnel, which re-triggers this effect for the next-step candidates fetch.
+  //
+  // On subsequent renders (via user interaction) fetch next steps and,
+  // if the journey changed, also refetch the funnel.
   useEffect(() => {
-    setActiveColumnLoading(true)
-    setActiveColumnResults([])
-
     const journeyChanged =
       prevStepsRef.current !== steps ||
       prevDirectionRef.current !== direction ||
@@ -336,13 +292,64 @@ export function FunnelExploration() {
     prevDirectionRef.current = direction
     prevDashboardStateRef.current = dashboardState
 
-    const includeFunnel = journeyChanged && steps.length > 0
+    let cancelled = false
+
+    if (!preloadFiredRef.current) {
+      preloadFiredRef.current = true
+      setActiveColumnLoading(true)
+
+      fetchInterestingFunnel(site, dashboardState)
+        .then((response) => {
+          if (cancelled) return
+          if (response && response.length > 0) {
+            funnelFromPreloadRef.current = true
+            setSteps(response.map(({ step }) => step))
+            setFunnel(response)
+          } else {
+            // Nothing to preload, fall back to a plain next-steps fetch
+            fetchNextWithFunnel(site, dashboardState, [], '', direction, false)
+              .then((r) => {
+                if (!cancelled) setActiveColumnResults(r?.next || [])
+              })
+              .catch(() => {
+                if (!cancelled) setActiveColumnResults([])
+              })
+              .finally(() => {
+                if (!cancelled) setActiveColumnLoading(false)
+              })
+          }
+        })
+        .catch(() => {
+          if (cancelled) return
+          fetchNextWithFunnel(site, dashboardState, [], '', direction, false)
+            .then((r) => {
+              if (!cancelled) setActiveColumnResults(r?.next || [])
+            })
+            .catch(() => {
+              if (!cancelled) setActiveColumnResults([])
+            })
+            .finally(() => {
+              if (!cancelled) setActiveColumnLoading(false)
+            })
+        })
+
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setActiveColumnLoading(true)
+    setActiveColumnResults([])
+
+    const funnelAlreadyLoaded = funnelFromPreloadRef.current
+    funnelFromPreloadRef.current = false
+
+    const includeFunnel =
+      journeyChanged && steps.length > 0 && !funnelAlreadyLoaded
 
     if (journeyChanged && steps.length === 0) {
       setFunnel([])
     }
-
-    let cancelled = false
 
     fetchNextWithFunnel(
       site,
@@ -393,16 +400,6 @@ export function FunnelExploration() {
           </h4>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          {steps.length === 0 &&
-            direction === EXPLORATION_DIRECTIONS.FORWARD && (
-              <button
-                onClick={handleSuggestJourney}
-                disabled={isSuggestingJourney}
-                className="text-xs font-medium text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200 disabled:opacity-50"
-              >
-                {isSuggestingJourney ? 'Suggesting...' : 'Suggest a journey'}
-              </button>
-            )}
           <div className="flex gap-1 overflow-hidden">
             <button
               onClick={() =>
