@@ -82,7 +82,7 @@ describe(`${getStaleTime.name}`, () => {
       ).toBe(CACHE_TTL_SHORT_ONGOING)
     })
 
-    it('for period=year and date=yesterday', () => {
+    it('for period=year and date=today', () => {
       expect(
         getStaleTime({ ...base, period: DashboardPeriod.year, date: today })
       ).toBe(CACHE_TTL_SHORT_ONGOING)
