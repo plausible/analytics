@@ -13,7 +13,6 @@ import {
 } from '../dashboard-time-periods'
 import { REALTIME_UPDATE_TIME_MS } from '../util/realtime-update-timer'
 import {
-  GetIntervalProps,
   Interval,
   validIntervals
 } from '../stats/graph/intervals'
