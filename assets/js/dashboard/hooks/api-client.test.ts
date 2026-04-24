@@ -23,13 +23,13 @@ const base = {
 
 describe(`${getStaleTime.name}`, () => {
   describe('realtime periods', () => {
-    it('for realtime', () => {
+    test('for realtime', () => {
       expect(getStaleTime({ ...base, period: DashboardPeriod.realtime })).toBe(
         CACHE_TTL_REALTIME
       )
     })
 
-    it('for realtime_30m', () => {
+    test('for realtime_30m', () => {
       expect(
         getStaleTime({ ...base, period: DashboardPeriod.realtime_30m })
       ).toBe(CACHE_TTL_REALTIME)
@@ -37,25 +37,25 @@ describe(`${getStaleTime.name}`, () => {
   })
 
   describe('historical periods (does not include today)', () => {
-    it('for 28d', () => {
+    test('for 28d', () => {
       expect(getStaleTime({ ...base, period: DashboardPeriod['28d'] })).toBe(
         CACHE_TTL_HISTORICAL
       )
     })
 
-    it('for 6mo', () => {
+    test('for 6mo', () => {
       expect(getStaleTime({ ...base, period: DashboardPeriod['6mo'] })).toBe(
         CACHE_TTL_HISTORICAL
       )
     })
 
-    it('for period=day and date=yesterday', () => {
+    test('for period=day and date=yesterday', () => {
       expect(
         getStaleTime({ ...base, period: DashboardPeriod.day, date: yesterday })
       ).toBe(CACHE_TTL_HISTORICAL)
     })
 
-    it('for custom period ending yesterday', () => {
+    test('for custom period ending yesterday', () => {
       expect(
         getStaleTime({
           ...base,
@@ -69,31 +69,31 @@ describe(`${getStaleTime.name}`, () => {
   })
 
   describe('ongoing periods with short TTL (supports day or shorter interval)', () => {
-    it('for today period', () => {
+    test('for today period', () => {
       expect(getStaleTime({ ...base, period: DashboardPeriod.day })).toBe(
         CACHE_TTL_SHORT_ONGOING
       )
     })
 
-    it('for 24h period', () => {
+    test('for 24h period', () => {
       expect(getStaleTime({ ...base, period: DashboardPeriod['24h'] })).toBe(
         CACHE_TTL_SHORT_ONGOING
       )
     })
 
-    it('for period=month and date=today', () => {
+    test('for period=month and date=today', () => {
       expect(
         getStaleTime({ ...base, period: DashboardPeriod.month, date: today })
       ).toBe(CACHE_TTL_SHORT_ONGOING)
     })
 
-    it('for period=year and date=today', () => {
+    test('for period=year and date=today', () => {
       expect(
         getStaleTime({ ...base, period: DashboardPeriod.year, date: today })
       ).toBe(CACHE_TTL_SHORT_ONGOING)
     })
 
-    it('for custom period under 12 months ending today', () => {
+    test('for custom period under 12 months ending today', () => {
       expect(
         getStaleTime({
           ...base,
@@ -104,7 +104,7 @@ describe(`${getStaleTime.name}`, () => {
       ).toBe(CACHE_TTL_SHORT_ONGOING)
     })
 
-    it('for all time period when stats begin recently', () => {
+    test('for all time period when stats begin recently', () => {
       expect(
         getStaleTime({
           ...base,
@@ -114,7 +114,7 @@ describe(`${getStaleTime.name}`, () => {
       ).toBe(CACHE_TTL_SHORT_ONGOING)
     })
 
-    it('for a historical period when comparison includes today', () => {
+    test('for a historical period when comparison includes today', () => {
       expect(
         getStaleTime({
           ...base,
@@ -129,7 +129,7 @@ describe(`${getStaleTime.name}`, () => {
   })
 
   describe('ongoing periods with long TTL (only week or month interval available)', () => {
-    it('for custom period over 12 months ending today', () => {
+    test('for custom period over 12 months ending today', () => {
       expect(
         getStaleTime({
           ...base,
@@ -140,7 +140,7 @@ describe(`${getStaleTime.name}`, () => {
       ).toBe(CACHE_TTL_LONG_ONGOING)
     })
 
-    it('for all time period when stats begin over 12 months ago', () => {
+    test('for all time period when stats begin over 12 months ago', () => {
       expect(
         getStaleTime({
           ...base,
