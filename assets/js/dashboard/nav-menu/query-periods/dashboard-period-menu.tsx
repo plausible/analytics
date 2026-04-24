@@ -34,7 +34,7 @@ import {
   hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
-import { formatISO, nowForSite } from '../../util/date'
+import { formatISO, now } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
 import { MovePeriodArrows, periodsWithArrows } from './move-period-arrows'
 
@@ -250,7 +250,7 @@ export const MainCalendar = ({
             closeDropdown()
           }}
           minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
+          maxDate={formatISO(now(site.offset))}
           defaultDates={
             dashboardState.from && dashboardState.to
               ? [formatISO(dashboardState.from), formatISO(dashboardState.to)]

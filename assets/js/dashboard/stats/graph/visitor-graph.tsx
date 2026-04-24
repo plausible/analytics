@@ -52,7 +52,11 @@ export default function VisitorGraph({
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime({ site, ...opts.dashboardState })
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
     }
   })
 
@@ -82,7 +86,11 @@ export default function VisitorGraph({
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime({ site, ...opts.dashboardState })
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
     }
   })
 

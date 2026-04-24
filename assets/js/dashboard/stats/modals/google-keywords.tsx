@@ -58,7 +58,8 @@ function GoogleKeywordsModal() {
     { results: GoogleKeywordItem[] },
     [string, { dashboardState: DashboardState; search: string }]
   >({
-    site,
+    siteTimezoneOffset: site.offset,
+    siteStatsBegin: site.statsBegin,
     key: [endpoint, { dashboardState, search }],
     getRequestParams: (key) => {
       const [_endpoint, { dashboardState, search }] = key

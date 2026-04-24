@@ -18,7 +18,7 @@ import {
   isToday,
   isTodayOrYesterday,
   lastMonth,
-  nowForSite,
+  now,
   parseNaiveDate,
   yesterday
 } from './util/date'
@@ -50,7 +50,8 @@ export enum ComparisonMode {
 }
 
 export type DashboardTimeSettings = {
-  site: Pick<PlausibleSite, 'offset' | 'statsBegin'>
+  siteTimezoneOffset: PlausibleSite['offset']
+  siteStatsBegin: PlausibleSite['statsBegin']
   date: DashboardState['date']
   period: DashboardState['period']
   from: DashboardState['from']
@@ -94,7 +95,7 @@ const PERIODS_EXCLUDING_NOW = [
 ]
 
 export function isHistoricalPeriod({
-  site,
+  siteTimezoneOffset,
   date,
   period,
   from,
@@ -103,7 +104,7 @@ export function isHistoricalPeriod({
   compare_from,
   compare_to
 }: DashboardTimeSettings) {
-  const startOfDay = nowForSite(site).startOf('day')
+  const startOfDay = now(siteTimezoneOffset).startOf('day')
 
   const mainPeriodIncludesToday =
     period === DashboardPeriod.custom && to && from
@@ -331,12 +332,12 @@ export const getDatePeriodGroups = ({
             ...s,
             ...clearedDateSearch,
             period: DashboardPeriod.day,
-            date: formatISO(nowForSite(site)),
+            date: formatISO(now(site.offset)),
             keybindHint: 'D'
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.day &&
-            isSameDate(dashboardState.date, nowForSite(site)),
+            isSameDate(dashboardState.date, now(site.offset)),
           onEvent
         }
       ],
@@ -347,12 +348,12 @@ export const getDatePeriodGroups = ({
             ...s,
             ...clearedDateSearch,
             period: DashboardPeriod.day,
-            date: formatISO(yesterday(site)),
+            date: formatISO(yesterday(site.offset)),
             keybindHint: 'E'
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.day &&
-            isSameDate(dashboardState.date, yesterday(site)),
+            isSameDate(dashboardState.date, yesterday(site.offset)),
           onEvent
         }
       ],
@@ -456,7 +457,7 @@ export const getDatePeriodGroups = ({
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.month &&
-            isSameMonth(dashboardState.date, nowForSite(site)),
+            isSameMonth(dashboardState.date, now(site.offset)),
           onEvent
         }
       ],

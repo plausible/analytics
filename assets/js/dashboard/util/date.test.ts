@@ -4,7 +4,7 @@ import {
   formatTime,
   formatMonthYYYY,
   formatISO,
-  nowForSite,
+  now,
   parseNaiveDate,
   shiftMonths,
   yesterday
@@ -12,7 +12,7 @@ import {
 
 jest.useFakeTimers()
 
-describe(`${nowForSite.name} and ${formatISO.name}`, () => {
+describe(`${now.name} and ${formatISO.name}`, () => {
   /* prettier-ignore */
   const cases = [
     [ 'Los Angeles/America', -3600 * 6, '2024-11-01T20:00:00.000Z', '2024-11-01' ],
@@ -22,7 +22,7 @@ describe(`${nowForSite.name} and ${formatISO.name}`, () => {
     'in timezone of %s (offset %p) at %s, today is %s',
     (_tz, offset, utcTime, expectedToday) => {
       jest.setSystemTime(new Date(utcTime))
-      expect(formatISO(nowForSite({ offset }))).toEqual(expectedToday)
+      expect(formatISO(now(offset))).toEqual(expectedToday)
     }
   )
 })
@@ -94,11 +94,11 @@ for (const [timezone, suite] of sets) {
       ) => {
         jest.setSystemTime(new Date(utcTime))
         expect({
-          today: formatISO(nowForSite({ offset })),
-          yesterday: formatISO(yesterday({ offset })),
-          twoMonthsBack: formatISO(shiftMonths(nowForSite({ offset }), -2)),
-          twoMonthsAhead: formatISO(shiftMonths(nowForSite({ offset }), 2)),
-          oneYearBack: formatISO(shiftMonths(nowForSite({ offset }), -12))
+          today: formatISO(now(offset)),
+          yesterday: formatISO(yesterday(offset)),
+          twoMonthsBack: formatISO(shiftMonths(now(offset), -2)),
+          twoMonthsAhead: formatISO(shiftMonths(now(offset), 2)),
+          oneYearBack: formatISO(shiftMonths(now(offset), -12))
         }).toEqual({
           today: expectedToday,
           yesterday: expectedYesterday,

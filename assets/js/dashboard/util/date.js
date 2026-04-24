@@ -11,10 +11,6 @@ export function is12HourClock() {
   return browserDateFormat.resolvedOptions().hour12
 }
 
-export function utcNow() {
-  return dayjs()
-}
-
 // https://stackoverflow.com/a/50130338
 export function formatISO(date) {
   return date.format('YYYY-MM-DD')
@@ -90,16 +86,20 @@ export function dateForSite(utcDateString, site) {
   return dayjs.utc(utcDateString).utcOffset(site.offset / 60)
 }
 
-export function nowForSite(site) {
-  return dayjs.utc().utcOffset(site.offset / 60)
+export function utcNow() {
+  return dayjs.utc()
 }
 
-export function yesterday(site) {
-  return shiftDays(nowForSite(site), -1)
+export function now(offset) {
+  return utcNow().utcOffset(offset / 60)
+}
+
+export function yesterday(offset) {
+  return shiftDays(now(offset), -1)
 }
 
 export function lastMonth(site) {
-  return shiftMonths(nowForSite(site), -1)
+  return shiftMonths(now(site.offset), -1)
 }
 
 export function isSameDate(date1, date2) {
@@ -111,7 +111,7 @@ export function isSameMonth(date1, date2) {
 }
 
 export function isToday(site, date) {
-  return isSameDate(date, nowForSite(site))
+  return isSameDate(date, now(site.offset))
 }
 
 export function isTodayOrYesterday(isoDate) {
@@ -121,11 +121,11 @@ export function isTodayOrYesterday(isoDate) {
 }
 
 export function isThisMonth(site, date) {
-  return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
+  return formatMonthYYYY(date) === formatMonthYYYY(now(site.offset))
 }
 
 export function isThisYear(site, date) {
-  return date.year() === nowForSite(site).year()
+  return date.year() === now(site.offset).year()
 }
 
 export function isBefore(date1, date2, period) {

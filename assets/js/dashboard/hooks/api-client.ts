@@ -45,14 +45,16 @@ export function usePaginatedGetAPI<
   TResponse extends { results: unknown[] },
   TKey extends PaginatedQueryKeyBase = PaginatedQueryKeyBase
 >({
-  site,
+  siteTimezoneOffset,
+  siteStatsBegin,
   key,
   getRequestParams,
   afterFetchData,
   afterFetchNextPage,
   initialPageParam = 1
 }: {
-  site: DashboardTimeSettings['site']
+  siteTimezoneOffset: DashboardTimeSettings['siteTimezoneOffset']
+  siteStatsBegin: DashboardTimeSettings['siteStatsBegin']
   key: TKey
   getRequestParams: GetRequestParams<TKey>
   afterFetchData?: (response: TResponse) => void
@@ -104,7 +106,11 @@ export function usePaginatedGetAPI<
     },
     staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime({ site, ...opts.dashboardState })
+      return getStaleTime({
+        siteTimezoneOffset: siteTimezoneOffset,
+        siteStatsBegin: siteStatsBegin,
+        ...opts.dashboardState
+      })
     },
     initialPageParam,
     placeholderData: (previousData) => previousData

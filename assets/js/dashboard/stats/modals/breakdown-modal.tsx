@@ -107,7 +107,8 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       { dashboardState: DashboardState; search: string; orderBy: OrderBy }
     ]
   >({
-    site,
+    siteTimezoneOffset: site.offset,
+    siteStatsBegin: site.statsBegin,
     key: [reportInfo.endpoint, { dashboardState, search, orderBy }],
     getRequestParams: (key) => {
       const [_endpoint, { dashboardState, search }] = key

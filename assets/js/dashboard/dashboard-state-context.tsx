@@ -5,7 +5,7 @@ import * as api from './api'
 import { useSiteContext } from './site-context'
 import { parseSearch } from './util/url-search-params'
 import dayjs from 'dayjs'
-import { nowForSite, yesterday } from './util/date'
+import { now, yesterday } from './util/date'
 import {
   getDashboardTimeSettings,
   getSavedTimePreferencesFromStorage,
@@ -95,18 +95,18 @@ export default function DashboardStateContextProvider({
       date:
         typeof date === 'string' && date.length
           ? dayjs.utc(date)
-          : nowForSite(site).startOf('day'),
+          : now(site.offset).startOf('day'),
       from:
         typeof from === 'string' && from.length
           ? dayjs.utc(from)
           : timeSettings.period === DashboardPeriod.custom
-            ? yesterday(site)
+            ? yesterday(site.offset)
             : defaultValues.from,
       to:
         typeof to === 'string' && to.length
           ? dayjs.utc(to)
           : timeSettings.period === DashboardPeriod.custom
-            ? nowForSite(site)
+            ? now(site.offset)
             : defaultValues.to,
       with_imported: [true, false].includes(with_imported as boolean)
         ? (with_imported as boolean)

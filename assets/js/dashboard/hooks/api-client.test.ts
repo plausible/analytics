@@ -1,6 +1,5 @@
-import { DEFAULT_SITE } from '../../../test-utils/app-context-providers'
 import { ComparisonMode, DashboardPeriod } from '../dashboard-time-periods'
-import { formatISO, nowForSite } from '../util/date'
+import { formatISO, utcNow } from '../util/date'
 import {
   CACHE_TTL_HISTORICAL,
   CACHE_TTL_LONG_ONGOING,
@@ -9,12 +8,18 @@ import {
   getStaleTime
 } from './api-client'
 
-const site = DEFAULT_SITE
-const today = nowForSite(site)
-const yesterday = nowForSite(site).subtract(1, 'day')
+const today = utcNow()
+const yesterday = utcNow().subtract(1, 'day')
 
 const noComparison = { comparison: null, compare_from: null, compare_to: null }
-const base = { site, date: null, from: null, to: null, ...noComparison }
+const base = {
+  siteStatsBegin: '',
+  siteTimezoneOffset: 0,
+  date: null,
+  from: null,
+  to: null,
+  ...noComparison
+}
 
 describe(`${getStaleTime.name}`, () => {
   describe('realtime periods', () => {
@@ -100,14 +105,10 @@ describe(`${getStaleTime.name}`, () => {
     })
 
     it('for all time period when stats begin recently', () => {
-      const siteWithRecentStats = {
-        ...DEFAULT_SITE,
-        statsBegin: formatISO(yesterday)
-      }
       expect(
         getStaleTime({
           ...base,
-          site: siteWithRecentStats,
+          siteStatsBegin: formatISO(yesterday),
           period: DashboardPeriod.all
         })
       ).toBe(CACHE_TTL_SHORT_ONGOING)
@@ -140,11 +141,10 @@ describe(`${getStaleTime.name}`, () => {
     })
 
     it('for all time period when stats begin over 12 months ago', () => {
-      const siteWithOldStats = { ...DEFAULT_SITE, statsBegin: '2020-01-01' }
       expect(
         getStaleTime({
           ...base,
-          site: siteWithOldStats,
+          siteStatsBegin: '2020-01-01',
           period: DashboardPeriod.all
         })
       ).toBe(CACHE_TTL_LONG_ONGOING)
