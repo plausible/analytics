@@ -152,11 +152,7 @@ export const getStaleTime = (props: DashboardTimeSettings): number => {
     return CACHE_TTL_HISTORICAL
   }
 
-  const availableIntervals = validIntervals(
-    Object.fromEntries(
-      Object.entries(props).filter(([k, _v]) => k !== 'date')
-    ) as GetIntervalProps
-  )
+  const availableIntervals = validIntervals(props)
 
   if (
     availableIntervals.includes(Interval.day) ||
