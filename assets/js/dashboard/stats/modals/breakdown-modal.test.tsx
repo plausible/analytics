@@ -59,7 +59,9 @@ describe('BreakdownModal', () => {
     expect(pagesHandler).toHaveBeenCalledTimes(1)
     expect(pagesHandler).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining('order_by=%5B%5B%22visitors%22%2C%22desc%22%5D%5D&limit=100&page=1'),
+      expect.stringContaining(
+        'order_by=%5B%5B%22visitors%22%2C%22desc%22%5D%5D&limit=100&page=1'
+      ),
       expect.anything()
     )
 

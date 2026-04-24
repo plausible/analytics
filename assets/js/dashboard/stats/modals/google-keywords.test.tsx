@@ -1,38 +1,29 @@
 import React, { useState, Dispatch, SetStateAction } from 'react'
-import { act, render, waitFor } from '@testing-library/react'
-import {
-  mockAnimationsApi,
-  mockResizeObserver,
-  mockIntersectionObserver
-} from 'jsdom-testing-mocks'
+import { act, render, screen } from '@testing-library/react'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import GoogleKeywordsModal from './google-keywords'
+import { MockAPI } from '../../../../test-utils/mock-api'
 
-mockAnimationsApi()
-mockResizeObserver()
-mockIntersectionObserver()
+const domain = 'dummy.site'
 
-const fetchMock = jest.fn()
+let mockAPI: MockAPI
 
 beforeAll(() => {
-  globalThis.fetch = fetchMock
+  mockAPI = new MockAPI().start()
+})
+
+afterAll(() => {
+  mockAPI.stop()
+})
+
+beforeEach(() => {
+  mockAPI.clear()
 })
 
 beforeEach(() => {
   const modalRoot = document.createElement('div')
   modalRoot.setAttribute('id', 'modal_root')
   document.body.appendChild(modalRoot)
-
-  fetchMock.mockImplementation((url: string) => {
-    if (url.includes('/referrers/Google/')) {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({ results: [] })
-      })
-    }
-    throw new Error(`Unmocked request: ${url}`)
-  })
 })
 
 afterEach(() => {
@@ -41,27 +32,40 @@ afterEach(() => {
 
 describe('GoogleKeywordsModal', () => {
   test('opening the modal for a second time with the same dashboardState gets response from cache', async () => {
+    const googleKeywordsHandler = mockAPI.get(
+      `/api/stats/${domain}/referrers/Google/`,
+      { results: [] }
+    )
+
     let setOpen: Dispatch<SetStateAction<boolean>>
 
     function ToggleableModal() {
-      const [open, s] = useState(true)
+      const [open, s] = useState(false)
       setOpen = s
       return open ? <GoogleKeywordsModal /> : null
     }
 
     render(
-      <TestContextProviders>
+      <TestContextProviders siteOptions={{ domain }}>
         <ToggleableModal />
       </TestContextProviders>
     )
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(googleKeywordsHandler).toHaveBeenCalledTimes(0)
+    act(() => setOpen(true))
+    expect(screen.getByText('Google search terms')).toBeVisible()
+    expect(googleKeywordsHandler).toHaveBeenCalledTimes(1)
+    expect(googleKeywordsHandler).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('limit=100'),
+      expect.anything()
+    )
 
     act(() => setOpen(false))
+    expect(screen.queryByText('Google search terms')).not.toBeInTheDocument()
     act(() => setOpen(true))
+    expect(screen.getByText('Google search terms')).toBeVisible()
 
-    await act(async () => {})
-
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(googleKeywordsHandler).toHaveBeenCalledTimes(1)
   })
 })
