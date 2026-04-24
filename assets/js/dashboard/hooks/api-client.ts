@@ -12,10 +12,7 @@ import {
   isHistoricalPeriod
 } from '../dashboard-time-periods'
 import { REALTIME_UPDATE_TIME_MS } from '../util/realtime-update-timer'
-import {
-  Interval,
-  validIntervals
-} from '../stats/graph/intervals'
+import { Interval, validIntervals } from '../stats/graph/intervals'
 
 // define (in ms) when query API responses should become stale
 export const CACHE_TTL_REALTIME = REALTIME_UPDATE_TIME_MS
