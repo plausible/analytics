@@ -59,8 +59,6 @@ export class MockAPI {
       const urlWithoutQueryString = input.split('?')[0]
       const handler = this.getHandler(method, urlWithoutQueryString)
       if (!handler) {
-        console.log(input, 'no handler')
-
         throw new Error(
           `Unmocked request ${method.toString()} ${input.toString()}`
         )
