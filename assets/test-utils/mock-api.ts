@@ -22,7 +22,7 @@ export class MockAPI {
   // sets get handler
   public get(
     urlWithoutQueryString: string,
-    responseHandler: typeof fetch | Record<string, unknown>
+    responseHandler: typeof fetch | Record<string, unknown> | number | null
   ): jest.Mock {
     const handler: typeof fetch =
       typeof responseHandler === 'function'
