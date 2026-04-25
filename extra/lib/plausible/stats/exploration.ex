@@ -218,7 +218,7 @@ defmodule Plausible.Stats.Exploration do
           visitors: selected_as(fragment("sum(?)", em.visitors), :visitors),
           unique_paths: fragment("uniq(?)", em.pathname)
         },
-        group_by: [em.name, fragment("?", pname)]
+        group_by: [em.name, selected_as(:pathname)]
       )
 
     q_wildcard_filtered_matches =
