@@ -189,7 +189,7 @@ defmodule Plausible.Stats.Exploration do
         select: %{
           name: selected_as(field(s, ^next_name), :name),
           pathname: selected_as(field(s, ^next_pathname), :pathname),
-          visitors: scale_sample(fragment("uniq(?)", s.user_id)),
+          visitors: scale_sample(fragment("uniqExact(?)", s.user_id)),
           include_subpaths: type(^false, :boolean),
           subpaths_count: 0
         },
@@ -216,7 +216,7 @@ defmodule Plausible.Stats.Exploration do
           name: em.name,
           pathname: selected_as(fragment("?", pname), :pathname),
           visitors: selected_as(fragment("sum(?)", em.visitors), :visitors),
-          unique_paths: fragment("uniq(?)", em.pathname)
+          unique_paths: fragment("uniqExact(?)", em.pathname)
         },
         group_by: [em.name, selected_as(:pathname)]
       )
@@ -286,7 +286,7 @@ defmodule Plausible.Stats.Exploration do
 
         from(e in q,
           select_merge: %{
-            1 => scale_sample(fragment("uniq(?, ?, ?)", e.user_id, e.name1, e.pathname1))
+            1 => scale_sample(fragment("uniqExact(?, ?, ?)", e.user_id, e.name1, e.pathname1))
           },
           where: ^step_condition
         )
@@ -307,7 +307,7 @@ defmodule Plausible.Stats.Exploration do
             [e],
             scale_sample(
               fragment(
-                "uniqIf(?, ?, ?, ?)",
+                "uniqExactIf(?, ?, ?, ?)",
                 e.user_id,
                 field(e, ^:"name#{idx + 1}"),
                 field(e, ^:"pathname#{idx + 1}"),
