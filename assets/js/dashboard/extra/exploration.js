@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
+import { Tooltip } from '../util/tooltip'
 import { useDebounce } from '../custom-hooks'
 import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
@@ -172,7 +173,9 @@ function ExplorationColumn({
                       {step.label}
                     </span>
                     <span className="shrink-0 text-gray-800 dark:text-gray-200 tabular-nums">
-                      {numberShortFormatter(visitorsToShow)}
+                      <Tooltip info={visitorsToShow}>
+                        {numberShortFormatter(visitorsToShow)}
+                      </Tooltip>
                     </span>
                   </div>
                   <div
