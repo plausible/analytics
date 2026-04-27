@@ -206,30 +206,42 @@ defmodule Plausible.Stats.Exploration do
     next_name = :"name#{next_step_idx}"
     next_pathname = :"pathname#{next_step_idx}"
 
-    q_exact_matches =
+    q_matches =
       from(s in subquery(q_steps),
         where: selected_as(:name) != "",
         select: %{
           name: selected_as(field(s, ^next_name), :name),
-          pathname: selected_as(field(s, ^next_pathname), :pathname),
-          visitors: scale_sample(fragment("uniqExact(?)", s.user_id)),
+          pathname: selected_as(field(s, ^next_pathname), :pathname)
+        }
+      )
+
+    q_matches =
+      steps
+      |> Enum.with_index()
+      |> Enum.reduce(q_matches, fn {step, idx}, q ->
+        step_condition = step_condition(step, idx + 1)
+
+        from(s in q, where: ^step_condition)
+      end)
+
+    q_exact_matches =
+      from(m in q_matches,
+        select_merge: %{
+          visitors: scale_sample(fragment("uniqExact(?)", m.user_id)),
           include_subpaths: type(^false, :boolean),
           subpaths_count: 0
         },
         group_by: [selected_as(:name), selected_as(:pathname)]
       )
 
-    q_exact_matches =
-      steps
-      |> Enum.with_index()
-      |> Enum.reduce(q_exact_matches, fn {step, idx}, q ->
-        step_condition = step_condition(step, idx + 1)
-
-        from(s in q, where: ^step_condition)
-      end)
+    q_per_user_matches =
+      from(m in q_matches,
+        select_merge: %{user_id: m.user_id},
+        group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
+      )
 
     q_wildcard_matches =
-      from(em in subquery(q_exact_matches),
+      from(em in subquery(q_per_user_matches),
         join: pname in fragment(@wildcard_array_join, em.pathname),
         on: true,
         hints: "ARRAY",
@@ -238,7 +250,7 @@ defmodule Plausible.Stats.Exploration do
         select: %{
           name: em.name,
           pathname: selected_as(fragment("?", pname), :pathname),
-          visitors: selected_as(fragment("sum(?)", em.visitors), :visitors),
+          visitors: selected_as(fragment("uniqExact(?)", em.user_id), :visitors),
           unique_paths: fragment("uniqExact(?)", em.pathname)
         },
         group_by: [em.name, selected_as(:pathname)]
@@ -309,7 +321,7 @@ defmodule Plausible.Stats.Exploration do
 
         from(e in q,
           select_merge: %{
-            1 => scale_sample(fragment("uniqExact(?, ?, ?)", e.user_id, e.name1, e.pathname1))
+            1 => scale_sample(fragment("uniqExact(?)", e.user_id))
           },
           where: ^step_condition
         )
@@ -330,10 +342,8 @@ defmodule Plausible.Stats.Exploration do
             [e],
             scale_sample(
               fragment(
-                "uniqExactIf(?, ?, ?, ?)",
+                "uniqExactIf(?, ?)",
                 e.user_id,
-                field(e, ^:"name#{idx + 1}"),
-                field(e, ^:"pathname#{idx + 1}"),
                 ^step_conditions
               )
             )

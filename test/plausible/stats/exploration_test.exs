@@ -928,21 +928,28 @@ defmodule Plausible.Stats.ExplorationTest do
           user_id: 123,
           pathname: "/a/b/c",
           timestamp: DateTime.shift(now, minute: -240)
+        ),
+        build(:pageview,
+          user_id: 128,
+          pathname: "/a/b/c",
+          timestamp: DateTime.shift(now, minute: -240)
         )
       ])
 
       query = QueryBuilder.build!(site, input_date_range: :all)
 
+      result = Exploration.next_steps(query, [])
+
       assert {:ok,
               [
-                %{step: %{label: "/a" <> @wildcard_suffix <> " (4 pages)"}, visitors: 10},
+                %{step: %{label: "/a" <> @wildcard_suffix <> " (4 pages)"}, visitors: 6},
                 %{step: %{label: "/a"}, visitors: 5},
                 %{step: %{label: "/a/b" <> @wildcard_suffix <> " (2 pages)"}, visitors: 3},
                 %{step: %{label: "/a/b"}, visitors: 2},
+                %{step: %{label: "/a/b/c"}, visitors: 2},
                 %{step: %{label: "/a/d"}, visitors: 2},
-                %{step: %{label: "/a/b/c"}, visitors: 1},
                 %{step: %{label: "/aa"}, visitors: 1}
-              ]} = Exploration.next_steps(query, [])
+              ]} = result
 
       journey = [
         %Exploration.Journey.Step{
@@ -956,7 +963,7 @@ defmodule Plausible.Stats.ExplorationTest do
       assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
 
       assert step1.step.label == "/a#{@wildcard_suffix} (4 pages)"
-      assert step1.visitors == 10
+      assert step1.visitors == 6
     end
   end
 end
