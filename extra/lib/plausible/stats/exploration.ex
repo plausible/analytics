@@ -67,7 +67,12 @@ defmodule Plausible.Stats.Exploration do
           conversion_rate_step: String.t()
         }
 
+  @wildcard_suffix "…"
+
   @next_steps_defaults [search_term: "", direction: :forward, max_candidates: 10]
+
+  @spec wildcard_suffix() :: String.t()
+  def wildcard_suffix, do: @wildcard_suffix
 
   @spec next_steps(Query.t(), journey(), keyword()) :: {:ok, [next_step()]}
   def next_steps(query, journey, opts \\ []) do
@@ -228,7 +233,7 @@ defmodule Plausible.Stats.Exploration do
         where: wm.unique_paths > 1 and (is_nil(emx.name) or wm.visitors != emx.visitors),
         select: %{
           name: wm.name,
-          pathname: fragment("concat(?, '...')", wm.pathname),
+          pathname: fragment("concat(?, ?)", wm.pathname, @wildcard_suffix),
           visitors: wm.visitors,
           include_subpaths: type(^true, :boolean),
           subpaths_count: wm.unique_paths
@@ -411,7 +416,7 @@ defmodule Plausible.Stats.Exploration do
     if step.include_subpaths do
       escaped =
         step.pathname
-        |> String.trim_trailing("...")
+        |> String.trim_trailing(@wildcard_suffix)
         |> Regex.escape()
 
       pattern = "^#{escaped}(/.+)?$"
