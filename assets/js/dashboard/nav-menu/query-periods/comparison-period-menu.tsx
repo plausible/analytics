@@ -26,7 +26,7 @@ import {
   hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
-import { formatISO, nowForSite } from '../../util/date'
+import { formatISO, now } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
 
 export const ComparisonPeriodMenuItems = ({
@@ -169,7 +169,7 @@ export const ComparisonCalendarMenu = ({
             closeDropdown()
           }}
           minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
+          maxDate={formatISO(now(site.offset))}
           defaultDates={
             dashboardState.compare_from && dashboardState.compare_to
               ? [

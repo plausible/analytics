@@ -7,6 +7,8 @@ import {
   validIntervals,
   getDefaultInterval
 } from './intervals'
+import { PlausibleSite } from '../../site-context'
+import { DashboardPeriod } from '../../dashboard-time-periods'
 
 const INTERVAL_LABELS: Record<Interval, string> = {
   [Interval.minute]: 'Min',
@@ -16,8 +18,18 @@ const INTERVAL_LABELS: Record<Interval, string> = {
   [Interval.month]: 'Months'
 }
 
-function getStoredInterval(period: string, domain: string): string | null {
-  const stored = storage.getItem(`interval__${period}__${domain}`)
+function getIntervalStorageKey(
+  domain: PlausibleSite['domain'],
+  period: DashboardPeriod
+) {
+  return `interval__${period}__${domain}`
+}
+
+function getStoredInterval(
+  domain: PlausibleSite['domain'],
+  period: DashboardPeriod
+): string | null {
+  const stored = storage.getItem(getIntervalStorageKey(domain, period))
 
   if (stored === 'date') {
     return 'day'
@@ -27,15 +39,18 @@ function getStoredInterval(period: string, domain: string): string | null {
 }
 
 function storeInterval(
-  period: string,
-  domain: string,
+  domain: PlausibleSite['domain'],
+  period: DashboardPeriod,
   interval: Interval
 ): void {
-  storage.setItem(`interval__${period}__${domain}`, interval)
+  storage.setItem(getIntervalStorageKey(domain, period), interval)
 }
 
-export const useStoredInterval = (props: GetIntervalProps) => {
-  const { period, from, to, site, comparison, compare_from, compare_to } = props
+export const useStoredInterval = (
+  props: Pick<PlausibleSite, 'domain'> & GetIntervalProps
+) => {
+  const { domain, period, from, to, comparison, compare_from, compare_to } =
+    props
 
   // Dayjs objects are new references on every render, so we
   // use valueOf() (ms since epoch) to get stable primitive
@@ -52,7 +67,6 @@ export const useStoredInterval = (props: GetIntervalProps) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    site,
     period,
     customFrom,
     customTo,
@@ -77,7 +91,7 @@ export const useStoredInterval = (props: GetIntervalProps) => {
     [storableIntervals]
   )
 
-  const storedInterval = getStoredInterval(period, site.domain)
+  const storedInterval = getStoredInterval(domain, period)
 
   const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
 
@@ -88,11 +102,11 @@ export const useStoredInterval = (props: GetIntervalProps) => {
   const onIntervalClick = useCallback(
     (interval: Interval) => {
       if (isStorable(interval)) {
-        storeInterval(period, site.domain, interval)
+        storeInterval(domain, period, interval)
       }
       setSelectedInterval(interval)
     },
-    [period, site, isStorable]
+    [domain, period, isStorable]
   )
 
   return {

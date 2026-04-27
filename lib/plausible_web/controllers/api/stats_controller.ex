@@ -151,8 +151,8 @@ defmodule PlausibleWeb.Api.StatsController do
              ) do
         json(conn, next_steps)
       else
-        _ ->
-          bad_request(conn, "There was an error with your request")
+        {:error, :journey_too_long} ->
+          bad_request(conn, "The journey is too long")
       end
     end
 
@@ -167,13 +167,10 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, :empty_journey} ->
-          bad_request(
-            conn,
-            "We are unable to show funnels when journey is empty",
-            %{
-              level: :normal
-            }
-          )
+          bad_request(conn, "We are unable to show funnels when journey is empty")
+
+        {:error, :journey_too_long} ->
+          bad_request(conn, "The journey is too long")
       end
     end
 
@@ -227,8 +224,18 @@ defmodule PlausibleWeb.Api.StatsController do
       |> then(&{:ok, &1})
     end
 
-    defp parse_journey_step(%{"name" => name, "pathname" => pathname}) do
-      Plausible.Stats.Exploration.Journey.Step.new(name, pathname)
+    defp parse_journey_step(%{
+           "name" => name,
+           "pathname" => pathname,
+           "includes_subpaths" => includes_subpaths,
+           "subpaths_count" => subpaths_count
+         }) do
+      Plausible.Stats.Exploration.Journey.Step.new(
+        name,
+        pathname,
+        includes_subpaths,
+        subpaths_count
+      )
     end
 
     defp parse_exploration_direction("backward"), do: {:ok, :backward}

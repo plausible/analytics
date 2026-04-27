@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
   use Plausible
 
   on_ee do
+    alias Plausible.Stats.Exploration.Journey
+
     setup [:create_user, :log_in, :create_site]
 
     setup %{user: user, site: site} do
@@ -62,11 +64,11 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
     end
 
     describe "exploration_next/2" do
-      test "it works", %{conn: conn, site: site} do
+      test "returns suggestions for the next step", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -78,22 +80,39 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
           |> json_response(200)
 
         assert [next_step1, next_step2, next_step3] = resp
-        assert next_step1["step"]["label"] == "Visit /docs"
+        assert next_step1["step"]["label"] == "/docs"
         assert next_step1["step"]["pathname"] == "/docs"
         assert next_step1["visitors"] == 1
-        assert next_step2["step"]["label"] == "Visit /home"
+        assert next_step2["step"]["label"] == "/home"
         assert next_step2["step"]["pathname"] == "/home"
         assert next_step2["visitors"] == 1
-        assert next_step3["step"]["label"] == "Visit /logout"
+        assert next_step3["step"]["label"] == "/logout"
         assert next_step3["step"]["pathname"] == "/logout"
         assert next_step3["visitors"] == 1
       end
 
-      test "it filters", %{conn: conn, site: site} do
+      test "returns error on too long journey", %{conn: conn, site: site} do
+        journey =
+          Jason.encode!(
+            Enum.map(1..20, fn idx -> Journey.Step.new("pageview", "/page#{idx}") end)
+          )
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "The journey is too long"
+      end
+
+      test "allows filtering suggestions", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -110,8 +129,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert next_step["visitors"] == 1
       end
 
-      test "it supports backward direction", %{conn: conn, site: site} do
-        journey = Jason.encode!([%{name: "pageview", pathname: "/logout"}])
+      test "supports backward direction", %{conn: conn, site: site} do
+        journey = Jason.encode!([Journey.Step.new("pageview", "/logout")])
 
         resp =
           conn
@@ -131,12 +150,12 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
     end
 
     describe "exploration_funnel/2" do
-      test "it works", %{conn: conn, site: site} do
+      test "returns a funnel", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/logout"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/logout")
           ])
 
         resp =
@@ -149,21 +168,21 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         assert [step1, step2, step3] = resp
 
-        assert step1["step"]["label"] == "Visit /home"
+        assert step1["step"]["label"] == "/home"
         assert step1["step"]["pathname"] == "/home"
         assert step1["visitors"] == 2
         assert step1["dropoff"] == 0
         assert step1["dropoff_percentage"] == "0"
         assert step1["conversion_rate"] == "100"
         assert step1["conversion_rate_step"] == "0"
-        assert step2["step"]["label"] == "Visit /login"
+        assert step2["step"]["label"] == "/login"
         assert step2["step"]["pathname"] == "/login"
         assert step2["visitors"] == 2
         assert step2["dropoff"] == 0
         assert step2["dropoff_percentage"] == "0"
         assert step2["conversion_rate"] == "100"
         assert step2["conversion_rate_step"] == "100"
-        assert step3["step"]["label"] == "Visit /logout"
+        assert step3["step"]["label"] == "/logout"
         assert step3["step"]["pathname"] == "/logout"
         assert step3["visitors"] == 1
         assert step3["dropoff"] == 1
@@ -172,12 +191,41 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert step3["conversion_rate_step"] == "50"
       end
 
-      test "it supports backward direction", %{conn: conn, site: site} do
+      test "returns error on too long journey", %{conn: conn, site: site} do
+        journey =
+          Jason.encode!(
+            Enum.map(1..21, fn idx -> Journey.Step.new("pageview", "/page#{idx}") end)
+          )
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "The journey is too long"
+      end
+
+      test "returns error on empty journey", %{conn: conn, site: site} do
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => Jason.encode!([]),
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "We are unable to show funnels when journey is empty"
+      end
+
+      test "supports backward direction", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/logout"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/home"}
+            Journey.Step.new("pageview", "/logout"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/home")
           ])
 
         resp =
@@ -216,8 +264,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "returns next steps without funnel by default", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -229,13 +277,13 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
           |> json_response(200)
 
         assert [next_step1, next_step2, next_step3] = resp["next"]
-        assert next_step1["step"]["label"] == "Visit /docs"
+        assert next_step1["step"]["label"] == "/docs"
         assert next_step1["step"]["pathname"] == "/docs"
         assert next_step1["visitors"] == 1
-        assert next_step2["step"]["label"] == "Visit /home"
+        assert next_step2["step"]["label"] == "/home"
         assert next_step2["step"]["pathname"] == "/home"
         assert next_step2["visitors"] == 1
-        assert next_step3["step"]["label"] == "Visit /logout"
+        assert next_step3["step"]["label"] == "/logout"
         assert next_step3["step"]["pathname"] == "/logout"
         assert next_step3["visitors"] == 1
 
@@ -245,8 +293,8 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "filters next steps by search_term", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login")
           ])
 
         resp =
@@ -265,7 +313,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       end
 
       test "supports backward direction for next steps", %{conn: conn, site: site} do
-        journey = Jason.encode!([%{name: "pageview", pathname: "/logout"}])
+        journey = Jason.encode!([Journey.Step.new("pageview", "/logout")])
 
         resp =
           conn
@@ -287,9 +335,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       test "includes funnel when include_funnel is true", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/home"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/logout"}
+            Journey.Step.new("pageview", "/home"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/logout")
           ])
 
         resp =
@@ -303,21 +351,21 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
 
         assert [step1, step2, step3] = resp["funnel"]
 
-        assert step1["step"]["label"] == "Visit /home"
+        assert step1["step"]["label"] == "/home"
         assert step1["step"]["pathname"] == "/home"
         assert step1["visitors"] == 2
         assert step1["dropoff"] == 0
         assert step1["dropoff_percentage"] == "0"
         assert step1["conversion_rate"] == "100"
         assert step1["conversion_rate_step"] == "0"
-        assert step2["step"]["label"] == "Visit /login"
+        assert step2["step"]["label"] == "/login"
         assert step2["step"]["pathname"] == "/login"
         assert step2["visitors"] == 2
         assert step2["dropoff"] == 0
         assert step2["dropoff_percentage"] == "0"
         assert step2["conversion_rate"] == "100"
         assert step2["conversion_rate_step"] == "100"
-        assert step3["step"]["label"] == "Visit /logout"
+        assert step3["step"]["label"] == "/logout"
         assert step3["step"]["pathname"] == "/logout"
         assert step3["visitors"] == 1
         assert step3["dropoff"] == 1
@@ -332,9 +380,9 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       } do
         journey =
           Jason.encode!([
-            %{name: "pageview", pathname: "/logout"},
-            %{name: "pageview", pathname: "/login"},
-            %{name: "pageview", pathname: "/home"}
+            Journey.Step.new("pageview", "/logout"),
+            Journey.Step.new("pageview", "/login"),
+            Journey.Step.new("pageview", "/home")
           ])
 
         resp =

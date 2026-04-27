@@ -149,9 +149,9 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok, [step1, step2, step3, step4]} = Exploration.journey_funnel(query, journey)
 
-        assert step1.step.label == "Visit /register"
+        assert step1.step.label == "/register"
         assert step2.step.label == "Signup /register"
-        assert step3.step.label == "Visit /activate"
+        assert step3.step.label == "/activate"
         assert step4.step.label == "Create site /sites/new"
       end
 
@@ -194,6 +194,17 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:error, :empty_journey} = Exploration.journey_funnel(query, [])
+      end
+
+      test "returns error on too long journey", %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey =
+          Enum.map(1..21, fn idx ->
+            %Exploration.Journey.Step{name: "pageview", pathname: "/page#{idx}"}
+          end)
+
+        assert {:error, :journey_too_long} = Exploration.journey_funnel(query, journey)
       end
 
       test "supports backward journey funnel", %{site: site} do
@@ -324,7 +335,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:ok, funnel} = Exploration.interesting_funnel(query)
 
         pathnames = Enum.map(funnel, & &1.step.pathname)
-        assert pathnames == ["/home", "/about/", "/contact"]
+        assert pathnames == ["/about", "/contact"]
       end
 
       test "stops when no more unseen steps are available" do
@@ -430,13 +441,13 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:ok, [next_step1, next_step2, next_step3]} =
                  Exploration.next_steps(query, journey)
 
-        assert next_step1.step.label == "Visit /docs"
+        assert next_step1.step.label == "/docs"
         assert next_step1.step.pathname == "/docs"
         assert next_step1.visitors == 1
-        assert next_step2.step.label == "Visit /home"
+        assert next_step2.step.label == "/home"
         assert next_step2.step.pathname == "/home"
         assert next_step2.visitors == 1
-        assert next_step3.step.label == "Visit /logout"
+        assert next_step3.step.label == "/logout"
         assert next_step3.step.pathname == "/logout"
         assert next_step3.visitors == 1
       end
@@ -451,6 +462,17 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok, [%{step: %{pathname: "/docs"}}]} =
                  Exploration.next_steps(query, journey, max_candidates: 1)
+      end
+
+      test "returns error on too long journey", %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey =
+          Enum.map(1..20, fn idx ->
+            %Exploration.Journey.Step{name: "pageview", pathname: "/page#{idx}"}
+          end)
+
+        assert {:error, :journey_too_long} = Exploration.next_steps(query, journey)
       end
 
       test "suggests the first step in the journey", %{site: site} do
@@ -503,18 +525,42 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.visitors == 1
       end
 
-      test "allows to filter according to how label is rendered", %{site: site} do
+      test "allows to filter according to how label is rendered" do
+        site = new_site()
+
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -320)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Signup",
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -270)
+          )
+        ])
+
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         journey = [
-          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
-          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
         ]
 
         assert {:ok, [next_step]} =
-                 Exploration.next_steps(query, journey, search_term: "isit /doc")
+                 Exploration.next_steps(query, journey, search_term: "up /regi")
 
-        assert next_step.step.pathname == "/docs"
+        assert next_step.step.label == "Signup /register"
+        assert next_step.step.name == "Signup"
+        assert next_step.step.pathname == "/register"
         assert next_step.visitors == 1
       end
 
@@ -581,11 +627,17 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [%{step: %{pathname: "/:dashboard"}}, %{step: %{pathname: "/:dashboard/"}}]} =
-                 Exploration.next_steps(query, journey, direction: :forward)
+        assert {:ok,
+                [
+                  %{step: %{pathname: "/:dashboard"}}
+                ]} =
+                 Exploration.next_steps(query, journey, search_term: "", direction: :forward)
 
-        assert {:ok, [%{step: %{pathname: "/:dashboard"}}, %{step: %{pathname: "/:dashboard/"}}]} =
-                 Exploration.next_steps(query, journey, direction: :backward)
+        assert {:ok,
+                [
+                  %{step: %{pathname: "/:dashboard"}}
+                ]} =
+                 Exploration.next_steps(query, journey, search_term: "", direction: :backward)
       end
 
       test "treats identical sequence of events as a single step" do
@@ -813,6 +865,107 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.step.pathname == "/logout"
         assert next_step.visitors == 2
       end
+    end
+
+    test "implicit wildcard path visitors computation is correct and consistent between next_step and journey_funnel" do
+      now = DateTime.utc_now()
+      site = new_site()
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 122,
+          pathname: "/aa",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 125,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 127,
+          pathname: "/a",
+          timestamp: DateTime.shift(now, minute: -300)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a/b",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 124,
+          pathname: "/a/b",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 126,
+          pathname: "/a/d",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 127,
+          pathname: "/a/d",
+          timestamp: DateTime.shift(now, minute: -270)
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/a/b/c",
+          timestamp: DateTime.shift(now, minute: -240)
+        ),
+        build(:pageview,
+          user_id: 128,
+          pathname: "/a/b/c",
+          timestamp: DateTime.shift(now, minute: -240)
+        )
+      ])
+
+      query = QueryBuilder.build!(site, input_date_range: :all)
+
+      result = Exploration.next_steps(query, [])
+
+      assert {:ok,
+              [
+                %{step: %{label: "/a", includes_subpaths: true, subpaths_count: 4}, visitors: 6},
+                %{step: %{label: "/a", includes_subpaths: false}, visitors: 5},
+                %{
+                  step: %{label: "/a/b", includes_subpaths: true, subpaths_count: 2},
+                  visitors: 3
+                },
+                %{step: %{label: "/a/b", includes_subpaths: false}, visitors: 2},
+                %{step: %{label: "/a/b/c"}, visitors: 2},
+                %{step: %{label: "/a/d"}, visitors: 2},
+                %{step: %{label: "/aa"}, visitors: 1}
+              ]} = result
+
+      journey = [
+        %Exploration.Journey.Step{
+          name: "pageview",
+          pathname: "/a",
+          includes_subpaths: true,
+          subpaths_count: 4
+        }
+      ]
+
+      assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
+
+      assert step1.step.label == "/a"
+      assert step1.step.includes_subpaths == true
+      assert step1.visitors == 6
     end
   end
 end

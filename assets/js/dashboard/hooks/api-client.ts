@@ -6,12 +6,19 @@ import {
 } from '@tanstack/react-query'
 import * as api from '../api'
 import { DashboardState } from '../dashboard-state'
-import { DashboardPeriod } from '../dashboard-time-periods'
-import { Dayjs } from 'dayjs'
+import {
+  DashboardPeriod,
+  DashboardTimeSettings,
+  isHistoricalPeriod
+} from '../dashboard-time-periods'
 import { REALTIME_UPDATE_TIME_MS } from '../util/realtime-update-timer'
+import { Interval, validIntervals } from '../stats/graph/intervals'
 
-// defines when queries that don't include the current time should be refetched
-const HISTORICAL_RESPONSES_STALE_TIME_MS = 12 * 60 * 60 * 1000
+// define (in ms) when query API responses should become stale
+export const CACHE_TTL_REALTIME = REALTIME_UPDATE_TIME_MS
+export const CACHE_TTL_SHORT_ONGOING = 5 * 60 * 1000 // 5 minutes
+export const CACHE_TTL_LONG_ONGOING = 60 * 60 * 1000 // 1 hour
+export const CACHE_TTL_HISTORICAL = 12 * 60 * 60 * 1000 // 12 hours
 
 // how many items per page for breakdown modals
 const PAGINATION_LIMIT = 100
@@ -34,12 +41,16 @@ export function usePaginatedGetAPI<
   TResponse extends { results: unknown[] },
   TKey extends PaginatedQueryKeyBase = PaginatedQueryKeyBase
 >({
+  siteTimezoneOffset,
+  siteStatsBegin,
   key,
   getRequestParams,
   afterFetchData,
   afterFetchNextPage,
   initialPageParam = 1
 }: {
+  siteTimezoneOffset: DashboardTimeSettings['siteTimezoneOffset']
+  siteStatsBegin: DashboardTimeSettings['siteStatsBegin']
   key: TKey
   getRequestParams: GetRequestParams<TKey>
   afterFetchData?: (response: TResponse) => void
@@ -89,6 +100,14 @@ export function usePaginatedGetAPI<
         ? lastPageIndex + 1
         : null
     },
+    staleTime: ({ queryKey }) => {
+      const [_, opts] = queryKey
+      return getStaleTime({
+        siteTimezoneOffset: siteTimezoneOffset,
+        siteStatsBegin: siteStatsBegin,
+        ...opts.dashboardState
+      })
+    },
     initialPageParam,
     placeholderData: (previousData) => previousData
   })
@@ -108,59 +127,36 @@ export const cleanToPageOne = <
   return data
 }
 
-export const getStaleTime = (
-  /** the start of the current day */
-  startOfDay: Dayjs,
-  {
-    period,
-    from,
-    to,
-    date
-  }: Pick<DashboardState, 'period' | 'from' | 'to' | 'date'>
-): number => {
-  if (DashboardPeriod.custom && to && from) {
-    // historical
-    if (from.isBefore(startOfDay) && to.isBefore(startOfDay)) {
-      return HISTORICAL_RESPONSES_STALE_TIME_MS
-    }
-    // period includes now
-    if (to.diff(from, 'days') < 7) {
-      return 5 * 60 * 1000
-    }
-    if (to.diff(from, 'months') < 1) {
-      return 15 * 60 * 1000
-    }
-    if (to.diff(from, 'months') < 12) {
-      return 60 * 60 * 1000
-    }
-    return 3 * 60 * 60 * 1000
+/**
+ * Returns the time-to-live for cached query API responses based on the given DashboardTimeSettings.
+ *
+ * - For a realtime dashboard: {@link CACHE_TTL_REALTIME}
+ * - For any historical period (i.e. does not include today): {@link CACHE_TTL_HISTORICAL}
+ * - For a period that includes today, supporting 'day' or shorter interval: {@link CACHE_TTL_SHORT_ONGOING}
+ * - For a period that includes today, too long to support 'day' interval: {@link CACHE_TTL_LONG_ONGOING}
+ */
+export const getStaleTime = (props: DashboardTimeSettings): number => {
+  if (
+    [DashboardPeriod.realtime, DashboardPeriod.realtime_30m].includes(
+      props.period
+    )
+  ) {
+    return CACHE_TTL_REALTIME
   }
 
-  const historical = date?.isBefore(startOfDay)
-  if (historical) {
-    return HISTORICAL_RESPONSES_STALE_TIME_MS
+  if (isHistoricalPeriod(props)) {
+    return CACHE_TTL_HISTORICAL
   }
 
-  switch (period) {
-    case DashboardPeriod.realtime:
-      return REALTIME_UPDATE_TIME_MS
-    case DashboardPeriod['24h']:
-    case DashboardPeriod.day:
-      return 5 * 60 * 1000
-    case DashboardPeriod['7d']:
-      return 15 * 60 * 1000
-    case DashboardPeriod['28d']:
-    case DashboardPeriod['30d']:
-    case DashboardPeriod['91d']:
-    case DashboardPeriod['6mo']:
-      return 60 * 60 * 1000
-    case DashboardPeriod['12mo']:
-    case DashboardPeriod.year:
-      return 3 * 60 * 60 * 1000
-    case DashboardPeriod.all:
-    default:
-      // err on the side of less caching,
-      // to avoid the user refresheshing
-      return 15 * 60 * 1000
+  const availableIntervals = validIntervals(props)
+
+  if (
+    availableIntervals.includes(Interval.day) ||
+    availableIntervals.includes(Interval.hour) ||
+    availableIntervals.includes(Interval.minute)
+  ) {
+    return CACHE_TTL_SHORT_ONGOING
+  } else {
+    return CACHE_TTL_LONG_ONGOING
   }
 }

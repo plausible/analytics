@@ -1,8 +1,10 @@
-import { PlausibleSite } from '../../site-context'
-import { DashboardState } from '../../dashboard-state'
 import { Dayjs } from 'dayjs'
-import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
-import { dateForSite, nowForSite } from '../../util/date'
+import {
+  ComparisonMode,
+  DashboardPeriod,
+  DashboardTimeSettings
+} from '../../dashboard-time-periods'
+import { now, parseUTCDate } from '../../util/date'
 
 export enum Interval {
   minute = 'minute',
@@ -12,10 +14,7 @@ export enum Interval {
   month = 'month'
 }
 
-export type GetIntervalProps = { site: PlausibleSite } & Pick<
-  DashboardState,
-  'period' | 'to' | 'from' | 'comparison' | 'compare_to' | 'compare_from'
->
+export type GetIntervalProps = Omit<DashboardTimeSettings, 'date'>
 
 type DayjsRange = { from: Dayjs; to: Dayjs }
 
@@ -54,7 +53,8 @@ const INTERVAL_COARSENESS: Record<Interval, number> = {
  * modes the valid intervals are determined solely by the main period.
  */
 export function validIntervals({
-  site,
+  siteTimezoneOffset,
+  siteStatsBegin,
   period,
   to,
   from,
@@ -62,7 +62,13 @@ export function validIntervals({
   compare_to,
   compare_from
 }: GetIntervalProps): Interval[] {
-  const mainIntervals = validIntervalsForMainPeriod(site, period, from, to)
+  const mainIntervals = validIntervalsForMainPeriod(
+    siteTimezoneOffset,
+    siteStatsBegin,
+    period,
+    from,
+    to
+  )
   const comparisonIntervals = validIntervalsForCustomComparison(
     comparison,
     compare_from,
@@ -82,7 +88,8 @@ export function validIntervals({
  * appropriate for the comparison date range.
  */
 export function getDefaultInterval({
-  site,
+  siteTimezoneOffset,
+  siteStatsBegin,
   period,
   to,
   from,
@@ -90,7 +97,13 @@ export function getDefaultInterval({
   compare_to,
   compare_from
 }: GetIntervalProps): Interval {
-  const defaultForMain = defaultForMainPeriod(site, period, from, to)
+  const defaultForMain = defaultForMainPeriod(
+    siteTimezoneOffset,
+    siteStatsBegin,
+    period,
+    from,
+    to
+  )
 
   const validComparisonIntervals = validIntervalsForCustomComparison(
     comparison,
@@ -117,7 +130,8 @@ function coarser(a: Interval[], b: Interval[]): Interval[] {
 }
 
 function validIntervalsForMainPeriod(
-  site: PlausibleSite,
+  siteTimezoneOffset: DashboardTimeSettings['siteTimezoneOffset'],
+  siteStatsBegin: DashboardTimeSettings['siteStatsBegin'],
   period: DashboardPeriod,
   from: Dayjs | null,
   to: Dayjs | null
@@ -126,7 +140,7 @@ function validIntervalsForMainPeriod(
     return validIntervalsForCustomPeriod({ from, to })
   }
   if (period === 'all') {
-    return validIntervalsForAllTimePeriod(site)
+    return validIntervalsForAllTimePeriod(siteTimezoneOffset, siteStatsBegin)
   }
   return VALID_INTERVALS_BY_FIXED_PERIOD[period as FixedPeriod]
 }
@@ -143,7 +157,8 @@ function validIntervalsForCustomComparison(
 }
 
 function defaultForMainPeriod(
-  site: PlausibleSite,
+  siteTimezoneOffset: DashboardTimeSettings['siteTimezoneOffset'],
+  siteStatsBegin: DashboardTimeSettings['siteStatsBegin'],
   period: DashboardPeriod,
   from: Dayjs | null,
   to: Dayjs | null
@@ -152,7 +167,10 @@ function defaultForMainPeriod(
     return defaultForCustomPeriod({ from, to })
   }
   if (period === 'all') {
-    return validIntervalsForAllTimePeriod(site).includes(Interval.day)
+    return validIntervalsForAllTimePeriod(
+      siteTimezoneOffset,
+      siteStatsBegin
+    ).includes(Interval.day)
       ? Interval.day
       : Interval.month
   }
@@ -191,9 +209,14 @@ function validIntervalsForCustomPeriod({ to, from }: DayjsRange): Interval[] {
   return [Interval.week, Interval.month]
 }
 
-function validIntervalsForAllTimePeriod(site: PlausibleSite): Interval[] {
-  const to = nowForSite(site)
-  const from = site.statsBegin ? dateForSite(site.statsBegin, site) : to
+function validIntervalsForAllTimePeriod(
+  siteTimezoneOffset: DashboardTimeSettings['siteTimezoneOffset'],
+  siteStatsBegin: DashboardTimeSettings['siteStatsBegin']
+): Interval[] {
+  const to = now(siteTimezoneOffset)
+  const from = siteStatsBegin
+    ? parseUTCDate(siteStatsBegin).utcOffset(siteTimezoneOffset / 60, true)
+    : to
 
   return validIntervalsForCustomPeriod({ from, to })
 }

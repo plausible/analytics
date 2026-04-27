@@ -24,7 +24,9 @@ export function GraphIntervalProvider({
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useStoredInterval({
-      site,
+      domain: site.domain,
+      siteTimezoneOffset: site.offset,
+      siteStatsBegin: site.statsBegin,
       to: dashboardState.to,
       from: dashboardState.from,
       period: dashboardState.period,

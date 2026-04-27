@@ -9,7 +9,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Metric } from '../../../types/query-api'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
-import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { useGraphIntervalContext } from './graph-interval-context'
@@ -30,7 +29,6 @@ export default function VisitorGraph({
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
   const queryClient = useQueryClient()
-  const startOfDay = nowForSite(site).startOf('day')
 
   const { selectedInterval } = useGraphIntervalContext()
 
@@ -52,14 +50,14 @@ export default function VisitorGraph({
       return await fetchTopStats(site, opts.dashboardState)
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
+    staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
+    }
   })
 
   const mainGraphQuery = useQuery({
@@ -86,14 +84,14 @@ export default function VisitorGraph({
       }
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
+    staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
+    }
   })
 
   // update metric to one that exists

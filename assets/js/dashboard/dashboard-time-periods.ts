@@ -18,7 +18,7 @@ import {
   isToday,
   isTodayOrYesterday,
   lastMonth,
-  nowForSite,
+  now,
   parseNaiveDate,
   yesterday
 } from './util/date'
@@ -49,6 +49,18 @@ export enum ComparisonMode {
   custom = 'custom'
 }
 
+export type DashboardTimeSettings = {
+  siteTimezoneOffset: PlausibleSite['offset']
+  siteStatsBegin: PlausibleSite['statsBegin']
+  date: DashboardState['date']
+  period: DashboardState['period']
+  from: DashboardState['from']
+  to: DashboardState['to']
+  comparison: DashboardState['comparison']
+  compare_from: DashboardState['compare_from']
+  compare_to: DashboardState['compare_to']
+}
+
 export const COMPARISON_MODES = {
   [ComparisonMode.off]: 'Disable comparison',
   [ComparisonMode.previous_period]: 'Previous period',
@@ -72,6 +84,41 @@ const COMPARISON_DISABLED_PERIODS = [
   DashboardPeriod.realtime,
   DashboardPeriod.all
 ]
+
+const PERIODS_EXCLUDING_NOW = [
+  DashboardPeriod['7d'],
+  DashboardPeriod['28d'],
+  DashboardPeriod['30d'],
+  DashboardPeriod['91d'],
+  DashboardPeriod['6mo'],
+  DashboardPeriod['12mo']
+]
+
+export function isHistoricalPeriod({
+  siteTimezoneOffset,
+  date,
+  period,
+  from,
+  to,
+  comparison,
+  compare_from,
+  compare_to
+}: DashboardTimeSettings) {
+  const startOfDay = now(siteTimezoneOffset).startOf('day')
+
+  const mainPeriodIncludesToday =
+    period === DashboardPeriod.custom && to && from
+      ? !to.isBefore(startOfDay)
+      : !(date?.isBefore(startOfDay) || PERIODS_EXCLUDING_NOW.includes(period))
+
+  const comparisonPeriodIncludesToday =
+    comparison === ComparisonMode.custom &&
+    compare_to &&
+    compare_from &&
+    !compare_to.isBefore(startOfDay)
+
+  return !(mainPeriodIncludesToday || comparisonPeriodIncludesToday)
+}
 
 export const isComparisonForbidden = ({
   period,
@@ -285,12 +332,12 @@ export const getDatePeriodGroups = ({
             ...s,
             ...clearedDateSearch,
             period: DashboardPeriod.day,
-            date: formatISO(nowForSite(site)),
+            date: formatISO(now(site.offset)),
             keybindHint: 'D'
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.day &&
-            isSameDate(dashboardState.date, nowForSite(site)),
+            isSameDate(dashboardState.date, now(site.offset)),
           onEvent
         }
       ],
@@ -301,12 +348,12 @@ export const getDatePeriodGroups = ({
             ...s,
             ...clearedDateSearch,
             period: DashboardPeriod.day,
-            date: formatISO(yesterday(site)),
+            date: formatISO(yesterday(site.offset)),
             keybindHint: 'E'
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.day &&
-            isSameDate(dashboardState.date, yesterday(site)),
+            isSameDate(dashboardState.date, yesterday(site.offset)),
           onEvent
         }
       ],
@@ -410,7 +457,7 @@ export const getDatePeriodGroups = ({
           }),
           isActive: ({ dashboardState }) =>
             dashboardState.period === DashboardPeriod.month &&
-            isSameMonth(dashboardState.date, nowForSite(site)),
+            isSameMonth(dashboardState.date, now(site.offset)),
           onEvent
         }
       ],
