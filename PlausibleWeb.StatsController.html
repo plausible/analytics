@@ -149,10 +149,6 @@ which is an appropriate choice for highly interactive browser UIs.</p><div class
   Api.StatsController --) Browser: {"top_stats": [...]}
   Note left of Browser: TopStats.render()
 
-  Browser -) Api.StatsController: GET /api/stats/mydomain.com/main-graph
-  Api.StatsController --) Browser: [{"plot": [...], "labels": [...]}, ...]
-  Note left of Browser: VisitorGraph.render()
-
   Browser -) Api.StatsController: GET /api/stats/mydomain.com/sources
   Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
   Note left of Browser: Sources.render()
@@ -244,7 +240,7 @@ using the IN filter, it causes the requests to balloon in payload size.</p></div
     </a>
     <h1 class="signature" translate="no">authenticate_shared_link(conn, map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L359" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L355" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -264,7 +260,7 @@ using the IN filter, it causes the requests to balloon in payload size.</p></div
     </a>
     <h1 class="signature" translate="no">csv_export(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L138" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L134" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -286,7 +282,7 @@ using the IN filter, it causes the requests to balloon in payload size.</p>
     </a>
     <h1 class="signature" translate="no">shared_link(conn, arg2)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L264" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L260" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -311,7 +307,7 @@ The cookie allows the user to access the dashboard for 24 hours without entering
     </a>
     <h1 class="signature" translate="no">stats(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L55" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L51" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -331,7 +327,7 @@ The cookie allows the user to access the dashboard for 24 hours without entering
     </a>
     <h1 class="signature" translate="no">validate_shared_link_password(conn, shared_link)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L302" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/stats_controller.ex#L298" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
