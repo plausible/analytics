@@ -201,7 +201,8 @@ defmodule Plausible.Stats.Exploration do
         where: selected_as(:name) != "",
         select: %{
           name: selected_as(field(s, ^next_name), :name),
-          pathname: selected_as(field(s, ^next_pathname), :pathname)
+          pathname: selected_as(field(s, ^next_pathname), :pathname),
+          _sample_factor: s._sample_factor
         }
       )
 
@@ -240,8 +241,8 @@ defmodule Plausible.Stats.Exploration do
         select: %{
           name: em.name,
           pathname: selected_as(fragment("?", pname), :pathname),
-          visitors: selected_as(fragment("uniqExact(?)", em.user_id), :visitors),
-          unique_paths: fragment("uniqExact(?)", em.pathname)
+          visitors: selected_as(scale_sample(fragment("uniqExact(?)", em.user_id)), :visitors),
+          unique_paths: scale_sample(fragment("uniqExact(?)", em.pathname))
         },
         group_by: [em.name, selected_as(:pathname)]
       )
