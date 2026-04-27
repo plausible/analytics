@@ -79,6 +79,30 @@ export const RefreshIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+export const CursorIcon = ({
+  className,
+  title
+}: {
+  className?: string
+  title?: string
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    {title && <title>{title}</title>}
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="m4.63 3.711 15.23 5.565c.641.235.623 1.148-.028 1.358l-6.97 2.23-2.232 6.971c-.208.65-1.122.67-1.357.028L3.71 4.631a.717.717 0 0 1 .92-.92"
+    />
+  </svg>
+)
+
 export const Spinner = ({ className }: { className?: string }) => (
   <svg
     className={className}

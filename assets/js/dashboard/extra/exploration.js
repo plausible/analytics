@@ -9,8 +9,8 @@ import {
   numberShortFormatter,
   numberLongFormatter
 } from '../util/number-formatter'
-import { RefreshIcon } from '../components/icons'
-import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import { RefreshIcon, CursorIcon } from '../components/icons'
+import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { popover } from '../components/popover'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
@@ -111,7 +111,7 @@ function DirectionDropdown({ direction, onDirectionChange }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-0.5 text-xs font-semibold text-gray-800 dark:text-gray-200 hover:text-gray-700 dark:hover:text-gray-200"
+        className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
       >
         {label}
         <ChevronUpDownIcon className="size-3.5 shrink-0" />
@@ -254,7 +254,7 @@ function PathConnectors({ scrollRef, steps }) {
           d={d}
           fill="none"
           clipPath="url(#exploration-list-clip)"
-          className="stroke-indigo-200/80 dark:stroke-indigo-800"
+          className="stroke-indigo-300/80 dark:stroke-indigo-800"
           strokeWidth="1.5"
         />
       ))}
@@ -307,7 +307,7 @@ function ExplorationColumn({
             onDirectionChange={onDirectionChange}
           />
         ) : (
-          <span className="shrink-0 text-xs font-semibold text-gray-800 dark:text-gray-200">
+          <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {header}
           </span>
         )}
@@ -322,7 +322,7 @@ function ExplorationColumn({
           />
         )}
         {headerConversionRate && (
-          <span className="shrink-0 text-xs font-semibold text-gray-800 dark:text-gray-200">
+          <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
           </span>
         )}
@@ -355,9 +355,7 @@ function ExplorationColumn({
               isSelected && selectedConversionRate !== null
                 ? selectedConversionRate
                 : Math.round((visitors / stepMaxVisitors) * 100)
-            const label = step.includes_subpaths
-              ? `${step.label}… (${step.subpaths_count} pages)`
-              : step.label
+            const label = step.label
 
             return (
               <li key={label}>
@@ -365,28 +363,49 @@ function ExplorationColumn({
                   data-exploration-step={isSelected ? colIndex : undefined}
                   className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
                     isSelected
-                      ? isCustomEvent
-                        ? 'bg-red-50/80 dark:bg-gray-750 border-red-100 dark:border-transparent'
-                        : 'bg-indigo-50/80 dark:bg-gray-750 border-indigo-100 dark:border-transparent'
+                      ? 'bg-indigo-50 dark:bg-gray-750 border-indigo-100 dark:border-transparent'
                       : 'bg-white border-gray-150 dark:border-gray-750'
                   }`}
                   onClick={() => onSelect(isSelected ? null : step)}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span
-                      className={`truncate ${
+                      className={`flex items-center gap-2 min-w-0 ${
                         isDimmed
-                          ? 'text-gray-500 dark:text-gray-400'
+                          ? 'text-gray-400 dark:text-gray-500'
                           : 'text-gray-800 dark:text-gray-200'
                       }`}
-                      title={label}
+                      title={
+                        step.includes_subpaths
+                          ? `${label} > all (${step.subpaths_count})`
+                          : label
+                      }
                     >
-                      {label}
+                      {isCustomEvent && (
+                        <CursorIcon
+                          title="Custom event"
+                          className={`size-4 shrink-0 ${isDimmed ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}
+                        />
+                      )}
+                      <span className="truncate">{label}</span>
+                      {step.includes_subpaths && (
+                        <>
+                          <ChevronRightIcon className="mt-0.5 size-3 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <span
+                            className={`shrink-0 ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
+                          >
+                            all{' '}
+                            <span className="text-[0.85rem]">
+                              ({numberShortFormatter(step.subpaths_count)})
+                            </span>
+                          </span>
+                        </>
+                      )}
                     </span>
                     <span
                       className={`shrink-0 font-medium ${
                         isDimmed
-                          ? 'text-gray-500 dark:text-gray-400'
+                          ? 'text-gray-400 dark:text-gray-500'
                           : 'text-gray-800 dark:text-gray-200'
                       }`}
                     >
@@ -398,20 +417,16 @@ function ExplorationColumn({
                   <div
                     className={`h-1 rounded-full overflow-hidden ${
                       isSelected
-                        ? isCustomEvent
-                          ? 'bg-red-200/70 dark:bg-gray-700'
-                          : 'bg-indigo-200/70 dark:bg-gray-700'
+                        ? 'bg-indigo-200/70 dark:bg-gray-700'
                         : 'bg-gray-150 dark:bg-gray-700/50'
                     }`}
                   >
                     <div
                       className={`h-full rounded-full transition-[width] ease-in-out ${
                         isSelected
-                          ? isCustomEvent
-                            ? 'bg-red-400 dark:bg-white'
-                            : 'bg-indigo-500 dark:bg-white'
-                          : isCustomEvent
-                            ? 'bg-red-300 dark:bg-gray-500 group-hover:bg-red-400 dark:group-hover:bg-white'
+                          ? 'bg-indigo-500 dark:bg-white'
+                          : isDimmed
+                            ? 'bg-indigo-200 dark:bg-gray-600'
                             : 'bg-indigo-300 dark:bg-gray-500 group-hover:bg-indigo-400 dark:group-hover:bg-white'
                       }`}
                       style={{ width: `${barWidth}%` }}
@@ -704,15 +719,6 @@ export function FunnelExploration() {
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
   const overallConversionVisitors = lastFunnelStep?.visitors ?? null
-  const totalVisitors = funnel[0]?.visitors ?? null
-  const dropoffVisitors =
-    totalVisitors != null && overallConversionVisitors != null
-      ? totalVisitors - overallConversionVisitors
-      : null
-  const dropoffRate =
-    overallConversionRate != null
-      ? parseFloat((100 - parseFloat(overallConversionRate)).toFixed(1))
-      : null
 
   useEffect(() => {
     const el = scrollRef.current
@@ -740,17 +746,6 @@ export function FunnelExploration() {
                   </span>
                   <span className="text-gray-400 dark:text-gray-500">
                     ({numberShortFormatter(overallConversionVisitors)})
-                  </span>
-                </span>
-                <span className="text-gray-300 dark:text-gray-700 select-none">
-                  |
-                </span>
-                <span>
-                  <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Drop-off: {dropoffRate}%{' '}
-                  </span>
-                  <span className="text-gray-400 dark:text-gray-500">
-                    ({numberShortFormatter(dropoffVisitors)})
                   </span>
                 </span>
                 <span className="text-gray-300 dark:text-gray-700 select-none">
