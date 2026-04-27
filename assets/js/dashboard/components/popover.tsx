@@ -36,6 +36,8 @@ const toggleButton = {
       'flex items-center rounded-md text-sm leading-tight h-8 transition-all duration-150',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
+    outline:
+      'border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750',
     ghost:
       'gap-x-1.5 px-2.5 font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
     truncatedText: 'truncate block',
