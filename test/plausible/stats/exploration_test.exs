@@ -6,8 +6,6 @@ defmodule Plausible.Stats.ExplorationTest do
     alias Plausible.Stats.Exploration
     alias Plausible.Stats.QueryBuilder
 
-    @wildcard_suffix Exploration.wildcard_suffix()
-
     setup do
       site = new_site()
 
@@ -942,10 +940,13 @@ defmodule Plausible.Stats.ExplorationTest do
 
       assert {:ok,
               [
-                %{step: %{label: "/a" <> @wildcard_suffix <> " (4 pages)"}, visitors: 6},
-                %{step: %{label: "/a"}, visitors: 5},
-                %{step: %{label: "/a/b" <> @wildcard_suffix <> " (2 pages)"}, visitors: 3},
-                %{step: %{label: "/a/b"}, visitors: 2},
+                %{step: %{label: "/a", includes_subpaths: true, subpaths_count: 4}, visitors: 6},
+                %{step: %{label: "/a", includes_subpaths: false}, visitors: 5},
+                %{
+                  step: %{label: "/a/b", includes_subpaths: true, subpaths_count: 2},
+                  visitors: 3
+                },
+                %{step: %{label: "/a/b", includes_subpaths: false}, visitors: 2},
                 %{step: %{label: "/a/b/c"}, visitors: 2},
                 %{step: %{label: "/a/d"}, visitors: 2},
                 %{step: %{label: "/aa"}, visitors: 1}
@@ -954,15 +955,16 @@ defmodule Plausible.Stats.ExplorationTest do
       journey = [
         %Exploration.Journey.Step{
           name: "pageview",
-          pathname: "/a" <> @wildcard_suffix,
-          include_subpaths: true,
+          pathname: "/a",
+          includes_subpaths: true,
           subpaths_count: 4
         }
       ]
 
       assert {:ok, [step1]} = Exploration.journey_funnel(query, journey)
 
-      assert step1.step.label == "/a#{@wildcard_suffix} (4 pages)"
+      assert step1.step.label == "/a"
+      assert step1.step.includes_subpaths == true
       assert step1.visitors == 6
     end
   end

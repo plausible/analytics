@@ -8,34 +8,29 @@ defmodule Plausible.Stats.Exploration do
 
     @type t() :: %__MODULE__{}
 
-    @derive {Jason.Encoder, only: [:name, :pathname, :label, :include_subpaths, :subpaths_count]}
-    defstruct name: nil, pathname: nil, label: nil, include_subpaths: false, subpaths_count: 0
+    @derive {Jason.Encoder, only: [:name, :pathname, :label, :includes_subpaths, :subpaths_count]}
+    defstruct name: nil, pathname: nil, label: nil, includes_subpaths: false, subpaths_count: 0
 
     @spec from(map()) :: t()
     def from(step) do
-      new(step.name, step.pathname, step.include_subpaths, step.subpaths_count)
+      new(step.name, step.pathname, step.includes_subpaths, step.subpaths_count)
     end
 
     @spec new(String.t(), String.t(), boolean(), non_neg_integer()) :: t()
-    def new(name, pathname, include_subpaths \\ false, subpaths_count \\ 0)
-        when is_boolean(include_subpaths) and is_integer(subpaths_count) do
+    def new(name, pathname, includes_subpaths \\ false, subpaths_count \\ 0)
+        when is_boolean(includes_subpaths) and is_integer(subpaths_count) do
       label =
-        cond do
-          name != "pageview" ->
-            name <> " " <> pathname
-
-          include_subpaths ->
-            pathname <> " (" <> to_string(subpaths_count) <> " pages)"
-
-          true ->
-            pathname
+        if name != "pageview" do
+          name <> " " <> pathname
+        else
+          pathname
         end
 
       %__MODULE__{
         label: label,
         name: name,
         pathname: pathname,
-        include_subpaths: include_subpaths,
+        includes_subpaths: includes_subpaths,
         subpaths_count: subpaths_count
       }
     end
@@ -68,15 +63,10 @@ defmodule Plausible.Stats.Exploration do
           conversion_rate_step: String.t()
         }
 
-  @wildcard_suffix "…"
-
   @max_steps 20
   @max_candidates 20
 
   @next_steps_defaults [search_term: "", direction: :forward, max_candidates: 10]
-
-  @spec wildcard_suffix() :: String.t()
-  def wildcard_suffix, do: @wildcard_suffix
 
   @spec max_steps() :: pos_integer()
   def max_steps, do: @max_steps
@@ -228,7 +218,7 @@ defmodule Plausible.Stats.Exploration do
       from(m in q_matches,
         select_merge: %{
           visitors: scale_sample(fragment("uniqExact(?)", m.user_id)),
-          include_subpaths: type(^false, :boolean),
+          includes_subpaths: type(^false, :boolean),
           subpaths_count: 0
         },
         group_by: [selected_as(:name), selected_as(:pathname)]
@@ -263,9 +253,9 @@ defmodule Plausible.Stats.Exploration do
         where: wm.unique_paths > 1 and (is_nil(emx.name) or wm.visitors != emx.visitors),
         select: %{
           name: wm.name,
-          pathname: fragment("concat(?, ?)", wm.pathname, @wildcard_suffix),
+          pathname: wm.pathname,
           visitors: wm.visitors,
-          include_subpaths: type(^true, :boolean),
+          includes_subpaths: type(^true, :boolean),
           subpaths_count: wm.unique_paths
         }
       )
@@ -280,20 +270,17 @@ defmodule Plausible.Stats.Exploration do
           label:
             selected_as(
               fragment(
-                "multiIf(? != 'pageview', concat(?, ' ', ?), ? = true, concat(?, ' (' , ?, ' pages)'), ?)",
+                "if(? != 'pageview', concat(?, ' ', ?), ?)",
                 m.name,
                 m.name,
                 m.pathname,
-                m.include_subpaths,
-                m.pathname,
-                m.subpaths_count,
                 m.pathname
               ),
               :label
             ),
           name: m.name,
           pathname: m.pathname,
-          include_subpaths: m.include_subpaths,
+          includes_subpaths: m.includes_subpaths,
           subpaths_count: m.subpaths_count
         },
         visitors: m.visitors
@@ -441,11 +428,8 @@ defmodule Plausible.Stats.Exploration do
   end
 
   defp step_condition(step, count) when count <= @max_steps do
-    if step.include_subpaths do
-      escaped =
-        step.pathname
-        |> String.trim_trailing(@wildcard_suffix)
-        |> Regex.escape()
+    if step.includes_subpaths do
+      escaped = Regex.escape(step.pathname)
 
       pattern = "^#{escaped}(/.+)?$"
 

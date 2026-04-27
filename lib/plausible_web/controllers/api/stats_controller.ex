@@ -227,13 +227,13 @@ defmodule PlausibleWeb.Api.StatsController do
     defp parse_journey_step(%{
            "name" => name,
            "pathname" => pathname,
-           "include_subpaths" => include_subpaths,
+           "includes_subpaths" => includes_subpaths,
            "subpaths_count" => subpaths_count
          }) do
       Plausible.Stats.Exploration.Journey.Step.new(
         name,
         pathname,
-        include_subpaths,
+        includes_subpaths,
         subpaths_count
       )
     end
