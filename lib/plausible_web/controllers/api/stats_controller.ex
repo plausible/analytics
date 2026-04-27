@@ -153,9 +153,6 @@ defmodule PlausibleWeb.Api.StatsController do
       else
         {:error, :journey_too_long} ->
           bad_request(conn, "The journey is too long")
-
-        _ ->
-          bad_request(conn, "There was an error with your request")
       end
     end
 
