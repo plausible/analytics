@@ -9,7 +9,6 @@ import {
   numberShortFormatter,
   numberLongFormatter
 } from '../util/number-formatter'
-import { Tooltip } from '../util/tooltip'
 import { RefreshIcon } from '../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { popover } from '../components/popover'
@@ -148,7 +147,13 @@ function DirectionDropdown({ direction, onDirectionChange }) {
 }
 
 function PathConnectors({ scrollRef, steps }) {
-  const [svgData, setSvgData] = useState({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
+  const [svgData, setSvgData] = useState({
+    paths: [],
+    width: 0,
+    height: 0,
+    clipY: 0,
+    clipHeight: 0
+  })
 
   useLayoutEffect(() => {
     const container = scrollRef.current
@@ -213,7 +218,9 @@ function PathConnectors({ scrollRef, steps }) {
     observer.observe(container)
     window.addEventListener('resize', recalculate)
 
-    const lists = Array.from(container.querySelectorAll('[data-exploration-list]'))
+    const lists = Array.from(
+      container.querySelectorAll('[data-exploration-list]')
+    )
     lists.forEach((list) => list.addEventListener('scroll', recalculate))
 
     return () => {
@@ -233,7 +240,12 @@ function PathConnectors({ scrollRef, steps }) {
     >
       <defs>
         <clipPath id="exploration-list-clip">
-          <rect x="0" y={svgData.clipY} width={svgData.width} height={svgData.clipHeight} />
+          <rect
+            x="0"
+            y={svgData.clipY}
+            width={svgData.width}
+            height={svgData.clipHeight}
+          />
         </clipPath>
       </defs>
       {svgData.paths.map((d, i) => (
@@ -327,7 +339,10 @@ function ExplorationColumn({
           {!active ? 'Select an event to continue' : 'No data'}
         </div>
       ) : (
-        <ul data-exploration-list className="flex flex-col gap-y-2 p-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]">
+        <ul
+          data-exploration-list
+          className="flex flex-col gap-y-2 p-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+        >
           {listItems.map(({ step, visitors }) => {
             const isSelected = !!selected && isSameStep(step, selected)
             const isDimmed = !!selected && !isSelected
