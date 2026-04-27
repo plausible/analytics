@@ -70,7 +70,11 @@ function fetchInterestingFunnel(site, dashboardState) {
 }
 
 function isSameStep(step, otherStep) {
-  return step.name === otherStep.name && step.pathname === otherStep.pathname
+  return (
+    step.name === otherStep.name &&
+    step.pathname === otherStep.pathname &&
+    step.includes_subpaths === otherStep.includes_subpaths
+  )
 }
 
 function ExplorationColumn({
