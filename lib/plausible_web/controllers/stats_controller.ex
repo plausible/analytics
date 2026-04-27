@@ -18,10 +18,6 @@ defmodule PlausibleWeb.StatsController do
     Api.StatsController --) Browser: {"top_stats": [...]}
     Note left of Browser: TopStats.render()
 
-    Browser -) Api.StatsController: GET /api/stats/mydomain.com/main-graph
-    Api.StatsController --) Browser: [{"plot": [...], "labels": [...]}, ...]
-    Note left of Browser: VisitorGraph.render()
-
     Browser -) Api.StatsController: GET /api/stats/mydomain.com/sources
     Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
     Note left of Browser: Sources.render()

@@ -12,7 +12,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   describe "API authorization - as anonymous user" do
     test "returns 404 for a site that doesn't exist", %{conn: conn} do
       conn = init_session(conn)
-      conn = get(conn, "/api/stats/fake-site.com/main-graph")
+
+      conn =
+        post(conn, "/api/stats/fake-site.com/query", %{})
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -22,7 +24,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     test "returns 404 for private site", %{conn: conn} do
       conn = init_session(conn)
       site = insert(:site, public: false)
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
+
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{})
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -34,10 +38,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = insert(:site, public: true)
 
       conn =
-        post(conn, "/api/stats/#{site.domain}/query", %{
-          "date_range" => "day",
-          "metrics" => ["visitors"]
-        })
+        query_visitors(conn, site, [])
 
       assert %{"results" => _} = json_response(conn, 200)
     end
@@ -183,7 +184,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "returns 404 for a site that doesn't exist", %{conn: conn} do
       conn = init_session(conn)
-      conn = get(conn, "/api/stats/fake-site.com/main-graph/")
+
+      conn =
+        post(conn, "/api/stats/fake-site.com/query", %{})
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -192,7 +195,9 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "returns 404 when user does not have access to site", %{conn: conn} do
       site = new_site()
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
+
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{})
 
       assert json_response(conn, 404) == %{
                "error" => "Site does not exist or user does not have sufficient access."
@@ -203,10 +208,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = new_site(public: true)
 
       conn =
-        post(conn, "/api/stats/#{site.domain}/query", %{
-          "date_range" => "day",
-          "metrics" => ["visitors"]
-        })
+        query_visitors(conn, site, [])
 
       assert %{"results" => _} = json_response(conn, 200)
     end
@@ -214,11 +216,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
       site = new_site(public: false, owner: user)
 
-      conn =
-        post(conn, "/api/stats/#{site.domain}/query", %{
-          "date_range" => "day",
-          "metrics" => ["visitors"]
-        })
+      conn = query_visitors(conn, site, [])
 
       assert %{"results" => _} = json_response(conn, 200)
     end
