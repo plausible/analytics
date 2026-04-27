@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
     end
 
     describe "exploration_next/2" do
-      test "it works", %{conn: conn, site: site} do
+      test "returns suggestions for the next step", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
             Journey.Step.new("pageview", "/home"),
@@ -91,7 +91,24 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert next_step3["visitors"] == 1
       end
 
-      test "it filters", %{conn: conn, site: site} do
+      test "returns error on too long journey", %{conn: conn, site: site} do
+        journey =
+          Jason.encode!(
+            Enum.map(1..20, fn idx -> Journey.Step.new("pageview", "/page#{idx}") end)
+          )
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "The journey is too long"
+      end
+
+      test "allows filtering suggestions", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
             Journey.Step.new("pageview", "/home"),
@@ -112,7 +129,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert next_step["visitors"] == 1
       end
 
-      test "it supports backward direction", %{conn: conn, site: site} do
+      test "supports backward direction", %{conn: conn, site: site} do
         journey = Jason.encode!([Journey.Step.new("pageview", "/logout")])
 
         resp =
@@ -133,7 +150,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
     end
 
     describe "exploration_funnel/2" do
-      test "it works", %{conn: conn, site: site} do
+      test "returns a funnel", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
             Journey.Step.new("pageview", "/home"),
@@ -174,7 +191,36 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert step3["conversion_rate_step"] == "50"
       end
 
-      test "it supports backward direction", %{conn: conn, site: site} do
+      test "returns error on too long journey", %{conn: conn, site: site} do
+        journey =
+          Jason.encode!(
+            Enum.map(1..21, fn idx -> Journey.Step.new("pageview", "/page#{idx}") end)
+          )
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => journey,
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "The journey is too long"
+      end
+
+      test "returns error on empty journey", %{conn: conn, site: site} do
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => Jason.encode!([]),
+            "period" => "24h"
+          })
+          |> json_response(400)
+
+        assert resp["error"] == "We are unable to show funnels when journey is empty"
+      end
+
+      test "supports backward direction", %{conn: conn, site: site} do
         journey =
           Jason.encode!([
             Journey.Step.new("pageview", "/logout"),

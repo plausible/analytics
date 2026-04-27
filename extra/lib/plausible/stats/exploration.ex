@@ -70,17 +70,30 @@ defmodule Plausible.Stats.Exploration do
 
   @wildcard_suffix "…"
 
+  @max_steps 20
+  @max_candidates 20
+
   @next_steps_defaults [search_term: "", direction: :forward, max_candidates: 10]
 
   @spec wildcard_suffix() :: String.t()
   def wildcard_suffix, do: @wildcard_suffix
 
-  @spec next_steps(Query.t(), journey(), keyword()) :: {:ok, [next_step()]}
-  def next_steps(query, journey, opts \\ []) do
+  @spec max_steps() :: pos_integer()
+  def max_steps, do: @max_steps
+
+  @spec next_steps(Query.t(), journey(), keyword()) ::
+          {:ok, [next_step()]} | {:error, :journey_too_long}
+  def next_steps(query, journey, opts \\ [])
+
+  def next_steps(_query, journey, _opts) when length(journey) >= @max_steps do
+    {:error, :journey_too_long}
+  end
+
+  def next_steps(query, journey, opts) do
     opts = Keyword.merge(@next_steps_defaults, opts)
     direction = Keyword.fetch!(opts, :direction)
     search_term = Keyword.fetch!(opts, :search_term)
-    max_candidates = min(Keyword.fetch!(opts, :max_candidates), 20)
+    max_candidates = min(Keyword.fetch!(opts, :max_candidates), @max_candidates)
 
     query
     |> Base.base_event_query()
@@ -92,10 +105,14 @@ defmodule Plausible.Stats.Exploration do
   end
 
   @spec journey_funnel(Query.t(), journey(), direction()) ::
-          {:ok, [funnel_step()]} | {:error, :empty_journey}
+          {:ok, [funnel_step()]} | {:error, :empty_journey | :journey_too_long}
   def journey_funnel(query, journey, direction \\ :forward)
 
   def journey_funnel(_query, [], _direction), do: {:error, :empty_journey}
+
+  def journey_funnel(_query, journey, _direction) when length(journey) > @max_steps do
+    {:error, :journey_too_long}
+  end
 
   def journey_funnel(query, journey, direction) when is_direction(direction) do
     query
@@ -130,8 +147,8 @@ defmodule Plausible.Stats.Exploration do
   @spec interesting_funnel(Query.t(), keyword()) ::
           {:ok, [funnel_step()]} | {:error, :not_found}
   def interesting_funnel(query, opts \\ []) do
-    max_steps = min(Keyword.get(opts, :max_steps, 6), 20)
-    max_candidates = min(Keyword.get(opts, :max_candidates, 10), 20)
+    max_steps = min(Keyword.get(opts, :max_steps, 6), @max_steps)
+    max_candidates = min(Keyword.get(opts, :max_candidates, 10), @max_candidates)
 
     case build_interesting_journey(query, max_steps, max_candidates) do
       [] -> {:error, :not_found}
@@ -413,7 +430,7 @@ defmodule Plausible.Stats.Exploration do
     )
   end
 
-  defp step_condition(step, count) do
+  defp step_condition(step, count) when count <= @max_steps do
     if step.include_subpaths do
       escaped =
         step.pathname

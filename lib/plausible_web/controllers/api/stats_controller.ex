@@ -151,6 +151,9 @@ defmodule PlausibleWeb.Api.StatsController do
              ) do
         json(conn, next_steps)
       else
+        {:error, :journey_too_long} ->
+          bad_request(conn, "The journey is too long")
+
         _ ->
           bad_request(conn, "There was an error with your request")
       end
@@ -167,13 +170,10 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, :empty_journey} ->
-          bad_request(
-            conn,
-            "We are unable to show funnels when journey is empty",
-            %{
-              level: :normal
-            }
-          )
+          bad_request(conn, "We are unable to show funnels when journey is empty")
+
+        {:error, :journey_too_long} ->
+          bad_request(conn, "The journey is too long")
       end
     end
 

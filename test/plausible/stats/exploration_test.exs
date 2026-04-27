@@ -198,6 +198,17 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:error, :empty_journey} = Exploration.journey_funnel(query, [])
       end
 
+      test "returns error on too long journey", %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey =
+          Enum.map(1..21, fn idx ->
+            %Exploration.Journey.Step{name: "pageview", pathname: "/page#{idx}"}
+          end)
+
+        assert {:error, :journey_too_long} = Exploration.journey_funnel(query, journey)
+      end
+
       test "supports backward journey funnel", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
@@ -453,6 +464,17 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok, [%{step: %{pathname: "/docs"}}]} =
                  Exploration.next_steps(query, journey, max_candidates: 1)
+      end
+
+      test "returns error on too long journey", %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey =
+          Enum.map(1..20, fn idx ->
+            %Exploration.Journey.Step{name: "pageview", pathname: "/page#{idx}"}
+          end)
+
+        assert {:error, :journey_too_long} = Exploration.next_steps(query, journey)
       end
 
       test "suggests the first step in the journey", %{site: site} do
