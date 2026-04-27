@@ -379,9 +379,9 @@ function ExplorationColumn({
                           ? 'text-gray-500 dark:text-gray-400'
                           : 'text-gray-800 dark:text-gray-200'
                       }`}
-                      title={step.label}
+                      title={label}
                     >
-                      {step.name === 'pageview' ? step.pathname : step.label}
+                      {label}
                     </span>
                     <span
                       className={`shrink-0 font-medium ${
@@ -747,7 +747,7 @@ export function FunnelExploration() {
                 </span>
                 <span>
                   <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Dropoff: {dropoffRate}%{' '}
+                    Drop-off: {dropoffRate}%{' '}
                   </span>
                   <span className="text-gray-400 dark:text-gray-500">
                     ({numberShortFormatter(dropoffVisitors)})
