@@ -135,12 +135,12 @@ function DirectionDropdown({ direction, onDirectionChange }) {
 }
 
 function PathConnectors({ scrollRef, steps }) {
-  const [svgData, setSvgData] = useState({ paths: [], width: 0, height: 0 })
+  const [svgData, setSvgData] = useState({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
 
   useLayoutEffect(() => {
     const container = scrollRef.current
     if (!container || steps.length < 2) {
-      setSvgData({ paths: [], width: 0, height: 0 })
+      setSvgData({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
       return
     }
 
@@ -167,8 +167,8 @@ function PathConnectors({ scrollRef, steps }) {
         const x2 = rColB.left - containerRect.left + c.scrollLeft
         const y2 = (rCardB.top + rCardB.bottom) / 2 - containerRect.top
         const mx = (x1 + x2) / 2
-        const r = 10
         const dy = y2 - y1
+        const r = Math.min(10, Math.abs(dy) / 2)
 
         const d =
           Math.abs(dy) < 1
@@ -180,10 +180,17 @@ function PathConnectors({ scrollRef, steps }) {
         newPaths.push(d)
       }
 
+      const firstList = c.querySelector('[data-exploration-list]')
+      const listRect = firstList ? firstList.getBoundingClientRect() : null
+      const clipY = listRect ? listRect.top - containerRect.top : 0
+      const clipHeight = listRect ? listRect.height : c.clientHeight
+
       setSvgData({
         paths: newPaths,
         width: c.scrollWidth,
-        height: c.clientHeight
+        height: c.clientHeight,
+        clipY,
+        clipHeight
       })
     }
 
@@ -193,9 +200,13 @@ function PathConnectors({ scrollRef, steps }) {
     observer.observe(container)
     window.addEventListener('resize', recalculate)
 
+    const lists = Array.from(container.querySelectorAll('[data-exploration-list]'))
+    lists.forEach((list) => list.addEventListener('scroll', recalculate))
+
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', recalculate)
+      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
     }
   }, [steps, scrollRef])
 
@@ -207,11 +218,17 @@ function PathConnectors({ scrollRef, steps }) {
       width={svgData.width}
       height={svgData.height}
     >
+      <defs>
+        <clipPath id="exploration-list-clip">
+          <rect x="0" y={svgData.clipY} width={svgData.width} height={svgData.clipHeight} />
+        </clipPath>
+      </defs>
       {svgData.paths.map((d, i) => (
         <path
           key={i}
           d={d}
           fill="none"
+          clipPath="url(#exploration-list-clip)"
           className="stroke-indigo-200/80 dark:stroke-indigo-800"
           strokeWidth="1.5"
         />
@@ -297,7 +314,7 @@ function ExplorationColumn({
           {!active ? 'Select an event to continue' : 'No data'}
         </div>
       ) : (
-        <ul className="flex flex-col gap-y-2 p-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]">
+        <ul data-exploration-list className="flex flex-col gap-y-2 p-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]">
           {listItems.map(({ step, visitors }) => {
             const isSelected = !!selected && isSameStep(step, selected)
             const isDimmed = !!selected && !isSelected
