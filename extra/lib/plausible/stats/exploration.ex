@@ -201,8 +201,7 @@ defmodule Plausible.Stats.Exploration do
         where: selected_as(:name) != "",
         select: %{
           name: selected_as(field(s, ^next_name), :name),
-          pathname: selected_as(field(s, ^next_pathname), :pathname),
-          _sample_factor: s._sample_factor
+          pathname: selected_as(field(s, ^next_pathname), :pathname)
         }
       )
 
@@ -227,7 +226,7 @@ defmodule Plausible.Stats.Exploration do
 
     q_per_user_matches =
       from(m in q_matches,
-        select_merge: %{user_id: m.user_id},
+        select_merge: %{user_id: m.user_id, _sample_factor: fragment("any(?)", m._sample_factor)},
         group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
       )
 
