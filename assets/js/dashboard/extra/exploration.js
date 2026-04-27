@@ -5,7 +5,10 @@ import { Tooltip } from '../util/tooltip'
 import { useDebounce } from '../custom-hooks'
 import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
-import { numberShortFormatter } from '../util/number-formatter'
+import {
+  numberShortFormatter,
+  numberLongFormatter
+} from '../util/number-formatter'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 const EXPLORATION_DIRECTIONS = {
@@ -176,7 +179,7 @@ function ExplorationColumn({
                       {label}
                     </span>
                     <span className="shrink-0 text-gray-800 dark:text-gray-200 tabular-nums">
-                      <Tooltip info={visitorsToShow}>
+                      <Tooltip info={numberLongFormatter(visitorsToShow)}>
                         {numberShortFormatter(visitorsToShow)}
                       </Tooltip>
                     </span>
