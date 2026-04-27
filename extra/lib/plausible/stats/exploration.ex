@@ -17,7 +17,8 @@ defmodule Plausible.Stats.Exploration do
     end
 
     @spec new(String.t(), String.t(), boolean(), non_neg_integer()) :: t()
-    def new(name, pathname, include_subpaths \\ false, subpaths_count \\ 0) do
+    def new(name, pathname, include_subpaths \\ false, subpaths_count \\ 0)
+        when is_boolean(include_subpaths) and is_integer(subpaths_count) do
       label =
         cond do
           name != "pageview" ->
