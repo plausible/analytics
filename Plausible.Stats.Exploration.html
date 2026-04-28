@@ -384,7 +384,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">interesting_funnel(query, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L139" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L148" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -415,7 +415,9 @@ the same page - we should probably do that when deduplicating step candidates to
   <span class="text">Options</span>
 </h2>
 <ul><li><code class="inline">:max_steps</code> - maximum number of funnel steps to build (default: <code class="inline">6</code>)</li><li><code class="inline">:max_candidates</code> - passed to <a href="#next_steps/3"><code class="inline">next_steps/3</code></a>, limiting
-how many candidate next steps are fetched per step (default: <code class="inline">10</code>)</li></ul>
+how many candidate next steps are fetched per step (default: <code class="inline">10</code>)</li><li><code class="inline">:include_wildcard?</code> - passed to <a href="#next_steps/3"><code class="inline">next_steps/3</code></a>, deciding whether
+to include implicit wildcard pathnames in suggestions or not
+(default: true)</li></ul>
   </section>
 </section>
 <section class="detail" id="is_direction/1">
@@ -450,7 +452,7 @@ how many candidate next steps are fetched per step (default: <code class="inline
     </a>
     <h1 class="signature" translate="no">journey_funnel(query, journey, direction \\ :forward)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L99" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L105" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -477,7 +479,7 @@ how many candidate next steps are fetched per step (default: <code class="inline
     </a>
     <h1 class="signature" translate="no">max_steps()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L72" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L77" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -505,7 +507,7 @@ how many candidate next steps are fetched per step (default: <code class="inline
     </a>
     <h1 class="signature" translate="no">next_steps(query, journey, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L76" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/exploration.ex#L81" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
