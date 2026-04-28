@@ -214,95 +214,75 @@ defmodule Plausible.Stats.Exploration do
         from(s in q, where: ^step_condition)
       end)
 
-    # Scan events_v2 once, producing one row per (name, pathname, user_id).
-    # Both the exact-match aggregation and the wildcard/subpath aggregation are
-    # derived from this single result, avoiding a second scan of events_v2.
+    # Expand each (name, pathname, user_id) row into all prefix paths via
+    # ARRAY JOIN, then aggregate once to get both exact and wildcard visitor
+    # counts in a single scan of events_v2.
+    #
+    # The arrayFold expansion includes the original pathname as the last
+    # element, so uniqIf(user_id, original_pathname = prefix_pathname) gives the
+    # exact-match count for free, alongside the wildcard uniq(user_id) and the
+    # uniq(original_pathname) subpath count — all in one GROUP BY.
+    #
+    # Non-pageview events are included in the expansion but produce only a
+    # single prefix (their exact pathname), so they naturally get
+    # subpaths_count = 1 and are only emitted as exact rows.
     q_per_user_matches =
       from(m in q_matches,
         select_merge: %{user_id: m.user_id, _sample_factor: fragment("any(?)", m._sample_factor)},
         group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
       )
 
-    # Derive exact-match visitor counts by re-aggregating q_per_user_matches.
-    # Since it already has one row per (name, pathname, user_id), count() is
-    # equivalent to uniq(user_id) on the raw events — no second scan needed.
-    q_exact_matches =
-      from(m in subquery(q_per_user_matches),
-        select: %{
-          name: m.name,
-          pathname: m.pathname,
-          visitors: scale_sample(fragment("count()")),
-          includes_subpaths: type(^false, :boolean),
-          subpaths_count: 0
-        },
-        group_by: [m.name, m.pathname]
-      )
-
-    q_wildcard_matches =
+    q_combined =
       from(em in subquery(q_per_user_matches),
         join: pname in fragment(@wildcard_array_join, em.pathname),
         on: true,
         hints: "ARRAY",
-        where: em.name == "pageview",
         where: selected_as(:pathname) != "" and selected_as(:pathname) != "/",
         select: %{
           name: em.name,
           pathname: selected_as(fragment("?", pname), :pathname),
-          visitors: selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :visitors),
-          includes_subpaths: type(^true, :boolean),
+          exact_visitors:
+            scale_sample(
+              fragment("uniqIf(?, ? = ?)", em.user_id, em.pathname, pname)
+            ),
+          wildcard_visitors:
+            selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :wildcard_visitors),
           subpaths_count: scale_sample(fragment("uniq(?)", em.pathname))
         },
         group_by: [em.name, selected_as(:pathname)]
       )
 
-    # Union exact matches and wildcard matches together, then filter in the outer
-    # query. Both branches derive from q_per_user_matches which itself comes from
-    # a single scan of events_v2 — keeping total scan count at one.
-    q_all_unfiltered =
-      q_exact_matches
-      |> union_all(^q_wildcard_matches)
-
-    # Annotate every row with the exact-match visitor count for that
-    # (name, pathname) pair using a window function. ClickHouse does not allow
-    # window functions directly in WHERE, so we wrap in a subquery first and
-    # filter in the outer query.
-    q_with_exact_visitors =
-      from(m in subquery(q_all_unfiltered),
+    # The aggregated result q_combined is tiny (one row per distinct prefix
+    # path). The UNION ALL below operates on this small in-memory table, not on
+    # raw events — so both branches are cheap regardless of inlining.
+    q_exact_matches =
+      from(m in subquery(q_combined),
         select: %{
           name: m.name,
           pathname: m.pathname,
-          visitors: m.visitors,
-          includes_subpaths: m.includes_subpaths,
-          subpaths_count: m.subpaths_count,
-          exact_visitors:
-            fragment(
-              "anyIf(?, NOT ?) OVER (PARTITION BY ?, ?)",
-              m.visitors,
-              m.includes_subpaths,
-              m.name,
-              m.pathname
-            )
+          visitors: m.exact_visitors,
+          includes_subpaths: type(^false, :boolean),
+          subpaths_count: 0
         }
       )
 
-    # For each (name, pathname) pair, compute the exact-match visitor count
-    # (includes_subpaths = false) across all rows sharing that pair.
-    # Wildcard rows are kept only when their visitor count differs from the
-    # exact count (meaning the prefix genuinely adds paths beyond the exact
-    # match) and they cover more than one distinct path.
-    q_all_matches =
-      from(m in subquery(q_with_exact_visitors),
+    q_wildcard_matches =
+      from(m in subquery(q_combined),
+        where:
+          m.name == "pageview" and m.subpaths_count > 1 and
+            m.wildcard_visitors != m.exact_visitors,
         select: %{
           name: m.name,
           pathname: m.pathname,
-          visitors: m.visitors,
-          includes_subpaths: m.includes_subpaths,
+          visitors: m.wildcard_visitors,
+          includes_subpaths: type(^true, :boolean),
           subpaths_count: m.subpaths_count
-        },
-        where:
-          not m.includes_subpaths or
-            (m.subpaths_count > 1 and m.visitors != m.exact_visitors)
+        }
       )
+
+    q_all_matches =
+      q_exact_matches
+      |> union_all(^q_wildcard_matches)
 
     from(m in subquery(q_all_matches),
       select: %{
