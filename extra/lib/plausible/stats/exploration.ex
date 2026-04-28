@@ -252,37 +252,41 @@ defmodule Plausible.Stats.Exploration do
         group_by: [em.name, selected_as(:pathname)]
       )
 
-    # The aggregated result q_combined is tiny (one row per distinct prefix
-    # path). The UNION ALL below operates on this small in-memory table, not on
-    # raw events — so both branches are cheap regardless of inlining.
-    q_exact_matches =
-      from(m in subquery(q_combined),
-        select: %{
-          name: m.name,
-          pathname: m.pathname,
-          visitors: m.exact_visitors,
-          includes_subpaths: type(^false, :boolean),
-          subpaths_count: 0
-        }
-      )
-
-    q_wildcard_matches =
-      from(m in subquery(q_combined),
-        where:
-          m.name == "pageview" and m.subpaths_count > 1 and
-            m.wildcard_visitors != m.exact_visitors,
-        select: %{
-          name: m.name,
-          pathname: m.pathname,
-          visitors: m.wildcard_visitors,
-          includes_subpaths: type(^true, :boolean),
-          subpaths_count: m.subpaths_count
-        }
-      )
-
+    # Fan out each q_combined row into up to two output rows (exact + wildcard)
+    # using ARRAY JOIN over a small boolean array — no UNION ALL, no branching,
+    # no second scan of events_v2.
+    #
+    # For each row we build [false, true] and filter it down to just [false]
+    # when the wildcard row should be suppressed (non-pageview, only one distinct
+    # subpath, or same visitor count as exact). ARRAY JOIN then emits one or two
+    # rows per group. The joined boolean `is_wildcard` selects which values to
+    # use for visitors / includes_subpaths / subpaths_count.
     q_all_matches =
-      q_exact_matches
-      |> union_all(^q_wildcard_matches)
+      from(m in subquery(q_combined),
+        join:
+          is_wildcard in fragment(
+            """
+            arrayFilter(
+              x -> x = false OR (? = 'pageview' AND ? > 1 AND ? != ?),
+              [false, true]
+            )
+            """,
+            m.name,
+            m.subpaths_count,
+            m.wildcard_visitors,
+            m.exact_visitors
+          ),
+        on: true,
+        hints: "ARRAY",
+        select: %{
+          name: m.name,
+          pathname: m.pathname,
+          visitors:
+            fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+          includes_subpaths: fragment("CAST(?, 'Bool')", is_wildcard),
+          subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count)
+        }
+      )
 
     from(m in subquery(q_all_matches),
       select: %{
