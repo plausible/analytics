@@ -108,7 +108,7 @@ function DirectionDropdown({ direction, onDirectionChange }) {
       : 'End point'
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
@@ -297,9 +297,9 @@ function ExplorationColumn({
   return (
     <div
       data-exploration-column={colIndex}
-      className="min-w-80 flex-1 bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden"
+      className="min-w-72 sm:min-w-80 flex-1 bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden"
     >
-      <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between">
+      <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
           <DirectionDropdown
             direction={direction}
@@ -735,65 +735,79 @@ export function FunnelExploration() {
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
   const overallConversionVisitors = lastFunnelStep?.visitors ?? null
 
+  const prevStepsLengthRef = useRef(0)
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+    if (steps.length !== prevStepsLengthRef.current) {
+      const activeColumn = el.querySelector(
+        `[data-exploration-column="${steps.length}"]`
+      )
+      if (activeColumn) {
+        const { left: colLeft, right: colRight } =
+          activeColumn.getBoundingClientRect()
+        const { left: containerLeft, right: containerRight } =
+          el.getBoundingClientRect()
+        if (colRight > containerRight || colLeft < containerLeft) {
+          el.scrollTo({
+            left: el.scrollLeft + colLeft - containerLeft,
+            behavior: 'smooth'
+          })
+        }
+      } else {
+        el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+      }
+    }
+    prevStepsLengthRef.current = steps.length
   }, [steps.length])
 
   return (
     <div className="flex flex-col gap-4 pt-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <h4 className="text-base font-semibold dark:text-gray-100">
-            {funnel.length >= 2
-              ? `${funnel.length}-step user journey`
-              : 'Explore user journeys'}
-          </h4>
-        </div>
-        <div className="flex items-center gap-3">
-          {overallConversionRate != null && (
-            <>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <span>
-                  <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Conversion: {parseFloat(overallConversionRate).toFixed(1)}%{' '}
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    ({numberShortFormatter(overallConversionVisitors)})
-                  </span>
-                </span>
-                <span className="text-gray-300 dark:text-gray-600 select-none">
-                  |
-                </span>
-              </div>
-            </>
-          )}
-          {steps.length === 0 ? (
+      <div className="flex flex-wrap items-center gap-x-3">
+        <h4 className="flex-1 text-base font-semibold dark:text-gray-100">
+          {funnel.length >= 2
+            ? `${funnel.length}-step user journey`
+            : 'Explore user journeys'}
+        </h4>
+        {overallConversionRate != null && (
+          <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>
+              <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
+                Conversion: {parseFloat(overallConversionRate).toFixed(1)}%{' '}
+              </span>
+              <span className="text-gray-500 dark:text-gray-400">
+                ({numberShortFormatter(overallConversionVisitors)})
+              </span>
+            </span>
+            <span className="hidden sm:inline text-gray-300 dark:text-gray-600 select-none">
+              |
+            </span>
+          </div>
+        )}
+        {steps.length === 0 ? (
+          <button
+            onClick={handleSuggestJourney}
+            disabled={activeColumnLoading}
+            className={`shrink-0 ${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} !h-7 px-1.5 text-xs flex items-center gap-1.5`}
+          >
+            {activeColumnLoading ? (
+              <RefreshIcon className="size-3.5 animate-spin" />
+            ) : (
+              <span className="px-1">Suggest journey</span>
+            )}
+          </button>
+        ) : (
+          <Tooltip
+            info={<span className="whitespace-nowrap">Deselect all</span>}
+          >
             <button
-              onClick={handleSuggestJourney}
-              disabled={activeColumnLoading}
-              className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} !h-7 px-1.5 text-xs flex items-center gap-1.5`}
+              onClick={handleReset}
+              className={`shrink-0 ${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
             >
-              {activeColumnLoading ? (
-                <RefreshIcon className="size-3.5 animate-spin" />
-              ) : (
-                <span className="px-1">Suggest journey</span>
-              )}
+              <RefreshIcon className="size-3.5" />
             </button>
-          ) : (
-            <Tooltip
-              info={<span className="whitespace-nowrap">Deselect all</span>}
-            >
-              <button
-                onClick={handleReset}
-                className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
-              >
-                <RefreshIcon className="size-3.5" />
-              </button>
-            </Tooltip>
-          )}
-        </div>
+          </Tooltip>
+        )}
       </div>
 
       <div
