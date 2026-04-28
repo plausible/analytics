@@ -242,9 +242,7 @@ defmodule Plausible.Stats.Exploration do
           name: em.name,
           pathname: selected_as(fragment("?", pname), :pathname),
           exact_visitors:
-            scale_sample(
-              fragment("uniqIf(?, ? = ?)", em.user_id, em.pathname, pname)
-            ),
+            scale_sample(fragment("uniqIf(?, ? = ?)", em.user_id, em.pathname, pname)),
           wildcard_visitors:
             selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :wildcard_visitors),
           subpaths_count: scale_sample(fragment("uniq(?)", em.pathname))
@@ -281,8 +279,7 @@ defmodule Plausible.Stats.Exploration do
         select: %{
           name: m.name,
           pathname: m.pathname,
-          visitors:
-            fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+          visitors: fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
           includes_subpaths: fragment("CAST(?, 'Bool')", is_wildcard),
           subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count)
         }
@@ -384,8 +381,7 @@ defmodule Plausible.Stats.Exploration do
             fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
           timestamp: e.timestamp
         },
-        where: e.name != "engagement",
-        order_by: ^event_ordering
+        where: e.name != "engagement"
       )
       |> select_previous(direction)
 
@@ -398,8 +394,7 @@ defmodule Plausible.Stats.Exploration do
           name1: e.name,
           pathname1: e.pathname
         },
-        where: e.prev_name != e.name or e.prev_pathname != e.pathname,
-        order_by: ^event_ordering
+        where: e.prev_name != e.name or e.prev_pathname != e.pathname
       )
 
     if steps > 1 do
