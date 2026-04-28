@@ -54,8 +54,6 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :site,
           name: "EMEA region"
         )
-        |> Map.put(:owner_name, nil)
-        |> Map.put(:owner_id, nil)
 
       foo_personal_segment =
         insert(:segment,
@@ -64,15 +62,19 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :personal,
           name: "FOO"
         )
-        |> Map.put(:owner_name, nil)
-        |> Map.put(:owner_id, nil)
 
       conn = get(conn, "/#{site.domain}")
       resp = html_response(conn, 200)
       assert element_exists?(resp, @react_container)
 
       assert text_of_attr(resp, @react_container, "data-segments") ==
-               Jason.encode!([foo_personal_segment, emea_site_segment])
+               Jason.encode!([
+                 Plausible.Segments.to_response_map(
+                   %{foo_personal_segment | owner_id: nil},
+                   site
+                 ),
+                 Plausible.Segments.to_response_map(%{emea_site_segment | owner_id: nil}, site)
+               ])
     end
 
     test "plausible.io live demo - shows site stats, header and footer", %{conn: conn} do
@@ -318,7 +320,6 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :site,
           name: "EMEA region"
         )
-        |> Map.put(:owner_name, user.name)
 
       foo_personal_segment =
         insert(:segment,
@@ -327,14 +328,16 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :personal,
           name: "FOO"
         )
-        |> Map.put(:owner_name, user.name)
 
       conn = get(conn, "/#{site.domain}")
       resp = html_response(conn, 200)
       assert element_exists?(resp, @react_container)
 
       assert text_of_attr(resp, @react_container, "data-segments") ==
-               Jason.encode!([foo_personal_segment, emea_site_segment])
+               Jason.encode!([
+                 Plausible.Segments.to_response_map(foo_personal_segment, site),
+                 Plausible.Segments.to_response_map(emea_site_segment, site)
+               ])
     end
   end
 
@@ -1381,9 +1384,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(resp, @react_container, "data-segments") ==
                emea_site_segment
-               |> Map.take([:id, :name, :type, :inserted_at, :updated_at, :segment_data])
+               |> Plausible.Segments.to_response_map(site)
                |> List.wrap()
-               |> JSON.encode!()
+               |> Jason.encode!()
 
       refute resp =~ apac_site_segment.name
 
@@ -1519,8 +1522,6 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :site,
           name: "EMEA region"
         )
-        |> Map.put(:owner_name, nil)
-        |> Map.put(:owner_id, nil)
 
       foo_personal_segment =
         insert(:segment,
@@ -1529,14 +1530,18 @@ defmodule PlausibleWeb.StatsControllerTest do
           type: :personal,
           name: "FOO"
         )
-        |> Map.put(:owner_name, nil)
-        |> Map.put(:owner_id, nil)
 
       conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
       resp = html_response(conn, 200)
 
       assert text_of_attr(resp, @react_container, "data-segments") ==
-               Jason.encode!([foo_personal_segment, emea_site_segment])
+               Jason.encode!([
+                 Plausible.Segments.to_response_map(
+                   %{foo_personal_segment | owner_id: nil},
+                   site
+                 ),
+                 Plausible.Segments.to_response_map(%{emea_site_segment | owner_id: nil}, site)
+               ])
     end
   end
 

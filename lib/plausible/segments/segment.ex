@@ -154,4 +154,3 @@ defmodule Plausible.Segments.Segment do
     end
   end
 end
-
