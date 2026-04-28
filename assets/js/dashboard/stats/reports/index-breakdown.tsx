@@ -177,7 +177,7 @@ export function IndexBreakdown({
 
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
-      <IndexBreakdownRenderer apiState={apiState} columns={columns} />
+      <IndexBreakdownRenderer {...apiState} columns={columns} />
     </LazyLoader>
   )
 }
@@ -415,18 +415,20 @@ function MetricValueCell({
 }
 
 export function IndexBreakdownRenderer({
-  apiState,
+  data,
+  isPending,
   columns
 }: {
-  apiState: ReturnType<typeof usePaginatedQueryAPI>
+  data?: { pages: QueryResultRow[][] }
+  isPending: boolean
   columns: ColumnConfiguration<QueryResultRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
 
   if (!columns) return null
-  const rows = apiState.data?.pages?.[0]?.slice(0, MAX_ITEMS) ?? []
+  const rows = data?.pages?.[0]?.slice(0, MAX_ITEMS) ?? []
 
-  if (apiState.isPending) {
+  if (isPending) {
     return (
       <div
         className="w-full flex flex-col justify-center"
