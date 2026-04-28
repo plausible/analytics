@@ -525,6 +525,41 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.visitors == 1
       end
 
+      test "includes root path (/) in suggestions" do
+        site = new_site()
+
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 122,
+            pathname: "/",
+            timestamp: DateTime.shift(now, minute: -320)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/",
+            timestamp: DateTime.shift(now, minute: -320)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Signup",
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -300)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(query, [])
+
+        assert next_step1.step.label == "/"
+        assert next_step1.visitors == 2
+
+        assert next_step2.step.label == "Signup /register"
+        assert next_step2.visitors == 1
+      end
+
       test "allows to filter according to how label is rendered" do
         site = new_site()
 
