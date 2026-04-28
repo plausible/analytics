@@ -269,10 +269,15 @@ defmodule Plausible.Stats.Exploration do
           ),
         on: true,
         hints: "ARRAY",
+        where: selected_as(:visitors) > 0,
         select: %{
           name: m.name,
           pathname: m.pathname,
-          visitors: fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+          visitors:
+            selected_as(
+              fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+              :visitors
+            ),
           includes_subpaths: fragment("CAST(?, 'Bool')", is_wildcard),
           subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count)
         }
