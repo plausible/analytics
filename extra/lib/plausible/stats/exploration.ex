@@ -328,7 +328,7 @@ defmodule Plausible.Stats.Exploration do
     arraySlice(split_pathname, 1, 1)), [?])
   """
 
-  defp combined_query(q_matches, _include_wildcard? = true) do
+  defp combined_query(q_matches, true = _include_wildcard?) do
     from(em in subquery(q_matches),
       join: pname in fragment(@wildcard_array_join, em.name, em.pathname, em.pathname),
       on: true,
@@ -347,7 +347,7 @@ defmodule Plausible.Stats.Exploration do
     )
   end
 
-  defp combined_query(q_matches, _include_wildcard? = false) do
+  defp combined_query(q_matches, false = _include_wildcard?) do
     from(em in subquery(q_matches),
       where: selected_as(:pathname) != "",
       select: %{
