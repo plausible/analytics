@@ -66,7 +66,12 @@ defmodule Plausible.Stats.Exploration do
   @max_steps 20
   @max_candidates 20
 
-  @next_steps_defaults [search_term: "", direction: :forward, max_candidates: 10]
+  @next_steps_defaults [
+    search_term: "",
+    direction: :forward,
+    max_candidates: 10,
+    include_wildcard?: true
+  ]
 
   @spec max_steps() :: pos_integer()
   def max_steps, do: @max_steps
@@ -84,10 +89,11 @@ defmodule Plausible.Stats.Exploration do
     direction = Keyword.fetch!(opts, :direction)
     search_term = Keyword.fetch!(opts, :search_term)
     max_candidates = min(Keyword.fetch!(opts, :max_candidates), @max_candidates)
+    include_wilcard? = Keyword.fetch!(opts, :include_wildcard?)
 
     query
     |> Base.base_event_query()
-    |> next_steps_query(journey, search_term, direction, max_candidates)
+    |> next_steps_query(journey, search_term, direction, max_candidates, include_wilcard?)
     # We pass the query struct to record query metadata for
     # the CH debug console.
     |> ClickhouseRepo.all(query: query)
@@ -133,6 +139,9 @@ defmodule Plausible.Stats.Exploration do
     * `:max_steps` - maximum number of funnel steps to build (default: `6`)
     * `:max_candidates` - passed to `next_steps/3`, limiting
       how many candidate next steps are fetched per step (default: `10`)
+    * `:include_wildcard?` - passed to `next_steps/3`, deciding whether
+      to include implicit wildcard pathnames in suggestions or not
+      (default: true)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
           {:ok, [funnel_step()]} | {:error, :not_found}
@@ -140,23 +149,34 @@ defmodule Plausible.Stats.Exploration do
     max_steps = min(Keyword.get(opts, :max_steps, 6), @max_steps)
     max_candidates = min(Keyword.get(opts, :max_candidates, 10), @max_candidates)
 
-    case build_interesting_journey(query, max_steps, max_candidates) do
+    include_wildcard? =
+      Keyword.get(
+        opts,
+        :include_wildcard?,
+        Keyword.fetch!(@next_steps_defaults, :include_wildcard?)
+      )
+
+    case build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
       [] -> {:error, :not_found}
       journey -> journey_funnel(query, journey)
     end
   end
 
-  defp build_interesting_journey(query, max_steps, max_candidates) do
-    do_build_journey(query, [], MapSet.new(), max_steps, max_candidates)
+  defp build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
+    do_build_journey(query, [], MapSet.new(), max_steps, max_candidates, include_wildcard?)
   end
 
-  defp do_build_journey(_query, journey, _seen, max_steps, _max_candidates)
+  defp do_build_journey(_query, journey, _seen, max_steps, _max_candidates, _include_wildcard?)
        when length(journey) >= max_steps do
     journey
   end
 
-  defp do_build_journey(query, journey, seen, max_steps, max_candidates) do
-    {:ok, candidates} = next_steps(query, journey, max_candidates: max_candidates)
+  defp do_build_journey(query, journey, seen, max_steps, max_candidates, include_wildcard?) do
+    {:ok, candidates} =
+      next_steps(query, journey,
+        max_candidates: max_candidates,
+        include_wildcard?: include_wildcard?
+      )
 
     case find_unseen_step(candidates, seen) do
       nil ->
@@ -164,7 +184,15 @@ defmodule Plausible.Stats.Exploration do
 
       step ->
         new_seen = MapSet.put(seen, normalize_step_key(step))
-        do_build_journey(query, journey ++ [step], new_seen, max_steps, max_candidates)
+
+        do_build_journey(
+          query,
+          journey ++ [step],
+          new_seen,
+          max_steps,
+          max_candidates,
+          include_wildcard?
+        )
     end
   end
 
@@ -181,14 +209,7 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname("/"), do: "/"
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
-  @wildcard_array_join """
-  arrayFold(
-    acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
-    arraySlice(splitByChar('/', ?) AS split_pathname, 2), 
-    arraySlice(split_pathname, 1, 1))
-  """
-
-  defp next_steps_query(query, steps, search_term, direction, max_candidates)
+  defp next_steps_query(query, steps, search_term, direction, max_candidates, include_wildcard?)
        when is_direction(direction) do
     next_step_idx = length(steps) + 1
     q_steps = steps_query(query, next_step_idx, direction)
@@ -214,55 +235,53 @@ defmodule Plausible.Stats.Exploration do
         from(s in q, where: ^step_condition)
       end)
 
-    q_exact_matches =
-      from(m in q_matches,
-        select_merge: %{
-          visitors: scale_sample(fragment("uniq(?)", m.user_id)),
-          includes_subpaths: type(^false, :boolean),
-          subpaths_count: 0
-        },
-        group_by: [selected_as(:name), selected_as(:pathname)]
-      )
-
     q_per_user_matches =
       from(m in q_matches,
         select_merge: %{user_id: m.user_id, _sample_factor: fragment("any(?)", m._sample_factor)},
         group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
       )
 
-    q_wildcard_matches =
-      from(em in subquery(q_per_user_matches),
-        join: pname in fragment(@wildcard_array_join, em.pathname),
+    q_combined = combined_query(q_per_user_matches, include_wildcard?)
+
+    # Fan out each q_combined row into up to two output rows (exact + wildcard)
+    # using ARRAY JOIN over a small boolean array.
+    #
+    # For each row we build [false, true] and filter it down to just [false]
+    # when the wildcard row should be suppressed (non-pageview, only one distinct
+    # subpath, or same visitor count as exact). ARRAY JOIN then emits one or more
+    # rows per group. The joined boolean `is_wildcard` selects which values to
+    # use for visitors / includes_subpaths / subpaths_count.
+    q_all_matches =
+      from(m in subquery(q_combined),
+        join:
+          is_wildcard in fragment(
+            """
+            arrayFilter(
+              x -> x = false OR (? = 'pageview' AND ? != '/' AND ? > 1 AND ? != ?),
+              [false, true]
+            )
+            """,
+            m.name,
+            m.pathname,
+            m.subpaths_count,
+            m.wildcard_visitors,
+            m.exact_visitors
+          ),
         on: true,
         hints: "ARRAY",
-        where: em.name == "pageview",
-        where: selected_as(:pathname) != "" and selected_as(:pathname) != "/",
+        where: selected_as(:visitors) > 0,
         select: %{
-          name: em.name,
-          pathname: selected_as(fragment("?", pname), :pathname),
-          visitors: selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :visitors),
-          unique_paths: scale_sample(fragment("uniq(?)", em.pathname))
-        },
-        group_by: [em.name, selected_as(:pathname)]
-      )
-
-    q_wildcard_filtered_matches =
-      from(wm in subquery(q_wildcard_matches),
-        left_join: emx in subquery(q_exact_matches),
-        on: emx.name == wm.name and emx.pathname == wm.pathname,
-        where: wm.unique_paths > 1 and (is_nil(emx.name) or wm.visitors != emx.visitors),
-        select: %{
-          name: wm.name,
-          pathname: wm.pathname,
-          visitors: wm.visitors,
-          includes_subpaths: type(^true, :boolean),
-          subpaths_count: wm.unique_paths
+          name: m.name,
+          pathname: m.pathname,
+          visitors:
+            selected_as(
+              fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+              :visitors
+            ),
+          includes_subpaths: fragment("CAST(?, 'Bool')", is_wildcard),
+          subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count)
         }
       )
-
-    q_all_matches =
-      q_exact_matches
-      |> union_all(^q_wildcard_filtered_matches)
 
     from(m in subquery(q_all_matches),
       select: %{
@@ -293,6 +312,59 @@ defmodule Plausible.Stats.Exploration do
       limit: ^max_candidates
     )
     |> maybe_search(search_term)
+  end
+
+  # Expand each (name, pathname, user_id) row into all prefix paths via
+  # ARRAY JOIN, then aggregate once to get both exact and wildcard visitor
+  # counts in a single scan of events_v2.
+  #
+  # The arrayFold expansion includes the original pathname as the last
+  # element, so uniqIf(user_id, original_pathname = prefix_pathname) gives the
+  # exact-match count for free, alongside the wildcard uniq(user_id) and the
+  # uniq(original_pathname) subpath count — all in one GROUP BY.
+  #
+  # Non-pageview events are included in the expansion but produce only a
+  # single prefix (their exact pathname), so they naturally get
+  # subpaths_count = 1 and are only emitted as exact rows.
+  @wildcard_array_join """
+  if(? = 'pageview', arrayFold(
+    acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
+    arraySlice(splitByChar('/', ?) AS split_pathname, 2), 
+    arraySlice(split_pathname, 1, 1)), [?])
+  """
+
+  defp combined_query(q_matches, true = _include_wildcard?) do
+    from(em in subquery(q_matches),
+      join: pname in fragment(@wildcard_array_join, em.name, em.pathname, em.pathname),
+      on: true,
+      hints: "ARRAY",
+      where: selected_as(:pathname) != "",
+      select: %{
+        name: em.name,
+        pathname: selected_as(fragment("?", pname), :pathname),
+        exact_visitors:
+          scale_sample(fragment("uniqIf(?, ? = ?)", em.user_id, em.pathname, pname)),
+        wildcard_visitors:
+          selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :wildcard_visitors),
+        subpaths_count: scale_sample(fragment("uniq(?)", em.pathname))
+      },
+      group_by: [em.name, selected_as(:pathname)]
+    )
+  end
+
+  defp combined_query(q_matches, false = _include_wildcard?) do
+    from(em in subquery(q_matches),
+      where: selected_as(:pathname) != "",
+      select: %{
+        name: em.name,
+        pathname: selected_as(em.pathname, :pathname),
+        exact_visitors:
+          selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :exact_visitors),
+        wildcard_visitors: selected_as(:exact_visitors),
+        subpaths_count: 1
+      },
+      group_by: [em.name, selected_as(:pathname)]
+    )
   end
 
   defp journey_funnel_query(query, steps, direction) do
@@ -341,41 +413,40 @@ defmodule Plausible.Stats.Exploration do
   end
 
   defp steps_query(query, steps, direction) when is_integer(steps) do
-    event_ordering = [asc: :timestamp, asc: :name, asc: :pathname]
-
     q_pairs =
       from(e in query,
         windows: [
           session_window: [
             partition_by: e.user_id,
-            order_by: ^event_ordering
+            order_by: [asc: e.timestamp]
           ]
         ],
         select: %{
           site_id: e.site_id,
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
+          row_number: row_number() |> over(:session_window),
           name: e.name,
           pathname:
             fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
           timestamp: e.timestamp
         },
-        where: e.name != "engagement",
-        order_by: ^event_ordering
+        where: e.name != "engagement"
       )
       |> select_previous(direction)
 
     q_steps =
       from(e in subquery(q_pairs),
-        windows: [step_window: [partition_by: e.user_id, order_by: ^event_ordering]],
+        windows: [
+          step_window: [partition_by: e.user_id, order_by: [asc: e.timestamp, asc: e.row_number]]
+        ],
         select: %{
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
           name1: e.name,
           pathname1: e.pathname
         },
-        where: e.prev_name != e.name or e.prev_pathname != e.pathname,
-        order_by: ^event_ordering
+        where: e.prev_name != e.name or e.prev_pathname != e.pathname
       )
 
     if steps > 1 do
