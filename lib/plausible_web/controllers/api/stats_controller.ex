@@ -137,6 +137,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_ee do
+    @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
+
     def exploration_next(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
@@ -147,7 +149,9 @@ defmodule PlausibleWeb.Api.StatsController do
            {:ok, next_steps} <-
              Plausible.Stats.Exploration.next_steps(query, journey,
                search_term: search_term,
-               direction: direction
+               direction: direction,
+               include_wildcard?:
+                 not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
              ) do
         json(conn, next_steps)
       else
@@ -180,7 +184,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
       case Plausible.Stats.Exploration.interesting_funnel(query,
              max_steps: params["max_steps"],
-             max_candidates: params["max_candidates"]
+             max_candidates: params["max_candidates"],
+             include_wildcard?:
+               not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
            ) do
         {:ok, funnel} -> json(conn, funnel)
         {:error, :not_found} -> json(conn, [])
