@@ -11,6 +11,7 @@ import {
 } from '../util/number-formatter'
 import { RefreshIcon, CursorIcon } from '../components/icons'
 import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
+import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
@@ -277,7 +278,8 @@ function ExplorationColumn({
   direction,
   onDirectionChange,
   headerConversionRate,
-  colIndex
+  colIndex,
+  className
 }) {
   const debouncedOnFilterChange = useDebounce((event) =>
     onFilterChange(event.target.value)
@@ -297,7 +299,7 @@ function ExplorationColumn({
   return (
     <div
       data-exploration-column={colIndex}
-      className="min-w-72 sm:min-w-80 flex-1 bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden"
+      className={`bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden ${className || ''}`}
     >
       <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
@@ -310,7 +312,7 @@ function ExplorationColumn({
             {header}
           </span>
         )}
-        {!selected && active && (
+        {!selected && active && (results.length > 0 || filter) && (
           <input
             data-testid="search-input"
             type="text"
@@ -334,8 +336,27 @@ function ExplorationColumn({
           </div>
         </div>
       ) : results.length === 0 && !selected ? (
-        <div className="h-110 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
-          {!active ? 'Select an event to continue' : 'No data'}
+        <div className="h-110 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
+          {!active ? (
+            <span className="flex flex-col items-center gap-2">
+              <CursorIcon className="size-5" />
+              {colIndex === 1
+                ? direction === EXPLORATION_DIRECTIONS.BACKWARD
+                  ? 'Select an end point to continue'
+                  : 'Select a starting point to continue'
+                : 'Select an event to continue'}
+            </span>
+          ) : filter ? (
+            <span className="flex flex-col items-center gap-2">
+              <MagnifyingGlassIcon className="size-4.5" />
+              {'No events found'}
+            </span>
+          ) : (
+            <span className="flex flex-col items-center gap-2">
+              <FlagIcon className="size-4.5" />
+              {"You've reached the end of this journey"}
+            </span>
+          )}
         </div>
       ) : (
         <ul
@@ -547,18 +568,6 @@ export function FunnelExploration() {
   }
 
   function handleReset() {
-    journeyVersionRef.current++
-    setSteps([])
-    setFunnel([])
-    setActiveColumnResults([])
-    setActiveColumnFilter('')
-    setProvisionalFunnelEntries({})
-    setFrozenColumnResults({})
-  }
-
-  function handleSuggestJourney() {
-    preloadFiredRef.current = false
-    funnelFromPreloadRef.current = false
     journeyVersionRef.current++
     setSteps([])
     setFunnel([])
@@ -784,35 +793,25 @@ export function FunnelExploration() {
             </span>
           </div>
         )}
-        {steps.length === 0 ? (
+        <Tooltip
+          info={<span className="whitespace-nowrap">Deselect all</span>}
+          className={steps.length === 0 ? 'invisible pointer-events-none' : ''}
+        >
           <button
-            onClick={handleSuggestJourney}
-            disabled={activeColumnLoading}
-            className={`shrink-0 ${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} !h-7 px-1.5 text-xs flex items-center gap-1.5`}
+            onClick={handleReset}
+            className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
           >
-            {activeColumnLoading ? (
-              <RefreshIcon className="size-3.5 animate-spin" />
-            ) : (
-              <span className="px-1">Suggest journey</span>
-            )}
+            <RefreshIcon className="size-3.5" />
           </button>
-        ) : (
-          <Tooltip
-            info={<span className="whitespace-nowrap">Deselect all</span>}
-          >
-            <button
-              onClick={handleReset}
-              className={`shrink-0 ${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
-            >
-              <RefreshIcon className="size-3.5" />
-            </button>
-          </Tooltip>
-        )}
+        </Tooltip>
       </div>
 
       <div
         ref={scrollRef}
-        className="relative flex gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+        className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+        style={{
+          gridTemplateColumns: `repeat(${numColumns}, minmax(20rem, 1fr))`
+        }}
       >
         {Array.from({ length: numColumns }, (_, i) => {
           const isActive = i === activeColumnIndex
@@ -823,6 +822,13 @@ export function FunnelExploration() {
               key={i}
               colIndex={i}
               header={columnHeader(i, direction)}
+              className={
+                steps.length === 0 && i === 2
+                  ? 'sm:hidden'
+                  : steps.length === 0 && i === 1
+                    ? 'sm:[grid-column:span_2]'
+                    : undefined
+              }
               active={isReachable}
               // Active column gets live results; previously-active (now
               // selected) columns get the candidate list that was visible at
