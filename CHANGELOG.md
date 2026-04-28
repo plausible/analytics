@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file.
 - Fixed comparison tooltip in the top pages report missing date labels
 - Fixed top bar not scrolling horizontally on mobile
 - Fixed incline/decline percentages not showing in top stats in comparison mode
+- Fixed issue with timestamps being rendered incorrectly in segment menus and modals for some timezones
 
 ## v3.2.0 - 2026-01-16
 
