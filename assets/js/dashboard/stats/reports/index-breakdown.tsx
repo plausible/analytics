@@ -33,7 +33,9 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { DashboardPeriod } from '../../dashboard-time-periods'
+import { DashboardState } from '../../dashboard-state'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -68,6 +70,9 @@ export function IndexBreakdown({
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
+  const isRealtime = dashboardState.period === DashboardPeriod.realtime
+  const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState(false)
+  const queryClient = useQueryClient()
 
   const statsQuery: StatsQuery = useMemo(
     () => createStatsQuery(dashboardState, { metrics: metrics, dimensions }),
@@ -96,6 +101,38 @@ export function IndexBreakdown({
       onDataReady(apiState.data)
     }
   }, [apiState.data, onDataReady])
+
+  useEffect(() => {
+    if (!apiState.isRefetching) {
+      setIsRealtimeSilentUpdate(false)
+    }
+  }, [apiState.isRefetching])
+
+  useEffect(() => {
+    if (!isRealtime) {
+      setIsRealtimeSilentUpdate(false)
+    }
+  }, [isRealtime])
+
+  useEffect(() => {
+    const onTick = () => {
+      setIsRealtimeSilentUpdate(true)
+      queryClient.invalidateQueries({
+        predicate: ({ queryKey }) =>
+          queryKey[0] === dimensionKey &&
+          typeof queryKey[1] === 'object' &&
+          (queryKey[1] as DashboardState)?.period === DashboardPeriod.realtime
+      })
+    }
+
+    if (isRealtime) {
+      document.addEventListener('tick', onTick)
+    }
+
+    return () => {
+      document.removeEventListener('tick', onTick)
+    }
+  }, [queryClient, isRealtime, dimensionKey])
 
   const query: QueryResultQuery | null = apiState.data?.query ?? null
 
@@ -196,7 +233,11 @@ export function IndexBreakdown({
 
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
-      <IndexBreakdownRenderer {...apiState} columns={columns} />
+      <IndexBreakdownRenderer
+        {...apiState}
+        isRealtimeSilentUpdate={isRealtimeSilentUpdate}
+        columns={columns}
+      />
     </LazyLoader>
   )
 }
@@ -436,18 +477,18 @@ function MetricValueCell({
 export function IndexBreakdownRenderer({
   data,
   isPending,
+  isRealtimeSilentUpdate,
   columns
 }: {
   data?: QueryApiResponse
   isPending: boolean
+  isRealtimeSilentUpdate: boolean
   columns: ColumnConfiguration<QueryResultRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
-
-  if (!columns) return null
   const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
-  if (isPending) {
+  if (!columns || isPending) {
     return (
       <div
         className="w-full flex flex-col justify-center"
@@ -474,70 +515,68 @@ export function IndexBreakdownRenderer({
   }
 
   return (
-    <FadeIn show className="h-full">
-      <div className="h-full flex flex-col">
-        <div
-          style={{ height: ROW_HEIGHT }}
-          className="pt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center"
-        >
-          {columns.map((col) => (
-            <div
-              key={col.key}
-              data-testid="report-header"
-              className={classNames(
-                col.width ?? 'grow w-full',
-                col.align === 'right' ? 'text-right' : 'truncate'
-              )}
-            >
-              {col.renderLabel()}
-            </div>
-          ))}
-        </div>
-        <div
-          className="group/report"
-          style={{ minHeight: DATA_CONTAINER_HEIGHT }}
-        >
-          <FlipMove>
-            {rows.map((row) => {
-              const dimension = row.dimensions[0]
-              const isActive = tappedRow === dimension
-
-              const handleClick = (e: React.MouseEvent) => {
-                if (
-                  window.innerWidth < 768 &&
-                  !(e.target as HTMLElement).closest('a')
-                ) {
-                  setTappedRow(isActive ? null : dimension)
-                }
-              }
-
-              return (
-                <div key={dimension} style={{ minHeight: ROW_HEIGHT }}>
-                  <div
-                    data-testid="report-row"
-                    className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
-                    style={{ marginTop: ROW_GAP_HEIGHT }}
-                    onClick={handleClick}
-                  >
-                    {columns.map((col) => (
-                      <div
-                        key={col.key}
-                        className={classNames(
-                          col.width ?? 'grow w-full',
-                          col.align === 'right' ? 'text-right' : 'truncate'
-                        )}
-                      >
-                        {col.renderCell(row, isActive)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </FlipMove>
-        </div>
+    <div className="h-full flex flex-col opacity-100 transition-opacity duration-300 starting:opacity-0">
+      <div
+        style={{ height: ROW_HEIGHT }}
+        className="pt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center"
+      >
+        {columns.map((col) => (
+          <div
+            key={col.key}
+            data-testid="report-header"
+            className={classNames(
+              col.width ?? 'grow w-full',
+              col.align === 'right' ? 'text-right' : 'truncate'
+            )}
+          >
+            {col.renderLabel()}
+          </div>
+        ))}
       </div>
-    </FadeIn>
+      <div
+        className="group/report"
+        style={{ minHeight: DATA_CONTAINER_HEIGHT }}
+      >
+        <FlipMove disableAllAnimations={!isRealtimeSilentUpdate}>
+          {rows.map((row) => {
+            const dimension = row.dimensions[0]
+            const isActive = tappedRow === dimension
+
+            const handleClick = (e: React.MouseEvent) => {
+              if (
+                window.innerWidth < 768 &&
+                !(e.target as HTMLElement).closest('a')
+              ) {
+                setTappedRow(isActive ? null : dimension)
+              }
+            }
+
+            return (
+              <div key={dimension} style={{ minHeight: ROW_HEIGHT }}>
+                <div
+                  data-testid="report-row"
+                  className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
+                  style={{ marginTop: ROW_GAP_HEIGHT }}
+                  onClick={handleClick}
+                >
+                  {columns.map((col) => (
+                    <div
+                      key={col.key}
+                      className={classNames(
+                        col.width ?? 'grow w-full',
+                        col.align === 'right' ? 'text-right' : 'truncate'
+                      )}
+                    >
+                      {col.renderCell(row, isActive)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </FlipMove>
+      </div>
+    </div>
   )
 }
 
