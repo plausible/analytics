@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
-import { Tooltip } from '../util/tooltip'
 import { useDebounce } from '../custom-hooks'
 import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
-import {
-  numberShortFormatter,
-  numberLongFormatter
-} from '../util/number-formatter'
+import { numberShortFormatter } from '../util/number-formatter'
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 const EXPLORATION_DIRECTIONS = {
@@ -30,12 +26,7 @@ function stateWithApplicableFilters(dashboardState, steps) {
 }
 
 function toJourney(steps) {
-  return steps.map((s) => ({
-    name: s.name,
-    pathname: s.pathname,
-    includes_subpaths: s.includes_subpaths,
-    subpaths_count: s.subpaths_count
-  }))
+  return steps.map((s) => ({ name: s.name, pathname: s.pathname }))
 }
 
 function fetchNextWithFunnel(
@@ -70,11 +61,7 @@ function fetchInterestingFunnel(site, dashboardState) {
 }
 
 function isSameStep(step, otherStep) {
-  return (
-    step.name === otherStep.name &&
-    step.pathname === otherStep.pathname &&
-    step.includes_subpaths === otherStep.includes_subpaths
-  )
+  return step.name === otherStep.name && step.pathname === otherStep.pathname
 }
 
 function ExplorationColumn({
@@ -161,12 +148,9 @@ function ExplorationColumn({
               isSelected && selectedConversionRate !== null
                 ? selectedConversionRate
                 : Math.round((visitors / stepMaxVisitors) * 100)
-            const label = step.includes_subpaths
-              ? `${step.label}… (${step.subpaths_count} pages)`
-              : step.label
 
             return (
-              <li key={label}>
+              <li key={step.label}>
                 <button
                   className={`group w-full border text-left px-2.5 pt-2 pb-2.5 text-sm rounded-md focus:outline-none ${
                     isSelected
@@ -178,14 +162,12 @@ function ExplorationColumn({
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span
                       className="truncate font-medium text-gray-800 dark:text-gray-200"
-                      title={label}
+                      title={step.label}
                     >
-                      {label}
+                      {step.label}
                     </span>
                     <span className="shrink-0 text-gray-800 dark:text-gray-200 tabular-nums">
-                      <Tooltip info={numberLongFormatter(visitorsToShow)}>
-                        {numberShortFormatter(visitorsToShow)}
-                      </Tooltip>
+                      {numberShortFormatter(visitorsToShow)}
                     </span>
                   </div>
                   <div
