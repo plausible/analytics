@@ -118,7 +118,7 @@ function DirectionDropdown({ direction, onDirectionChange }) {
       </button>
       {open && (
         <div
-          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 ${popover.panel.classNames.roundedSheet}`}
+          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
         >
           {[
             [EXPLORATION_DIRECTIONS.FORWARD, 'Starting point'],
@@ -130,7 +130,7 @@ function DirectionDropdown({ direction, onDirectionChange }) {
                 onDirectionChange(value)
                 setOpen(false)
               }}
-              className={`w-full text-left text-sm rounded-md ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${
+              className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${
                 direction === value
                   ? popover.items.classNames.selectedOption
                   : ''
@@ -235,7 +235,6 @@ function PathConnectors({ scrollRef, steps }) {
   return (
     <svg
       className="absolute inset-0 pointer-events-none overflow-visible"
-      width={svgData.width}
       height={svgData.height}
     >
       <defs>
@@ -254,7 +253,7 @@ function PathConnectors({ scrollRef, steps }) {
           d={d}
           fill="none"
           clipPath="url(#exploration-list-clip)"
-          className="stroke-indigo-300/80 dark:stroke-indigo-800"
+          className="stroke-indigo-500 dark:stroke-gray-500"
           strokeWidth="1.5"
         />
       ))}
@@ -318,7 +317,7 @@ function ExplorationColumn({
             defaultValue={filter}
             placeholder="Search"
             onChange={debouncedOnFilterChange}
-            className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+            className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
         {headerConversionRate && (
@@ -363,17 +362,17 @@ function ExplorationColumn({
                   data-exploration-step={isSelected ? colIndex : undefined}
                   className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
                     isSelected
-                      ? 'bg-indigo-50 dark:bg-gray-750 border-indigo-100 dark:border-transparent'
-                      : 'bg-white border-gray-150 dark:border-gray-750'
+                      ? 'bg-indigo-50 dark:bg-gray-700 border-indigo-100 dark:border-transparent'
+                      : 'bg-white dark:bg-gray-750 border-gray-150 dark:border-gray-750'
                   }`}
                   onClick={() => onSelect(isSelected ? null : step)}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span
-                      className={`flex items-center gap-2 min-w-0 ${
+                      className={`flex items-center gap-1.5 min-w-0 ${
                         isDimmed
                           ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-800 dark:text-gray-200'
+                          : 'text-gray-900 dark:text-gray-100'
                       }`}
                       title={
                         step.includes_subpaths
@@ -544,6 +543,18 @@ export function FunnelExploration() {
   }
 
   function handleReset() {
+    journeyVersionRef.current++
+    setSteps([])
+    setFunnel([])
+    setActiveColumnResults([])
+    setActiveColumnFilter('')
+    setProvisionalFunnelEntries({})
+    setFrozenColumnResults({})
+  }
+
+  function handleSuggestJourney() {
+    preloadFiredRef.current = false
+    funnelFromPreloadRef.current = false
     journeyVersionRef.current++
     setSteps([])
     setFunnel([])
@@ -744,30 +755,44 @@ export function FunnelExploration() {
                   <span className="font-semibold text-gray-700 dark:text-gray-200">
                     Conversion: {parseFloat(overallConversionRate).toFixed(1)}%{' '}
                   </span>
-                  <span className="text-gray-400 dark:text-gray-500">
+                  <span className="text-gray-500 dark:text-gray-400">
                     ({numberShortFormatter(overallConversionVisitors)})
                   </span>
                 </span>
-                <span className="text-gray-300 dark:text-gray-700 select-none">
+                <span className="text-gray-300 dark:text-gray-600 select-none">
                   |
                 </span>
               </div>
             </>
           )}
-          <Tooltip info="Reset">
+          {steps.length === 0 ? (
             <button
-              onClick={handleReset}
-              className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
+              onClick={handleSuggestJourney}
+              disabled={activeColumnLoading}
+              className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} !h-7 px-1.5 text-xs flex items-center gap-1.5`}
             >
-              <RefreshIcon className="size-3.5" />
+              {activeColumnLoading ? (
+                <RefreshIcon className="size-3.5 animate-spin" />
+              ) : (
+                <span className="px-1">Suggest journey</span>
+              )}
             </button>
-          </Tooltip>
+          ) : (
+            <Tooltip info="Deselect all">
+              <button
+                onClick={handleReset}
+                className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
+              >
+                <RefreshIcon className="size-3.5" />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="relative flex gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3"
+        className="relative flex gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
       >
         {Array.from({ length: numColumns }, (_, i) => {
           const isActive = i === activeColumnIndex
