@@ -139,6 +139,9 @@ defmodule Plausible.Stats.Exploration do
     * `:max_steps` - maximum number of funnel steps to build (default: `6`)
     * `:max_candidates` - passed to `next_steps/3`, limiting
       how many candidate next steps are fetched per step (default: `10`)
+    * `:include_wildcard?` - passed to `next_steps/3`, deciding whether
+      to include implicit wildcard pathnames in suggestions or not
+      (default: true)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
           {:ok, [funnel_step()]} | {:error, :not_found}
