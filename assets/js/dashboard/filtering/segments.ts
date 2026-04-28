@@ -34,9 +34,9 @@ export type SavedSegment = {
   id: number
   name: string
   type: SegmentType
-  /** naive UTC timestamp, example 2025-02-26T10:00:00 */
+  /** naive site-timezone timestamp, example 2025-02-26T10:00:00 */
   inserted_at: string
-  /** naive UTC timestamp, example 2025-02-26T10:00:00 */
+  /** naive site-timezone timestamp, example 2025-02-26T10:00:00 */
   updated_at: string
 } & SegmentOwnership
 

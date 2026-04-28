@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.to_response_map(segment, site))
     end
   end
 
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.to_response_map(segment, site))
     end
   end
 
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         segment_not_found(conn, params["segment_id"])
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.to_response_map(segment, site))
     end
   end
 

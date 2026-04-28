@@ -82,10 +82,6 @@ export function parseNaiveDate(dateString) {
   return dayjs(dateString)
 }
 
-export function dateForSite(utcDateString, site) {
-  return dayjs.utc(utcDateString).utcOffset(site.offset / 60)
-}
-
 export function utcNow() {
   return dayjs.utc()
 }

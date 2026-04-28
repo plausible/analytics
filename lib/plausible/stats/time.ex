@@ -189,9 +189,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp to_naive_in_tz!(utc_datetime, timezone) do
-    utc_datetime
-    |> DateTime.shift_zone!(timezone)
-    |> DateTime.to_naive()
+    Plausible.Times.to_naive_datetime!(utc_datetime, timezone)
   end
 
   def present_index(time_labels, query) do
