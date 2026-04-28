@@ -253,7 +253,7 @@ function PathConnectors({ scrollRef, steps }) {
           d={d}
           fill="none"
           clipPath="url(#exploration-list-clip)"
-          className="stroke-indigo-500 dark:stroke-gray-500"
+          className="stroke-indigo-500 dark:stroke-indigo-400"
           strokeWidth="1.5"
         />
       ))}
@@ -297,9 +297,9 @@ function ExplorationColumn({
   return (
     <div
       data-exploration-column={colIndex}
-      className="min-w-80 flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden"
+      className="min-w-80 flex-1 bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden"
     >
-      <div className="h-[42px] pt-2 pl-4 pr-1.5 flex items-center justify-between">
+      <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between">
         {onDirectionChange ? (
           <DirectionDropdown
             direction={direction}
@@ -340,7 +340,7 @@ function ExplorationColumn({
       ) : (
         <ul
           data-exploration-list
-          className="flex flex-col gap-y-2 p-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+          className="flex flex-col gap-y-2 px-2 pb-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
         >
           {listItems.map(({ step, visitors }) => {
             const isSelected = !!selected && isSameStep(step, selected)
@@ -362,7 +362,7 @@ function ExplorationColumn({
                   data-exploration-step={isSelected ? colIndex : undefined}
                   className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
                     isSelected
-                      ? 'bg-indigo-50 dark:bg-gray-700 border-indigo-100 dark:border-transparent'
+                      ? 'bg-indigo-50 dark:bg-gray-600/70 border-indigo-100 dark:border-transparent'
                       : 'bg-white dark:bg-gray-750 border-gray-150 dark:border-gray-750'
                   }`}
                   onClick={() => onSelect(isSelected ? null : step)}
@@ -383,13 +383,15 @@ function ExplorationColumn({
                       {isCustomEvent && (
                         <CursorIcon
                           title="Custom event"
-                          className={`size-4 shrink-0 ${isDimmed ? 'text-gray-300 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}
+                          className={`size-4 shrink-0 ${isDimmed ? 'text-gray-300 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
                         />
                       )}
                       <span className="truncate">{label}</span>
                       {step.includes_subpaths && (
                         <>
-                          <ChevronRightIcon className="mt-0.5 size-3 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <ChevronRightIcon
+                            className={`mt-0.5 size-3 shrink-0 ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
+                          />
                           <span
                             className={`shrink-0 ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
                           >
@@ -416,17 +418,19 @@ function ExplorationColumn({
                   <div
                     className={`h-1 rounded-full overflow-hidden ${
                       isSelected
-                        ? 'bg-indigo-200/70 dark:bg-gray-700'
-                        : 'bg-gray-150 dark:bg-gray-700/50'
+                        ? 'bg-indigo-200/70 dark:bg-gray-500/60'
+                        : isDimmed
+                          ? 'bg-gray-150 dark:bg-gray-700'
+                          : 'bg-gray-150 dark:bg-gray-600'
                     }`}
                   >
                     <div
                       className={`h-full rounded-full transition-[width] ease-in-out ${
                         isSelected
-                          ? 'bg-indigo-500 dark:bg-white'
+                          ? 'bg-indigo-500 dark:bg-indigo-400'
                           : isDimmed
-                            ? 'bg-indigo-200 dark:bg-gray-600'
-                            : 'bg-indigo-300 dark:bg-gray-500 group-hover:bg-indigo-400 dark:group-hover:bg-white'
+                            ? 'bg-indigo-200 dark:bg-indigo-400/30'
+                            : 'bg-indigo-300 dark:bg-indigo-400/75 group-hover:bg-indigo-400 dark:group-hover:bg-indigo-400'
                       }`}
                       style={{ width: `${barWidth}%` }}
                     />
