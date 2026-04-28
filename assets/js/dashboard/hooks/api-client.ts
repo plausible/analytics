@@ -41,6 +41,7 @@ type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
  */
 export function usePaginatedQueryAPI({
   site,
+  dashboardState,
   statsQuery,
   afterFetchData,
   afterFetchNextPage,
@@ -48,6 +49,7 @@ export function usePaginatedQueryAPI({
   enabled = true
 }: {
   site: PlausibleSite
+  dashboardState: DashboardState
   statsQuery: StatsQuery
   afterFetchData?: (response: api.QueryApiResponse) => void
   afterFetchNextPage?: (response: api.QueryApiResponse) => void
@@ -60,22 +62,14 @@ export function usePaginatedQueryAPI({
   useEffect(() => {
     return () => {
       const tanstackQueryFilters: QueryFilters = {
-        predicate: (query) => {
-          const key = query.queryKey[0]
-          return (
-            typeof key === 'object' &&
-            key !== null &&
-            'dimensions' in key &&
-            (key as StatsQuery).dimensions.join(',') === dimensionKey
-          )
-        }
+        predicate: ({ queryKey }) => queryKey[0] === dimensionKey
       }
       queryClient.setQueriesData(tanstackQueryFilters, cleanToPageOne)
     }
   }, [queryClient, dimensionKey])
 
   return useInfiniteQuery({
-    queryKey: [statsQuery],
+    queryKey: [dimensionKey, statsQuery],
     enabled,
     queryFn: async ({
       pageParam
@@ -102,6 +96,12 @@ export function usePaginatedQueryAPI({
         ? (lastPageParam as number) + pageSize
         : null
     },
+    staleTime: () =>
+      getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...dashboardState
+      }),
     initialPageParam: 0,
     placeholderData: (previousData) => previousData
   })
