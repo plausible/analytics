@@ -778,7 +778,7 @@ export function FunnelExploration() {
               )}
             </button>
           ) : (
-            <Tooltip info="Deselect all">
+            <Tooltip info={<span className="whitespace-nowrap">Deselect all</span>}>
               <button
                 onClick={handleReset}
                 className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
