@@ -420,6 +420,7 @@ defmodule Plausible.Stats.Exploration do
           site_id: e.site_id,
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
+          row_number: row_number() |> over(:session_window),
           name: e.name,
           pathname:
             fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
@@ -432,7 +433,9 @@ defmodule Plausible.Stats.Exploration do
 
     q_steps =
       from(e in subquery(q_pairs),
-        windows: [step_window: [partition_by: e.user_id]],
+        windows: [
+          step_window: [partition_by: e.user_id, order_by: [asc: e.timestamp, asc: e.row_number]]
+        ],
         select: %{
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
