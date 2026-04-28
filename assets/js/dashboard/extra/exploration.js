@@ -162,7 +162,7 @@ function ExplorationColumn({
                 ? selectedConversionRate
                 : Math.round((visitors / stepMaxVisitors) * 100)
             const label = step.includes_subpaths
-              ? `${step.label}… (${step.subpaths_count} pages)`
+              ? `${step.label}… (${numberShortFormatter(step.subpaths_count)} pages)`
               : step.label
 
             return (
