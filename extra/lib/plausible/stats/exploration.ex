@@ -425,7 +425,8 @@ defmodule Plausible.Stats.Exploration do
             fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
           timestamp: e.timestamp
         },
-        where: e.name != "engagement"
+        where: e.name != "engagement",
+        order_by: [asc: e.timestamp]
       )
       |> select_previous(direction)
 
