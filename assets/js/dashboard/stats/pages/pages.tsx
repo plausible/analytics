@@ -40,9 +40,9 @@ function addSearchFilter(statsQuery: StatsQuery, search: string) {
 }
 
 export function PagesIndex({
-  afterFetchData
+  onDataReady
 }: {
-  afterFetchData?: (response: QueryApiResponse) => void
+  onDataReady?: (data: QueryApiResponse) => void
 }) {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
@@ -65,7 +65,7 @@ export function PagesIndex({
       getExternalLinkUrl={getExternalLinkUrl}
       getFilterInfo={getFilterInfo}
       dimensionLabel="Page"
-      afterFetchData={afterFetchData}
+      onDataReady={onDataReady}
     />
   )
 }

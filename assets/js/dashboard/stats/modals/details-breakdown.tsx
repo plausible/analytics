@@ -1,4 +1,10 @@
-import React, { ReactNode, useCallback, useMemo, useState } from 'react'
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { usePaginatedQueryAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
@@ -43,11 +49,13 @@ import {
 } from '../../util/filters'
 import { SortButton } from '../../components/sort-button'
 
+type PaginatedData = { pages: QueryApiResponse[] }
+
 type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
   defaultOrderBy?: OrderBy
   addSearchFilter?: (statsQuery: StatsQuery, search: string) => StatsQuery
-  afterFetchNextPage?: (response: QueryApiResponse) => void
+  onDataReady?: (data: PaginatedData) => void
 }
 
 const getMetricCellWidthClass = (
@@ -78,14 +86,11 @@ export function DetailsBreakdown({
   getFilterInfo,
   getExternalLinkUrl,
   addSearchFilter,
-  afterFetchData,
-  afterFetchNextPage
+  onDataReady
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [search, setSearch] = useState('')
-  const [meta, setMeta] = useState<QueryResultMeta | null>(null)
-  const [query, setQuery] = useState<QueryResultQuery | null>(null)
 
   const storedOrderBy = getStoredOrderBy({
     domain: site.domain,
@@ -124,21 +129,24 @@ export function DetailsBreakdown({
     return baseStatsQuery
   }, [baseStatsQuery, search, addSearchFilter])
 
-  const handleAfterFetchData = useCallback(
-    (response: QueryApiResponse) => {
-      setMeta(response.meta)
-      setQuery(response.query)
-      afterFetchData?.(response)
-    },
-    [afterFetchData]
-  )
-
   const apiState = usePaginatedQueryAPI({
     site,
-    statsQuery,
-    afterFetchData: handleAfterFetchData,
-    afterFetchNextPage
+    dashboardState,
+    statsQuery
   })
+
+  useEffect(() => {
+    const pages = apiState.data?.pages
+    if (pages?.length) {
+      onDataReady?.({ pages })
+    }
+  }, [apiState.data, onDataReady])
+
+  const query: QueryResultQuery | null =
+    apiState.data?.pages?.[0]?.query ?? null
+
+  const meta: QueryResultMeta | null =
+    (apiState.data?.pages?.[0]?.meta as QueryResultMeta) ?? null
 
   const metricLabelFor = useCallback(
     (metric: Metric): string => {
@@ -230,10 +238,15 @@ export function DetailsBreakdown({
     metricLabelFor
   ])
 
+  const tableData = apiState.data
+    ? { pages: apiState.data.pages.map((p) => p.results) }
+    : undefined
+
   return (
     <BreakdownTable<QueryResultRow>
       title={title}
       {...apiState}
+      data={tableData}
       columns={columns}
       onSearch={addSearchFilter ? setSearch : undefined}
       getRowKey={(row) => row.dimensions[0]}

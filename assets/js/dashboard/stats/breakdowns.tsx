@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useRef } from 'react'
 import { SortDirection } from '../hooks/use-order-by'
-import type { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../api'
+import type { QueryResultRow, QueryResultQuery } from '../api'
 import { Metric } from './metrics'
 import { FilterInfo } from '../components/drilldown-link'
 import { ChangeArrow } from './reports/change-arrow'
@@ -14,7 +14,6 @@ export type SharedBreakdownReportProps = {
   metrics: Metric[]
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
   getExternalLinkUrl?: (row: QueryResultRow) => string | null
-  afterFetchData?: (response: QueryApiResponse) => void
 }
 
 export type ColumnConfiguration<T> = {

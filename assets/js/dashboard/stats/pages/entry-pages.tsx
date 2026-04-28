@@ -38,9 +38,9 @@ function addSearchFilter(statsQuery: StatsQuery, search: string) {
 }
 
 export function EntryPagesIndex({
-  afterFetchData
+  onDataReady
 }: {
-  afterFetchData?: (response: QueryApiResponse) => void
+  onDataReady?: (data: QueryApiResponse) => void
 }) {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
@@ -63,7 +63,7 @@ export function EntryPagesIndex({
       getExternalLinkUrl={getExternalLinkUrl}
       getFilterInfo={getFilterInfo}
       dimensionLabel="Entry page"
-      afterFetchData={afterFetchData}
+      onDataReady={onDataReady}
     />
   )
 }

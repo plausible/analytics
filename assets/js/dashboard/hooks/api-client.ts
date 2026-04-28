@@ -35,26 +35,16 @@ type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
 ) => [DashboardState, Record<string, unknown>]
 
 /**
- * Hook for paginated POST /api/stats/:domain/query requests.
- * Pass pageSize to limit results (e.g. 9 for index views, default 100 for modals).
- * Set enabled=false to defer fetching (e.g. until the component is visible).
+ * Hook for paginated POST /api/stats/:domain/query requests (i.e. Details views).
  */
 export function usePaginatedQueryAPI({
   site,
   dashboardState,
-  statsQuery,
-  afterFetchData,
-  afterFetchNextPage,
-  pageSize = PAGINATION_LIMIT,
-  enabled = true
+  statsQuery
 }: {
   site: PlausibleSite
   dashboardState: DashboardState
   statsQuery: StatsQuery
-  afterFetchData?: (response: api.QueryApiResponse) => void
-  afterFetchNextPage?: (response: api.QueryApiResponse) => void
-  pageSize?: number
-  enabled?: boolean
 }) {
   const queryClient = useQueryClient()
   const dimensionKey = statsQuery.dimensions.join(',')
@@ -70,30 +60,15 @@ export function usePaginatedQueryAPI({
 
   return useInfiniteQuery({
     queryKey: [dimensionKey, statsQuery],
-    enabled,
-    queryFn: async ({
-      pageParam
-    }): Promise<api.QueryApiResponse['results']> => {
-      const response: api.QueryApiResponse = await api.stats(site, {
+    queryFn: async ({ pageParam }): Promise<api.QueryApiResponse> => {
+      return api.stats(site, {
         ...statsQuery,
-        pagination: { limit: pageSize, offset: pageParam as number }
+        pagination: { limit: PAGINATION_LIMIT, offset: pageParam as number }
       } as StatsQuery)
-
-      if (pageParam === 0 && typeof afterFetchData === 'function') {
-        afterFetchData(response)
-      }
-      if (
-        (pageParam as number) > 0 &&
-        typeof afterFetchNextPage === 'function'
-      ) {
-        afterFetchNextPage(response)
-      }
-
-      return response.results
     },
-    getNextPageParam: (lastPageResults, _, lastPageParam) => {
-      return lastPageResults.length === pageSize
-        ? (lastPageParam as number) + pageSize
+    getNextPageParam: (lastPage, _, lastPageParam) => {
+      return lastPage.results.length === PAGINATION_LIMIT
+        ? (lastPageParam as number) + PAGINATION_LIMIT
         : null
     },
     staleTime: () =>

@@ -1,11 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import FlipMove from 'react-flip-move'
 import FadeIn from '../../fade-in'
 import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { usePaginatedQueryAPI } from '../../hooks/api-client'
+import { getStaleTime } from '../../hooks/api-client'
 import { createStatsQuery } from '../../stats-query'
 import type { StatsQuery } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
@@ -19,8 +19,12 @@ import {
   extractMetricValue
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import * as api from '../../api'
-import type { QueryResultRow, QueryResultQuery } from '../../api'
+import {
+  QueryResultRow,
+  QueryResultQuery,
+  QueryApiResponse,
+  stats
+} from '../../api'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
@@ -29,6 +33,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
+import { useQuery } from '@tanstack/react-query'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -44,6 +49,12 @@ const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
 const BAR_METRIC = 'visitors'
 
+type IndexBreakdownProps = SharedBreakdownReportProps & {
+  color: string
+  metricColumnWidth?: string
+  onDataReady?: (data: QueryApiResponse) => void
+}
+
 export function IndexBreakdown({
   metrics,
   dimensions,
@@ -51,41 +62,49 @@ export function IndexBreakdown({
   getFilterInfo,
   getExternalLinkUrl,
   dimensionLabel,
-  afterFetchData,
+  onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
-}: SharedBreakdownReportProps & { color: string; metricColumnWidth?: string }) {
+}: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
-  const [query, setQuery] = useState<QueryResultQuery | null>(null)
 
   const statsQuery: StatsQuery = useMemo(
     () => createStatsQuery(dashboardState, { metrics: metrics, dimensions }),
     [dashboardState, metrics, dimensions]
   )
 
-  const handleAfterFetchData = useCallback(
-    (response: api.QueryApiResponse) => {
-      setQuery(response.query)
-      afterFetchData?.(response)
-    },
-    [afterFetchData]
-  )
+  const dimensionKey = statsQuery.dimensions.join(',')
 
-  const apiState = usePaginatedQueryAPI({
-    site,
-    statsQuery,
-    afterFetchData: handleAfterFetchData,
-    pageSize: MAX_ITEMS,
-    enabled: visible
+  const apiState = useQuery<QueryApiResponse>({
+    queryKey: [dimensionKey, dashboardState],
+    enabled: visible,
+    queryFn: () =>
+      stats(site, {
+        ...statsQuery,
+        pagination: { limit: MAX_ITEMS, offset: 0 }
+      } as StatsQuery),
+    staleTime: getStaleTime({
+      siteTimezoneOffset: site.offset,
+      siteStatsBegin: site.statsBegin,
+      ...dashboardState
+    })
   })
+
+  useEffect(() => {
+    if (apiState.data && typeof onDataReady === 'function') {
+      onDataReady(apiState.data)
+    }
+  }, [apiState.data, onDataReady])
+
+  const query: QueryResultQuery | null = apiState.data?.query ?? null
 
   const barMetricIndex = query
     ? query.metrics.findIndex((m) => m === BAR_METRIC)
     : null
 
   const barMaxValue = useMemo(() => {
-    const rows = apiState.data?.pages?.[0] ?? []
+    const rows = apiState.data?.results ?? []
     return barMetricIndex === null
       ? null
       : Math.max(...rows.map((r) => r.metrics[barMetricIndex] as number))
@@ -419,14 +438,14 @@ export function IndexBreakdownRenderer({
   isPending,
   columns
 }: {
-  data?: { pages: QueryResultRow[][] }
+  data?: QueryApiResponse
   isPending: boolean
   columns: ColumnConfiguration<QueryResultRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
 
   if (!columns) return null
-  const rows = data?.pages?.[0]?.slice(0, MAX_ITEMS) ?? []
+  const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
   if (isPending) {
     return (

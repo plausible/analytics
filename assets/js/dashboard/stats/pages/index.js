@@ -31,10 +31,10 @@ export default function Pages() {
     setMode(mode)
   }
 
-  function afterFetchData(apiResponse) {
+  function onDataReady(queryApiResponse) {
     setLoading(false)
-    setSkipImportedReason(apiResponse.skip_imported_reason)
-    if (apiResponse.results && apiResponse.results.length > 0) {
+    setSkipImportedReason(queryApiResponse.meta?.imports_skip_reason)
+    if (queryApiResponse.results && queryApiResponse.results.length > 0) {
       setMoreLinkState(MoreLinkState.READY)
     } else {
       setMoreLinkState(MoreLinkState.HIDDEN)
@@ -70,12 +70,12 @@ export default function Pages() {
   function renderContent() {
     switch (mode) {
       case 'entry-pages':
-        return <EntryPagesIndex afterFetchData={afterFetchData} />
+        return <EntryPagesIndex onDataReady={onDataReady} />
       case 'exit-pages':
-        return <ExitPagesIndex afterFetchData={afterFetchData} />
+        return <ExitPagesIndex onDataReady={onDataReady} />
       case 'pages':
       default:
-        return <PagesIndex afterFetchData={afterFetchData} />
+        return <PagesIndex onDataReady={onDataReady} />
     }
   }
 
