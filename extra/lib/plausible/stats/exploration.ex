@@ -408,14 +408,12 @@ defmodule Plausible.Stats.Exploration do
   end
 
   defp steps_query(query, steps, direction) when is_integer(steps) do
-    event_ordering = [asc: :timestamp, asc: :name, asc: :pathname]
-
     q_pairs =
       from(e in query,
         windows: [
           session_window: [
             partition_by: e.user_id,
-            order_by: ^event_ordering
+            order_by: [asc: e.timestamp]
           ]
         ],
         select: %{
@@ -433,7 +431,7 @@ defmodule Plausible.Stats.Exploration do
 
     q_steps =
       from(e in subquery(q_pairs),
-        windows: [step_window: [partition_by: e.user_id, order_by: ^event_ordering]],
+        windows: [step_window: [partition_by: e.user_id]],
         select: %{
           user_id: e.user_id,
           _sample_factor: e._sample_factor,
