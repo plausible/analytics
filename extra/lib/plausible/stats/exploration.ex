@@ -251,12 +251,11 @@ defmodule Plausible.Stats.Exploration do
       )
 
     # Fan out each q_combined row into up to two output rows (exact + wildcard)
-    # using ARRAY JOIN over a small boolean array — no UNION ALL, no branching,
-    # no second scan of events_v2.
+    # using ARRAY JOIN over a small boolean array.
     #
     # For each row we build [false, true] and filter it down to just [false]
     # when the wildcard row should be suppressed (non-pageview, only one distinct
-    # subpath, or same visitor count as exact). ARRAY JOIN then emits one or two
+    # subpath, or same visitor count as exact). ARRAY JOIN then emits one or more
     # rows per group. The joined boolean `is_wildcard` selects which values to
     # use for visitors / includes_subpaths / subpaths_count.
     q_all_matches =
