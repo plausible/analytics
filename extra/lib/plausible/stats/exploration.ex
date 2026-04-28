@@ -182,10 +182,10 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
   @wildcard_array_join """
-  arrayFold(
+  if(? = 'pageview', arrayFold(
     acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
     arraySlice(splitByChar('/', ?) AS split_pathname, 2), 
-    arraySlice(split_pathname, 1, 1))
+    arraySlice(split_pathname, 1, 1)), [?])
   """
 
   defp next_steps_query(query, steps, search_term, direction, max_candidates)
@@ -234,7 +234,7 @@ defmodule Plausible.Stats.Exploration do
 
     q_combined =
       from(em in subquery(q_per_user_matches),
-        join: pname in fragment(@wildcard_array_join, em.pathname),
+        join: pname in fragment(@wildcard_array_join, em.name, em.pathname, em.pathname),
         on: true,
         hints: "ARRAY",
         where: selected_as(:pathname) != "" and selected_as(:pathname) != "/",
