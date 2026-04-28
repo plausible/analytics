@@ -214,20 +214,28 @@ defmodule Plausible.Stats.Exploration do
         from(s in q, where: ^step_condition)
       end)
 
-    q_exact_matches =
-      from(m in q_matches,
-        select_merge: %{
-          visitors: scale_sample(fragment("uniq(?)", m.user_id)),
-          includes_subpaths: type(^false, :boolean),
-          subpaths_count: 0
-        },
-        group_by: [selected_as(:name), selected_as(:pathname)]
-      )
-
+    # Scan events_v2 once, producing one row per (name, pathname, user_id).
+    # Both the exact-match aggregation and the wildcard/subpath aggregation are
+    # derived from this single result, avoiding a second scan of events_v2.
     q_per_user_matches =
       from(m in q_matches,
         select_merge: %{user_id: m.user_id, _sample_factor: fragment("any(?)", m._sample_factor)},
         group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
+      )
+
+    # Derive exact-match visitor counts by re-aggregating q_per_user_matches.
+    # Since it already has one row per (name, pathname, user_id), count() is
+    # equivalent to uniq(user_id) on the raw events — no second scan needed.
+    q_exact_matches =
+      from(m in subquery(q_per_user_matches),
+        select: %{
+          name: m.name,
+          pathname: m.pathname,
+          visitors: scale_sample(fragment("count()")),
+          includes_subpaths: type(^false, :boolean),
+          subpaths_count: 0
+        },
+        group_by: [m.name, m.pathname]
       )
 
     q_wildcard_matches =
@@ -248,12 +256,8 @@ defmodule Plausible.Stats.Exploration do
       )
 
     # Union exact matches and wildcard matches together, then filter in the outer
-    # query. This avoids re-scanning events_v2 a third time: previously the
-    # LEFT JOIN in q_wildcard_filtered_matches caused q_exact_matches (and
-    # therefore the base event scan) to be evaluated again. Now we look up the
-    # exact-match visitor count from the same UNION ALL result via a window
-    # function partitioned by (name, pathname), keeping the total scan count at
-    # two.
+    # query. Both branches derive from q_per_user_matches which itself comes from
+    # a single scan of events_v2 — keeping total scan count at one.
     q_all_unfiltered =
       q_exact_matches
       |> union_all(^q_wildcard_matches)
