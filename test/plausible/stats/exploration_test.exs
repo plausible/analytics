@@ -1012,6 +1012,187 @@ defmodule Plausible.Stats.ExplorationTest do
         assert step1.visitors == 6
       end
 
+      test "wildcard step in journey excludes its matching subpaths from next step suggestions",
+           %{site: site} do
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{
+            name: "pageview",
+            pathname: "/a",
+            includes_subpaths: true,
+            subpaths_count: 4
+          }
+        ]
+
+        assert {:ok, next} = Exploration.next_steps(query, journey)
+
+        next_pathnames = Enum.map(next, & &1.step.pathname)
+        assert next_pathnames == []
+      end
+
+      test "wildcard step in journey excludes the same wildcard from next step suggestions" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        # Two users travel between /sites subpaths, then go elsewhere.
+        # After the wildcard step "/sites*" is in the journey,
+        # the wildcard suggestion /sites (... pages) should not reappear as a next step.
+        populate_stats(site, [
+          # user 1: /home -> /sites -> /sites/new -> /other
+          build(:pageview,
+            user_id: 1,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 1,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 1,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -20)
+          ),
+          build(:pageview,
+            user_id: 1,
+            pathname: "/other",
+            timestamp: DateTime.shift(now, minute: -10)
+          ),
+          # user 2: /home -> /sites/new -> /sites -> /other
+          build(:pageview,
+            user_id: 2,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 2,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 2,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -20)
+          ),
+          build(:pageview,
+            user_id: 2,
+            pathname: "/other",
+            timestamp: DateTime.shift(now, minute: -10)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{
+            name: "pageview",
+            pathname: "/sites",
+            includes_subpaths: true,
+            subpaths_count: 2
+          }
+        ]
+
+        assert {:ok, next} = Exploration.next_steps(query, journey)
+
+        next_pathnames = Enum.map(next, & &1.step.pathname)
+        next_wildcards = Enum.filter(next, & &1.step.includes_subpaths)
+
+        assert next_pathnames == ["/other"]
+        assert next_wildcards == []
+      end
+
+      test "wildcard exclusion does not shrink result below max_candidates and unrelated wildcards are preserved" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        page_users =
+          Enum.flat_map(1..10, fn n ->
+            [
+              build(:pageview,
+                user_id: 100 + n,
+                pathname: "/sites",
+                timestamp: DateTime.shift(now, minute: -(30 + n))
+              ),
+              build(:pageview,
+                user_id: 100 + n,
+                pathname: "/page-#{n}",
+                timestamp: DateTime.shift(now, minute: -(20 + n))
+              )
+            ]
+          end)
+
+        other_user1 = [
+          build(:pageview,
+            user_id: 201,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 201,
+            pathname: "/other/a",
+            timestamp: DateTime.shift(now, minute: -20)
+          )
+        ]
+
+        other_user2 = [
+          build(:pageview,
+            user_id: 202,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 202,
+            pathname: "/other/b",
+            timestamp: DateTime.shift(now, minute: -20)
+          )
+        ]
+
+        travelers =
+          Enum.flat_map([301, 302], fn uid ->
+            [
+              build(:pageview,
+                user_id: uid,
+                pathname: "/sites",
+                timestamp: DateTime.shift(now, minute: -50)
+              ),
+              build(:pageview,
+                user_id: uid,
+                pathname: "/sites/new",
+                timestamp: DateTime.shift(now, minute: -40)
+              ),
+              build(:pageview,
+                user_id: uid,
+                pathname: "/page-1",
+                timestamp: DateTime.shift(now, minute: -30)
+              )
+            ]
+          end)
+
+        populate_stats(site, page_users ++ other_user1 ++ other_user2 ++ travelers)
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{
+            name: "pageview",
+            pathname: "/sites",
+            includes_subpaths: true,
+            subpaths_count: 2
+          }
+        ]
+
+        assert {:ok, next} = Exploration.next_steps(query, journey, max_candidates: 12)
+        assert length(next) == 12
+
+        assert Enum.any?(next, &(&1.step.pathname == "/other" && &1.step.includes_subpaths)),
+               "expected unrelated /other* wildcard to appear in suggestions"
+
+        refute Enum.any?(next, &String.starts_with?(&1.step.pathname, "/sites")),
+               "no /sites* rows should appear (covered by wildcard journey step)"
+      end
+
       test "implicit wildcard paths are not returned in suggestions when explicitly disabled", %{
         site: site
       } do

@@ -283,35 +283,49 @@ defmodule Plausible.Stats.Exploration do
         }
       )
 
-    from(m in subquery(q_all_matches),
-      select: %{
-        step: %Journey.Step{
-          label:
-            selected_as(
-              fragment(
-                "if(? != 'pageview', concat(?, ' ', ?), ?)",
-                m.name,
-                m.name,
-                m.pathname,
-                m.pathname
+    q_final =
+      from(m in subquery(q_all_matches),
+        select: %{
+          step: %Journey.Step{
+            label:
+              selected_as(
+                fragment(
+                  "if(? != 'pageview', concat(?, ' ', ?), ?)",
+                  m.name,
+                  m.name,
+                  m.pathname,
+                  m.pathname
+                ),
+                :label
               ),
-              :label
-            ),
-          name: m.name,
-          pathname: m.pathname,
-          includes_subpaths: m.includes_subpaths,
-          subpaths_count: m.subpaths_count
+            name: m.name,
+            pathname: m.pathname,
+            includes_subpaths: m.includes_subpaths,
+            subpaths_count: m.subpaths_count
+          },
+          visitors: m.visitors
         },
-        visitors: m.visitors
-      },
-      order_by: [
-        desc: m.visitors,
-        asc: m.pathname,
-        asc: m.name
-      ],
-      limit: ^max_candidates
-    )
-    |> maybe_search(search_term)
+        order_by: [
+          desc: m.visitors,
+          asc: m.pathname,
+          asc: m.name
+        ],
+        limit: ^max_candidates
+      )
+      |> maybe_search(search_term)
+
+    steps
+    |> Enum.filter(& &1.includes_subpaths)
+    |> Enum.reduce(q_final, fn step, q ->
+      escaped = Regex.escape(step.pathname)
+      pattern = "^#{escaped}(/.+)?$"
+
+      from(m in q,
+        where:
+          not (m.name == ^step.name and
+                 fragment("match(?, ?)", m.pathname, ^pattern))
+      )
+    end)
   end
 
   # Expand each (name, pathname, user_id) row into all prefix paths via
