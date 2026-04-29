@@ -699,36 +699,12 @@ export function FunnelExploration() {
       fetchInterestingFunnel(site, dashboardState)
         .then((response) => {
           if (cancelled) return
-          if (response && response.length > 0) {
+          if (response && response.funnel && response.funnel.length > 0) {
             funnelFromPreloadRef.current = true
-            const preloadedSteps = response.map(({ step }) => step)
+            const preloadedSteps = response.funnel.map(({ step }) => step)
             setSteps(preloadedSteps)
-            setFunnel(response)
-            // Backfill candidate lists for each preloaded (selected) column
-            // so the user can immediately switch options without first
-            // having to clear and re-search. We capture the current journey
-            // version so any of these fetches that resolve after the user
-            // has navigated away can be safely ignored.
-            const journeyVersion = journeyVersionRef.current
-            preloadedSteps.forEach((_, idx) => {
-              const prefix = preloadedSteps.slice(0, idx)
-              fetchNextWithFunnel(
-                site,
-                dashboardState,
-                prefix,
-                '',
-                direction,
-                false
-              )
-                .then((r) => {
-                  if (journeyVersionRef.current !== journeyVersion) return
-                  setFrozenColumnResults((prev) => ({
-                    ...prev,
-                    [idx]: r?.next || []
-                  }))
-                })
-                .catch(() => {})
-            })
+            setFunnel(response.funnel)
+            setFrozenColumnResults(response.candidates)
           } else {
             // Nothing to preload, fall back to a plain next-steps fetch
             fetchNextWithFunnel(site, dashboardState, [], '', direction, false)

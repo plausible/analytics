@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Exploration do
       (default: true)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
-          {:ok, [funnel_step()]} | {:error, :not_found}
+          {:ok, %{funnel: [funnel_step()], candidates: [next_step()]}} | {:error, :not_found}
   def interesting_funnel(query, opts \\ []) do
     max_steps = min(Keyword.get(opts, :max_steps, 6), @max_steps)
     max_candidates = min(Keyword.get(opts, :max_candidates, 10), @max_candidates)
@@ -156,22 +156,50 @@ defmodule Plausible.Stats.Exploration do
         Keyword.fetch!(@next_steps_defaults, :include_wildcard?)
       )
 
-    case build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
-      [] -> {:error, :not_found}
-      journey -> journey_funnel(query, journey)
+    with {:ok, result} <-
+           build_interesting_journey(query, max_steps, max_candidates, include_wildcard?),
+         {:ok, funnel} <- journey_funnel(query, result.journey) do
+      {:ok, %{funnel: funnel, candidates: result.candidates}}
     end
   end
 
   defp build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
-    do_build_journey(query, [], MapSet.new(), max_steps, max_candidates, include_wildcard?)
+    case do_build_journey(
+           query,
+           [],
+           [],
+           MapSet.new(),
+           max_steps,
+           max_candidates,
+           include_wildcard?
+         ) do
+      %{journey: []} -> {:error, :not_found}
+      result -> {:ok, result}
+    end
   end
 
-  defp do_build_journey(_query, journey, _seen, max_steps, _max_candidates, _include_wildcard?)
+  defp do_build_journey(
+         _query,
+         journey,
+         step_candidates,
+         _seen,
+         max_steps,
+         _max_candidates,
+         _include_wildcard?
+       )
        when length(journey) >= max_steps do
-    journey
+    %{journey: journey, candidates: step_candidates}
   end
 
-  defp do_build_journey(query, journey, seen, max_steps, max_candidates, include_wildcard?) do
+  defp do_build_journey(
+         query,
+         journey,
+         step_candidates,
+         seen,
+         max_steps,
+         max_candidates,
+         include_wildcard?
+       ) do
     {:ok, candidates} =
       next_steps(query, journey,
         max_candidates: max_candidates,
@@ -180,7 +208,7 @@ defmodule Plausible.Stats.Exploration do
 
     case find_unseen_step(candidates, seen) do
       nil ->
-        journey
+        %{journey: journey, candidates: step_candidates}
 
       step ->
         new_seen = MapSet.put(seen, normalize_step_key(step))
@@ -188,6 +216,7 @@ defmodule Plausible.Stats.Exploration do
         do_build_journey(
           query,
           journey ++ [step],
+          step_candidates ++ [candidates],
           new_seen,
           max_steps,
           max_candidates,

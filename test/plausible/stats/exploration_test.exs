@@ -244,7 +244,8 @@ defmodule Plausible.Stats.ExplorationTest do
       test "builds a funnel starting with the most visited step", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [step1, step2, step3, step4]} = Exploration.interesting_funnel(query)
+        assert {:ok, %{funnel: [step1, step2, step3, step4]}} =
+                 Exploration.interesting_funnel(query)
 
         assert step1.step.pathname == "/home"
         assert step1.visitors == 2
@@ -262,7 +263,8 @@ defmodule Plausible.Stats.ExplorationTest do
       test "limits the funnel to max_steps", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [step1, step2]} = Exploration.interesting_funnel(query, max_steps: 2)
+        assert {:ok, %{funnel: [step1, step2]}} =
+                 Exploration.interesting_funnel(query, max_steps: 2)
 
         assert step1.step.pathname == "/home"
         assert step2.step.pathname == "/login"
@@ -289,7 +291,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [step1]} = Exploration.interesting_funnel(query, max_steps: 6)
+        assert {:ok, %{funnel: [step1]}} = Exploration.interesting_funnel(query, max_steps: 6)
 
         assert step1.step.pathname == "/only-page"
         assert step1.visitors == 1
@@ -302,9 +304,9 @@ defmodule Plausible.Stats.ExplorationTest do
             filters: [[:is, "visit:browser", ["Firefox"]]]
           )
 
-        assert {:ok, funnel} = Exploration.interesting_funnel(query)
+        assert {:ok, result} = Exploration.interesting_funnel(query)
 
-        pathnames = Enum.map(funnel, & &1.step.pathname)
+        pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/docs", "/logout"]
       end
 
@@ -359,9 +361,9 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, funnel} = Exploration.interesting_funnel(query)
+        assert {:ok, result} = Exploration.interesting_funnel(query)
 
-        pathnames = Enum.map(funnel, & &1.step.pathname)
+        pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/a", "/b", "/c"]
       end
     end
