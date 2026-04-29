@@ -28,23 +28,19 @@ export const GraphTooltipWrapper = ({
 
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
 
-  const leftIfAlignedToRight = x + xOffset
-  const leftIfAlignedToLeft = x - xOffset - measuredWidth
-  const leftIfCentered = Math.max(0, x - measuredWidth / 2)
+  const leftByAlignment = {
+    alignedRight: x + xOffset,
+    alignedLeft: x - xOffset - measuredWidth,
+    alignedRightClamped: Math.max(0, Math.min(x, maxX - measuredWidth))
+  }
 
-  const canFitRight = leftIfAlignedToRight + measuredWidth <= maxX
-  const canFitLeft = leftIfAlignedToLeft >= 0
+  const canFitRight = leftByAlignment.alignedRight + measuredWidth <= maxX
+  const canFitLeft = leftByAlignment.alignedLeft >= 0
   const position = canFitRight
-    ? 'right'
+    ? 'alignedRight'
     : canFitLeft
-      ? 'left'
-      : 'centered-over-top'
-
-  const tooltipLeft = {
-    right: leftIfAlignedToRight,
-    left: leftIfAlignedToLeft,
-    'centered-over-top': leftIfCentered
-  }[position]
+      ? 'alignedLeft'
+      : 'alignedRightClamped'
 
   useLayoutEffect(() => {
     if (!ref.current) {
@@ -60,10 +56,8 @@ export const GraphTooltipWrapper = ({
         className={className}
         style={{
           minWidth,
-          left: tooltipLeft,
-          top: y,
-          transform:
-            position === 'centered-over-top' ? 'translateY(-100%)' : undefined
+          left: leftByAlignment[position],
+          top: y
         }}
       >
         {children}
