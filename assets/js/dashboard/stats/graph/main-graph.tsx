@@ -249,7 +249,7 @@ export const MainGraph = ({
   )
 
   const onPointerMove = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
+    ({ inHoverableArea, closestPoint, event }) => {
       if (event instanceof PointerEvent && event.pointerType === 'touch') {
         return setIsTouchDevice(true)
       }
@@ -259,8 +259,8 @@ export const MainGraph = ({
       }
       return setTooltip({
         selectedIndex: closestPoint.index,
-        x: Math.floor(xPointer),
-        y: Math.floor(yPointer),
+        x: closestPoint.x,
+        y: 0,
         persistent: false
       })
     },

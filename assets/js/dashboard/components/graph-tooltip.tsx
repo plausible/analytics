@@ -23,12 +23,22 @@ export const GraphTooltipWrapper = ({
   transition?: TransitionClasses & TransitionEvents
 }) => {
   const ref = useRef<HTMLDivElement>(null)
-  const xOffsetFromCursor = 12
-  const yOffsetFromCursor = 24
+
+  const xOffset = 12
+
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
-  // clamp to prevent left/right overflow
-  const rawLeft = x + xOffsetFromCursor
-  const tooltipLeft = Math.max(0, Math.min(rawLeft, maxX - measuredWidth))
+
+  const leftIfAlignedToRight = x + xOffset
+  const leftIfAlignedToLeft = x - xOffset - measuredWidth
+
+  const canFitRight = leftIfAlignedToRight + measuredWidth <= maxX
+  const canFitLeft = leftIfAlignedToLeft >= 0
+  
+  const tooltipLeft = canFitRight
+    ? leftIfAlignedToRight
+    : canFitLeft
+      ? leftIfAlignedToLeft
+      : Math.max(0, Math.min(leftIfAlignedToRight, maxX - measuredWidth))
 
   useLayoutEffect(() => {
     if (!ref.current) {
@@ -46,7 +56,6 @@ export const GraphTooltipWrapper = ({
           minWidth,
           left: tooltipLeft,
           top: y,
-          transform: `translateY(-100%) translateY(-${yOffsetFromCursor}px)`
         }}
       >
         {children}
