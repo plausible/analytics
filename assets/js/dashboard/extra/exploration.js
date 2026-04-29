@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip'
@@ -197,7 +197,7 @@ function listClipRect(container, containerRect) {
   }
 }
 
-function PathConnectors({ scrollRef, steps }) {
+function PathConnectors({ steps, dashboardState, containerRef }) {
   const [svgData, setSvgData] = useState({
     paths: [],
     width: 0,
@@ -206,32 +206,30 @@ function PathConnectors({ scrollRef, steps }) {
     clipHeight: 0
   })
 
-  useLayoutEffect(() => {
-    const container = scrollRef.current
-    if (!container || steps.length < 2) {
-      setSvgData({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
-      return
-    }
-
+  useEffect(() => {
     function recalculate() {
-      const c = scrollRef.current
-      if (!c) return
+      const c = containerRef.current
       const containerRect = c.getBoundingClientRect()
       const newPaths = []
 
+      const cards = c.querySelectorAll(`[data-exploration-step]`)
+      const columns = c.querySelectorAll(`[data-exploration-column]`)
+
       for (let i = 0; i < steps.length - 1; i++) {
-        const cardA = c.querySelector(`[data-exploration-step="${i}"]`)
-        const cardB = c.querySelector(`[data-exploration-step="${i + 1}"]`)
-        const colA = c.querySelector(`[data-exploration-column="${i}"]`)
-        const colB = c.querySelector(`[data-exploration-column="${i + 1}"]`)
-        if (!cardA || !cardB || !colA || !colB) continue
+        const cardA = cards[i]
+        const cardB = cards[i + 1]
 
-        const x1 = columnEdgeX(colA, 'right', containerRect, c.scrollLeft)
-        const x2 = columnEdgeX(colB, 'left', containerRect, c.scrollLeft)
-        const y1 = cardMidY(cardA, containerRect)
-        const y2 = cardMidY(cardB, containerRect)
+        const colA = columns[i]
+        const colB = columns[i + 1]
 
-        newPaths.push(steppedPath(x1, y1, x2, y2))
+        if (cardA && cardB) {
+          const x1 = columnEdgeX(colA, 'right', containerRect, c.scrollLeft)
+          const x2 = columnEdgeX(colB, 'left', containerRect, c.scrollLeft)
+          const y1 = cardMidY(cardA, containerRect)
+          const y2 = cardMidY(cardB, containerRect)
+
+          newPaths.push(steppedPath(x1, y1, x2, y2))
+        }
       }
 
       const clip = listClipRect(c, containerRect)
@@ -247,21 +245,11 @@ function PathConnectors({ scrollRef, steps }) {
 
     recalculate()
 
-    const observer = new ResizeObserver(recalculate)
-    observer.observe(container)
-    window.addEventListener('resize', recalculate)
-
     const lists = Array.from(
-      container.querySelectorAll('[data-exploration-list]')
+      containerRef.current.querySelectorAll('[data-exploration-list]')
     )
     lists.forEach((list) => list.addEventListener('scroll', recalculate))
-
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', recalculate)
-      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
-    }
-  }, [steps, scrollRef])
+  }, [steps, containerRef, dashboardState])
 
   if (svgData.paths.length === 0) return null
 
@@ -770,7 +758,7 @@ export function FunnelExploration() {
 
   const numColumns = Math.max(steps.length + 1, 3)
   const activeColumnIndex = steps.length
-  const scrollRef = useRef(null)
+  const containerRef = useRef(null)
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
@@ -778,7 +766,7 @@ export function FunnelExploration() {
 
   const prevStepsLengthRef = useRef(0)
   useEffect(() => {
-    const el = scrollRef.current
+    const el = containerRef.current
     if (!el) return
     if (steps.length !== prevStepsLengthRef.current) {
       const activeColumn = el.querySelector(
@@ -839,7 +827,7 @@ export function FunnelExploration() {
       </div>
 
       <div
-        ref={scrollRef}
+        ref={containerRef}
         className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
         style={{
           gridTemplateColumns: `repeat(${numColumns}, minmax(20rem, 1fr))`
@@ -899,7 +887,11 @@ export function FunnelExploration() {
             />
           )
         })}
-        <PathConnectors scrollRef={scrollRef} steps={steps} />
+        <PathConnectors
+          containerRef={containerRef}
+          steps={steps}
+          dashboardState={dashboardState}
+        />
       </div>
     </div>
   )
