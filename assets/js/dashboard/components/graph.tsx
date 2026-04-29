@@ -10,6 +10,8 @@ import classNames from 'classnames'
 
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
+const X_TICK_LENGTH_PX = 4
+const HIGHLIGHT_LINE_VERTICAL_SPILL_PX = 4
 
 type GraphYValues = ReadonlyArray<number | null>
 
@@ -74,6 +76,8 @@ export function Graph<T extends GraphYValues>({
     </div>
   )
 }
+
+const highlightIndicatorGroupId = 'highlight-indicator'
 
 function InnerGraph<T extends GraphYValues>({
   className,
@@ -199,7 +203,7 @@ function InnerGraph<T extends GraphYValues>({
             d3
               .axisBottom(x)
               .tickValues(xTickValues)
-              .tickSize(4)
+              .tickSize(X_TICK_LENGTH_PX)
               .tickFormat(getXTickFormat(data))
           )
           .call((g) => g.select('.domain').remove())
@@ -226,6 +230,9 @@ function InnerGraph<T extends GraphYValues>({
       })
     }
 
+    // must be on top of gradients, but under lines and points
+    svg.append('g').attr('id', highlightIndicatorGroupId)
+
     const points: Point<T>[] = []
     for (const [seriesIndex, series] of settings.entries()) {
       if (series.underline) {
@@ -239,7 +246,9 @@ function InnerGraph<T extends GraphYValues>({
           y1Accessor: (d) => y(d.values[seriesIndex]!)
         })
       }
+    }
 
+    for (const [seriesIndex, series] of settings.entries()) {
       if (series.lines) {
         for (const line of series.lines) {
           drawLine({
@@ -275,7 +284,9 @@ function InnerGraph<T extends GraphYValues>({
         })
         points[i] = {
           ...point,
-          dots: [...point.dots, dotForSeries] as { [K in keyof T]: SelectedDot }
+          dots: [...point.dots, dotForSeries] as {
+            [K in keyof T]: SelectedGroup
+          }
         }
       }
     }
@@ -459,15 +470,45 @@ function InnerGraph<T extends GraphYValues>({
   }, [onClick, isInHoverableArea, data])
 
   useEffect(() => {
-    pointsRef.current?.forEach(({ dots }, index) =>
-      dots.forEach((g) =>
-        g.attr(
-          'data-active',
-          highlightedIndex !== null && index === highlightedIndex ? '' : null
+    if (pointsRef.current) {
+      const currentPoints = pointsRef.current
+      currentPoints.forEach(({ dots }, index) =>
+        dots.forEach((g) =>
+          g.attr(
+            'data-active',
+            highlightedIndex !== null && index === highlightedIndex ? '' : null
+          )
         )
       )
-    )
-  }, [highlightedIndex, data])
+
+      if (svgRef.current) {
+        const svg = d3.select(svgRef.current)
+        let line = svg.select<SVGLineElement>(
+          `#${highlightIndicatorGroupId} line`
+        )
+        const shouldShowLine = typeof highlightedIndex === 'number'
+        if (shouldShowLine) {
+          const { x } = currentPoints[highlightedIndex]
+          if (line.empty()) {
+            line = svg.select(`#${highlightIndicatorGroupId}`).append('line')
+          }
+          line
+            .attr('x1', 0)
+            .attr('x2', 0)
+            .attr('y1', marginTop - HIGHLIGHT_LINE_VERTICAL_SPILL_PX)
+            .attr(
+              'y2',
+              height - marginBottom + HIGHLIGHT_LINE_VERTICAL_SPILL_PX
+            )
+            .attr('class', currentlySelectedLineClass)
+            .attr('transform', `translate(${x}, 0)`)
+        }
+        if (!shouldShowLine && !line.empty()) {
+          line.remove()
+        }
+      }
+    }
+  }, [highlightedIndex, data, height, marginBottom, marginTop])
 
   return (
     <svg
@@ -478,6 +519,8 @@ function InnerGraph<T extends GraphYValues>({
   )
 }
 
+const currentlySelectedLineClass =
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700' // maybe add 'transition-transform duration-75'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
@@ -777,7 +820,7 @@ function drawDot({
   series: SeriesConfig
   x: number
   y: number | null
-}): SelectedDot {
+}): SelectedGroup {
   const group = svg.append('g').attr('class', 'group')
   if (series.dot && y !== null) {
     group
@@ -834,7 +877,7 @@ type XPos = number
 type Point<T extends GraphYValues> = {
   x: XPos
   values: T
-  dots: { [K in keyof T]: SelectedDot }
+  dots: { [K in keyof T]: SelectedGroup }
 }
 
 export type SeriesConfig = {
@@ -857,4 +900,4 @@ export type PointerHandler<T extends GraphYValues> = (opts: {
 }) => void
 
 type SelectedSVG = d3.Selection<SVGSVGElement, unknown, null, undefined>
-type SelectedDot = d3.Selection<SVGGElement, unknown, null, undefined>
+type SelectedGroup = d3.Selection<SVGGElement, unknown, null, undefined>
