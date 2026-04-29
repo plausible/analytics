@@ -423,10 +423,10 @@ const MainGraphTooltip = ({
     <GraphTooltipWrapper
       x={x}
       y={y}
-      minWidth={200}
+      minWidth={148}
       maxX={maxX}
       className={classNames(
-        'absolute select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
+        'absolute select-none bg-gray-800 dark:bg-gray-950 py-2 px-3 sm:py-3 sm:px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
         typeof onClick !== 'function' && 'pointer-events-none'
       )}
       transition={
@@ -441,9 +441,9 @@ const MainGraphTooltip = ({
           : {}
       }
     >
-      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
-        <div className="flex justify-between items-center rounded-sm">
-          <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
+      <aside className="text-xs sm:text-sm font-normal text-gray-100 flex flex-col gap-1 sm:gap-1.5">
+        <div className="hidden sm:flex justify-between items-center gap-2 sm:gap-4 rounded-sm">
+          <div className="font-semibold text-xs sm:text-sm sm:uppercase whitespace-nowrap">
             {metricLabel}
           </div>
           {comparison.isDefined && typeof change === 'number' && (
@@ -454,11 +454,11 @@ const MainGraphTooltip = ({
             />
           )}
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-y-1.5 sm:gap-y-0">
           {main.isDefined && (
-            <div className="flex flex-row justify-between items-center">
-              <div className="flex items-center mr-4">
-                <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
+            <div className="flex gap-1.5 sm:gap-2">
+              <div className="mt-1.5 size-1.5 sm:size-2 flex-none rounded-full bg-indigo-400" />
+              <div className="flex flex-col sm:flex-row justify-between sm:w-full items-start sm:items-center sm:gap-x-4">
                 <div className="whitespace-nowrap">
                   {getFullBucketLabel(main.timeLabel, {
                     period,
@@ -470,17 +470,24 @@ const MainGraphTooltip = ({
                     isPartial: main.isPartial
                   })}
                 </div>
-              </div>
-              <div className="font-bold whitespace-nowrap">
-                {getFormattedValue(main.value)}
+                <div className="flex items-center gap-1.5 font-bold whitespace-nowrap">
+                  {getFormattedValue(main.value)}
+                  {comparison.isDefined && typeof change === 'number' && (
+                    <ChangeArrow
+                      className="sm:hidden text-xs/6 font-medium text-white whitespace-nowrap"
+                      metric={metric}
+                      change={change}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           )}
 
           {comparison.isDefined && (
-            <div className="flex flex-row justify-between items-center">
-              <div className="flex items-center mr-4">
-                <div className="size-2 flex-none mr-2 rounded-full bg-gray-500"></div>
+            <div className="flex gap-1.5 sm:gap-2">
+              <div className="mt-1.5 size-1.5 sm:size-2 flex-none rounded-full bg-gray-500" />
+              <div className="flex flex-col sm:flex-row justify-between sm:w-full items-start sm:items-center sm:gap-x-4">
                 <div className="whitespace-nowrap">
                   {getFullBucketLabel(comparison.timeLabel, {
                     period,
@@ -492,10 +499,9 @@ const MainGraphTooltip = ({
                     isPartial: comparison.isPartial
                   })}
                 </div>
-              </div>
-              <div className="font-bold whitespace-nowrap">
-                {' '}
-                {getFormattedValue(comparison.value)}
+                <div className="font-bold whitespace-nowrap">
+                  {getFormattedValue(comparison.value)}
+                </div>
               </div>
             </div>
           )}
