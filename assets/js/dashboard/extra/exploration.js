@@ -148,25 +148,19 @@ function DirectionDropdown({ direction, onDirectionChange }) {
 }
 
 function PathConnectors({ scrollRef, steps }) {
-  const [svgData, setSvgData] = useState({
-    paths: [],
-    width: 0,
-    height: 0,
-    clipY: 0,
-    clipHeight: 0
-  })
+  const [paths, setPaths] = useState([])
 
   useLayoutEffect(() => {
     const container = scrollRef.current
     if (!container || steps.length < 2) {
-      setSvgData({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
+      setPaths([])
       return
     }
 
     function recalculate() {
       const c = scrollRef.current
       if (!c) return
-      const containerRect = c.getBoundingClientRect()
+      const cr = c.getBoundingClientRect()
       const newPaths = []
 
       for (let i = 0; i < steps.length - 1; i++) {
@@ -176,48 +170,30 @@ function PathConnectors({ scrollRef, steps }) {
         const colB = c.querySelector(`[data-exploration-column="${i + 1}"]`)
         if (!cardA || !cardB || !colA || !colB) continue
 
-        const rColA = colA.getBoundingClientRect()
-        const rColB = colB.getBoundingClientRect()
-        const rCardA = cardA.getBoundingClientRect()
-        const rCardB = cardB.getBoundingClientRect()
-
-        const x1 = rColA.right - containerRect.left + c.scrollLeft
-        const y1 = (rCardA.top + rCardA.bottom) / 2 - containerRect.top
-        const x2 = rColB.left - containerRect.left + c.scrollLeft
-        const y2 = (rCardB.top + rCardB.bottom) / 2 - containerRect.top
+        const x1 = colA.getBoundingClientRect().right - cr.left + c.scrollLeft
+        const x2 = colB.getBoundingClientRect().left - cr.left + c.scrollLeft
+        const y1 =
+          (cardA.getBoundingClientRect().top +
+            cardA.getBoundingClientRect().bottom) /
+            2 -
+          cr.top
+        const y2 =
+          (cardB.getBoundingClientRect().top +
+            cardB.getBoundingClientRect().bottom) /
+            2 -
+          cr.top
         const mx = (x1 + x2) / 2
-        const dy = y2 - y1
-        const r = Math.min(10, Math.abs(dy) / 2)
 
-        const d =
-          Math.abs(dy) < 1
-            ? `M ${x1} ${y1} H ${x2}`
-            : dy > 0
-              ? `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 1 ${mx} ${y1 + r} V ${y2 - r} A ${r} ${r} 0 0 0 ${mx + r} ${y2} H ${x2}`
-              : `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 0 ${mx} ${y1 - r} V ${y2 + r} A ${r} ${r} 0 0 1 ${mx + r} ${y2} H ${x2}`
-
-        newPaths.push(d)
+        newPaths.push(`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`)
       }
 
-      const firstList = c.querySelector('[data-exploration-list]')
-      const listRect = firstList ? firstList.getBoundingClientRect() : null
-      const clipY = listRect ? listRect.top - containerRect.top : 0
-      const clipHeight = listRect ? listRect.height : c.clientHeight
-
-      setSvgData({
-        paths: newPaths,
-        width: c.scrollWidth,
-        height: c.clientHeight,
-        clipY,
-        clipHeight
-      })
+      setPaths(newPaths)
     }
 
     recalculate()
 
     const observer = new ResizeObserver(recalculate)
     observer.observe(container)
-    window.addEventListener('resize', recalculate)
 
     const lists = Array.from(
       container.querySelectorAll('[data-exploration-list]')
@@ -226,34 +202,22 @@ function PathConnectors({ scrollRef, steps }) {
 
     return () => {
       observer.disconnect()
-      window.removeEventListener('resize', recalculate)
       lists.forEach((list) => list.removeEventListener('scroll', recalculate))
     }
   }, [steps, scrollRef])
 
-  if (svgData.paths.length === 0) return null
+  if (paths.length === 0) return null
 
   return (
     <svg
       className="absolute inset-0 pointer-events-none overflow-visible"
-      height={svgData.height}
+      height="100%"
     >
-      <defs>
-        <clipPath id="exploration-list-clip">
-          <rect
-            x="0"
-            y={svgData.clipY}
-            width={svgData.width}
-            height={svgData.clipHeight}
-          />
-        </clipPath>
-      </defs>
-      {svgData.paths.map((d, i) => (
+      {paths.map((d, i) => (
         <path
           key={i}
           d={d}
           fill="none"
-          clipPath="url(#exploration-list-clip)"
           className="stroke-indigo-500 dark:stroke-indigo-400"
           strokeWidth="1.5"
         />
