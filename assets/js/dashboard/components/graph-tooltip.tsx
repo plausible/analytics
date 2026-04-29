@@ -33,7 +33,7 @@ export const GraphTooltipWrapper = ({
 
   const canFitRight = leftIfAlignedToRight + measuredWidth <= maxX
   const canFitLeft = leftIfAlignedToLeft >= 0
-  
+
   const tooltipLeft = canFitRight
     ? leftIfAlignedToRight
     : canFitLeft
@@ -55,7 +55,7 @@ export const GraphTooltipWrapper = ({
         style={{
           minWidth,
           left: tooltipLeft,
-          top: y,
+          top: y
         }}
       >
         {children}
