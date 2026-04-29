@@ -142,17 +142,17 @@ defmodule Plausible.Stats.ExplorationTest do
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/register"},
-          %Exploration.Journey.Step{name: "Signup", pathname: "/register"},
+          %Exploration.Journey.Step{name: "Signup"},
           %Exploration.Journey.Step{name: "pageview", pathname: "/activate"},
-          %Exploration.Journey.Step{name: "Create site", pathname: "/sites/new"}
+          %Exploration.Journey.Step{name: "Create site"}
         ]
 
         assert {:ok, [step1, step2, step3, step4]} = Exploration.journey_funnel(query, journey)
 
         assert step1.step.label == "/register"
-        assert step2.step.label == "Signup /register"
+        assert step2.step.label == "Signup"
         assert step3.step.label == "/activate"
-        assert step4.step.label == "Create site /sites/new"
+        assert step4.step.label == "Create site"
       end
 
       test "respects filters in the query", %{site: site} do
@@ -493,7 +493,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step1.step.label == "/"
         assert next_step1.visitors == 2
 
-        assert next_step2.step.label == "Signup /register"
+        assert next_step2.step.label == "Signup"
         assert next_step2.visitors == 1
       end
 
@@ -528,11 +528,11 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step]} =
-                 Exploration.next_steps(query, journey, search_term: "up /regi")
+                 Exploration.next_steps(query, journey, search_term: "up")
 
-        assert next_step.step.label == "Signup /register"
+        assert next_step.step.label == "Signup"
         assert next_step.step.name == "Signup"
-        assert next_step.step.pathname == "/register"
+        assert next_step.step.pathname == ""
         assert next_step.visitors == 1
       end
 
