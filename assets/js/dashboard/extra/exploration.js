@@ -147,20 +147,76 @@ function DirectionDropdown({ direction, onDirectionChange }) {
   )
 }
 
+// Returns the x coordinate of a column's right or left edge,
+// adjusted for the container's scroll position so it is stable
+// in SVG/document space even when the user scrolls horizontally.
+function columnEdgeX(colEl, side, containerRect, scrollLeft) {
+  const rect = colEl.getBoundingClientRect()
+  const edgeX = side === 'right' ? rect.right : rect.left
+  return edgeX - containerRect.left + scrollLeft
+}
+
+// Returns the vertical midpoint of a card element relative to
+// the top of the scroll container (not the viewport).
+function cardMidY(cardEl, containerRect) {
+  const rect = cardEl.getBoundingClientRect()
+  return (rect.top + rect.bottom) / 2 - containerRect.top
+}
+
+// Builds an SVG path string for a stepped connector with rounded
+// corners between two points. The path goes: horizontal → rounded
+// corner → vertical → rounded corner → horizontal.
+function steppedPath(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2
+  const dy = y2 - y1
+
+  if (Math.abs(dy) < 1) {
+    // Points are on the same horizontal line — plain horizontal segment.
+    return `M ${x1} ${y1} H ${x2}`
+  }
+
+  const r = Math.min(10, Math.abs(dy) / 2)
+
+  if (dy > 0) {
+    // Target is below: corners curve downward then outward.
+    return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 1 ${mx} ${y1 + r} V ${y2 - r} A ${r} ${r} 0 0 0 ${mx + r} ${y2} H ${x2}`
+  } else {
+    // Target is above: corners curve upward then outward.
+    return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 0 ${mx} ${y1 - r} V ${y2 + r} A ${r} ${r} 0 0 1 ${mx + r} ${y2} H ${x2}`
+  }
+}
+
+// Computes the clip rect that confines connectors to the list area,
+// so they don't bleed into column headers.
+function listClipRect(container, containerRect) {
+  const firstList = container.querySelector('[data-exploration-list]')
+  const listRect = firstList ? firstList.getBoundingClientRect() : null
+  return {
+    y: listRect ? listRect.top - containerRect.top : 0,
+    height: listRect ? listRect.height : container.clientHeight
+  }
+}
+
 function PathConnectors({ scrollRef, steps }) {
-  const [paths, setPaths] = useState([])
+  const [svgData, setSvgData] = useState({
+    paths: [],
+    width: 0,
+    height: 0,
+    clipY: 0,
+    clipHeight: 0
+  })
 
   useLayoutEffect(() => {
     const container = scrollRef.current
     if (!container || steps.length < 2) {
-      setPaths([])
+      setSvgData({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
       return
     }
 
     function recalculate() {
       const c = scrollRef.current
       if (!c) return
-      const cr = c.getBoundingClientRect()
+      const containerRect = c.getBoundingClientRect()
       const newPaths = []
 
       for (let i = 0; i < steps.length - 1; i++) {
@@ -170,30 +226,30 @@ function PathConnectors({ scrollRef, steps }) {
         const colB = c.querySelector(`[data-exploration-column="${i + 1}"]`)
         if (!cardA || !cardB || !colA || !colB) continue
 
-        const x1 = colA.getBoundingClientRect().right - cr.left + c.scrollLeft
-        const x2 = colB.getBoundingClientRect().left - cr.left + c.scrollLeft
-        const y1 =
-          (cardA.getBoundingClientRect().top +
-            cardA.getBoundingClientRect().bottom) /
-            2 -
-          cr.top
-        const y2 =
-          (cardB.getBoundingClientRect().top +
-            cardB.getBoundingClientRect().bottom) /
-            2 -
-          cr.top
-        const mx = (x1 + x2) / 2
+        const x1 = columnEdgeX(colA, 'right', containerRect, c.scrollLeft)
+        const x2 = columnEdgeX(colB, 'left', containerRect, c.scrollLeft)
+        const y1 = cardMidY(cardA, containerRect)
+        const y2 = cardMidY(cardB, containerRect)
 
-        newPaths.push(`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`)
+        newPaths.push(steppedPath(x1, y1, x2, y2))
       }
 
-      setPaths(newPaths)
+      const clip = listClipRect(c, containerRect)
+
+      setSvgData({
+        paths: newPaths,
+        width: c.scrollWidth,
+        height: c.clientHeight,
+        clipY: clip.y,
+        clipHeight: clip.height
+      })
     }
 
     recalculate()
 
     const observer = new ResizeObserver(recalculate)
     observer.observe(container)
+    window.addEventListener('resize', recalculate)
 
     const lists = Array.from(
       container.querySelectorAll('[data-exploration-list]')
@@ -202,22 +258,34 @@ function PathConnectors({ scrollRef, steps }) {
 
     return () => {
       observer.disconnect()
+      window.removeEventListener('resize', recalculate)
       lists.forEach((list) => list.removeEventListener('scroll', recalculate))
     }
   }, [steps, scrollRef])
 
-  if (paths.length === 0) return null
+  if (svgData.paths.length === 0) return null
 
   return (
     <svg
       className="absolute inset-0 pointer-events-none overflow-visible"
-      height="100%"
+      height={svgData.height}
     >
-      {paths.map((d, i) => (
+      <defs>
+        <clipPath id="exploration-list-clip">
+          <rect
+            x="0"
+            y={svgData.clipY}
+            width={svgData.width}
+            height={svgData.clipHeight}
+          />
+        </clipPath>
+      </defs>
+      {svgData.paths.map((d, i) => (
         <path
           key={i}
           d={d}
           fill="none"
+          clipPath="url(#exploration-list-clip)"
           className="stroke-indigo-500 dark:stroke-indigo-400"
           strokeWidth="1.5"
         />
