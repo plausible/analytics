@@ -30,15 +30,21 @@ export const GraphTooltipWrapper = ({
 
   const leftIfAlignedToRight = x + xOffset
   const leftIfAlignedToLeft = x - xOffset - measuredWidth
+  const leftIfCentered = Math.max(0, x - measuredWidth / 2)
 
   const canFitRight = leftIfAlignedToRight + measuredWidth <= maxX
   const canFitLeft = leftIfAlignedToLeft >= 0
-
-  const tooltipLeft = canFitRight
-    ? leftIfAlignedToRight
+  const position = canFitRight
+    ? 'right'
     : canFitLeft
-      ? leftIfAlignedToLeft
-      : Math.max(0, Math.min(leftIfAlignedToRight, maxX - measuredWidth))
+      ? 'left'
+      : 'centered-over-top'
+
+  const tooltipLeft = {
+    right: leftIfAlignedToRight,
+    left: leftIfAlignedToLeft,
+    'centered-over-top': leftIfCentered
+  }[position]
 
   useLayoutEffect(() => {
     if (!ref.current) {
@@ -55,7 +61,9 @@ export const GraphTooltipWrapper = ({
         style={{
           minWidth,
           left: tooltipLeft,
-          top: y
+          top: y,
+          transform:
+            position === 'centered-over-top' ? 'translateY(-100%)' : undefined
         }}
       >
         {children}

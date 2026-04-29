@@ -319,7 +319,7 @@ export const MainGraph = ({
           return setTooltip({
             selectedIndex: closestPoint.index,
             x: closestPoint.x,
-            y: Math.min(...closestPoint.values.filter((y) => y !== null)),
+            y: 0,
             persistent: true
           })
         }
