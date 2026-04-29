@@ -101,6 +101,16 @@ export const MainGraph = ({
     setTooltip(initialTooltipState)
   }, [data])
 
+  useEffect(() => {
+    const onPointerCancel = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        setTooltip(initialTooltipState)
+      }
+    }
+    window.addEventListener('pointercancel', onPointerCancel)
+    return () => window.removeEventListener('pointercancel', onPointerCancel)
+  }, [])
+
   const {
     remappedData,
     yMax,
@@ -251,7 +261,16 @@ export const MainGraph = ({
   const onPointerMove = useCallback<PointerHandler<MainGraphYValues>>(
     ({ inHoverableArea, closestPoint, event }) => {
       if (event instanceof PointerEvent && event.pointerType === 'touch') {
-        return setIsTouchDevice(true)
+        setIsTouchDevice(true)
+        if (tooltip.persistent && inHoverableArea && closestPoint) {
+          setTooltip({
+            selectedIndex: closestPoint.index,
+            x: closestPoint.x,
+            y: 0,
+            persistent: true
+          })
+        }
+        return
       }
       setIsTouchDevice(false)
       if (!inHoverableArea || !closestPoint) {
@@ -264,7 +283,7 @@ export const MainGraph = ({
         persistent: false
       })
     },
-    []
+    [tooltip.persistent]
   )
 
   const onGotPointerCapture = useCallback((event: unknown) => {
@@ -280,8 +299,11 @@ export const MainGraph = ({
   }, [])
 
   const onPointerLeave = useCallback(() => {
+    if (tooltip.persistent) {
+      return
+    }
     setTooltip(initialTooltipState)
-  }, [])
+  }, [tooltip.persistent])
 
   const showZoomToPeriod = canZoomToPeriod(
     interval,
@@ -334,7 +356,10 @@ export const MainGraph = ({
 
   return (
     <Graph<MainGraphYValues>
-      className={showZoomToPeriod && selectedDatum ? 'cursor-pointer' : ''}
+      className={classNames(
+        showZoomToPeriod && selectedDatum ? 'cursor-pointer' : '',
+        tooltip.persistent ? 'touch-pan-y' : ''
+      )}
       highlightedIndex={selectedIndex}
       width={width}
       height={height}
