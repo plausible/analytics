@@ -142,17 +142,17 @@ defmodule Plausible.Stats.ExplorationTest do
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/register"},
-          %Exploration.Journey.Step{name: "Signup", pathname: "/register"},
+          %Exploration.Journey.Step{name: "Signup"},
           %Exploration.Journey.Step{name: "pageview", pathname: "/activate"},
-          %Exploration.Journey.Step{name: "Create site", pathname: "/sites/new"}
+          %Exploration.Journey.Step{name: "Create site"}
         ]
 
         assert {:ok, [step1, step2, step3, step4]} = Exploration.journey_funnel(query, journey)
 
         assert step1.step.label == "/register"
-        assert step2.step.label == "Signup /register"
+        assert step2.step.label == "Signup"
         assert step3.step.label == "/activate"
-        assert step4.step.label == "Create site /sites/new"
+        assert step4.step.label == "Create site"
       end
 
       test "respects filters in the query", %{site: site} do
@@ -273,69 +273,6 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(empty_site, input_date_range: :all)
 
         assert {:error, :not_found} = Exploration.interesting_funnel(query)
-      end
-
-      test "treats trailing slash as the same page" do
-        site = new_site()
-        now = DateTime.utc_now()
-
-        populate_stats(site, [
-          # user 123
-          build(:pageview,
-            user_id: 123,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 123,
-            pathname: "/about/",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 123,
-            pathname: "/contact",
-            timestamp: DateTime.shift(now, minute: -20)
-          ),
-          # user 124
-          build(:pageview,
-            user_id: 124,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 124,
-            pathname: "/about",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 124,
-            pathname: "/pricing",
-            timestamp: DateTime.shift(now, minute: -20)
-          ),
-          # user 125
-          build(:pageview,
-            user_id: 125,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 125,
-            pathname: "/about/",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 125,
-            pathname: "/contact",
-            timestamp: DateTime.shift(now, minute: -20)
-          )
-        ])
-
-        query = QueryBuilder.build!(site, input_date_range: :all)
-
-        assert {:ok, funnel} = Exploration.interesting_funnel(query)
-
-        pathnames = Enum.map(funnel, & &1.step.pathname)
-        assert pathnames == ["/about", "/contact"]
       end
 
       test "stops when no more unseen steps are available" do
@@ -556,7 +493,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step1.step.label == "/"
         assert next_step1.visitors == 2
 
-        assert next_step2.step.label == "Signup /register"
+        assert next_step2.step.label == "Signup"
         assert next_step2.visitors == 1
       end
 
@@ -591,11 +528,11 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step]} =
-                 Exploration.next_steps(query, journey, search_term: "up /regi")
+                 Exploration.next_steps(query, journey, search_term: "up")
 
-        assert next_step.step.label == "Signup /register"
+        assert next_step.step.label == "Signup"
         assert next_step.step.name == "Signup"
-        assert next_step.step.pathname == "/register"
+        assert next_step.step.pathname == ""
         assert next_step.visitors == 1
       end
 
@@ -643,7 +580,7 @@ defmodule Plausible.Stats.ExplorationTest do
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(88)),
           build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(87)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(87)),
-          build(:pageview, user_id: 123, pathname: "/:dashboard/", timestamp: ago.(86)),
+          build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(86)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(85)),
           build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(84)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(83)),

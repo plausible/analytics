@@ -146,12 +146,13 @@ defmodule PlausibleWeb.Api.StatsController do
       with {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
              Plausible.Stats.Exploration.next_steps(query, journey,
                search_term: search_term,
                direction: direction,
-               include_wildcard?:
-                 not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+               include_wildcard?: include_wildcard?
              ) do
         json(conn, next_steps)
       else
@@ -182,11 +183,13 @@ defmodule PlausibleWeb.Api.StatsController do
       site = conn.assigns.site
       query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
+      include_wildcard? =
+        not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+
       case Plausible.Stats.Exploration.interesting_funnel(query,
              max_steps: params["max_steps"],
              max_candidates: params["max_candidates"],
-             include_wildcard?:
-               not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+             include_wildcard?: include_wildcard?
            ) do
         {:ok, funnel} -> json(conn, funnel)
         {:error, :not_found} -> json(conn, [])
@@ -201,10 +204,13 @@ defmodule PlausibleWeb.Api.StatsController do
       with {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
              Plausible.Stats.Exploration.next_steps(query, journey,
                search_term: search_term,
-               direction: direction
+               direction: direction,
+               include_wildcard?: include_wildcard?
              ),
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})
