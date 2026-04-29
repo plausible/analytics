@@ -427,8 +427,7 @@ defmodule Plausible.Stats.Exploration do
           _sample_factor: e._sample_factor,
           row_number: row_number() |> over(:session_window),
           name: e.name,
-          pathname:
-            fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
+          pathname: e.pathname,
           timestamp: e.timestamp
         },
         where: e.name != "engagement"
@@ -461,9 +460,7 @@ defmodule Plausible.Stats.Exploration do
   defp select_previous(query, :forward) do
     from(e in query,
       select_merge: %{
-        prev_pathname:
-          lag(fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname))
-          |> over(:session_window),
+        prev_pathname: lag(e.pathname) |> over(:session_window),
         prev_name: lag(e.name) |> over(:session_window)
       }
     )
@@ -473,7 +470,7 @@ defmodule Plausible.Stats.Exploration do
     from(e in query,
       select_merge: %{
         prev_pathname:
-          lead(fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname))
+          lead(e.pathname)
           |> over(:session_window),
         prev_name: lead(e.name) |> over(:session_window)
       }

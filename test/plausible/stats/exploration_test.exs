@@ -275,69 +275,6 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:error, :not_found} = Exploration.interesting_funnel(query)
       end
 
-      test "treats trailing slash as the same page" do
-        site = new_site()
-        now = DateTime.utc_now()
-
-        populate_stats(site, [
-          # user 123
-          build(:pageview,
-            user_id: 123,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 123,
-            pathname: "/about/",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 123,
-            pathname: "/contact",
-            timestamp: DateTime.shift(now, minute: -20)
-          ),
-          # user 124
-          build(:pageview,
-            user_id: 124,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 124,
-            pathname: "/about",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 124,
-            pathname: "/pricing",
-            timestamp: DateTime.shift(now, minute: -20)
-          ),
-          # user 125
-          build(:pageview,
-            user_id: 125,
-            pathname: "/home",
-            timestamp: DateTime.shift(now, minute: -30)
-          ),
-          build(:pageview,
-            user_id: 125,
-            pathname: "/about/",
-            timestamp: DateTime.shift(now, minute: -25)
-          ),
-          build(:pageview,
-            user_id: 125,
-            pathname: "/contact",
-            timestamp: DateTime.shift(now, minute: -20)
-          )
-        ])
-
-        query = QueryBuilder.build!(site, input_date_range: :all)
-
-        assert {:ok, funnel} = Exploration.interesting_funnel(query)
-
-        pathnames = Enum.map(funnel, & &1.step.pathname)
-        assert pathnames == ["/about", "/contact"]
-      end
-
       test "stops when no more unseen steps are available" do
         site = new_site()
         now = DateTime.utc_now()
@@ -643,7 +580,7 @@ defmodule Plausible.Stats.ExplorationTest do
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(88)),
           build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(87)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(87)),
-          build(:pageview, user_id: 123, pathname: "/:dashboard/", timestamp: ago.(86)),
+          build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(86)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(85)),
           build(:pageview, user_id: 123, pathname: "/:dashboard", timestamp: ago.(84)),
           build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(83)),
