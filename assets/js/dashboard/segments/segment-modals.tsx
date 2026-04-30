@@ -27,8 +27,6 @@ import { Role, UserContextValue, useUserContext } from '../user-context'
 import { useSiteContext } from '../site-context'
 import { Button, buttonClassName } from '../components/button'
 
-const inModalPillClassName = '!shadow-none !bg-gray-100 dark:!bg-gray-750'
-
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
 interface ApiRequestProps {
@@ -246,7 +244,7 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
         className="flex-wrap"
         direction="horizontal"
         pills={sharedLinks.map((name) => ({
-          className: inModalPillClassName,
+          className: 'dark:!shadow-gray-950/60',
           plainText: name,
           children: name,
           interactive: false
@@ -502,7 +500,7 @@ const FiltersInSegment = ({
         className="flex-wrap"
         direction="horizontal"
         pills={segment_data.filters.map((filter) => ({
-          className: inModalPillClassName,
+          className: 'dark:!shadow-gray-950/60',
           plainText: plainFilterText({ labels: segment_data.labels }, filter),
           children: styledFilterText({ labels: segment_data.labels }, filter),
           interactive: false
