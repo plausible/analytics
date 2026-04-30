@@ -37,7 +37,7 @@ export function FilterPill({
   return (
     <div
       className={classNames(
-        'flex h-8 shadow rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
+        'flex h-8 shadow-sm rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
         className
       )}
     >

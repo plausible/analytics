@@ -44,7 +44,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
     onClose ?? (() => navigate({ path: rootRoute.path, search: (s) => s }))
 
   return (
-    <>
+    <div className="min-h-[66vh] md:min-h-120 flex flex-col flex-1">
       <div className="flex justify-between items-center gap-4">
         <div className="flex items-center gap-4 w-full">
           <h1 className="shrink-0 mb-0.5 text-base md:text-lg font-bold dark:text-gray-100">
@@ -84,7 +84,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
           />
         )}
       </div>
-    </>
+    </div>
   )
 }
 
