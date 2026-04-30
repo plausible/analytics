@@ -790,7 +790,15 @@ export function FunnelExploration() {
 
   const initialLoading =
     !inViewport || (steps.length === 0 && activeColumnLoading)
-  const numColumns = Math.max(steps.length + 1, initialLoading ? 1 : 3)
+  const journeyEnded =
+    !activeColumnLoading &&
+    activeColumnResults.length === 0 &&
+    steps.length >= 1
+  const numColumns = initialLoading
+    ? 1
+    : journeyEnded || (activeColumnLoading && steps.length === 1)
+      ? steps.length + 1
+      : Math.max(steps.length + 1, 3)
   const gridColumns = Math.max(numColumns, 3)
   const activeColumnIndex = steps.length
   const containerRef = useRef(null)
@@ -880,13 +888,6 @@ export function FunnelExploration() {
                 key={i}
                 colIndex={i}
                 header={columnHeader(i, direction)}
-                className={
-                  steps.length === 0 && i === 2
-                    ? 'sm:hidden'
-                    : steps.length === 0 && i === 1
-                      ? 'sm:[grid-column:span_2]'
-                      : undefined
-                }
                 active={isReachable}
                 // Active column gets live results; previously-active (now
                 // selected) columns get the candidate list that was visible at
