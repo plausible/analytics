@@ -9,7 +9,6 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats.{
     Query,
     Comparisons,
-    Exploration,
     Filters,
     TableDecider,
     Dashboard,
@@ -138,6 +137,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_ee do
+    alias Plausible.Stats.Exploration
+
     @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
 
     def exploration_next(conn, %{"journey" => steps} = params) do
