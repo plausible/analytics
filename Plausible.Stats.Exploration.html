@@ -398,7 +398,9 @@ Pages
           <pre translate="no"><span class="attribute">@spec</span> interesting_funnel(
   <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()
-) :: {:ok, [<a href="#t:funnel_step/0">funnel_step</a>()]} | {:error, :not_found}</pre>
+) ::
+  {:ok, %{funnel: [<a href="#t:funnel_step/0">funnel_step</a>()], candidates: [<a href="#t:next_step/0">next_step</a>()]}}
+  | {:error, :not_found}</pre>
 
       </div>
 
