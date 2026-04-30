@@ -21,7 +21,7 @@ export function ModalLayout({
       allowScroll={allowScroll}
       onClose={onClose}
     >
-      <div className="flex flex-col gap-6 py-2">
+      <div className="flex flex-col gap-6 p-1 md:py-2 md:px-0">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-base font-bold leading-tight dark:text-gray-100">
             {title}

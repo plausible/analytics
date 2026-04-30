@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
 - Improved top bar and top stats UI/styling
 - Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
+- Standardised and improved segment and filter modals styling
 
 ### Fixed
 

@@ -27,7 +27,7 @@ import { Role, UserContextValue, useUserContext } from '../user-context'
 import { useSiteContext } from '../site-context'
 import { Button, buttonClassName } from '../components/button'
 
-const inModalPillClassName = '!shadow-none !bg-gray-100'
+const inModalPillClassName = '!shadow-none !bg-gray-100 dark:!bg-gray-750'
 
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
