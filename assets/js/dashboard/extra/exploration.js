@@ -791,6 +791,7 @@ export function FunnelExploration() {
   const initialLoading =
     !inViewport || (steps.length === 0 && activeColumnLoading)
   const numColumns = Math.max(steps.length + 1, initialLoading ? 1 : 3)
+  const gridColumns = Math.max(numColumns, 3)
   const activeColumnIndex = steps.length
   const containerRef = useRef(null)
 
@@ -867,7 +868,7 @@ export function FunnelExploration() {
           ref={containerRef}
           className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
           style={{
-            gridTemplateColumns: `repeat(${numColumns}, minmax(20rem, 1fr))`
+            gridTemplateColumns: `repeat(${gridColumns}, minmax(20rem, 1fr))`
           }}
         >
           {Array.from({ length: numColumns }, (_, i) => {
