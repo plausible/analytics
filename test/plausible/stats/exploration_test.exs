@@ -245,7 +245,7 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, %{funnel: [step1, step2, step3, step4]}} =
-                 Exploration.interesting_funnel(query)
+                 Exploration.interesting_funnel(site, query)
 
         assert step1.step.pathname == "/home"
         assert step1.visitors == 2
@@ -264,7 +264,7 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, %{funnel: [step1, step2]}} =
-                 Exploration.interesting_funnel(query, max_steps: 2)
+                 Exploration.interesting_funnel(site, query, max_steps: 2)
 
         assert step1.step.pathname == "/home"
         assert step2.step.pathname == "/login"
@@ -274,7 +274,7 @@ defmodule Plausible.Stats.ExplorationTest do
         empty_site = new_site()
         query = QueryBuilder.build!(empty_site, input_date_range: :all)
 
-        assert {:error, :not_found} = Exploration.interesting_funnel(query)
+        assert {:error, :not_found} = Exploration.interesting_funnel(empty_site, query)
       end
 
       test "stops when no more unseen steps are available" do
@@ -291,7 +291,8 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, %{funnel: [step1]}} = Exploration.interesting_funnel(query, max_steps: 6)
+        assert {:ok, %{funnel: [step1]}} =
+                 Exploration.interesting_funnel(site, query, max_steps: 6)
 
         assert step1.step.pathname == "/only-page"
         assert step1.visitors == 1
@@ -304,7 +305,7 @@ defmodule Plausible.Stats.ExplorationTest do
             filters: [[:is, "visit:browser", ["Firefox"]]]
           )
 
-        assert {:ok, result} = Exploration.interesting_funnel(query)
+        assert {:ok, result} = Exploration.interesting_funnel(site, query)
 
         pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/docs", "/logout"]
@@ -361,7 +362,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, result} = Exploration.interesting_funnel(query)
+        assert {:ok, result} = Exploration.interesting_funnel(site, query)
 
         pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/a", "/b", "/c"]
@@ -378,7 +379,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step1, next_step2, next_step3]} =
-                 Exploration.next_steps(query, journey)
+                 Exploration.next_steps(site, query, journey)
 
         assert next_step1.step.label == "/docs"
         assert next_step1.step.pathname == "/docs"
@@ -400,7 +401,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [%{step: %{pathname: "/docs"}}]} =
-                 Exploration.next_steps(query, journey, max_candidates: 1)
+                 Exploration.next_steps(site, query, journey, max_candidates: 1)
       end
 
       test "returns error on too long journey", %{site: site} do
@@ -411,14 +412,14 @@ defmodule Plausible.Stats.ExplorationTest do
             %Exploration.Journey.Step{name: "pageview", pathname: "/page#{idx}"}
           end)
 
-        assert {:error, :journey_too_long} = Exploration.next_steps(query, journey)
+        assert {:error, :journey_too_long} = Exploration.next_steps(site, query, journey)
       end
 
       test "suggests the first step in the journey", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, [next_step1, next_step2, next_step3, next_step4]} =
-                 Exploration.next_steps(query, [])
+                 Exploration.next_steps(site, query, [])
 
         assert next_step1.step.pathname == "/home"
         assert next_step1.visitors == 2
@@ -438,7 +439,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
 
         assert {:ok, [next_step1, next_step2, next_step3, next_step4]} =
-                 Exploration.next_steps(query, [])
+                 Exploration.next_steps(site, query, [])
 
         assert next_step1.step.pathname == "/docs"
         assert next_step1.visitors == 1
@@ -458,7 +459,8 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(query, journey, search_term: "doc")
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "doc")
 
         assert next_step.step.pathname == "/docs"
         assert next_step.visitors == 1
@@ -490,7 +492,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(query, [])
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, [])
 
         assert next_step1.step.label == "/"
         assert next_step1.visitors == 2
@@ -530,7 +532,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step]} =
-                 Exploration.next_steps(query, journey, search_term: "up")
+                 Exploration.next_steps(site, query, journey, search_term: "up")
 
         assert next_step.step.label == "Signup"
         assert next_step.step.name == "Signup"
@@ -546,7 +548,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step1, next_step2]} =
-                 Exploration.next_steps(query, journey, direction: :backward)
+                 Exploration.next_steps(site, query, journey, direction: :backward)
 
         assert next_step1.visitors == 1
         assert next_step2.step.pathname == "/login"
@@ -605,13 +607,19 @@ defmodule Plausible.Stats.ExplorationTest do
                 [
                   %{step: %{pathname: "/:dashboard"}}
                 ]} =
-                 Exploration.next_steps(query, journey, search_term: "", direction: :forward)
+                 Exploration.next_steps(site, query, journey,
+                   search_term: "",
+                   direction: :forward
+                 )
 
         assert {:ok,
                 [
                   %{step: %{pathname: "/:dashboard"}}
                 ]} =
-                 Exploration.next_steps(query, journey, search_term: "", direction: :backward)
+                 Exploration.next_steps(site, query, journey,
+                   search_term: "",
+                   direction: :backward
+                 )
       end
 
       test "treats identical sequence of events as a single step" do
@@ -690,7 +698,7 @@ defmodule Plausible.Stats.ExplorationTest do
         ]
 
         assert {:ok, [next_step1, next_step2, next_step3]} =
-                 Exploration.next_steps(query, journey)
+                 Exploration.next_steps(site, query, journey)
 
         assert next_step1.step.pathname == "/docs"
         assert next_step1.visitors == 1
@@ -705,7 +713,7 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/docs"}
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
 
         assert next_step.step.pathname == "/logout"
         assert next_step.visitors == 1
@@ -760,7 +768,8 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(query, journey, direction: :backward)
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, direction: :backward)
 
         assert next_step.step.pathname == "/login"
         assert next_step.visitors == 1
@@ -811,7 +820,8 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, [next_step1, next_step2, next_step3]} = Exploration.next_steps(query, [])
+        assert {:ok, [next_step1, next_step2, next_step3]} =
+                 Exploration.next_steps(site, query, [])
 
         assert next_step1.step.pathname == "/home"
         assert next_step1.visitors == 2
@@ -824,7 +834,7 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
 
         assert next_step.step.pathname == "/login"
         assert next_step.visitors == 2
@@ -834,7 +844,7 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(query, journey)
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
 
         assert next_step.step.pathname == "/logout"
         assert next_step.visitors == 2
@@ -916,7 +926,7 @@ defmodule Plausible.Stats.ExplorationTest do
            %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        result = Exploration.next_steps(query, [])
+        result = Exploration.next_steps(site, query, [])
 
         assert {:ok,
                 [
@@ -956,7 +966,7 @@ defmodule Plausible.Stats.ExplorationTest do
       } do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        result = Exploration.next_steps(query, [], include_wildcard?: false)
+        result = Exploration.next_steps(site, query, [], include_wildcard?: false)
 
         assert {:ok,
                 [
