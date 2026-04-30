@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback
+} from 'react'
 import * as api from '../api'
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip'
@@ -18,6 +24,10 @@ const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 const EXPLORATION_DIRECTIONS = {
   FORWARD: 'forward',
   BACKWARD: 'backward'
+}
+
+function randomKey() {
+  return Math.random().toString()
 }
 
 function stateWithApplicableFilters(dashboardState, steps) {
@@ -147,89 +157,142 @@ function DirectionDropdown({ direction, onDirectionChange }) {
   )
 }
 
-function PathConnectors({ scrollRef, steps }) {
-  const [svgData, setSvgData] = useState({
+// Returns the x coordinate of a column's right or left edge,
+// adjusted for the container's scroll position so it is stable
+// in SVG/document space even when the user scrolls horizontally.
+function columnEdgeX(colEl, side, containerRect, scrollLeft) {
+  const rect = colEl.getBoundingClientRect()
+  const edgeX = side === 'right' ? rect.right : rect.left
+  return edgeX - containerRect.left + scrollLeft
+}
+
+// Returns the vertical midpoint of a step row element relative to
+// the top of the scroll container (not the viewport).
+function stepRowMidY(stepRowEl, containerRect) {
+  const rect = stepRowEl.getBoundingClientRect()
+  return (rect.top + rect.bottom) / 2 - containerRect.top
+}
+
+// Builds an SVG path string for a stepped connector with rounded
+// corners between two points. The path goes: horizontal → rounded
+// corner → vertical → rounded corner → horizontal.
+function steppedPath(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2
+  const dy = y2 - y1
+
+  if (Math.abs(dy) < 1) {
+    // Points are on the same horizontal line — plain horizontal segment.
+    return `M ${x1} ${y1} H ${x2}`
+  }
+
+  const r = Math.min(10, Math.abs(dy) / 2)
+
+  if (dy > 0) {
+    // Target is below: corners curve downward then outward.
+    return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 1 ${mx} ${y1 + r} V ${y2 - r} A ${r} ${r} 0 0 0 ${mx + r} ${y2} H ${x2}`
+  } else {
+    // Target is above: corners curve upward then outward.
+    return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 0 ${mx} ${y1 - r} V ${y2 + r} A ${r} ${r} 0 0 1 ${mx + r} ${y2} H ${x2}`
+  }
+}
+
+// Computes the clip rect that confines connectors to the list area,
+// so they don't bleed into column headers.
+function listClipRect(container, containerRect) {
+  const firstList = container.querySelector('[data-exploration-list]')
+  const listRect = firstList ? firstList.getBoundingClientRect() : null
+  return {
+    y: listRect ? listRect.top - containerRect.top : 0,
+    height: listRect ? listRect.height : container.clientHeight
+  }
+}
+
+function emptyConnectorSvgData() {
+  return {
     paths: [],
     width: 0,
     height: 0,
     clipY: 0,
     clipHeight: 0
-  })
+  }
+}
+
+function calculateConnectors(container, steps) {
+  const containerRect = container.getBoundingClientRect()
+  const newPaths = []
+
+  const columns = container.querySelectorAll(`[data-exploration-column]`)
+  const stepRows = container.querySelectorAll(`[data-exploration-step]`)
+
+  for (let i = 0; i < steps.length - 1; i++) {
+    const colA = columns[i]
+    const colB = columns[i + 1]
+
+    const stepRowA = stepRows[i]
+    const stepRowB = stepRows[i + 1]
+
+    if (colA && stepRowA && colB && stepRowB) {
+      const x1 = columnEdgeX(colA, 'right', containerRect, container.scrollLeft)
+      const x2 = columnEdgeX(colB, 'left', containerRect, container.scrollLeft)
+      const y1 = stepRowMidY(stepRowA, containerRect)
+      const y2 = stepRowMidY(stepRowB, containerRect)
+
+      newPaths.push(steppedPath(x1, y1, x2, y2))
+    }
+  }
+
+  const clip = listClipRect(container, containerRect)
+
+  return {
+    paths: newPaths,
+    width: container.scrollWidth,
+    height: container.clientHeight,
+    clipY: clip.y,
+    clipHeight: clip.height
+  }
+}
+
+function PathConnectors({ steps, containerRef }) {
+  const [svgData, setSvgData] = useState(emptyConnectorSvgData)
+
+  const calculateCallback = useCallback(() => {
+    const container = containerRef.current
+
+    if (container) {
+      setSvgData(calculateConnectors(container, steps))
+    }
+  }, [steps, containerRef])
 
   useLayoutEffect(() => {
-    const container = scrollRef.current
+    const container = containerRef.current
+
     if (!container || steps.length < 2) {
-      setSvgData({ paths: [], width: 0, height: 0, clipY: 0, clipHeight: 0 })
+      setSvgData(emptyConnectorSvgData)
       return
-    }
+    } else {
+      setSvgData(calculateConnectors(container, steps))
 
-    function recalculate() {
-      const c = scrollRef.current
-      if (!c) return
-      const containerRect = c.getBoundingClientRect()
-      const newPaths = []
+      const observer = new ResizeObserver(calculateCallback)
+      observer.observe(container)
+      window.addEventListener('resize', calculateCallback)
 
-      for (let i = 0; i < steps.length - 1; i++) {
-        const cardA = c.querySelector(`[data-exploration-step="${i}"]`)
-        const cardB = c.querySelector(`[data-exploration-step="${i + 1}"]`)
-        const colA = c.querySelector(`[data-exploration-column="${i}"]`)
-        const colB = c.querySelector(`[data-exploration-column="${i + 1}"]`)
-        if (!cardA || !cardB || !colA || !colB) continue
+      const lists = Array.from(
+        container.querySelectorAll('[data-exploration-list]')
+      )
 
-        const rColA = colA.getBoundingClientRect()
-        const rColB = colB.getBoundingClientRect()
-        const rCardA = cardA.getBoundingClientRect()
-        const rCardB = cardB.getBoundingClientRect()
+      lists.forEach((list) =>
+        list.addEventListener('scroll', calculateCallback)
+      )
 
-        const x1 = rColA.right - containerRect.left + c.scrollLeft
-        const y1 = (rCardA.top + rCardA.bottom) / 2 - containerRect.top
-        const x2 = rColB.left - containerRect.left + c.scrollLeft
-        const y2 = (rCardB.top + rCardB.bottom) / 2 - containerRect.top
-        const mx = (x1 + x2) / 2
-        const dy = y2 - y1
-        const r = Math.min(10, Math.abs(dy) / 2)
-
-        const d =
-          Math.abs(dy) < 1
-            ? `M ${x1} ${y1} H ${x2}`
-            : dy > 0
-              ? `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 1 ${mx} ${y1 + r} V ${y2 - r} A ${r} ${r} 0 0 0 ${mx + r} ${y2} H ${x2}`
-              : `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 0 ${mx} ${y1 - r} V ${y2 + r} A ${r} ${r} 0 0 1 ${mx + r} ${y2} H ${x2}`
-
-        newPaths.push(d)
+      return () => {
+        observer.disconnect()
+        window.removeEventListener('resize', calculateCallback)
+        lists.forEach((list) =>
+          list.removeEventListener('scroll', calculateCallback)
+        )
       }
-
-      const firstList = c.querySelector('[data-exploration-list]')
-      const listRect = firstList ? firstList.getBoundingClientRect() : null
-      const clipY = listRect ? listRect.top - containerRect.top : 0
-      const clipHeight = listRect ? listRect.height : c.clientHeight
-
-      setSvgData({
-        paths: newPaths,
-        width: c.scrollWidth,
-        height: c.clientHeight,
-        clipY,
-        clipHeight
-      })
     }
-
-    recalculate()
-
-    const observer = new ResizeObserver(recalculate)
-    observer.observe(container)
-    window.addEventListener('resize', recalculate)
-
-    const lists = Array.from(
-      container.querySelectorAll('[data-exploration-list]')
-    )
-    lists.forEach((list) => list.addEventListener('scroll', recalculate))
-
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', recalculate)
-      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
-    }
-  }, [steps, scrollRef])
+  }, [steps, containerRef, calculateCallback])
 
   if (svgData.paths.length === 0) return null
 
@@ -497,6 +560,12 @@ export function FunnelExploration() {
   // real funnel response arrives. Prevents from flashing "0 visitors"
   // during the loading window.
   const [provisionalFunnelEntries, setProvisionalFunnelEntries] = useState({})
+  // Workaround for force refreshing connectors between steps
+  // when dashboardState changes. Currently the connectors
+  // logic extracts part of the state from DOM, which shouldn't be the
+  // case. It will eventually be properlu rewritten and the workaround
+  // will no longer be needed.
+  const [connectorsKey, setConnectorsKey] = useState(randomKey)
   // Tracks the steps/direction/dashboardState values from the previous effect
   // run so we can tell whether the journey changed (needs funnel) or only the
   // search filter changed (next steps only, no funnel).
@@ -630,36 +699,12 @@ export function FunnelExploration() {
       fetchInterestingFunnel(site, dashboardState)
         .then((response) => {
           if (cancelled) return
-          if (response && response.length > 0) {
+          if (response && response.funnel && response.funnel.length > 0) {
             funnelFromPreloadRef.current = true
-            const preloadedSteps = response.map(({ step }) => step)
+            const preloadedSteps = response.funnel.map(({ step }) => step)
             setSteps(preloadedSteps)
-            setFunnel(response)
-            // Backfill candidate lists for each preloaded (selected) column
-            // so the user can immediately switch options without first
-            // having to clear and re-search. We capture the current journey
-            // version so any of these fetches that resolve after the user
-            // has navigated away can be safely ignored.
-            const journeyVersion = journeyVersionRef.current
-            preloadedSteps.forEach((_, idx) => {
-              const prefix = preloadedSteps.slice(0, idx)
-              fetchNextWithFunnel(
-                site,
-                dashboardState,
-                prefix,
-                '',
-                direction,
-                false
-              )
-                .then((r) => {
-                  if (journeyVersionRef.current !== journeyVersion) return
-                  setFrozenColumnResults((prev) => ({
-                    ...prev,
-                    [idx]: r?.next || []
-                  }))
-                })
-                .catch(() => {})
-            })
+            setFunnel(response.funnel)
+            setFrozenColumnResults(response.candidates)
           } else {
             // Nothing to preload, fall back to a plain next-steps fetch
             fetchNextWithFunnel(site, dashboardState, [], '', direction, false)
@@ -731,6 +776,8 @@ export function FunnelExploration() {
         if (!cancelled) setActiveColumnLoading(false)
       })
 
+    setConnectorsKey(randomKey)
+
     return () => {
       cancelled = true
     }
@@ -738,7 +785,7 @@ export function FunnelExploration() {
 
   const numColumns = Math.max(steps.length + 1, 3)
   const activeColumnIndex = steps.length
-  const scrollRef = useRef(null)
+  const containerRef = useRef(null)
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
@@ -746,7 +793,7 @@ export function FunnelExploration() {
 
   const prevStepsLengthRef = useRef(0)
   useEffect(() => {
-    const el = scrollRef.current
+    const el = containerRef.current
     if (!el) return
     if (steps.length !== prevStepsLengthRef.current) {
       const activeColumn = el.querySelector(
@@ -807,7 +854,7 @@ export function FunnelExploration() {
       </div>
 
       <div
-        ref={scrollRef}
+        ref={containerRef}
         className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
         style={{
           gridTemplateColumns: `repeat(${numColumns}, minmax(20rem, 1fr))`
@@ -867,7 +914,11 @@ export function FunnelExploration() {
             />
           )
         })}
-        <PathConnectors scrollRef={scrollRef} steps={steps} />
+        <PathConnectors
+          key={connectorsKey}
+          containerRef={containerRef}
+          steps={steps}
+        />
       </div>
     </div>
   )
