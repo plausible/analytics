@@ -538,6 +538,80 @@ defmodule Plausible.BillingTest do
     end
   end
 
+  describe "downgrade yearly to monthly then cancel" do
+    # A customer pays upfront for a yearly plan, then switches to a monthly plan,
+    # then cancels. The test documents the current behaviour: after switching to
+    # monthly the access window is reset to the monthly cycle, so the user does
+    # NOT retain access for the full year they already paid for.
+    #
+    # The money for the unused yearly months is returned to Paddle as a proration
+    # credit, but Plausible's `accept_traffic_until` is recalculated based on the
+    # new monthly `next_bill_date` rather than the original yearly end date.
+    #
+    # This test is therefore expected to FAIL until the bug is fixed: after
+    # downgrading to monthly, `accept_traffic_until` should remain at the end of
+    # the already-paid yearly period.
+
+    @tag :ee_only
+    test "access is retained until the end of the paid yearly period after downgrade and cancel" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      # Subscribe on a yearly plan
+      yearly_next_bill = Date.shift(Date.utc_today(), year: 1)
+
+      %{
+        "event_time" => "2019-05-01 01:03:52",
+        "alert_name" => "subscription_created",
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
+        "email" => "",
+        "subscription_id" => @subscription_id,
+        "subscription_plan_id" => "857079",
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "status" => "active",
+        "next_bill_date" => Date.to_iso8601(yearly_next_bill),
+        "unit_price" => "90.00",
+        "currency" => "EUR"
+      }
+      |> Billing.subscription_created()
+
+      # Switch to monthly plan immediately
+      # new monthly billing cycle is ~1 month from now
+      monthly_next_bill = Date.shift(Date.utc_today(), month: 1)
+
+      %{
+        "alert_name" => "subscription_updated",
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
+        "subscription_id" => @subscription_id,
+        "subscription_plan_id" => "857097",
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "old_status" => "active",
+        "status" => "active",
+        "next_bill_date" => Date.to_iso8601(monthly_next_bill),
+        "new_unit_price" => "9.00",
+        "currency" => "EUR"
+      }
+      |> Billing.subscription_updated()
+
+      # cancel the subscription
+      Billing.subscription_cancelled(%{
+        "alert_name" => "subscription_cancelled",
+        "subscription_id" => @subscription_id,
+        "status" => "deleted"
+      })
+
+      team = Repo.reload!(team_of(user))
+
+      # After cancellation the user already paid for a full year upfront.
+      # They should retain access until the end of that yearly period
+      # (plus the standard 30-day grace window), not just until the end
+      # of the short monthly billing cycle they switched to.
+      assert team.accept_traffic_until == Date.add(yearly_next_bill, 30)
+    end
+  end
+
   describe "subscription_payment_succeeded" do
     @tag :ee_only
     test "updates accept_traffic_until" do
