@@ -889,13 +889,13 @@ export function FunnelExploration() {
               loading={isActive ? activeColumnLoading : false}
               selected={steps[i] || null}
               selectedVisitors={
-                funnel[i]?.visitors ??
                 provisionalFunnelEntries[i]?.visitors ??
+                funnel[i]?.visitors ??
                 null
               }
               selectedConversionRate={
-                funnel[i]?.conversion_rate ??
                 provisionalFunnelEntries[i]?.conversion_rate ??
+                funnel[i]?.conversion_rate ??
                 null
               }
               maxVisitors={funnel[0]?.visitors ?? null}
