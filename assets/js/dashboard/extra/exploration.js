@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback
 } from 'react'
+import LazyLoader from '../components/lazy-loader'
 import * as api from '../api'
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip'
@@ -544,6 +545,8 @@ function columnHeader(index, direction) {
 export function FunnelExploration() {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const [inViewport, setInViewport] = useState(false)
+
   const [steps, setSteps] = useState([])
   const [direction, setDirection] = useState(EXPLORATION_DIRECTIONS.FORWARD)
   const [funnel, setFunnel] = useState([])
@@ -681,6 +684,8 @@ export function FunnelExploration() {
   // On subsequent renders (via user interaction) fetch next steps and,
   // if the journey changed, also refetch the funnel.
   useEffect(() => {
+    if (!inViewport) return
+
     const journeyChanged =
       prevStepsRef.current !== steps ||
       prevDirectionRef.current !== direction ||
@@ -781,9 +786,10 @@ export function FunnelExploration() {
     return () => {
       cancelled = true
     }
-  }, [site, dashboardState, steps, direction, activeColumnFilter])
+  }, [site, dashboardState, steps, direction, activeColumnFilter, inViewport])
 
-  const numColumns = Math.max(steps.length + 1, 3)
+  const initialLoading = !inViewport || (steps.length === 0 && activeColumnLoading)
+  const numColumns = Math.max(steps.length + 1, initialLoading ? 1 : 3)
   const activeColumnIndex = steps.length
   const containerRef = useRef(null)
 
@@ -818,8 +824,9 @@ export function FunnelExploration() {
   }, [steps.length])
 
   return (
-    <div className="flex flex-col gap-4 pt-4">
-      <div className="flex flex-wrap items-center gap-x-3">
+    <LazyLoader onVisible={() => setInViewport(true)}>
+      <div className="flex flex-col gap-4 pt-4">
+        <div className="flex flex-wrap items-center gap-x-3">
         <h4 className="flex-1 text-base font-semibold dark:text-gray-100">
           {funnel.length >= 2
             ? `${funnel.length}-step user journey`
@@ -886,7 +893,7 @@ export function FunnelExploration() {
               results={
                 isActive ? activeColumnResults : frozenColumnResults[i] || []
               }
-              loading={isActive ? activeColumnLoading : false}
+              loading={isActive ? (initialLoading || activeColumnLoading) : false}
               selected={steps[i] || null}
               selectedVisitors={
                 provisionalFunnelEntries[i]?.visitors ??
@@ -920,7 +927,8 @@ export function FunnelExploration() {
           steps={steps}
         />
       </div>
-    </div>
+      </div>
+    </LazyLoader>
   )
 }
 
