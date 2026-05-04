@@ -881,7 +881,7 @@ export function FunnelExploration() {
 
         {noData ? (
           <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
-            No journey data found for the selected period
+            No data yet
           </div>
         ) : (
           <div
