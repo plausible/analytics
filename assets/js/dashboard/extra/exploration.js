@@ -886,68 +886,72 @@ export function FunnelExploration() {
             No journey data found for the selected period
           </div>
         ) : (
-        <div
-          ref={containerRef}
-          className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
-          style={{
-            gridTemplateColumns: `repeat(${gridColumns}, minmax(20rem, 1fr))`
-          }}
-        >
-          {Array.from({ length: numColumns }, (_, i) => {
-            const isActive = i === activeColumnIndex
-            const isReachable = steps.length >= i
+          <div
+            ref={containerRef}
+            className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+            style={{
+              gridTemplateColumns: `repeat(${gridColumns}, minmax(20rem, 1fr))`
+            }}
+          >
+            {Array.from({ length: numColumns }, (_, i) => {
+              const isActive = i === activeColumnIndex
+              const isReachable = steps.length >= i
 
-            return (
-              <ExplorationColumn
-                key={i}
-                colIndex={i}
-                header={columnHeader(i, direction)}
-                active={isReachable}
-                // Active column gets live results; previously-active (now
-                // selected) columns get the candidate list that was visible at
-                // the moment of selection so the user can switch options
-                // without losing context. Pre-selected columns (e.g. populated
-                // by interesting-funnel preload) have no frozen results and
-                // fall back to a single-item display sourced from funnel data.
-                results={
-                  isActive ? activeColumnResults : frozenColumnResults[i] || []
-                }
-                loading={
-                  isActive ? initialLoading || activeColumnLoading : false
-                }
-                selected={steps[i] || null}
-                selectedVisitors={
-                  provisionalFunnelEntries[i]?.visitors ??
-                  funnel[i]?.visitors ??
-                  null
-                }
-                selectedConversionRate={
-                  provisionalFunnelEntries[i]?.conversion_rate ??
-                  funnel[i]?.conversion_rate ??
-                  null
-                }
-                maxVisitors={funnel[0]?.visitors ?? null}
-                onSelect={(selected) => handleSelect(i, selected)}
-                onFilterChange={isActive ? setActiveColumnFilter : () => {}}
-                filter={isActive ? activeColumnFilter : ''}
-                direction={direction}
-                onDirectionChange={i === 0 ? handleDirectionSelect : undefined}
-                headerConversionRate={
-                  funnel[i]?.conversion_rate != null
-                    ? i === 0
-                      ? '100%'
-                      : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
-                    : null
-                }
-              />
-            )
-          })}
-          <PathConnectors
-            key={connectorsKey}
-            containerRef={containerRef}
-            steps={steps}
-          />
-        </div>
+              return (
+                <ExplorationColumn
+                  key={i}
+                  colIndex={i}
+                  header={columnHeader(i, direction)}
+                  active={isReachable}
+                  // Active column gets live results; previously-active (now
+                  // selected) columns get the candidate list that was visible at
+                  // the moment of selection so the user can switch options
+                  // without losing context. Pre-selected columns (e.g. populated
+                  // by interesting-funnel preload) have no frozen results and
+                  // fall back to a single-item display sourced from funnel data.
+                  results={
+                    isActive
+                      ? activeColumnResults
+                      : frozenColumnResults[i] || []
+                  }
+                  loading={
+                    isActive ? initialLoading || activeColumnLoading : false
+                  }
+                  selected={steps[i] || null}
+                  selectedVisitors={
+                    provisionalFunnelEntries[i]?.visitors ??
+                    funnel[i]?.visitors ??
+                    null
+                  }
+                  selectedConversionRate={
+                    provisionalFunnelEntries[i]?.conversion_rate ??
+                    funnel[i]?.conversion_rate ??
+                    null
+                  }
+                  maxVisitors={funnel[0]?.visitors ?? null}
+                  onSelect={(selected) => handleSelect(i, selected)}
+                  onFilterChange={isActive ? setActiveColumnFilter : () => {}}
+                  filter={isActive ? activeColumnFilter : ''}
+                  direction={direction}
+                  onDirectionChange={
+                    i === 0 ? handleDirectionSelect : undefined
+                  }
+                  headerConversionRate={
+                    funnel[i]?.conversion_rate != null
+                      ? i === 0
+                        ? '100%'
+                        : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
+                      : null
+                  }
+                />
+              )
+            })}
+            <PathConnectors
+              key={connectorsKey}
+              containerRef={containerRef}
+              steps={steps}
+            />
+          </div>
         )}
       </div>
     </LazyLoader>
