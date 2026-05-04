@@ -93,8 +93,8 @@ export function formatDateRangeLabel([from, to]: [string, string]): string {
   const toDay = dayjs(to.slice(0, 19))
   if (fromDay.isSame(toDay, 'day')) return fromDay.format('D MMM YYYY')
   if (fromDay.isSame(toDay, 'year'))
-    return `${fromDay.format('D MMM')} – ${toDay.format('D MMM YYYY')}`
-  return `${fromDay.format('D MMM YY')} – ${toDay.format('D MMM YY')}`
+    return `${fromDay.format('D MMM')} - ${toDay.format('D MMM YYYY')}`
+  return `${fromDay.format('D MMM YY')} - ${toDay.format('D MMM YY')}`
 }
 
 export function useBodyPortalRef() {

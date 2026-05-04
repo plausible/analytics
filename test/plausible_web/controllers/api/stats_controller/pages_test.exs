@@ -637,7 +637,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"dimensions" => ["/firefox"], "metrics" => [2, 100.0]}
              ]
 
-      assert json_response(conn, 200)["meta"] == %{"date_range_label" => "1 Jan 2021"}
+      assert %{
+               "date_range" => ["2021-01-01T00:00:00Z", "2021-01-01T23:59:59Z"]
+             } = response["query"]
     end
 
     test "returns top pages with :not_member filter on custom pageview props including (none) value",
@@ -1236,6 +1238,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         query_pages(conn, site,
           date_range: ["2021-01-01", "2021-01-01"],
           filters: [["contains", "event:page", ["/blog/(/", "/blog/)/"]]],
+          order_by: [["visitors", "desc"], ["event:page", "asc"]],
           metrics: @detailed_metrics
         )
 
@@ -1925,10 +1928,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
 
-      assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "2 Jan 2021",
-               "comparison_date_range_label" => "1 Jan 2021"
-             }
+      assert %{
+               "comparison_date_range" => ["2021-01-01T00:00:00Z", "2021-01-01T23:59:59Z"],
+               "date_range" => ["2021-01-02T00:00:00Z", "2021-01-02T23:59:59Z"]
+             } = response["query"]
     end
 
     on_ee do
