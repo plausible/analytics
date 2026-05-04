@@ -362,7 +362,7 @@ function ExplorationColumn({
   // from the funnel data so the column still renders the selected step.
   // If the candidate list exists but the selected step isn't in it (e.g. it
   // dropped out of the top suggestions after a dashboard state change), inject
-  // it at the top so the connector always has a target to attach to.
+  // it to the bottom so the connector always has a target to attach to.
   const slicedResults = results.slice(0, 10)
   const selectedInResults =
     selected && slicedResults.some(({ step }) => isSameStep(step, selected))
