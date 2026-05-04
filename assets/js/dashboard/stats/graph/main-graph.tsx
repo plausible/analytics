@@ -70,13 +70,11 @@ type MainGraphYValues = Readonly<
 
 type TooltipState = {
   x: number
-  y: number
   selectedIndex: number | null
   persistent: boolean
 }
 const initialTooltipState: TooltipState = {
   x: 0,
-  y: 0,
   selectedIndex: null,
   persistent: false
 }
@@ -278,7 +276,6 @@ export const MainGraph = ({
             setTooltip({
               selectedIndex: closestPoint.index,
               x: closestPoint.x,
-              y: 0,
               persistent: true
             })
           }
@@ -292,7 +289,6 @@ export const MainGraph = ({
       return setTooltip({
         selectedIndex: closestPoint.index,
         x: closestPoint.x,
-        y: 0,
         persistent: false
       })
     },
@@ -355,7 +351,6 @@ export const MainGraph = ({
           return setTooltip({
             selectedIndex: closestPoint.index,
             x: closestPoint.x,
-            y: 0,
             persistent: true
           })
         }
@@ -404,7 +399,8 @@ export const MainGraph = ({
           interval={interval}
           metric={metric}
           x={tooltip.x}
-          y={tooltip.y}
+          // aligned to top of graph
+          y={0}
           datum={selectedDatum}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
