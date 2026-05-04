@@ -388,7 +388,7 @@ defmodule Plausible.Stats.Exploration do
   end
 
   @goal_pathname_condition """
-  if(? LIKE '^%$', match(?, ?), ? = ?)
+  if(? != '', match(?, ?), ? = ?)
   """
 
   defp goals_query(_, []), do: nil
@@ -398,21 +398,22 @@ defmodule Plausible.Stats.Exploration do
       Enum.map(goals, fn g ->
         pathname = g.page_path || ""
 
-        pathname =
+        regex_pathname =
           if String.contains?(pathname, "*") do
             Filters.Utils.page_regex(pathname)
           else
-            pathname
+            ""
           end
 
         %{
           label: g.display_name,
           name: g.event_name || "pageview",
-          pathname: pathname
+          pathname: pathname,
+          regex_pathname: regex_pathname
         }
       end)
 
-    types = %{label: :string, name: :string, pathname: :string}
+    types = %{label: :string, name: :string, pathname: :string, regex_pathname: :string}
 
     query =
       from(g in values(values, types),
@@ -423,9 +424,9 @@ defmodule Plausible.Stats.Exploration do
                (g.name == "pageview" and
                   fragment(
                     @goal_pathname_condition,
-                    g.pathname,
+                    g.regex_pathname,
                     m.pathname,
-                    g.pathname,
+                    g.regex_pathname,
                     m.pathname,
                     g.pathname
                   ))),
@@ -647,22 +648,33 @@ defmodule Plausible.Stats.Exploration do
   end
 
   defp step_condition(step, count) when count <= @max_steps do
-    if step.includes_subpaths do
-      escaped = Regex.escape(step.pathname)
+    cond do
+      step.includes_subpaths ->
+        escaped = Regex.escape(step.pathname)
 
-      pattern = "^#{escaped}(/.+)?$"
+        pattern = "^#{escaped}(/.+)?$"
 
-      dynamic(
-        [s],
-        field(s, ^:"name#{count}") == ^step.name and
-          fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
-      )
-    else
-      dynamic(
-        [s],
-        field(s, ^:"name#{count}") == ^step.name and
-          field(s, ^:"pathname#{count}") == ^step.pathname
-      )
+        dynamic(
+          [s],
+          field(s, ^:"name#{count}") == ^step.name and
+            fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
+        )
+
+      step.is_goal and step.name == "pageview" and String.contains?(step.pathname, "*") ->
+        pattern = Filters.Utils.page_regex(step.pathname)
+
+        dynamic(
+          [s],
+          field(s, ^:"name#{count}") == ^step.name and
+            fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
+        )
+
+      true ->
+        dynamic(
+          [s],
+          field(s, ^:"name#{count}") == ^step.name and
+            field(s, ^:"pathname#{count}") == ^step.pathname
+        )
     end
   end
 
