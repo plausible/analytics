@@ -418,9 +418,7 @@ function ExplorationColumn({
           ) : (
             <span className="flex flex-col items-center gap-2">
               <FlagIcon className="size-4.5" />
-              {direction === EXPLORATION_DIRECTIONS.BACKWARD
-                ? "You've reached the beginning of this journey"
-                : "You've reached the end of this journey"}
+              No further steps found for the selected period and filters
             </span>
           )}
         </div>
