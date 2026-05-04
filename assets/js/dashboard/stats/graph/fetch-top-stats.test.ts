@@ -35,7 +35,8 @@ const expectedBaseQuery = {
   filters: [],
   include: expectedBaseInclude,
   relative_date: null,
-  order_by: null
+  order_by: null,
+  pagination: null
 }
 
 const expectedRealtimeVisitorsQuery: StatsQuery = {
