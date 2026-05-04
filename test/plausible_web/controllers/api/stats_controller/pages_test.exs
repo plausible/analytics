@@ -2271,7 +2271,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "can filter out empty entry pages (sessions with only custom events)", %{conn: conn, site: site} do
+    test "can filter out empty entry pages (sessions with only custom events)", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Signup",
@@ -2648,7 +2651,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "can filter out empty exit pages (sessions with only custom events)", %{conn: conn, site: site} do
+    test "can filter out empty exit pages (sessions with only custom events)", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Signup",
