@@ -835,9 +835,16 @@ export function FunnelExploration() {
     prevStepsLengthRef.current = steps.length
   }, [steps.length])
 
+  const noData =
+    !initialLoading &&
+    !activeColumnLoading &&
+    steps.length === 0 &&
+    funnel.length === 0 &&
+    activeColumnResults.length === 0
+
   return (
     <LazyLoader onVisible={() => setInViewport(true)}>
-      <div className="flex flex-col gap-4 pt-4">
+      <div className="flex-1 flex flex-col gap-4 pt-4">
         <div className="flex flex-wrap items-center gap-x-3">
           <h4 className="flex-1 text-base font-semibold dark:text-gray-100">
             {funnel.length >= 2
@@ -874,6 +881,11 @@ export function FunnelExploration() {
           </Tooltip>
         </div>
 
+        {noData ? (
+          <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
+            No journey data found for the selected period
+          </div>
+        ) : (
         <div
           ref={containerRef}
           className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
@@ -936,6 +948,7 @@ export function FunnelExploration() {
             steps={steps}
           />
         </div>
+        )}
       </div>
     </LazyLoader>
   )
