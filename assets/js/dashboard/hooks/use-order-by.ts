@@ -9,7 +9,7 @@ export enum SortDirection {
   desc = 'desc'
 }
 
-export type Order = [Metric, SortDirection]
+export type Order = [string, SortDirection]
 
 export type OrderBy = Order[]
 

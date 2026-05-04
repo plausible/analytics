@@ -64,7 +64,7 @@ export function usePaginatedQueryAPI({
       return api.stats(site, {
         ...statsQuery,
         pagination: { limit: PAGINATION_LIMIT, offset: pageParam as number }
-      } as StatsQuery)
+      })
     },
     getNextPageParam: (lastPage, _, lastPageParam) => {
       return lastPage.results.length === PAGINATION_LIMIT

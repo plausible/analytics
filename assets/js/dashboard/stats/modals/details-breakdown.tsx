@@ -110,7 +110,9 @@ export function DetailsBreakdown({
     reportInfo: { dimensionLabel }
   })
 
-  const effectiveOrderBy = orderBy.length ? orderBy : storedOrderBy
+  const effectiveOrderBy = (orderBy.length ? orderBy : storedOrderBy).concat(
+    dimensions.map((dim) => [dim, SortDirection.asc])
+  )
 
   const baseStatsQuery: StatsQuery = useMemo(
     () =>

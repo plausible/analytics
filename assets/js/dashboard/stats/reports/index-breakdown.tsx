@@ -35,6 +35,8 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
+import { SortDirection } from '../../hooks/use-order-by-legacy'
+import { OrderBy } from '../../hooks/use-order-by'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -73,21 +75,23 @@ export function IndexBreakdown({
   const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState(false)
   const queryClient = useQueryClient()
 
-  const statsQuery: StatsQuery = useMemo(
-    () => createStatsQuery(dashboardState, { metrics: metrics, dimensions }),
-    [dashboardState, metrics, dimensions]
-  )
+  const statsQuery: StatsQuery = useMemo(() => {
+    return createStatsQuery(dashboardState, {
+      metrics,
+      dimensions,
+      order_by: [['visitors', SortDirection.desc]].concat(
+        dimensions.map((dim) => [dim, SortDirection.asc])
+      ) as OrderBy,
+      pagination: { limit: MAX_ITEMS, offset: 0 }
+    })
+  }, [dashboardState, metrics, dimensions])
 
   const dimensionKey = statsQuery.dimensions.join(',')
 
   const apiState = useQuery<QueryApiResponse>({
     queryKey: [dimensionKey, dashboardState],
     enabled: visible,
-    queryFn: () =>
-      stats(site, {
-        ...statsQuery,
-        pagination: { limit: MAX_ITEMS, offset: 0 }
-      } as StatsQuery),
+    queryFn: () => stats(site, statsQuery),
     staleTime: getStaleTime({
       siteTimezoneOffset: site.offset,
       siteStatsBegin: site.statsBegin,

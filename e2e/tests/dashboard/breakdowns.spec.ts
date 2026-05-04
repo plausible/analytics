@@ -563,7 +563,7 @@ test('pages breakdown', async ({ page, request }) => {
 
     await expectHeaders(modal(page), [
       'Entry page',
-      /Visitors/,
+      /Unique entrances/,
       /Total entrances/,
       /Bounce rate/,
       /Visit duration/
@@ -599,8 +599,8 @@ test('pages breakdown', async ({ page, request }) => {
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
-      'Page url',
-      /Visitors/,
+      'Exit page',
+      /Unique exits/,
       /Total exits/,
       /Exit rate/
     ])
