@@ -92,6 +92,11 @@ function isSameStep(step, otherStep) {
   )
 }
 
+function truncateFunnelAtFirstZero(funnel) {
+  const cutoff = funnel.findIndex((entry) => entry.visitors === 0)
+  return cutoff === -1 ? funnel : funnel.slice(0, cutoff)
+}
+
 function truncateFrozenResultsAtIndex(frozenResults, fromIndex) {
   const next = {}
   Object.keys(frozenResults).forEach((key) => {
@@ -577,6 +582,9 @@ export function FunnelExploration() {
   const prevDashboardStateRef = useRef(dashboardState)
   const preloadFiredRef = useRef(false)
   const funnelFromPreloadRef = useRef(false)
+  // Set to true when steps are trimmed to match a truncated funnel response.
+  // Prevents the resulting steps change from triggering a redundant funnel re-fetch.
+  const funnelTruncatedStepsRef = useRef(false)
   // Bumped whenever the user actively changes the journey or direction.
   // Used to discard stale preload-driven candidate fetches that resolve
   // after the user has already navigated away from the preloaded prefix.
@@ -706,9 +714,14 @@ export function FunnelExploration() {
           if (cancelled) return
           if (response && response.funnel && response.funnel.length > 0) {
             funnelFromPreloadRef.current = true
-            const preloadedSteps = response.funnel.map(({ step }) => step)
-            setSteps(preloadedSteps)
-            setFunnel(response.funnel)
+            // When dahshboard state changes for an already set journey,
+            // we might end with some of the trailing steps having zero visitors.
+            // In such case we should truncate the journey, allow further candidate
+            // selection (if present) instead of drawing connections
+            // to non-selectable nodes.
+            const truncatedFunnel = truncateFunnelAtFirstZero(response.funnel)
+            setSteps(truncatedFunnel.map(({ step }) => step))
+            setFunnel(truncatedFunnel)
             setFrozenColumnResults(response.candidates)
           } else {
             // Nothing to preload, fall back to a plain next-steps fetch
@@ -749,8 +762,14 @@ export function FunnelExploration() {
     const funnelAlreadyLoaded = funnelFromPreloadRef.current
     funnelFromPreloadRef.current = false
 
+    const funnelTruncatedSteps = funnelTruncatedStepsRef.current
+    funnelTruncatedStepsRef.current = false
+
     const includeFunnel =
-      journeyChanged && steps.length > 0 && !funnelAlreadyLoaded
+      journeyChanged &&
+      steps.length > 0 &&
+      !funnelAlreadyLoaded &&
+      !funnelTruncatedSteps
 
     if (journeyChanged && steps.length === 0) {
       setFunnel([])
@@ -768,7 +787,14 @@ export function FunnelExploration() {
         if (cancelled) return
         setActiveColumnResults(response?.next || [])
         if (includeFunnel) {
-          setFunnel(response?.funnel || [])
+          const truncatedFunnel = truncateFunnelAtFirstZero(
+            response?.funnel || []
+          )
+          setFunnel(truncatedFunnel)
+          if (truncatedFunnel.length < (response?.funnel?.length ?? 0)) {
+            funnelTruncatedStepsRef.current = true
+            setSteps((prev) => prev.slice(0, truncatedFunnel.length))
+          }
           setProvisionalFunnelEntries({})
         }
       })
