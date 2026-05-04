@@ -33,25 +33,23 @@ defmodule PlausibleWeb.Components.Generic do
     }
   }
 
+  # Themes/sizes/base are defined as component classes in
+  # assets/css/app.css and mirrored by the React `Button` component in
+  # assets/js/dashboard/components/button.tsx. Update there only.
   @button_themes %{
-    "primary" =>
-      "border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
-    "secondary" =>
-      "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-50 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-white disabled:text-gray-700/40 dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
-    "yellow" =>
-      "bg-yellow-600/90 text-white hover:bg-yellow-600 focus-visible:outline-yellow-600 disabled:bg-yellow-400/60 disabled:dark:bg-yellow-600/30 disabled:dark:text-white/35",
-    "danger" =>
-      "border border-gray-300 dark:border-gray-800 text-red-600 bg-white dark:bg-gray-800 hover:text-red-700 dark:hover:text-red-400 dark:text-red-500 active:text-red-800 disabled:text-red-700/40 disabled:hover:shadow-none dark:disabled:text-red-500/35 dark:disabled:bg-gray-800",
-    "ghost" =>
-      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-600 disabled:hover:bg-transparent",
-    "icon" => "text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+    "primary" => "btn-theme-primary",
+    "secondary" => "btn-theme-secondary",
+    "yellow" => "btn-theme-yellow",
+    "danger" => "btn-theme-danger",
+    "ghost" => "btn-theme-ghost",
+    "icon" => "btn-theme-icon"
   }
 
-  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-md cursor-pointer disabled:cursor-not-allowed"
+  @button_base_class "btn-base"
 
   @button_sizes %{
-    "sm" => "px-3 py-2",
-    "md" => "px-3.5 py-2.5"
+    "sm" => "btn-sm",
+    "md" => "btn-md"
   }
 
   attr(:type, :string, default: "button")

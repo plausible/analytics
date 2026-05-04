@@ -137,6 +137,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_ee do
+    alias Plausible.Stats.Exploration
+
     @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
 
     def exploration_next(conn, %{"journey" => steps} = params) do
@@ -146,12 +148,13 @@ defmodule PlausibleWeb.Api.StatsController do
       with {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
-             Plausible.Stats.Exploration.next_steps(query, journey,
+             Exploration.next_steps(query, journey,
                search_term: search_term,
                direction: direction,
-               include_wildcard?:
-                 not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+               include_wildcard?: include_wildcard?
              ) do
         json(conn, next_steps)
       else
@@ -167,7 +170,7 @@ defmodule PlausibleWeb.Api.StatsController do
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            {:ok, funnel} <-
-             Plausible.Stats.Exploration.journey_funnel(query, journey, direction) do
+             Exploration.journey_funnel(query, journey, direction) do
         json(conn, funnel)
       else
         {:error, :empty_journey} ->
@@ -182,13 +185,15 @@ defmodule PlausibleWeb.Api.StatsController do
       site = conn.assigns.site
       query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      case Plausible.Stats.Exploration.interesting_funnel(query,
+      include_wildcard? =
+        not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+
+      case Exploration.interesting_funnel(query,
              max_steps: params["max_steps"],
              max_candidates: params["max_candidates"],
-             include_wildcard?:
-               not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+             include_wildcard?: include_wildcard?
            ) do
-        {:ok, funnel} -> json(conn, funnel)
+        {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
         {:error, :not_found} -> json(conn, [])
       end
     end
@@ -201,10 +206,13 @@ defmodule PlausibleWeb.Api.StatsController do
       with {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
-             Plausible.Stats.Exploration.next_steps(query, journey,
+             Exploration.next_steps(query, journey,
                search_term: search_term,
-               direction: direction
+               direction: direction,
+               include_wildcard?: include_wildcard?
              ),
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})
@@ -215,7 +223,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
 
     defp maybe_include_funnel(true, query, journey, direction) do
-      case Plausible.Stats.Exploration.journey_funnel(query, journey, direction) do
+      case Exploration.journey_funnel(query, journey, direction) do
         {:ok, funnel_data} -> funnel_data
         {:error, :empty_journey} -> []
       end
@@ -236,7 +244,7 @@ defmodule PlausibleWeb.Api.StatsController do
            "includes_subpaths" => includes_subpaths,
            "subpaths_count" => subpaths_count
          }) do
-      Plausible.Stats.Exploration.Journey.Step.new(
+      Exploration.Journey.Step.new(
         name,
         pathname,
         includes_subpaths,

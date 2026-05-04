@@ -156,14 +156,28 @@ defmodule Plausible.Stats.Comparisons do
   defp get_comparison_datetime_range(
          %Query{
            input_date_range: input_range,
-           include: %{compare: :year_over_year}
+           include: %{compare: :year_over_year} = include
          } = source_query
        )
        when input_range in [:"24h", :day] do
     comparison_start = DateTime.shift(source_query.utc_time_range.first, year: -1)
     comparison_end = DateTime.shift(source_query.utc_time_range.last, year: -1)
 
-    DateTimeRange.new!(comparison_start, comparison_end)
+    if include.compare_match_day_of_week do
+      source_first_date = Times.to_date(source_query.utc_time_range.first, source_query.timezone)
+      comparison_first_date = Times.to_date(comparison_start, source_query.timezone)
+
+      day_to_match = Date.day_of_week(source_first_date)
+      matched_date = shift_to_nearest(day_to_match, comparison_first_date, source_first_date)
+      days_shifted = Date.diff(matched_date, comparison_first_date)
+
+      DateTimeRange.new!(
+        DateTime.shift(comparison_start, day: days_shifted),
+        DateTime.shift(comparison_end, day: days_shifted)
+      )
+    else
+      DateTimeRange.new!(comparison_start, comparison_end)
+    end
   end
 
   defp get_comparison_datetime_range(

@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Exploration do
     @type t() :: %__MODULE__{}
 
     @derive {Jason.Encoder, only: [:name, :pathname, :label, :includes_subpaths, :subpaths_count]}
-    defstruct name: nil, pathname: nil, label: nil, includes_subpaths: false, subpaths_count: 0
+    defstruct name: nil, pathname: "", label: nil, includes_subpaths: false, subpaths_count: 0
 
     @spec from(map()) :: t()
     def from(step) do
@@ -21,7 +21,7 @@ defmodule Plausible.Stats.Exploration do
         when is_boolean(includes_subpaths) and is_integer(subpaths_count) do
       label =
         if name != "pageview" do
-          name <> " " <> pathname
+          name
         else
           pathname
         end
@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Exploration do
       (default: true)
   """
   @spec interesting_funnel(Query.t(), keyword()) ::
-          {:ok, [funnel_step()]} | {:error, :not_found}
+          {:ok, %{funnel: [funnel_step()], candidates: [next_step()]}} | {:error, :not_found}
   def interesting_funnel(query, opts \\ []) do
     max_steps = min(Keyword.get(opts, :max_steps, 6), @max_steps)
     max_candidates = min(Keyword.get(opts, :max_candidates, 10), @max_candidates)
@@ -156,22 +156,50 @@ defmodule Plausible.Stats.Exploration do
         Keyword.fetch!(@next_steps_defaults, :include_wildcard?)
       )
 
-    case build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
-      [] -> {:error, :not_found}
-      journey -> journey_funnel(query, journey)
+    with {:ok, result} <-
+           build_interesting_journey(query, max_steps, max_candidates, include_wildcard?),
+         {:ok, funnel} <- journey_funnel(query, result.journey) do
+      {:ok, %{funnel: funnel, candidates: result.candidates}}
     end
   end
 
   defp build_interesting_journey(query, max_steps, max_candidates, include_wildcard?) do
-    do_build_journey(query, [], MapSet.new(), max_steps, max_candidates, include_wildcard?)
+    case do_build_journey(
+           query,
+           [],
+           [],
+           MapSet.new(),
+           max_steps,
+           max_candidates,
+           include_wildcard?
+         ) do
+      %{journey: []} -> {:error, :not_found}
+      result -> {:ok, result}
+    end
   end
 
-  defp do_build_journey(_query, journey, _seen, max_steps, _max_candidates, _include_wildcard?)
+  defp do_build_journey(
+         _query,
+         journey,
+         step_candidates,
+         _seen,
+         max_steps,
+         _max_candidates,
+         _include_wildcard?
+       )
        when length(journey) >= max_steps do
-    journey
+    %{journey: journey, candidates: step_candidates}
   end
 
-  defp do_build_journey(query, journey, seen, max_steps, max_candidates, include_wildcard?) do
+  defp do_build_journey(
+         query,
+         journey,
+         step_candidates,
+         seen,
+         max_steps,
+         max_candidates,
+         include_wildcard?
+       ) do
     {:ok, candidates} =
       next_steps(query, journey,
         max_candidates: max_candidates,
@@ -180,7 +208,7 @@ defmodule Plausible.Stats.Exploration do
 
     case find_unseen_step(candidates, seen) do
       nil ->
-        journey
+        %{journey: journey, candidates: step_candidates}
 
       step ->
         new_seen = MapSet.put(seen, normalize_step_key(step))
@@ -188,6 +216,7 @@ defmodule Plausible.Stats.Exploration do
         do_build_journey(
           query,
           journey ++ [step],
+          step_candidates ++ [candidates],
           new_seen,
           max_steps,
           max_candidates,
@@ -289,10 +318,9 @@ defmodule Plausible.Stats.Exploration do
           label:
             selected_as(
               fragment(
-                "if(? != 'pageview', concat(?, ' ', ?), ?)",
+                "if(? != 'pageview', ?, ?)",
                 m.name,
                 m.name,
-                m.pathname,
                 m.pathname
               ),
               :label
@@ -338,7 +366,7 @@ defmodule Plausible.Stats.Exploration do
       join: pname in fragment(@wildcard_array_join, em.name, em.pathname, em.pathname),
       on: true,
       hints: "ARRAY",
-      where: selected_as(:pathname) != "",
+      where: em.name != "pageview" or selected_as(:pathname) != "",
       select: %{
         name: em.name,
         pathname: selected_as(fragment("?", pname), :pathname),
@@ -354,7 +382,7 @@ defmodule Plausible.Stats.Exploration do
 
   defp combined_query(q_matches, false = _include_wildcard?) do
     from(em in subquery(q_matches),
-      where: selected_as(:pathname) != "",
+      where: em.name != "pageview" or selected_as(:pathname) != "",
       select: %{
         name: em.name,
         pathname: selected_as(em.pathname, :pathname),
@@ -427,8 +455,7 @@ defmodule Plausible.Stats.Exploration do
           _sample_factor: e._sample_factor,
           row_number: row_number() |> over(:session_window),
           name: e.name,
-          pathname:
-            fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname),
+          pathname: fragment("if(? = 'pageview', ?, '')", e.name, e.pathname),
           timestamp: e.timestamp
         },
         where: e.name != "engagement"
@@ -462,8 +489,7 @@ defmodule Plausible.Stats.Exploration do
     from(e in query,
       select_merge: %{
         prev_pathname:
-          lag(fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname))
-          |> over(:session_window),
+          lag(fragment("if(? = 'pageview', ?, '')", e.name, e.pathname)) |> over(:session_window),
         prev_name: lag(e.name) |> over(:session_window)
       }
     )
@@ -473,8 +499,7 @@ defmodule Plausible.Stats.Exploration do
     from(e in query,
       select_merge: %{
         prev_pathname:
-          lead(fragment("if(? = '/', ?, trimRight(?, '/'))", e.pathname, e.pathname, e.pathname))
-          |> over(:session_window),
+          lead(fragment("if(? = 'pageview', ?, '')", e.name, e.pathname)) |> over(:session_window),
         prev_name: lead(e.name) |> over(:session_window)
       }
     )

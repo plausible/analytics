@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useState } from 'react'
-import ModalWithRouting from '../stats/modals/modal'
+import { ModalLayout, ModalFooter } from '../components/modal-layout'
 import {
   canRemoveFilter,
   getSearchToRemoveSegmentFilter,
@@ -24,8 +24,10 @@ import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { Role, UserContextValue, useUserContext } from '../user-context'
-import { removeFilterButtonClassname } from '../components/remove-filter-button'
 import { useSiteContext } from '../site-context'
+import { Button, buttonClassName } from '../components/button'
+
+const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -38,37 +40,6 @@ interface SegmentModalProps {
   siteSegmentsAvailable: boolean
   onClose: () => void
   namePlaceholder: string
-}
-
-const primaryNeutralButtonClassName = 'button !px-3'
-
-const primaryNegativeButtonClassName = classNames(
-  'button !px-3.5',
-  'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap',
-  'disabled:!bg-red-400 disabled:cursor-not-allowed'
-)
-
-const secondaryButtonClassName = classNames(
-  'button !px-3.5',
-  'border !border-gray-300 dark:!border-gray-700 !bg-white dark:!bg-gray-700 !text-gray-800 dark:!text-gray-100 hover:!text-gray-900 hover:!shadow-sm dark:hover:!bg-gray-600 dark:hover:!text-white'
-)
-
-const SegmentActionModal = ({
-  children,
-  onClose
-}: {
-  children: ReactNode
-  onClose: () => void
-}) => {
-  return (
-    <ModalWithRouting
-      maxWidth="460px"
-      className="p-6 min-h-fit"
-      onClose={onClose}
-    >
-      <div className="mb-8 dark:text-gray-100">{children}</div>
-    </ModalWithRouting>
-  )
 }
 
 export const CreateSegmentModal = ({
@@ -107,8 +78,7 @@ export const CreateSegmentModal = ({
     })
 
   return (
-    <SegmentActionModal onClose={onClose}>
-      <FormTitle className="mb-8">Create segment</FormTitle>
+    <ModalLayout title="Create segment" onClose={onClose}>
       <SegmentNameInput
         value={name}
         onChange={setName}
@@ -116,7 +86,10 @@ export const CreateSegmentModal = ({
       />
       <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
       {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
-      <ButtonsRow>
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
         <SaveSegmentButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
@@ -127,10 +100,7 @@ export const CreateSegmentModal = ({
             onSave({ name: saveableName, type })
           }}
         />
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -142,7 +112,7 @@ export const CreateSegmentModal = ({
           onClose={reset}
         />
       )}
-    </SegmentActionModal>
+    </ModalLayout>
   )
 }
 
@@ -183,55 +153,62 @@ export const DeleteSegmentModal = ({
     (!!linksQuery.data?.length && !confirmed)
 
   return (
-    <SegmentActionModal onClose={onClose}>
-      <FormTitle className="mb-4">
-        Delete {SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}
-        <span className="break-all">{` "${segment.name}"?`}</span>
-      </FormTitle>
-      {linksQuery.status === 'pending' && (
-        <div className="loading sm">
-          <div />
-        </div>
-      )}
-      {linksQuery.status === 'success' && !!linksQuery.data?.length && (
-        <ErrorPanel
-          errorMessage={
-            <span className="break-normal">
-              {getLinksDeleteNotice(linksQuery.data)}
-            </span>
-          }
-        />
-      )}
-      {linksQuery.status === 'error' && (
-        <ErrorPanel
-          errorMessage="Error loading related shared links"
-          onRetry={linksQuery.refetch}
-        />
-      )}
+    <ModalLayout
+      title={`Delete ${SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}`}
+      onClose={onClose}
+    >
+      <div className="flex flex-col gap-y-2">
+        <p className="text-sm dark:text-gray-100">
+          {`You're about to delete `}
+          <span className="break-all font-semibold">{`"${segment.name}"`}</span>
+          {`. Are you sure?`}
+        </p>
+        {linksQuery.status === 'pending' && (
+          <div className="loading sm">
+            <div />
+          </div>
+        )}
+        {linksQuery.status === 'success' && !!linksQuery.data?.length && (
+          <ErrorPanel
+            errorMessage={
+              <span className="break-normal">
+                {getLinksDeleteNotice(linksQuery.data)}
+              </span>
+            }
+          />
+        )}
+        {linksQuery.status === 'error' && (
+          <ErrorPanel
+            errorMessage="Error loading related shared links"
+            onRetry={linksQuery.refetch}
+          />
+        )}
+      </div>
       {!!segment.segment_data && (
-        <div className="mt-4">
-          <FiltersInSegment segment_data={segment.segment_data} />
-        </div>
+        <FiltersInSegment
+          segment_data={segment.segment_data}
+          className={linksQuery.data?.length ? undefined : 'mb-4'}
+        />
       )}
       {!!linksQuery.data?.length && (
         <>
-          <div className="mt-4">
-            <RelatedSharedLinks sharedLinks={linksQuery.data} />
-          </div>
-          <div className="mt-4">
-            <Checkbox
-              id="confirm"
-              checked={confirmed}
-              onChange={(e) => setConfirmed(e.currentTarget.checked)}
-            >
-              Yes, delete the associated shared links
-            </Checkbox>
-          </div>
+          <RelatedSharedLinks sharedLinks={linksQuery.data} />
+          <Checkbox
+            id="confirm"
+            checked={confirmed}
+            onChange={(e) => setConfirmed(e.currentTarget.checked)}
+          >
+            Yes, delete the associated shared links
+          </Checkbox>
         </>
       )}
-      <ButtonsRow>
-        <button
-          className={primaryNegativeButtonClassName}
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          theme="danger"
+          size="sm"
           disabled={deleteDisabled}
           onClick={
             deleteDisabled
@@ -242,11 +219,8 @@ export const DeleteSegmentModal = ({
           }
         >
           Delete
-        </button>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+        </Button>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -258,58 +232,27 @@ export const DeleteSegmentModal = ({
           onClose={reset}
         />
       )}
-    </SegmentActionModal>
+    </ModalLayout>
   )
 }
 
 const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   return (
-    <>
-      <SecondaryTitle>Shared links</SecondaryTitle>
-      <div className="mt-2">
-        <FilterPillsList
-          className="flex-wrap"
-          direction="horizontal"
-          pills={sharedLinks.map((name) => ({
-            className: 'dark:!shadow-gray-950/60',
-            plainText: name,
-            children: name,
-            interactive: false
-          }))}
-        />
-      </div>
-    </>
+    <div className="flex flex-col gap-y-2">
+      <p className={inModalSectionLabelClassName}>Shared links</p>
+      <FilterPillsList
+        className="flex-wrap"
+        direction="horizontal"
+        pills={sharedLinks.map((name) => ({
+          className: 'dark:!shadow-gray-950/60',
+          plainText: name,
+          children: name,
+          interactive: false
+        }))}
+      />
+    </div>
   )
 }
-
-const FormTitle = ({
-  className,
-  children
-}: {
-  className?: string
-  children?: ReactNode
-}) => (
-  <h1
-    className={classNames(
-      'text-lg font-medium text-gray-900 dark:text-gray-100 leading-7',
-      className
-    )}
-  >
-    {children}
-  </h1>
-)
-
-const ButtonsRow = ({
-  className,
-  children
-}: {
-  className?: string
-  children?: ReactNode
-}) => (
-  <div className={classNames('mt-8 flex gap-x-3 items-center', className)}>
-    {children}
-  </div>
-)
 
 const SegmentNameInput = ({
   namePlaceholder,
@@ -321,7 +264,7 @@ const SegmentNameInput = ({
   onChange: (value: string) => void
 }) => {
   return (
-    <>
+    <div className="flex flex-col">
       <label
         htmlFor="name"
         className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
@@ -336,7 +279,7 @@ const SegmentNameInput = ({
         id="name"
         className="block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
       />
-    </>
+    </div>
   )
 }
 
@@ -361,7 +304,7 @@ const SegmentTypeSelector = ({
   ]
 
   return (
-    <div className="mt-6 flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-2">
       {options.map(({ type, name, description }) => (
         <div key={type}>
           <div className="flex">
@@ -378,7 +321,7 @@ const SegmentTypeSelector = ({
               className="block ml-3 text-sm font-medium dark:text-gray-100 flex flex-col flex-inline"
             >
               <div>{name}</div>
-              <div className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm font-normal">
                 {description}
               </div>
             </label>
@@ -454,14 +397,13 @@ const SaveSegmentButton = ({
   onSave: () => void
 }) => {
   return (
-    <button
-      className={primaryNeutralButtonClassName}
-      type="button"
+    <Button
+      size="sm"
       disabled={disabled}
       onClick={disabled ? () => {} : onSave}
     >
       Save
-    </button>
+    </Button>
   )
 }
 
@@ -506,8 +448,7 @@ export const UpdateSegmentModal = ({
     })
 
   return (
-    <SegmentActionModal onClose={onClose}>
-      <FormTitle className="mb-8">Update segment</FormTitle>
+    <ModalLayout title="Update segment" onClose={onClose}>
       <SegmentNameInput
         value={name}
         onChange={setName}
@@ -515,7 +456,10 @@ export const UpdateSegmentModal = ({
       />
       <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
       {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
-      <ButtonsRow>
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
         <SaveSegmentButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
@@ -526,10 +470,7 @@ export const UpdateSegmentModal = ({
             onSave({ id: segment.id, name: saveableName, type })
           }}
         />
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -541,33 +482,33 @@ export const UpdateSegmentModal = ({
           onClose={reset}
         />
       )}
-    </SegmentActionModal>
+    </ModalLayout>
   )
 }
 
-const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
+const FiltersInSegment = ({
+  segment_data,
+  className
+}: {
+  segment_data: SegmentData
+  className?: string
+}) => {
   return (
-    <>
-      <SecondaryTitle>Filters in segment</SecondaryTitle>
-      <div className="mt-2">
-        <FilterPillsList
-          className="flex-wrap"
-          direction="horizontal"
-          pills={segment_data.filters.map((filter) => ({
-            className: 'dark:!shadow-gray-950/60',
-            plainText: plainFilterText({ labels: segment_data.labels }, filter),
-            children: styledFilterText({ labels: segment_data.labels }, filter),
-            interactive: false
-          }))}
-        />
-      </div>
-    </>
+    <div className={classNames('flex flex-col gap-y-2', className)}>
+      <p className={inModalSectionLabelClassName}>Filters in segment</p>
+      <FilterPillsList
+        className="flex-wrap"
+        direction="horizontal"
+        pills={segment_data.filters.map((filter) => ({
+          className: 'dark:!shadow-gray-950/60',
+          plainText: plainFilterText({ labels: segment_data.labels }, filter),
+          children: styledFilterText({ labels: segment_data.labels }, filter),
+          interactive: false
+        }))}
+      />
+    </div>
   )
 }
-
-const SecondaryTitle = ({ children }: { children: ReactNode }) => (
-  <h2 className="font-bold dark:text-gray-100">{children}</h2>
-)
 
 /** Keep this component styled the same as checkboxes in PlausibleWeb.Live.Installation.Instructions */
 const Checkbox = ({
@@ -642,66 +583,74 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
     limitedToSegment
   )
 
+  const onClose = () => navigate({ path: rootRoute.path, search: (s) => s })
+
   return (
-    <ModalWithRouting maxWidth="460px">
-      <div className="dark:text-gray-100 mb-8">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-x-2">
-            <h1 className="text-xl font-bold break-all">
-              {data ? data.name : 'Segment details'}
-            </h1>
+    <ModalLayout title="Segment details" onClose={onClose}>
+      <div className="flex flex-col gap-y-6 dark:text-gray-100">
+        <div className="text-sm flex flex-col gap-y-0.5">
+          <h2 className="font-semibold break-all">
+            <Placeholder placeholder="Segment name">
+              {data?.name ?? false}
+            </Placeholder>
+          </h2>
+          <div className="text-gray-500 dark:text-gray-400">
+            <Placeholder placeholder="Segment type">
+              {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
+            </Placeholder>
+            {!!data?.segment_data && (
+              <>
+                {' • '}
+                <SegmentAuthorship
+                  segment={data}
+                  showOnlyPublicData={
+                    !user.loggedIn || user.role === Role.public
+                  }
+                />
+              </>
+            )}
           </div>
         </div>
-
-        <div className="mt-2 text-sm/5">
-          <Placeholder placeholder={'Segment type'}>
-            {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
-          </Placeholder>
-        </div>
-        <div className="my-4 border-b border-gray-300 dark:border-gray-700" />
         {!!data?.segment_data && (
           <>
-            <FiltersInSegment segment_data={data.segment_data} />
-
-            <SegmentAuthorship
-              segment={data}
-              showOnlyPublicData={!user.loggedIn || user.role === Role.public}
-              className="mt-4 text-sm"
+            <FiltersInSegment
+              segment_data={data.segment_data}
+              className="mb-4"
             />
-            <div className="mt-4">
-              <ButtonsRow>
-                {canExpandSegment({ segment: data, user }) && (
-                  <AppNavigationLink
-                    className={primaryNeutralButtonClassName}
-                    path={rootRoute.path}
-                    search={(s) => ({
-                      ...s,
-                      filters: data.segment_data.filters,
-                      labels: data.segment_data.labels
-                    })}
-                    state={{
-                      expandedSegment: data
-                    }}
-                  >
-                    Edit segment
-                  </AppNavigationLink>
-                )}
 
-                {showClearButton && (
-                  <button
-                    className={removeFilterButtonClassname}
-                    onClick={() =>
-                      navigate({
-                        path: rootRoute.path,
-                        search: getSearchToRemoveSegmentFilter()
-                      })
-                    }
-                  >
-                    Remove filter
-                  </button>
-                )}
-              </ButtonsRow>
-            </div>
+            <ModalFooter>
+              {showClearButton && (
+                <Button
+                  theme="secondary"
+                  size="sm"
+                  onClick={() =>
+                    navigate({
+                      path: rootRoute.path,
+                      search: getSearchToRemoveSegmentFilter()
+                    })
+                  }
+                >
+                  Remove filter
+                </Button>
+              )}
+
+              {canExpandSegment({ segment: data, user }) && (
+                <AppNavigationLink
+                  className={buttonClassName({ size: 'sm' })}
+                  path={rootRoute.path}
+                  search={(s) => ({
+                    ...s,
+                    filters: data.segment_data.filters,
+                    labels: data.segment_data.labels
+                  })}
+                  state={{
+                    expandedSegment: data
+                  }}
+                >
+                  Edit segment
+                </AppNavigationLink>
+              )}
+            </ModalFooter>
           </>
         )}
         {error !== null && (
@@ -716,6 +665,6 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
           />
         )}
       </div>
-    </ModalWithRouting>
+    </ModalLayout>
   )
 }

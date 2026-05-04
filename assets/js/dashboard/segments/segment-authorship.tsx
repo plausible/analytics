@@ -22,17 +22,20 @@ export function SegmentAuthorship({
   const showUpdatedAt = updated_at !== inserted_at
 
   return (
-    <div className={className}>
-      <div>
+    <span className={className}>
+      <span>
         {`Created at ${formatDayShort(parseNaiveDate(inserted_at))}`}
         {!showUpdatedAt && !!authorLabel && ` by ${authorLabel}`}
-      </div>
+      </span>
       {showUpdatedAt && (
-        <div>
-          {`Last updated at ${formatDayShort(parseNaiveDate(updated_at))}`}
-          {!!authorLabel && ` by ${authorLabel}`}
-        </div>
+        <>
+          {' • '}
+          <span>
+            {`Last updated at ${formatDayShort(parseNaiveDate(updated_at))}`}
+            {!!authorLabel && ` by ${authorLabel}`}
+          </span>
+        </>
       )}
-    </div>
+    </span>
   )
 }
