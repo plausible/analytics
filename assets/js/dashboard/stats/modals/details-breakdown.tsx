@@ -180,6 +180,7 @@ export function DetailsBreakdown({
             isActive={isActive}
           />
         ),
+        width: 'w-40 max-w-40 md:w-48 md:max-w-48',
         align: 'left'
       },
       ...query.metrics
@@ -482,7 +483,7 @@ function DimensionCell({
   isActive?: boolean
 }) {
   return (
-    <div className="max-w-44 md:max-w-52 break-all flex items-center gap-x-1">
+    <div className="break-all flex items-center gap-x-1">
       <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
         {row.dimensions[0]}
       </DrilldownLink>
