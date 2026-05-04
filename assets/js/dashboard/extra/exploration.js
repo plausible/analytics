@@ -355,10 +355,21 @@ function ExplorationColumn({
   // user can quickly switch to another option. If we don't have the candidate
   // list (e.g. preloaded journey), fall back to a synthetic single item built
   // from the funnel data so the column still renders the selected step.
+  // If the candidate list exists but the selected step isn't in it (e.g. it
+  // dropped out of the top suggestions after a dashboard state change), inject
+  // it at the top so the connector always has a target to attach to.
+  const slicedResults = results.slice(0, 10)
+  const selectedInResults =
+    selected && slicedResults.some(({ step }) => isSameStep(step, selected))
   const listItems =
     selected && results.length === 0
       ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
-      : results.slice(0, 10)
+      : selected && !selectedInResults
+        ? [
+            ...slicedResults,
+            { step: selected, visitors: selectedVisitors ?? 0 }
+          ]
+        : slicedResults
 
   return (
     <div
@@ -565,11 +576,12 @@ export function FunnelExploration() {
   // real funnel response arrives. Prevents from flashing "0 visitors"
   // during the loading window.
   const [provisionalFunnelEntries, setProvisionalFunnelEntries] = useState({})
-  // Workaround for force refreshing connectors between steps
-  // when dashboardState changes. Currently the connectors
-  // logic extracts part of the state from DOM, which shouldn't be the
-  // case. It will eventually be properlu rewritten and the workaround
-  // will no longer be needed.
+  // PathConnectors recalculates connector positions via getBoundingClientRect
+  // whenever its `steps` prop changes or the container resizes. However when
+  // dashboardState changes, frozen candidate lists are re-fetched and columns
+  // may re-render with different item counts, shifting the selected-step rows
+  // without `steps` itself changing. Bumping this key remounts PathConnectors
+  // in that case, triggering a fresh layout read after the new content paints.
   const [connectorsKey, setConnectorsKey] = useState(randomKey)
   // Tracks the steps/direction/dashboardState values from the previous effect
   // run so we can tell whether the journey changed (needs funnel) or only the
@@ -583,6 +595,14 @@ export function FunnelExploration() {
   // Used to discard stale preload-driven candidate fetches that resolve
   // after the user has already navigated away from the preloaded prefix.
   const journeyVersionRef = useRef(0)
+  // Always up-to-date refs so the site/dashboardState change effect can read
+  // current steps and direction without adding them to its dependency array.
+  const stepsRef = useRef(steps)
+  const directionRef = useRef(direction)
+  useEffect(() => {
+    stepsRef.current = steps
+    directionRef.current = direction
+  })
 
   function handleSelect(columnIndex, selected) {
     journeyVersionRef.current++
@@ -666,9 +686,9 @@ export function FunnelExploration() {
 
   // Frozen candidate lists were fetched against a specific site +
   // dashboard filter context. When either changes the cached candidates
-  // become stale, so drop them and invalidate any in-flight preload
-  // backfills. We skip the initial run so we don't clobber the freshly
-  // populated state on mount.
+  // become stale, so re-fetch candidates for each selected step position
+  // and repopulate frozenColumnResults. We skip the initial run so we
+  // don't clobber the freshly populated state on mount.
   const initialFilterContextRef = useRef(true)
   useEffect(() => {
     if (initialFilterContextRef.current) {
@@ -676,7 +696,39 @@ export function FunnelExploration() {
       return
     }
     journeyVersionRef.current++
-    setFrozenColumnResults({})
+    const capturedVersion = journeyVersionRef.current
+
+    const currentSteps = stepsRef.current
+    const currentDirection = directionRef.current
+
+    if (currentSteps.length === 0) {
+      setFrozenColumnResults({})
+      return
+    }
+
+    // Re-fetch candidates for each selected step (columns 0..steps.length-1).
+    // Column i shows candidates that were fetched with the journey up to step i-1,
+    // i.e. steps.slice(0, i) as the journey prefix.
+    const fetches = currentSteps.map((_, i) =>
+      fetchNextWithFunnel(
+        site,
+        dashboardState,
+        currentSteps.slice(0, i),
+        '',
+        currentDirection,
+        false
+      ).then((r) => ({ index: i, results: r?.next || [] }))
+    )
+
+    Promise.all(fetches).then((entries) => {
+      if (journeyVersionRef.current !== capturedVersion) return
+      const newFrozen = {}
+      entries.forEach(({ index, results }) => {
+        newFrozen[index] = results
+      })
+      setFrozenColumnResults(newFrozen)
+      setConnectorsKey(randomKey)
+    })
   }, [site, dashboardState])
 
   // On first render fire the interesting-funnel preload and skip the normal
@@ -782,8 +834,6 @@ export function FunnelExploration() {
       .finally(() => {
         if (!cancelled) setActiveColumnLoading(false)
       })
-
-    setConnectorsKey(randomKey)
 
     return () => {
       cancelled = true
@@ -894,9 +944,10 @@ export function FunnelExploration() {
                 // Active column gets live results; previously-active (now
                 // selected) columns get the candidate list that was visible at
                 // the moment of selection so the user can switch options
-                // without losing context. Pre-selected columns (e.g. populated
-                // by interesting-funnel preload) have no frozen results and
-                // fall back to a single-item display sourced from funnel data.
+                // without losing context. If no frozen results exist yet
+                // (e.g. briefly after a dashboardState change triggers a
+                // re-fetch), the column falls back to a single-item display
+                // sourced from funnel data until the fetch completes.
                 results={
                   isActive ? activeColumnResults : frozenColumnResults[i] || []
                 }
