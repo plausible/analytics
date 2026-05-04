@@ -25,7 +25,8 @@ All notable changes to this project will be documented in this file.
 - "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
 - Improved top bar and top stats UI/styling
 - Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
-- Changed graph tooltip positioning logic: it now aligns at the top of the chart to the right of the indicator line. Indicator line follows cursor, tooltip follows indicator line.
+- Standardised and improved segment and filter modals styling
+- Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
 
 ### Fixed
 
@@ -36,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Fixed comparison tooltip in the top pages report missing date labels
 - Fixed top bar not scrolling horizontally on mobile
 - Fixed incline/decline percentages not showing in top stats in comparison mode
+- Fixed issue with timestamps being rendered incorrectly in segment menus and modals for some timezones
 
 ## v3.2.0 - 2026-01-16
 

@@ -442,6 +442,65 @@ defmodule Plausible.Stats.ComparisonsTest do
     |> Enum.count()
   end
 
+  describe "with period set to today" do
+    test "handles YoY comparison mode matching exact date", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :day,
+          include: [compare: :year_over_year],
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      assert comparison_query.utc_time_range.first == ~U[2022-03-15 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2022-03-15 18:30:00Z]
+    end
+
+    test "handles YoY comparison mode with match_day_of_week enabled",
+         %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :day,
+          include: [compare: :year_over_year, compare_match_day_of_week: true],
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # today range: 2023-03-15 (Wednesday) 00:00:00 to 18:30:00 UTC
+      # Year ago: 2022-03-15 (Tuesday); nearest Wednesday is 2022-03-16 (+1 day)
+      assert comparison_query.utc_time_range.first == ~U[2022-03-16 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2022-03-16 18:30:00Z]
+    end
+
+    test "handles YoY + match_day_of_week comparison for a non-UTC timezone" do
+      site = insert(:site, timezone: "US/Eastern")
+
+      # 2023-03-14 20:30:00 (Tuesday) in US/Eastern
+      utc_now = ~U[2023-03-15 00:30:00Z]
+
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :day,
+          include: [compare: :year_over_year, compare_match_day_of_week: true],
+          now: utc_now
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # Year ago: March 14, 2022 is Monday
+      # Nearest Tuesday: March 15, 2022 (+1 day)
+      # Comparison start in US/Eastern: 2022-03-15T00:00:00
+      assert comparison_query.utc_time_range.first == ~U[2022-03-15 04:00:00Z]
+      # Comparison end in US/Eastern: 2022-03-15T20:30:00
+      assert comparison_query.utc_time_range.last == ~U[2022-03-16 00:30:00Z]
+    end
+  end
+
   describe "with period set to 24h" do
     test "shifts back 24h period when mode is previous_period", %{site: site} do
       query =
@@ -475,6 +534,24 @@ defmodule Plausible.Stats.ComparisonsTest do
       # Year over year shifts back exactly 1 year
       assert comparison_query.utc_time_range.first == ~U[2022-03-14 18:30:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-03-15 18:30:00Z]
+    end
+
+    test "handles YoY with match_day_of_week enabled", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: :"24h",
+          include: [compare: :year_over_year, compare_match_day_of_week: true],
+          now: ~U[2023-03-15 18:30:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # Main 24h range: 2023-03-14 18:30:00 (Tue) -> 2023-03-15 18:30:00 (Wed)
+      # Year ago: 2022-03-14 18:30:00 (Mon) -> 2022-03-15 18:30:00 (Tue)
+      # Nearest Tuesday to Monday: March 15, 2022 (+1 day shift)
+      assert comparison_query.utc_time_range.first == ~U[2022-03-15 18:30:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2022-03-16 18:30:00Z]
     end
 
     test "custom time zone works with 24h comparison" do

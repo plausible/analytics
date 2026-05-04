@@ -151,4 +151,107 @@ defmodule Plausible.SegmentsTest do
       })
     end
   end
+
+  describe "to_response_map/2" do
+    test "returns owner name for segment with owner association loaded", %{user: user} do
+      site = insert(:site, timezone: "Etc/UTC")
+
+      segment =
+        insert(:segment,
+          name: "Segment with owner",
+          type: :site,
+          site: site,
+          owner: user,
+          inserted_at: ~N[2025-06-01 12:00:00],
+          updated_at: ~N[2025-06-01 13:00:00]
+        )
+
+      assert_matches ^strict_map(%{
+                       id: ^segment.id,
+                       name: ^segment.name,
+                       type: ^segment.type,
+                       segment_data: ^segment.segment_data,
+                       owner_id: ^user.id,
+                       owner_name: ^user.name,
+                       inserted_at: ~N[2025-06-01 12:00:00],
+                       updated_at: ~N[2025-06-01 13:00:00]
+                     }) = Plausible.Segments.to_response_map(segment, site)
+    end
+
+    test "returns nil owner_name when owner association is not loaded", %{user: user} do
+      site = insert(:site, timezone: "Etc/UTC")
+
+      segment =
+        insert(:segment,
+          name: "Segment with owner",
+          site: site,
+          type: :site,
+          owner: user,
+          inserted_at: ~N[2025-06-01 12:00:00],
+          updated_at: ~N[2025-06-01 13:00:00]
+        )
+        |> Map.put(:owner, %Ecto.Association.NotLoaded{})
+
+      assert_matches ^strict_map(%{
+                       id: ^segment.id,
+                       name: ^segment.name,
+                       type: ^segment.type,
+                       segment_data: ^segment.segment_data,
+                       owner_id: ^user.id,
+                       owner_name: nil,
+                       inserted_at: ~N[2025-06-01 12:00:00],
+                       updated_at: ~N[2025-06-01 13:00:00]
+                     }) = Plausible.Segments.to_response_map(segment, site)
+    end
+
+    test "returns nil owner_name when owner_id is nil" do
+      site = insert(:site, timezone: "Etc/UTC")
+
+      segment =
+        insert(:segment,
+          name: "Orphaned segment",
+          site: site,
+          type: :site,
+          owner: nil,
+          inserted_at: ~N[2025-06-01 12:00:00],
+          updated_at: ~N[2025-06-01 13:00:00]
+        )
+
+      assert_matches ^strict_map(%{
+                       id: ^segment.id,
+                       name: ^segment.name,
+                       type: ^segment.type,
+                       segment_data: ^segment.segment_data,
+                       owner_id: nil,
+                       owner_name: nil,
+                       inserted_at: ~N[2025-06-01 12:00:00],
+                       updated_at: ~N[2025-06-01 13:00:00]
+                     }) = Plausible.Segments.to_response_map(segment, site)
+    end
+
+    test "shifts timestamps to site timezone" do
+      site = insert(:site, timezone: "Europe/Tallinn")
+
+      segment =
+        insert(:segment,
+          name: "My Segment",
+          site: site,
+          type: :site,
+          owner: nil,
+          inserted_at: ~N[2025-01-15 15:00:00],
+          updated_at: ~N[2025-01-15 23:00:00]
+        )
+
+      assert_matches ^strict_map(%{
+                       id: ^segment.id,
+                       name: ^segment.name,
+                       type: ^segment.type,
+                       segment_data: ^segment.segment_data,
+                       owner_id: nil,
+                       owner_name: nil,
+                       inserted_at: ~N[2025-01-15 17:00:00],
+                       updated_at: ~N[2025-01-16 01:00:00]
+                     }) = Plausible.Segments.to_response_map(segment, site)
+    end
+  end
 end

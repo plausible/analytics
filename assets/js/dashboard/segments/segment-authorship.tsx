@@ -1,7 +1,6 @@
 import React from 'react'
 import { SavedSegmentPublic, SavedSegment } from '../filtering/segments'
-import { dateForSite, formatDayShort } from '../util/date'
-import { useSiteContext } from '../site-context'
+import { parseNaiveDate, formatDayShort } from '../util/date'
 
 type SegmentAuthorshipProps = {
   className?: string
@@ -14,7 +13,6 @@ export function SegmentAuthorship({
   showOnlyPublicData,
   segment
 }: SegmentAuthorshipProps) {
-  const site = useSiteContext()
   const authorLabel =
     showOnlyPublicData === true
       ? null
@@ -24,17 +22,20 @@ export function SegmentAuthorship({
   const showUpdatedAt = updated_at !== inserted_at
 
   return (
-    <div className={className}>
-      <div>
-        {`Created at ${formatDayShort(dateForSite(inserted_at, site))}`}
+    <span className={className}>
+      <span>
+        {`Created at ${formatDayShort(parseNaiveDate(inserted_at))}`}
         {!showUpdatedAt && !!authorLabel && ` by ${authorLabel}`}
-      </div>
+      </span>
       {showUpdatedAt && (
-        <div>
-          {`Last updated at ${formatDayShort(dateForSite(updated_at, site))}`}
-          {!!authorLabel && ` by ${authorLabel}`}
-        </div>
+        <>
+          {' • '}
+          <span>
+            {`Last updated at ${formatDayShort(parseNaiveDate(updated_at))}`}
+            {!!authorLabel && ` by ${authorLabel}`}
+          </span>
+        </>
       )}
-    </div>
+    </span>
   )
 }

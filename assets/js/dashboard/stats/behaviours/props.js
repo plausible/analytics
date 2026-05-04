@@ -59,7 +59,7 @@ export default function Properties({ propKey, afterFetchData }) {
 
   if (!propKey) {
     return (
-      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         No custom properties found
       </div>
     )
