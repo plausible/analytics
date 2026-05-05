@@ -93,6 +93,7 @@ function isSameStep(step, otherStep) {
 }
 
 function truncateFrozenResultsAtIndex(frozenResults, fromIndex) {
+  console.log('Frozen results to truncate', frozenResults, fromIndex)
   const next = {}
   Object.keys(frozenResults).forEach((key) => {
     const idx = Number(key)
