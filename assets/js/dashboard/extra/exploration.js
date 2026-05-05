@@ -791,13 +791,17 @@ export function FunnelExploration() {
             response?.funnel || []
           )
           setFunnel(truncatedFunnel)
-          if (truncatedFunnel.length < (response?.funnel?.length ?? 0)) {
-            // The funnel was trimmed - `next` suggestions in the response
-            // are for the step after the original (untrimmed) journey, not for
-            // the new active column after trimming. Skip setting them here and
-            // let re-run the effect via setSteps to fetch the correct
-            // suggestions. Keep activeColumnLoading as true so the spinner
-            // stays visible while it's getting fetched.
+          // The funnel response may be shorter than the current steps either
+          // because truncateFunnelAtFirstZero cut it, or because the new
+          // dashboard state (e.g. date range switch) resulted with an empty funnel
+          // for the existing journey. In both cases the steps must be trimmed
+          // so the UI doesn't show stale selected steps with no funnel
+          // backing them. Next step suggestions in this response are for the
+          // step after the original (untrimmed) journey - skip them and let the
+          // effect re-run via setSteps to fetch correct suggestions for the new
+          // active column. Keep activeColumnLoading as true so the spinner
+          // stays visible while it's getting fetched.
+          if (truncatedFunnel.length < steps.length) {
             funnelTruncatedStepsRef.current = true
             setSteps((prev) => prev.slice(0, truncatedFunnel.length))
             setProvisionalFunnelEntries({})
