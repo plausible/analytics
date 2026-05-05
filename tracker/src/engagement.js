@@ -137,19 +137,16 @@ function getDocumentHeight() {
 }
 
 function getCurrentScrollDepthPx() {
+  var viewportHeight, scrollTop
   if (COMPILE_COMPAT) {
     var el = document.documentElement || {}
     var body = document.body || {}
-    var viewportHeight = window.innerHeight || el.clientHeight || 0
-    var scrollTop = window.scrollY || window.pageYOffset || el.scrollTop || body.scrollTop || 0
-    return currentDocumentHeight <= viewportHeight
-      ? currentDocumentHeight
-      : scrollTop + viewportHeight
+    viewportHeight = window.innerHeight || el.clientHeight || 0
+    scrollTop = window.scrollY || window.pageYOffset || el.scrollTop || body.scrollTop || 0
+  } else {
+    viewportHeight = window.innerHeight
+    scrollTop = window.scrollY
   }
-
-  var viewportHeight = window.innerHeight
-  var scrollTop = window.scrollY
-
   return currentDocumentHeight <= viewportHeight
     ? currentDocumentHeight
     : scrollTop + viewportHeight
