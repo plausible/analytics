@@ -443,7 +443,13 @@ function ExplorationColumn({
             const label = step.label
 
             return (
-              <li key={label}>
+              <li
+                key={
+                  step.includes_subpaths
+                    ? `${label} > all (${step.subpaths_count})`
+                    : label
+                }
+              >
                 <button
                   data-exploration-step={isSelected ? colIndex : undefined}
                   className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
