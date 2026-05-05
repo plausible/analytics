@@ -77,9 +77,9 @@ export function Table<T>({
         </tr>
       </thead>
       <tbody>
-        {data.pages.map((page) =>
+        {data.pages.map((page, pageIndex) =>
           page.map((row) => {
-            const rowKey = getRowKey(row)
+            const rowKey = `${getRowKey(row)}_${pageIndex}`
             return (
               <Row
                 key={rowKey}
