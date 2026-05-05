@@ -1,19 +1,28 @@
-import { isSortable, getMetricLabel, getBreakdownMetricLabel } from './metrics'
+import {
+  isSortable,
+  getMetricLabel,
+  getBreakdownMetricLabel,
+  Metric
+} from './metrics'
 
-describe('isSortable', () => {
+describe(`${isSortable.name}`, () => {
   it('returns false for total_visitors', () => {
     expect(isSortable('total_visitors')).toBe(false)
   })
 
-  it.each(['visitors', 'bounce_rate', 'visit_duration', 'conversion_rate'])(
-    'returns true for %s',
-    (metric) => {
-      expect(isSortable(metric as Parameters<typeof isSortable>[0])).toBe(true)
-    }
-  )
+  const sortableMetrics: Metric[] = [
+    'visitors',
+    'bounce_rate',
+    'visit_duration',
+    'conversion_rate'
+  ]
+
+  it.each(sortableMetrics)('returns true for %s', (metric) => {
+    expect(isSortable(metric)).toBe(true)
+  })
 })
 
-describe('getMetricLabel', () => {
+describe(`${getMetricLabel.name}`, () => {
   it.each([
     ['visitors', false, 'Unique visitors'],
     ['visitors', true, 'Unique conversions'],
@@ -41,7 +50,7 @@ describe('getMetricLabel', () => {
   )
 })
 
-describe('getBreakdownMetricLabel', () => {
+describe(`${getBreakdownMetricLabel.name}`, () => {
   const defaults = { hasConversionGoalFilter: false, isRealtime: false }
 
   describe('entry page dimension', () => {
