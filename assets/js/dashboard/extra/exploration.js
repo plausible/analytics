@@ -662,21 +662,6 @@ export function FunnelExploration() {
     setFrozenColumnResults({})
   }
 
-  // Frozen candidate lists were fetched against a specific site +
-  // dashboard filter context. When either changes the cached candidates
-  // become stale, so drop them and invalidate any in-flight preload
-  // backfills. We skip the initial run so we don't clobber the freshly
-  // populated state on mount.
-  const initialFilterContextRef = useRef(true)
-  useEffect(() => {
-    if (initialFilterContextRef.current) {
-      initialFilterContextRef.current = false
-      return
-    }
-    journeyVersionRef.current++
-    setFrozenColumnResults({})
-  }, [site, dashboardState])
-
   // On first render fire the interesting-funnel preload and skip the normal
   // next-with-funnel fetch. Once the preload resolves it sets steps
   // and funnel, which re-triggers this effect for the next-step candidates fetch.
@@ -690,6 +675,15 @@ export function FunnelExploration() {
       prevStepsRef.current !== steps ||
       prevDirectionRef.current !== direction ||
       prevDashboardStateRef.current !== dashboardState
+
+    // Frozen candidate lists were fetched against a specific
+    // dashboard state context. When it changes, the cached candidates
+    // become stale, so drop them and invalidate any in-flight preload
+    // backfills.
+    if (prevDashboardStateRef.current !== dashboardState) {
+      setFrozenColumnResults({})
+      journeyVersionRef.current++
+    }
 
     prevStepsRef.current = steps
     prevDirectionRef.current = direction
