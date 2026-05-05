@@ -704,6 +704,7 @@ export function FunnelExploration() {
     prevDashboardStateRef.current = dashboardState
 
     let cancelled = false
+    let pendingFollowUpFetch = false
 
     if (!preloadFiredRef.current) {
       preloadFiredRef.current = true
@@ -785,18 +786,27 @@ export function FunnelExploration() {
     )
       .then((response) => {
         if (cancelled) return
-        setActiveColumnResults(response?.next || [])
         if (includeFunnel) {
           const truncatedFunnel = truncateFunnelAtFirstZero(
             response?.funnel || []
           )
           setFunnel(truncatedFunnel)
           if (truncatedFunnel.length < (response?.funnel?.length ?? 0)) {
+            // The funnel was trimmed - `next` suggestions in the response
+            // are for the step after the original (untrimmed) journey, not for
+            // the new active column after trimming. Skip setting them here and
+            // let re-run the effect via setSteps to fetch the correct
+            // suggestions. Keep activeColumnLoading as true so the spinner
+            // stays visible while it's getting fetched.
             funnelTruncatedStepsRef.current = true
             setSteps((prev) => prev.slice(0, truncatedFunnel.length))
+            setProvisionalFunnelEntries({})
+            pendingFollowUpFetch = true
+            return
           }
           setProvisionalFunnelEntries({})
         }
+        setActiveColumnResults(response?.next || [])
       })
       .catch(() => {
         if (cancelled) return
@@ -804,7 +814,7 @@ export function FunnelExploration() {
         if (includeFunnel) setFunnel([])
       })
       .finally(() => {
-        if (!cancelled) setActiveColumnLoading(false)
+        if (!cancelled && !pendingFollowUpFetch) setActiveColumnLoading(false)
       })
 
     setConnectorsKey(randomKey)
