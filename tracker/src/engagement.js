@@ -142,7 +142,12 @@ function getCurrentScrollDepthPx() {
     var el = document.documentElement || {}
     var body = document.body || {}
     viewportHeight = window.innerHeight || el.clientHeight || 0
-    scrollTop = window.scrollY || window.pageYOffset || el.scrollTop || body.scrollTop || 0
+    scrollTop =
+      window.scrollY ||
+      window.pageYOffset ||
+      el.scrollTop ||
+      body.scrollTop ||
+      0
   } else {
     viewportHeight = window.innerHeight
     scrollTop = window.scrollY
