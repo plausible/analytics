@@ -238,6 +238,51 @@ defmodule Plausible.Stats.ExplorationTest do
         assert step3.conversion_rate == "50"
         assert step3.conversion_rate_step == "100"
       end
+
+      test "handles goal with a pattern" do
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/site*", is_goal: true},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/dashboard"}
+        ]
+
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/sites/settings",
+            timestamp: DateTime.shift(now, minute: -50)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok, [step1, step2]} = Exploration.journey_funnel(query, journey)
+
+        assert step1.step.pathname == "/site*"
+        assert step1.visitors == 2
+        assert step1.dropoff == 0
+        assert step1.dropoff_percentage == "0"
+        assert step1.conversion_rate == "100"
+        assert step1.conversion_rate_step == "0"
+        assert step2.step.pathname == "/dashboard"
+        assert step2.visitors == 1
+        assert step2.dropoff == 1
+        assert step2.dropoff_percentage == "50"
+        assert step2.conversion_rate == "50"
+        assert step2.conversion_rate_step == "50"
+      end
     end
 
     describe "interesting_funnel" do
@@ -848,6 +893,168 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert next_step.step.pathname == "/logout"
         assert next_step.visitors == 2
+      end
+
+      test "considers existing goals in the listing" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{"page_path" => "/home"})
+        Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+        Plausible.Goals.create(site, %{
+          "page_path" => "/sites/new",
+          "display_name" => "Create a site"
+        })
+
+        Plausible.Goals.create(site, %{"page_path" => "/site*"})
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Signup",
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -280)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/activate",
+            timestamp: DateTime.shift(now, minute: -270)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/sites/new",
+            timestamp: DateTime.shift(now, minute: -260)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -250)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:event,
+            user_id: 124,
+            name: "Signup",
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -280)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/activate",
+            timestamp: DateTime.shift(now, minute: -270)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -250)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:event,
+            user_id: 125,
+            name: "Signup",
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -280)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/register",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 127,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok,
+                [
+                  next_step1,
+                  next_step2,
+                  next_step3,
+                  next_step4,
+                  next_step5,
+                  next_step6,
+                  next_step7
+                ]} =
+                 Exploration.next_steps(site, query, [])
+
+        assert next_step1.step.label == "Visit /home"
+        assert next_step1.step.name == "pageview"
+        assert next_step1.step.pathname == "/home"
+        assert next_step1.step.is_goal
+        assert next_step1.visitors == 5
+
+        assert next_step2.step.label == "/register"
+        assert next_step2.step.name == "pageview"
+        assert next_step2.step.pathname == "/register"
+        refute next_step2.step.is_goal
+        assert next_step2.visitors == 4
+
+        assert next_step3.step.label == "Signup"
+        assert next_step3.step.name == "Signup"
+        assert next_step3.step.pathname == ""
+        assert next_step3.step.is_goal
+        assert next_step3.visitors == 3
+
+        assert next_step4.step.label == "/activate"
+        assert next_step4.step.name == "pageview"
+        assert next_step4.step.pathname == "/activate"
+        refute next_step4.step.is_goal
+        assert next_step4.visitors == 2
+
+        assert next_step5.step.label == "Visit /site*"
+        assert next_step5.step.name == "pageview"
+        assert next_step5.step.pathname == "/site*"
+        assert next_step5.step.is_goal
+        assert next_step5.visitors == 2
+
+        assert next_step6.step.label == "/sites"
+        assert next_step6.step.name == "pageview"
+        assert next_step6.step.pathname == "/sites"
+        refute next_step6.step.is_goal
+        assert next_step6.visitors == 2
+
+        assert next_step7.step.label == "Create a site"
+        assert next_step7.step.name == "pageview"
+        assert next_step7.step.pathname == "/sites/new"
+        assert next_step7.step.is_goal
+        assert next_step7.visitors == 1
       end
     end
 
