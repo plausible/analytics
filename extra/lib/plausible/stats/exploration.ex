@@ -463,7 +463,7 @@ defmodule Plausible.Stats.Exploration do
     from m in query,
       left_join: g in values(to_exclude, types),
       on: g.name == selected_as(:name) and g.pathname == selected_as(:pathname),
-      where: g.name == "" and not selected_as(:includes_subpaths)
+      where: g.name == ""
   end
 
   # Expand each (name, pathname, user_id) row into all prefix paths via
