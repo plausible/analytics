@@ -825,11 +825,17 @@ function useExplorationData(site, dashboardState, inViewport) {
             // candidates and new results carry fresh values, causing duplicate
             // entries and double-highlighted rows.
             if (newFunnel.length > 0 && prev.steps.length > 0) {
-              next.steps = prev.steps.map((s, idx) =>
+              const synced = prev.steps.map((s, idx) =>
                 newFunnel[idx]
                   ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
                   : s
               )
+              // Only replace the steps reference when something actually changed
+              // to avoid re-triggering the main effect (steps is a dep array entry).
+              const changed = synced.some(
+                (s, idx) => s.subpaths_count !== prev.steps[idx].subpaths_count
+              )
+              if (changed) next.steps = synced
             }
           }
           return next
