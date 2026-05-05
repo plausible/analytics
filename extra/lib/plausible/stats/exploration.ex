@@ -416,8 +416,8 @@ defmodule Plausible.Stats.Exploration do
     types = %{label: :string, name: :string, pathname: :string, regex_pathname: :string}
 
     query =
-      from(g in values(values, types),
-        inner_join: m in subquery(q_matches),
+      from(m in subquery(q_matches),
+        inner_join: g in values(values, types),
         on:
           g.name == m.name and
             (g.name != "pageview" or
