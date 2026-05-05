@@ -463,7 +463,7 @@ defmodule Plausible.Stats.Exploration do
     from m in subquery(query),
       left_join: g in values(to_exclude, types),
       on: g.name == m.name and g.pathname == m.pathname,
-      where: g.name == ""
+      where: g.name == "" or m.includes_subpaths
   end
 
   # Expand each (name, pathname, user_id) row into all prefix paths via
