@@ -93,7 +93,6 @@ function isSameStep(step, otherStep) {
 }
 
 function truncateFrozenResultsAtIndex(frozenResults, fromIndex) {
-  console.log('Frozen results to truncate', frozenResults, fromIndex)
   const next = {}
   Object.keys(frozenResults).forEach((key) => {
     const idx = Number(key)
@@ -356,6 +355,7 @@ function ExplorationColumn({
   // user can quickly switch to another option. If we don't have the candidate
   // list (e.g. preloaded journey), fall back to a synthetic single item built
   // from the funnel data so the column still renders the selected step.
+  console.log('selected and results', selected, results)
   const listItems =
     selected && results.length === 0
       ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
