@@ -2,10 +2,26 @@ import { Metric as PublicApiMetric } from '../../types/query-api'
 
 export type Metric = PublicApiMetric | 'total_visitors' | 'exit_rate'
 
-const NOT_SORTABLE = ['total_visitors']
+const SORTABLE = [
+  'visitors',
+  'visits',
+  'pageviews',
+  'views_per_visit',
+  'bounce_rate',
+  'visit_duration',
+  'events',
+  'percentage',
+  'conversion_rate',
+  'group_conversion_rate',
+  'time_on_page',
+  'total_revenue',
+  'average_revenue',
+  'scroll_depth',
+  'exit_rate'
+]
 
 export const isSortable = (metric: Metric): boolean => {
-  return !NOT_SORTABLE.includes(metric)
+  return SORTABLE.includes(metric)
 }
 
 export const getMetricLabel = (

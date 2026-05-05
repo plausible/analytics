@@ -12,9 +12,20 @@ describe(`${isSortable.name}`, () => {
 
   const sortableMetrics: Metric[] = [
     'visitors',
+    'visits',
+    'pageviews',
+    'views_per_visit',
     'bounce_rate',
     'visit_duration',
-    'conversion_rate'
+    'events',
+    'percentage',
+    'conversion_rate',
+    'group_conversion_rate',
+    'time_on_page',
+    'total_revenue',
+    'average_revenue',
+    'scroll_depth',
+    'exit_rate'
   ]
 
   it.each(sortableMetrics)('returns true for %s', (metric) => {
