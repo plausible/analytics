@@ -281,10 +281,12 @@ defmodule Plausible.Stats.Exploration do
       from(s in subquery(q_steps),
         where: selected_as(:name) != "",
         select: %{
+          user_id: s.user_id,
           name: selected_as(field(s, ^next_name), :name),
           pathname: selected_as(field(s, ^next_pathname), :pathname),
           _sample_factor: fragment("any(?)", s._sample_factor)
-        }
+        },
+        group_by: [selected_as(:name), selected_as(:pathname), s.user_id]
       )
 
     q_matches =
@@ -296,12 +298,6 @@ defmodule Plausible.Stats.Exploration do
         from(s in q, where: ^step_condition)
       end)
 
-    q_per_user_matches =
-      from(m in q_matches,
-        select_merge: %{user_id: m.user_id},
-        group_by: [selected_as(:name), selected_as(:pathname), m.user_id]
-      )
-
     # Fan out each q_combined row into up to two output rows (exact + wildcard)
     # using ARRAY JOIN over a small boolean array.
     #
@@ -310,54 +306,13 @@ defmodule Plausible.Stats.Exploration do
     # subpath, or same visitor count as exact). ARRAY JOIN then emits one or more
     # rows per group. The joined boolean `is_wildcard` selects which values to
     # use for visitors / includes_subpaths / subpaths_count.
-    q_wildcard_combined = combined_wildcard_query(q_per_user_matches, include_wildcard?)
-
     q_wildcard_combined_matches =
-      from(m in subquery(q_wildcard_combined),
-        join:
-          is_wildcard in fragment(
-            """
-            arrayFilter(
-              x -> x = false OR (? = 'pageview' AND ? != '/' AND ? > 1 AND ? != ?),
-              [false, true]
-            )
-            """,
-            m.name,
-            m.pathname,
-            m.subpaths_count,
-            m.wildcard_visitors,
-            m.exact_visitors
-          ),
-        on: true,
-        hints: "ARRAY",
-        where: selected_as(:visitors) > 0,
-        select: %{
-          label:
-            selected_as(
-              fragment(
-                "if(? != 'pageview', ?, ?)",
-                m.name,
-                m.name,
-                m.pathname
-              ),
-              :label
-            ),
-          name: selected_as(m.name, :name),
-          pathname: selected_as(m.pathname, :pathname),
-          visitors:
-            selected_as(
-              fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
-              :visitors
-            ),
-          includes_subpaths:
-            selected_as(fragment("CAST(?, 'Bool')", is_wildcard), :includes_subpaths),
-          subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count),
-          is_goal: fragment("CAST(?, 'Bool')", false)
-        }
-      )
+      q_matches
+      |> combined_wildcard_query(include_wildcard?)
+      |> combined_wildcard_matches_query()
 
     q_all_combined_matches =
-      if q_goal_matches = goals_query(q_per_user_matches, goals) do
+      if q_goal_matches = goals_query(q_matches, goals) do
         q_wildcard_combined_matches
         |> exclude_goal_matches(goals)
         |> union_all(^q_goal_matches)
@@ -386,10 +341,6 @@ defmodule Plausible.Stats.Exploration do
     )
     |> maybe_search(search_term)
   end
-
-  @goal_pathname_condition """
-  if(? != '', match(?, ?), ? = ?)
-  """
 
   defp goals_query(_, []), do: nil
 
@@ -423,7 +374,7 @@ defmodule Plausible.Stats.Exploration do
             (g.name != "pageview" or
                (g.name == "pageview" and
                   fragment(
-                    @goal_pathname_condition,
+                    "if(? != '', match(?, ?), ? = ?)",
                     g.regex_pathname,
                     m.pathname,
                     g.regex_pathname,
@@ -516,6 +467,51 @@ defmodule Plausible.Stats.Exploration do
         subpaths_count: 1
       },
       group_by: [em.name, selected_as(:pathname)]
+    )
+  end
+
+  defp combined_wildcard_matches_query(q_wildcard_combined) do
+    from(m in subquery(q_wildcard_combined),
+      join:
+        is_wildcard in fragment(
+          """
+          arrayFilter(
+            x -> x = false OR (? = 'pageview' AND ? != '/' AND ? > 1 AND ? != ?),
+            [false, true]
+          )
+          """,
+          m.name,
+          m.pathname,
+          m.subpaths_count,
+          m.wildcard_visitors,
+          m.exact_visitors
+        ),
+      on: true,
+      hints: "ARRAY",
+      where: selected_as(:visitors) > 0,
+      select: %{
+        label:
+          selected_as(
+            fragment(
+              "if(? != 'pageview', ?, ?)",
+              m.name,
+              m.name,
+              m.pathname
+            ),
+            :label
+          ),
+        name: selected_as(m.name, :name),
+        pathname: selected_as(m.pathname, :pathname),
+        visitors:
+          selected_as(
+            fragment("if(?, ?, ?)", is_wildcard, m.wildcard_visitors, m.exact_visitors),
+            :visitors
+          ),
+        includes_subpaths:
+          selected_as(fragment("CAST(?, 'Bool')", is_wildcard), :includes_subpaths),
+        subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count),
+        is_goal: fragment("CAST(?, 'Bool')", false)
+      }
     )
   end
 
