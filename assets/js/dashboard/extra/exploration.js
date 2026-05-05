@@ -346,28 +346,39 @@ function CandidateCard({
       ? selectedConversionRate
       : Math.round((visitors / stepMaxVisitors) * 100)
 
-  const textColour = isDimmed
-    ? 'text-gray-400 dark:text-gray-500'
+  const textColor = isDimmed
+    ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
     : 'text-gray-900 dark:text-gray-100'
 
-  const subpathColour = isDimmed
-    ? 'text-gray-400 dark:text-gray-500'
+  const subpathColor = isDimmed
+    ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'
     : 'text-gray-500 dark:text-gray-400'
+
+  const barBg = isSelected
+    ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
+    : isDimmed
+      ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
+      : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
+
+  const rowBg = isSelected
+    ? 'bg-gray-100/60 dark:bg-gray-850'
+    : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
 
   return (
     <li>
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
-        className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
-          isSelected
-            ? 'bg-indigo-50 dark:bg-gray-600/70 border-indigo-100 dark:border-transparent'
-            : 'bg-white dark:bg-gray-750 border-gray-150 dark:border-gray-750'
-        }`}
+        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
         onClick={() => onSelect(isSelected ? null : step)}
       >
-        <div className="flex items-center justify-between gap-2 mb-1">
+        <div
+          className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
+          style={{ width: `${barWidth}%` }}
+        />
+
+        <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
           <span
-            className={`flex items-center gap-1.5 min-w-0 ${textColour}`}
+            className={`flex items-center gap-1.5 min-w-0 ${textColor}`}
             title={
               step.includes_subpaths
                 ? `${step.label} > all (${step.subpaths_count})`
@@ -377,16 +388,16 @@ function CandidateCard({
             {isCustomEvent && (
               <CursorIcon
                 title="Custom event"
-                className={`size-4 shrink-0 ${isDimmed ? 'text-gray-300 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
+                className={`size-4 shrink-0 ${textColor}`}
               />
             )}
             <span className="truncate">{step.label}</span>
             {step.includes_subpaths && (
               <>
                 <ChevronRightIcon
-                  className={`mt-0.5 size-3 shrink-0 ${subpathColour}`}
+                  className={`mt-0.5 size-3 shrink-0 ${subpathColor}`}
                 />
-                <span className={`shrink-0 ${subpathColour}`}>
+                <span className={`shrink-0 ${subpathColor}`}>
                   all{' '}
                   <span className="text-[0.85rem]">
                     ({numberShortFormatter(step.subpaths_count)})
@@ -396,34 +407,11 @@ function CandidateCard({
             )}
           </span>
 
-          <span
-            className={`shrink-0 font-medium ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}`}
-          >
+          <span className={`shrink-0 font-medium ${textColor}`}>
             <Tooltip info={numberLongFormatter(visitorsToShow)}>
               {numberShortFormatter(visitorsToShow)}
             </Tooltip>
           </span>
-        </div>
-
-        <div
-          className={`h-1 rounded-full overflow-hidden ${
-            isSelected
-              ? 'bg-indigo-200/70 dark:bg-gray-500/60'
-              : isDimmed
-                ? 'bg-gray-150 dark:bg-gray-700'
-                : 'bg-gray-150 dark:bg-gray-600'
-          }`}
-        >
-          <div
-            className={`h-full rounded-full transition-[width] ease-in-out ${
-              isSelected
-                ? 'bg-indigo-500 dark:bg-indigo-400'
-                : isDimmed
-                  ? 'bg-indigo-200 dark:bg-indigo-400/30'
-                  : 'bg-indigo-300 dark:bg-indigo-400/75 group-hover:bg-indigo-400 dark:group-hover:bg-indigo-400'
-            }`}
-            style={{ width: `${barWidth}%` }}
-          />
         </div>
       </button>
     </li>
@@ -500,7 +488,7 @@ function ExplorationColumn({
   return (
     <div
       data-exploration-column={colIndex}
-      className="bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden"
+      className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
     >
       <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
@@ -533,13 +521,13 @@ function ExplorationColumn({
       </div>
 
       {loading ? (
-        <div className="h-110 flex items-center justify-center">
+        <div className="h-92 flex items-center justify-center">
           <div className="mx-auto loading pt-4">
             <div></div>
           </div>
         </div>
       ) : listItems.length === 0 ? (
-        <div className="h-110 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
+        <div className="h-92 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
           <ColumnEmptyState
             active={active}
             filter={filter}
@@ -550,7 +538,7 @@ function ExplorationColumn({
       ) : (
         <ul
           data-exploration-list
-          className="flex flex-col gap-y-2 px-2 pb-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+          className="flex flex-col gap-y-1 px-2 pb-2 h-92 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
         >
           {listItems.map(({ step, visitors }) => (
             <CandidateCard

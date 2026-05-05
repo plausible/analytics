@@ -165,6 +165,9 @@
   --color-gray-825: rgb(35 35 38);
   --color-gray-850: rgb(34 34 38);
 
+  /* Custom indigo shades */
+  --color-indigo-150: rgb(212 220 255);
+
   /* Set v3 default ring behavior */
   --default-ring-width: 2px;
   --default-ring-color: var(--color-indigo-500);
