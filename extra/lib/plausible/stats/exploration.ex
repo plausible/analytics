@@ -460,9 +460,9 @@ defmodule Plausible.Stats.Exploration do
 
     types = %{name: :string, pathname: :string}
 
-    from m in query,
+    from m in subquery(query),
       left_join: g in values(to_exclude, types),
-      on: g.name == selected_as(:name) and g.pathname == selected_as(:pathname),
+      on: g.name == m.name and g.pathname == m.pathname,
       where: g.name == ""
   end
 
