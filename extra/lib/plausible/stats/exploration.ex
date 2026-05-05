@@ -479,98 +479,32 @@ defmodule Plausible.Stats.Exploration do
   # single prefix (their exact pathname), so they naturally get
   # subpaths_count = 1 and are only emitted as exact rows.
   @wildcard_array_join """
-  if(? = 'pageview' and ? = '', arrayFold(
+  if(? = 'pageview', arrayFold(
     acc, x -> arrayPushBack(acc, concat(acc[-1], '/', x)), 
     arraySlice(splitByChar('/', ?) AS split_pathname, 2), 
     arraySlice(split_pathname, 1, 1)), [?])
   """
 
-  @goal_pathname_condition """
-  if(? != '', match(?, ?), ? = ?)
-  """
-
-  defp combined_wildcard_query(q_matches, goals, true = _include_wildcard?) do
-    goal_values =
-      Enum.map(goals, fn g ->
-        pathname = g.page_path || ""
-
-        regex_pathname =
-          if String.contains?(pathname, "*") do
-            Filters.Utils.page_regex(pathname)
-          else
-            ""
-          end
-
-        %{
-          label: g.display_name,
-          name: g.event_name || "pageview",
-          pathname: pathname,
-          regex_pathname: regex_pathname
-        }
-      end)
-
-    types = %{label: :string, name: :string, pathname: :string, regex_pathname: :string}
-
+  defp combined_wildcard_query(q_matches, true = _include_wildcard?) do
     from(em in subquery(q_matches),
-      left_join: g in values(goal_values, goal_types),
-      on:
-        g.name == em.name and
-          (g.name != "pageview" or
-             (g.name == "pageview" and
-                fragment(
-                  @goal_pathname_condition,
-                  g.regex_pathname,
-                  em.pathname,
-                  g.regex_pathname,
-                  em.pathname,
-                  g.pathname
-                ))),
-      join: is_goal in fragment("[?, ? != '']", 0, g.name),
-      on: true,
-      hints: "ARRAY",
-      join:
-        pname in fragment(
-          @wildcard_array_join,
-          em.name,
-          g.regex_pathname,
-          em.pathname,
-          em.pathname
-        ),
+      join: pname in fragment(@wildcard_array_join, em.name, em.pathname, em.pathname),
       on: true,
       hints: "ARRAY",
       where: em.name != "pageview" or selected_as(:pathname) != "",
       select: %{
-        label:
-          selected_as(
-            fragment(
-              "if(? = '', if(? != 'pageview', ?, ?), ?)",
-              g.name,
-              m.name,
-              m.name,
-              m.pathname,
-              g.label
-            ),
-            :label
-          ),
         name: em.name,
-        pathname: selected_as(fragment("if(?, ?, ?)", is_goal, g.pathname, pname), :pathname),
-        goal_visitors: scale_sample(fragment("uniqIf(?, ?)", em.user_id, is_goal)),
+        pathname: selected_as(fragment("?", pname), :pathname),
         exact_visitors:
-          scale_sample(
-            fragment("uniqIf(?, ? = ? and not ?)", em.user_id, em.pathname, pname, is_goal)
-          ),
+          scale_sample(fragment("uniqIf(?, ? = ?)", em.user_id, em.pathname, pname)),
         wildcard_visitors:
-          selected_as(
-            scale_sample(fragment("uniqIf(?, not ?)", em.user_id, is_goal)),
-            :wildcard_visitors
-          ),
-        subpaths_count: scale_sample(fragment("uniqIf(?, not ?)", em.pathname, is_goal))
+          selected_as(scale_sample(fragment("uniq(?)", em.user_id)), :wildcard_visitors),
+        subpaths_count: scale_sample(fragment("uniq(?)", em.pathname))
       },
       group_by: [em.name, selected_as(:pathname)]
     )
   end
 
-  defp combined_wildcard_query(q_matches, goals, false = _include_wildcard?) do
+  defp combined_wildcard_query(q_matches, false = _include_wildcard?) do
     from(em in subquery(q_matches),
       where: em.name != "pageview" or selected_as(:pathname) != "",
       select: %{
