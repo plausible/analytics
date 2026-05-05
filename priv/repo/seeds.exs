@@ -45,10 +45,10 @@ long_random_paths =
       |> Enum.take(Enum.random(1..20))
       |> Enum.join("/")
 
-    "/#{path}.html"
+    "/index/#{path}.html"
   end
 
-long_random_paths = ["/", "/register", "/login", "/about"] ++ long_random_paths
+long_random_paths = ["/", "/register", "/login", "/about", "/index"] ++ long_random_paths
 
 long_random_urls =
   for path <- long_random_paths do
