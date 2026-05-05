@@ -997,7 +997,7 @@ export function FunnelExploration() {
             ref={containerRef}
             className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
             style={{
-              gridTemplateColumns: `repeat(${gridColumns}, minmax(20rem, 1fr))`
+              gridTemplateColumns: `repeat(${gridColumns}, minmax(18rem, 1fr))`
             }}
           >
             {Array.from({ length: numColumns }, (_, i) => {
