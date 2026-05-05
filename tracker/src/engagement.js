@@ -137,6 +137,16 @@ function getDocumentHeight() {
 }
 
 function getCurrentScrollDepthPx() {
+  if (COMPILE_COMPAT) {
+    var el = document.documentElement || {}
+    var body = document.body || {}
+    var viewportHeight = window.innerHeight || el.clientHeight || 0
+    var scrollTop = window.scrollY || window.pageYOffset || el.scrollTop || body.scrollTop || 0
+    return currentDocumentHeight <= viewportHeight
+      ? currentDocumentHeight
+      : scrollTop + viewportHeight
+  }
+
   var viewportHeight = window.innerHeight
   var scrollTop = window.scrollY
 
@@ -149,9 +159,20 @@ export function init() {
   currentDocumentHeight = getDocumentHeight()
   maxScrollDepthPx = getCurrentScrollDepthPx()
 
-  new ResizeObserver(function () {
-    currentDocumentHeight = getDocumentHeight()
-  }).observe(document.documentElement)
+  if (COMPILE_COMPAT) {
+    window.addEventListener('load', function () {
+      currentDocumentHeight = getDocumentHeight()
+      var count = 0
+      var interval = setInterval(function () {
+        currentDocumentHeight = getDocumentHeight()
+        if (++count === 15) clearInterval(interval)
+      }, 200)
+    })
+  } else {
+    new ResizeObserver(function () {
+      currentDocumentHeight = getDocumentHeight()
+    }).observe(document.documentElement)
+  }
 
   document.addEventListener('scroll', function () {
     var currentScrollDepthPx = getCurrentScrollDepthPx()
