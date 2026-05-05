@@ -175,15 +175,14 @@ function listClipRect(container, containerRect) {
 
 function computeConnectors(container, steps) {
   const containerRect = container.getBoundingClientRect()
-  const columns = container.querySelectorAll('[data-exploration-column]')
-  const stepRows = container.querySelectorAll('[data-exploration-step]')
   const paths = []
 
   for (let i = 0; i < steps.length - 1; i++) {
-    const colA = columns[i]
-    const colB = columns[i + 1]
-    const rowA = stepRows[i]
-    const rowB = stepRows[i + 1]
+    // Query by explicit column index so DOM order never causes a mismatch.
+    const colA = container.querySelector(`[data-exploration-column="${i}"]`)
+    const colB = container.querySelector(`[data-exploration-column="${i + 1}"]`)
+    const rowA = container.querySelector(`[data-exploration-step="${i}"]`)
+    const rowB = container.querySelector(`[data-exploration-step="${i + 1}"]`)
 
     if (colA && colB && rowA && rowB) {
       const x1 = columnEdgeX(colA, 'right', containerRect, container.scrollLeft)
@@ -356,7 +355,7 @@ function CandidateCard({
     : 'text-gray-500 dark:text-gray-400'
 
   return (
-    <li key={step.label}>
+    <li>
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
         className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
@@ -555,7 +554,7 @@ function ExplorationColumn({
         >
           {listItems.map(({ step, visitors }) => (
             <CandidateCard
-              key={step.label}
+              key={`${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
               step={step}
               visitors={visitors}
               isSelected={!!selected && stepsEqual(step, selected)}
@@ -816,8 +815,22 @@ function useExplorationData(site, dashboardState, inViewport) {
         setState((prev) => {
           const next = { ...prev, activeResults: response?.next ?? [] }
           if (includeFunnel) {
-            next.funnel = response?.funnel ?? []
+            const newFunnel = response?.funnel ?? []
+            next.funnel = newFunnel
             next.provisional = {}
+            // Sync subpaths_count on existing steps from the refreshed funnel
+            // so that step identity stays consistent with what the API now
+            // reports for the current period. Without this, a period change
+            // leaves stale subpaths_count values in steps while frozen
+            // candidates and new results carry fresh values, causing duplicate
+            // entries and double-highlighted rows.
+            if (newFunnel.length > 0 && prev.steps.length > 0) {
+              next.steps = prev.steps.map((s, idx) =>
+                newFunnel[idx]
+                  ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
+                  : s
+              )
+            }
           }
           return next
         })
