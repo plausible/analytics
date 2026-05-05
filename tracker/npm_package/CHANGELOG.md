@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.5] - 2026-05-05
+
+- Use ResizeObserver over polling for getting scroll metrics
+
 ## [0.4.4] - 2025-10-31
 
 - Convert all TypeScript definition comments from `//` style to JSDoc `/** */` style for better IDE integration and TypeScript tooling support
