@@ -30,7 +30,7 @@ export function useOrderBy({
     () =>
       (orderBy.length
         ? Object.fromEntries(orderBy)
-        : Object.fromEntries(defaultOrderBy)) as Record<Metric, SortDirection>,
+        : Object.fromEntries(defaultOrderBy)),
     [orderBy, defaultOrderBy]
   )
 
