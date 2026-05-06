@@ -413,17 +413,28 @@ function CandidateCard({
           </span>
 
           <span className={`shrink-0 font-medium ${textColor}`}>
-            <Tooltip
-              info={numberLongFormatter(visitorsToShow)}
-              containerRef={{ current: document.body }}
-            >
-              {numberShortFormatter(visitorsToShow)}
-            </Tooltip>
+            <VisitorsMetric visitors={visitorsToShow} />
           </span>
         </div>
       </button>
     </li>
   )
+}
+
+function VisitorsMetric({ visitors }) {
+  const shortNumber = numberShortFormatter(visitors)
+  const longNumber = numberLongFormatter(visitors)
+  const showTooltip = shortNumber !== longNumber
+
+  if (showTooltip) {
+    return (
+      <Tooltip info={longNumber} containerRef={{ current: document.body }}>
+        {shortNumber}
+      </Tooltip>
+    )
+  } else {
+    return shortNumber
+  }
 }
 
 function ColumnEmptyState({ active, filter, colIndex, direction }) {
