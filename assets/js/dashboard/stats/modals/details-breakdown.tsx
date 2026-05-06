@@ -180,7 +180,7 @@ export function DetailsBreakdown({
             isActive={isActive}
           />
         ),
-        width: 'w-40 max-w-40 md:w-48 md:max-w-48',
+        width: 'w-48 max-w-48 md:w-56 md:max-w-56',
         align: 'left'
       },
       ...query.metrics
