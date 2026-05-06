@@ -110,35 +110,35 @@ describe(`${validateOrderBy.name}`, () => {
 
 describe(`storing detailed report preferred order`, () => {
   const domain = 'any-domain'
-  const reportInfo = { dimensionLabel: 'Goal' }
+  const dimensionLabel = 'Goal'
 
   it('does not store invalid value', () => {
     maybeStoreOrderBy({
       orderBy: [['total_visitors', SortDirection.desc]],
       domain,
-      reportInfo,
+      dimensionLabel,
       metrics: ['total_visitors']
     })
-    expect(localStorage.getItem(getOrderByStorageKey(domain, reportInfo))).toBe(
-      null
-    )
+    expect(
+      localStorage.getItem(getOrderByStorageKey(domain, dimensionLabel))
+    ).toBe(null)
   })
 
   it('falls back to fallbackValue if metric has become unsortable between storing and retrieving', () => {
     maybeStoreOrderBy({
       orderBy: [['visitors', SortDirection.desc]],
       domain,
-      reportInfo,
+      dimensionLabel,
       metrics: ['visitors']
     })
     const inStorage = localStorage.getItem(
-      getOrderByStorageKey(domain, reportInfo)
+      getOrderByStorageKey(domain, dimensionLabel)
     )
     expect(inStorage).toBe('[["visitors","desc"]]')
     expect(
       getStoredOrderBy({
         domain,
-        reportInfo,
+        dimensionLabel,
         metrics: ['total_visitors'],
         fallbackValue: [['visitors', SortDirection.desc]]
       })
@@ -148,13 +148,13 @@ describe(`storing detailed report preferred order`, () => {
   it('retrieves stored value correctly', () => {
     const input: OrderBy = [['visitors', SortDirection.asc]]
     localStorage.setItem(
-      getOrderByStorageKey(domain, reportInfo),
+      getOrderByStorageKey(domain, dimensionLabel),
       JSON.stringify(input)
     )
     expect(
       getStoredOrderBy({
         domain,
-        reportInfo,
+        dimensionLabel,
         metrics: ['visitors'],
         fallbackValue: [['visitors', SortDirection.desc]]
       })

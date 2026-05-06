@@ -94,7 +94,7 @@ export function DetailsBreakdown({
 
   const storedOrderBy = getStoredOrderBy({
     domain: site.domain,
-    reportInfo: { dimensionLabel },
+    dimensionLabel,
     metrics,
     fallbackValue: defaultOrderBy
   })
@@ -107,7 +107,7 @@ export function DetailsBreakdown({
   useRememberOrderBy({
     effectiveOrderBy: orderBy,
     metrics,
-    reportInfo: { dimensionLabel }
+    dimensionLabel
   })
 
   const effectiveOrderBy = (orderBy.length ? orderBy : storedOrderBy).concat(
