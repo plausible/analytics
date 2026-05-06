@@ -299,6 +299,15 @@ defmodule Plausible.Stats.Exploration do
         from(s in q, where: ^step_condition)
       end)
 
+    last_step = List.last(steps)
+
+    q_matches =
+      if last_step && last_step.includes_subpaths do
+        exclude_wildcard_matches(q_matches, last_step)
+      else
+        q_matches
+      end
+
     # Fan out each q_combined row into up to two output rows (exact + wildcard)
     # using ARRAY JOIN over a small boolean array.
     #
@@ -397,6 +406,15 @@ defmodule Plausible.Stats.Exploration do
     from(m in subquery(query),
       where: m.visitors > 0
     )
+  end
+
+  defp exclude_wildcard_matches(query, step) do
+    pattern = wildcard_pattern(step.pathname)
+
+    from m in query,
+      where:
+        selected_as(:name) != ^step.name or
+          not fragment("match(?, ?)", selected_as(:pathname), ^pattern)
   end
 
   defp exclude_goal_matches(query, goals) do
@@ -647,9 +665,7 @@ defmodule Plausible.Stats.Exploration do
   defp step_condition(step, count) when count <= @max_steps do
     cond do
       step.includes_subpaths ->
-        escaped = Regex.escape(step.pathname)
-
-        pattern = "^#{escaped}(/.+)?$"
+        pattern = wildcard_pattern(step.pathname)
 
         dynamic(
           [s],
@@ -673,6 +689,12 @@ defmodule Plausible.Stats.Exploration do
             field(s, ^:"pathname#{count}") == ^step.pathname
         )
     end
+  end
+
+  defp wildcard_pattern(pathname) when is_binary(pathname) do
+    escaped = Regex.escape(pathname)
+
+    "^#{escaped}(/.+)?$"
   end
 
   defp maybe_search(query, search_term) do
