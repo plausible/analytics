@@ -256,8 +256,8 @@ defmodule Plausible.Stats.Exploration do
   defp normalize_pathname(pathname), do: String.trim_trailing(pathname, "/")
 
   defp filter_eligible_goals(goals) do
-    Enum.filter(goals, fn g ->
-      is_nil(g.currency) and g.scroll_threshold == -1 and g.custom_props == %{}
+    Enum.reject(goals, fn g ->
+      Plausible.Goal.Revenue.revenue?(g) or g.scroll_threshold > -1 or Plausible.Goal.has_custom_props?(g)
     end)
   end
 
