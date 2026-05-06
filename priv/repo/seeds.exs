@@ -45,13 +45,13 @@ long_random_paths =
       |> Enum.take(Enum.random(1..20))
       |> Enum.join("/")
 
-    "/#{path}.html"
+    "/index/#{path}.html"
   end
 
-long_random_paths = ["/", "/register", "/login", "/about"] ++ long_random_paths
+paths = ["/", "/register", "/login", "/about", "/index", "/index/all"] ++ long_random_paths
 
-long_random_urls =
-  for path <- long_random_paths do
+random_urls =
+  for path <- paths do
     "https://dummy.site#{path}"
   end
 
@@ -249,7 +249,7 @@ random_event_data = fn site ->
     pathname: Enum.random(long_random_paths),
     "meta.key": ["url", "logged_in"],
     "meta.value": [
-      Enum.random(long_random_urls),
+      Enum.random(random_urls),
       Enum.random(["true", "false"])
     ]
   ]
