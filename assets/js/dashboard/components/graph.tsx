@@ -11,6 +11,7 @@ import classNames from 'classnames'
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
 const X_TICK_LENGTH_PX = 4
+const MINIMUM_X_LABEL_GAP_PX = 8
 const HIGHLIGHT_LINE_VERTICAL_SPILL_PX = 4
 
 type GraphYValues = ReadonlyArray<number | null>
@@ -520,7 +521,7 @@ function InnerGraph<T extends GraphYValues>({
 }
 
 const currentlySelectedLineClass =
-  'stroke-1 stroke-gray-300 dark:stroke-gray-700' // maybe add 'transition-transform duration-75'
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
@@ -696,7 +697,8 @@ const handleXTickText = ({
   }
 
   return {
-    isOverlappingPrevious: textRect.left < lastTickTextRightEdge,
+    isOverlappingPrevious:
+      textRect.left < lastTickTextRightEdge + MINIMUM_X_LABEL_GAP_PX,
     rightEdge: textRect.right
   }
 }
