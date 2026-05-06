@@ -1,7 +1,17 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import updateLocale from 'dayjs/plugin/updateLocale'
 
 dayjs.extend(utc)
+dayjs.extend(updateLocale)
+// The locale 'en' is the default (and the only one currently), 
+// but its start of week is Sunday. 
+// This change that the week starts on Monday unifies behavior 
+// between start of week according to the backend
+// and start of week according to the frontend. 
+dayjs.updateLocale('en', {
+    weekStart: 1,
+})
 
 const browserDateFormat = Intl.DateTimeFormat(navigator.language, {
   hour: 'numeric'

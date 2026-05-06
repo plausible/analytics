@@ -322,6 +322,14 @@ defmodule PlausibleWeb.Router do
       delete "/:segment_id", SegmentsController, :delete
       get "/:segment_id/shared-links", SegmentsController, :get_related_shared_links
     end
+
+    scope "/:domain/annotations", PlausibleWeb.Api.Internal,
+      private: %{allow_consolidated_views: true} do
+      get "/", AnnotationsController, :index
+      post "/", AnnotationsController, :create
+      patch "/:annotation_id", AnnotationsController, :update
+      delete "/:annotation_id", AnnotationsController, :delete
+    end
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api,
