@@ -348,7 +348,7 @@ function CandidateCard({
     isSelected && selectedVisitors !== null ? selectedVisitors : visitors
   const barWidth =
     isSelected && selectedConversionRate !== null
-      ? selectedConversionRate
+      ? Math.max(1, selectedConversionRate)
       : Math.max(1, Math.round((visitors / stepMaxVisitors) * 100))
 
   const textColor = isDimmed
