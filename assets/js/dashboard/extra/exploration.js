@@ -369,56 +369,58 @@ function CandidateCard({
     ? 'bg-gray-100/60 dark:bg-gray-850'
     : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
 
+  const labelTooltip = step.includes_subpaths
+    ? `${step.label} > all (${step.subpaths_count})`
+    : step.label
+
   return (
     <li>
-      <button
-        data-exploration-step={isSelected ? colIndex : undefined}
-        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
-        onClick={() => onSelect(isSelected ? null : step)}
-      >
-        <div
-          className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
-          style={{ width: `${barWidth}%` }}
-        />
+      <Tooltip info={labelTooltip} containerRef={{ current: document.body }}>
+        <button
+          data-exploration-step={isSelected ? colIndex : undefined}
+          className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
+          onClick={() => onSelect(isSelected ? null : step)}
+        >
+          <div
+            className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
+            style={{ width: `${barWidth}%` }}
+          />
 
-        <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
-          <span
-            className={`flex items-center gap-1.5 min-w-0 ${textColor}`}
-            title={
-              step.includes_subpaths
-                ? `${step.label} > all (${step.subpaths_count})`
-                : step.label
-            }
-          >
-            {(isCustomEvent || isGoal) && (
-              <CursorIcon
-                title={isGoal ? 'Goal' : 'Custom event'}
-                className={`size-4 shrink-0 ${textColor}`}
-              />
-            )}
-            <span className="truncate">{step.label}</span>
-            {step.includes_subpaths && (
-              <>
-                <ChevronRightIcon
-                  className={`mt-0.5 size-3 shrink-0 ${subpathColor}`}
+          <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
+            <span className={`flex items-center gap-1.5 min-w-0 ${textColor}`}>
+              {(isCustomEvent || isGoal) && (
+                <CursorIcon
+                  title={isGoal ? 'Goal' : 'Custom event'}
+                  className={`size-4 shrink-0 ${textColor}`}
                 />
-                <span className={`shrink-0 ${subpathColor}`}>
-                  all{' '}
-                  <span className="text-[0.85rem]">
-                    ({numberShortFormatter(step.subpaths_count)})
+              )}
+              <span className="truncate">{step.label}</span>
+              {step.includes_subpaths && (
+                <>
+                  <ChevronRightIcon
+                    className={`mt-0.5 size-3 shrink-0 ${subpathColor}`}
+                  />
+                  <span className={`shrink-0 ${subpathColor}`}>
+                    all{' '}
+                    <span className="text-[0.85rem]">
+                      ({numberShortFormatter(step.subpaths_count)})
+                    </span>
                   </span>
-                </span>
-              </>
-            )}
-          </span>
+                </>
+              )}
+            </span>
 
-          <span className={`shrink-0 font-medium ${textColor}`}>
-            <Tooltip info={numberLongFormatter(visitorsToShow)} containerRef={{ current: document.body }}>
-              {numberShortFormatter(visitorsToShow)}
-            </Tooltip>
-          </span>
-        </div>
-      </button>
+            <span className={`shrink-0 font-medium ${textColor}`}>
+              <Tooltip
+                info={numberLongFormatter(visitorsToShow)}
+                containerRef={{ current: document.body }}
+              >
+                {numberShortFormatter(visitorsToShow)}
+              </Tooltip>
+            </span>
+          </div>
+        </button>
+      </Tooltip>
     </li>
   )
 }
