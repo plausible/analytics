@@ -22,7 +22,7 @@ defmodule Plausible.Stats.Exploration do
       new(step.name, step.pathname, step.includes_subpaths, step.subpaths_count, step.is_goal)
     end
 
-    @spec new(String.t(), String.t(), boolean(), non_neg_integer()) :: t()
+    @spec new(String.t(), String.t(), boolean(), non_neg_integer(), boolean()) :: t()
     def new(name, pathname, includes_subpaths \\ false, subpaths_count \\ 0, is_goal \\ false)
         when is_boolean(includes_subpaths) and is_integer(subpaths_count) do
       label =
