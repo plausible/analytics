@@ -342,13 +342,14 @@ function CandidateCard({
   onSelect
 }) {
   const isCustomEvent = step.name !== 'pageview'
+  const isGoal = step.is_goal
 
   const visitorsToShow =
     isSelected && selectedVisitors !== null ? selectedVisitors : visitors
   const barWidth =
     isSelected && selectedConversionRate !== null
-      ? selectedConversionRate
-      : Math.round((visitors / stepMaxVisitors) * 100)
+      ? Math.max(1, selectedConversionRate)
+      : Math.max(1, Math.round((visitors / stepMaxVisitors) * 100))
 
   const textColor = isDimmed
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
@@ -389,9 +390,9 @@ function CandidateCard({
                 : step.label
             }
           >
-            {isCustomEvent && (
+            {(isCustomEvent || isGoal) && (
               <CursorIcon
-                title="Custom event"
+                title={isGoal ? 'Goal' : 'Custom event'}
                 className={`size-4 shrink-0 ${textColor}`}
               />
             )}
@@ -412,14 +413,28 @@ function CandidateCard({
           </span>
 
           <span className={`shrink-0 font-medium ${textColor}`}>
-            <Tooltip info={numberLongFormatter(visitorsToShow)}>
-              {numberShortFormatter(visitorsToShow)}
-            </Tooltip>
+            <VisitorsMetric visitors={visitorsToShow} />
           </span>
         </div>
       </button>
     </li>
   )
+}
+
+function VisitorsMetric({ visitors }) {
+  const shortNumber = numberShortFormatter(visitors)
+  const longNumber = numberLongFormatter(visitors)
+  const showTooltip = shortNumber !== longNumber
+
+  if (showTooltip) {
+    return (
+      <Tooltip info={longNumber} containerRef={{ current: document.body }}>
+        {shortNumber}
+      </Tooltip>
+    )
+  } else {
+    return shortNumber
+  }
 }
 
 function ColumnEmptyState({ active, filter, colIndex, direction }) {
