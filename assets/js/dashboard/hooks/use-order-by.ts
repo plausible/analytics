@@ -72,15 +72,11 @@ export function cycleSortDirection(
   }
 }
 
-export function findOrderIndex(orderBy: OrderBy, metric: Metric) {
-  return orderBy.findIndex(([m]) => m === metric)
-}
-
 export function rearrangeOrderBy(
   currentOrderBy: OrderBy,
   metric: Metric
 ): OrderBy {
-  const orderIndex = findOrderIndex(currentOrderBy, metric)
+  const orderIndex = currentOrderBy.findIndex(([m]) => m === metric)
   if (orderIndex < 0) {
     const sortDirection = cycleSortDirection(null).direction as SortDirection
     return [[metric, sortDirection]]

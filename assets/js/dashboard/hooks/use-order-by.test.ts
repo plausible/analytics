@@ -3,30 +3,12 @@ import {
   OrderBy,
   SortDirection,
   cycleSortDirection,
-  findOrderIndex,
   getOrderByStorageKey,
   getStoredOrderBy,
   maybeStoreOrderBy,
   rearrangeOrderBy,
   validateOrderBy
 } from './use-order-by'
-
-describe(`${findOrderIndex.name}`, () => {
-  /* prettier-ignore */
-  const cases: [OrderBy, Metric, number][] = [
-    [[], 'visitors', -1],
-    [[['visitors', SortDirection.asc]], 'bounce_rate', -1],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], 'bounce_rate', 0],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], 'visitors', 1]
-  ]
-
-  test.each(cases)(
-    `[%#] in order by %p, the index of metric %p is %p`,
-    (orderBy, metric, expectedIndex) => {
-      expect(findOrderIndex(orderBy, metric)).toEqual(expectedIndex)
-    }
-  )
-})
 
 describe(`${cycleSortDirection.name}`, () => {
   test.each([
