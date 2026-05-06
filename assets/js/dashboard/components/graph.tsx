@@ -349,7 +349,7 @@ function InnerGraph<T extends GraphYValues>({
                 ? {
                     index: closestIndexToPointer,
                     x: points[closestIndexToPointer].x,
-                    values: points[closestIndexToPointer].values
+                    values: points[closestIndexToPointer].values,
                   }
                 : null,
             xPointer,
