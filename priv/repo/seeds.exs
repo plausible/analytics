@@ -48,7 +48,7 @@ long_random_paths =
     "/index/#{path}.html"
   end
 
-paths = ["/", "/register", "/login", "/about", "/index", "/index/all"] ++ long_random_paths
+paths = ["/", "/register", "/login", "/about", "/index", "/index/short"] ++ long_random_paths
 
 random_urls =
   for path <- paths do
