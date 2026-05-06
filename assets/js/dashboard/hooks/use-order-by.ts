@@ -28,9 +28,9 @@ export function useOrderBy({
   const [orderBy, setOrderBy] = useState<OrderBy>([])
   const orderByDictionary = useMemo(
     () =>
-      (orderBy.length
+      orderBy.length
         ? Object.fromEntries(orderBy)
-        : Object.fromEntries(defaultOrderBy)),
+        : Object.fromEntries(defaultOrderBy),
     [orderBy, defaultOrderBy]
   )
 
@@ -134,12 +134,7 @@ export function getStoredOrderBy({
   try {
     const storedItem = getItem(getOrderByStorageKey(domain, dimensionLabel))
     const parsed = JSON.parse(storedItem)
-    if (
-      validateOrderBy(
-        parsed,
-        metrics.filter((m) => isSortable(m))
-      )
-    ) {
+    if (validateOrderBy(parsed, metrics.filter(isSortable))) {
       return parsed
     } else {
       throw new Error('Invalid stored order_by value')
