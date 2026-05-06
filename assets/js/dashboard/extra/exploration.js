@@ -342,6 +342,7 @@ function CandidateCard({
   onSelect
 }) {
   const isCustomEvent = step.name !== 'pageview'
+  const isGoal = step.is_goal
 
   const visitorsToShow =
     isSelected && selectedVisitors !== null ? selectedVisitors : visitors
@@ -389,9 +390,9 @@ function CandidateCard({
                 : step.label
             }
           >
-            {isCustomEvent && (
+            {(isCustomEvent || isGoal) && (
               <CursorIcon
-                title="Custom event"
+                title={isGoal ? 'Goal' : 'Custom event'}
                 className={`size-4 shrink-0 ${textColor}`}
               />
             )}
