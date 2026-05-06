@@ -413,7 +413,10 @@ function CandidateCard({
           </span>
 
           <span className={`shrink-0 font-medium ${textColor}`}>
-            <Tooltip info={numberLongFormatter(visitorsToShow)} containerRef={{ current: document.body }}>
+            <Tooltip
+              info={numberLongFormatter(visitorsToShow)}
+              containerRef={{ current: document.body }}
+            >
               {numberShortFormatter(visitorsToShow)}
             </Tooltip>
           </span>
