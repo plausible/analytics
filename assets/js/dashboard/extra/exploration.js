@@ -77,12 +77,15 @@ function dashboardStateForQuery(dashboardState, steps) {
 // Serialize steps into the wire format expected by the API.
 function stepsToJourneyParam(steps) {
   return JSON.stringify(
-    steps.map(({ name, pathname, includes_subpaths, subpaths_count }) => ({
-      name,
-      pathname,
-      includes_subpaths,
-      subpaths_count
-    }))
+    steps.map(
+      ({ name, pathname, includes_subpaths, subpaths_count, is_goal }) => ({
+        name,
+        pathname,
+        includes_subpaths,
+        subpaths_count,
+        is_goal
+      })
+    )
   )
 }
 

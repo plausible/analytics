@@ -151,7 +151,7 @@ defmodule PlausibleWeb.Api.StatsController do
            include_wildcard? =
              not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
-             Exploration.next_steps(query, journey,
+             Exploration.next_steps(site, query, journey,
                search_term: search_term,
                direction: direction,
                include_wildcard?: include_wildcard?
@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Api.StatsController do
       include_wildcard? =
         not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
 
-      case Exploration.interesting_funnel(query,
+      case Exploration.interesting_funnel(site, query,
              max_steps: params["max_steps"],
              max_candidates: params["max_candidates"],
              include_wildcard?: include_wildcard?
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Api.StatsController do
            include_wildcard? =
              not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
            {:ok, next_steps} <-
-             Exploration.next_steps(query, journey,
+             Exploration.next_steps(site, query, journey,
                search_term: search_term,
                direction: direction,
                include_wildcard?: include_wildcard?
@@ -242,13 +242,15 @@ defmodule PlausibleWeb.Api.StatsController do
            "name" => name,
            "pathname" => pathname,
            "includes_subpaths" => includes_subpaths,
-           "subpaths_count" => subpaths_count
+           "subpaths_count" => subpaths_count,
+           "is_goal" => is_goal
          }) do
       Exploration.Journey.Step.new(
         name,
         pathname,
         includes_subpaths,
-        subpaths_count
+        subpaths_count,
+        is_goal
       )
     end
 
