@@ -109,9 +109,8 @@ function InnerGraph<T extends GraphYValues>({
   const yBottomEdge = height - marginBottom
 
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const pointsRef = useRef<Point<T>[] | null>(null)
 
-  // Effect to fully redraw chart from scratch
+  // Effect to redraw the chart from scratch
   useEffect(() => {
     if (!svgRef.current) {
       return
@@ -349,7 +348,7 @@ function InnerGraph<T extends GraphYValues>({
                 ? {
                     index: closestIndexToPointer,
                     x: points[closestIndexToPointer].x,
-                    values: points[closestIndexToPointer].values,
+                    values: points[closestIndexToPointer].values
                   }
                 : null,
             xPointer,
@@ -366,7 +365,7 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
-  }, [onPointerMove, isInHoverableArea, data])
+  }, [onPointerMove, isInHoverableArea, points])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -433,7 +432,6 @@ function InnerGraph<T extends GraphYValues>({
     const currentSvg = svgRef.current
     if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
-      const points = pointsRef.current
       if (typeof onClick !== 'function') {
         svg.on('click', null)
       } else {
@@ -466,7 +464,7 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('click', null)
       }
     }
-  }, [onClick, isInHoverableArea, data])
+  }, [onClick, isInHoverableArea, points])
 
   useEffect(() => {
     points.forEach(({ dots }, index) =>
