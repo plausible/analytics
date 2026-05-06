@@ -348,7 +348,7 @@ function CandidateCard({
   const barWidth =
     isSelected && selectedConversionRate !== null
       ? selectedConversionRate
-      : Math.round((visitors / stepMaxVisitors) * 100)
+      : Math.max(1, Math.round((visitors / stepMaxVisitors) * 100))
 
   const textColor = isDimmed
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
