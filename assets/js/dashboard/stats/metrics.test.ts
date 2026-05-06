@@ -247,10 +247,15 @@ describe(`${getBreakdownMetricLabel.name}`, () => {
       )
     })
 
-    it('delegates to getMetricLabel for other metrics', () => {
-      expect(
-        getBreakdownMetricLabel('bounce_rate', { ...defaults, dimensions })
-      ).toBe('Bounce rate')
+    it.each([
+      'visits',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
+    ] as const)('delegates to getMetricLabel for %s', (metric) => {
+      expect(getBreakdownMetricLabel(metric, { ...defaults, dimensions })).toBe(
+        getMetricLabel(metric, defaults)
+      )
     })
   })
 })
