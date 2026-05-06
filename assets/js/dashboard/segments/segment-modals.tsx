@@ -29,6 +29,24 @@ import { Button, buttonClassName } from '../components/button'
 
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
+const nameInputProps = { id: 'name', label: 'Segment name' }
+
+const segmentTypeSelectorProps = {
+  idPrefix: 'segment-type',
+  options: [
+    {
+      type: SegmentType.personal,
+      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
+      description: 'Visible only to you'
+    },
+    {
+      type: SegmentType.site,
+      name: SEGMENT_TYPE_LABELS[SegmentType.site],
+      description: 'Visible to others on the site'
+    }
+  ]
+}
+
 interface ApiRequestProps {
   status: MutationStatus
   error?: unknown
@@ -79,18 +97,23 @@ export const CreateSegmentModal = ({
 
   return (
     <ModalLayout title="Create segment" onClose={onClose}>
-      <SegmentNameInput
+      <LabeledTextInput
+        {...nameInputProps}
         value={name}
         onChange={setName}
-        namePlaceholder={namePlaceholder}
+        placeholder={namePlaceholder}
       />
-      <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
-      {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
+      <TypeSelector<SegmentType>
+        {...segmentTypeSelectorProps}
+        value={type}
+        onChange={onSegmentTypeChange}
+      />
+      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
-        <SaveSegmentButton
+        <SaveButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
             const trimmedName = name.trim()
@@ -254,55 +277,50 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   )
 }
 
-const SegmentNameInput = ({
-  namePlaceholder,
+export const LabeledTextInput = ({
+  label,
+  id,
   value,
-  onChange
+  onChange,
+  placeholder
 }: {
-  namePlaceholder: string
+  label: string
+  id: string
   value: string
   onChange: (value: string) => void
+  placeholder: string
 }) => {
   return (
     <div className="flex flex-col">
       <label
-        htmlFor="name"
+        htmlFor={id}
         className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
       >
-        Segment name
+        {label}
       </label>
       <input
         autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={namePlaceholder}
-        id="name"
+        placeholder={placeholder}
+        id={id}
         className="block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
       />
     </div>
   )
 }
 
-const SegmentTypeSelector = ({
+export const TypeSelector = <T extends string>({
   value,
-  onChange
+  onChange,
+  options,
+  idPrefix
 }: {
-  value: SegmentType
-  onChange: (value: SegmentType) => void
+  value: T
+  onChange: (value: T) => void
+  options: { type: T; name: string; description: string }[]
+  idPrefix: string
 }) => {
-  const options = [
-    {
-      type: SegmentType.personal,
-      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
-      description: 'Visible only to you'
-    },
-    {
-      type: SegmentType.site,
-      name: SEGMENT_TYPE_LABELS[SegmentType.site],
-      description: 'Visible to others on the site'
-    }
-  ]
-
   return (
     <div className="flex flex-col gap-y-2">
       {options.map(({ type, name, description }) => (
@@ -310,14 +328,14 @@ const SegmentTypeSelector = ({
           <div className="flex">
             <input
               checked={value === type}
-              id={`segment-type-${type}`}
+              id={`${idPrefix}-${type}`}
               type="radio"
               value=""
               onChange={() => onChange(type)}
               className="mt-px size-4.5 cursor-pointer text-indigo-600 dark:bg-transparent border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white"
             />
             <label
-              htmlFor={`segment-type-${type}`}
+              htmlFor={`${idPrefix}-${type}`}
               className="block ml-3 text-sm font-medium dark:text-gray-100 flex flex-col flex-inline"
             >
               <div>{name}</div>
@@ -389,7 +407,7 @@ const useSegmentTypeDisabledState = ({
   }
 }
 
-const SaveSegmentButton = ({
+export const SaveButton = ({
   disabled,
   onSave
 }: {
@@ -407,7 +425,7 @@ const SaveSegmentButton = ({
   )
 }
 
-const SegmentTypeDisabledMessage = ({
+export const TypeDisabledMessage = ({
   message
 }: {
   message: ReactNode | null
@@ -449,18 +467,23 @@ export const UpdateSegmentModal = ({
 
   return (
     <ModalLayout title="Update segment" onClose={onClose}>
-      <SegmentNameInput
+      <LabeledTextInput
+        {...nameInputProps}
         value={name}
         onChange={setName}
-        namePlaceholder={namePlaceholder}
+        placeholder={namePlaceholder}
       />
-      <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
-      {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
+      <TypeSelector<SegmentType>
+        {...segmentTypeSelectorProps}
+        value={type}
+        onChange={onSegmentTypeChange}
+      />
+      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
-        <SaveSegmentButton
+        <SaveButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
             const trimmedName = name.trim()
