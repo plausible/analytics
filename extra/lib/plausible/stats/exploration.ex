@@ -257,7 +257,8 @@ defmodule Plausible.Stats.Exploration do
 
   defp filter_eligible_goals(goals) do
     Enum.reject(goals, fn g ->
-      Plausible.Goal.Revenue.revenue?(g) or g.scroll_threshold > -1 or Plausible.Goal.has_custom_props?(g)
+      Plausible.Goal.Revenue.revenue?(g) or g.scroll_threshold > -1 or
+        Plausible.Goal.has_custom_props?(g)
     end)
   end
 
