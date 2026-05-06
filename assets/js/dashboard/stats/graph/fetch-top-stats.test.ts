@@ -269,6 +269,7 @@ function makeTopStatsResponse(
   return {
     query: {
       metrics: ['visitors'] as ['visitors'],
+      dimensions: [],
       date_range: dateRange,
       comparison_date_range: comparisonDateRange as [string, string]
     },

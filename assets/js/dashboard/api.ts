@@ -20,6 +20,7 @@ export type MetricValue = null | number | RevenueMetricValue
 
 export type QueryResultQuery = {
   metrics: Metric[]
+  dimensions: string[]
   date_range: [string, string]
   comparison_date_range?: [string, string] | null
 }

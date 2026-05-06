@@ -58,11 +58,5 @@ export type MainGraphResponse = {
     empty_metrics: MetricValues
     present_index: number
   }
-  query: {
-    interval: string
-    date_range: [string, string]
-    comparison_date_range?: [string, string]
-    dimensions: [string] // one item
-    metrics: [string] // one item
-  }
+  query: api.QueryResultQuery
 }
