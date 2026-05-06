@@ -1,4 +1,4 @@
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import {
   DashboardState,
   dashboardStateDefaultValue,
@@ -30,17 +30,24 @@ const expectedBaseInclude: StatsQuery['include'] = {
   present_index: false
 }
 
-const expectedRealtimeVisitorsQuery: StatsQuery = {
-  date_range: DashboardPeriod.realtime,
+const expectedBaseQuery = {
   dimensions: [],
   filters: [],
+  include: expectedBaseInclude,
+  relative_date: null,
+  order_by: null,
+  pagination: null
+}
+
+const expectedRealtimeVisitorsQuery: StatsQuery = {
+  ...expectedBaseQuery,
+  date_range: DashboardPeriod.realtime,
   include: {
     ...expectedBaseInclude,
     compare: null,
     imports_meta: false
   },
-  metrics: ['visitors'],
-  relative_date: null
+  metrics: ['visitors']
 }
 
 type TestCase = [
@@ -62,12 +69,11 @@ const cases: TestCase[] = [
     ['visitors', 'events'],
     [
       {
+        ...expectedBaseQuery,
         date_range: DashboardPeriod.realtime_30m,
-        dimensions: [],
         filters: remapToApiFilters([aGoalFilter]),
         include: { ...expectedBaseInclude, compare: null },
-        metrics: ['visitors', 'events'],
-        relative_date: null
+        metrics: ['visitors', 'events']
       },
       expectedRealtimeVisitorsQuery
     ]
@@ -79,15 +85,13 @@ const cases: TestCase[] = [
     ['visitors', 'pageviews'],
     [
       {
+        ...expectedBaseQuery,
         date_range: DashboardPeriod.realtime_30m,
-        dimensions: [],
-        filters: [],
         include: {
           ...expectedBaseInclude,
           compare: null
         },
-        metrics: ['visitors', 'pageviews'],
-        relative_date: null
+        metrics: ['visitors', 'pageviews']
       },
       expectedRealtimeVisitorsQuery
     ]
@@ -111,18 +115,16 @@ const cases: TestCase[] = [
     ],
     [
       {
+        ...expectedBaseQuery,
         date_range: aPeriodNotRealtime,
-        dimensions: [],
         filters: remapToApiFilters([aGoalFilter]),
-        include: expectedBaseInclude,
         metrics: [
           'visitors',
           'events',
           'total_revenue',
           'average_revenue',
           'conversion_rate'
-        ],
-        relative_date: null
+        ]
       },
       null
     ]
@@ -134,12 +136,10 @@ const cases: TestCase[] = [
     ['visitors', 'events', 'conversion_rate'],
     [
       {
+        ...expectedBaseQuery,
         date_range: aPeriodNotRealtime,
-        dimensions: [],
         filters: remapToApiFilters([aGoalFilter]),
-        include: expectedBaseInclude,
-        metrics: ['visitors', 'events', 'conversion_rate'],
-        relative_date: null
+        metrics: ['visitors', 'events', 'conversion_rate']
       },
       null
     ]
@@ -162,10 +162,9 @@ const cases: TestCase[] = [
 
     [
       {
+        ...expectedBaseQuery,
         date_range: aPeriodNotRealtime,
-        dimensions: [],
         filters: remapToApiFilters([aPageFilter]),
-        include: { ...expectedBaseInclude },
         metrics: [
           'visitors',
           'visits',
@@ -173,8 +172,7 @@ const cases: TestCase[] = [
           'bounce_rate',
           'scroll_depth',
           'time_on_page'
-        ],
-        relative_date: null
+        ]
       },
       null
     ]
@@ -193,10 +191,8 @@ const cases: TestCase[] = [
     ],
     [
       {
+        ...expectedBaseQuery,
         date_range: aPeriodNotRealtime,
-        dimensions: [],
-        filters: [],
-        include: expectedBaseInclude,
         metrics: [
           'visitors',
           'visits',
@@ -204,8 +200,7 @@ const cases: TestCase[] = [
           'views_per_visit',
           'bounce_rate',
           'visit_duration'
-        ],
-        relative_date: null
+        ]
       },
       null
     ]
@@ -274,6 +269,7 @@ function makeTopStatsResponse(
   return {
     query: {
       metrics: ['visitors'] as ['visitors'],
+      dimensions: [],
       date_range: dateRange,
       comparison_date_range: comparisonDateRange as [string, string]
     },

@@ -325,11 +325,11 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_include_entry(key, _value),
     do: {:error, %QueryError{code: :invalid_include, message: "Invalid include key'#{i(key)}'."}}
 
-  defp parse_pagination(pagination) when is_map(pagination) do
+  def parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp parse_pagination(nil), do: {:ok, @default_pagination}
+  def parse_pagination(nil), do: {:ok, @default_pagination}
 
   defp atomize_keys(map) when is_map(map) do
     Map.new(map, fn {key, value} ->

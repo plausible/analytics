@@ -92,6 +92,19 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       assert error =~ "Invalid metric"
     end
 
+    test "public API does not recognize total_visitors metric", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["total_visitors"],
+        "date_range" => "all"
+      }
+
+      assert {:error, %QueryError{message: error}} =
+               Query.parse_and_build(site, params, now: @now)
+
+      assert error =~ "Invalid metric"
+    end
+
     test "valid metrics passed", %{site: site} do
       params = %{
         "site_id" => site.domain,

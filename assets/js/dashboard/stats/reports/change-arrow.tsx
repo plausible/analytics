@@ -1,5 +1,5 @@
 import React from 'react'
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import { numberShortFormatter } from '../../util/number-formatter'
 import { ArrowDownRightIcon, ArrowUpRightIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'

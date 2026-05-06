@@ -5,7 +5,7 @@ import CountriesMap from './map'
 
 import * as api from '../../api'
 import { apiPath } from '../../util/url'
-import ListReport from '../reports/list'
+import ListReport from '../reports/list-legacy'
 import * as metrics from '../reports/metrics'
 import {
   hasConversionGoalFilter,

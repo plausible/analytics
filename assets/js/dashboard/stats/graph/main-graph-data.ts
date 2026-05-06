@@ -1,4 +1,5 @@
-import { MainGraphResponse, MetricValue, ResultItem } from './fetch-main-graph'
+import { MainGraphResponse, ResultItem } from './fetch-main-graph'
+import { MetricValue } from '../../api'
 
 /**
  * Fills gaps in @see MainGraphResponse the series of `results` and `comparisonResults`.

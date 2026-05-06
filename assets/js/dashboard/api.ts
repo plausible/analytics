@@ -1,4 +1,4 @@
-import { Metric } from '../types/query-api'
+import { Metric } from './stats/metrics'
 import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import { StatsQuery } from './stats-query'
@@ -9,18 +9,38 @@ import * as url from './util/url'
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
 
+export type RevenueMetricValue = {
+  short: string
+  value: number
+  long: string
+  currency: string
+}
+
+export type MetricValue = null | number | RevenueMetricValue
+
+export type QueryResultQuery = {
+  metrics: Metric[]
+  dimensions: string[]
+  date_range: [string, string]
+  comparison_date_range?: [string, string] | null
+}
+
+export type QueryResultMeta = {
+  metric_warnings?: Record<string, Record<string, string>>
+  imports_included?: boolean
+  imports_skip_reason?: string
+}
+
+export type QueryResultRow = {
+  metrics: Array<MetricValue>
+  dimensions: Array<string>
+  comparison?: { metrics: Array<number>; change: Array<number> }
+}
+
 export type QueryApiResponse = {
-  query: {
-    metrics: Metric[]
-    date_range: [string, string]
-    comparison_date_range: [string, string]
-  }
-  meta: Record<string, unknown>
-  results: {
-    metrics: Array<number>
-    dimensions: Array<string>
-    comparison: { metrics: Array<number>; change: Array<number> }
-  }[]
+  query: QueryResultQuery
+  meta: QueryResultMeta
+  results: QueryResultRow[]
 }
 
 export class ApiError extends Error {

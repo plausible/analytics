@@ -11,9 +11,9 @@ import Dashboard from './index'
 import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
-import PagesModal from './stats/modals/pages'
-import EntryPagesModal from './stats/modals/entry-pages'
-import ExitPagesModal from './stats/modals/exit-pages'
+import { PagesDetails } from './stats/pages/pages'
+import { EntryPagesDetails } from './stats/pages/entry-pages'
+import { ExitPagesDetails } from './stats/pages/exit-pages'
 import LocationsModal from './stats/modals/locations-modal'
 import BrowsersModal from './stats/modals/devices/browsers-modal'
 import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
@@ -101,17 +101,17 @@ export const referrersGoogleRoute = {
 
 export const topPagesRoute = {
   path: 'pages',
-  element: <PagesModal />
+  element: <PagesDetails />
 }
 
 export const entryPagesRoute = {
   path: 'entry-pages',
-  element: <EntryPagesModal />
+  element: <EntryPagesDetails />
 }
 
 export const exitPagesRoute = {
   path: 'exit-pages',
-  element: <ExitPagesModal />
+  element: <ExitPagesDetails />
 }
 
 export const countriesRoute = {

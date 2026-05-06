@@ -9,15 +9,15 @@ import {
   OrderBy,
   useOrderBy,
   useRememberOrderBy
-} from '../../hooks/use-order-by'
+} from '../../hooks/use-order-by-legacy'
 import { Metric } from '../reports/metrics'
 import * as metricsModule from '../reports/metrics'
 import { BreakdownResultMeta, DashboardState } from '../../dashboard-state'
-import { ColumnConfiguraton } from '../../components/table'
-import { BreakdownTable } from './breakdown-table'
+import { ColumnConfiguraton } from '../../components/table-legacy'
+import { BreakdownTable } from './breakdown-table-legacy'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import { SharedReportProps } from '../reports/list'
+import { SharedReportProps } from '../reports/list-legacy'
 import { hasConversionGoalFilter } from '../../util/filters'
 
 export type ReportInfo = {

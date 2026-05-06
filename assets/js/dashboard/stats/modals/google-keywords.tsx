@@ -11,8 +11,8 @@ import {
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'
 import { DashboardState } from '../../dashboard-state'
-import { ColumnConfiguraton } from '../../components/table'
-import { BreakdownTable } from './breakdown-table'
+import { ColumnConfiguraton } from '../../components/table-legacy'
+import { BreakdownTable } from './breakdown-table-legacy'
 
 type GoogleKeywordItem = {
   visitors: string

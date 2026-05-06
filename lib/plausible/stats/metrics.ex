@@ -19,6 +19,7 @@ defmodule Plausible.Stats.Metrics do
                  :visit_duration,
                  :events,
                  :conversion_rate,
+                 :total_visitors,
                  :group_conversion_rate,
                  :time_on_page,
                  :percentage,

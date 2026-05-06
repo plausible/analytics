@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import { cycleSortDirection, SortDirection } from '../hooks/use-order-by'
+import { cycleSortDirection, SortDirection } from '../hooks/use-order-by-legacy'
 import classNames from 'classnames'
 
 export const SortButton = ({
