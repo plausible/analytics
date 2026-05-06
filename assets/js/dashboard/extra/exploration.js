@@ -40,6 +40,7 @@ const EMPTY_JOURNEY_STATE = {
   funnel: [],
   activeResults: [],
   activeFilter: '',
+  // list of suggestions the user saw when picking step
   frozen: {},
   provisional: {}
 }
@@ -803,17 +804,31 @@ function useExplorationData(site, dashboardState, inViewport) {
         setState((prev) => {
           const next = { ...prev, activeResults: response?.next ?? [] }
           if (includeFunnel) {
-            const newFunnel = response?.funnel ?? []
-            next.funnel = newFunnel
+            let newFunnel = response?.funnel ?? []
             next.provisional = {}
+
+            // Truncate the funnel at first 0-visitors step.
+            // This happens when the dashboard state narrows (e.g. shorter time range)
+            // and the existing steps can no longer be fulfilled.
+            const firstZeroIdx = newFunnel.findIndex((f) => f.visitors === 0)
+            if (firstZeroIdx !== -1) {
+              newFunnel = newFunnel.slice(0, firstZeroIdx)
+              next.steps = prev.steps.slice(0, firstZeroIdx)
+              next.frozen = truncateFrozenAt(prev.frozen, firstZeroIdx)
+              next.activeResults = []
+            }
+
+            next.funnel = newFunnel
+
             // Sync subpaths_count on existing steps from the refreshed funnel
             // so that step identity stays consistent with what the API now
             // reports for the current period. Without this, a period change
             // leaves stale subpaths_count values in steps while frozen
             // candidates and new results carry fresh values, causing duplicate
             // entries and double-highlighted rows.
-            if (newFunnel.length > 0 && prev.steps.length > 0) {
-              const synced = prev.steps.map((s, idx) =>
+            const currentSteps = next.steps ?? prev.steps
+            if (newFunnel.length > 0 && currentSteps.length > 0) {
+              const synced = currentSteps.map((s, idx) =>
                 newFunnel[idx]
                   ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
                   : s
@@ -821,7 +836,8 @@ function useExplorationData(site, dashboardState, inViewport) {
               // Only replace the steps reference when something actually changed
               // to avoid re-triggering the main effect (steps is a dep array entry).
               const changed = synced.some(
-                (s, idx) => s.subpaths_count !== prev.steps[idx].subpaths_count
+                (s, idx) =>
+                  s.subpaths_count !== currentSteps[idx].subpaths_count
               )
               if (changed) next.steps = synced
             }
