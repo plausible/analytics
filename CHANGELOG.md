@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Add "Unknown" option to Countries shield, for when the country code is unrecognized
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
 - Always compare against the same time range in comparisons with "Today"
+- Added vertical indicator line to graph to make it easier to see what's hovered / selected
 
 ### Removed
 
@@ -25,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - Improved top bar and top stats UI/styling
 - Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
 - Standardised and improved segment and filter modals styling
+- Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
+- Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 
 ### Fixed
 

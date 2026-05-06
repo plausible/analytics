@@ -21,21 +21,50 @@ import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
+const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
+
+const DIRECTION_OPTIONS = [
+  { value: DIRECTION.FORWARD, label: 'Starting point' },
+  { value: DIRECTION.BACKWARD, label: 'End point' }
+]
+
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
-const EXPLORATION_DIRECTIONS = {
-  FORWARD: 'forward',
-  BACKWARD: 'backward'
+
+const MAX_VISIBLE_CANDIDATES = 10
+const MIN_GRID_COLUMNS = 3
+const PRELOAD_MAX_STEPS = 2
+const PRELOAD_MAX_CANDIDATES = MAX_VISIBLE_CANDIDATES
+
+const EMPTY_JOURNEY_STATE = {
+  steps: [],
+  funnel: [],
+  activeResults: [],
+  activeFilter: '',
+  frozen: {},
+  provisional: {}
 }
 
-function randomKey() {
-  return Math.random().toString()
+const EMPTY_SVG_DATA = {
+  paths: [],
+  width: 0,
+  height: 0,
+  clipY: 0,
+  clipHeight: 0
 }
 
-function stateWithApplicableFilters(dashboardState, steps) {
-  if (steps.length === 0) {
-    return dashboardState
-  }
+// Two steps are identical when their identity fields match.
+function stepsEqual(a, b) {
+  return (
+    a.name === b.name &&
+    a.pathname === b.pathname &&
+    a.includes_subpaths === b.includes_subpaths
+  )
+}
 
+// Strip page-related filters from the dashboard state when a journey is
+// active - the journey itself defines the page scope.
+function dashboardStateForQuery(dashboardState, steps) {
+  if (steps.length === 0) return dashboardState
   return {
     ...dashboardState,
     filters: dashboardState.filters.filter(
@@ -44,13 +73,35 @@ function stateWithApplicableFilters(dashboardState, steps) {
   }
 }
 
-function toJourney(steps) {
-  return steps.map((s) => ({
-    name: s.name,
-    pathname: s.pathname,
-    includes_subpaths: s.includes_subpaths,
-    subpaths_count: s.subpaths_count
-  }))
+// Serialize steps into the wire format expected by the API.
+function stepsToJourneyParam(steps) {
+  return JSON.stringify(
+    steps.map(({ name, pathname, includes_subpaths, subpaths_count }) => ({
+      name,
+      pathname,
+      includes_subpaths,
+      subpaths_count
+    }))
+  )
+}
+
+// Keep only entries with index < fromIndex, discarding everything at or after.
+// Used to truncate frozen candidate snapshots when the journey is shortened.
+function truncateFrozenAt(frozen, fromIndex) {
+  const result = {}
+  for (const key of Object.keys(frozen)) {
+    if (Number(key) < fromIndex) result[key] = frozen[key]
+  }
+  return result
+}
+
+// Column header label based on index and direction.
+function columnHeader(index, direction) {
+  if (index === 0) {
+    return direction === DIRECTION.BACKWARD ? 'End point' : 'Starting point'
+  }
+  const word = direction === DIRECTION.BACKWARD ? 'before' : 'after'
+  return `${index} step${index === 1 ? '' : 's'} ${word}`
 }
 
 function fetchNextWithFunnel(
@@ -61,14 +112,11 @@ function fetchNextWithFunnel(
   direction,
   includeFunnel
 ) {
-  const stateToUse = stateWithApplicableFilters(dashboardState, steps)
-  const journey = toJourney(steps)
-
   return api.post(
     url.apiPath(site, '/exploration/next-with-funnel'),
-    stateToUse,
+    dashboardStateForQuery(dashboardState, steps),
     {
-      journey: JSON.stringify(journey),
+      journey: stepsToJourneyParam(steps),
       search_term: filter,
       direction,
       include_funnel: includeFunnel
@@ -80,172 +128,75 @@ function fetchInterestingFunnel(site, dashboardState) {
   return api.post(
     url.apiPath(site, '/exploration/interesting-funnel'),
     dashboardState,
-    { max_steps: 2, max_candidates: 6 }
+    { max_steps: PRELOAD_MAX_STEPS, max_candidates: PRELOAD_MAX_CANDIDATES }
   )
 }
 
-function isSameStep(step, otherStep) {
-  return (
-    step.name === otherStep.name &&
-    step.pathname === otherStep.pathname &&
-    step.includes_subpaths === otherStep.includes_subpaths
-  )
-}
-
-function truncateFrozenResultsAtIndex(frozenResults, fromIndex) {
-  const next = {}
-  Object.keys(frozenResults).forEach((key) => {
-    const idx = Number(key)
-    if (idx < fromIndex) next[idx] = frozenResults[key]
-  })
-  return next
-}
-
-function DirectionDropdown({ direction, onDirectionChange }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-    function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
-
-  const label =
-    direction === EXPLORATION_DIRECTIONS.FORWARD
-      ? 'Starting point'
-      : 'End point'
-
-  return (
-    <div ref={ref} className="relative shrink-0">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
-      >
-        {label}
-        <ChevronUpDownIcon className="size-3.5 shrink-0" />
-      </button>
-      {open && (
-        <div
-          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
-        >
-          {[
-            [EXPLORATION_DIRECTIONS.FORWARD, 'Starting point'],
-            [EXPLORATION_DIRECTIONS.BACKWARD, 'End point']
-          ].map(([value, optionLabel]) => (
-            <button
-              key={value}
-              onClick={() => {
-                onDirectionChange(value)
-                setOpen(false)
-              }}
-              className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${
-                direction === value
-                  ? popover.items.classNames.selectedOption
-                  : ''
-              }`}
-              data-selected={direction === value}
-            >
-              {optionLabel}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Returns the x coordinate of a column's right or left edge,
-// adjusted for the container's scroll position so it is stable
-// in SVG/document space even when the user scrolls horizontally.
+// x-coordinate of a column element's left or right edge in the coordinate
+// space of the scroll container, stable across horizontal scrolling.
 function columnEdgeX(colEl, side, containerRect, scrollLeft) {
   const rect = colEl.getBoundingClientRect()
   const edgeX = side === 'right' ? rect.right : rect.left
   return edgeX - containerRect.left + scrollLeft
 }
 
-// Returns the vertical midpoint of a step row element relative to
-// the top of the scroll container (not the viewport).
+// Vertical midpoint of a step row relative to the top of the container.
 function stepRowMidY(stepRowEl, containerRect) {
   const rect = stepRowEl.getBoundingClientRect()
   return (rect.top + rect.bottom) / 2 - containerRect.top
 }
 
-// Builds an SVG path string for a stepped connector with rounded
-// corners between two points. The path goes: horizontal → rounded
-// corner → vertical → rounded corner → horizontal.
+// SVG path for a stepped connector with rounded corners.
 function steppedPath(x1, y1, x2, y2) {
   const mx = (x1 + x2) / 2
   const dy = y2 - y1
 
   if (Math.abs(dy) < 1) {
-    // Points are on the same horizontal line — plain horizontal segment.
     return `M ${x1} ${y1} H ${x2}`
   }
 
   const r = Math.min(10, Math.abs(dy) / 2)
 
   if (dy > 0) {
-    // Target is below: corners curve downward then outward.
     return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 1 ${mx} ${y1 + r} V ${y2 - r} A ${r} ${r} 0 0 0 ${mx + r} ${y2} H ${x2}`
   } else {
-    // Target is above: corners curve upward then outward.
     return `M ${x1} ${y1} H ${mx - r} A ${r} ${r} 0 0 0 ${mx} ${y1 - r} V ${y2 + r} A ${r} ${r} 0 0 1 ${mx + r} ${y2} H ${x2}`
   }
 }
 
-// Computes the clip rect that confines connectors to the list area,
-// so they don't bleed into column headers.
+// Clip rect that keeps connectors inside the list area,
+// preventing them from bleeding into column headers.
 function listClipRect(container, containerRect) {
   const firstList = container.querySelector('[data-exploration-list]')
-  const listRect = firstList ? firstList.getBoundingClientRect() : null
-  return {
-    y: listRect ? listRect.top - containerRect.top : 0,
-    height: listRect ? listRect.height : container.clientHeight
-  }
+  if (!firstList) return { y: 0, height: container.clientHeight }
+  const rect = firstList.getBoundingClientRect()
+  return { y: rect.top - containerRect.top, height: rect.height }
 }
 
-function emptyConnectorSvgData() {
-  return {
-    paths: [],
-    width: 0,
-    height: 0,
-    clipY: 0,
-    clipHeight: 0
-  }
-}
-
-function calculateConnectors(container, steps) {
+function computeConnectors(container, steps) {
   const containerRect = container.getBoundingClientRect()
-  const newPaths = []
-
-  const columns = container.querySelectorAll(`[data-exploration-column]`)
-  const stepRows = container.querySelectorAll(`[data-exploration-step]`)
+  const paths = []
 
   for (let i = 0; i < steps.length - 1; i++) {
-    const colA = columns[i]
-    const colB = columns[i + 1]
+    // Query by explicit column index so DOM order never causes a mismatch.
+    const colA = container.querySelector(`[data-exploration-column="${i}"]`)
+    const colB = container.querySelector(`[data-exploration-column="${i + 1}"]`)
+    const rowA = container.querySelector(`[data-exploration-step="${i}"]`)
+    const rowB = container.querySelector(`[data-exploration-step="${i + 1}"]`)
 
-    const stepRowA = stepRows[i]
-    const stepRowB = stepRows[i + 1]
-
-    if (colA && stepRowA && colB && stepRowB) {
+    if (colA && colB && rowA && rowB) {
       const x1 = columnEdgeX(colA, 'right', containerRect, container.scrollLeft)
       const x2 = columnEdgeX(colB, 'left', containerRect, container.scrollLeft)
-      const y1 = stepRowMidY(stepRowA, containerRect)
-      const y2 = stepRowMidY(stepRowB, containerRect)
-
-      newPaths.push(steppedPath(x1, y1, x2, y2))
+      const y1 = stepRowMidY(rowA, containerRect)
+      const y2 = stepRowMidY(rowB, containerRect)
+      paths.push(steppedPath(x1, y1, x2, y2))
     }
   }
 
   const clip = listClipRect(container, containerRect)
 
   return {
-    paths: newPaths,
+    paths,
     width: container.scrollWidth,
     height: container.clientHeight,
     clipY: clip.y,
@@ -253,47 +204,44 @@ function calculateConnectors(container, steps) {
   }
 }
 
-function PathConnectors({ steps, containerRef }) {
-  const [svgData, setSvgData] = useState(emptyConnectorSvgData)
+// layoutKey is bumped whenever the DOM may have changed in a way that is not
+// reflected by a steps reference change, e.g. a dashboardState update. It
+// is the caller's responsibility to increment it after such changes.
+function PathConnectors({ steps, containerRef, layoutKey }) {
+  const [svgData, setSvgData] = useState(EMPTY_SVG_DATA)
 
-  const calculateCallback = useCallback(() => {
+  const recalculate = useCallback(() => {
     const container = containerRef.current
-
-    if (container) {
-      setSvgData(calculateConnectors(container, steps))
-    }
+    if (container) setSvgData(computeConnectors(container, steps))
   }, [steps, containerRef])
 
   useLayoutEffect(() => {
     const container = containerRef.current
 
     if (!container || steps.length < 2) {
-      setSvgData(emptyConnectorSvgData)
+      setSvgData(EMPTY_SVG_DATA)
       return
-    } else {
-      setSvgData(calculateConnectors(container, steps))
-
-      const observer = new ResizeObserver(calculateCallback)
-      observer.observe(container)
-      window.addEventListener('resize', calculateCallback)
-
-      const lists = Array.from(
-        container.querySelectorAll('[data-exploration-list]')
-      )
-
-      lists.forEach((list) =>
-        list.addEventListener('scroll', calculateCallback)
-      )
-
-      return () => {
-        observer.disconnect()
-        window.removeEventListener('resize', calculateCallback)
-        lists.forEach((list) =>
-          list.removeEventListener('scroll', calculateCallback)
-        )
-      }
     }
-  }, [steps, containerRef, calculateCallback])
+
+    setSvgData(computeConnectors(container, steps))
+
+    const observer = new ResizeObserver(recalculate)
+    observer.observe(container)
+    window.addEventListener('resize', recalculate)
+
+    const lists = Array.from(
+      container.querySelectorAll('[data-exploration-list]')
+    )
+    lists.forEach((list) => list.addEventListener('scroll', recalculate))
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', recalculate)
+      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
+    }
+    // layoutKey is intentionally included: it forces this effect to re-run
+    // and recalculate geometry after DOM updates that don't change steps.
+  }, [steps, containerRef, recalculate, layoutKey])
 
   if (svgData.paths.length === 0) return null
 
@@ -326,66 +274,245 @@ function PathConnectors({ steps, containerRef }) {
   )
 }
 
+function DirectionDropdown({ direction, onChange }) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  const currentLabel = DIRECTION_OPTIONS.find(
+    (o) => o.value === direction
+  )?.label
+
+  return (
+    <div ref={containerRef} className="relative shrink-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
+      >
+        {currentLabel}
+        <ChevronUpDownIcon className="size-3.5 shrink-0" />
+      </button>
+
+      {open && (
+        <div
+          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
+        >
+          {DIRECTION_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              data-selected={direction === value}
+              onClick={() => {
+                onChange(value)
+                setOpen(false)
+              }}
+              className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${direction === value ? popover.items.classNames.selectedOption : ''}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CandidateCard({
+  step,
+  visitors,
+  isSelected,
+  isDimmed,
+  selectedVisitors,
+  selectedConversionRate,
+  stepMaxVisitors,
+  colIndex,
+  onSelect
+}) {
+  const isCustomEvent = step.name !== 'pageview'
+
+  const visitorsToShow =
+    isSelected && selectedVisitors !== null ? selectedVisitors : visitors
+  const barWidth =
+    isSelected && selectedConversionRate !== null
+      ? selectedConversionRate
+      : Math.round((visitors / stepMaxVisitors) * 100)
+
+  const textColor = isDimmed
+    ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
+    : 'text-gray-900 dark:text-gray-100'
+
+  const subpathColor = isDimmed
+    ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'
+    : 'text-gray-500 dark:text-gray-400'
+
+  const barBg = isSelected
+    ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
+    : isDimmed
+      ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
+      : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
+
+  const rowBg = isSelected
+    ? 'bg-gray-100/60 dark:bg-gray-850'
+    : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
+
+  return (
+    <li>
+      <button
+        data-exploration-step={isSelected ? colIndex : undefined}
+        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
+        onClick={() => onSelect(isSelected ? null : step)}
+      >
+        <div
+          className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
+          style={{ width: `${barWidth}%` }}
+        />
+
+        <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
+          <span
+            className={`flex items-center gap-1.5 min-w-0 ${textColor}`}
+            title={
+              step.includes_subpaths
+                ? `${step.label} > all (${step.subpaths_count})`
+                : step.label
+            }
+          >
+            {isCustomEvent && (
+              <CursorIcon
+                title="Custom event"
+                className={`size-4 shrink-0 ${textColor}`}
+              />
+            )}
+            <span className="truncate">{step.label}</span>
+            {step.includes_subpaths && (
+              <>
+                <ChevronRightIcon
+                  className={`mt-0.5 size-3 shrink-0 ${subpathColor}`}
+                />
+                <span className={`shrink-0 ${subpathColor}`}>
+                  all{' '}
+                  <span className="text-[0.85rem]">
+                    ({numberShortFormatter(step.subpaths_count)})
+                  </span>
+                </span>
+              </>
+            )}
+          </span>
+
+          <span className={`shrink-0 font-medium ${textColor}`}>
+            <Tooltip info={numberLongFormatter(visitorsToShow)}>
+              {numberShortFormatter(visitorsToShow)}
+            </Tooltip>
+          </span>
+        </div>
+      </button>
+    </li>
+  )
+}
+
+function ColumnEmptyState({ active, filter, colIndex, direction }) {
+  if (!active) {
+    const prompt =
+      colIndex === 1
+        ? direction === DIRECTION.BACKWARD
+          ? 'Select an end point to continue'
+          : 'Select a starting point to continue'
+        : 'Select an event to continue'
+
+    return (
+      <span className="flex flex-col items-center gap-2">
+        <CursorIcon className="size-5" />
+        {prompt}
+      </span>
+    )
+  }
+
+  if (filter) {
+    return (
+      <span className="flex flex-col items-center gap-2">
+        <MagnifyingGlassIcon className="size-4.5" />
+        No events found
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex flex-col items-center gap-2">
+      <FlagIcon className="size-4.5" />
+      No further steps found for the selected period and filters
+    </span>
+  )
+}
+
 function ExplorationColumn({
+  colIndex,
+  direction,
+  onDirectionChange,
   header,
-  // null means column should not be rendered (no preceding step selected)
+  headerConversionRate,
   active,
-  results,
   loading,
-  maxVisitors,
+  results,
   selected,
   selectedVisitors,
   selectedConversionRate,
-  onSelect,
-  onFilterChange,
+  maxVisitors,
   filter,
-  direction,
-  onDirectionChange,
-  headerConversionRate,
-  colIndex,
-  className
+  onFilterChange,
+  onSelect
 }) {
-  const debouncedOnFilterChange = useDebounce((event) =>
-    onFilterChange(event.target.value)
+  const debouncedFilterChange = useDebounce((e) =>
+    onFilterChange(e.target.value)
   )
 
-  const stepMaxVisitors = maxVisitors || results[0]?.visitors
-
-  // When a step is selected we keep showing the full candidate list so the
-  // user can quickly switch to another option. If we don't have the candidate
-  // list (e.g. preloaded journey), fall back to a synthetic single item built
-  // from the funnel data so the column still renders the selected step.
+  // When a step is selected but there are no candidate results, e.g. from a
+  // preloaded journey, synthesise a single-item list from the funnel data so
+  // the selected step is still rendered in the column.
   const listItems =
     selected && results.length === 0
       ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
-      : results.slice(0, 10)
+      : results.slice(0, MAX_VISIBLE_CANDIDATES)
+
+  const stepMaxVisitors = maxVisitors ?? results[0]?.visitors
+
+  const showSearch = active && !selected && (results.length > 0 || filter)
 
   return (
     <div
       data-exploration-column={colIndex}
-      className={`bg-gray-50 dark:bg-gray-850 rounded-lg overflow-hidden ${className || ''}`}
+      className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
     >
       <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
           <DirectionDropdown
             direction={direction}
-            onDirectionChange={onDirectionChange}
+            onChange={onDirectionChange}
           />
         ) : (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {header}
           </span>
         )}
-        {!selected && active && (results.length > 0 || filter) && (
+
+        {showSearch && (
           <input
             data-testid="search-input"
             type="text"
             defaultValue={filter}
             placeholder="Search"
-            onChange={debouncedOnFilterChange}
+            onChange={debouncedFilterChange}
             className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
+
         {headerConversionRate && (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
@@ -394,357 +521,264 @@ function ExplorationColumn({
       </div>
 
       {loading ? (
-        <div className="h-110 flex items-center justify-center">
+        <div className="h-92 flex items-center justify-center">
           <div className="mx-auto loading pt-4">
             <div></div>
           </div>
         </div>
-      ) : results.length === 0 && !selected ? (
-        <div className="h-110 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
-          {!active ? (
-            <span className="flex flex-col items-center gap-2">
-              <CursorIcon className="size-5" />
-              {colIndex === 1
-                ? direction === EXPLORATION_DIRECTIONS.BACKWARD
-                  ? 'Select an end point to continue'
-                  : 'Select a starting point to continue'
-                : 'Select an event to continue'}
-            </span>
-          ) : filter ? (
-            <span className="flex flex-col items-center gap-2">
-              <MagnifyingGlassIcon className="size-4.5" />
-              {'No events found'}
-            </span>
-          ) : (
-            <span className="flex flex-col items-center gap-2">
-              <FlagIcon className="size-4.5" />
-              No further steps found for the selected period and filters
-            </span>
-          )}
+      ) : listItems.length === 0 ? (
+        <div className="h-92 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
+          <ColumnEmptyState
+            active={active}
+            filter={filter}
+            colIndex={colIndex}
+            direction={direction}
+          />
         </div>
       ) : (
         <ul
           data-exploration-list
-          className="flex flex-col gap-y-2 px-2 pb-2 h-110 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
+          className="flex flex-col gap-y-1 px-2 pb-2 h-92 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
         >
-          {listItems.map(({ step, visitors }) => {
-            const isSelected = !!selected && isSameStep(step, selected)
-            const isDimmed = !!selected && !isSelected
-            const isCustomEvent = step.name !== 'pageview'
-            const visitorsToShow =
-              isSelected && selectedVisitors !== null
-                ? selectedVisitors
-                : visitors
-            const barWidth =
-              isSelected && selectedConversionRate !== null
-                ? selectedConversionRate
-                : Math.round((visitors / stepMaxVisitors) * 100)
-            const label = step.label
-
-            return (
-              <li key={label}>
-                <button
-                  data-exploration-step={isSelected ? colIndex : undefined}
-                  className={`group w-full border text-left px-4 py-3 text-sm rounded-md focus:outline-none ${
-                    isSelected
-                      ? 'bg-indigo-50 dark:bg-gray-600/70 border-indigo-100 dark:border-transparent'
-                      : 'bg-white dark:bg-gray-750 border-gray-150 dark:border-gray-750'
-                  }`}
-                  onClick={() => onSelect(isSelected ? null : step)}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span
-                      className={`flex items-center gap-1.5 min-w-0 ${
-                        isDimmed
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-900 dark:text-gray-100'
-                      }`}
-                      title={
-                        step.includes_subpaths
-                          ? `${label} > all (${step.subpaths_count})`
-                          : label
-                      }
-                    >
-                      {isCustomEvent && (
-                        <CursorIcon
-                          title="Custom event"
-                          className={`size-4 shrink-0 ${isDimmed ? 'text-gray-300 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
-                        />
-                      )}
-                      <span className="truncate">{label}</span>
-                      {step.includes_subpaths && (
-                        <>
-                          <ChevronRightIcon
-                            className={`mt-0.5 size-3 shrink-0 ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
-                          />
-                          <span
-                            className={`shrink-0 ${isDimmed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
-                          >
-                            all{' '}
-                            <span className="text-[0.85rem]">
-                              ({numberShortFormatter(step.subpaths_count)})
-                            </span>
-                          </span>
-                        </>
-                      )}
-                    </span>
-                    <span
-                      className={`shrink-0 font-medium ${
-                        isDimmed
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-800 dark:text-gray-200'
-                      }`}
-                    >
-                      <Tooltip info={numberLongFormatter(visitorsToShow)}>
-                        {numberShortFormatter(visitorsToShow)}
-                      </Tooltip>
-                    </span>
-                  </div>
-                  <div
-                    className={`h-1 rounded-full overflow-hidden ${
-                      isSelected
-                        ? 'bg-indigo-200/70 dark:bg-gray-500/60'
-                        : isDimmed
-                          ? 'bg-gray-150 dark:bg-gray-700'
-                          : 'bg-gray-150 dark:bg-gray-600'
-                    }`}
-                  >
-                    <div
-                      className={`h-full rounded-full transition-[width] ease-in-out ${
-                        isSelected
-                          ? 'bg-indigo-500 dark:bg-indigo-400'
-                          : isDimmed
-                            ? 'bg-indigo-200 dark:bg-indigo-400/30'
-                            : 'bg-indigo-300 dark:bg-indigo-400/75 group-hover:bg-indigo-400 dark:group-hover:bg-indigo-400'
-                      }`}
-                      style={{ width: `${barWidth}%` }}
-                    />
-                  </div>
-                </button>
-              </li>
-            )
-          })}
+          {listItems.map(({ step, visitors }) => (
+            <CandidateCard
+              key={`${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
+              step={step}
+              visitors={visitors}
+              isSelected={!!selected && stepsEqual(step, selected)}
+              isDimmed={!!selected && !stepsEqual(step, selected)}
+              selectedVisitors={selectedVisitors}
+              selectedConversionRate={selectedConversionRate}
+              stepMaxVisitors={stepMaxVisitors}
+              colIndex={colIndex}
+              onSelect={onSelect}
+            />
+          ))}
         </ul>
       )}
     </div>
   )
 }
 
-function columnHeader(index, direction) {
-  if (index === 0) {
-    return direction === EXPLORATION_DIRECTIONS.BACKWARD
-      ? 'End point'
-      : 'Starting point'
-  }
+// Compute provisional funnel entries for a newly selected step so the UI
+// displays sensible values immediately before the API responds.
+function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
+  const match = sourceResults.find(({ step: s }) => stepsEqual(s, step))
+  if (!match) return {}
 
-  return `${index} step${index === 1 ? '' : 's'} ${
-    direction === EXPLORATION_DIRECTIONS.BACKWARD ? 'before' : 'after'
-  }`
+  const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
+  const conversionRate = Math.round((match.visitors / firstStepVisitors) * 100)
+  return {
+    [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
+  }
 }
 
-export function FunnelExploration() {
-  const site = useSiteContext()
-  const { dashboardState } = useDashboardStateContext()
-  const [inViewport, setInViewport] = useState(false)
+// useExplorationData manages all async data fetching, cancellation, and
+// journey state.
+function useExplorationData(site, dashboardState, inViewport) {
+  const [state, setState] = useState(EMPTY_JOURNEY_STATE)
+  const [activeLoading, setActiveLoading] = useState(false)
+  // Incremented whenever the dashboardState or site changes so that
+  // PathConnectors re-runs its layout effect and recalculates connector
+  // geometry against the freshly rendered DOM. Steps alone do not change
+  // on a context switch, so without this the SVG paths would be stale.
+  const [layoutKey, setLayoutKey] = useState(0)
 
-  const [steps, setSteps] = useState([])
-  const [direction, setDirection] = useState(EXPLORATION_DIRECTIONS.FORWARD)
-  const [funnel, setFunnel] = useState([])
-  // Results for the active (last, unselected) column
-  const [activeColumnResults, setActiveColumnResults] = useState([])
-  const [activeColumnFilter, setActiveColumnFilter] = useState('')
-  const [activeColumnLoading, setActiveColumnLoading] = useState(false)
-  // Snapshot of candidate results at the moment a step was selected, kept per
-  // column index so previously-active columns can keep showing their full
-  // candidate list (with the selected option highlighted) instead of
-  // collapsing to a single item.
-  const [frozenColumnResults, setFrozenColumnResults] = useState({})
-  // Initial visitor/bar data for a newly selected step, held until
-  // real funnel response arrives. Prevents from flashing "0 visitors"
-  // during the loading window.
-  const [provisionalFunnelEntries, setProvisionalFunnelEntries] = useState({})
-  // Workaround for force refreshing connectors between steps
-  // when dashboardState changes. Currently the connectors
-  // logic extracts part of the state from DOM, which shouldn't be the
-  // case. It will eventually be properlu rewritten and the workaround
-  // will no longer be needed.
-  const [connectorsKey, setConnectorsKey] = useState(randomKey)
-  // Tracks the steps/direction/dashboardState values from the previous effect
-  // run so we can tell whether the journey changed (needs funnel) or only the
-  // search filter changed (next steps only, no funnel).
-  const prevStepsRef = useRef(steps)
-  const prevDirectionRef = useRef(direction)
-  const prevDashboardStateRef = useRef(dashboardState)
+  // Track whether the initial preload has fired and whether the most recent
+  // funnel data came from that preload, so we skip an immediately redundant
+  // funnel refetch.
   const preloadFiredRef = useRef(false)
   const funnelFromPreloadRef = useRef(false)
-  // Bumped whenever the user actively changes the journey or direction.
-  // Used to discard stale preload-driven candidate fetches that resolve
-  // after the user has already navigated away from the preloaded prefix.
+
+  // Ref-copies of the previous dependency values so the main effect can detect
+  // which dimension changed without adding them to the dep array.
+  const prevStepsRef = useRef(state.steps)
+  const prevDirectionRef = useRef(DIRECTION.FORWARD)
+  const prevDashboardStateRef = useRef(dashboardState)
+
+  // Incremented on every user-driven journey mutation. Stale async callbacks
+  // capture the version at dispatch time and abort if it no longer matches.
   const journeyVersionRef = useRef(0)
 
-  function handleSelect(columnIndex, selected) {
-    journeyVersionRef.current++
-    // Reset the active-column filter whenever the journey changes
-    setActiveColumnFilter('')
+  // Direction lives in a ref so that changing it resets state in one render
+  // without causing a double-fetch from a direction state update racing with
+  // a steps state update.
+  const directionRef = useRef(DIRECTION.FORWARD)
 
-    if (selected === null) {
-      setProvisionalFunnelEntries({})
-      setActiveColumnResults([])
-      setActiveColumnLoading(true)
-      setFrozenColumnResults((prev) =>
-        truncateFrozenResultsAtIndex(prev, columnIndex)
-      )
-      setSteps(steps.slice(0, columnIndex))
-    } else {
-      // Snapshot the clicked step's visitor count from the current results so
-      // the column can display a sensible value immediately, before the funnel
-      // API response arrives. The bar width is computed relative to the first
-      // step's visitor count (same baseline the real funnel uses).
-      const sourceResults =
-        columnIndex === steps.length
-          ? activeColumnResults
-          : frozenColumnResults[columnIndex] || []
-      const match = sourceResults.find(({ step }) => isSameStep(step, selected))
-      if (match) {
-        const firstStepVisitors = funnel[0]?.visitors ?? match.visitors
-        const conversionRate = Math.round(
-          (match.visitors / firstStepVisitors) * 100
-        )
-        setProvisionalFunnelEntries({
-          [columnIndex]: {
-            visitors: match.visitors,
-            conversion_rate: conversionRate
-          }
-        })
-      } else {
-        setProvisionalFunnelEntries({})
-      }
-      setFrozenColumnResults((prev) => {
-        if (columnIndex === steps.length) {
-          // Selecting from the active column: freeze its current results so
-          // they remain visible in the now-selected column.
-          return {
-            ...truncateFrozenResultsAtIndex(prev, columnIndex),
-            [columnIndex]: activeColumnResults
-          }
+  const selectStep = useCallback((columnIndex, step) => {
+    ++journeyVersionRef.current
+
+    setState((prev) => {
+      if (step === null) {
+        // Deselect: truncate journey at columnIndex.
+        return {
+          ...prev,
+          steps: prev.steps.slice(0, columnIndex),
+          activeResults: [],
+          activeFilter: '',
+          frozen: truncateFrozenAt(prev.frozen, columnIndex),
+          provisional: {}
         }
-        // Selecting from a previously-frozen column: keep its frozen results
-        // (the user is browsing them) but drop anything beyond, since the
-        // journey downstream just changed.
-        return truncateFrozenResultsAtIndex(prev, columnIndex + 1)
-      })
-      setActiveColumnResults([])
-      setActiveColumnLoading(true)
-      setSteps([...steps.slice(0, columnIndex), selected])
-    }
-  }
+      }
 
-  function handleReset() {
-    journeyVersionRef.current++
-    setSteps([])
-    setFunnel([])
-    setActiveColumnResults([])
-    setActiveColumnFilter('')
-    setProvisionalFunnelEntries({})
-    setFrozenColumnResults({})
-  }
+      // Select: determine source results for provisional values.
+      const sourceResults =
+        columnIndex === prev.steps.length
+          ? prev.activeResults
+          : (prev.frozen[columnIndex] ?? [])
 
-  function handleDirectionSelect(nextDirection) {
-    if (nextDirection === direction) return
+      const newFrozen =
+        columnIndex === prev.steps.length
+          ? {
+              ...truncateFrozenAt(prev.frozen, columnIndex),
+              [columnIndex]: prev.activeResults
+            }
+          : truncateFrozenAt(prev.frozen, columnIndex + 1)
 
-    journeyVersionRef.current++
-    setDirection(nextDirection)
-    setSteps([])
-    setFunnel([])
-    setActiveColumnResults([])
-    setActiveColumnFilter('')
-    setProvisionalFunnelEntries({})
-    setFrozenColumnResults({})
-  }
+      return {
+        ...prev,
+        steps: [...prev.steps.slice(0, columnIndex), step],
+        activeResults: [],
+        activeFilter: '',
+        frozen: newFrozen,
+        provisional: provisionalEntry(
+          step,
+          columnIndex,
+          sourceResults,
+          prev.funnel
+        )
+      }
+    })
+  }, [])
 
-  // Frozen candidate lists were fetched against a specific site +
-  // dashboard filter context. When either changes the cached candidates
-  // become stale, so drop them and invalidate any in-flight preload
-  // backfills. We skip the initial run so we don't clobber the freshly
+  const reset = useCallback(() => {
+    ++journeyVersionRef.current
+    setState(EMPTY_JOURNEY_STATE)
+  }, [])
+
+  const setDirection = useCallback((newDirection) => {
+    if (newDirection === directionRef.current) return
+    directionRef.current = newDirection
+    ++journeyVersionRef.current
+    setState(EMPTY_JOURNEY_STATE)
+  }, [])
+
+  const setActiveFilter = useCallback((filter) => {
+    setState((prev) => ({ ...prev, activeFilter: filter }))
+  }, [])
+
+  // Frozen candidate lists were fetched against a specific site and dashboard
+  // filter context. When either changes the cached candidates become stale, so
+  // drop them. We also bump layoutKey so PathConnectors recalculates geometry
+  // after the DOM settles. Skip the initial run to avoid clobbering freshly
   // populated state on mount.
-  const initialFilterContextRef = useRef(true)
+  const isFirstContextChangeRef = useRef(true)
   useEffect(() => {
-    if (initialFilterContextRef.current) {
-      initialFilterContextRef.current = false
+    if (isFirstContextChangeRef.current) {
+      isFirstContextChangeRef.current = false
       return
     }
-    journeyVersionRef.current++
-    setFrozenColumnResults({})
+    ++journeyVersionRef.current
+    setState((prev) => ({ ...prev, frozen: {} }))
+    setLayoutKey((k) => k + 1)
   }, [site, dashboardState])
 
-  // On first render fire the interesting-funnel preload and skip the normal
-  // next-with-funnel fetch. Once the preload resolves it sets steps
-  // and funnel, which re-triggers this effect for the next-step candidates fetch.
-  //
-  // On subsequent renders (via user interaction) fetch next steps and,
-  // if the journey changed, also refetch the funnel.
   useEffect(() => {
     if (!inViewport) return
 
+    const currentDirection = directionRef.current
+    const steps = state.steps
+    const activeFilter = state.activeFilter
+
     const journeyChanged =
       prevStepsRef.current !== steps ||
-      prevDirectionRef.current !== direction ||
+      prevDirectionRef.current !== currentDirection ||
       prevDashboardStateRef.current !== dashboardState
 
     prevStepsRef.current = steps
-    prevDirectionRef.current = direction
+    prevDirectionRef.current = currentDirection
     prevDashboardStateRef.current = dashboardState
 
-    let cancelled = false
+    // Capture the version at effect-dispatch time so stale responses are
+    // discarded if the user mutates the journey before the response arrives.
+    const capturedVersion = journeyVersionRef.current
+    const isStale = () => journeyVersionRef.current !== capturedVersion
 
+    setActiveLoading(true)
+
+    // On first render fire the interesting-funnel preload. Once the preload
+    // resolves it sets steps and funnel, which re-triggers this effect for
+    // the active-column candidate fetch.
     if (!preloadFiredRef.current) {
       preloadFiredRef.current = true
-      setActiveColumnLoading(true)
 
       fetchInterestingFunnel(site, dashboardState)
         .then((response) => {
-          if (cancelled) return
-          if (response && response.funnel && response.funnel.length > 0) {
+          if (isStale()) return
+          if (response?.funnel?.length > 0) {
             funnelFromPreloadRef.current = true
-            const preloadedSteps = response.funnel.map(({ step }) => step)
-            setSteps(preloadedSteps)
-            setFunnel(response.funnel)
-            setFrozenColumnResults(response.candidates)
+            setState((prev) => ({
+              ...prev,
+              steps: response.funnel.map(({ step }) => step),
+              funnel: response.funnel,
+              frozen: response.candidates ?? {}
+            }))
+            // The preload populates steps, which re-triggers this effect for
+            // the active-column candidate fetch, so leave loading=true.
           } else {
-            // Nothing to preload, fall back to a plain next-steps fetch
-            fetchNextWithFunnel(site, dashboardState, [], '', direction, false)
+            // No interesting funnel found; fall back to plain candidates for column 0.
+            fetchNextWithFunnel(
+              site,
+              dashboardState,
+              [],
+              '',
+              currentDirection,
+              false
+            )
               .then((r) => {
-                if (!cancelled) setActiveColumnResults(r?.next || [])
+                if (!isStale())
+                  setState((prev) => ({
+                    ...prev,
+                    activeResults: r?.next ?? []
+                  }))
               })
               .catch(() => {
-                if (!cancelled) setActiveColumnResults([])
+                if (!isStale())
+                  setState((prev) => ({ ...prev, activeResults: [] }))
               })
               .finally(() => {
-                if (!cancelled) setActiveColumnLoading(false)
+                if (!isStale()) setActiveLoading(false)
               })
           }
         })
         .catch(() => {
-          if (cancelled) return
-          fetchNextWithFunnel(site, dashboardState, [], '', direction, false)
+          if (isStale()) return
+          fetchNextWithFunnel(
+            site,
+            dashboardState,
+            [],
+            '',
+            currentDirection,
+            false
+          )
             .then((r) => {
-              if (!cancelled) setActiveColumnResults(r?.next || [])
+              if (!isStale())
+                setState((prev) => ({ ...prev, activeResults: r?.next ?? [] }))
             })
             .catch(() => {
-              if (!cancelled) setActiveColumnResults([])
+              if (!isStale())
+                setState((prev) => ({ ...prev, activeResults: [] }))
             })
             .finally(() => {
-              if (!cancelled) setActiveColumnLoading(false)
+              if (!isStale()) setActiveLoading(false)
             })
         })
 
-      return () => {
-        cancelled = true
-      }
+      return
     }
 
-    setActiveColumnLoading(true)
-    setActiveColumnResults([])
+    // On subsequent renders fetch next steps and, if the journey changed,
+    // also refetch the funnel.
 
     const funnelAlreadyLoaded = funnelFromPreloadRef.current
     funnelFromPreloadRef.current = false
@@ -753,92 +787,153 @@ export function FunnelExploration() {
       journeyChanged && steps.length > 0 && !funnelAlreadyLoaded
 
     if (journeyChanged && steps.length === 0) {
-      setFunnel([])
+      setState((prev) => ({ ...prev, funnel: [] }))
     }
 
     fetchNextWithFunnel(
       site,
       dashboardState,
       steps,
-      activeColumnFilter,
-      direction,
+      activeFilter,
+      currentDirection,
       includeFunnel
     )
       .then((response) => {
-        if (cancelled) return
-        setActiveColumnResults(response?.next || [])
-        if (includeFunnel) {
-          setFunnel(response?.funnel || [])
-          setProvisionalFunnelEntries({})
-        }
+        if (isStale()) return
+        setState((prev) => {
+          const next = { ...prev, activeResults: response?.next ?? [] }
+          if (includeFunnel) {
+            const newFunnel = response?.funnel ?? []
+            next.funnel = newFunnel
+            next.provisional = {}
+            // Sync subpaths_count on existing steps from the refreshed funnel
+            // so that step identity stays consistent with what the API now
+            // reports for the current period. Without this, a period change
+            // leaves stale subpaths_count values in steps while frozen
+            // candidates and new results carry fresh values, causing duplicate
+            // entries and double-highlighted rows.
+            if (newFunnel.length > 0 && prev.steps.length > 0) {
+              const synced = prev.steps.map((s, idx) =>
+                newFunnel[idx]
+                  ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
+                  : s
+              )
+              // Only replace the steps reference when something actually changed
+              // to avoid re-triggering the main effect (steps is a dep array entry).
+              const changed = synced.some(
+                (s, idx) => s.subpaths_count !== prev.steps[idx].subpaths_count
+              )
+              if (changed) next.steps = synced
+            }
+          }
+          return next
+        })
       })
       .catch(() => {
-        if (cancelled) return
-        setActiveColumnResults([])
-        if (includeFunnel) setFunnel([])
+        if (isStale()) return
+        setState((prev) => ({
+          ...prev,
+          activeResults: [],
+          ...(includeFunnel ? { funnel: [] } : {})
+        }))
       })
       .finally(() => {
-        if (!cancelled) setActiveColumnLoading(false)
+        if (!isStale()) setActiveLoading(false)
       })
+  }, [site, dashboardState, state.steps, state.activeFilter, inViewport])
+  // direction is intentionally excluded from the dep array. It lives in a ref
+  // and resets state, which does appear above, so the state update itself
+  // drives the re-run without double-firing.
 
-    setConnectorsKey(randomKey)
+  return {
+    state,
+    direction: directionRef.current,
+    activeLoading,
+    layoutKey,
+    selectStep,
+    reset,
+    setDirection,
+    setActiveFilter
+  }
+}
 
-    return () => {
-      cancelled = true
+// Scrolls the active column into view whenever the journey length changes.
+function useScrollActiveColumnIntoView(containerRef, stepsLength) {
+  const prevLengthRef = useRef(0)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el || stepsLength === prevLengthRef.current) {
+      prevLengthRef.current = stepsLength
+      return
     }
-  }, [site, dashboardState, steps, direction, activeColumnFilter, inViewport])
+    prevLengthRef.current = stepsLength
 
-  const initialLoading =
-    !inViewport || (steps.length === 0 && activeColumnLoading)
+    const activeColumn = el.querySelector(
+      `[data-exploration-column="${stepsLength}"]`
+    )
+    if (activeColumn) {
+      const { left: colLeft, right: colRight } =
+        activeColumn.getBoundingClientRect()
+      const { left: containerLeft, right: containerRight } =
+        el.getBoundingClientRect()
+      if (colRight > containerRight || colLeft < containerLeft) {
+        el.scrollTo({
+          left: el.scrollLeft + colLeft - containerLeft,
+          behavior: 'smooth'
+        })
+      }
+    } else {
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+    }
+  }, [containerRef, stepsLength])
+}
+
+export function FunnelExploration() {
+  const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
+  const [inViewport, setInViewport] = useState(false)
+
+  const {
+    state,
+    direction,
+    activeLoading,
+    layoutKey,
+    selectStep,
+    reset,
+    setDirection,
+    setActiveFilter
+  } = useExplorationData(site, dashboardState, inViewport)
+
+  const { steps, funnel, activeResults, activeFilter, frozen, provisional } =
+    state
+
+  const containerRef = useRef(null)
+  useScrollActiveColumnIntoView(containerRef, steps.length)
+
+  const initialLoading = !inViewport || (steps.length === 0 && activeLoading)
   const journeyEnded =
-    !activeColumnLoading &&
-    activeColumnResults.length === 0 &&
-    steps.length >= 1
+    !activeLoading && activeResults.length === 0 && steps.length >= 1
+  const activeColumnIndex = steps.length
+
   const numColumns = initialLoading
     ? 1
-    : journeyEnded || (activeColumnLoading && steps.length === 1)
+    : journeyEnded || (activeLoading && steps.length === 1)
       ? steps.length + 1
-      : Math.max(steps.length + 1, 3)
-  const gridColumns = Math.max(numColumns, 3)
-  const activeColumnIndex = steps.length
-  const containerRef = useRef(null)
+      : Math.max(steps.length + 1, MIN_GRID_COLUMNS)
+
+  const gridColumns = Math.max(numColumns, MIN_GRID_COLUMNS)
+
+  const noData =
+    !initialLoading &&
+    !activeLoading &&
+    steps.length === 0 &&
+    funnel.length === 0 &&
+    activeResults.length === 0
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
   const overallConversionVisitors = lastFunnelStep?.visitors ?? null
-
-  const prevStepsLengthRef = useRef(0)
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    if (steps.length !== prevStepsLengthRef.current) {
-      const activeColumn = el.querySelector(
-        `[data-exploration-column="${steps.length}"]`
-      )
-      if (activeColumn) {
-        const { left: colLeft, right: colRight } =
-          activeColumn.getBoundingClientRect()
-        const { left: containerLeft, right: containerRight } =
-          el.getBoundingClientRect()
-        if (colRight > containerRight || colLeft < containerLeft) {
-          el.scrollTo({
-            left: el.scrollLeft + colLeft - containerLeft,
-            behavior: 'smooth'
-          })
-        }
-      } else {
-        el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
-      }
-    }
-    prevStepsLengthRef.current = steps.length
-  }, [steps.length])
-
-  const noData =
-    !initialLoading &&
-    !activeColumnLoading &&
-    steps.length === 0 &&
-    funnel.length === 0 &&
-    activeColumnResults.length === 0
 
   return (
     <LazyLoader onVisible={() => setInViewport(true)}>
@@ -849,6 +944,7 @@ export function FunnelExploration() {
               ? `${funnel.length}-step user journey`
               : 'Explore user journeys'}
           </h4>
+
           {overallConversionRate != null && (
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
@@ -864,6 +960,7 @@ export function FunnelExploration() {
               </span>
             </div>
           )}
+
           <Tooltip
             info={<span className="whitespace-nowrap">Deselect all</span>}
             className={
@@ -871,7 +968,7 @@ export function FunnelExploration() {
             }
           >
             <button
-              onClick={handleReset}
+              onClick={reset}
               className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
             >
               <RefreshIcon className="size-3.5" />
@@ -888,66 +985,56 @@ export function FunnelExploration() {
             ref={containerRef}
             className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
             style={{
-              gridTemplateColumns: `repeat(${gridColumns}, minmax(20rem, 1fr))`
+              gridTemplateColumns: `repeat(${gridColumns}, minmax(18rem, 1fr))`
             }}
           >
             {Array.from({ length: numColumns }, (_, i) => {
               const isActive = i === activeColumnIndex
               const isReachable = steps.length >= i
 
+              const colResults = isActive ? activeResults : (frozen[i] ?? [])
+              const colLoading = isActive && (initialLoading || activeLoading)
+
+              const colSelectedVisitors =
+                provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
+              const colSelectedConversionRate =
+                provisional[i]?.conversion_rate ??
+                funnel[i]?.conversion_rate ??
+                null
+
+              const colHeaderConversionRate =
+                funnel[i]?.conversion_rate != null
+                  ? i === 0
+                    ? '100%'
+                    : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
+                  : null
+
               return (
                 <ExplorationColumn
                   key={i}
                   colIndex={i}
-                  header={columnHeader(i, direction)}
-                  active={isReachable}
-                  // Active column gets live results; previously-active (now
-                  // selected) columns get the candidate list that was visible at
-                  // the moment of selection so the user can switch options
-                  // without losing context. Pre-selected columns (e.g. populated
-                  // by interesting-funnel preload) have no frozen results and
-                  // fall back to a single-item display sourced from funnel data.
-                  results={
-                    isActive
-                      ? activeColumnResults
-                      : frozenColumnResults[i] || []
-                  }
-                  loading={
-                    isActive ? initialLoading || activeColumnLoading : false
-                  }
-                  selected={steps[i] || null}
-                  selectedVisitors={
-                    provisionalFunnelEntries[i]?.visitors ??
-                    funnel[i]?.visitors ??
-                    null
-                  }
-                  selectedConversionRate={
-                    provisionalFunnelEntries[i]?.conversion_rate ??
-                    funnel[i]?.conversion_rate ??
-                    null
-                  }
-                  maxVisitors={funnel[0]?.visitors ?? null}
-                  onSelect={(selected) => handleSelect(i, selected)}
-                  onFilterChange={isActive ? setActiveColumnFilter : () => {}}
-                  filter={isActive ? activeColumnFilter : ''}
                   direction={direction}
-                  onDirectionChange={
-                    i === 0 ? handleDirectionSelect : undefined
-                  }
-                  headerConversionRate={
-                    funnel[i]?.conversion_rate != null
-                      ? i === 0
-                        ? '100%'
-                        : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
-                      : null
-                  }
+                  onDirectionChange={i === 0 ? setDirection : undefined}
+                  header={columnHeader(i, direction)}
+                  headerConversionRate={colHeaderConversionRate}
+                  active={isReachable}
+                  loading={colLoading}
+                  results={colResults}
+                  selected={steps[i] ?? null}
+                  selectedVisitors={colSelectedVisitors}
+                  selectedConversionRate={colSelectedConversionRate}
+                  maxVisitors={funnel[0]?.visitors ?? null}
+                  filter={isActive ? activeFilter : ''}
+                  onFilterChange={isActive ? setActiveFilter : () => {}}
+                  onSelect={(step) => selectStep(i, step)}
                 />
               )
             })}
+
             <PathConnectors
-              key={connectorsKey}
               containerRef={containerRef}
               steps={steps}
+              layoutKey={layoutKey}
             />
           </div>
         )}

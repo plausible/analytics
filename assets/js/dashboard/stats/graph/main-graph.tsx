@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState
 } from 'react'
 import { UIMode, useTheme } from '../../theme-context'
@@ -47,6 +48,7 @@ const marginRight = 4
 const marginBottom = 32
 const defaultMarginLeft = 16 // this is adjusted by the Graph component based on y-axis label width
 const hoverBuffer = 4
+const HORIZONTAL_PAN_DELAY_MS = 100
 
 type MainGraphData = MainGraphResponse & {
   period: DashboardPeriod
@@ -64,13 +66,11 @@ type MainGraphYValues = Readonly<
 
 type TooltipState = {
   x: number
-  y: number
   selectedIndex: number | null
   persistent: boolean
 }
 const initialTooltipState: TooltipState = {
   x: 0,
-  y: 0,
   selectedIndex: null,
   persistent: false
 }
@@ -89,6 +89,7 @@ export const MainGraph = ({
   const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   const { selectedIndex } = tooltip
+  const panGestureStartTimeRef = useRef<number | null>(null)
   const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
@@ -96,6 +97,17 @@ export const MainGraph = ({
   useEffect(() => {
     setTooltip(initialTooltipState)
   }, [data])
+
+  useEffect(() => {
+    const onPointerCancel = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        panGestureStartTimeRef.current = null
+        setTooltip(initialTooltipState)
+      }
+    }
+    document.addEventListener('pointercancel', onPointerCancel)
+    return () => document.removeEventListener('pointercancel', onPointerCancel)
+  }, [])
 
   const {
     remappedData,
@@ -245,9 +257,26 @@ export const MainGraph = ({
   )
 
   const onPointerMove = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint, xPointer, yPointer, event }) => {
+    ({ inHoverableArea, closestPoint, event }) => {
       if (event instanceof PointerEvent && event.pointerType === 'touch') {
-        return setIsTouchDevice(true)
+        setIsTouchDevice(true)
+        if (tooltip.persistent && inHoverableArea && closestPoint) {
+          const now = Date.now()
+          // move the tooltip only when it is certain it's a y-pan
+          if (panGestureStartTimeRef.current === null) {
+            panGestureStartTimeRef.current = now
+          } else if (
+            now - panGestureStartTimeRef.current >=
+            HORIZONTAL_PAN_DELAY_MS
+          ) {
+            setTooltip({
+              selectedIndex: closestPoint.index,
+              x: closestPoint.x,
+              persistent: true
+            })
+          }
+        }
+        return
       }
       setIsTouchDevice(false)
       if (!inHoverableArea || !closestPoint) {
@@ -255,12 +284,11 @@ export const MainGraph = ({
       }
       return setTooltip({
         selectedIndex: closestPoint.index,
-        x: Math.floor(xPointer),
-        y: Math.floor(yPointer),
+        x: closestPoint.x,
         persistent: false
       })
     },
-    []
+    [tooltip.persistent]
   )
 
   const onGotPointerCapture = useCallback((event: unknown) => {
@@ -276,8 +304,12 @@ export const MainGraph = ({
   }, [])
 
   const onPointerLeave = useCallback(() => {
+    panGestureStartTimeRef.current = null
+    if (tooltip.persistent) {
+      return
+    }
     setTooltip(initialTooltipState)
-  }, [])
+  }, [tooltip.persistent])
 
   const showZoomToPeriod = canZoomToPeriod(
     interval,
@@ -315,7 +347,6 @@ export const MainGraph = ({
           return setTooltip({
             selectedIndex: closestPoint.index,
             x: closestPoint.x,
-            y: Math.min(...closestPoint.values.filter((y) => y !== null)),
             persistent: true
           })
         }
@@ -330,7 +361,10 @@ export const MainGraph = ({
 
   return (
     <Graph<MainGraphYValues>
-      className={showZoomToPeriod && selectedDatum ? 'cursor-pointer' : ''}
+      className={classNames(
+        showZoomToPeriod && selectedDatum ? 'cursor-pointer' : '',
+        tooltip.persistent ? 'touch-pan-y' : ''
+      )}
       highlightedIndex={selectedIndex}
       width={width}
       height={height}
@@ -361,7 +395,8 @@ export const MainGraph = ({
           interval={interval}
           metric={metric}
           x={tooltip.x}
-          y={tooltip.y}
+          // aligned to top of graph
+          y={0}
           datum={selectedDatum}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
@@ -425,17 +460,6 @@ const MainGraphTooltip = ({
         'absolute select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
         typeof onClick !== 'function' && 'pointer-events-none'
       )}
-      transition={
-        persistent
-          ? {
-              // enter delay on mobile is needed to prevent the tooltip from entering when the user starts to y-pan
-              // but the y-pan is not yet certain
-              enter: 'transition-opacity duration-0 delay-150',
-              enterFrom: 'opacity-0',
-              enterTo: 'opacity-100'
-            }
-          : {}
-      }
     >
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
         <div className="flex justify-between items-center rounded-sm">
