@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Fixed incline/decline percentages not showing in top stats in comparison mode
 - Fixed issue with timestamps being rendered incorrectly in segment menus and modals for some timezones
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
+- Fixed issue with users with billing role not being able to create personal segments
 
 ## v3.2.0 - 2026-01-16
 

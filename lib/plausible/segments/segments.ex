@@ -31,7 +31,7 @@ defmodule Plausible.Segments do
            )
          )}
 
-      site_role in @roles_with_personal_segments or site_role in @roles_with_maybe_site_segments ->
+      site_role in roles_with_personal_segments() or site_role in roles_with_maybe_site_segments() ->
         fields = fields ++ [:owner_id]
 
         {:ok,
@@ -456,8 +456,8 @@ defmodule Plausible.Segments do
     |> Plausible.Times.to_naive_datetime!(timezone)
   end
 
-  def roles_with_personal_segments(), do: [:viewer, :editor, :admin, :owner, :super_admin]
-  def roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
+  def roles_with_personal_segments(), do: @roles_with_personal_segments
+  def roles_with_maybe_site_segments(), do: @roles_with_maybe_site_segments
 
   def site_segments_available?(%Plausible.Site{} = site),
     do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
