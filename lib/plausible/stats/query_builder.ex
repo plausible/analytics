@@ -150,47 +150,59 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
-    now = parsed_query_params.now || DateTime.utc_now(:second)
+    {%{relative_date: relative_date}, query_fields} =
+      Map.split(parsed_query_params, [:relative_date, :skip_goal_existence_check])
 
-    %ParsedQueryParams{
-      input_date_range: input_date_range,
-      relative_date: relative_date,
-      metrics: metrics,
-      filters: filters,
-      dimensions: dimensions
-    } = parsed_query_params
-
-    relative_date = relative_date || Times.to_date(now, site.timezone)
-
-    utc_time_range =
-      input_date_range
-      |> build_datetime_range(site, relative_date, now)
-      |> DateTimeRange.to_timezone("Etc/UTC")
-
-    {preloaded_goals, revenue_warning, revenue_currencies} =
-      preload_goals_and_revenue(site, metrics, filters, dimensions)
-
-    consolidated_site_ids = get_consolidated_site_ids(site)
-
-    struct!(%Query{},
-      now: now,
-      input_date_range: input_date_range,
-      utc_time_range: utc_time_range,
+    struct!(%Query{}, Map.to_list(query_fields))
+    |> set_now()
+    |> set_utc_time_range(site, relative_date)
+    |> set_preloaded_goals_and_revenue(site)
+    |> Query.set(
       site_id: site.id,
-      metrics: metrics,
-      dimensions: dimensions,
-      filters: filters,
-      order_by: parsed_query_params.order_by,
-      pagination: parsed_query_params.pagination,
-      include: parsed_query_params.include,
       site_native_stats_start_at: site.native_stats_start_at,
-      consolidated_site_ids: consolidated_site_ids,
       timezone: site.timezone,
-      preloaded_goals: preloaded_goals,
-      revenue_warning: revenue_warning,
-      revenue_currencies: revenue_currencies,
+      consolidated_site_ids: get_consolidated_site_ids(site),
       debug_metadata: debug_metadata
     )
+  end
+
+  defp set_now(%Query{now: nil} = query), do: Query.set(query, now: DateTime.utc_now(:second))
+  defp set_now(query), do: query
+
+  defp set_utc_time_range(query, site, relative_date) do
+    relative_date = relative_date || Times.to_date(query.now, site.timezone)
+
+    utc_time_range =
+      query.input_date_range
+      |> build_datetime_range(site, relative_date, query.now)
+      |> DateTimeRange.to_timezone("Etc/UTC")
+
+    Query.set(query, utc_time_range: utc_time_range)
+  end
+
+  defp set_preloaded_goals_and_revenue(query, site) do
+    {preloaded_goals, revenue_warning, revenue_currencies} =
+      preload_goals_and_revenue(site, query.metrics, query.filters, query.dimensions)
+
+    Query.set(query,
+      preloaded_goals: preloaded_goals,
+      revenue_warning: revenue_warning,
+      revenue_currencies: revenue_currencies
+    )
+  end
+
+  def preload_goals_and_revenue(site, metrics, filters, dimensions) do
+    preloaded_goals =
+      Plausible.Stats.Goals.preload_needed_goals(site, dimensions, filters)
+
+    {revenue_warning, revenue_currencies} =
+      preload_revenue(site, preloaded_goals, metrics, dimensions)
+
+    {
+      preloaded_goals,
+      revenue_warning,
+      revenue_currencies
+    }
   end
 
   on_ee do
@@ -217,20 +229,6 @@ defmodule Plausible.Stats.QueryBuilder do
   def put_comparison_utc_time_range(%Query{} = query) do
     datetime_range = Comparisons.get_comparison_utc_time_range(query)
     struct!(query, comparison_utc_time_range: datetime_range)
-  end
-
-  def preload_goals_and_revenue(site, metrics, filters, dimensions) do
-    preloaded_goals =
-      Plausible.Stats.Goals.preload_needed_goals(site, dimensions, filters)
-
-    {revenue_warning, revenue_currencies} =
-      preload_revenue(site, preloaded_goals, metrics, dimensions)
-
-    {
-      preloaded_goals,
-      revenue_warning,
-      revenue_currencies
-    }
   end
 
   on_ee do
