@@ -435,12 +435,16 @@ defmodule Plausible.Stats.Exploration do
         }
       end)
 
-    types = %{name: :string, pathname: :string}
+    if to_exclude != [] do
+      types = %{name: :string, pathname: :string}
 
-    from m in subquery(query),
-      left_join: g in values(to_exclude, types),
-      on: g.name == m.name and g.pathname == m.pathname,
-      where: g.name == "" or m.includes_subpaths
+      from m in subquery(query),
+        left_join: g in values(to_exclude, types),
+        on: g.name == m.name and g.pathname == m.pathname,
+        where: g.name == "" or m.includes_subpaths
+    else
+      query
+    end
   end
 
   # Expand each (name, pathname, user_id) row into all prefix paths via

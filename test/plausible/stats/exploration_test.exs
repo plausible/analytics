@@ -1056,6 +1056,124 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step7.step.is_goal
         assert next_step7.visitors == 1
       end
+
+      test "suggestions matching implicit wildcard from previous step are excluded" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/a",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/a",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/a-blog",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{
+            name: "pageview",
+            pathname: "/a",
+            includes_subpaths: true,
+            subpaths_count: 2
+          }
+        ]
+
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+
+        assert next_step.step.label == "/a-blog"
+      end
+
+      test "suggestions matching goal pattern from previous step are excluded" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{"page_path" => "/a*"})
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/a",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/a",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/a/b",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/a-blog",
+            timestamp: DateTime.shift(now, minute: -290)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/a",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/blog",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{
+            label: "Visit /a*",
+            name: "pageview",
+            pathname: "/a*",
+            is_goal: true
+          }
+        ]
+
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+
+        assert next_step.step.label == "/blog"
+      end
     end
 
     describe "implicit wildcard pathnames" do
