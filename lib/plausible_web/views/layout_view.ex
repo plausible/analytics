@@ -6,6 +6,8 @@ defmodule PlausibleWeb.LayoutView do
   alias PlausibleWeb.Components.Billing.Notice
   alias PlausibleWeb.Components.Layout
 
+  require Plausible.Billing
+
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
@@ -123,7 +125,7 @@ defmodule PlausibleWeb.LayoutView do
         "Team",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          if(ee?() and current_team_role in [:owner, :billing],
+          if(ee?() and current_team_role in Plausible.Billing.allowed_roles(),
             do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
           ),
           if(current_team_role in [:owner, :billing, :admin, :editor],

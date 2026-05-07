@@ -29,7 +29,7 @@
           <p class="mt-4 text-gray-600 dark:text-gray-300 text-center text-sm">
             This shared link is locked because the owner of the site does not have access to the Shared Links feature. To restore it, the owner must upgrade to a suitable plan.
           </p>
-        <% %{site_role: role} when role in [:owner, :billing] -> %>
+        <% %{site_role: role} when role in Plausible.Billing.allowed_roles() -> %>
           <div class="mt-4 text-gray-600 dark:text-gray-300 text-center text-sm">
             <p>
               It looks like you don't have a valid subscription for this dashboard.

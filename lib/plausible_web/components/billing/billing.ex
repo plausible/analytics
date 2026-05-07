@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Components.Billing do
   use PlausibleWeb, :component
   use Plausible
 
+  require Plausible.Billing
+
   import PlausibleWeb.Components.Icons
 
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan}
@@ -423,7 +425,7 @@ defmodule PlausibleWeb.Components.Billing do
       end
 
     cond do
-      not is_nil(current_role) and current_role not in [:owner, :billing] ->
+      not is_nil(current_role) and current_role not in Plausible.Billing.allowed_roles() ->
         ~H"ask your team owner to upgrade their subscription."
 
       upgrade_assistance_required? ->

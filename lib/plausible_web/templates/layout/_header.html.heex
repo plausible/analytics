@@ -47,7 +47,7 @@
                 :if={
                   ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team]) and
                     (not Plausible.Teams.setup?(@conn.assigns[:current_team]) or
-                       @conn.assigns[:current_team_role] in [:owner, :billing])
+                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles())
                 }
                 class="hidden sm:block"
               >

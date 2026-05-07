@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   use PlausibleWeb, :live_view
   use Plausible
 
+  require Plausible.Billing
+
   import PlausibleWeb.Components.Billing.Helpers
 
   alias Plausible.Teams
@@ -13,7 +15,8 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   def mount(_params, _session, socket) do
     team = socket.assigns.current_team
 
-    if Teams.setup?(team) && socket.assigns.current_team_role not in [:owner, :billing] do
+    if Teams.setup?(team) &&
+         socket.assigns.current_team_role not in Plausible.Billing.allowed_roles() do
       {:ok, redirect(socket, to: Routes.site_path(socket, :index))}
     else
       subscription = Teams.Billing.get_subscription(team)

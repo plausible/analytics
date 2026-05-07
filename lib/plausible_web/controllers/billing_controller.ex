@@ -1,14 +1,17 @@
 defmodule PlausibleWeb.BillingController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+
   require Logger
   require Plausible.Billing.Subscription.Status
+  require Plausible.Billing
+
   alias Plausible.Billing
   alias Plausible.Billing.Subscription
 
   plug PlausibleWeb.RequireAccountPlug
 
-  plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :billing]
+  plug Plausible.Plugs.AuthorizeTeamAccess, Billing.allowed_roles()
 
   def ping_subscription(%Plug.Conn{} = conn, _params) do
     subscribed? = Plausible.Teams.Billing.has_active_subscription?(conn.assigns.current_team)

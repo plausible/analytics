@@ -6,6 +6,8 @@ defmodule Plausible.Billing do
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
+  defmacro allowed_roles(), do: [:owner, :billing]
+
   def subscription_created(params) do
     Repo.transaction(fn ->
       handle_subscription_created(params)
