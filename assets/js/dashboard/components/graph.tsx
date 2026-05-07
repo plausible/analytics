@@ -11,6 +11,7 @@ import classNames from 'classnames'
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
 const X_TICK_LENGTH_PX = 4
+const MINIMUM_X_LABEL_GAP_PX = 8
 const HIGHLIGHT_LINE_VERTICAL_SPILL_PX = 4
 
 type GraphYValues = ReadonlyArray<number | null>
@@ -101,7 +102,7 @@ function InnerGraph<T extends GraphYValues>({
   highlightedIndex
 }: GraphProps<T>) {
   const [extraMarginLeft, setExtraMarginLeft] = useState(0)
-
+  const [points, setPoints] = useState<Point<T>[]>([])
   const marginLeft = defaultMarginLeft + extraMarginLeft
   const xLeftEdge = marginLeft
   const xRightEdge = width - marginRight
@@ -109,9 +110,8 @@ function InnerGraph<T extends GraphYValues>({
   const yBottomEdge = height - marginBottom
 
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const pointsRef = useRef<Point<T>[] | null>(null)
 
-  // Effect to fully redraw chart from scratch
+  // Effect to redraw the chart from scratch
   useEffect(() => {
     if (!svgRef.current) {
       return
@@ -128,7 +128,7 @@ function InnerGraph<T extends GraphYValues>({
     const svg = d3.select(svgRef.current)
 
     const cleanup = () => {
-      pointsRef.current = null
+      setPoints([])
       svg.selectAll('*').remove()
     }
 
@@ -291,7 +291,7 @@ function InnerGraph<T extends GraphYValues>({
       }
     }
 
-    pointsRef.current = points
+    setPoints(points)
 
     // Unhide chart
     svg.attr('opacity', 1)
@@ -331,8 +331,7 @@ function InnerGraph<T extends GraphYValues>({
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg && pointsRef.current) {
-      const points = pointsRef.current
+    if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
 
       svg.on(
@@ -367,11 +366,11 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
-  }, [onPointerMove, isInHoverableArea, data])
+  }, [onPointerMove, isInHoverableArea, points])
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg && pointsRef.current) {
+    if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
       svg.on(
         'gotpointercapture',
@@ -387,11 +386,11 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('gotpointercapture', null)
       }
     }
-  }, [onGotPointerCapture, isInHoverableArea, data])
+  }, [onGotPointerCapture, points])
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg && pointsRef.current) {
+    if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
       svg.on(
         'pointerenter',
@@ -407,11 +406,11 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('pointerenter', null)
       }
     }
-  }, [onPointerEnter, isInHoverableArea, data])
+  }, [onPointerEnter, points])
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg && pointsRef.current) {
+    if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
       svg.on(
         'lostpointercapture pointerleave',
@@ -428,13 +427,12 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('lostpointercapture pointerleave', null)
       }
     }
-  }, [onPointerLeave, isInHoverableArea, data])
+  }, [onPointerLeave, points])
 
   useEffect(() => {
     const currentSvg = svgRef.current
-    if (currentSvg && pointsRef.current) {
+    if (currentSvg && points.length) {
       const svg = d3.select(currentSvg)
-      const points = pointsRef.current
       if (typeof onClick !== 'function') {
         svg.on('click', null)
       } else {
@@ -467,48 +465,42 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('click', null)
       }
     }
-  }, [onClick, isInHoverableArea, data])
+  }, [onClick, isInHoverableArea, points])
 
   useEffect(() => {
-    if (pointsRef.current) {
-      const currentPoints = pointsRef.current
-      currentPoints.forEach(({ dots }, index) =>
-        dots.forEach((g) =>
-          g.attr(
-            'data-active',
-            highlightedIndex !== null && index === highlightedIndex ? '' : null
-          )
+    points.forEach(({ dots }, index) =>
+      dots.forEach((g) =>
+        g.attr(
+          'data-active',
+          highlightedIndex !== null && index === highlightedIndex ? '' : null
         )
       )
+    )
 
-      if (svgRef.current) {
-        const svg = d3.select(svgRef.current)
-        let line = svg.select<SVGLineElement>(
-          `#${highlightIndicatorGroupId} line`
-        )
-        const shouldShowLine = typeof highlightedIndex === 'number'
-        if (shouldShowLine) {
-          const { x } = currentPoints[highlightedIndex]
-          if (line.empty()) {
-            line = svg.select(`#${highlightIndicatorGroupId}`).append('line')
-          }
-          line
-            .attr('x1', 0)
-            .attr('x2', 0)
-            .attr('y1', marginTop - HIGHLIGHT_LINE_VERTICAL_SPILL_PX)
-            .attr(
-              'y2',
-              height - marginBottom + HIGHLIGHT_LINE_VERTICAL_SPILL_PX
-            )
-            .attr('class', currentlySelectedLineClass)
-            .attr('transform', `translate(${x}, 0)`)
+    if (svgRef.current) {
+      const svg = d3.select(svgRef.current)
+      let line = svg.select<SVGLineElement>(
+        `#${highlightIndicatorGroupId} line`
+      )
+      const shouldShowLine = typeof highlightedIndex === 'number'
+      if (shouldShowLine) {
+        const { x } = points[highlightedIndex]
+        if (line.empty()) {
+          line = svg.select(`#${highlightIndicatorGroupId}`).append('line')
         }
-        if (!shouldShowLine && !line.empty()) {
-          line.remove()
-        }
+        line
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', marginTop - HIGHLIGHT_LINE_VERTICAL_SPILL_PX)
+          .attr('y2', height - marginBottom + HIGHLIGHT_LINE_VERTICAL_SPILL_PX)
+          .attr('class', currentlySelectedLineClass)
+          .attr('transform', `translate(${x}, 0)`)
+      }
+      if (!shouldShowLine && !line.empty()) {
+        line.remove()
       }
     }
-  }, [highlightedIndex, data, height, marginBottom, marginTop])
+  }, [height, highlightedIndex, marginBottom, marginTop, points])
 
   return (
     <svg
@@ -520,7 +512,7 @@ function InnerGraph<T extends GraphYValues>({
 }
 
 const currentlySelectedLineClass =
-  'stroke-1 stroke-gray-300 dark:stroke-gray-700' // maybe add 'transition-transform duration-75'
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
@@ -696,7 +688,8 @@ const handleXTickText = ({
   }
 
   return {
-    isOverlappingPrevious: textRect.left < lastTickTextRightEdge,
+    isOverlappingPrevious:
+      textRect.left < lastTickTextRightEdge + MINIMUM_X_LABEL_GAP_PX,
     rightEdge: textRect.right
   }
 }
