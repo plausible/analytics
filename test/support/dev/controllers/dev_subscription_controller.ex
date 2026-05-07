@@ -9,9 +9,11 @@ defmodule PlausibleWeb.DevSubscriptionController do
     alias Plausible.Teams.Team
     alias Plausible.Teams
 
+    require Plausible.Billing
+
     plug PlausibleWeb.RequireAccountPlug
 
-    plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :billing]
+    plug Plausible.Plugs.AuthorizeTeamAccess, Plausible.Billing.allowed_roles()
 
     def create_form(conn, %{"plan_id" => plan_id}) do
       render(conn, "create_dev_subscription.html",
