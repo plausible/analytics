@@ -585,6 +585,91 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
       end
     end
+
+    @tag :ee_only
+    test "allows owner of a setup team to access the page", %{conn: conn, user: user} do
+      team = new_user(team: [setup_complete: true]) |> team_of()
+      add_member(team, user: user, role: :owner)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert html_response(conn, 200)
+    end
+
+    @tag :ee_only
+    test "allows billing role of a setup team to access the page", %{conn: conn, user: user} do
+      owner = new_user(team: [setup_complete: true])
+      team = team_of(owner)
+      add_member(team, user: user, role: :billing)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert html_response(conn, 200)
+    end
+
+    @tag :ee_only
+    test "redirects admin role of a setup team away from the page", %{conn: conn, user: user} do
+      owner = new_user(team: [setup_complete: true])
+      team = team_of(owner)
+      add_member(team, user: user, role: :admin)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    @tag :ee_only
+    test "redirects editor role of a setup team away from the page", %{conn: conn, user: user} do
+      owner = new_user(team: [setup_complete: true])
+      team = team_of(owner)
+      add_member(team, user: user, role: :editor)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    @tag :ee_only
+    test "redirects viewer role of a setup team away from the page", %{conn: conn, user: user} do
+      owner = new_user(team: [setup_complete: true])
+      team = team_of(owner)
+      add_member(team, user: user, role: :viewer)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    test "allows any role on a non-setup (personal) team to access the page", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      refute Plausible.Teams.setup?(team)
+
+      conn =
+        conn
+        |> set_current_team(team)
+        |> get(Routes.settings_path(conn, :subscription))
+
+      assert html_response(conn, 200)
+    end
   end
 
   describe "GET /security" do
