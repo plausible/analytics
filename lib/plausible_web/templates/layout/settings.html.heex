@@ -13,7 +13,7 @@
       <.mobile_nav_dropdown
         name="settings"
         options={options}
-        selected_fn={&is_current_tab(@current_path, &1)}
+        selected_fn={&current_tab?(@current_path, &1)}
         href_base="/settings/"
       />
 
@@ -26,7 +26,7 @@
             </p>
           </div>
           <Layout.settings_sidebar
-            selected_fn={&is_current_tab(@current_path, &1)}
+            selected_fn={&current_tab?(@current_path, &1)}
             options={options["Account"]}
           />
         </div>
@@ -39,7 +39,7 @@
             </p>
           </div>
           <Layout.settings_sidebar
-            selected_fn={&is_current_tab(@current_path, &1)}
+            selected_fn={&current_tab?(@current_path, &1)}
             options={options["Team"]}
           />
         </div>

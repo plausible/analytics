@@ -246,15 +246,15 @@ defmodule PlausibleWeb.LayoutView do
     render(layout, Map.put(assigns, :inner_layout, content))
   end
 
-  def is_current_tab(_, nil) do
+  def current_tab?(_, nil) do
     false
   end
 
-  def is_current_tab(path, tab) when is_binary(path) do
+  def current_tab?(path, tab) when is_binary(path) do
     String.ends_with?(path, tab)
   end
 
-  def is_current_tab(conn, tab) do
+  def current_tab?(conn, tab) do
     full_path = Path.join(conn.path_info)
 
     one_up =

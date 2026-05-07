@@ -18,13 +18,13 @@
         options={options}
         name="tab"
         href_base={"/#{URI.encode_www_form(@site.domain)}/settings/"}
-        selected_fn={&is_current_tab(@conn, &1)}
+        selected_fn={&current_tab?(@conn, &1)}
       />
 
       <div class="hidden lg:block py-4 sticky top-0" data-testid="site_settings_sidebar">
         <Layout.settings_sidebar
           prefix={"/#{URI.encode_www_form(@site.domain)}"}
-          selected_fn={&is_current_tab(@conn, &1)}
+          selected_fn={&current_tab?(@conn, &1)}
           options={options}
         />
       </div>
