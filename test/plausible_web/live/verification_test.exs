@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
         build(:pageview)
       ])
 
-      assert_redirect(lv, "/#{URI.encode_www_form(site.domain)}/")
+      assert_redirect(lv, Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain))
     end
 
     @tag :ce_build_only

@@ -140,7 +140,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/"
+      assert redirected_to(conn, 302) ==
+               Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
