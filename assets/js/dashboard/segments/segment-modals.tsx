@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import {
   ModalLayout,
   ModalFooter,
@@ -31,7 +31,9 @@ import { useSiteContext } from '../site-context'
 import { Button, buttonClassName } from '../components/button'
 import {
   Checkbox,
+  getOptionDisabledMessage,
   LabeledTextInput,
+  OptionDisabledMessageType,
   TypeDisabledMessage,
   TypeSelector
 } from '../components/form-elements'
@@ -40,22 +42,6 @@ import { Placeholder } from '../components/placeholder'
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
 const nameInputProps = { id: 'name', label: 'Segment name' }
-
-const segmentTypeSelectorProps = {
-  idPrefix: 'segment-type',
-  options: [
-    {
-      type: SegmentType.personal,
-      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
-      description: 'Visible only to you'
-    },
-    {
-      type: SegmentType.site,
-      name: SEGMENT_TYPE_LABELS[SegmentType.site],
-      description: 'Visible to others on the site'
-    }
-  ]
-}
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -98,12 +84,13 @@ export const CreateSegmentModal = ({
 
   const [type, setType] = useState<SegmentType>(defaultType)
 
-  const { disabled, disabledMessage, onSegmentTypeChange } =
-    useSegmentTypeDisabledState({
-      siteSegmentsAvailable,
-      user,
-      setType
-    })
+  const disabledMessage =
+    type === SegmentType.site
+      ? getSiteSegmentDisabledMessage({
+          siteSegmentsAvailable,
+          user
+        })
+      : null
 
   return (
     <ModalLayout title="Create segment" onClose={onClose}>
@@ -113,18 +100,17 @@ export const CreateSegmentModal = ({
         onChange={setName}
         placeholder={namePlaceholder}
       />
-      <TypeSelector<SegmentType>
-        {...segmentTypeSelectorProps}
-        value={type}
-        onChange={onSegmentTypeChange}
+      <SegmentTypeSelector
+        type={type}
+        setType={setType}
+        optionDisabledMessage={disabledMessage}
       />
-      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
         <SaveButton
-          disabled={status === 'pending' || disabled}
+          disabled={status === 'pending' || disabledMessage !== null}
           onSave={() => {
             const trimmedName = name.trim()
             const saveableName = trimmedName.length
@@ -287,60 +273,83 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   )
 }
 
-const useSegmentTypeDisabledState = ({
+const getSiteSegmentDisabledMessage = ({
   siteSegmentsAvailable,
-  user,
-  setType
+  user
 }: {
   siteSegmentsAvailable: boolean
   user: UserContextValue
+}) =>
+  getOptionDisabledMessage({
+    optionAvailable: siteSegmentsAvailable,
+    userHasOptionPermissions: hasSiteSegmentPermission(user),
+    userCanUpgradeSubscription: user.role === Role.owner
+  })
+
+const SegmentTypeSelector = ({
+  type,
+  setType,
+  optionDisabledMessage
+}: {
+  type: SegmentType
   setType: (type: SegmentType) => void
-}) => {
-  const [disabled, setDisabled] = useState<boolean>(false)
-  const [disabledMessage, setDisabledMessage] = useState<ReactNode | null>(null)
+  optionDisabledMessage: OptionDisabledMessageType | null
+}) => (
+  <>
+    <TypeSelector<SegmentType>
+      idPrefix="segment-type"
+      options={[
+        {
+          type: SegmentType.personal,
+          name: SEGMENT_TYPE_LABELS[SegmentType.personal],
+          description: 'Visible only to you'
+        },
+        {
+          type: SegmentType.site,
+          name: SEGMENT_TYPE_LABELS[SegmentType.site],
+          description: 'Visible to others on the site'
+        }
+      ]}
+      value={type}
+      onChange={setType}
+    />
+    {optionDisabledMessage !== null && (
+      <TypeDisabledMessage
+        message={
+          <SegmentTypeDisabledMessage messageType={optionDisabledMessage} />
+        }
+      />
+    )}
+  </>
+)
 
-  const userIsOwner = user.role === Role.owner
-  const canSelectSiteSegment = hasSiteSegmentPermission(user)
-
-  const onSegmentTypeChange = useCallback(
-    (type: SegmentType) => {
-      setType(type)
-
-      if (type === SegmentType.site && !canSelectSiteSegment) {
-        setDisabled(true)
-        setDisabledMessage(
-          <>
-            {"You don't have enough permissions to change segment to this type"}
-          </>
-        )
-      } else if (type === SegmentType.site && !siteSegmentsAvailable) {
-        setDisabled(true)
-        setDisabledMessage(
-          <>
-            To use this segment type,&#32;
-            {userIsOwner ? (
-              <a href="/billing/choose-plan" className="underline">
-                please upgrade your subscription
-              </a>
-            ) : (
-              <>
-                please reach out to a team owner to upgrade their subscription.
-              </>
-            )}
-          </>
-        )
-      } else {
-        setDisabled(false)
-        setDisabledMessage(null)
-      }
-    },
-    [setType, siteSegmentsAvailable, userIsOwner, canSelectSiteSegment]
-  )
-
-  return {
-    disabled,
-    disabledMessage,
-    onSegmentTypeChange
+const SegmentTypeDisabledMessage = ({
+  messageType
+}: {
+  messageType: OptionDisabledMessageType
+}): Exclude<ReactNode, undefined> => {
+  switch (messageType) {
+    case 'no-permissions': {
+      return "You don't have enough permissions to change segment to this type"
+    }
+    case 'upgrade-subscription-yourself': {
+      return (
+        <>
+          To use this segment type,{' '}
+          <a href="/billing/choose-plan" className="underline">
+            please upgrade your subscription
+          </a>
+        </>
+      )
+    }
+    case 'upgrade-subsription-reach-out': {
+      return (
+        <>
+          To use this segment type, please reach out to a team owner to upgrade
+          their subscription
+        </>
+      )
+    }
   }
 }
 
@@ -362,12 +371,13 @@ export const UpdateSegmentModal = ({
   const [name, setName] = useState(segment.name)
   const [type, setType] = useState<SegmentType>(segment.type)
 
-  const { disabled, disabledMessage, onSegmentTypeChange } =
-    useSegmentTypeDisabledState({
-      siteSegmentsAvailable,
-      user,
-      setType
-    })
+  const disabledMessage =
+    type === SegmentType.site
+      ? getSiteSegmentDisabledMessage({
+          siteSegmentsAvailable,
+          user
+        })
+      : null
 
   return (
     <ModalLayout title="Update segment" onClose={onClose}>
@@ -377,18 +387,17 @@ export const UpdateSegmentModal = ({
         onChange={setName}
         placeholder={namePlaceholder}
       />
-      <TypeSelector<SegmentType>
-        {...segmentTypeSelectorProps}
-        value={type}
-        onChange={onSegmentTypeChange}
+      <SegmentTypeSelector
+        type={type}
+        setType={setType}
+        optionDisabledMessage={disabledMessage}
       />
-      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
         <SaveButton
-          disabled={status === 'pending' || disabled}
+          disabled={status === 'pending' || disabledMessage !== null}
           onSave={() => {
             const trimmedName = name.trim()
             const saveableName = trimmedName.length
