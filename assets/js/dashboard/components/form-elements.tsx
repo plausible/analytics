@@ -76,7 +76,7 @@ export const TypeSelector = <T extends string>({
 
 export type OptionDisabledMessageType =
   | 'upgrade-subscription-yourself'
-  | 'upgrade-subsription-reach-out'
+  | 'upgrade-subscription-reach-out'
   | 'no-permissions'
 
 export const getOptionDisabledMessage = ({
@@ -95,7 +95,7 @@ export const getOptionDisabledMessage = ({
     if (userCanUpgradeSubscription) {
       return 'upgrade-subscription-yourself'
     }
-    return 'upgrade-subsription-reach-out'
+    return 'upgrade-subscription-reach-out'
   }
   return null
 }

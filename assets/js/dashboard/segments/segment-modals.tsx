@@ -342,7 +342,7 @@ const SegmentTypeDisabledMessage = ({
         </>
       )
     }
-    case 'upgrade-subsription-reach-out': {
+    case 'upgrade-subscription-reach-out': {
       return (
         <>
           To use this segment type, please reach out to a team owner to upgrade
