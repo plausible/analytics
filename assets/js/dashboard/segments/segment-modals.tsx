@@ -1,5 +1,9 @@
 import React, { ReactNode, useCallback, useState } from 'react'
-import { ModalLayout, ModalFooter } from '../components/modal-layout'
+import {
+  ModalLayout,
+  ModalFooter,
+  SaveButton
+} from '../components/modal-layout'
 import {
   canRemoveFilter,
   getSearchToRemoveSegmentFilter,
@@ -18,7 +22,6 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { MutationStatus, useQuery } from '@tanstack/react-query'
 import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
@@ -26,8 +29,33 @@ import { useSegmentsContext } from '../filtering/segments-context'
 import { Role, UserContextValue, useUserContext } from '../user-context'
 import { useSiteContext } from '../site-context'
 import { Button, buttonClassName } from '../components/button'
+import {
+  Checkbox,
+  LabeledTextInput,
+  TypeDisabledMessage,
+  TypeSelector
+} from '../components/form-elements'
+import { Placeholder } from '../components/placeholder'
 
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
+
+const nameInputProps = { id: 'name', label: 'Segment name' }
+
+const segmentTypeSelectorProps = {
+  idPrefix: 'segment-type',
+  options: [
+    {
+      type: SegmentType.personal,
+      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
+      description: 'Visible only to you'
+    },
+    {
+      type: SegmentType.site,
+      name: SEGMENT_TYPE_LABELS[SegmentType.site],
+      description: 'Visible to others on the site'
+    }
+  ]
+}
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -79,18 +107,23 @@ export const CreateSegmentModal = ({
 
   return (
     <ModalLayout title="Create segment" onClose={onClose}>
-      <SegmentNameInput
+      <LabeledTextInput
+        {...nameInputProps}
         value={name}
         onChange={setName}
-        namePlaceholder={namePlaceholder}
+        placeholder={namePlaceholder}
       />
-      <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
-      {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
+      <TypeSelector<SegmentType>
+        {...segmentTypeSelectorProps}
+        value={type}
+        onChange={onSegmentTypeChange}
+      />
+      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
-        <SaveSegmentButton
+        <SaveButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
             const trimmedName = name.trim()
@@ -254,84 +287,6 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
   )
 }
 
-const SegmentNameInput = ({
-  namePlaceholder,
-  value,
-  onChange
-}: {
-  namePlaceholder: string
-  value: string
-  onChange: (value: string) => void
-}) => {
-  return (
-    <div className="flex flex-col">
-      <label
-        htmlFor="name"
-        className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
-      >
-        Segment name
-      </label>
-      <input
-        autoComplete="off"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={namePlaceholder}
-        id="name"
-        className="block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
-      />
-    </div>
-  )
-}
-
-const SegmentTypeSelector = ({
-  value,
-  onChange
-}: {
-  value: SegmentType
-  onChange: (value: SegmentType) => void
-}) => {
-  const options = [
-    {
-      type: SegmentType.personal,
-      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
-      description: 'Visible only to you'
-    },
-    {
-      type: SegmentType.site,
-      name: SEGMENT_TYPE_LABELS[SegmentType.site],
-      description: 'Visible to others on the site'
-    }
-  ]
-
-  return (
-    <div className="flex flex-col gap-y-2">
-      {options.map(({ type, name, description }) => (
-        <div key={type}>
-          <div className="flex">
-            <input
-              checked={value === type}
-              id={`segment-type-${type}`}
-              type="radio"
-              value=""
-              onChange={() => onChange(type)}
-              className="mt-px size-4.5 cursor-pointer text-indigo-600 dark:bg-transparent border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white"
-            />
-            <label
-              htmlFor={`segment-type-${type}`}
-              className="block ml-3 text-sm font-medium dark:text-gray-100 flex flex-col flex-inline"
-            >
-              <div>{name}</div>
-              <div className="text-gray-500 dark:text-gray-400 text-sm font-normal">
-                {description}
-              </div>
-            </label>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 const useSegmentTypeDisabledState = ({
   siteSegmentsAvailable,
   user,
@@ -389,39 +344,6 @@ const useSegmentTypeDisabledState = ({
   }
 }
 
-const SaveSegmentButton = ({
-  disabled,
-  onSave
-}: {
-  disabled: boolean
-  onSave: () => void
-}) => {
-  return (
-    <Button
-      size="sm"
-      disabled={disabled}
-      onClick={disabled ? () => {} : onSave}
-    >
-      Save
-    </Button>
-  )
-}
-
-const SegmentTypeDisabledMessage = ({
-  message
-}: {
-  message: ReactNode | null
-}) => {
-  if (!message) return null
-
-  return (
-    <div className="mt-2 flex gap-x-2 text-sm">
-      <ExclamationTriangleIcon className="mt-1 block w-4 h-4 shrink-0" />
-      <div>{message}</div>
-    </div>
-  )
-}
-
 export const UpdateSegmentModal = ({
   onClose,
   onSave,
@@ -449,18 +371,23 @@ export const UpdateSegmentModal = ({
 
   return (
     <ModalLayout title="Update segment" onClose={onClose}>
-      <SegmentNameInput
+      <LabeledTextInput
+        {...nameInputProps}
         value={name}
         onChange={setName}
-        namePlaceholder={namePlaceholder}
+        placeholder={namePlaceholder}
       />
-      <SegmentTypeSelector value={type} onChange={onSegmentTypeChange} />
-      {disabled && <SegmentTypeDisabledMessage message={disabledMessage} />}
+      <TypeSelector<SegmentType>
+        {...segmentTypeSelectorProps}
+        value={type}
+        onChange={onSegmentTypeChange}
+      />
+      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
-        <SaveSegmentButton
+        <SaveButton
           disabled={status === 'pending' || disabled}
           onSave={() => {
             const trimmedName = name.trim()
@@ -509,51 +436,6 @@ const FiltersInSegment = ({
     </div>
   )
 }
-
-/** Keep this component styled the same as checkboxes in PlausibleWeb.Live.Installation.Instructions */
-const Checkbox = ({
-  id,
-  checked,
-  onChange,
-  children
-}: React.DetailedHTMLProps<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  HTMLInputElement
->) => {
-  return (
-    <label
-      className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
-      htmlFor={id}
-    >
-      <input
-        className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
-        id={id}
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-      />
-      {children}
-    </label>
-  )
-}
-
-const Placeholder = ({
-  children,
-  placeholder
-}: {
-  children: ReactNode | false
-  placeholder: ReactNode
-}) => (
-  <span
-    className={classNames(
-      'rounded',
-      children === false &&
-        'bg-gray-100 dark:bg-gray-700 text-gray-100 dark:text-gray-700'
-    )}
-  >
-    {children === false ? placeholder : children}
-  </span>
-)
 
 const hasSiteSegmentPermission = (user: UserContextValue) => {
   return [Role.admin, Role.owner, Role.editor, 'super_admin'].includes(

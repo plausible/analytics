@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 import ModalWithRouting from '../stats/modals/modal'
+import { Button } from './button'
 
 export function ModalLayout({
   title,
@@ -43,4 +44,22 @@ export function ModalLayout({
 
 export function ModalFooter({ children }: { children: ReactNode }) {
   return <div className="flex gap-x-3 items-center justify-end">{children}</div>
+}
+
+export function SaveButton({
+  disabled,
+  onSave
+}: {
+  disabled: boolean
+  onSave: () => void
+}) {
+  return (
+    <Button
+      size="sm"
+      disabled={disabled}
+      onClick={disabled ? () => {} : onSave}
+    >
+      Save
+    </Button>
+  )
 }
