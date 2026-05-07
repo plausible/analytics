@@ -80,15 +80,29 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
              ) == 500
     end
 
-    for %{role: role, type: type} <- [
-          %{role: :viewer, type: :personal},
-          %{role: :editor, type: :personal},
-          %{role: :editor, type: :site}
+    for %{role: role, type: type, membership_type: membership_type} <- [
+          %{membership_type: :site_guest, role: :viewer, type: :personal},
+          %{membership_type: :site_guest, role: :editor, type: :personal},
+          %{membership_type: :site_guest, role: :editor, type: :site},
+          %{membership_type: :team_member, role: :viewer, type: :personal},
+          %{membership_type: :team_member, role: :billing, type: :personal},
+          %{membership_type: :team_member, role: :editor, type: :personal},
+          %{membership_type: :team_member, role: :editor, type: :site},
+          %{membership_type: :team_member, role: :admin, type: :personal},
+          %{membership_type: :team_member, role: :admin, type: :site},
+          %{membership_type: :team_member, role: :owner, type: :personal},
+          %{membership_type: :team_member, role: :owner, type: :site}
         ] do
-      test "#{role} can create segment with type \"#{type}\" successfully",
+      test "#{role} (#{Phoenix.Naming.humanize(membership_type)}) can create segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
         site = new_site()
-        add_guest(site, user: user, role: unquote(role))
+
+        add_site_guest_or_team_member(site,
+          user: user,
+          role: unquote(role),
+          membership_type: unquote(membership_type)
+        )
+
         insert(:goal, site: site, event_name: "Conversion")
 
         response =
