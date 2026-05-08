@@ -256,28 +256,10 @@
                 <li>
                   <a
                     rel="noreferrer"
-                    href="https://plausible.io/changelog"
-                    class="text-base leading-6 text-gray-300 hover:text-white"
-                  >
-                    What's new
-                  </a>
-                </li>
-                <li class="mt-4">
-                  <a
-                    rel="noreferrer"
                     href="https://status.plausible.io/"
                     class="text-base leading-6 text-gray-300 hover:text-white"
                   >
                     Status
-                  </a>
-                </li>
-                <li class="mt-4">
-                  <a
-                    rel="noreferrer"
-                    href="https://feedback.plausible.io/"
-                    class="text-base leading-6 text-gray-300 hover:text-white"
-                  >
-                    Feature requests
                   </a>
                 </li>
                 <li class="mt-4">
@@ -301,35 +283,37 @@
                 <li class="mt-4">
                   <a
                     rel="noreferrer"
-                    href="https://x.com/PlausibleHQ"
-                    class="group inline-flex items-center text-base leading-6 text-gray-300 hover:text-white"
+                    href="https://plausible.io/privacy"
+                    class="text-base leading-6 text-gray-300 hover:text-white"
                   >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      class="mr-2 h-4 w-4 text-gray-500 group-hover:text-gray-300"
-                      fill="currentColor"
-                    >
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817-5.966 6.817H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
-                    </svg>
-                    X
+                    Privacy
                   </a>
                 </li>
                 <li class="mt-4">
                   <a
                     rel="noreferrer"
-                    href="https://www.linkedin.com/company/plausible-analytics/"
-                    class="group inline-flex items-center text-base leading-6 text-gray-300 hover:text-white"
+                    href="https://plausible.io/terms"
+                    class="text-base leading-6 text-gray-300 hover:text-white"
                   >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      class="mr-2 h-4 w-4 text-gray-500 group-hover:text-gray-300"
-                      fill="currentColor"
-                    >
-                      <path d="M20.452 20.452h-3.554v-5.569c0-1.328-.024-3.037-1.85-3.037-1.853 0-2.136 1.447-2.136 2.941v5.665H9.358V9h3.414v1.564h.048c.475-.9 1.637-1.85 3.368-1.85 3.602 0 4.266 2.371 4.266 5.455v6.283ZM5.35 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124ZM7.127 20.452H3.57V9h3.557v11.452ZM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.226.792 24 1.771 24h20.451C23.2 24 24 23.226 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003Z" />
-                    </svg>
-                    LinkedIn
+                    Terms
+                  </a>
+                </li>
+                <li class="mt-4">
+                  <a
+                    rel="noreferrer"
+                    href="https://plausible.io/security"
+                    class="text-base leading-6 text-gray-300 hover:text-white"
+                  >
+                    Security
+                  </a>
+                </li>
+                <li class="mt-4">
+                  <a
+                    rel="noreferrer"
+                    href="https://plausible.io/dpa"
+                    class="text-base leading-6 text-gray-300 hover:text-white"
+                  >
+                    DPA
                   </a>
                 </li>
               </ul>
@@ -670,38 +654,5 @@
       <% end %>
     </div>
 
-    <%= if ee?() do %>
-      <div class="flex flex-col gap-4 pt-6 text-sm leading-5 text-gray-400 md:flex-row md:items-center md:justify-between">
-        <p>&copy; {Date.utc_today().year} Plausible Analytics OÜ</p>
-
-        <nav aria-label="Legal links">
-          <ul class="flex flex-wrap gap-x-3 gap-y-2 md:justify-end">
-            <li>
-              <a rel="noreferrer" href="https://plausible.io/privacy" class="hover:text-gray-300">
-                Privacy
-              </a>
-            </li>
-            <li aria-hidden="true" class="text-gray-600">·</li>
-            <li>
-              <a rel="noreferrer" href="https://plausible.io/terms" class="hover:text-gray-300">
-                Terms
-              </a>
-            </li>
-            <li aria-hidden="true" class="text-gray-600">·</li>
-            <li>
-              <a rel="noreferrer" href="https://plausible.io/security" class="hover:text-gray-300">
-                Security
-              </a>
-            </li>
-            <li aria-hidden="true" class="text-gray-600">·</li>
-            <li>
-              <a rel="noreferrer" href="https://plausible.io/dpa" class="hover:text-gray-300">
-                DPA
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    <% end %>
   </div>
 </div>
