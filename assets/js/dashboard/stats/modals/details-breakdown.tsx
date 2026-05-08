@@ -15,7 +15,7 @@ import {
   SortDirection,
   useOrderBy,
   useRememberOrderBy
-} from '../../hooks/use-order-by'
+} from '../../hooks/use-metric-order-by'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
 import { createStatsQuery, StatsQuery } from '../../stats-query'

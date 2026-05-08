@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useRef } from 'react'
-import { SortDirection } from '../hooks/use-order-by'
+import { SortDirection } from '../hooks/use-metric-order-by'
 import type { QueryResultRow, QueryResultQuery } from '../api'
 import { Metric } from './metrics'
 import { FilterInfo } from '../components/drilldown-link'

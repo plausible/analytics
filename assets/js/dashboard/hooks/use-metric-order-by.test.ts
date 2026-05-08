@@ -8,7 +8,7 @@ import {
   maybeStoreOrderBy,
   rearrangeOrderBy,
   validateOrderBy
-} from './use-order-by'
+} from './use-metric-order-by'
 
 describe(`${cycleSortDirection.name}`, () => {
   test.each([

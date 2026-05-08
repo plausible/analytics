@@ -36,7 +36,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
 import { SortDirection } from '../../hooks/use-order-by-legacy'
-import { OrderBy } from '../../hooks/use-order-by'
+import { OrderBy } from '../../hooks/use-metric-order-by'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356

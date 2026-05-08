@@ -5,7 +5,7 @@ import {
   FilterKey,
   FilterClause
 } from './dashboard-state'
-import { OrderBy } from './hooks/use-order-by'
+import { OrderBy } from './hooks/use-metric-order-by'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
 import { remapToApiFilters } from './util/filters'

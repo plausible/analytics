@@ -13,7 +13,7 @@ import {
 } from '../../util/filters'
 import { revenueAvailable, Filter } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
-import { SortDirection } from '../../hooks/use-order-by'
+import { SortDirection } from '../../hooks/use-metric-order-by'
 import { addDimensionSearchFilter, getBreakdownMetrics } from '../breakdowns'
 
 export const PAGES_BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
