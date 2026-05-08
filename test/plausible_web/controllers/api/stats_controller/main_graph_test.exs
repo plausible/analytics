@@ -2037,6 +2037,67 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "revenue metric dropped" do
+    @describetag :ee_only
+    setup [:create_user, :log_in, :create_site]
+
+    for revenue_metric <- ["total_revenue", "average_revenue"] do
+      test "#{revenue_metric} without goal filter", %{
+        conn: conn,
+        site: site
+      } do
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+
+      test "#{revenue_metric} with filtered goals mixing currencies", %{
+        conn: conn,
+        site: site
+      } do
+        insert(:goal, site: site, event_name: "PurchaseEUR", currency: "EUR")
+        insert(:goal, site: site, event_name: "PurchaseUSD", currency: "USD")
+
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "filters" => [["is", "event:goal", ["PurchaseUSD", "PurchaseEUR"]]],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+
+      test "#{revenue_metric} with insufficient subscription", %{
+        conn: conn,
+        user: user,
+        site: site
+      } do
+        insert(:goal, site: site, event_name: "PurchaseEUR", currency: "EUR")
+        subscribe_to_growth_plan(user)
+
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "filters" => [["is", "event:goal", ["PurchaseEUR"]]],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+    end
+  end
+
   describe "total_revenue plot" do
     @describetag :ee_only
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]

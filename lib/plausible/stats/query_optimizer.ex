@@ -24,7 +24,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     2. Adds a missing order_by clause to a query
     3. Updating "time" dimension in order_by to the right granularity
     4. Updates event:hostname filters to also apply on visit level for sane results.
-    5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
+    5. [DEPRECATED AND WILL BE REMOVED] Removes revenue metrics from legacy queries if ineligible
     6. Trims the date range to the current time if query.include.trim_relative_date_range is true.
     7. Sets the join_type for the query based on the query.
 

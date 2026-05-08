@@ -30,7 +30,7 @@ defmodule Plausible.Stats.QueryBuilder do
 
   def build(site, %ParsedQueryParams{} = parsed_query_params, debug_metadata) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
-         query = do_build(parsed_query_params, site, debug_metadata),
+         {:ok, query} <- do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_case_sensitive_filter_modifier(query),
@@ -164,6 +164,7 @@ defmodule Plausible.Stats.QueryBuilder do
       consolidated_site_ids: get_consolidated_site_ids(site),
       debug_metadata: debug_metadata
     )
+    |> maybe_drop_revenue_metrics()
   end
 
   defp set_now(%Query{now: nil} = query), do: Query.set(query, now: DateTime.utc_now(:second))
@@ -239,8 +240,7 @@ defmodule Plausible.Stats.QueryBuilder do
     end
 
     defp validate_revenue_metrics_access(site, query) do
-      if Revenue.requested?(query.metrics) and not Revenue.available?(site) and
-           not query.include.drop_unavailable_revenue_metrics do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
         {:error,
          %QueryError{
            code: :feature_access,
@@ -250,10 +250,29 @@ defmodule Plausible.Stats.QueryBuilder do
         :ok
       end
     end
+
+    defp maybe_drop_revenue_metrics(query) do
+      if query.include.drop_unavailable_revenue_metrics and
+           map_size(query.revenue_currencies) == 0 do
+        if Enum.all?(query.metrics, &(&1 in Revenue.revenue_metrics())) do
+          {:error,
+           %QueryError{
+             code: :all_metrics_dropped,
+             message: "Revenue metrics were dropped and no other metrics were left to query."
+           }}
+        else
+          {:ok, Query.set(query, metrics: query.metrics -- Revenue.revenue_metrics())}
+        end
+      else
+        {:ok, query}
+      end
+    end
   else
     defp preload_revenue(_site, _preloaded_goals, _metrics, _dimensions), do: {nil, %{}}
 
     defp validate_revenue_metrics_access(_site, _query), do: :ok
+
+    defp maybe_drop_revenue_metrics(query), do: {:ok, query}
   end
 
   defp validate_order_by(query) do
