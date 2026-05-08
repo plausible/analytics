@@ -503,6 +503,11 @@
         { "$ref": "#/definitions/filter_tree" }
       ]
     },
+    "sort_direction": {
+      "type": "string",
+      "enum": ["asc", "desc"],
+      "description": "Sorting order"
+    },
     "order_by_entry": {
       "type": "array",
       "additionalItems": false,
@@ -518,11 +523,7 @@
           ],
           "markdownDescription": "Metric or dimension to order by. Must be listed under `metrics` or `dimensions`"
         },
-        {
-          "type": "string",
-          "enum": ["asc", "desc"],
-          "description": "Sorting order"
-        }
+        { "$ref": "#/definitions/sort_direction" }
       ]
     }
   }

@@ -35,7 +35,6 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
-import { SortDirection } from '../../hooks/use-order-by-legacy'
 import { OrderBy } from '../../hooks/use-metric-order-by'
 
 const MAX_ITEMS = 9
@@ -79,8 +78,8 @@ export function IndexBreakdown({
     return createStatsQuery(dashboardState, {
       metrics,
       dimensions,
-      order_by: [['visitors', SortDirection.desc]].concat(
-        dimensions.map((dim) => [dim, SortDirection.asc])
+      order_by: [['visitors', 'desc']].concat(
+        dimensions.map((dim) => [dim, 'asc'])
       ) as OrderBy,
       pagination: { limit: MAX_ITEMS, offset: 0 }
     })

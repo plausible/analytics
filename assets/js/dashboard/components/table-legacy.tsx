@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import React, { ReactNode } from 'react'
-import { SortDirection } from '../hooks/use-order-by-legacy'
+import { SortDirection } from '../../types/query-api'
 import { SortButton } from './sort-button'
 import { Tooltip } from '../util/tooltip'
 

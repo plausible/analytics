@@ -1,7 +1,6 @@
 import { Metric } from '../stats/metrics'
 import {
   OrderBy,
-  SortDirection,
   cycleSortDirection,
   getOrderByStorageKey,
   getStoredOrderBy,
@@ -15,25 +14,25 @@ describe(`${cycleSortDirection.name}`, () => {
     [
       null,
       {
-        direction: SortDirection.desc,
+        direction: 'desc',
         hint: 'Press to sort column in descending order'
       }
     ],
     [
-      SortDirection.desc,
+      'desc',
       {
-        direction: SortDirection.asc,
+        direction: 'asc',
         hint: 'Press to sort column in ascending order'
       }
     ],
     [
-      SortDirection.asc,
+      'asc',
       {
-        direction: SortDirection.desc,
+        direction: 'desc',
         hint: 'Press to sort column in descending order'
       }
     ]
-  ])(
+  ] as const)(
     'for current direction %p returns %p',
     (currentDirection, expectedOutput) => {
       expect(cycleSortDirection(currentDirection)).toEqual(expectedOutput)
@@ -43,21 +42,9 @@ describe(`${cycleSortDirection.name}`, () => {
 
 describe(`${rearrangeOrderBy.name}`, () => {
   const cases: [Metric, OrderBy, OrderBy][] = [
-    [
-      'visitors',
-      [['visitors', SortDirection.asc]],
-      [['visitors', SortDirection.desc]]
-    ],
-    [
-      'visitors',
-      [['visitors', SortDirection.desc]],
-      [['visitors', SortDirection.asc]]
-    ],
-    [
-      'visit_duration',
-      [['visitors', SortDirection.asc]],
-      [['visit_duration', SortDirection.desc]]
-    ]
+    ['visitors', [['visitors', 'asc']], [['visitors', 'desc']]],
+    ['visitors', [['visitors', 'desc']], [['visitors', 'asc']]],
+    ['visit_duration', [['visitors', 'asc']], [['visit_duration', 'desc']]]
   ]
   it.each(cases)(
     `[%#] clicking on %p yields expected order`,
@@ -96,7 +83,7 @@ describe(`storing detailed report preferred order`, () => {
 
   it('does not store invalid value', () => {
     maybeStoreOrderBy({
-      orderBy: [['total_visitors', SortDirection.desc]],
+      orderBy: [['total_visitors', 'desc']],
       domain,
       dimensionLabel,
       metrics: ['total_visitors']
@@ -108,7 +95,7 @@ describe(`storing detailed report preferred order`, () => {
 
   it('falls back to fallbackValue if metric has become unsortable between storing and retrieving', () => {
     maybeStoreOrderBy({
-      orderBy: [['visitors', SortDirection.desc]],
+      orderBy: [['visitors', 'desc']],
       domain,
       dimensionLabel,
       metrics: ['visitors']
@@ -122,13 +109,13 @@ describe(`storing detailed report preferred order`, () => {
         domain,
         dimensionLabel,
         metrics: ['total_visitors'],
-        fallbackValue: [['visitors', SortDirection.desc]]
+        fallbackValue: [['visitors', 'desc']]
       })
-    ).toEqual([['visitors', SortDirection.desc]])
+    ).toEqual([['visitors', 'desc']])
   })
 
   it('retrieves stored value correctly', () => {
-    const input: OrderBy = [['visitors', SortDirection.asc]]
+    const input: OrderBy = [['visitors', 'asc']]
     localStorage.setItem(
       getOrderByStorageKey(domain, dimensionLabel),
       JSON.stringify(input)
@@ -138,7 +125,7 @@ describe(`storing detailed report preferred order`, () => {
         domain,
         dimensionLabel,
         metrics: ['visitors'],
-        fallbackValue: [['visitors', SortDirection.desc]]
+        fallbackValue: [['visitors', 'desc']]
       })
     ).toEqual(input)
   })

@@ -6,7 +6,6 @@ import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { screenSizeIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by-legacy'
 
 function ScreenSizesModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -17,7 +16,7 @@ function ScreenSizesModal() {
     dimension: 'screen',
     endpoint: url.apiPath(site, '/screen-sizes'),
     dimensionLabel: 'Device',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(

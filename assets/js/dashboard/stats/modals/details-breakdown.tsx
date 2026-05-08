@@ -12,10 +12,10 @@ import {
   getStoredOrderBy,
   Order,
   OrderBy,
-  SortDirection,
   useOrderBy,
   useRememberOrderBy
 } from '../../hooks/use-metric-order-by'
+import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
 import { createStatsQuery, StatsQuery } from '../../stats-query'
@@ -111,7 +111,7 @@ export function DetailsBreakdown({
   })
 
   const effectiveOrderBy = (orderBy.length ? orderBy : storedOrderBy).concat(
-    dimensions.map((dim) => [dim, SortDirection.asc])
+    dimensions.map((dim) => [dim, 'asc'])
   )
 
   const baseStatsQuery: StatsQuery = useMemo(

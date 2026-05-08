@@ -7,7 +7,6 @@ import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { osIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by-legacy'
 
 function OperatingSystemVersionsModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -18,7 +17,7 @@ function OperatingSystemVersionsModal() {
     dimension: 'os_version',
     endpoint: url.apiPath(site, '/operating-system-versions'),
     dimensionLabel: 'Operating system version',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(

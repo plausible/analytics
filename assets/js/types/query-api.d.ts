@@ -156,8 +156,12 @@ export type FilterHasDone = ["has_done" | "has_not_done", FilterTree];
  */
 export type OrderByEntry = [
   Metric | SimpleFilterDimensions | CustomPropertyFilterDimensions | TimeDimensions,
-  "asc" | "desc"
+  SortDirection
 ];
+/**
+ * Sorting order
+ */
+export type SortDirection = "asc" | "desc";
 
 export interface QueryApiSchema {
   /**

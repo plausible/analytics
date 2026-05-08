@@ -13,7 +13,6 @@ import {
 } from '../../util/filters'
 import { revenueAvailable, Filter } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
-import { SortDirection } from '../../hooks/use-metric-order-by'
 import { addDimensionSearchFilter, getBreakdownMetrics } from '../breakdowns'
 
 export const PAGES_BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
@@ -98,7 +97,7 @@ export function PagesDetails() {
         dimensionLabel="Page url"
         dimensions={[DIMENSION]}
         metrics={metrics}
-        defaultOrderBy={[['visitors', SortDirection.desc]]}
+        defaultOrderBy={[['visitors', 'desc']]}
         getFilterInfo={getFilterInfo}
         getExternalLinkUrl={getExternalLinkUrl}
         addSearchFilter={addSearchFilter}

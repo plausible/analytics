@@ -13,7 +13,6 @@ import {
 } from '../../util/filters'
 import { revenueAvailable, Filter } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
-import { SortDirection } from '../../hooks/use-metric-order-by'
 import { addDimensionSearchFilter, getBreakdownMetrics } from '../breakdowns'
 import { PAGES_BAR_COLOR } from './pages'
 
@@ -95,7 +94,7 @@ export function ExitPagesDetails() {
         dimensionLabel="Exit page"
         dimensions={[DIMENSION]}
         metrics={metrics}
-        defaultOrderBy={[['visitors', SortDirection.desc]]}
+        defaultOrderBy={[['visitors', 'desc']]}
         getFilterInfo={getFilterInfo}
         getExternalLinkUrl={getExternalLinkUrl}
         addSearchFilter={addSearchFilter}

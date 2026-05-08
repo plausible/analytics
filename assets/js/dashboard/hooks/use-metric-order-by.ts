@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { isSortable, Metric } from '../stats/metrics'
 import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
 import { useSiteContext } from '../site-context'
-
-export enum SortDirection {
-  asc = 'asc',
-  desc = 'desc'
-}
+import { SortDirection } from '../../types/query-api'
 
 export type Order = [string, SortDirection]
 
@@ -14,8 +10,8 @@ export type OrderBy = Order[]
 
 export const getSortDirectionLabel = (sortDirection: SortDirection): string =>
   ({
-    [SortDirection.asc]: 'Sorted in ascending order',
-    [SortDirection.desc]: 'Sorted in descending order'
+    asc: 'Sorted in ascending order',
+    desc: 'Sorted in descending order'
   })[sortDirection]
 
 export function useOrderBy({
@@ -59,15 +55,15 @@ export function useOrderBy({
 export function cycleSortDirection(
   currentSortDirection: SortDirection | null
 ): { direction: SortDirection; hint: string } {
-  if (currentSortDirection === SortDirection.desc) {
+  if (currentSortDirection === 'desc') {
     return {
-      direction: SortDirection.asc,
+      direction: 'asc',
       hint: 'Press to sort column in ascending order'
     }
   }
 
   return {
-    direction: SortDirection.desc,
+    direction: 'desc',
     hint: 'Press to sort column in descending order'
   }
 }
@@ -78,7 +74,7 @@ export function rearrangeOrderBy(
 ): OrderBy {
   const orderIndex = currentOrderBy.findIndex(([m]) => m === metric)
   if (orderIndex < 0) {
-    const sortDirection = cycleSortDirection(null).direction as SortDirection
+    const sortDirection = cycleSortDirection(null).direction
     return [[metric, sortDirection]]
   }
   const previousOrder = currentOrderBy[orderIndex]
@@ -113,7 +109,7 @@ export function validateOrderBy(
   if (
     orderBy[0].length === 2 &&
     metrics.findIndex((m) => m === orderBy[0][0]) > -1 &&
-    [SortDirection.asc, SortDirection.desc].includes(orderBy[0][1])
+    ['asc', 'desc'].includes(orderBy[0][1])
   ) {
     return true
   }

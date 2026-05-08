@@ -7,7 +7,6 @@ import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { browserIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by-legacy'
 
 function BrowsersModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -18,7 +17,7 @@ function BrowsersModal() {
     dimension: 'browser',
     endpoint: url.apiPath(site, '/browsers'),
     dimensionLabel: 'Browser',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(
