@@ -5,7 +5,7 @@ import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { getStaleTime } from '../../hooks/api-client'
-import { createStatsQuery, OrderBy } from '../../stats-query'
+import { createStatsQuery, OrderByEntry } from '../../stats-query'
 import type { StatsQuery } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
@@ -77,9 +77,10 @@ export function IndexBreakdown({
     return createStatsQuery(dashboardState, {
       metrics,
       dimensions,
-      order_by: [['visitors', 'desc']].concat(
-        dimensions.map((dim) => [dim, 'asc'])
-      ) as OrderBy,
+      order_by: [
+        ['visitors', 'desc'],
+        ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+      ],
       pagination: { limit: MAX_ITEMS, offset: 0 }
     })
   }, [dashboardState, metrics, dimensions])

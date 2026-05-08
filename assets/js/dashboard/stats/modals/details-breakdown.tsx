@@ -17,12 +17,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import {
-  createStatsQuery,
-  StatsQuery,
-  OrderByEntry,
-  NonTimeDimension
-} from '../../stats-query'
+import { createStatsQuery, StatsQuery, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -121,9 +116,7 @@ export function DetailsBreakdown({
         dimensions,
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
-          ...dimensions.map(
-            (dim): OrderByEntry => [dim as NonTimeDimension, 'asc']
-          )
+          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
         ]
       }),
     [dashboardState, metrics, dimensions, orderBy, storedOrderBy]

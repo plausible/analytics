@@ -6,11 +6,16 @@ import { FilterInfo } from '../components/drilldown-link'
 import { ChangeArrow } from './reports/change-arrow'
 import { MetricFormatterLong, ValueType } from './reports/metric-formatter'
 import dayjs from 'dayjs'
-import { addFilter, ApiFilter, StatsQuery } from '../stats-query'
+import {
+  addFilter,
+  ApiFilter,
+  NonTimeDimension,
+  StatsQuery
+} from '../stats-query'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
-  dimensions: string[]
+  dimensions: NonTimeDimension[]
   metrics: Metric[]
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
   getExternalLinkUrl?: (row: QueryResultRow) => string | null
