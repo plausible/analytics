@@ -67,7 +67,7 @@ export type SimpleFilterDimensions =
   | "visit:exit_page"
   | "visit:entry_page_hostname"
   | "visit:exit_page_hostname";
-export type CustomPropertyFilterDimensions = string;
+export type CustomPropertyFilterDimensions = `event:props:${string}`;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;

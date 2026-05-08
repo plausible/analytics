@@ -290,6 +290,7 @@
     },
     "custom_property_filter_dimensions": {
       "type": "string",
+      "tsType": "`event:props:${string}`",
       "pattern": "^event:props:.+",
       "markdownDescription": "Custom property. See [documentation](https://plausible.io/docs/custom-props/introduction) for more information",
       "examples": ["event:props:url", "event:props:path"]
