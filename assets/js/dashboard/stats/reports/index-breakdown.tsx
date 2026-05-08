@@ -5,7 +5,7 @@ import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { getStaleTime } from '../../hooks/api-client'
-import { createStatsQuery } from '../../stats-query'
+import { createStatsQuery, OrderBy } from '../../stats-query'
 import type { StatsQuery } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
@@ -35,7 +35,6 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
-import { OrderBy } from '../../hooks/use-metric-order-by'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356

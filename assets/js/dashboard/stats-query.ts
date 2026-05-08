@@ -5,10 +5,14 @@ import {
   FilterKey,
   FilterClause
 } from './dashboard-state'
-import { OrderBy } from './hooks/use-metric-order-by'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
-import { Pagination } from '../types/query-api'
+import {
+  Pagination,
+  SimpleFilterDimensions,
+  CustomPropertyFilterDimensions,
+  SortDirection
+} from '../types/query-api'
 import { remapToApiFilters } from './util/filters'
 
 export type FilterModifiers = { case_sensitive?: boolean }
@@ -16,6 +20,13 @@ export type FilterModifiers = { case_sensitive?: boolean }
 export type ApiFilter =
   | [FilterOperator, FilterKey, FilterClause[]]
   | [FilterOperator, FilterKey, FilterClause[], FilterModifiers]
+
+export type NonTimeDimension =
+  | SimpleFilterDimensions
+  | CustomPropertyFilterDimensions
+
+export type OrderByEntry = [Metric | NonTimeDimension, SortDirection]
+export type OrderBy = OrderByEntry[]
 
 type DateRange = DashboardPeriod | [string, string]
 type IncludeCompare =

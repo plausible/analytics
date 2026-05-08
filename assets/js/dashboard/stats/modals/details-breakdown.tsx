@@ -10,15 +10,19 @@ import { usePaginatedQueryAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
 import {
   getStoredOrderBy,
-  Order,
-  OrderBy,
-  useOrderBy,
+  MetricOrderBy,
+  useMetricOrderBy,
   useRememberOrderBy
 } from '../../hooks/use-metric-order-by'
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { createStatsQuery, StatsQuery } from '../../stats-query'
+import {
+  createStatsQuery,
+  StatsQuery,
+  OrderByEntry,
+  NonTimeDimension
+} from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -53,7 +57,7 @@ type PaginatedData = { pages: QueryApiResponse[] }
 
 type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
-  defaultOrderBy?: OrderBy
+  defaultOrderBy?: MetricOrderBy
   addSearchFilter?: (statsQuery: StatsQuery, search: string) => StatsQuery
   onDataReady?: (data: PaginatedData) => void
 }
@@ -82,7 +86,7 @@ export function DetailsBreakdown({
   dimensionLabel,
   dimensions,
   metrics,
-  defaultOrderBy = [] as OrderBy,
+  defaultOrderBy = [] as MetricOrderBy,
   getFilterInfo,
   getExternalLinkUrl,
   addSearchFilter,
@@ -99,7 +103,7 @@ export function DetailsBreakdown({
     fallbackValue: defaultOrderBy
   })
 
-  const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
+  const { orderBy, orderByDictionary, toggleSortByMetric } = useMetricOrderBy({
     metrics,
     defaultOrderBy: storedOrderBy
   })
@@ -110,18 +114,19 @@ export function DetailsBreakdown({
     dimensionLabel
   })
 
-  const effectiveOrderBy = (orderBy.length ? orderBy : storedOrderBy).concat(
-    dimensions.map((dim) => [dim, 'asc'])
-  )
-
   const baseStatsQuery: StatsQuery = useMemo(
     () =>
       createStatsQuery(dashboardState, {
         metrics: metrics,
         dimensions,
-        order_by: effectiveOrderBy as Order[]
+        order_by: [
+          ...(orderBy.length ? orderBy : storedOrderBy),
+          ...dimensions.map(
+            (dim): OrderByEntry => [dim as NonTimeDimension, 'asc']
+          )
+        ]
       }),
-    [dashboardState, metrics, dimensions, effectiveOrderBy]
+    [dashboardState, metrics, dimensions, orderBy, storedOrderBy]
   )
 
   const statsQuery: StatsQuery = useMemo(() => {

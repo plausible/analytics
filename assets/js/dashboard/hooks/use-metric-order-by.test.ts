@@ -1,6 +1,6 @@
 import { Metric } from '../stats/metrics'
 import {
-  OrderBy,
+  MetricOrderBy,
   cycleSortDirection,
   getOrderByStorageKey,
   getStoredOrderBy,
@@ -41,7 +41,7 @@ describe(`${cycleSortDirection.name}`, () => {
 })
 
 describe(`${rearrangeOrderBy.name}`, () => {
-  const cases: [Metric, OrderBy, OrderBy][] = [
+  const cases: [Metric, MetricOrderBy, MetricOrderBy][] = [
     ['visitors', [['visitors', 'asc']], [['visitors', 'desc']]],
     ['visitors', [['visitors', 'desc']], [['visitors', 'asc']]],
     ['visit_duration', [['visitors', 'asc']], [['visit_duration', 'desc']]]
@@ -115,7 +115,7 @@ describe(`storing detailed report preferred order`, () => {
   })
 
   it('retrieves stored value correctly', () => {
-    const input: OrderBy = [['visitors', 'asc']]
+    const input: MetricOrderBy = [['visitors', 'asc']]
     localStorage.setItem(
       getOrderByStorageKey(domain, dimensionLabel),
       JSON.stringify(input)

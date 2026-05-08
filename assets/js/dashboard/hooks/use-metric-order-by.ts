@@ -4,9 +4,9 @@ import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
 import { useSiteContext } from '../site-context'
 import { SortDirection } from '../../types/query-api'
 
-export type Order = [string, SortDirection]
+export type MetricOrderByEntry = [Metric, SortDirection]
 
-export type OrderBy = Order[]
+export type MetricOrderBy = MetricOrderByEntry[]
 
 export const getSortDirectionLabel = (sortDirection: SortDirection): string =>
   ({
@@ -14,14 +14,14 @@ export const getSortDirectionLabel = (sortDirection: SortDirection): string =>
     desc: 'Sorted in descending order'
   })[sortDirection]
 
-export function useOrderBy({
+export function useMetricOrderBy({
   metrics,
   defaultOrderBy
 }: {
   metrics: Metric[]
-  defaultOrderBy: OrderBy
+  defaultOrderBy: MetricOrderBy
 }) {
-  const [orderBy, setOrderBy] = useState<OrderBy>([])
+  const [orderBy, setOrderBy] = useState<MetricOrderBy>([])
   const orderByDictionary = useMemo(
     () =>
       orderBy.length
@@ -69,9 +69,9 @@ export function cycleSortDirection(
 }
 
 export function rearrangeOrderBy(
-  currentOrderBy: OrderBy,
+  currentOrderBy: MetricOrderBy,
   metric: Metric
-): OrderBy {
+): MetricOrderBy {
   const orderIndex = currentOrderBy.findIndex(([m]) => m === metric)
   if (orderIndex < 0) {
     const sortDirection = cycleSortDirection(null).direction
@@ -96,7 +96,7 @@ export function getOrderByStorageKey(domain: string, dimensionLabel: string) {
 export function validateOrderBy(
   orderBy: unknown,
   metrics: Metric[]
-): orderBy is OrderBy {
+): orderBy is MetricOrderBy {
   if (!Array.isArray(orderBy)) {
     return false
   }
@@ -125,8 +125,8 @@ export function getStoredOrderBy({
   domain: string
   dimensionLabel: string
   metrics: Metric[]
-  fallbackValue: OrderBy
-}): OrderBy {
+  fallbackValue: MetricOrderBy
+}): MetricOrderBy {
   try {
     const storedItem = getItem(getOrderByStorageKey(domain, dimensionLabel))
     const parsed = JSON.parse(storedItem)
@@ -149,7 +149,7 @@ export function maybeStoreOrderBy({
   domain: string
   dimensionLabel: string
   metrics: Metric[]
-  orderBy: OrderBy
+  orderBy: MetricOrderBy
 }) {
   if (
     validateOrderBy(
@@ -169,7 +169,7 @@ export function useRememberOrderBy({
   metrics,
   dimensionLabel
 }: {
-  effectiveOrderBy: OrderBy
+  effectiveOrderBy: MetricOrderBy
   metrics: Metric[]
   dimensionLabel: string
 }) {
