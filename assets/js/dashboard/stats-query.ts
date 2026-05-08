@@ -8,6 +8,7 @@ import {
 import { OrderBy } from './hooks/use-metric-order-by'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
+import { Pagination } from '../types/query-api'
 import { remapToApiFilters } from './util/filters'
 
 export type FilterModifiers = { case_sensitive?: boolean }
@@ -15,8 +16,6 @@ export type FilterModifiers = { case_sensitive?: boolean }
 export type ApiFilter =
   | [FilterOperator, FilterKey, FilterClause[]]
   | [FilterOperator, FilterKey, FilterClause[], FilterModifiers]
-
-type Pagination = { limit: number; offset: number }
 
 type DateRange = DashboardPeriod | [string, string]
 type IncludeCompare =

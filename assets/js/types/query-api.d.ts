@@ -202,14 +202,15 @@ export interface QueryApiSchema {
      */
     trim_relative_date_range?: boolean;
   };
-  pagination?: {
-    /**
-     * Number of rows to limit result to.
-     */
-    limit?: number;
-    /**
-     * Pagination offset.
-     */
-    offset?: number;
-  };
+  pagination?: Pagination;
+}
+export interface Pagination {
+  /**
+   * Number of rows to limit result to.
+   */
+  limit?: number;
+  /**
+   * Pagination offset.
+   */
+  offset?: number;
 }

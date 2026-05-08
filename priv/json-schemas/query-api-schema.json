@@ -67,22 +67,7 @@
       }
     },
     "pagination": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "limit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10000,
-          "description": "Number of rows to limit result to."
-        },
-        "offset": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0,
-          "description": "Pagination offset."
-        }
-      }
+      "$ref": "#/definitions/pagination"
     }
   },
   "required": ["site_id", "metrics", "date_range"],
@@ -502,6 +487,24 @@
         },
         { "$ref": "#/definitions/filter_tree" }
       ]
+    },
+    "pagination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Number of rows to limit result to."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Pagination offset."
+        }
+      }
     },
     "sort_direction": {
       "type": "string",
