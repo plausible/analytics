@@ -2205,6 +2205,49 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                }
              ]
     end
+
+    test "silently ignores imported data", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.21"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "all",
+          "metrics" => ["total_revenue"],
+          "dimensions" => ["time:month"],
+          "filters" => [["is", "event:goal", ["Payment"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$26.50",
+                     "short" => "$26.5",
+                     "value" => 26.5
+                   }
+                 ]
+               }
+             ]
+    end
   end
 
   describe "average_revenue plot" do
@@ -2378,6 +2421,49 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                    %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9}
                  ],
                  "change" => [-25]
+               }
+             ]
+    end
+
+    test "silently ignores imported data", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("3.3"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("1.1"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "all",
+          "metrics" => ["average_revenue"],
+          "dimensions" => ["time:month"],
+          "filters" => [["is", "event:goal", ["Payment"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$2.20",
+                     "short" => "$2.2",
+                     "value" => 2.2
+                   }
+                 ]
                }
              ]
     end

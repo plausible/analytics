@@ -360,7 +360,9 @@ defmodule Plausible.Stats.Imported do
     :bounce_rate,
     :conversion_rate,
     :group_conversion_rate,
-    :time_on_page
+    :time_on_page,
+    :total_revenue,
+    :average_revenue
   ]
 
   defp can_order_by?(query) do
