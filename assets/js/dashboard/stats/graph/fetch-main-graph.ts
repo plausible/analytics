@@ -6,12 +6,13 @@ import { createStatsQuery, ReportParams } from '../../stats-query'
 import { isRealTimeDashboard } from '../../util/filters'
 import { MetricValue } from '../../api'
 import * as api from '../../api'
+import { Interval } from './intervals'
 
 export function fetchMainGraph(
   site: PlausibleSite,
   dashboardState: DashboardState,
   metric: Metric,
-  interval: string
+  interval: Interval
 ): Promise<MainGraphResponse> {
   const metricToQuery =
     metric === 'conversion_rate' ? 'group_conversion_rate' : metric
