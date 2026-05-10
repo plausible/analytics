@@ -51,7 +51,7 @@ type QueryInclude = {
 
 export type ReportParams = {
   metrics: Metric[]
-  dimensions?: Dimension[]
+  dimensions: Dimension[]
   include?: Partial<QueryInclude>
   order_by?: OrderBy
   pagination?: Pagination

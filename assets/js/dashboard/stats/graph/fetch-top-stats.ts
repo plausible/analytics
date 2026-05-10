@@ -23,6 +23,7 @@ export function topStatsQueries(
 
   if (isRealTimeDashboard(dashboardState)) {
     currentVisitorsQuery = createStatsQuery(dashboardState, {
+      dimensions: [],
       metrics: ['visitors']
     })
 
@@ -116,6 +117,7 @@ function constructTopStatsQuery(
 ): StatsQuery {
   const reportParams: ReportParams = {
     metrics,
+    dimensions: [],
     include: { imports_meta: true }
   }
 

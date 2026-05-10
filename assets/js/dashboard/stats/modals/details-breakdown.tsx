@@ -6,7 +6,11 @@ import React, {
   useState
 } from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { usePaginatedQueryAPI } from '../../hooks/api-client'
+import {
+  StatsReportId,
+  StatsReportQueryKey,
+  useSearchAndPaginateQueryAPI
+} from '../../hooks/use-query-api'
 import { rootRoute } from '../../router'
 import {
   getStoredOrderBy,
@@ -17,7 +21,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { createStatsQuery, StatsQuery, OrderByEntry } from '../../stats-query'
+import { StatsQuery, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -109,31 +113,25 @@ export function DetailsBreakdown({
     dimensionLabel
   })
 
-  const baseStatsQuery: StatsQuery = useMemo(
-    () =>
-      createStatsQuery(dashboardState, {
-        metrics: metrics,
-        dimensions,
-        order_by: [
-          ...(orderBy.length ? orderBy : storedOrderBy),
-          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-        ]
-      }),
-    [dashboardState, metrics, dimensions, orderBy, storedOrderBy]
-  )
+  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
+    return [
+      dimensions.join(',') as StatsReportId,
+      {
+        dashboardState,
+        reportParams: {
+          metrics,
+          dimensions,
+          order_by: [
+            ...(orderBy.length ? orderBy : storedOrderBy),
+            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ]
+        },
+        search
+      }
+    ]
+  }, [dashboardState, metrics, dimensions, orderBy, storedOrderBy, search])
 
-  const statsQuery: StatsQuery = useMemo(() => {
-    if (search && addSearchFilter) {
-      return addSearchFilter(baseStatsQuery, search)
-    }
-    return baseStatsQuery
-  }, [baseStatsQuery, search, addSearchFilter])
-
-  const apiState = usePaginatedQueryAPI({
-    site,
-    dashboardState,
-    statsQuery
-  })
+  const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
 
   useEffect(() => {
     const pages = apiState.data?.pages

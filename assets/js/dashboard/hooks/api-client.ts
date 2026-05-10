@@ -13,8 +13,6 @@ import {
 } from '../dashboard-time-periods'
 import { REALTIME_UPDATE_TIME_MS } from '../util/realtime-update-timer'
 import { Interval, validIntervals } from '../stats/graph/intervals'
-import { PlausibleSite } from '../site-context'
-import { StatsQuery } from '../stats-query'
 
 // define (in ms) when query API responses should become stale
 export const CACHE_TTL_REALTIME = REALTIME_UPDATE_TIME_MS
@@ -23,7 +21,7 @@ export const CACHE_TTL_LONG_ONGOING = 60 * 60 * 1000 // 1 hour
 export const CACHE_TTL_HISTORICAL = 12 * 60 * 60 * 1000 // 12 hours
 
 // how many items per page for breakdown modals
-const PAGINATION_LIMIT = 100
+export const PAGINATION_LIMIT = 100
 
 /** full endpoint URL */
 type Endpoint = string
@@ -33,54 +31,6 @@ type PaginatedQueryKeyBase = [Endpoint, { dashboardState: DashboardState }]
 type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
   k: TKey
 ) => [DashboardState, Record<string, unknown>]
-
-/**
- * Hook for paginated POST /api/stats/:domain/query requests (i.e. Details views).
- */
-export function usePaginatedQueryAPI({
-  site,
-  dashboardState,
-  statsQuery
-}: {
-  site: PlausibleSite
-  dashboardState: DashboardState
-  statsQuery: StatsQuery
-}) {
-  const queryClient = useQueryClient()
-  const dimensionKey = statsQuery.dimensions.join(',')
-
-  useEffect(() => {
-    return () => {
-      const tanstackQueryFilters: QueryFilters = {
-        predicate: ({ queryKey }) => queryKey[0] === dimensionKey
-      }
-      queryClient.setQueriesData(tanstackQueryFilters, cleanToPageOne)
-    }
-  }, [queryClient, dimensionKey])
-
-  return useInfiniteQuery({
-    queryKey: [dimensionKey, statsQuery],
-    queryFn: async ({ pageParam }): Promise<api.QueryApiResponse> => {
-      return api.stats(site, {
-        ...statsQuery,
-        pagination: { limit: PAGINATION_LIMIT, offset: pageParam as number }
-      })
-    },
-    getNextPageParam: (lastPage, _, lastPageParam) => {
-      return lastPage.results.length === PAGINATION_LIMIT
-        ? (lastPageParam as number) + PAGINATION_LIMIT
-        : null
-    },
-    staleTime: () =>
-      getStaleTime({
-        siteTimezoneOffset: site.offset,
-        siteStatsBegin: site.statsBegin,
-        ...dashboardState
-      }),
-    initialPageParam: 0,
-    placeholderData: (previousData) => previousData
-  })
-}
 
 /**
  * Hook that fetches the first page from the defined GET endpoint on mount,
