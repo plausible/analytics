@@ -13,6 +13,7 @@ import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { useGraphIntervalContext } from './graph-interval-context'
 import { useSetImportsIncluded } from './imports-included-context'
+import { useSegmentsContext } from '../../filtering/segments-context'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -29,6 +30,8 @@ export default function VisitorGraph({
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
   const queryClient = useQueryClient()
+  const { limitedToSegment } = useSegmentsContext()
+  const limitedToSegmentId = limitedToSegment ? limitedToSegment.id : null
 
   const { selectedInterval } = useGraphIntervalContext()
 
@@ -47,7 +50,7 @@ export default function VisitorGraph({
     queryKey: ['top-stats', { dashboardState }] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      return await fetchTopStats(site, opts.dashboardState)
+      return await fetchTopStats(site, opts.dashboardState, limitedToSegmentId)
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {

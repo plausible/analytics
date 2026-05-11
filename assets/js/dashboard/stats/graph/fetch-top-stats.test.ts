@@ -325,7 +325,7 @@ describe(`${topStatsQueries.name}`, () => {
         resolvedFilters: inputDashboardState.filters,
         ...inputDashboardState
       }
-      const queries = topStatsQueries(dashboardState, metrics)
+      const queries = topStatsQueries(dashboardState, metrics, null)
       expect(queries).toEqual(expectedQueries)
     }
   )

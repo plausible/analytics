@@ -12,12 +12,15 @@ import { createStatsQuery, ReportParams, StatsQuery } from '../../stats-query'
 import {
   hasConversionGoalFilter,
   hasPageFilter,
-  isRealTimeDashboard
+  isRealTimeDashboard,
+  remapToApiFilters
 } from '../../util/filters'
+import { isSegmentFilter } from '../../filtering/segments'
 
 export function topStatsQueries(
   dashboardState: DashboardState,
-  metrics: Metric[]
+  metrics: Metric[],
+  limitedToSegmentId: number | null
 ): [StatsQuery, StatsQuery | null] {
   let currentVisitorsQuery = null
 
@@ -26,7 +29,16 @@ export function topStatsQueries(
       metrics: ['visitors']
     })
 
-    currentVisitorsQuery.filters = []
+    const filters = limitedToSegmentId
+      ? dashboardState.filters.filter((f) => {
+          const [_op, _key, clauses] = f
+          return (
+            isSegmentFilter(f) && clauses[0] === limitedToSegmentId.toString()
+          )
+        })
+      : []
+
+    currentVisitorsQuery.filters = remapToApiFilters(filters)
   }
   const topStatsQuery = constructTopStatsQuery(dashboardState, metrics)
 
@@ -35,12 +47,14 @@ export function topStatsQueries(
 
 export async function fetchTopStats(
   site: PlausibleSite,
-  dashboardState: DashboardState
+  dashboardState: DashboardState,
+  limitedToSegmentId: number | null
 ) {
   const metrics = chooseMetrics(site, dashboardState)
   const [topStatsQuery, currentVisitorsQuery] = topStatsQueries(
     dashboardState,
-    metrics
+    metrics,
+    limitedToSegmentId
   )
   const topStatsPromise = api.stats(site, topStatsQuery)
 
