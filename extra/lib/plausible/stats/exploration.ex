@@ -705,7 +705,7 @@ defmodule Plausible.Stats.Exploration do
   defp wildcard_pattern(pathname) when is_binary(pathname) do
     escaped = Regex.escape(pathname)
 
-    "^#{escaped}(/.+)?$"
+    "^#{escaped}(/.*)?$"
   end
 
   defp maybe_search(query, search_term) do
