@@ -664,6 +664,40 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step2.visitors == 1
       end
 
+      test "there can be multiple journey suggestions for a single user/session" do
+        site = new_site()
+
+        now = DateTime.utc_now()
+
+        ago = fn ms -> DateTime.shift(now, minute: -1 * ms) end
+
+        populate_stats(site, [
+          build(:pageview, user_id: 123, pathname: "/home", timestamp: ago.(100)),
+          build(:pageview, user_id: 123, pathname: "/login", timestamp: ago.(99)),
+          build(:pageview, user_id: 123, pathname: "/dashboard", timestamp: ago.(98)),
+          build(:pageview, user_id: 123, pathname: "/home", timestamp: ago.(97)),
+          build(:pageview, user_id: 123, pathname: "/login", timestamp: ago.(96)),
+          build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(95))
+        ])
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        ]
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok,
+                [
+                  %{step: %{pathname: "/dashboard"}, visitors: 1},
+                  %{step: %{pathname: "/sites"}, visitors: 1}
+                ]} =
+                 Exploration.next_steps(site, query, journey,
+                   search_term: "",
+                   direction: :forward
+                 )
+      end
+
       test "does not suggest the same path/pathname as in previous step (regression test)" do
         site = new_site()
 
