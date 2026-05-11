@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         )
 
       assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
-      assert html =~ "/my-site.example.com/?period=custom"
+      assert html =~ "/my-site.example.com?period=custom"
     end
 
     test "renders no total link when no domain is provided" do
@@ -354,8 +354,8 @@ defmodule PlausibleWeb.Components.BillingTest do
 
       html = render_monthly_pageview_usage(usage, 10_000)
 
-      assert html =~ "/example.com/?period=custom"
-      assert html =~ "/app.example.com/?period=custom"
+      assert html =~ "/example.com?period=custom"
+      assert html =~ "/app.example.com?period=custom"
     end
 
     test "dashboard links include the billing cycle date range" do
@@ -367,7 +367,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         )
 
       assert html =~
-               "/my-site.example.com/?period=custom&amp;from=2024-01-01&amp;to=2024-01-31"
+               "/my-site.example.com?period=custom&amp;from=2024-01-01&amp;to=2024-01-31"
     end
   end
 

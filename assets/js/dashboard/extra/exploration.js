@@ -963,7 +963,8 @@ export function FunnelExploration() {
     !activeLoading &&
     steps.length === 0 &&
     funnel.length === 0 &&
-    activeResults.length === 0
+    activeResults.length === 0 &&
+    !activeFilter
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null

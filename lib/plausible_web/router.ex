@@ -734,6 +734,7 @@ defmodule PlausibleWeb.Router do
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain/export", StatsController, :csv_export
+      get "/:domain", StatsController, :stats
       get "/:domain/*path", StatsController, :stats
     end
   end
