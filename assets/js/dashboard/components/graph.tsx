@@ -8,7 +8,7 @@ import React, {
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
-const ANNOTATION_CIRCLE_RADIUS_PX = 6
+const ANNOTATION_DIAMOND_SIZE_PX = 3
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
 const X_TICK_LENGTH_PX = 4
@@ -43,6 +43,7 @@ type GraphProps<
   onPointerLeave: (event: unknown) => void
   onGotPointerCapture: (event: unknown) => void
   onClick?: PointerHandler<T>
+  onContextMenu?: PointerHandler<T>
   yFormat: (domainValue: d3.NumberValue, index: number) => string
   /**
    * Things are drawn in the order of settings,
@@ -99,6 +100,7 @@ function InnerGraph<T extends GraphYValues>({
   onGotPointerCapture,
   onPointerEnter,
   onClick,
+  onContextMenu,
   yFormat,
   settings,
   gradients,
@@ -348,18 +350,6 @@ function InnerGraph<T extends GraphYValues>({
           const closestIndexToPointer = inHoverableArea
             ? getClosestIndexToPointer(xPointer, points)
             : null
-          const onAnnotationsBubble =
-            closestIndexToPointer !== null &&
-            annotationsCountByIndex[closestIndexToPointer] > 0
-              ? isOverAnnotationBubble({
-                  bubble: {
-                    x: points[closestIndexToPointer].x,
-                    y: yBottomEdge,
-                    radius: ANNOTATION_CIRCLE_RADIUS_PX
-                  },
-                  pointer: { x: xPointer, y: yPointer }
-                })
-              : false
           onPointerMove({
             inHoverableArea,
             closestPoint:
@@ -370,7 +360,6 @@ function InnerGraph<T extends GraphYValues>({
                     values: points[closestIndexToPointer].values
                   }
                 : null,
-            onAnnotationsBubble,
             xPointer,
             yPointer,
             event
@@ -467,18 +456,6 @@ function InnerGraph<T extends GraphYValues>({
           const closestIndexToPointer = inHoverableArea
             ? getClosestIndexToPointer(xPointer, points)
             : null
-          const onAnnotationsBubble =
-            closestIndexToPointer !== null &&
-            annotationsCountByIndex[closestIndexToPointer] > 0
-              ? isOverAnnotationBubble({
-                  bubble: {
-                    x: points[closestIndexToPointer].x,
-                    y: yBottomEdge,
-                    radius: ANNOTATION_CIRCLE_RADIUS_PX
-                  },
-                  pointer: { x: xPointer, y: yPointer }
-                })
-              : false
           onClick({
             inHoverableArea,
             closestPoint:
@@ -489,7 +466,6 @@ function InnerGraph<T extends GraphYValues>({
                     values: points[closestIndexToPointer].values
                   }
                 : null,
-            onAnnotationsBubble,
             xPointer,
             yPointer,
             event
@@ -504,6 +480,51 @@ function InnerGraph<T extends GraphYValues>({
       }
     }
   }, [onClick, isInHoverableArea, points, annotationsCountByIndex, yBottomEdge])
+
+  useEffect(() => {
+    const currentSvg = svgRef.current
+    if (currentSvg && points.length) {
+      const svg = d3.select(currentSvg)
+      if (typeof onContextMenu !== 'function') {
+        svg.on('contextmenu', null)
+      } else {
+        svg.on('contextmenu', (event) => {
+          event.preventDefault()
+          const { xPointer, yPointer } = getPosition(event)
+          const inHoverableArea = isInHoverableArea(xPointer, yPointer)
+          const closestIndexToPointer = inHoverableArea
+            ? getClosestIndexToPointer(xPointer, points)
+            : null
+          onContextMenu({
+            inHoverableArea,
+            closestPoint:
+              closestIndexToPointer !== null
+                ? {
+                    index: closestIndexToPointer,
+                    x: points[closestIndexToPointer].x,
+                    values: points[closestIndexToPointer].values
+                  }
+                : null,
+            xPointer,
+            yPointer,
+            event
+          })
+        })
+      }
+    }
+    return () => {
+      if (currentSvg) {
+        const svg = d3.select(currentSvg)
+        svg.on('contextmenu', null)
+      }
+    }
+  }, [
+    onContextMenu,
+    isInHoverableArea,
+    points,
+    annotationsCountByIndex,
+    yBottomEdge
+  ])
 
   useEffect(() => {
     points.forEach(({ dots }, index) =>
@@ -562,21 +583,13 @@ function InnerGraph<T extends GraphYValues>({
           .append('g')
           .call((g) =>
             g
-              .append('circle')
-              .attr('cx', point.x)
-              .attr('cy', yBottomEdge)
-              .attr('r', ANNOTATION_CIRCLE_RADIUS_PX)
+              .append('polygon')
+              .attr(
+                'points',
+                `${-ANNOTATION_DIAMOND_SIZE_PX},0 0,${ANNOTATION_DIAMOND_SIZE_PX} ${ANNOTATION_DIAMOND_SIZE_PX},0 0,${-ANNOTATION_DIAMOND_SIZE_PX}`
+              )
+              .attr('transform', `translate(${point.x}, ${yBottomEdge})`)
               .attr('class', annotationCircleClass)
-          )
-          .call((g) =>
-            g
-              .append('text')
-              .text(point.annotationCount)
-              .attr('dx', point.x)
-              .attr('dy', yBottomEdge)
-              .attr('text-anchor', 'middle')
-              .attr('alignment-baseline', 'middle')
-              .attr('class', annotationCountTextClass)
           )
       }
     }
@@ -599,23 +612,6 @@ const yTickLineClass =
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
 const xTickLineClass = 'stroke-gray-300 dark:stroke-gray-700'
 const annotationCircleClass = 'fill-indigo-500 stroke-indigo-500'
-const annotationCountTextClass =
-  'fill-gray-100 text-[10px] pointer-events-none select-none'
-
-const isOverAnnotationBubble = ({
-  bubble,
-  pointer
-}: {
-  bubble: { x: number; y: number; radius: number }
-  pointer: { x: number; y: number }
-}) => {
-  const vectorLength =
-    ((pointer.y - bubble.y) ** 2 + (pointer.x - bubble.x) ** 2) ** (1 / 2)
-
-  const withinCircle = vectorLength <= bubble.radius
-
-  return withinCircle
-}
 
 export const getXDomain = (bucketCount: number): [number, number] => {
   const xMin = 0
@@ -988,7 +984,6 @@ export type PointerHandler<T extends GraphYValues> = (opts: {
   xPointer: number
   yPointer: number
   closestPoint: ({ index: number } & Pick<Point<T>, 'x' | 'values'>) | null
-  onAnnotationsBubble: boolean
   event: unknown
 }) => void
 

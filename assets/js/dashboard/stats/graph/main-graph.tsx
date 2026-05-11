@@ -1,5 +1,6 @@
 import React, {
   ReactNode,
+  RefObject,
   useCallback,
   useEffect,
   useMemo,
@@ -49,6 +50,9 @@ import {
   AnnotationType,
   groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
+import { Button } from '../../components/button'
+import { TrashIcon } from '@heroicons/react/20/solid'
+import { PencilIcon } from '@heroicons/react/24/outline'
 
 const height = 368
 const marginTop = 16
@@ -72,24 +76,12 @@ type MainGraphYValues = Readonly<
   ]
 >
 
-type AnnotationMenuState = {
-  x: number
-  y: number
-  selectedIndex: number | null
-}
-
 type TooltipState = {
   x: number
   y: number
   selectedIndex: number | null
   persistent: boolean
   type: 'annotations' | 'series'
-}
-
-const initialAnnotationMenuState: AnnotationMenuState = {
-  x: 0,
-  y: 0,
-  selectedIndex: null
 }
 
 const initialTooltipState: TooltipState = {
@@ -108,7 +100,6 @@ export const MainGraph = ({
   data: MainGraphData
 }) => {
   const site = useSiteContext()
-  const { setModal } = useRoutelessModalsContext()
   const getAnnotationsQuery = useGetAnnotations()
   const { mode } = useTheme()
   const navigate = useAppNavigate()
@@ -116,6 +107,8 @@ export const MainGraph = ({
   const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
 
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
   const metric = data.query.metrics[0] as Metric
@@ -132,9 +125,28 @@ export const MainGraph = ({
   }, [data, annotationsByTimeLabel])
 
   useEffect(() => {
-    const onPointerCancel = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') {
+    const onClickOutside = (event: PointerEvent) => {
+      if (!tooltipRef.current?.contains(event.target as Node)) {
+        setTooltip(initialTooltipState)
+      }
+    }
+    if (tooltip.persistent && isTouchDevice === false) {
+      document.addEventListener('click', onClickOutside)
+    } else {
+      document.removeEventListener('click', onClickOutside)
+    }
+    return () => {
+      document.removeEventListener('click', onClickOutside)
+    }
+  }, [tooltip.persistent, isTouchDevice])
+
+  useEffect(() => {
+    const onPointerCancel = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
         panGestureStartTimeRef.current = null
+        if (tooltipRef.current?.contains(event.target as Node)) {
+          return
+        }
         setTooltip(initialTooltipState)
       }
     }
@@ -306,7 +318,7 @@ export const MainGraph = ({
         setIsTouchDevice(true)
         if (tooltip.persistent && inHoverableArea && closestPoint) {
           const now = Date.now()
-          // move the tooltip only when it is certain it's a y-pan
+          // move the tooltip only when it is certain it's not a y-pan
           if (panGestureStartTimeRef.current === null) {
             panGestureStartTimeRef.current = now
           } else if (
@@ -325,15 +337,21 @@ export const MainGraph = ({
         return
       }
       setIsTouchDevice(false)
-      if (!inHoverableArea || !closestPoint) {
-        return setTooltip(initialTooltipState)
-      }
-      return setTooltip({
-        persistent: false,
-        selectedIndex: closestPoint.index,
-        x: closestPoint.x,
-        y: 0,
-        type: 'series'
+      setTooltip((currentState) => {
+        const currentlyPersistent = currentState.persistent
+        if (currentlyPersistent) {
+          return currentState
+        }
+        if (!inHoverableArea || !closestPoint) {
+          return initialTooltipState
+        }
+        return {
+          persistent: false,
+          selectedIndex: closestPoint.index,
+          x: closestPoint.x,
+          y: 0,
+          type: 'series'
+        }
       })
     },
     [tooltip.persistent]
@@ -393,23 +411,8 @@ export const MainGraph = ({
     [navigate, interval]
   )
 
-  const openAnnotationModal = useCallback(
-    (datetime: string) => {
-      setModal({
-        type: 'create-annotation',
-        annotation: {
-          note: `Note on ${datetime}`,
-          type: AnnotationType.personal,
-          datetime: datetime,
-          granularity: getGranularity(interval)
-        }
-      })
-    },
-    [setModal, interval]
-  )
-
   const onChartClick = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint, event }) => {
+    ({ inHoverableArea, closestPoint }) => {
       if (isTouchDevice) {
         if (inHoverableArea && closestPoint) {
           return setTooltip({
@@ -423,21 +426,41 @@ export const MainGraph = ({
         return setTooltip(initialTooltipState)
       }
 
-      const isAltClick = event instanceof PointerEvent && event.altKey
-      if (annotationDatetime && isAltClick) {
-        return openAnnotationModal(annotationDatetime)
+      if (tooltip.persistent) {
+        return
       }
-      if (typeof zoomDate === 'string' && !isAltClick) {
+      // const isAltClick = event instanceof PointerEvent && event.altKey
+      // if (annotationDatetime && isAltClick) {
+      //   return openAnnotationModal(annotationDatetime)
+      // }
+      if (typeof zoomDate === 'string') {
         return zoomToPeriod(zoomDate)
       }
     },
     [
       isTouchDevice,
       zoomDate,
-      annotationDatetime,
+      // annotationDatetime,
       zoomToPeriod,
-      openAnnotationModal
+      // openAnnotationModal,
+      tooltip.persistent
     ]
+  )
+
+  const onContextMenu = useCallback<PointerHandler<MainGraphYValues>>(
+    ({ inHoverableArea, closestPoint }) => {
+      if (inHoverableArea && closestPoint) {
+        return setTooltip({
+          selectedIndex: closestPoint.index,
+          x: closestPoint.x,
+          y: 0,
+          persistent: true,
+          type: 'series'
+        })
+      }
+      return setTooltip(initialTooltipState)
+    },
+    []
   )
 
   return (
@@ -463,6 +486,7 @@ export const MainGraph = ({
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       onClick={onChartClick}
+      onContextMenu={onContextMenu}
       yFormat={yFormat}
       gradients={gradients}
       annotationsCountByIndex={annotationsCountByIndex}
@@ -485,20 +509,27 @@ export const MainGraph = ({
             bucketIndex={selectedIndex}
             totalBuckets={remappedData.length}
             persistent={tooltip.persistent}
+            tooltipRef={tooltipRef}
+            isTouchDevice={isTouchDevice}
           >
             {tooltip.persistent && (
               <>
-                {!!zoomDate && (
-                  <button
-                    className="button"
-                    onClick={() => zoomToPeriod(zoomDate)}
-                  >{`View ${interval}`}</button>
-                )}
-                {selectedDatum.main.isDefined && (
+                {!!annotationDatetime &&
+                  !!annotationsByTimeLabel[annotationDatetime] && (
+                    <InteractiveAnnotationsList
+                      annotations={annotationsByTimeLabel[annotationDatetime]}
+                    />
+                  )}
+                {!!annotationDatetime && (
                   <AddAnnotationButton
                     interval={interval}
-                    main={selectedDatum.main}
+                    timelabel={annotationDatetime}
                   />
+                )}
+                {!!zoomDate && (
+                  <Button
+                    onClick={() => zoomToPeriod(zoomDate)}
+                  >{`View ${interval}`}</Button>
                 )}
               </>
             )}
@@ -506,17 +537,19 @@ export const MainGraph = ({
               <>
                 {!!annotationDatetime &&
                   !!annotationsByTimeLabel[annotationDatetime] && (
-                    <AnnotationsList
-                      annotations={annotationsByTimeLabel[
-                        annotationDatetime
-                      ].slice(0, 1)}
-                      onAnnotationClick={() => {}}
-                    >
+                    <>
+                      <AnnotationsList
+                        expandedIndex={null}
+                        annotations={annotationsByTimeLabel[
+                          annotationDatetime
+                        ].slice(0, 1)}
+                        onAnnotationClick={() => {}}
+                      />
                       {annotationsByTimeLabel[annotationDatetime].length == 2 &&
                         `and 1 more note`}
                       {annotationsByTimeLabel[annotationDatetime].length > 2 &&
                         `and ${annotationsByTimeLabel[annotationDatetime].length - 1} more notes`}
-                    </AnnotationsList>
+                    </>
                   )}
                 {(!!zoomDate || !!annotationDatetime) && (
                   <hr className="border-gray-600 dark:border-gray-800 my-1" />
@@ -539,23 +572,53 @@ export const MainGraph = ({
   )
 }
 
-const AnnotationsList = ({
-  annotations,
-  // expandedIndex,
-  onAnnotationClick,
-  children
+const InteractiveAnnotationsList = ({
+  annotations
 }: {
   annotations: Annotation[]
-  // expandedIndex: number
+}) => {
+  const [expanded, setExpanded] = useState<number | null>(null)
+  useEffect(() => {
+    setExpanded(null)
+  }, [annotations])
+  const { setModal } = useRoutelessModalsContext()
+
+  return (
+    <AnnotationsList
+      annotations={annotations}
+      expandedIndex={expanded}
+      onAnnotationClick={(index: number) =>
+        setExpanded((current) => (current === index ? null : index))
+      }
+      onEdit={(annotation) =>
+        setModal({ type: 'update-annotation', annotation })
+      }
+      onDelete={(annotation) =>
+        setModal({ type: 'delete-annotation', annotation })
+      }
+    />
+  )
+}
+
+const AnnotationsList = ({
+  annotations,
+  expandedIndex,
+  onAnnotationClick,
+  onEdit,
+  onDelete
+}: {
+  annotations: Annotation[]
+  onEdit?: (annotation: Annotation) => void
+  onDelete?: (annotation: Annotation) => void
+  expandedIndex: number | null
   onAnnotationClick: (index: number) => void
-  children?: ReactNode
 }) => {
   return (
     <div className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
       {annotations.map((annotation, index) => {
         const { id, note } = annotation
         return (
-          <div className="flex flex-col" key={id}>
+          <div className="flex flex-col gap-y-1.5" key={id}>
             <button
               className="flex flex-row"
               onClick={() => onAnnotationClick(index)}
@@ -563,7 +626,30 @@ const AnnotationsList = ({
               <div className="rounded-xs w-[3px] bg-green-500 shrink-0"> </div>
               <div className="ml-2 text-left break-all">{note}</div>
             </button>
-            {children}
+            {expandedIndex === index && (
+              <div className="flex flex-row">
+                {typeof onEdit === 'function' && (
+                  <Button
+                    theme="ghost"
+                    size="sm"
+                    onClick={() => onEdit(annotation)}
+                  >
+                    <PencilIcon className="w-4 h-4 block" />
+                    Edit
+                  </Button>
+                )}
+                {typeof onDelete === 'function' && (
+                  <Button
+                    theme="ghost"
+                    size="sm"
+                    onClick={() => onDelete(annotation)}
+                  >
+                    <TrashIcon className="w-4 h-4 block" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         )
       })}
@@ -571,131 +657,42 @@ const AnnotationsList = ({
   )
 }
 
-const AnnotationMenu = ({
-  x,
-  y,
-  maxX,
-  annotations
-}: {
-  x: number
-  y: number
-  maxX: number
-  annotations: Annotation[]
-}) => {
-  const [expanded, setExpanded] = useState<null | number>(null)
-  useEffect(() => {
-    setExpanded(null)
-  }, [annotations])
-  const { setModal } = useRoutelessModalsContext()
-
-  return (
-    <GraphTooltipWrapper
-      anchor="bottomEdge"
-      x={x}
-      y={y}
-      minWidth={200}
-      maxX={maxX}
-      className={classNames(mainGraphTooltipClassName)}
-    >
-      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5"></aside>
-    </GraphTooltipWrapper>
-  )
-}
-
 const AddAnnotationButton = ({
   interval,
-  main
+  timelabel
 }: {
   interval: Interval
-  main: GraphDatum['main'] & { isDefined: true }
+  timelabel: string
 }) => {
   const { setModal } = useRoutelessModalsContext()
 
   return (
-    <button
-      className="button"
+    <Button
+      size="sm"
       onClick={() =>
         setModal({
           type: 'create-annotation',
           annotation: {
-            note: `Note on ${main.timeLabel}`,
+            note: `Note on ${timelabel}`,
             type: AnnotationType.personal,
-            datetime: main.timeLabel,
+            datetime: timelabel,
             granularity: getGranularity(interval)
           }
         })
       }
     >
       Add note
-    </button>
+    </Button>
   )
 }
 
 const isTouchEvent = (event: unknown) =>
   event instanceof PointerEvent && event.pointerType === 'touch'
 
-// const isBottomClick = ({
-//   height,
-//   yPointer,
-//   marginBottom
-// }: {
-//   height: number
-//   marginBottom: number
-//   yPointer: number
-// }) => {
-//   if (height - yPointer <= marginBottom + 16) {
-//     return true
-//   }
-//   return false
-// }
-
 const mainGraphTooltipClassName =
   'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
 
-const ViewAnnotationsTooltip = ({
-  x,
-  y,
-  maxX,
-  count
-}: {
-  x: number
-  y: number
-  maxX: number
-  count: number
-}) => (
-  <GraphTooltipWrapper
-    anchor="bottomEdge"
-    x={x}
-    y={y}
-    minWidth={100}
-    maxX={maxX}
-    className={classNames(
-      mainGraphTooltipClassName,
-      'select-none pointer-events-none'
-    )}
-  >
-    <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
-      {count === 1 ? 'View 1 note' : `View ${count} notes`}
-    </aside>
-  </GraphTooltipWrapper>
-)
-
-const MainGraphTooltip = ({
-  metric,
-  getFormattedValue,
-  interval,
-  period,
-  shouldShowDate,
-  shouldShowYear,
-  maxX,
-  x,
-  y,
-  datum,
-  bucketIndex,
-  totalBuckets,
-  persistent,
-  children
-}: {
+type MainGraphTooltipProps = {
   metric: Metric
   getFormattedValue: (value: MetricValue) => string
   interval: Interval
@@ -711,7 +708,28 @@ const MainGraphTooltip = ({
   maxX: number
   persistent: boolean
   children?: ReactNode
-}) => {
+  tooltipRef: RefObject<HTMLDivElement>
+  isTouchDevice: boolean
+}
+
+const MainGraphTooltip = ({
+  metric,
+  getFormattedValue,
+  interval,
+  period,
+  shouldShowDate,
+  shouldShowYear,
+  maxX,
+  x,
+  y,
+  datum,
+  bucketIndex,
+  totalBuckets,
+  persistent,
+  children,
+  tooltipRef,
+  isTouchDevice
+}: MainGraphTooltipProps) => {
   const { dashboardState } = useDashboardStateContext()
   const metricLabel = getMetricLabel(metric, {
     hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
@@ -719,12 +737,14 @@ const MainGraphTooltip = ({
   const { main, comparison, change } = datum
   return (
     <GraphTooltipWrapper
+      wrapperRef={tooltipRef}
       anchor="topEdge"
       x={x}
       y={y}
       minWidth={200}
       maxX={maxX}
-      className={classNames(mainGraphTooltipClassName, 'select-none', {
+      className={classNames(mainGraphTooltipClassName, {
+        'select-none': !persistent || isTouchDevice,
         'pointer-events-none': !persistent
       })}
     >

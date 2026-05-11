@@ -1,9 +1,26 @@
-import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
+import React, {
+  ReactNode,
+  RefObject,
+  useLayoutEffect,
+  useState
+} from 'react'
 import {
   Transition,
   TransitionClasses,
   TransitionEvents
 } from '@headlessui/react'
+
+type GraphTooltipWrapperProps = {
+  anchor: 'topEdge' | 'bottomEdge'
+  x: number
+  y: number
+  maxX: number
+  minWidth: number
+  children: ReactNode
+  className?: string
+  transition?: TransitionClasses & TransitionEvents
+  wrapperRef: RefObject<HTMLDivElement>
+}
 
 export const GraphTooltipWrapper = ({
   anchor,
@@ -13,19 +30,9 @@ export const GraphTooltipWrapper = ({
   minWidth,
   children,
   className,
-  transition
-}: {
-  anchor: 'topEdge' | 'bottomEdge'
-  x: number
-  y: number
-  maxX: number
-  minWidth: number
-  children: ReactNode
-  className?: string
-  transition?: TransitionClasses & TransitionEvents
-}) => {
-  const ref = useRef<HTMLDivElement>(null)
-
+  transition,
+  wrapperRef
+}: GraphTooltipWrapperProps) => {
   const xOffset = 12
 
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
@@ -45,13 +52,13 @@ export const GraphTooltipWrapper = ({
       : 'alignedRightClamped'
 
   useLayoutEffect(() => {
-    if (!ref.current) {
+    if (!wrapperRef?.current) {
       return
     }
-    const el = ref.current
+    const el = wrapperRef.current
     const w = el.getBoundingClientRect().width
     setMeasuredWidth(w)
-  }, [x, maxX, minWidth, className, children])
+  }, [x, maxX, minWidth, className, children, wrapperRef])
 
   const extraStyleByAnchor = {
     topEdge: {},
@@ -61,7 +68,7 @@ export const GraphTooltipWrapper = ({
   return (
     <Transition as={React.Fragment} appear show {...transition}>
       <div
-        ref={ref}
+        ref={wrapperRef}
         className={className}
         style={{
           minWidth,
