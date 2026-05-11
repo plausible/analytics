@@ -10,7 +10,7 @@ import { StatsQuery } from '../../stats-query'
 import { remapToApiFilters } from '../../util/filters'
 import {
   chooseMetrics,
-  topStatsQueries,
+  topStatsQuery,
   getPartialDayTimeRange,
   formatTopStatsData
 } from './fetch-top-stats'
@@ -39,17 +39,6 @@ const expectedBaseQuery = {
   pagination: null
 }
 
-const expectedRealtimeVisitorsQuery: StatsQuery = {
-  ...expectedBaseQuery,
-  date_range: DashboardPeriod.realtime,
-  include: {
-    ...expectedBaseInclude,
-    compare: null,
-    imports_meta: false
-  },
-  metrics: ['visitors']
-}
-
 type TestCase = [
   /** situation */
   string,
@@ -58,8 +47,8 @@ type TestCase = [
     Partial<{ site?: Pick<PlausibleSite, 'revenueGoals'> }>,
   /** expected metrics */
   Metric[],
-  /** expected queries */
-  [StatsQuery, null | StatsQuery]
+  /** expected top stats query */
+  StatsQuery
 ]
 
 const cases: TestCase[] = [
@@ -67,34 +56,28 @@ const cases: TestCase[] = [
     'realtime and goal filter',
     { period: DashboardPeriod.realtime, filters: [aGoalFilter] },
     ['visitors', 'events'],
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: DashboardPeriod.realtime_30m,
-        filters: remapToApiFilters([aGoalFilter]),
-        include: { ...expectedBaseInclude, compare: null },
-        metrics: ['visitors', 'events']
-      },
-      expectedRealtimeVisitorsQuery
-    ]
+    {
+      ...expectedBaseQuery,
+      date_range: DashboardPeriod.realtime_30m,
+      filters: remapToApiFilters([aGoalFilter]),
+      include: { ...expectedBaseInclude, compare: null },
+      metrics: ['visitors', 'events']
+    }
   ],
 
   [
     'realtime',
     { period: DashboardPeriod.realtime, filters: [] },
     ['visitors', 'pageviews'],
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: DashboardPeriod.realtime_30m,
-        include: {
-          ...expectedBaseInclude,
-          compare: null
-        },
-        metrics: ['visitors', 'pageviews']
+    {
+      ...expectedBaseQuery,
+      date_range: DashboardPeriod.realtime_30m,
+      include: {
+        ...expectedBaseInclude,
+        compare: null
       },
-      expectedRealtimeVisitorsQuery
-    ]
+      metrics: ['visitors', 'pageviews']
+    }
   ],
 
   [
@@ -113,36 +96,30 @@ const cases: TestCase[] = [
       'average_revenue',
       'conversion_rate'
     ],
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: aPeriodNotRealtime,
-        filters: remapToApiFilters([aGoalFilter]),
-        metrics: [
-          'visitors',
-          'events',
-          'total_revenue',
-          'average_revenue',
-          'conversion_rate'
-        ]
-      },
-      null
-    ]
+    {
+      ...expectedBaseQuery,
+      date_range: aPeriodNotRealtime,
+      filters: remapToApiFilters([aGoalFilter]),
+      metrics: [
+        'visitors',
+        'events',
+        'total_revenue',
+        'average_revenue',
+        'conversion_rate'
+      ]
+    }
   ],
 
   [
     'goal filter',
     { period: aPeriodNotRealtime, filters: [aGoalFilter] },
     ['visitors', 'events', 'conversion_rate'],
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: aPeriodNotRealtime,
-        filters: remapToApiFilters([aGoalFilter]),
-        metrics: ['visitors', 'events', 'conversion_rate']
-      },
-      null
-    ]
+    {
+      ...expectedBaseQuery,
+      date_range: aPeriodNotRealtime,
+      filters: remapToApiFilters([aGoalFilter]),
+      metrics: ['visitors', 'events', 'conversion_rate']
+    }
   ],
 
   [
@@ -159,23 +136,19 @@ const cases: TestCase[] = [
       'scroll_depth',
       'time_on_page'
     ],
-
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: aPeriodNotRealtime,
-        filters: remapToApiFilters([aPageFilter]),
-        metrics: [
-          'visitors',
-          'visits',
-          'pageviews',
-          'bounce_rate',
-          'scroll_depth',
-          'time_on_page'
-        ]
-      },
-      null
-    ]
+    {
+      ...expectedBaseQuery,
+      date_range: aPeriodNotRealtime,
+      filters: remapToApiFilters([aPageFilter]),
+      metrics: [
+        'visitors',
+        'visits',
+        'pageviews',
+        'bounce_rate',
+        'scroll_depth',
+        'time_on_page'
+      ]
+    }
   ],
 
   [
@@ -189,21 +162,18 @@ const cases: TestCase[] = [
       'bounce_rate',
       'visit_duration'
     ],
-    [
-      {
-        ...expectedBaseQuery,
-        date_range: aPeriodNotRealtime,
-        metrics: [
-          'visitors',
-          'visits',
-          'pageviews',
-          'views_per_visit',
-          'bounce_rate',
-          'visit_duration'
-        ]
-      },
-      null
-    ]
+    {
+      ...expectedBaseQuery,
+      date_range: aPeriodNotRealtime,
+      metrics: [
+        'visitors',
+        'visits',
+        'pageviews',
+        'views_per_visit',
+        'bounce_rate',
+        'visit_duration'
+      ]
+    }
   ]
 ]
 
@@ -294,7 +264,6 @@ describe(`${formatTopStatsData.name}`, () => {
     )
     const { timeRange, comparisonTimeRange } = formatTopStatsData(
       response,
-      null,
       metrics
     )
     expect(timeRange).toBe('until 10:25')
@@ -308,7 +277,6 @@ describe(`${formatTopStatsData.name}`, () => {
     )
     const { timeRange, comparisonTimeRange } = formatTopStatsData(
       response,
-      null,
       metrics
     )
     expect(timeRange).toBe('until 10:25')
@@ -316,17 +284,16 @@ describe(`${formatTopStatsData.name}`, () => {
   })
 })
 
-describe(`${topStatsQueries.name}`, () => {
+describe(`${topStatsQuery.name}`, () => {
   test.each(cases)(
     'for %s dashboard, queries are as expected',
-    (_, { site: _site, ...inputDashboardState }, metrics, expectedQueries) => {
+    (_, { site: _site, ...inputDashboardState }, metrics, expectedQuery) => {
       const dashboardState = {
         ...dashboardStateDefaultValue,
         resolvedFilters: inputDashboardState.filters,
         ...inputDashboardState
       }
-      const queries = topStatsQueries(dashboardState, metrics)
-      expect(queries).toEqual(expectedQueries)
+      expect(topStatsQuery(dashboardState, metrics)).toEqual(expectedQuery)
     }
   )
 })

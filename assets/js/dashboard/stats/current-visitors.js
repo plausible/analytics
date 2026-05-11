@@ -1,39 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import * as api from '../api'
 import { Tooltip } from '../util/tooltip'
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load'
-import { useDashboardStateContext } from '../dashboard-state-context'
-import { useSiteContext } from '../site-context'
 import { useLastLoadContext } from '../last-load-context'
+import { useCurrentVisitorsContext } from '../current-visitors-context'
 import classNames from 'classnames'
 import { popover } from '../components/popover'
 
 export default function CurrentVisitors({ className = '' }) {
-  const { dashboardState } = useDashboardStateContext()
   const lastLoadTimestamp = useLastLoadContext()
-  const site = useSiteContext()
-  const [currentVisitors, setCurrentVisitors] = useState(null)
+  const currentVisitors = useCurrentVisitorsContext()
 
-  const updateCount = useCallback(() => {
-    api
-      .get(`/api/stats/${encodeURIComponent(site.domain)}/current-visitors`)
-      .then((res) => setCurrentVisitors(res))
-  }, [site.domain])
-
-  useEffect(() => {
-    document.addEventListener('tick', updateCount)
-
-    return () => {
-      document.removeEventListener('tick', updateCount)
-    }
-  }, [updateCount])
-
-  useEffect(() => {
-    updateCount()
-  }, [dashboardState, updateCount])
-
-  if (currentVisitors !== null && dashboardState.filters.length === 0) {
+  if (currentVisitors !== null) {
     return (
       <Tooltip
         info={

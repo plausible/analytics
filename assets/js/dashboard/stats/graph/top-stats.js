@@ -6,6 +6,7 @@ import { formatDateRange, formatDayShort, parseUTCDate } from '../../util/date'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
+import { useCurrentVisitorsContext } from '../../current-visitors-context'
 import { ChangeArrow } from '../reports/change-arrow'
 import {
   MetricFormatterShort,
@@ -209,8 +210,25 @@ export default function TopStats({
     )
   }
 
+  const currentVisitors = useCurrentVisitorsContext()
+
+  const currentVisitorsStat =
+    dashboardState.period === 'realtime' && currentVisitors !== null
+      ? {
+          metric: 'visitors',
+          value: currentVisitors,
+          name: 'Current visitors',
+          graphable: false
+        }
+      : null
+
+  const allTopStats = [
+    ...(currentVisitorsStat ? [currentVisitorsStat] : []),
+    ...(data?.topStats ?? [])
+  ]
+
   const stats =
-    data && data.topStats.filter((stat) => stat.value !== null).map(renderStat)
+    data && allTopStats.filter((stat) => stat.value !== null).map(renderStat)
 
   if (stats && dashboardState.period === 'realtime') {
     stats.push(blinkingDot())

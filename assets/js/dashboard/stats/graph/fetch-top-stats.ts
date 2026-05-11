@@ -15,23 +15,33 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 
-export function topStatsQueries(
+export function topStatsQuery(
   dashboardState: DashboardState,
   metrics: Metric[]
-): [StatsQuery, StatsQuery | null] {
-  let currentVisitorsQuery = null
+): StatsQuery {
+  const reportParams: ReportParams = {
+    metrics,
+    dimensions: [],
+    include: { imports_meta: true }
+  }
+
+  const statsQuery = createStatsQuery(dashboardState, reportParams)
+
+  if (
+    !isComparisonEnabled(dashboardState.comparison) &&
+    !isComparisonForbidden({
+      period: dashboardState.period,
+      segmentIsExpanded: false
+    })
+  ) {
+    statsQuery.include.compare = ComparisonMode.previous_period
+  }
 
   if (isRealTimeDashboard(dashboardState)) {
-    currentVisitorsQuery = createStatsQuery(dashboardState, {
-      dimensions: [],
-      metrics: ['visitors']
-    })
-
-    currentVisitorsQuery.filters = []
+    statsQuery.date_range = DashboardPeriod.realtime_30m
   }
-  const topStatsQuery = constructTopStatsQuery(dashboardState, metrics)
 
-  return [topStatsQuery, currentVisitorsQuery]
+  return statsQuery
 }
 
 export async function fetchTopStats(
@@ -39,20 +49,8 @@ export async function fetchTopStats(
   dashboardState: DashboardState
 ) {
   const metrics = chooseMetrics(site, dashboardState)
-  const [topStatsQuery, currentVisitorsQuery] = topStatsQueries(
-    dashboardState,
-    metrics
-  )
-  const topStatsPromise = api.stats(site, topStatsQuery)
-
-  const currentVisitorsPromise = currentVisitorsQuery
-    ? api.stats(site, currentVisitorsQuery)
-    : null
-
-  const [topStatsResponse, currentVisitorsResponse] = await Promise.all([
-    topStatsPromise,
-    currentVisitorsPromise
-  ])
+  const statsQuery = topStatsQuery(dashboardState, metrics)
+  const topStatsResponse = await api.stats(site, statsQuery)
 
   const metricLabelSuffix = isRealTimeDashboard(dashboardState)
     ? ' (last 30 min)'
@@ -65,11 +63,7 @@ export async function fetchTopStats(
     })}${metricLabelSuffix}`
   }))
 
-  return formatTopStatsData(
-    topStatsResponse,
-    currentVisitorsResponse,
-    formattedMetrics
-  )
+  return formatTopStatsData(topStatsResponse, formattedMetrics)
 }
 
 export type MetricDef = { key: Metric; label: string }
@@ -111,35 +105,6 @@ export function chooseMetrics(
   }
 }
 
-function constructTopStatsQuery(
-  dashboardState: DashboardState,
-  metrics: Metric[]
-): StatsQuery {
-  const reportParams: ReportParams = {
-    metrics,
-    dimensions: [],
-    include: { imports_meta: true }
-  }
-
-  const statsQuery = createStatsQuery(dashboardState, reportParams)
-
-  if (
-    !isComparisonEnabled(dashboardState.comparison) &&
-    !isComparisonForbidden({
-      period: dashboardState.period,
-      segmentIsExpanded: false
-    })
-  ) {
-    statsQuery.include.compare = ComparisonMode.previous_period
-  }
-
-  if (isRealTimeDashboard(dashboardState)) {
-    statsQuery.date_range = DashboardPeriod.realtime_30m
-  }
-
-  return statsQuery
-}
-
 type TopStatItem = {
   metric: Metric
   value: api.MetricValue
@@ -151,21 +116,11 @@ type TopStatItem = {
 
 export function formatTopStatsData(
   topStatsResponse: api.QueryApiResponse,
-  currentVisitorsResponse: api.QueryApiResponse | null,
   metrics: MetricDef[]
 ) {
   const { query, meta, results } = topStatsResponse
 
   const topStats: TopStatItem[] = []
-
-  if (currentVisitorsResponse) {
-    topStats.push({
-      metric: currentVisitorsResponse.query.metrics[0],
-      value: currentVisitorsResponse.results[0].metrics[0],
-      name: 'Current visitors',
-      graphable: false
-    })
-  }
 
   for (let i = 0; i < query.metrics.length; i++) {
     const metricKey = query.metrics[i]
