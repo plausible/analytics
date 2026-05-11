@@ -58,6 +58,7 @@ type GraphProps<
   }[]
   children?: ReactNode
   highlightedIndex?: number | null
+  verticalLineIndices?: number[]
 }
 
 /**
@@ -83,6 +84,7 @@ export function Graph<T extends GraphYValues>({
 
 const highlightIndicatorGroupId = 'highlight-indicator'
 const annotationsGroupId = 'annotations'
+const verticalLinesGroupId = 'vertical-lines'
 
 function InnerGraph<T extends GraphYValues>({
   className,
@@ -105,7 +107,8 @@ function InnerGraph<T extends GraphYValues>({
   settings,
   gradients,
   highlightedIndex,
-  annotationsCountByIndex
+  annotationsCountByIndex,
+  verticalLineIndices
 }: GraphProps<T>) {
   const [extraMarginLeft, setExtraMarginLeft] = useState(0)
   const [points, setPoints] = useState<Point<T>[]>([])
@@ -235,6 +238,8 @@ function InnerGraph<T extends GraphYValues>({
         stopBottom: gradient.stopBottom
       })
     }
+
+    svg.append('g').attr('id', verticalLinesGroupId)
 
     // must be on top of gradients, but under lines and points
     svg.append('g').attr('id', highlightIndicatorGroupId)
@@ -596,6 +601,30 @@ function InnerGraph<T extends GraphYValues>({
     return cleanup
   }, [points, annotationsCountByIndex, yBottomEdge])
 
+  useEffect(() => {
+    if (!svgRef.current) return
+    const svg = d3.select(svgRef.current)
+    const cleanup = () => {
+      svg.select(`#${verticalLinesGroupId}`).selectAll('line').remove()
+    }
+    if (!points.length || !verticalLineIndices?.length) return cleanup()
+
+    for (const index of verticalLineIndices) {
+      const point = points[index]
+      if (!point) continue
+      svg
+        .select(`#${verticalLinesGroupId}`)
+        .append('line')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', marginTop)
+        .attr('y2', height - marginBottom)
+        .attr('transform', `translate(${point.x}, 0)`)
+        .attr('class', verticalDashedLineClass)
+    }
+    return cleanup
+  }, [points, verticalLineIndices, marginTop, marginBottom, height])
+
   return (
     <svg
       ref={svgRef}
@@ -607,6 +636,8 @@ function InnerGraph<T extends GraphYValues>({
 
 const currentlySelectedLineClass =
   'stroke-1 stroke-gray-300 dark:stroke-gray-700'
+const verticalDashedLineClass =
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700 [stroke-dasharray:4,4]'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
