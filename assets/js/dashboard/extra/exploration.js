@@ -367,7 +367,8 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
-  const isCustomEvent = step.name !== 'pageview'
+  const isJourneyEnd = step.name === '__journey_end__'
+  const isCustomEvent = step.name !== 'pageview' && step.name !== '__journey_end__'
   const isGoal = step.is_goal
 
   const visitorsToShow =
@@ -395,12 +396,16 @@ function CandidateCard({
     ? 'bg-gray-100/60 dark:bg-gray-850'
     : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
 
+  const pointer = isJourneyEnd ? 'pointer-events-none' : ''
+
+  const onSelectHandler = isJourneyEnd ? () => {} : onSelect
+
   return (
     <li>
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
-        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
-        onClick={() => onSelect(isSelected ? null : step)}
+        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg} ${pointer}`}
+        onClick={() => onSelectHandler(isSelected ? null : step)}
       >
         <div
           className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
