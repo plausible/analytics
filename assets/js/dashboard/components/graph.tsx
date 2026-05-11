@@ -637,7 +637,7 @@ function InnerGraph<T extends GraphYValues>({
 const currentlySelectedLineClass =
   'stroke-1 stroke-gray-300 dark:stroke-gray-700'
 const verticalDashedLineClass =
-  'stroke-1 stroke-gray-300 dark:stroke-gray-700 [stroke-dasharray:4,4]'
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700 [stroke-dasharray:2,2]'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
