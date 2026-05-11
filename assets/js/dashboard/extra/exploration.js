@@ -22,6 +22,8 @@ import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
+const JOURNEY_END_EVENT = '__journey_end__'
+
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
 const DIRECTION_OPTIONS = [
@@ -107,7 +109,7 @@ function parseFetchedResults(results) {
     return []
   } else if (
     results.length === 1 &&
-    results[0].step.name === '__journey_end__'
+    results[0].step.name === JOURNEY_END_EVENT
   ) {
     return []
   } else {
@@ -367,8 +369,9 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
-  const isJourneyEnd = step.name === '__journey_end__'
-  const isCustomEvent = step.name !== 'pageview' && step.name !== '__journey_end__'
+  const isJourneyEnd = step.name === JOURNEY_END_EVENT
+  const isCustomEvent =
+    step.name !== 'pageview' && step.name !== JOURNEY_END_EVENT
   const isGoal = step.is_goal
 
   const visitorsToShow =
