@@ -135,9 +135,9 @@ function fetchNextWithFunnel(
   )
 }
 
-function fetchInterestingFunnel(site, dashboardState) {
+function fetchFeaturedFunnel(site, dashboardState) {
   return api.post(
-    url.apiPath(site, '/exploration/interesting-funnel'),
+    url.apiPath(site, '/exploration/featured-funnel'),
     dashboardState,
     { max_steps: PRELOAD_MAX_STEPS, max_candidates: PRELOAD_MAX_CANDIDATES }
   )
@@ -732,13 +732,13 @@ function useExplorationData(site, dashboardState, inViewport) {
 
     setActiveLoading(true)
 
-    // On first render fire the interesting-funnel preload. Once the preload
+    // On first render fire the featured-funnel preload. Once the preload
     // resolves it sets steps and funnel, which re-triggers this effect for
     // the active-column candidate fetch.
     if (!preloadFiredRef.current) {
       preloadFiredRef.current = true
 
-      fetchInterestingFunnel(site, dashboardState)
+      fetchFeaturedFunnel(site, dashboardState)
         .then((response) => {
           if (isStale()) return
           if (response?.funnel?.length > 0) {
@@ -752,7 +752,7 @@ function useExplorationData(site, dashboardState, inViewport) {
             // The preload populates steps, which re-triggers this effect for
             // the active-column candidate fetch, so leave loading=true.
           } else {
-            // No interesting funnel found; fall back to plain candidates for column 0.
+            // No featured funnel found; fall back to plain candidates for column 0.
             fetchNextWithFunnel(
               site,
               dashboardState,

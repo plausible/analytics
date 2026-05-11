@@ -346,12 +346,12 @@ defmodule Plausible.Stats.ExplorationTest do
       end
     end
 
-    describe "interesting_funnel" do
+    describe "featured_funnel" do
       test "builds a funnel starting with the most visited step", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, %{funnel: [step1, step2, step3, step4]}} =
-                 Exploration.interesting_funnel(site, query)
+                 Exploration.featured_funnel(site, query)
 
         assert step1.step.pathname == "/home"
         assert step1.visitors == 2
@@ -370,7 +370,7 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, %{funnel: [step1, step2]}} =
-                 Exploration.interesting_funnel(site, query, max_steps: 2)
+                 Exploration.featured_funnel(site, query, max_steps: 2)
 
         assert step1.step.pathname == "/home"
         assert step2.step.pathname == "/login"
@@ -380,7 +380,7 @@ defmodule Plausible.Stats.ExplorationTest do
         empty_site = new_site()
         query = QueryBuilder.build!(empty_site, input_date_range: :all)
 
-        assert {:error, :not_found} = Exploration.interesting_funnel(empty_site, query)
+        assert {:error, :not_found} = Exploration.featured_funnel(empty_site, query)
       end
 
       test "stops when no more unseen steps are available" do
@@ -398,7 +398,7 @@ defmodule Plausible.Stats.ExplorationTest do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
         assert {:ok, %{funnel: [step1]}} =
-                 Exploration.interesting_funnel(site, query, max_steps: 6)
+                 Exploration.featured_funnel(site, query, max_steps: 6)
 
         assert step1.step.pathname == "/only-page"
         assert step1.visitors == 1
@@ -411,7 +411,7 @@ defmodule Plausible.Stats.ExplorationTest do
             filters: [[:is, "visit:browser", ["Firefox"]]]
           )
 
-        assert {:ok, result} = Exploration.interesting_funnel(site, query)
+        assert {:ok, result} = Exploration.featured_funnel(site, query)
 
         pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/docs", "/logout"]
@@ -468,7 +468,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {:ok, result} = Exploration.interesting_funnel(site, query)
+        assert {:ok, result} = Exploration.featured_funnel(site, query)
 
         pathnames = Enum.map(result.funnel, & &1.step.pathname)
         assert pathnames == ["/a", "/b", "/c"]

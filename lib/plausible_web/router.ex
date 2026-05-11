@@ -278,9 +278,9 @@ defmodule PlausibleWeb.Router do
              StatsController,
              :exploration_next_with_funnel
 
-        post "/:domain/exploration/interesting-funnel",
+        post "/:domain/exploration/featured-funnel",
              StatsController,
-             :exploration_interesting_funnel
+             :exploration_featured_funnel
       end
 
       scope private: %{allow_consolidated_views: true} do

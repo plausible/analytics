@@ -98,7 +98,7 @@ defmodule Plausible.Stats.Exploration do
   @doc """
   Builds a "teaser" funnel by greedily selecting steps.
 
-  We currently don't know what the "interesting" funnel might be,
+  We currently don't know what the "featured" funnel might be,
   but blindly following the most visited cascade, oftentimes results with
   a repetitive back and forth between two pages.
 
@@ -117,9 +117,9 @@ defmodule Plausible.Stats.Exploration do
       to include implicit wildcard pathnames in suggestions or not
       (default: true)
   """
-  @spec interesting_funnel(Plausible.Site.t(), Query.t(), keyword()) ::
+  @spec featured_funnel(Plausible.Site.t(), Query.t(), keyword()) ::
           {:ok, %{funnel: [funnel_step()], candidates: [next_step()]}} | {:error, :not_found}
-  def interesting_funnel(site, query, opts \\ []) do
+  def featured_funnel(site, query, opts \\ []) do
     max_steps = min(Keyword.get(opts, :max_steps, 6), @max_steps)
     max_candidates = min(Keyword.get(opts, :max_candidates, 10), @max_candidates)
 
@@ -131,13 +131,13 @@ defmodule Plausible.Stats.Exploration do
       )
 
     with {:ok, result} <-
-           build_interesting_journey(site, query, max_steps, max_candidates, include_wildcard?),
+           build_featured_journey(site, query, max_steps, max_candidates, include_wildcard?),
          {:ok, funnel} <- journey_funnel(query, result.journey) do
       {:ok, %{funnel: funnel, candidates: result.candidates}}
     end
   end
 
-  defp build_interesting_journey(site, query, max_steps, max_candidates, include_wildcard?) do
+  defp build_featured_journey(site, query, max_steps, max_candidates, include_wildcard?) do
     case do_build_journey(
            site,
            query,

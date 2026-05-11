@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Api.StatsController do
                 :exploration_next,
                 :exploration_funnel,
                 :exploration_next_with_funnel,
-                :exploration_interesting_funnel
+                :exploration_featured_funnel
               ]
   end
 
@@ -181,14 +181,14 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     end
 
-    def exploration_interesting_funnel(conn, params) do
+    def exploration_featured_funnel(conn, params) do
       site = conn.assigns.site
       query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
       include_wildcard? =
         not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
 
-      case Exploration.interesting_funnel(site, query,
+      case Exploration.featured_funnel(site, query,
              max_steps: params["max_steps"],
              max_candidates: params["max_candidates"],
              include_wildcard?: include_wildcard?
