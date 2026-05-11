@@ -140,12 +140,28 @@ defmodule PlausibleWeb.Api.StatsController do
     alias Plausible.Stats.Exploration
 
     @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
+    @exploration_hourly_limit 600
+    @exploration_burst_limit 10
+
+    defp check_exploration_rate_limit(site) do
+      key = "exploration:#{site.id}"
+
+      with {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.hours(1), @exploration_hourly_limit),
+           {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.seconds(10), @exploration_burst_limit) do
+        :ok
+      else
+        {:deny, _} -> {:error, :rate_limit}
+      end
+    end
 
     def exploration_next(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            include_wildcard? =
@@ -158,6 +174,12 @@ defmodule PlausibleWeb.Api.StatsController do
              ) do
         json(conn, next_steps)
       else
+        {:error, :rate_limit} ->
+          conn
+          |> put_status(429)
+          |> json(%{error: "Too many exploration requests"})
+          |> halt()
+
         {:error, :journey_too_long} ->
           bad_request(conn, "The journey is too long")
       end
@@ -166,13 +188,20 @@ defmodule PlausibleWeb.Api.StatsController do
     def exploration_funnel(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            {:ok, funnel} <-
              Exploration.journey_funnel(query, journey, direction) do
         json(conn, funnel)
       else
+        {:error, :rate_limit} ->
+          conn
+          |> put_status(429)
+          |> json(%{error: "Too many exploration requests"})
+          |> halt()
+
         {:error, :empty_journey} ->
           bad_request(conn, "We are unable to show funnels when journey is empty")
 
@@ -183,18 +212,27 @@ defmodule PlausibleWeb.Api.StatsController do
 
     def exploration_featured_funnel(conn, params) do
       site = conn.assigns.site
-      query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      include_wildcard? =
-        not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+      with :ok <- check_exploration_rate_limit(site) do
+        query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      case Exploration.featured_funnel(site, query,
-             max_steps: params["max_steps"],
-             max_candidates: params["max_candidates"],
-             include_wildcard?: include_wildcard?
-           ) do
-        {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
-        {:error, :not_found} -> json(conn, [])
+        include_wildcard? =
+          not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+
+        case Exploration.featured_funnel(site, query,
+               max_steps: params["max_steps"],
+               max_candidates: params["max_candidates"],
+               include_wildcard?: include_wildcard?
+             ) do
+          {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
+          {:error, :not_found} -> json(conn, [])
+        end
+      else
+        {:error, :rate_limit} ->
+          conn
+          |> put_status(429)
+          |> json(%{error: "Too many exploration requests"})
+          |> halt()
       end
     end
 
@@ -203,7 +241,8 @@ defmodule PlausibleWeb.Api.StatsController do
       search_term = params["search_term"] || ""
       include_funnel? = params["include_funnel"] == true
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            include_wildcard? =
@@ -217,6 +256,12 @@ defmodule PlausibleWeb.Api.StatsController do
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})
       else
+        {:error, :rate_limit} ->
+          conn
+          |> put_status(429)
+          |> json(%{error: "Too many exploration requests"})
+          |> halt()
+
         _ ->
           bad_request(conn, "There was an error with your request")
       end
