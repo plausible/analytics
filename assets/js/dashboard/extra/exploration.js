@@ -8,10 +8,6 @@ import React, {
 import LazyLoader from '../components/lazy-loader'
 import * as api from '../api'
 import { ApiError } from '../api'
-
-function isRateLimitedError(err) {
-  return err instanceof ApiError && err.status === 429
-}
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip'
 import { useDebounce } from '../custom-hooks'
@@ -64,6 +60,10 @@ function roundedPercentage(value, total) {
   // Rounding to 2 decimal places using Math.round()
   // (https://stackoverflow.com/a/11832950)
   return Math.round((percentage + Number.EPSILON) * 100) / 100
+}
+
+function isRateLimitedError(err) {
+  return err instanceof ApiError && err.status === 429
 }
 
 // Two steps are identical when their identity fields match.
