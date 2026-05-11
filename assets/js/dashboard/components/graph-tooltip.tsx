@@ -48,8 +48,10 @@ export const GraphTooltipWrapper = ({
     if (!ref.current) {
       return
     }
-    setMeasuredWidth(ref.current.offsetWidth)
-  }, [children, className, minWidth])
+    const el = ref.current
+    const w = el.getBoundingClientRect().width
+    setMeasuredWidth(w)
+  }, [x, maxX, minWidth, className, children])
 
   const extraStyleByAnchor = {
     topEdge: {},

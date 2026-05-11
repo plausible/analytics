@@ -753,7 +753,7 @@ const isTouchEvent = (event: unknown) =>
 // }
 
 const mainGraphTooltipClassName =
-  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 max-w-[300px]'
+  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
 
 const ViewAnnotationsTooltip = ({
   x,
