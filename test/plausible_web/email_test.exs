@@ -310,12 +310,12 @@ defmodule PlausibleWeb.EmailTest do
       %{html_body: body, subject: subject} =
         PlausibleWeb.Email.approaching_accept_traffic_until(notification)
 
-      assert subject == "We'll stop counting your stats"
-      assert body =~ plausible_link(team: team, label: "login to your Plausible account")
+      assert subject == "Your stats stop collecting soon"
+      assert body =~ plausible_link(team: team, label: "start a Plausible subscription")
       assert body =~ "Hey John,"
 
       assert body =~
-               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites next week."
+               "Your sites are still sending us data, but your account is no longer active. We'll stop counting your stats next week."
     end
 
     test "renders final warning" do
@@ -334,11 +334,11 @@ defmodule PlausibleWeb.EmailTest do
       %{html_body: body, subject: subject} =
         PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(notification)
 
-      assert subject == "A reminder that we'll stop counting your stats tomorrow"
-      assert body =~ plausible_link(team: team, label: "login to your Plausible account")
+      assert subject == "Your stats stop tomorrow"
+      assert body =~ plausible_link(team: team, label: "start a Plausible subscription")
 
       assert body =~
-               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites tomorrow."
+               "Your sites are still sending us data, but your account is no longer active. We'll stop counting your stats tomorrow."
     end
   end
 
