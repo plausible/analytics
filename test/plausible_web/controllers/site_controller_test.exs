@@ -638,7 +638,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/"
+        assert redirected_to(conn) == "/example.com"
       end
     end
 
