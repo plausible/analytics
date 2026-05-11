@@ -45,10 +45,12 @@ export type QueryApiResponse = {
 
 export class ApiError extends Error {
   payload: unknown
-  constructor(message: string, payload: unknown) {
+  status: number
+  constructor(message: string, payload: unknown, status: number) {
     super(message)
     this.name = 'ApiError'
     this.payload = payload
+    this.status = status
   }
 }
 
@@ -129,7 +131,7 @@ function getHeaders(): Record<string, string> {
 async function handleApiResponse(response: Response) {
   const payload = await response.json()
   if (!response.ok) {
-    throw new ApiError(payload.error, payload)
+    throw new ApiError(payload.error, payload, response.status)
   }
 
   return payload
