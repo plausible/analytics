@@ -6,6 +6,9 @@ defmodule Plausible.Stats.ExplorationTest do
     alias Plausible.Stats.Exploration
     alias Plausible.Stats.QueryBuilder
 
+    @journey_end_event Exploration.Journey.Step.journey_end_event()
+    @journey_end_label Exploration.Journey.Step.journey_end_label()
+
     setup do
       site = new_site()
 
@@ -720,6 +723,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok,
                 [
+                  %{step: %{name: @journey_end_event}},
                   %{step: %{pathname: "/:dashboard"}}
                 ]} =
                  Exploration.next_steps(site, query, journey,
@@ -1166,9 +1170,12 @@ defmodule Plausible.Stats.ExplorationTest do
           }
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, journey)
 
-        assert next_step.step.label == "/a-blog"
+        assert next_step1.step.label == @journey_end_label
+        assert next_step1.visitors == 2
+        assert next_step2.step.label == "/a-blog"
+        assert next_step2.visitors == 1
       end
 
       test "suggestions matching goal pattern from previous step are excluded" do
@@ -1231,9 +1238,12 @@ defmodule Plausible.Stats.ExplorationTest do
           }
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, journey)
 
-        assert next_step.step.label == "/blog"
+        assert next_step1.step.label == @journey_end_label
+        assert next_step1.visitors == 3
+        assert next_step2.step.label == "/blog"
+        assert next_step2.visitors == 1
       end
     end
 
