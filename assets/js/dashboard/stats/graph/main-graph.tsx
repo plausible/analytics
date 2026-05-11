@@ -17,7 +17,6 @@ import {
   parseNaiveDate,
   formatDay,
   isThisYear,
-  parseUTCDate
 } from '../../util/date'
 import classNames from 'classnames'
 import { ChangeArrow } from '../reports/change-arrow'
@@ -47,7 +46,8 @@ import { useGetAnnotations } from '../../annotations/routeless-annotations-modal
 import {
   Annotation,
   AnnotationGranularity,
-  AnnotationType
+  AnnotationType,
+  groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
 
 const height = 368
@@ -98,61 +98,6 @@ const initialTooltipState: TooltipState = {
   selectedIndex: null,
   persistent: false,
   type: 'series'
-}
-
-const getAnnotationTimeLabel = (
-  annotation: Pick<Annotation, 'datetime' | 'granularity'>,
-  interval: Interval
-): string => {
-  const dateString = annotation.datetime.substring(0, 'YYYY-MM-DD'.length)
-  switch (annotation.granularity) {
-    case AnnotationGranularity.date: {
-      switch (interval) {
-        case Interval.month:
-          // floors to closest start of month for the date
-          return parseUTCDate(dateString).startOf('month').format('YYYY-MM-DD')
-        case Interval.week:
-          // floors to closest start of week for the date
-          return parseUTCDate(dateString).startOf('week').format('YYYY-MM-DD')
-        case Interval.day:
-        case Interval.hour:
-        case Interval.minute:
-          // floors to date
-          return dateString
-      }
-      break
-    }
-    case AnnotationGranularity.minute: {
-      switch (interval) {
-        case Interval.month:
-          // floors to closest start of month for the date
-          return parseUTCDate(dateString).startOf('month').format('YYYY-MM-DD')
-        case Interval.week:
-          // floors to closest start of week for the date
-          return parseUTCDate(dateString).startOf('week').format('YYYY-MM-DD')
-        case Interval.day:
-          // floors to date
-          return dateString
-        case Interval.hour: {
-          const [dateYYYYMMDD, timeHHMMSS] = annotation.datetime.split('T')
-          // floors time to hour
-          return `${dateYYYYMMDD} ${timeHHMMSS.substring(0, 'HH'.length)}:00:00`
-        }
-        case Interval.minute:
-          return annotation.datetime.split('T').join(' ')
-      }
-    }
-  }
-}
-
-const groupAnnotationsByTimeLabel = (
-  annotations: Annotation[],
-  interval: Interval
-): Record<string, Annotation[] | undefined> => {
-  return annotations.reduce<Record<string, Annotation[]>>((acc, annotation) => {
-    const timeLabel = getAnnotationTimeLabel(annotation, interval)
-    return { ...acc, [timeLabel]: [...(acc[timeLabel] ?? []), annotation] }
-  }, {})
 }
 
 export const MainGraph = ({
