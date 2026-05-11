@@ -6,6 +6,7 @@ import {
 } from '@headlessui/react'
 
 export const GraphTooltipWrapper = ({
+  anchor,
   x,
   y,
   maxX,
@@ -14,6 +15,7 @@ export const GraphTooltipWrapper = ({
   className,
   transition
 }: {
+  anchor: 'topEdge' | 'bottomEdge'
   x: number
   y: number
   maxX: number
@@ -49,6 +51,11 @@ export const GraphTooltipWrapper = ({
     setMeasuredWidth(ref.current.offsetWidth)
   }, [children, className, minWidth])
 
+  const extraStyleByAnchor = {
+    topEdge: {},
+    bottomEdge: { transform: 'translateY(-100%)' }
+  }
+
   return (
     <Transition as={React.Fragment} appear show {...transition}>
       <div
@@ -57,7 +64,8 @@ export const GraphTooltipWrapper = ({
         style={{
           minWidth,
           left: leftByAlignment[position],
-          top: y
+          top: y,
+          ...extraStyleByAnchor[anchor]
         }}
       >
         {children}

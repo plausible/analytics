@@ -37,6 +37,8 @@ interface AnnotationModalProps {
 export const CreateAnnotationModal = ({
   onClose,
   onSave,
+  user,
+  siteAnnotationsAvailable,
   notePlaceholder,
   initialDatetime,
   initialGranularity,
@@ -54,9 +56,16 @@ export const CreateAnnotationModal = ({
   }) => {
   const defaultNote = ''
   const [note, setNote] = useState(defaultNote)
+  const [type, setType] = useState(initialType)
+  const { disabled, disabledMessage, onAnnotationTypeChange } =
+    useAnnotationTypeDisabledState({
+      siteAnnotationsAvailable,
+      user,
+      setType
+    })
+
   const granularity = initialGranularity
   const datetime = initialDatetime
-  const type = initialType
 
   return (
     <ActionModal onClose={onClose}>
@@ -68,9 +77,11 @@ export const CreateAnnotationModal = ({
         onChange={setNote}
         placeholder={notePlaceholder}
       />
+      <AnnotationTypeSelector value={type} onChange={onAnnotationTypeChange} />
+      {disabled && <TypeDisabledMessage message={disabledMessage} />}
       <ButtonsRow>
         <SaveButton
-          disabled={status === 'pending'}
+          disabled={status === 'pending' || disabled}
           onSave={() => {
             const trimmedNote = note.trim()
             const saveableNote = trimmedNote.length
@@ -161,14 +172,14 @@ const useAnnotationTypeDisabledState = ({
         setDisabled(true)
         setDisabledMessage(
           <>
-            {"You don't have enough permissions to change segment to this type"}
+            {"You don't have enough permissions to change note to this type"}
           </>
         )
       } else if (type === AnnotationType.site && !siteAnnotationsAvailable) {
         setDisabled(true)
         setDisabledMessage(
           <>
-            To use this annotation type,&#32;
+            To use this note type,&#32;
             {userIsOwner ? (
               <a href="/billing/choose-plan" className="underline">
                 please upgrade your subscription
@@ -306,7 +317,7 @@ export const UpdateAnnotationModal = ({
           errorMessage={
             error instanceof ApiError
               ? error.message
-              : 'Something went wrong updating segment'
+              : 'Something went wrong updating note'
           }
           onClose={reset}
         />
