@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Email do
+  @moduledoc """
+  Email template rendering functions.
+  """
+
   use Plausible
   import Bamboo.Email
   import Bamboo.PostmarkHelper
