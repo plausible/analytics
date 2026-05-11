@@ -1,9 +1,4 @@
-import React, {
-  ReactNode,
-  RefObject,
-  useLayoutEffect,
-  useState
-} from 'react'
+import React, { ReactNode, RefObject, useLayoutEffect, useState } from 'react'
 import {
   Transition,
   TransitionClasses,
@@ -11,7 +6,8 @@ import {
 } from '@headlessui/react'
 
 type GraphTooltipWrapperProps = {
-  anchor: 'topEdge' | 'bottomEdge'
+  verticalAnchor: 'topEdge' | 'bottomEdge'
+  horizontalAnchor: 'start' | 'middle'
   x: number
   y: number
   maxX: number
@@ -23,7 +19,8 @@ type GraphTooltipWrapperProps = {
 }
 
 export const GraphTooltipWrapper = ({
-  anchor,
+  verticalAnchor,
+  horizontalAnchor,
   x,
   y,
   maxX,
@@ -33,18 +30,37 @@ export const GraphTooltipWrapper = ({
   transition,
   wrapperRef
 }: GraphTooltipWrapperProps) => {
-  const xOffset = 12
+  const minX = 0
+  const xOffsetFromStart = 12
 
   const [measuredWidth, setMeasuredWidth] = useState(minWidth)
 
   const leftByAlignment = {
-    alignedRight: x + xOffset,
-    alignedLeft: x - xOffset - measuredWidth,
-    alignedRightClamped: Math.max(0, Math.min(x, maxX - measuredWidth))
-  }
+    start: {
+      alignedRight: x + xOffsetFromStart,
+      alignedLeft: x - xOffsetFromStart - measuredWidth,
+      alignedRightClamped: Math.max(0, Math.min(x, maxX - measuredWidth))
+    },
+    middle: {
+      alignedRight: x - measuredWidth / 2,
+      alignedLeft: x - measuredWidth / 2,
+      alignedRightClamped: Math.max(
+        minX,
+        Math.min(x - measuredWidth / 2, maxX - measuredWidth)
+      )
+    }
+  }[horizontalAnchor]
 
-  const canFitRight = leftByAlignment.alignedRight + measuredWidth <= maxX
-  const canFitLeft = leftByAlignment.alignedLeft >= 0
+  const canFitRight = {
+    start: leftByAlignment.alignedRight + measuredWidth <= maxX,
+    middle: x - measuredWidth / 2 >= minX && x + measuredWidth / 2 <= maxX
+  }[horizontalAnchor]
+
+  const canFitLeft = {
+    start: leftByAlignment.alignedLeft >= minX,
+    middle: false
+  }[horizontalAnchor]
+
   const position = canFitRight
     ? 'alignedRight'
     : canFitLeft
@@ -60,7 +76,7 @@ export const GraphTooltipWrapper = ({
     setMeasuredWidth(w)
   }, [x, maxX, minWidth, className, children, wrapperRef])
 
-  const extraStyleByAnchor = {
+  const extraStyleByVerticalAnchor = {
     topEdge: {},
     bottomEdge: { transform: 'translateY(-100%)' }
   }
@@ -74,7 +90,7 @@ export const GraphTooltipWrapper = ({
           minWidth,
           left: leftByAlignment[position],
           top: y,
-          ...extraStyleByAnchor[anchor]
+          ...extraStyleByVerticalAnchor[verticalAnchor]
         }}
       >
         {children}

@@ -43,21 +43,13 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { Interval } from './intervals'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
-import { useGetAnnotations } from '../../annotations/routeless-annotations-modals'
 import {
   Annotation,
-  AnnotationGranularity,
   AnnotationType,
   getAnnotationGranularity,
   groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
 import { Button } from '../../components/button'
-import { TrashIcon } from '@heroicons/react/20/solid'
-import {
-  BookmarkIcon,
-  BookmarkSlashIcon,
-  PencilIcon
-} from '@heroicons/react/24/outline'
 
 const height = 368
 const marginTop = 16
@@ -127,11 +119,7 @@ export const MainGraph = ({
   const period = data.period
 
   const annotationsByTimeLabel = useMemo(
-    () =>
-      groupAnnotationsByTimeLabel(
-        annotations,
-        interval
-      ),
+    () => groupAnnotationsByTimeLabel(annotations, interval),
     [annotations, interval]
   )
 
@@ -506,7 +494,6 @@ export const MainGraph = ({
       gradients={gradients}
       annotationsCountByIndex={annotationsCountByIndex}
     >
-
       {Object.entries(annotationsByTimeLabel)
         .map(([timeLabel, annotations]) => {
           const pinnedAnnotations = annotations?.filter(
@@ -825,7 +812,8 @@ const MainGraphTooltip = ({
   return (
     <GraphTooltipWrapper
       wrapperRef={tooltipRef}
-      anchor="topEdge"
+      horizontalAnchor="start"
+      verticalAnchor="topEdge"
       x={x}
       y={y}
       minWidth={200}
@@ -916,7 +904,8 @@ const PinnedAnnotationsTooltip = ({
   const ref = useRef<HTMLDivElement>(null)
   return (
     <GraphTooltipWrapper
-      anchor={'bottomEdge'}
+      horizontalAnchor="middle"
+      verticalAnchor={'bottomEdge'}
       x={x!}
       y={marginTop}
       maxX={maxX}
