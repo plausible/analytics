@@ -150,12 +150,10 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
-    {%{relative_date: relative_date}, query_fields} =
-      Map.split(parsed_query_params, [:relative_date, :skip_goal_existence_check])
-
-    struct!(%Query{}, Map.to_list(query_fields))
+    parsed_query_params
+    |> ParsedQueryParams.to_query!()
     |> set_now()
-    |> set_utc_time_range(site, relative_date)
+    |> set_utc_time_range(site, parsed_query_params["relative_date"])
     |> set_preloaded_goals_and_revenue(site)
     |> Query.set(
       site_id: site.id,

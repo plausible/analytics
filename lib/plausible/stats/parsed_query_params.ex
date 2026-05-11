@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.ParsedQueryParams do
   @moduledoc false
 
+  alias Plausible.Stats.Query
+
   defstruct input_date_range: nil,
             # `relative_date` is a convenience currently exclusive to the internal
             # dashboard API for constructing datetime ranges. It adds the ability
@@ -19,6 +21,11 @@ defmodule Plausible.Stats.ParsedQueryParams do
             # configured for the site. Missing goals simply match nothing in SQL, matching
             # the behaviour of legacy endpoints like top_stats.
             skip_goal_existence_check: false
+
+  def to_query!(%__MODULE__{} = parsed_query_params) do
+    query_fields = (Query.__struct__() |> Map.keys()) -- [:__struct__]
+    struct!(%Query{}, Map.take(parsed_query_params, query_fields))
+  end
 
   def new!(params) when is_map(params) do
     struct!(__MODULE__, Map.to_list(params))
