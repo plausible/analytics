@@ -153,7 +153,7 @@ defmodule Plausible.Stats.QueryBuilder do
     parsed_query_params
     |> ParsedQueryParams.to_query!()
     |> set_now()
-    |> set_utc_time_range(site, parsed_query_params["relative_date"])
+    |> set_utc_time_range(site, Map.get(parsed_query_params, :relative_date))
     |> set_preloaded_goals_and_revenue(site)
     |> Query.set(
       site_id: site.id,
