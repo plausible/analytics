@@ -102,6 +102,19 @@ function stepsToJourneyParam(steps) {
   )
 }
 
+function parseFetchedResults(results) {
+  if (results.length === 0) {
+    return []
+  } else if (
+    results.length === 1 &&
+    results[0].step.name === '__journey_end__'
+  ) {
+    return []
+  } else {
+    return results
+  }
+}
+
 // Keep only entries with index < fromIndex, discarding everything at or after.
 // Used to truncate frozen candidate snapshots when the journey is shortened.
 function truncateFrozenAt(frozen, fromIndex) {
@@ -801,7 +814,7 @@ function useExplorationData(site, dashboardState, inViewport) {
                 if (!isStale())
                   setState((prev) => ({
                     ...prev,
-                    activeResults: r?.next ?? [],
+                    activeResults: parseFetchedResults(r?.next ?? []),
                     rateLimited: false
                   }))
               })
@@ -846,7 +859,7 @@ function useExplorationData(site, dashboardState, inViewport) {
               if (!isStale())
                 setState((prev) => ({
                   ...prev,
-                  activeResults: r?.next ?? [],
+                  activeResults: parseFetchedResults(r?.next ?? []),
                   rateLimited: false
                 }))
             })
@@ -897,7 +910,7 @@ function useExplorationData(site, dashboardState, inViewport) {
         setState((prev) => {
           const next = {
             ...prev,
-            activeResults: response?.next ?? [],
+            activeResults: parseFetchedResults(response?.next ?? []),
             rateLimited: false
           }
           if (includeFunnel) {
