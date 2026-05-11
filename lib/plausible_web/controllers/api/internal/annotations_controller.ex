@@ -10,14 +10,21 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
 
   def index(
         %Plug.Conn{
-          assigns: %{
-            site: site,
-            site_role: site_role
-          }
+          assigns:
+            %{
+              site: site,
+              site_role: site_role
+            } = assigns
         } = conn,
         %{} = _params
       ) do
-    case Annotations.get_all_for_site(site, site_role) do
+    user_id =
+      case assigns[:current_user] do
+        %{id: id} -> id
+        nil -> nil
+      end
+
+    case Annotations.get_all_for_site(site, site_role, user_id) do
       {:ok, result} -> json(conn, result)
       {:error, :not_enough_permissions} -> json(conn, "Not enough permissions to get annotations")
     end

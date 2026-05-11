@@ -34,6 +34,7 @@ export const DEFAULT_SITE: PlausibleSite = {
   explorationAvailable: false,
   propsAvailable: false,
   siteSegmentsAvailable: false,
+  siteAnnotationsAvailable: false,
   conversionsOptedOut: false,
   funnelsOptedOut: false,
   propsOptedOut: false,

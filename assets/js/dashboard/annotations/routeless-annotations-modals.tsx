@@ -117,7 +117,7 @@ export const RoutelessAnnotationModals = () => {
       {modal?.type === 'update-annotation' && (
         <UpdateAnnotationModal
           user={user}
-          siteAnnotationsAvailable={site.siteSegmentsAvailable}
+          siteAnnotationsAvailable={site.siteAnnotationsAvailable}
           annotation={modal.annotation}
           notePlaceholder={''}
           onClose={() => {
@@ -139,7 +139,7 @@ export const RoutelessAnnotationModals = () => {
       {modal?.type === 'create-annotation' && (
         <CreateAnnotationModal
           user={user}
-          siteAnnotationsAvailable={site.siteSegmentsAvailable}
+          siteAnnotationsAvailable={site.siteAnnotationsAvailable}
           notePlaceholder={modal.annotation.note}
           initialType={modal.annotation.type}
           initialDatetime={modal.annotation.datetime}

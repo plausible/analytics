@@ -17,7 +17,9 @@ defmodule Plausible.Annotations do
 
   @max_annotations 500
 
-  def get_all_for_site(%Plausible.Site{} = site, site_role) do
+  @spec get_all_for_site(Plausible.Site.t(), atom(), pos_integer()) ::
+          {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
+  def get_all_for_site(%Plausible.Site{} = site, site_role, user_id) do
     fields = [:id, :note, :type, :datetime, :granularity, :inserted_at, :updated_at]
 
     cond do
@@ -27,14 +29,15 @@ defmodule Plausible.Annotations do
             from(annotation in Annotation,
               select: ^fields,
               where: annotation.site_id == ^site.id,
+              where: annotation.type == :site,
               order_by: [desc: annotation.updated_at, desc: annotation.id]
             )
           )
 
         {:ok, Enum.map(annotations, &localize_annotation(&1, site.timezone))}
 
-      site_role in @roles_with_personal_annotations or
-          site_role in @roles_with_maybe_site_annotations ->
+      site_role in roles_with_personal_annotations() or
+          site_role in roles_with_maybe_site_annotations() ->
         fields = fields ++ [:owner_id]
 
         annotations =
@@ -42,6 +45,9 @@ defmodule Plausible.Annotations do
             from(annotation in Annotation,
               select: ^fields,
               where: annotation.site_id == ^site.id,
+              where:
+                annotation.type == :site or
+                  (annotation.type == :personal and annotation.owner_id == ^user_id),
               order_by: [desc: annotation.updated_at, desc: annotation.id],
               preload: [:owner]
             )
@@ -90,7 +96,8 @@ defmodule Plausible.Annotations do
              %Annotation{},
              Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
            ) do
-      {:ok, changeset |> Repo.insert!() |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+      {:ok,
+       changeset |> Repo.insert!() |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
     else
       %{valid?: false, errors: errors} ->
         {:error, {:invalid_annotation, errors}}
@@ -124,7 +131,8 @@ defmodule Plausible.Annotations do
            ) do
       Repo.update!(changeset)
 
-      {:ok, Repo.reload!(annotation) |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+      {:ok,
+       Repo.reload!(annotation) |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
     else
       %{valid?: false, errors: errors} ->
         {:error, {:invalid_annotation, errors}}
@@ -223,7 +231,9 @@ defmodule Plausible.Annotations do
       from(annotation in Annotation,
         where: annotation.site_id == ^site_id,
         where: annotation.id == ^annotation_id,
-        where: annotation.type == :site or annotation.owner_id == ^user_id,
+        where:
+          annotation.type == :site or
+            (annotation.type == :personal and annotation.owner_id == ^user_id),
         preload: [:owner]
       )
 
@@ -282,7 +292,7 @@ defmodule Plausible.Annotations do
   def roles_with_maybe_site_annotations(), do: @roles_with_maybe_site_annotations
 
   def site_annotations_available?(%Plausible.Site{} = site),
-    do: Plausible.Billing.Feature.SiteAnnotations.check_availability(site.team) == :ok
+    do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
 
   @doc """
   iex> serialize_first_error([{"name", {"should be at most %{count} byte(s)", [count: 255]}}])

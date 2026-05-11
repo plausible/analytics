@@ -2,6 +2,73 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
+  describe "GET /api/:domain/annotations - index" do
+    setup [:create_user, :log_in]
+
+    test "public role sees only site annotations, not personal ones", %{conn: conn} do
+      public_site = new_site(public: true)
+      site_owner = new_user()
+      insert(:annotation, site: public_site, owner: site_owner, type: :site, note: "site note")
+      insert(:annotation, site: public_site, owner: site_owner, type: :personal, note: "private")
+
+      conn = get(conn, "/api/#{public_site.domain}/annotations")
+
+      assert [result] = json_response(conn, 200)
+      assert result["type"] == "site"
+      assert result["note"] == "site note"
+    end
+
+    test "public role response has null owner info", %{conn: conn} do
+      public_site = new_site(public: true)
+      site_owner = new_user()
+      insert(:annotation, site: public_site, owner: site_owner, type: :site, note: "deploy")
+
+      conn = get(conn, "/api/#{public_site.domain}/annotations")
+
+      assert [result] = json_response(conn, 200)
+      assert result["owner_id"] == nil
+      assert result["owner_name"] == nil
+    end
+
+    test "authenticated viewer sees their own personal annotations and all site annotations",
+         %{conn: conn, user: user} do
+      site = new_site()
+      other_user = new_user()
+      add_guest(site, user: user, role: :viewer)
+      insert(:annotation, site: site, owner: user, type: :personal, note: "mine")
+      insert(:annotation, site: site, owner: other_user, type: :personal, note: "not mine")
+      insert(:annotation, site: site, owner: other_user, type: :site, note: "shared")
+
+      conn = get(conn, "/api/#{site.domain}/annotations")
+
+      assert results = json_response(conn, 200)
+      assert length(results) == 2
+      notes = Enum.map(results, & &1["note"])
+      assert "mine" in notes
+      assert "shared" in notes
+      refute "not mine" in notes
+    end
+
+    test "authenticated owner response includes owner info", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      insert(:annotation, site: site, owner: user, type: :site, note: "deploy")
+
+      conn = get(conn, "/api/#{site.domain}/annotations")
+
+      assert [result] = json_response(conn, 200)
+      assert result["owner_id"] == user.id
+      assert result["owner_name"] == user.name
+    end
+
+    test "private site returns 404 for non-member", %{conn: conn} do
+      private_site = new_site()
+
+      conn = get(conn, "/api/#{private_site.domain}/annotations")
+
+      assert json_response(conn, 404)
+    end
+  end
+
   describe "POST /api/:domain/annotations - datetime coercion" do
     setup [:create_user, :log_in, :create_site]
 

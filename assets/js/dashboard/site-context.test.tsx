@@ -17,6 +17,7 @@ describe('parseSiteFromDataset', () => {
       data-funnels-available="true"
       data-exploration-available="false"
       data-site-segments-available="true"
+      data-site-annotations-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
@@ -46,6 +47,7 @@ describe('parseSiteFromDataset', () => {
     propsAvailable: true,
     explorationAvailable: false,
     siteSegmentsAvailable: true,
+    siteAnnotationsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
