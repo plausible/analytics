@@ -251,22 +251,25 @@ defmodule Plausible.Stats.QueryBuilder do
       end
     end
 
-    defp maybe_drop_revenue_metrics(query) do
-      if query.include.drop_unavailable_revenue_metrics and
-           map_size(query.revenue_currencies) == 0 do
-        if Enum.all?(query.metrics, &(&1 in Revenue.revenue_metrics())) do
-          {:error,
-           %QueryError{
-             code: :all_metrics_dropped,
-             message: "Revenue metrics were dropped and no other metrics were left to query."
-           }}
-        else
-          {:ok, Query.set(query, metrics: query.metrics -- Revenue.revenue_metrics())}
-        end
+    defp maybe_drop_revenue_metrics(
+           %Query{
+             include: %QueryInclude{drop_unavailable_revenue_metrics: true},
+             revenue_currencies: revenue_currencies
+           } = query
+         )
+         when map_size(revenue_currencies) == 0 do
+      if Enum.all?(query.metrics, &(&1 in Revenue.revenue_metrics())) do
+        {:error,
+         %QueryError{
+           code: :all_metrics_dropped,
+           message: "Revenue metrics were dropped and no other metrics were left to query."
+         }}
       else
-        {:ok, query}
+        {:ok, Query.set(query, metrics: query.metrics -- Revenue.revenue_metrics())}
       end
     end
+
+    defp maybe_drop_revenue_metrics(%Query{} = query), do: {:ok, query}
   else
     defp preload_revenue(_site, _preloaded_goals, _metrics, _dimensions), do: {nil, %{}}
 
