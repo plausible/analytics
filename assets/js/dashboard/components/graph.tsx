@@ -482,7 +482,8 @@ function InnerGraph<T extends GraphYValues>({
       let line = svg.select<SVGLineElement>(
         `#${highlightIndicatorGroupId} line`
       )
-      const shouldShowLine = typeof highlightedIndex === 'number'
+      const shouldShowLine =
+        typeof highlightedIndex === 'number' && points[highlightedIndex]
       if (shouldShowLine) {
         const { x } = points[highlightedIndex]
         if (line.empty()) {
