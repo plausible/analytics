@@ -98,3 +98,15 @@ export const groupAnnotationsByTimeLabel = (
     return { ...acc, [timeLabel]: [...(acc[timeLabel] ?? []), annotation] }
   }, {})
 }
+
+export const getAnnotationGranularity = (interval: Interval): AnnotationGranularity => {
+  switch (interval) {
+    case Interval.minute:
+    case Interval.hour:
+      return AnnotationGranularity.minute
+    case Interval.day:
+    case Interval.week:
+    case Interval.month:
+      return AnnotationGranularity.date
+  }
+}

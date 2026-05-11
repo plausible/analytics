@@ -48,11 +48,16 @@ import {
   Annotation,
   AnnotationGranularity,
   AnnotationType,
+  getAnnotationGranularity,
   groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
 import { Button } from '../../components/button'
 import { TrashIcon } from '@heroicons/react/20/solid'
-import { PencilIcon } from '@heroicons/react/24/outline'
+import {
+  BookmarkIcon,
+  BookmarkSlashIcon,
+  PencilIcon
+} from '@heroicons/react/24/outline'
 
 const height = 368
 const marginTop = 16
@@ -103,14 +108,19 @@ export const MainGraph = ({
   const getAnnotationsQuery = useGetAnnotations()
   const { mode } = useTheme()
   const navigate = useAppNavigate()
-  const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
-  const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
 
+  const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
+
+  const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
+  const [pinnedAnnotationIds, setPinnedAnnotationIds] = useState<
+    Record<number, number | null>
+  >({})
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   const tooltipRef = useRef<HTMLDivElement>(null)
-  
+
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
+
   const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
@@ -491,6 +501,34 @@ export const MainGraph = ({
       gradients={gradients}
       annotationsCountByIndex={annotationsCountByIndex}
     >
+      {Object.entries(annotationsByTimeLabel)
+        .map(([timeLabel, annotations]) => {
+          const pinnedAnnotations = annotations?.filter(
+            (a) => typeof pinnedAnnotationIds[a.id] === 'number'
+          )
+          const x =
+            pinnedAnnotations && pinnedAnnotations.length
+              ? pinnedAnnotationIds[pinnedAnnotations[0].id]
+              : null
+          return [x, pinnedAnnotations] as const
+        })
+        .filter(([x, _pinnedAnnotations]) => x !== null)
+        .map(([x, pinnedAnnotations]) => (
+          <PinnedAnnotationsTooltip
+            key={x}
+            x={x!}
+            maxX={width}
+            pinnedAnnotationIds={pinnedAnnotationIds}
+            annotations={pinnedAnnotations!}
+            onPin={(annotation) =>
+              setPinnedAnnotationIds((current) => ({
+                ...current,
+                [annotation.id]:
+                  typeof current[annotation.id] === 'number' ? null : tooltip.x
+              }))
+            }
+          />
+        ))}
       {!!selectedDatum &&
         isTouchDevice !== null &&
         tooltip.type === 'series' && (
@@ -517,6 +555,16 @@ export const MainGraph = ({
                 {!!annotationDatetime &&
                   !!annotationsByTimeLabel[annotationDatetime] && (
                     <InteractiveAnnotationsList
+                      pinnedAnnotationIds={pinnedAnnotationIds}
+                      onPin={(annotation) =>
+                        setPinnedAnnotationIds((current) => ({
+                          ...current,
+                          [annotation.id]:
+                            typeof current[annotation.id] === 'number'
+                              ? null
+                              : tooltip.x
+                        }))
+                      }
                       annotations={annotationsByTimeLabel[annotationDatetime]}
                     />
                   )}
@@ -539,6 +587,7 @@ export const MainGraph = ({
                   !!annotationsByTimeLabel[annotationDatetime] && (
                     <>
                       <AnnotationsList
+                        pinnedAnnotationIds={[]}
                         expandedIndex={null}
                         annotations={annotationsByTimeLabel[
                           annotationDatetime
@@ -573,8 +622,12 @@ export const MainGraph = ({
 }
 
 const InteractiveAnnotationsList = ({
-  annotations
+  annotations,
+  pinnedAnnotationIds,
+  onPin
 }: {
+  pinnedAnnotationIds: Record<number, number | null>
+  onPin: (annotation: Annotation) => void
   annotations: Annotation[]
 }) => {
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -585,6 +638,7 @@ const InteractiveAnnotationsList = ({
 
   return (
     <AnnotationsList
+      pinnedAnnotationIds={pinnedAnnotationIds}
       annotations={annotations}
       expandedIndex={expanded}
       onAnnotationClick={(index: number) =>
@@ -596,19 +650,24 @@ const InteractiveAnnotationsList = ({
       onDelete={(annotation) =>
         setModal({ type: 'delete-annotation', annotation })
       }
+      onPin={onPin}
     />
   )
 }
 
 const AnnotationsList = ({
+  pinnedAnnotationIds,
   annotations,
   expandedIndex,
   onAnnotationClick,
   onEdit,
+  onPin,
   onDelete
 }: {
+  pinnedAnnotationIds: Record<number, number | null>
   annotations: Annotation[]
   onEdit?: (annotation: Annotation) => void
+  onPin?: (annotation: Annotation) => void
   onDelete?: (annotation: Annotation) => void
   expandedIndex: number | null
   onAnnotationClick: (index: number) => void
@@ -618,38 +677,60 @@ const AnnotationsList = ({
       {annotations.map((annotation, index) => {
         const { id, note } = annotation
         return (
-          <div className="flex flex-col gap-y-1.5" key={id}>
-            <button
-              className="flex flex-row"
-              onClick={() => onAnnotationClick(index)}
-            >
-              <div className="rounded-xs w-[3px] bg-green-500 shrink-0"> </div>
-              <div className="ml-2 text-left break-all">{note}</div>
-            </button>
-            {expandedIndex === index && (
-              <div className="flex flex-row">
-                {typeof onEdit === 'function' && (
-                  <Button
-                    theme="ghost"
-                    size="sm"
-                    onClick={() => onEdit(annotation)}
-                  >
-                    <PencilIcon className="w-4 h-4 block" />
-                    Edit
-                  </Button>
-                )}
-                {typeof onDelete === 'function' && (
-                  <Button
-                    theme="ghost"
-                    size="sm"
-                    onClick={() => onDelete(annotation)}
-                  >
-                    <TrashIcon className="w-4 h-4 block" />
-                    Delete
-                  </Button>
-                )}
-              </div>
-            )}
+          <div className="flex flex-row gap-x-2" key={id}>
+            <div className="rounded-xs w-[3px] bg-green-500 shrink-0" />
+            <div className="flex flex-col gap-y-1 w-64">
+              <button
+                className="flex flex-row"
+                onClick={() => onAnnotationClick(index)}
+              >
+                <div className="text-left break-all">{note}</div>
+              </button>
+              {expandedIndex === index && (
+                <div className="flex flex-row">
+                  {typeof onEdit === 'function' && (
+                    <Button
+                      theme="ghost"
+                      size="sm"
+                      onClick={() => onEdit(annotation)}
+                    >
+                      {/* <PencilIcon className="w-4 h-4 block" /> */}
+                      Edit
+                    </Button>
+                  )}
+                  {typeof onPin === 'function' &&
+                    (pinnedAnnotationIds[annotation.id] ? (
+                      <Button
+                        theme="ghost"
+                        size="sm"
+                        onClick={() => onPin(annotation)}
+                      >
+                        {/* <BookmarkSlashIcon className="w-4 h-4 block" /> */}
+                        Unpin
+                      </Button>
+                    ) : (
+                      <Button
+                        theme="ghost"
+                        size="sm"
+                        onClick={() => onPin(annotation)}
+                      >
+                        {/* <BookmarkIcon className="w-4 h-4 block" /> */}
+                        Pin
+                      </Button>
+                    ))}
+                  {typeof onDelete === 'function' && (
+                    <Button
+                      theme="ghost"
+                      size="sm"
+                      onClick={() => onDelete(annotation)}
+                    >
+                      {/* <TrashIcon className="w-4 h-4 block" /> */}
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )
       })}
@@ -676,7 +757,7 @@ const AddAnnotationButton = ({
             note: `Note on ${timelabel}`,
             type: AnnotationType.personal,
             datetime: timelabel,
-            granularity: getGranularity(interval)
+            granularity: getAnnotationGranularity(interval)
           }
         })
       }
@@ -813,16 +894,38 @@ const MainGraphTooltip = ({
   )
 }
 
-const getGranularity = (interval: Interval): AnnotationGranularity => {
-  switch (interval) {
-    case Interval.minute:
-    case Interval.hour:
-      return AnnotationGranularity.minute
-    case Interval.day:
-    case Interval.week:
-    case Interval.month:
-      return AnnotationGranularity.date
-  }
+const PinnedAnnotationsTooltip = ({
+  x,
+  annotations,
+  pinnedAnnotationIds,
+  onPin,
+  maxX
+}: {
+  x: number
+  maxX: number
+  annotations: Annotation[]
+  pinnedAnnotationIds: Record<number, number | null>
+  onPin: (annotation: Annotation) => void
+}) => {
+  const ref = useRef<HTMLDivElement>(null)
+  return (
+    <GraphTooltipWrapper
+      anchor={'topEdge'}
+      x={x!}
+      y={0}
+      maxX={maxX}
+      minWidth={200}
+      wrapperRef={ref}
+      key={x}
+      className={mainGraphTooltipClassName}
+    >
+      <InteractiveAnnotationsList
+        pinnedAnnotationIds={pinnedAnnotationIds}
+        onPin={onPin}
+        annotations={annotations}
+      />
+    </GraphTooltipWrapper>
+  )
 }
 
 export const MainGraphContainer = React.forwardRef<
