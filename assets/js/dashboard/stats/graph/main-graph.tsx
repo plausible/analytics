@@ -99,13 +99,14 @@ const initialTooltipState: TooltipState = {
 
 export const MainGraph = ({
   width,
-  data
+  data,
+  annotations
 }: {
   width: number
   data: MainGraphData
+  annotations: Annotation[]
 }) => {
   const site = useSiteContext()
-  const getAnnotationsQuery = useGetAnnotations()
   const { mode } = useTheme()
   const navigate = useAppNavigate()
 
@@ -126,8 +127,12 @@ export const MainGraph = ({
   const period = data.period
 
   const annotationsByTimeLabel = useMemo(
-    () => groupAnnotationsByTimeLabel(getAnnotationsQuery.data ?? [], interval),
-    [getAnnotationsQuery.data, interval]
+    () =>
+      groupAnnotationsByTimeLabel(
+        annotations,
+        interval
+      ),
+    [annotations, interval]
   )
 
   useEffect(() => {
@@ -501,6 +506,7 @@ export const MainGraph = ({
       gradients={gradients}
       annotationsCountByIndex={annotationsCountByIndex}
     >
+
       {Object.entries(annotationsByTimeLabel)
         .map(([timeLabel, annotations]) => {
           const pinnedAnnotations = annotations?.filter(
@@ -910,9 +916,9 @@ const PinnedAnnotationsTooltip = ({
   const ref = useRef<HTMLDivElement>(null)
   return (
     <GraphTooltipWrapper
-      anchor={'topEdge'}
+      anchor={'bottomEdge'}
       x={x!}
-      y={0}
+      y={marginTop}
       maxX={maxX}
       minWidth={200}
       wrapperRef={ref}

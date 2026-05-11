@@ -13,6 +13,7 @@ import { getStaleTime } from '../../hooks/api-client'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { useGraphIntervalContext } from './graph-interval-context'
 import { useSetImportsIncluded } from './imports-included-context'
+import { useGetAnnotations } from '../../annotations/routeless-annotations-modals'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -29,6 +30,7 @@ export default function VisitorGraph({
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
   const queryClient = useQueryClient()
+  const getAnnotationsQuery = useGetAnnotations()
 
   const { selectedInterval } = useGraphIntervalContext()
 
@@ -239,7 +241,11 @@ export default function VisitorGraph({
             {!!mainGraphQuery.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <MainGraph width={width} data={mainGraphQuery.data} />
+                  <MainGraph
+                    width={width}
+                    data={mainGraphQuery.data}
+                    annotations={getAnnotationsQuery.data ?? []}
+                  />
                 )}
                 {showGraphLoader && <Loader />}
               </>
