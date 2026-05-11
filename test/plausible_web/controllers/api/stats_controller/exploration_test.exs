@@ -438,5 +438,86 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
         assert resp["funnel"] == []
       end
     end
+
+    describe "rate limiting" do
+      defp exhaust_exploration_rate_limit(site) do
+        Plausible.RateLimit.check_rate(
+          Plausible.RateLimit,
+          "exploration:#{site.id}",
+          :timer.hours(1),
+          600,
+          601
+        )
+      end
+
+      test "returns 429 for exploration_next when rate limit exceeded", %{
+        conn: conn,
+        site: site
+      } do
+        exhaust_exploration_rate_limit(site)
+
+        journey = Jason.encode!([Journey.Step.new("pageview", "/home")])
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/next/", %{
+            "journey" => journey,
+            "period" => "all"
+          })
+
+        assert json_response(resp, 429) == %{"error" => "Too many exploration requests"}
+      end
+
+      test "returns 429 for exploration_funnel when rate limit exceeded", %{
+        conn: conn,
+        site: site
+      } do
+        exhaust_exploration_rate_limit(site)
+
+        journey = Jason.encode!([Journey.Step.new("pageview", "/home")])
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/funnel/", %{
+            "journey" => journey,
+            "period" => "all"
+          })
+
+        assert json_response(resp, 429) == %{"error" => "Too many exploration requests"}
+      end
+
+      test "returns 429 for exploration_featured_funnel when rate limit exceeded", %{
+        conn: conn,
+        site: site
+      } do
+        exhaust_exploration_rate_limit(site)
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/featured-funnel/", %{
+            "period" => "all"
+          })
+
+        assert json_response(resp, 429) == %{"error" => "Too many exploration requests"}
+      end
+
+      test "returns 429 for exploration_next_with_funnel when rate limit exceeded", %{
+        conn: conn,
+        site: site
+      } do
+        exhaust_exploration_rate_limit(site)
+
+        journey = Jason.encode!([Journey.Step.new("pageview", "/home")])
+
+        resp =
+          conn
+          |> post("/api/stats/#{site.domain}/exploration/next-with-funnel/", %{
+            "journey" => journey,
+            "period" => "all"
+          })
+
+        assert json_response(resp, 429) == %{"error" => "Too many exploration requests"}
+      end
+    end
   end
 end
