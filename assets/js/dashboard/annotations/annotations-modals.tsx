@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import {
   Annotation,
   ANNOTATION_TYPE_LABELS,
@@ -8,17 +8,15 @@ import {
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
+import { ModalLayout, ModalFooter, SaveButton } from '../components/modal-layout'
 import {
-  ActionModal,
-  ButtonsRow,
-  FormTitle,
   LabeledTextInput,
-  primaryNegativeButtonClassName,
-  SaveButton,
-  secondaryButtonClassName,
+  TypeSelector,
   TypeDisabledMessage,
-  TypeSelector
-} from '../components/action-modal'
+  getOptionDisabledMessage,
+  OptionDisabledMessageType
+} from '../components/form-elements'
+import { Button } from '../components/button'
 import { Role, UserContextValue } from '../user-context'
 
 interface ApiRequestProps {
@@ -57,19 +55,17 @@ export const CreateAnnotationModal = ({
   const defaultNote = ''
   const [note, setNote] = useState(defaultNote)
   const [type, setType] = useState(initialType)
-  const { disabled, disabledMessage, onAnnotationTypeChange } =
-    useAnnotationTypeDisabledState({
-      siteAnnotationsAvailable,
-      user,
-      setType
-    })
 
   const granularity = initialGranularity
   const datetime = initialDatetime
 
+  const disabledMessage =
+    type === AnnotationType.site
+      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
+      : null
+
   return (
-    <ActionModal onClose={onClose}>
-      <FormTitle className="mb-8">Add note for {datetime}</FormTitle>
+    <ModalLayout title={`Add note for ${datetime}`} onClose={onClose}>
       <LabeledTextInput
         label="Note"
         id="note"
@@ -77,11 +73,17 @@ export const CreateAnnotationModal = ({
         onChange={setNote}
         placeholder={notePlaceholder}
       />
-      <AnnotationTypeSelector value={type} onChange={onAnnotationTypeChange} />
-      {disabled && <TypeDisabledMessage message={disabledMessage} />}
-      <ButtonsRow>
+      <AnnotationTypeSelector
+        value={type}
+        onChange={setType}
+        optionDisabledMessage={disabledMessage}
+      />
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
         <SaveButton
-          disabled={status === 'pending' || disabled}
+          disabled={status === 'pending' || disabledMessage !== null}
           onSave={() => {
             const trimmedNote = note.trim()
             const saveableNote = trimmedNote.length
@@ -96,10 +98,7 @@ export const CreateAnnotationModal = ({
             })
           }}
         />
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -111,100 +110,89 @@ export const CreateAnnotationModal = ({
           onClose={reset}
         />
       )}
-    </ActionModal>
+    </ModalLayout>
   )
 }
 
 const AnnotationTypeSelector = ({
   value,
-  onChange
+  onChange,
+  optionDisabledMessage
 }: {
   value: AnnotationType
   onChange: (value: AnnotationType) => void
-}) => {
-  const options = [
-    {
-      type: AnnotationType.personal,
-      name: ANNOTATION_TYPE_LABELS[AnnotationType.personal],
-      description: 'Visible only to you'
-    },
-    {
-      type: AnnotationType.site,
-      name: ANNOTATION_TYPE_LABELS[AnnotationType.site],
-      description: 'Visible to others on the site'
-    }
-  ]
-
-  return (
+  optionDisabledMessage: OptionDisabledMessageType | null
+}) => (
+  <>
     <TypeSelector<AnnotationType>
+      idPrefix="annotation-type"
       value={value}
       onChange={onChange}
-      options={options}
+      options={[
+        {
+          type: AnnotationType.personal,
+          name: ANNOTATION_TYPE_LABELS[AnnotationType.personal],
+          description: 'Visible only to you'
+        },
+        {
+          type: AnnotationType.site,
+          name: ANNOTATION_TYPE_LABELS[AnnotationType.site],
+          description: 'Visible to others on the site'
+        }
+      ]}
     />
-  )
+    {optionDisabledMessage !== null && (
+      <TypeDisabledMessage
+        message={
+          <AnnotationTypeDisabledMessage messageType={optionDisabledMessage} />
+        }
+      />
+    )}
+  </>
+)
+
+const AnnotationTypeDisabledMessage = ({
+  messageType
+}: {
+  messageType: OptionDisabledMessageType
+}): Exclude<ReactNode, undefined> => {
+  switch (messageType) {
+    case 'no-permissions':
+      return "You don't have enough permissions to change note to this type"
+    case 'upgrade-subscription-yourself':
+      return (
+        <>
+          To use this note type,{' '}
+          <a href="/billing/choose-plan" className="underline">
+            please upgrade your subscription
+          </a>
+        </>
+      )
+    case 'upgrade-subscription-reach-out':
+      return (
+        <>
+          To use this note type, please reach out to a team owner to upgrade
+          their subscription.
+        </>
+      )
+  }
 }
 
-const useAnnotationTypeDisabledState = ({
+const canSelectSiteAnnotation = (user: UserContextValue) =>
+  [Role.admin, Role.owner, Role.editor, 'super_admin'].includes(user.role)
+
+const getAnnotationTypeDisabledMessage = ({
   siteAnnotationsAvailable,
-  user,
-  setType
+  user
 }: {
   siteAnnotationsAvailable: boolean
   user: UserContextValue
-  setType: (type: AnnotationType) => void
-}) => {
-  const [disabled, setDisabled] = useState<boolean>(false)
-  const [disabledMessage, setDisabledMessage] = useState<ReactNode | null>(null)
-
-  const userIsOwner = user.role === Role.owner
-  const canSelectSiteAnnotation = [
-    Role.admin,
-    Role.owner,
-    Role.editor,
-    'super_admin'
-  ].includes(user.role)
-
-  const onAnnotationTypeChange = useCallback(
-    (type: AnnotationType) => {
-      setType(type)
-
-      if (type === AnnotationType.site && !canSelectSiteAnnotation) {
-        setDisabled(true)
-        setDisabledMessage(
-          <>
-            {"You don't have enough permissions to change note to this type"}
-          </>
-        )
-      } else if (type === AnnotationType.site && !siteAnnotationsAvailable) {
-        setDisabled(true)
-        setDisabledMessage(
-          <>
-            To use this note type,&#32;
-            {userIsOwner ? (
-              <a href="/billing/choose-plan" className="underline">
-                please upgrade your subscription
-              </a>
-            ) : (
-              <>
-                please reach out to a team owner to upgrade their subscription.
-              </>
-            )}
-          </>
-        )
-      } else {
-        setDisabled(false)
-        setDisabledMessage(null)
-      }
-    },
-    [setType, siteAnnotationsAvailable, userIsOwner, canSelectSiteAnnotation]
-  )
-
-  return {
-    disabled,
-    disabledMessage,
-    onAnnotationTypeChange
-  }
-}
+}): OptionDisabledMessageType | null =>
+  getOptionDisabledMessage({
+    optionAvailable: siteAnnotationsAvailable,
+    userHasOptionPermissions: canSelectSiteAnnotation(user),
+    userCanUpgradeSubscription: user.role === Role.owner
+  })
 
 export const DeleteAnnotationModal = ({
   annotation,
@@ -221,14 +209,22 @@ export const DeleteAnnotationModal = ({
   const deleteDisabled = status === 'pending'
 
   return (
-    <ActionModal onClose={onClose}>
-      <FormTitle className="mb-4">
-        Delete {ANNOTATION_TYPE_LABELS[annotation.type].toLowerCase()}
-        <span className="break-all">{` "${annotation.note}"?`}</span>
-      </FormTitle>
-      <ButtonsRow>
-        <button
-          className={primaryNegativeButtonClassName}
+    <ModalLayout
+      title={
+        <>
+          Delete {ANNOTATION_TYPE_LABELS[annotation.type].toLowerCase()}
+          <span className="break-all">{` "${annotation.note}"?`}</span>
+        </>
+      }
+      onClose={onClose}
+    >
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          theme="danger"
+          size="sm"
           disabled={deleteDisabled}
           onClick={
             deleteDisabled
@@ -239,11 +235,8 @@ export const DeleteAnnotationModal = ({
           }
         >
           Delete
-        </button>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+        </Button>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -255,7 +248,7 @@ export const DeleteAnnotationModal = ({
           onClose={reset}
         />
       )}
-    </ActionModal>
+    </ModalLayout>
   )
 }
 
@@ -277,16 +270,13 @@ export const UpdateAnnotationModal = ({
   const [note, setNote] = useState(annotation.note)
   const [type, setType] = useState<AnnotationType>(annotation.type)
 
-  const { disabled, disabledMessage, onAnnotationTypeChange } =
-    useAnnotationTypeDisabledState({
-      siteAnnotationsAvailable,
-      user,
-      setType
-    })
+  const disabledMessage =
+    type === AnnotationType.site
+      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
+      : null
 
   return (
-    <ActionModal onClose={onClose}>
-      <FormTitle className="mb-8">Update note</FormTitle>
+    <ModalLayout title="Update note" onClose={onClose}>
       <LabeledTextInput
         label="Note"
         id="note"
@@ -294,11 +284,17 @@ export const UpdateAnnotationModal = ({
         onChange={setNote}
         placeholder={notePlaceholder}
       />
-      <AnnotationTypeSelector value={type} onChange={onAnnotationTypeChange} />
-      {disabled && <TypeDisabledMessage message={disabledMessage} />}
-      <ButtonsRow>
+      <AnnotationTypeSelector
+        value={type}
+        onChange={setType}
+        optionDisabledMessage={disabledMessage}
+      />
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
         <SaveButton
-          disabled={status === 'pending' || disabled}
+          disabled={status === 'pending' || disabledMessage !== null}
           onSave={() => {
             const trimmedNote = note.trim()
             const saveableNote = trimmedNote.length
@@ -307,10 +303,7 @@ export const UpdateAnnotationModal = ({
             onSave({ id: annotation.id, note: saveableNote, type })
           }}
         />
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
-      </ButtonsRow>
+      </ModalFooter>
       {error !== null && (
         <ErrorPanel
           className="mt-4"
@@ -322,6 +315,6 @@ export const UpdateAnnotationModal = ({
           onClose={reset}
         />
       )}
-    </ActionModal>
+    </ModalLayout>
   )
 }

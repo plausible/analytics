@@ -100,24 +100,24 @@ export const RoutelessAnnotationModals = () => {
 
   return (
     <>
-          {modal?.type === 'delete-annotation' && (
-            <DeleteAnnotationModal
-              annotation={modal.annotation}
-              onClose={() => {
-                setModal(null)
-                deleteAnnotation.reset()
-              }}
-              onSave={({ id }) => deleteAnnotation.mutate({ id })}
-              status={deleteAnnotation.status}
-              error={deleteAnnotation.error}
-              reset={deleteAnnotation.reset}
-            />
-          )}
-    
+      {modal?.type === 'delete-annotation' && (
+        <DeleteAnnotationModal
+          annotation={modal.annotation}
+          onClose={() => {
+            setModal(null)
+            deleteAnnotation.reset()
+          }}
+          onSave={({ id }) => deleteAnnotation.mutate({ id })}
+          status={deleteAnnotation.status}
+          error={deleteAnnotation.error}
+          reset={deleteAnnotation.reset}
+        />
+      )}
+
       {modal?.type === 'update-annotation' && (
         <UpdateAnnotationModal
           user={user}
-          siteAnnotationsAvailable={false}
+          siteAnnotationsAvailable={site.siteSegmentsAvailable}
           annotation={modal.annotation}
           notePlaceholder={''}
           onClose={() => {
