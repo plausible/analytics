@@ -68,7 +68,7 @@ export const SegmentMenu = () => {
         search={(s) => s}
         state={{ expandedSegment }}
         onClick={() => {
-          setModal({type: 'update-segment'})
+          setModal({ type: 'update-segment' })
         }}
       >
         <span className="px-2 whitespace-nowrap">Update segment</span>
@@ -106,7 +106,7 @@ export const SegmentMenu = () => {
                   state={{ expandedSegment }}
                   onClick={() => {
                     closeDropdown()
-                    setModal({type: 'create-segment'})
+                    setModal({ type: 'create-segment' })
                   }}
                 >
                   <div className="flex items-center gap-x-2">
@@ -122,7 +122,7 @@ export const SegmentMenu = () => {
                   state={{ expandedSegment }}
                   onClick={() => {
                     closeDropdown()
-                    setModal({type: 'delete-segment'})
+                    setModal({ type: 'delete-segment' })
                   }}
                 >
                   <div className="flex items-center gap-x-2">

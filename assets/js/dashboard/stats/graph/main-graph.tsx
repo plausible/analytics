@@ -128,7 +128,7 @@ export const MainGraph = ({
   }, [data, annotationsByTimeLabel])
 
   useEffect(() => {
-    const onClickOutside = (event: PointerEvent) => {
+    const onClickOutside = (event: MouseEvent) => {
       if (!tooltipRef.current?.contains(event.target as Node)) {
         setTooltip(initialTooltipState)
       }
@@ -521,7 +521,10 @@ export const MainGraph = ({
               : null
           return [pinState, pinnedAnnotations] as const
         })
-        .filter(([pinState]) => pinState !== null && pinState!.selectedIndex !== selectedIndex)
+        .filter(
+          ([pinState]) =>
+            pinState !== null && pinState!.selectedIndex !== selectedIndex
+        )
         .sort(([a], [b]) => a!.x - b!.x)
         .map(([pinState, pinnedAnnotations]) => (
           <PinnedAnnotationsTooltip
@@ -573,7 +576,10 @@ export const MainGraph = ({
                           [annotation.id]:
                             current[annotation.id] != null
                               ? null
-                              : { x: tooltip.x, selectedIndex: tooltip.selectedIndex ?? 0 }
+                              : {
+                                  x: tooltip.x,
+                                  selectedIndex: tooltip.selectedIndex ?? 0
+                                }
                         }))
                       }
                       annotations={annotationsByTimeLabel[annotationDatetime]}
@@ -637,7 +643,10 @@ const InteractiveAnnotationsList = ({
   pinnedAnnotationIds,
   onPin
 }: {
-  pinnedAnnotationIds: Record<number, { x: number; selectedIndex: number } | null>
+  pinnedAnnotationIds: Record<
+    number,
+    { x: number; selectedIndex: number } | null
+  >
   onPin: (annotation: Annotation) => void
   annotations: Annotation[]
 }) => {
@@ -675,7 +684,10 @@ const AnnotationsList = ({
   onPin,
   onDelete
 }: {
-  pinnedAnnotationIds: Record<number, { x: number; selectedIndex: number } | null>
+  pinnedAnnotationIds: Record<
+    number,
+    { x: number; selectedIndex: number } | null
+  >
   annotations: Annotation[]
   onEdit?: (annotation: Annotation) => void
   onPin?: (annotation: Annotation) => void
@@ -934,7 +946,13 @@ const PinnedAnnotationsTooltip = ({
       key={x}
       className={mainGraphTooltipClassName}
     >
-      <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onClick() }}>
+      <div
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClick()
+        }}
+      >
         <AnnotationsList
           annotations={annotations}
           expandedIndex={null}

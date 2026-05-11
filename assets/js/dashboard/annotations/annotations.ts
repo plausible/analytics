@@ -1,5 +1,5 @@
-import { Interval } from "../stats/graph/intervals";
-import { parseUTCDate } from "../util/date";
+import { Interval } from '../stats/graph/intervals'
+import { parseUTCDate } from '../util/date'
 
 export enum AnnotationType {
   personal = 'personal',
@@ -99,7 +99,9 @@ export const groupAnnotationsByTimeLabel = (
   }, {})
 }
 
-export const getAnnotationGranularity = (interval: Interval): AnnotationGranularity => {
+export const getAnnotationGranularity = (
+  interval: Interval
+): AnnotationGranularity => {
   switch (interval) {
     case Interval.minute:
     case Interval.hour:

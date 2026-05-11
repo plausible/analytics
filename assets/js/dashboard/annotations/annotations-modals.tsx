@@ -8,7 +8,11 @@ import {
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
-import { ModalLayout, ModalFooter, SaveButton } from '../components/modal-layout'
+import {
+  ModalLayout,
+  ModalFooter,
+  SaveButton
+} from '../components/modal-layout'
 import {
   LabeledTextInput,
   TypeSelector,
