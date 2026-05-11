@@ -567,7 +567,7 @@ export function IndexBreakdownRenderer({
                       key={col.key}
                       className={classNames(
                         col.width ?? 'grow w-full',
-                        col.align === 'right' ? 'text-right' : 'truncate'
+                        col.align === 'right' ? 'text-right' : 'md:truncate'
                       )}
                     >
                       {col.renderCell(row, isActive)}
