@@ -6,13 +6,21 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Adds team_id to query debug metadata (saved in system.query_log log_comment column)
-
 ### Removed
 
 ### Changed
 
-- Keybind hints are hidden on smaller screens
+### Fixed
+
+## v3.2.1 - 2026-05-12
+
+### Added
+
+### Removed
+
+- Removed phoenix storybook dependency
+
+### Changed
 
 ### Fixed
 
