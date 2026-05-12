@@ -78,7 +78,6 @@ type TooltipState = {
   y: number
   selectedIndex: number | null
   persistent: boolean
-  type: 'annotations' | 'series'
 }
 
 const initialTooltipState: TooltipState = {
@@ -86,7 +85,6 @@ const initialTooltipState: TooltipState = {
   y: 0,
   selectedIndex: null,
   persistent: false,
-  type: 'series'
 }
 
 export const MainGraph = ({
@@ -348,7 +346,6 @@ export const MainGraph = ({
               x: closestPoint.x,
               y: 0,
               persistent: true,
-              type: 'series'
             })
           }
         }
@@ -438,7 +435,6 @@ export const MainGraph = ({
             x: closestPoint.x,
             y: 0,
             persistent: true,
-            type: 'series'
           })
         }
         return setTooltip(initialTooltipState)
@@ -473,7 +469,6 @@ export const MainGraph = ({
           x: closestPoint.x,
           y: 0,
           persistent: true,
-          type: 'series'
         })
       }
       return setTooltip(initialTooltipState)
@@ -485,7 +480,7 @@ export const MainGraph = ({
     <Graph<MainGraphYValues>
       className={classNames({
         'cursor-pointer':
-          selectedDatum && (showZoomToPeriod || tooltip.type === 'annotations'),
+          selectedDatum && showZoomToPeriod,
         'touch-pan-y': tooltip.persistent
       })}
       highlightedIndex={selectedIndex}
@@ -538,14 +533,13 @@ export const MainGraph = ({
                 x: pinState!.x,
                 y: 0,
                 persistent: true,
-                type: 'series'
               })
             }
           />
         ))}
       {!!selectedDatum &&
         isTouchDevice !== null &&
-        tooltip.type === 'series' && (
+         (
           <MainGraphTooltip
             getFormattedValue={getFormattedValue}
             maxX={width}
