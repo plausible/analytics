@@ -164,7 +164,7 @@ defmodule Plausible.Goal do
       value == "engagement" ->
         {:error, "The event name 'engagement' is reserved and cannot be used as a goal"}
 
-      not is_nil(@journey_end_event) and value == @journey_end_event ->
+      journey_end_event?(value) ->
         {:error,
          "The event name '#{@journey_end_event}' is reserved and cannot be used as a goal"}
 
@@ -237,6 +237,14 @@ defmodule Plausible.Goal do
       true ->
         []
     end
+  end
+
+  on_ee do
+    defp journey_end_event?(name) do
+      name == @journey_end_event
+    end
+  else
+    defp journey_end_event?(_name), do: always(false)
   end
 end
 
