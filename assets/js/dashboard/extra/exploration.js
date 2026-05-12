@@ -665,7 +665,8 @@ function useExplorationData(site, dashboardState, inViewport) {
           activeResults: [],
           activeFilter: '',
           frozen: truncateFrozenAt(prev.frozen, columnIndex),
-          provisional: {}
+          provisional: {},
+          rateLimited: false
         }
       }
 
@@ -694,7 +695,8 @@ function useExplorationData(site, dashboardState, inViewport) {
           columnIndex,
           sourceResults,
           prev.funnel
-        )
+        ),
+        rateLimited: false
       }
     })
   }, [])
