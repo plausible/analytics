@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, Plausible.Stats.query(site, query))
     else
-      {:error, %QueryError{message: message}} -> bad_request(conn, message)
+      {:error, %QueryError{message: message}} -> H.bad_request(conn, message)
     end
   end
 
@@ -175,10 +175,10 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, next_steps)
       else
         {:error, :rate_limit} ->
-          too_many_requests(conn, "Too many exploration requests")
+          H.too_many_requests(conn, "Too many exploration requests")
 
         {:error, :journey_too_long} ->
-          bad_request(conn, "The journey is too long")
+          H.bad_request(conn, "The journey is too long")
       end
     end
 
@@ -194,13 +194,13 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, :rate_limit} ->
-          too_many_requests(conn, "Too many exploration requests")
+          H.too_many_requests(conn, "Too many exploration requests")
 
         {:error, :empty_journey} ->
-          bad_request(conn, "We are unable to show funnels when journey is empty")
+          H.bad_request(conn, "We are unable to show funnels when journey is empty")
 
         {:error, :journey_too_long} ->
-          bad_request(conn, "The journey is too long")
+          H.bad_request(conn, "The journey is too long")
       end
     end
 
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Api.StatsController do
           end
 
         {:error, :rate_limit} ->
-          too_many_requests(conn, "Too many exploration requests")
+          H.too_many_requests(conn, "Too many exploration requests")
       end
     end
 
@@ -249,10 +249,10 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, %{next: next_steps, funnel: funnel})
       else
         {:error, :rate_limit} ->
-          too_many_requests(conn, "Too many exploration requests")
+          H.too_many_requests(conn, "Too many exploration requests")
 
         _ ->
-          bad_request(conn, "There was an error with your request")
+          H.bad_request(conn, "There was an error with your request")
       end
     end
 
@@ -305,7 +305,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, {:invalid_funnel_query, due_to}} ->
-          bad_request(
+          H.bad_request(
             conn,
             "We are unable to show funnels when the dashboard is filtered by #{due_to}",
             %{
@@ -326,7 +326,7 @@ defmodule PlausibleWeb.Api.StatsController do
           )
 
         _ ->
-          bad_request(conn, "There was an error with your request")
+          H.bad_request(conn, "There was an error with your request")
       end
     end
 
@@ -1360,7 +1360,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp date_validation_plug(conn, _opts) do
     case parse_date_params(conn.params) do
       {:ok, _dates} -> conn
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
+      {:error, message} when is_binary(message) -> H.bad_request(conn, message)
     end
   end
 
@@ -1377,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController do
         conn
 
       :error ->
-        bad_request(
+        H.bad_request(
           conn,
           "The first filter must be for the segment with id #{segment_id}"
         )
@@ -1430,22 +1430,6 @@ defmodule PlausibleWeb.Api.StatsController do
             "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
       end
     end)
-  end
-
-  defp bad_request(conn, message, extra \\ %{}) do
-    payload = Map.merge(extra, %{error: message})
-
-    conn
-    |> put_status(400)
-    |> json(payload)
-    |> halt()
-  end
-
-  defp too_many_requests(conn, message) do
-    conn
-    |> put_status(429)
-    |> json(%{error: message})
-    |> halt()
   end
 
   def comparison_query(query) do
