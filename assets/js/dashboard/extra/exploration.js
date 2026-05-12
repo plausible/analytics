@@ -701,6 +701,7 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   const reset = useCallback(() => {
     ++journeyVersionRef.current
+    setActiveLoading(true)
     setState(EMPTY_JOURNEY_STATE)
   }, [])
 
@@ -1040,7 +1041,8 @@ export function FunnelExploration() {
     steps.length === 0 &&
     funnel.length === 0 &&
     activeResults.length === 0 &&
-    !activeFilter
+    !activeFilter &&
+    !rateLimited
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
