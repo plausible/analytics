@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Api.Helpers do
+  @moduledoc """
+  Helper functions for API controllers.
+  """
+
   import Plug.Conn
 
   def unauthorized(conn, msg) do
