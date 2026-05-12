@@ -105,11 +105,9 @@ function stepsToJourneyParam(steps) {
 }
 
 function parseFetchedResults(results) {
-  if (results.length === 0) {
-    return []
-  } else if (
-    results.length === 1 &&
-    results[0].step.name === JOURNEY_END_EVENT
+  if (
+    results.length === 0 ||
+    (results.length === 1 && results[0].step.name === JOURNEY_END_EVENT)
   ) {
     return []
   } else {
