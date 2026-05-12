@@ -159,7 +159,7 @@ defmodule Plausible.MixProject do
       {:odgn_json_pointer, "~> 3.1.0"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
-      {:phoenix_storybook, "~> 0.9"},
+      {:phoenix_html_helpers, "~> 1.0"},
       {:libcluster, "~> 3.5"}
     ]
   end
@@ -174,12 +174,10 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "tailwind storybook",
         "esbuild default"
       ],
       "assets.deploy": [
         "tailwind default --minify",
-        "tailwind storybook --minify",
         "esbuild default --minify",
         "phx.digest"
       ]
