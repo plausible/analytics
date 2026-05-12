@@ -7,9 +7,9 @@ defmodule Plausible.Stats.Exploration do
   import Plausible.Stats.SQL.Fragments
   import Plausible.Stats.Util, only: [percentage: 2]
 
-  alias Plausible.Stats.Exploration.Journey
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
+  alias Plausible.Stats.Exploration.Journey
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
