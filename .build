@@ -549,7 +549,6 @@ PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
 PlausibleWeb.UserAuth.html
 PlausibleWeb.html
-Storybook.Root.html
 api-reference.html
 assets/logo.png
 contributing.html
@@ -570,8 +569,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-EE9523C9.js
-dist/sidebar_items-92EDED10.js
+dist/search_data-DA4319B3.js
+dist/sidebar_items-0E31B16B.js
 index.html
 readme.html
 search.html
