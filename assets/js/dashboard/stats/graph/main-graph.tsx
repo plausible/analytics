@@ -84,7 +84,7 @@ const initialTooltipState: TooltipState = {
   x: 0,
   y: 0,
   selectedIndex: null,
-  persistent: false,
+  persistent: false
 }
 
 export const MainGraph = ({
@@ -345,7 +345,7 @@ export const MainGraph = ({
               selectedIndex: closestPoint.index,
               x: closestPoint.x,
               y: 0,
-              persistent: true,
+              persistent: true
             })
           }
         }
@@ -434,7 +434,7 @@ export const MainGraph = ({
             selectedIndex: closestPoint.index,
             x: closestPoint.x,
             y: 0,
-            persistent: true,
+            persistent: true
           })
         }
         return setTooltip(initialTooltipState)
@@ -443,22 +443,11 @@ export const MainGraph = ({
       if (tooltip.persistent) {
         return
       }
-      // const isAltClick = event instanceof PointerEvent && event.altKey
-      // if (annotationDatetime && isAltClick) {
-      //   return openAnnotationModal(annotationDatetime)
-      // }
       if (typeof zoomDate === 'string') {
         return zoomToPeriod(zoomDate)
       }
     },
-    [
-      isTouchDevice,
-      zoomDate,
-      // annotationDatetime,
-      zoomToPeriod,
-      // openAnnotationModal,
-      tooltip.persistent
-    ]
+    [isTouchDevice, zoomDate, zoomToPeriod, tooltip.persistent]
   )
 
   const onContextMenu = useCallback<PointerHandler<MainGraphYValues>>(
@@ -468,7 +457,7 @@ export const MainGraph = ({
           selectedIndex: closestPoint.index,
           x: closestPoint.x,
           y: 0,
-          persistent: true,
+          persistent: true
         })
       }
       return setTooltip(initialTooltipState)
@@ -479,8 +468,7 @@ export const MainGraph = ({
   return (
     <Graph<MainGraphYValues>
       className={classNames({
-        'cursor-pointer':
-          selectedDatum && showZoomToPeriod,
+        'cursor-pointer': selectedDatum && showZoomToPeriod,
         'touch-pan-y': tooltip.persistent
       })}
       highlightedIndex={selectedIndex}
@@ -532,102 +520,100 @@ export const MainGraph = ({
                 selectedIndex: pinState!.selectedIndex,
                 x: pinState!.x,
                 y: 0,
-                persistent: true,
+                persistent: true
               })
             }
           />
         ))}
-      {!!selectedDatum &&
-        isTouchDevice !== null &&
-         (
-          <MainGraphTooltip
-            getFormattedValue={getFormattedValue}
-            maxX={width}
-            showZoomToPeriod={!!zoomDate}
-            shouldShowYear={!yearIsUnambiguous}
-            shouldShowDate={!dateIsUnambiguous}
-            period={period}
-            interval={interval}
-            metric={metric}
-            x={tooltip.x}
-            y={tooltip.y}
-            datum={selectedDatum}
-            bucketIndex={selectedIndex}
-            totalBuckets={remappedData.length}
-            persistent={tooltip.persistent}
-            tooltipRef={tooltipRef}
-            isTouchDevice={isTouchDevice}
-          >
-            {tooltip.persistent && (
-              <>
-                {!!annotationDatetime &&
-                  !!annotationsByTimeLabel[annotationDatetime] && (
-                    <InteractiveAnnotationsList
-                      pinnedAnnotationIds={pinnedAnnotationIds}
-                      onPin={(annotation) =>
-                        setPinnedAnnotationIds((current) => ({
-                          ...current,
-                          [annotation.id]:
-                            current[annotation.id] != null
-                              ? null
-                              : {
-                                  x: tooltip.x,
-                                  selectedIndex: tooltip.selectedIndex ?? 0
-                                }
-                        }))
-                      }
-                      annotations={annotationsByTimeLabel[annotationDatetime]}
-                    />
-                  )}
-                {!!annotationDatetime && (
-                  <AddAnnotationButton
-                    interval={interval}
-                    timelabel={annotationDatetime}
+      {!!selectedDatum && isTouchDevice !== null && (
+        <MainGraphTooltip
+          getFormattedValue={getFormattedValue}
+          maxX={width}
+          showZoomToPeriod={!!zoomDate}
+          shouldShowYear={!yearIsUnambiguous}
+          shouldShowDate={!dateIsUnambiguous}
+          period={period}
+          interval={interval}
+          metric={metric}
+          x={tooltip.x}
+          y={tooltip.y}
+          datum={selectedDatum}
+          bucketIndex={selectedIndex}
+          totalBuckets={remappedData.length}
+          persistent={tooltip.persistent}
+          tooltipRef={tooltipRef}
+          isTouchDevice={isTouchDevice}
+        >
+          {tooltip.persistent && (
+            <>
+              {!!annotationDatetime &&
+                !!annotationsByTimeLabel[annotationDatetime] && (
+                  <InteractiveAnnotationsList
+                    pinnedAnnotationIds={pinnedAnnotationIds}
+                    onPin={(annotation) =>
+                      setPinnedAnnotationIds((current) => ({
+                        ...current,
+                        [annotation.id]:
+                          current[annotation.id] != null
+                            ? null
+                            : {
+                                x: tooltip.x,
+                                selectedIndex: tooltip.selectedIndex ?? 0
+                              }
+                      }))
+                    }
+                    annotations={annotationsByTimeLabel[annotationDatetime]}
                   />
                 )}
-                {!!zoomDate && (
-                  <Button
-                    onClick={() => zoomToPeriod(zoomDate)}
-                  >{`View ${interval}`}</Button>
+              {!!annotationDatetime && (
+                <AddAnnotationButton
+                  interval={interval}
+                  timelabel={annotationDatetime}
+                />
+              )}
+              {!!zoomDate && (
+                <Button
+                  onClick={() => zoomToPeriod(zoomDate)}
+                >{`View ${interval}`}</Button>
+              )}
+            </>
+          )}
+          {!tooltip.persistent && (
+            <>
+              {!!annotationDatetime &&
+                !!annotationsByTimeLabel[annotationDatetime] && (
+                  <>
+                    <AnnotationsList
+                      pinnedAnnotationIds={[]}
+                      expandedIndex={null}
+                      annotations={annotationsByTimeLabel[
+                        annotationDatetime
+                      ].slice(0, 1)}
+                      onAnnotationClick={() => {}}
+                    />
+                    {annotationsByTimeLabel[annotationDatetime].length == 2 &&
+                      `and 1 more note`}
+                    {annotationsByTimeLabel[annotationDatetime].length > 2 &&
+                      `and ${annotationsByTimeLabel[annotationDatetime].length - 1} more notes`}
+                  </>
                 )}
-              </>
-            )}
-            {!tooltip.persistent && (
-              <>
-                {!!annotationDatetime &&
-                  !!annotationsByTimeLabel[annotationDatetime] && (
-                    <>
-                      <AnnotationsList
-                        pinnedAnnotationIds={[]}
-                        expandedIndex={null}
-                        annotations={annotationsByTimeLabel[
-                          annotationDatetime
-                        ].slice(0, 1)}
-                        onAnnotationClick={() => {}}
-                      />
-                      {annotationsByTimeLabel[annotationDatetime].length == 2 &&
-                        `and 1 more note`}
-                      {annotationsByTimeLabel[annotationDatetime].length > 2 &&
-                        `and ${annotationsByTimeLabel[annotationDatetime].length - 1} more notes`}
-                    </>
-                  )}
-                {(!!zoomDate || !!annotationDatetime) && (
-                  <hr className="border-gray-600 dark:border-gray-800 my-1" />
-                )}
-                {!!zoomDate && (
-                  <div className="text-gray-300 dark:text-gray-400 text-xs">
-                    {`Click to view ${interval}`}
-                  </div>
-                )}
-                {!!annotationDatetime && (
-                  <div className="text-gray-300 dark:text-gray-400 text-xs">
-                    Right click for more actions
-                  </div>
-                )}
-              </>
-            )}
-          </MainGraphTooltip>
-        )}
+              {(!!zoomDate || !!annotationDatetime) && (
+                <hr className="border-gray-600 dark:border-gray-800 my-1" />
+              )}
+              {!!zoomDate && (
+                <div className="text-gray-300 dark:text-gray-400 text-xs">
+                  {`Click to view ${interval}`}
+                </div>
+              )}
+              {!!annotationDatetime && (
+                <div className="text-gray-300 dark:text-gray-400 text-xs">
+                  Right click for more actions
+                </div>
+              )}
+            </>
+          )}
+        </MainGraphTooltip>
+      )}
     </Graph>
   )
 }
