@@ -589,7 +589,7 @@ function ExplorationColumn({
           />
         )}
 
-        {headerConversionRate && (
+        {!showSearch && headerConversionRate && (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
           </span>
@@ -695,7 +695,7 @@ function useExplorationData(site, dashboardState, inViewport) {
           steps: prev.steps.slice(0, columnIndex),
           activeResults: [],
           activeFilter: '',
-          frozen: truncateFrozenAt(prev.frozen, columnIndex),
+          frozen: truncateFrozenAt(prev.frozen, columnIndex + 1),
           provisional: {},
           rateLimited: false
         }
@@ -1162,8 +1162,13 @@ export function FunnelExploration() {
               const isActive = i === activeColumnIndex
               const isReachable = steps.length >= i
 
-              const colResults = isActive ? activeResults : (frozen[i] ?? [])
-              const colLoading = isActive && (initialLoading || activeLoading)
+              const colResults = isActive
+                ? activeResults.length > 0
+                  ? activeResults
+                  : (frozen[i] ?? [])
+                : (frozen[i] ?? [])
+              const colLoading =
+                isActive && (initialLoading || activeLoading) && !frozen[i]
 
               const colSelectedVisitors =
                 provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
