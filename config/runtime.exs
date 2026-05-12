@@ -1081,5 +1081,3 @@ unless s3_disabled? do
 end
 
 config :plausible, Plausible.Cache.Adapter, sessions: [partitions: 100]
-
-config :phoenix_storybook, enabled: env !== "prod"
