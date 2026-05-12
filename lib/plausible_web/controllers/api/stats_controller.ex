@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Api.StatsController do
                 :exploration_next,
                 :exploration_funnel,
                 :exploration_next_with_funnel,
-                :exploration_interesting_funnel
+                :exploration_featured_funnel
               ]
   end
 
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, Plausible.Stats.query(site, query))
     else
-      {:error, %QueryError{message: message}} -> bad_request(conn, message)
+      {:error, %QueryError{message: message}} -> H.bad_request(conn, message)
     end
   end
 
@@ -140,12 +140,28 @@ defmodule PlausibleWeb.Api.StatsController do
     alias Plausible.Stats.Exploration
 
     @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
+    @exploration_hourly_limit 600
+    @exploration_burst_limit 10
+
+    defp check_exploration_rate_limit(site) do
+      key = "exploration:#{site.id}"
+
+      with {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.hours(1), @exploration_hourly_limit),
+           {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.seconds(10), @exploration_burst_limit) do
+        :ok
+      else
+        {:deny, _} -> {:error, :rate_limit}
+      end
+    end
 
     def exploration_next(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            include_wildcard? =
@@ -158,43 +174,57 @@ defmodule PlausibleWeb.Api.StatsController do
              ) do
         json(conn, next_steps)
       else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
         {:error, :journey_too_long} ->
-          bad_request(conn, "The journey is too long")
+          H.bad_request(conn, "The journey is too long")
       end
     end
 
     def exploration_funnel(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            {:ok, funnel} <-
              Exploration.journey_funnel(query, journey, direction) do
         json(conn, funnel)
       else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
         {:error, :empty_journey} ->
-          bad_request(conn, "We are unable to show funnels when journey is empty")
+          H.bad_request(conn, "We are unable to show funnels when journey is empty")
 
         {:error, :journey_too_long} ->
-          bad_request(conn, "The journey is too long")
+          H.bad_request(conn, "The journey is too long")
       end
     end
 
-    def exploration_interesting_funnel(conn, params) do
+    def exploration_featured_funnel(conn, params) do
       site = conn.assigns.site
-      query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      include_wildcard? =
-        not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+      case check_exploration_rate_limit(site) do
+        :ok ->
+          query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-      case Exploration.interesting_funnel(site, query,
-             max_steps: params["max_steps"],
-             max_candidates: params["max_candidates"],
-             include_wildcard?: include_wildcard?
-           ) do
-        {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
-        {:error, :not_found} -> json(conn, [])
+          include_wildcard? =
+            not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+
+          case Exploration.featured_funnel(site, query,
+                 max_steps: params["max_steps"],
+                 max_candidates: params["max_candidates"],
+                 include_wildcard?: include_wildcard?
+               ) do
+            {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
+            {:error, :not_found} -> json(conn, [])
+          end
+
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
       end
     end
 
@@ -203,7 +233,8 @@ defmodule PlausibleWeb.Api.StatsController do
       search_term = params["search_term"] || ""
       include_funnel? = params["include_funnel"] == true
 
-      with {:ok, journey} <- parse_journey(steps),
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
            {:ok, direction} <- parse_exploration_direction(params["direction"]),
            query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
            include_wildcard? =
@@ -217,8 +248,11 @@ defmodule PlausibleWeb.Api.StatsController do
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})
       else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
         _ ->
-          bad_request(conn, "There was an error with your request")
+          H.bad_request(conn, "There was an error with your request")
       end
     end
 
@@ -271,7 +305,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, {:invalid_funnel_query, due_to}} ->
-          bad_request(
+          H.bad_request(
             conn,
             "We are unable to show funnels when the dashboard is filtered by #{due_to}",
             %{
@@ -292,7 +326,7 @@ defmodule PlausibleWeb.Api.StatsController do
           )
 
         _ ->
-          bad_request(conn, "There was an error with your request")
+          H.bad_request(conn, "There was an error with your request")
       end
     end
 
@@ -1326,7 +1360,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp date_validation_plug(conn, _opts) do
     case parse_date_params(conn.params) do
       {:ok, _dates} -> conn
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
+      {:error, message} when is_binary(message) -> H.bad_request(conn, message)
     end
   end
 
@@ -1343,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController do
         conn
 
       :error ->
-        bad_request(
+        H.bad_request(
           conn,
           "The first filter must be for the segment with id #{segment_id}"
         )
@@ -1396,15 +1430,6 @@ defmodule PlausibleWeb.Api.StatsController do
             "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
       end
     end)
-  end
-
-  defp bad_request(conn, message, extra \\ %{}) do
-    payload = Map.merge(extra, %{error: message})
-
-    conn
-    |> put_status(400)
-    |> json(payload)
-    |> halt()
   end
 
   def comparison_query(query) do

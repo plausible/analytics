@@ -7,6 +7,7 @@ import React, {
 } from 'react'
 import LazyLoader from '../components/lazy-loader'
 import * as api from '../api'
+import { ApiError } from '../api'
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip'
 import { useDebounce } from '../custom-hooks'
@@ -42,7 +43,8 @@ const EMPTY_JOURNEY_STATE = {
   activeFilter: '',
   // list of suggestions the user saw when picking step
   frozen: {},
-  provisional: {}
+  provisional: {},
+  rateLimited: false
 }
 
 const EMPTY_SVG_DATA = {
@@ -58,6 +60,10 @@ function roundedPercentage(value, total) {
   // Rounding to 2 decimal places using Math.round()
   // (https://stackoverflow.com/a/11832950)
   return Math.round((percentage + Number.EPSILON) * 100) / 100
+}
+
+function isRateLimitedError(err) {
+  return err instanceof ApiError && err.status === 429
 }
 
 // Two steps are identical when their identity fields match.
@@ -135,9 +141,9 @@ function fetchNextWithFunnel(
   )
 }
 
-function fetchInterestingFunnel(site, dashboardState) {
+function fetchFeaturedFunnel(site, dashboardState) {
   return api.post(
-    url.apiPath(site, '/exploration/interesting-funnel'),
+    url.apiPath(site, '/exploration/featured-funnel'),
     dashboardState,
     { max_steps: PRELOAD_MAX_STEPS, max_candidates: PRELOAD_MAX_CANDIDATES }
   )
@@ -444,7 +450,28 @@ function VisitorsMetric({ visitors }) {
   }
 }
 
-function ColumnEmptyState({ active, filter, colIndex, direction }) {
+function ColumnEmptyState({
+  active,
+  filter,
+  colIndex,
+  direction,
+  rateLimited,
+  onRetry
+}) {
+  if (active && rateLimited) {
+    return (
+      <span>
+        Too many requests, please wait a moment and{' '}
+        <button
+          onClick={onRetry}
+          className="underline hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+        >
+          try again
+        </button>
+      </span>
+    )
+  }
+
   if (!active) {
     const prompt =
       colIndex === 1
@@ -493,7 +520,9 @@ function ExplorationColumn({
   maxVisitors,
   filter,
   onFilterChange,
-  onSelect
+  onSelect,
+  rateLimited,
+  onRetry
 }) {
   const debouncedFilterChange = useDebounce((e) =>
     onFilterChange(e.target.value)
@@ -559,6 +588,8 @@ function ExplorationColumn({
             filter={filter}
             colIndex={colIndex}
             direction={direction}
+            rateLimited={rateLimited}
+            onRetry={onRetry}
           />
         </div>
       ) : (
@@ -604,6 +635,7 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
 function useExplorationData(site, dashboardState, inViewport) {
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   // Incremented whenever the dashboardState or site changes so that
   // PathConnectors re-runs its layout effect and recalculates connector
   // geometry against the freshly rendered DOM. Steps alone do not change
@@ -643,7 +675,8 @@ function useExplorationData(site, dashboardState, inViewport) {
           activeResults: [],
           activeFilter: '',
           frozen: truncateFrozenAt(prev.frozen, columnIndex),
-          provisional: {}
+          provisional: {},
+          rateLimited: false
         }
       }
 
@@ -672,13 +705,15 @@ function useExplorationData(site, dashboardState, inViewport) {
           columnIndex,
           sourceResults,
           prev.funnel
-        )
+        ),
+        rateLimited: false
       }
     })
   }, [])
 
   const reset = useCallback(() => {
     ++journeyVersionRef.current
+    setActiveLoading(true)
     setState(EMPTY_JOURNEY_STATE)
   }, [])
 
@@ -732,13 +767,13 @@ function useExplorationData(site, dashboardState, inViewport) {
 
     setActiveLoading(true)
 
-    // On first render fire the interesting-funnel preload. Once the preload
+    // On first render fire the featured-funnel preload. Once the preload
     // resolves it sets steps and funnel, which re-triggers this effect for
     // the active-column candidate fetch.
     if (!preloadFiredRef.current) {
       preloadFiredRef.current = true
 
-      fetchInterestingFunnel(site, dashboardState)
+      fetchFeaturedFunnel(site, dashboardState)
         .then((response) => {
           if (isStale()) return
           if (response?.funnel?.length > 0) {
@@ -747,12 +782,13 @@ function useExplorationData(site, dashboardState, inViewport) {
               ...prev,
               steps: response.funnel.map(({ step }) => step),
               funnel: response.funnel,
-              frozen: response.candidates ?? {}
+              frozen: response.candidates ?? {},
+              rateLimited: false
             }))
             // The preload populates steps, which re-triggers this effect for
             // the active-column candidate fetch, so leave loading=true.
           } else {
-            // No interesting funnel found; fall back to plain candidates for column 0.
+            // No featured funnel found; fall back to plain candidates for column 0.
             fetchNextWithFunnel(
               site,
               dashboardState,
@@ -765,20 +801,39 @@ function useExplorationData(site, dashboardState, inViewport) {
                 if (!isStale())
                   setState((prev) => ({
                     ...prev,
-                    activeResults: r?.next ?? []
+                    activeResults: r?.next ?? [],
+                    rateLimited: false
                   }))
               })
-              .catch(() => {
-                if (!isStale())
-                  setState((prev) => ({ ...prev, activeResults: [] }))
+              .catch((err) => {
+                if (!isStale()) {
+                  if (isRateLimitedError(err)) {
+                    setState((prev) => ({
+                      ...prev,
+                      rateLimited: true,
+                      activeResults: []
+                    }))
+                  } else {
+                    setState((prev) => ({ ...prev, activeResults: [] }))
+                  }
+                }
               })
               .finally(() => {
                 if (!isStale()) setActiveLoading(false)
               })
           }
         })
-        .catch(() => {
+        .catch((err) => {
           if (isStale()) return
+          if (isRateLimitedError(err)) {
+            setState((prev) => ({
+              ...prev,
+              rateLimited: true,
+              activeResults: []
+            }))
+            setActiveLoading(false)
+            return
+          }
           fetchNextWithFunnel(
             site,
             dashboardState,
@@ -789,11 +844,24 @@ function useExplorationData(site, dashboardState, inViewport) {
           )
             .then((r) => {
               if (!isStale())
-                setState((prev) => ({ ...prev, activeResults: r?.next ?? [] }))
+                setState((prev) => ({
+                  ...prev,
+                  activeResults: r?.next ?? [],
+                  rateLimited: false
+                }))
             })
-            .catch(() => {
-              if (!isStale())
-                setState((prev) => ({ ...prev, activeResults: [] }))
+            .catch((err) => {
+              if (!isStale()) {
+                if (isRateLimitedError(err)) {
+                  setState((prev) => ({
+                    ...prev,
+                    rateLimited: true,
+                    activeResults: []
+                  }))
+                } else {
+                  setState((prev) => ({ ...prev, activeResults: [] }))
+                }
+              }
             })
             .finally(() => {
               if (!isStale()) setActiveLoading(false)
@@ -827,7 +895,11 @@ function useExplorationData(site, dashboardState, inViewport) {
       .then((response) => {
         if (isStale()) return
         setState((prev) => {
-          const next = { ...prev, activeResults: response?.next ?? [] }
+          const next = {
+            ...prev,
+            activeResults: response?.next ?? [],
+            rateLimited: false
+          }
           if (includeFunnel) {
             let newFunnel = response?.funnel ?? []
             next.provisional = {}
@@ -870,29 +942,52 @@ function useExplorationData(site, dashboardState, inViewport) {
           return next
         })
       })
-      .catch(() => {
+      .catch((err) => {
         if (isStale()) return
-        setState((prev) => ({
-          ...prev,
-          activeResults: [],
-          ...(includeFunnel ? { funnel: [] } : {})
-        }))
+        if (isRateLimitedError(err)) {
+          setState((prev) => ({
+            ...prev,
+            rateLimited: true,
+            activeResults: [],
+            ...(includeFunnel ? { provisional: {} } : {})
+          }))
+        } else {
+          setState((prev) => ({
+            ...prev,
+            activeResults: [],
+            ...(includeFunnel ? { funnel: [] } : {})
+          }))
+        }
       })
       .finally(() => {
         if (!isStale()) setActiveLoading(false)
       })
-  }, [site, dashboardState, state.steps, state.activeFilter, inViewport])
+  }, [
+    site,
+    dashboardState,
+    state.steps,
+    state.activeFilter,
+    inViewport,
+    retryCount
+  ])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
   // drives the re-run without double-firing.
+
+  const retry = useCallback(() => {
+    setState((prev) => ({ ...prev, rateLimited: false }))
+    setRetryCount((c) => c + 1)
+  }, [])
 
   return {
     state,
     direction: directionRef.current,
     activeLoading,
     layoutKey,
+    rateLimited: state.rateLimited,
     selectStep,
     reset,
+    retry,
     setDirection,
     setActiveFilter
   }
@@ -940,8 +1035,10 @@ export function FunnelExploration() {
     direction,
     activeLoading,
     layoutKey,
+    rateLimited,
     selectStep,
     reset,
+    retry,
     setDirection,
     setActiveFilter
   } = useExplorationData(site, dashboardState, inViewport)
@@ -971,7 +1068,8 @@ export function FunnelExploration() {
     steps.length === 0 &&
     funnel.length === 0 &&
     activeResults.length === 0 &&
-    !activeFilter
+    !activeFilter &&
+    !rateLimited
 
   const lastFunnelStep = funnel.length >= 2 ? funnel[funnel.length - 1] : null
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
@@ -1069,6 +1167,8 @@ export function FunnelExploration() {
                   filter={isActive ? activeFilter : ''}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
                   onSelect={(step) => selectStep(i, step)}
+                  rateLimited={isActive && rateLimited}
+                  onRetry={retry}
                 />
               )
             })}
