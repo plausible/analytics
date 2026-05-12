@@ -948,7 +948,8 @@ function useExplorationData(site, dashboardState, inViewport) {
           setState((prev) => ({
             ...prev,
             rateLimited: true,
-            activeResults: []
+            activeResults: [],
+            ...(includeFunnel ? { provisional: {} } : {})
           }))
         } else {
           setState((prev) => ({
