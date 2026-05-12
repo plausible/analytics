@@ -455,12 +455,19 @@ function ColumnEmptyState({
   filter,
   colIndex,
   direction,
-  rateLimited
+  rateLimited,
+  onRetry
 }) {
   if (active && rateLimited) {
     return (
-      <span className="flex flex-col items-center gap-2">
-        Too many requests, please wait a moment and try again
+      <span>
+        Too many requests, please wait a moment and{' '}
+        <button
+          onClick={onRetry}
+          className="underline hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+        >
+          try again
+        </button>
       </span>
     )
   }
@@ -514,7 +521,8 @@ function ExplorationColumn({
   filter,
   onFilterChange,
   onSelect,
-  rateLimited
+  rateLimited,
+  onRetry
 }) {
   const debouncedFilterChange = useDebounce((e) =>
     onFilterChange(e.target.value)
@@ -581,6 +589,7 @@ function ExplorationColumn({
             colIndex={colIndex}
             direction={direction}
             rateLimited={rateLimited}
+            onRetry={onRetry}
           />
         </div>
       ) : (
@@ -626,6 +635,7 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
 function useExplorationData(site, dashboardState, inViewport) {
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
   // Incremented whenever the dashboardState or site changes so that
   // PathConnectors re-runs its layout effect and recalculates connector
   // geometry against the freshly rendered DOM. Steps alone do not change
@@ -951,10 +961,15 @@ function useExplorationData(site, dashboardState, inViewport) {
       .finally(() => {
         if (!isStale()) setActiveLoading(false)
       })
-  }, [site, dashboardState, state.steps, state.activeFilter, inViewport])
+  }, [site, dashboardState, state.steps, state.activeFilter, inViewport, retryCount])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
   // drives the re-run without double-firing.
+
+  const retry = useCallback(() => {
+    setState((prev) => ({ ...prev, rateLimited: false }))
+    setRetryCount((c) => c + 1)
+  }, [])
 
   return {
     state,
@@ -964,6 +979,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     rateLimited: state.rateLimited,
     selectStep,
     reset,
+    retry,
     setDirection,
     setActiveFilter
   }
@@ -1014,6 +1030,7 @@ export function FunnelExploration() {
     rateLimited,
     selectStep,
     reset,
+    retry,
     setDirection,
     setActiveFilter
   } = useExplorationData(site, dashboardState, inViewport)
@@ -1143,6 +1160,7 @@ export function FunnelExploration() {
                   onFilterChange={isActive ? setActiveFilter : () => {}}
                   onSelect={(step) => selectStep(i, step)}
                   rateLimited={isActive && rateLimited}
+                  onRetry={retry}
                 />
               )
             })}
