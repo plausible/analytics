@@ -21,6 +21,13 @@ export enum AnnotationGranularity {
   minute = 'minute'
 }
 
+export type PinPosition = { x: number; selectedIndex: number }
+
+export type AnnotationWithPinState = Annotation & {
+  isPinned: boolean
+  pinPosition: PinPosition | null
+}
+
 export type Annotation = {
   datetime: string
   granularity: AnnotationGranularity
@@ -89,15 +96,26 @@ export const getAnnotationTimeLabel = (
   }
 }
 
-export const groupAnnotationsByTimeLabel = (
-  annotations: Annotation[],
+export const groupAnnotationsByTimeLabel = <
+  T extends Pick<Annotation, 'datetime' | 'granularity'>
+>(
+  annotations: T[],
   interval: Interval
-): Record<string, Annotation[] | undefined> => {
-  return annotations.reduce<Record<string, Annotation[]>>((acc, annotation) => {
+): Record<string, T[] | undefined> => {
+  return annotations.reduce<Record<string, T[]>>((acc, annotation) => {
     const timeLabel = getAnnotationTimeLabel(annotation, interval)
     return { ...acc, [timeLabel]: [...(acc[timeLabel] ?? []), annotation] }
   }, {})
 }
+
+export const enrichAnnotationsWithPinState = (
+  annotations: Annotation[],
+  pinnedAnnotationIds: Record<number, PinPosition | null>
+): AnnotationWithPinState[] =>
+  annotations.map((annotation) => {
+    const pinPosition = pinnedAnnotationIds[annotation.id] ?? null
+    return { ...annotation, isPinned: pinPosition !== null, pinPosition }
+  })
 
 export const getAnnotationGranularity = (
   interval: Interval

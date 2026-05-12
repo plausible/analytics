@@ -36,7 +36,7 @@ type GraphProps<
   /** initial guess for left margin, automatically enlarged to fit y tick texts */
   defaultMarginLeft: number
   data: Datum<T>[]
-  annotationsCountByIndex: number[]
+  annotationsByIndex: { count: number; pinnedCount: number }[]
   yMax: number
   onPointerEnter: (event: unknown) => void
   onPointerMove: PointerHandler<T>
@@ -107,7 +107,7 @@ function InnerGraph<T extends GraphYValues>({
   settings,
   gradients,
   highlightedIndex,
-  annotationsCountByIndex,
+  annotationsByIndex,
   verticalLineIndices
 }: GraphProps<T>) {
   const [extraMarginLeft, setExtraMarginLeft] = useState(0)
@@ -383,7 +383,7 @@ function InnerGraph<T extends GraphYValues>({
     onPointerMove,
     isInHoverableArea,
     points,
-    annotationsCountByIndex,
+    annotationsByIndex,
     yBottomEdge
   ])
 
@@ -484,7 +484,7 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('click', null)
       }
     }
-  }, [onClick, isInHoverableArea, points, annotationsCountByIndex, yBottomEdge])
+  }, [onClick, isInHoverableArea, points, annotationsByIndex, yBottomEdge])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -494,7 +494,6 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('contextmenu', null)
       } else {
         svg.on('contextmenu', (event) => {
-          event.preventDefault()
           const { xPointer, yPointer } = getPosition(event)
           const inHoverableArea = isInHoverableArea(xPointer, yPointer)
           const closestIndexToPointer = inHoverableArea
@@ -527,7 +526,7 @@ function InnerGraph<T extends GraphYValues>({
     onContextMenu,
     isInHoverableArea,
     points,
-    annotationsCountByIndex,
+    annotationsByIndex,
     yBottomEdge
   ])
 
@@ -579,10 +578,10 @@ function InnerGraph<T extends GraphYValues>({
       return cleanup()
     }
     const pointsWithAnnotations = points.map((point, index) => {
-      return { ...point, annotationCount: annotationsCountByIndex[index] }
+      return { ...point, annotations: annotationsByIndex[index] }
     })
     for (const point of pointsWithAnnotations) {
-      if (point.annotationCount > 0) {
+      if (point.annotations.count > 0) {
         svg
           .select(`#${annotationsGroupId}`)
           .append('g')
@@ -599,7 +598,7 @@ function InnerGraph<T extends GraphYValues>({
       }
     }
     return cleanup
-  }, [points, annotationsCountByIndex, yBottomEdge])
+  }, [points, annotationsByIndex, yBottomEdge])
 
   useEffect(() => {
     if (!svgRef.current) return

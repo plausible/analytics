@@ -46,6 +46,9 @@ import { useRoutelessModalsContext } from '../../navigation/routeless-modals-con
 import {
   Annotation,
   AnnotationType,
+  AnnotationWithPinState,
+  PinPosition,
+  enrichAnnotationsWithPinState,
   getAnnotationGranularity,
   groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
@@ -104,7 +107,7 @@ export const MainGraph = ({
 
   const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
   const [pinnedAnnotationIds, setPinnedAnnotationIds] = useState<
-    Record<number, { x: number; selectedIndex: number } | null>
+    Record<number, PinPosition | null>
   >({})
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   const tooltipRef = useRef<HTMLDivElement>(null)
@@ -116,9 +119,14 @@ export const MainGraph = ({
   const interval = data.interval
   const period = data.period
 
+  const enrichedAnnotations = useMemo(
+    () => enrichAnnotationsWithPinState(annotations, pinnedAnnotationIds),
+    [annotations, pinnedAnnotationIds]
+  )
+
   const annotationsByTimeLabel = useMemo(
-    () => groupAnnotationsByTimeLabel(annotations, interval),
-    [annotations, interval]
+    () => groupAnnotationsByTimeLabel(enrichedAnnotations, interval),
+    [enrichedAnnotations, interval]
   )
 
   useEffect(() => {
@@ -292,30 +300,29 @@ export const MainGraph = ({
     }
   }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
-  const annotationsCountByIndex = useMemo(
+  const annotationsByIndex = useMemo(
     () =>
       remappedData.map((datum) => {
         const annotationsOnDatum = datum.main.isDefined
           ? (annotationsByTimeLabel[datum.main.timeLabel] ?? [])
           : []
-        return annotationsOnDatum.length
+        return {
+          count: annotationsOnDatum.length,
+          pinnedCount: annotationsOnDatum.filter((a) => a.isPinned).length
+        }
       }),
     [remappedData, annotationsByTimeLabel]
   )
 
   const verticalLineIndices = useMemo(
     () =>
-      remappedData.reduce<number[]>((acc, datum, index) => {
-        if (!datum.main.isDefined) return acc
-        const annotationsOnDatum =
-          annotationsByTimeLabel[datum.main.timeLabel] ?? []
-        const hasPinned = annotationsOnDatum.some(
-          (a) => pinnedAnnotationIds[a.id] != null
-        )
-        if (hasPinned) acc.push(index)
-        return acc
+      annotationsByIndex.reduce<number[]>((acc, { pinnedCount }, index) => {
+        if (pinnedCount < 1) {
+          return acc
+        }
+        return [...acc, index]
       }, []),
-    [remappedData, annotationsByTimeLabel, pinnedAnnotationIds]
+    [annotationsByIndex]
   )
 
   const getFormattedValue = useCallback(
@@ -451,18 +458,13 @@ export const MainGraph = ({
   )
 
   const onContextMenu = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint }) => {
-      if (inHoverableArea && closestPoint) {
-        return setTooltip({
-          selectedIndex: closestPoint.index,
-          x: closestPoint.x,
-          y: 0,
-          persistent: true
-        })
+    ({ event }) => {
+      if (selectedDatum) {
+        ;(event as Event).preventDefault()
+        return setTooltip((current) => ({ ...current, persistent: true }))
       }
-      return setTooltip(initialTooltipState)
     },
-    []
+    [selectedDatum]
   )
 
   return (
@@ -490,35 +492,30 @@ export const MainGraph = ({
       onContextMenu={onContextMenu}
       yFormat={yFormat}
       gradients={gradients}
-      annotationsCountByIndex={annotationsCountByIndex}
+      annotationsByIndex={annotationsByIndex}
       verticalLineIndices={verticalLineIndices}
     >
-      {Object.entries(annotationsByTimeLabel)
-        .map(([_timeLabel, annotations]) => {
-          const pinnedAnnotations = annotations?.filter(
-            (a) => pinnedAnnotationIds[a.id] != null
-          )
-          const pinState =
-            pinnedAnnotations && pinnedAnnotations.length
-              ? pinnedAnnotationIds[pinnedAnnotations[0].id]
-              : null
-          return [pinState, pinnedAnnotations] as const
+      {Object.values(annotationsByTimeLabel)
+        .map((annotations) => {
+          const pinnedAnnotations = annotations?.filter((a) => a.isPinned) ?? []
+          const pinPosition = pinnedAnnotations[0]?.pinPosition ?? null
+          return { pinPosition, pinnedAnnotations }
         })
         .filter(
-          ([pinState]) =>
-            pinState !== null && pinState!.selectedIndex !== selectedIndex
+          ({ pinPosition }) =>
+            pinPosition !== null && pinPosition.selectedIndex !== selectedIndex
         )
-        .sort(([a], [b]) => a!.x - b!.x)
-        .map(([pinState, pinnedAnnotations]) => (
+        .sort((a, b) => a.pinPosition!.x - b.pinPosition!.x)
+        .map(({ pinPosition, pinnedAnnotations }) => (
           <PinnedAnnotationsTooltip
-            key={pinState!.x}
-            x={pinState!.x}
+            key={pinPosition!.x}
+            x={pinPosition!.x}
             maxX={width}
-            annotations={pinnedAnnotations!}
+            annotations={pinnedAnnotations}
             onClick={() =>
               setTooltip({
-                selectedIndex: pinState!.selectedIndex,
-                x: pinState!.x,
+                selectedIndex: pinPosition!.selectedIndex,
+                x: pinPosition!.x,
                 y: 0,
                 persistent: true
               })
@@ -549,7 +546,6 @@ export const MainGraph = ({
               {!!annotationDatetime &&
                 !!annotationsByTimeLabel[annotationDatetime] && (
                   <InteractiveAnnotationsList
-                    pinnedAnnotationIds={pinnedAnnotationIds}
                     onPin={(annotation) =>
                       setPinnedAnnotationIds((current) => ({
                         ...current,
@@ -584,7 +580,6 @@ export const MainGraph = ({
                 !!annotationsByTimeLabel[annotationDatetime] && (
                   <>
                     <AnnotationsList
-                      pinnedAnnotationIds={[]}
                       expandedIndex={null}
                       annotations={annotationsByTimeLabel[
                         annotationDatetime
@@ -620,15 +615,10 @@ export const MainGraph = ({
 
 const InteractiveAnnotationsList = ({
   annotations,
-  pinnedAnnotationIds,
   onPin
 }: {
-  pinnedAnnotationIds: Record<
-    number,
-    { x: number; selectedIndex: number } | null
-  >
   onPin: (annotation: Annotation) => void
-  annotations: Annotation[]
+  annotations: AnnotationWithPinState[]
 }) => {
   const [expanded, setExpanded] = useState<number | null>(null)
   useEffect(() => {
@@ -638,7 +628,6 @@ const InteractiveAnnotationsList = ({
 
   return (
     <AnnotationsList
-      pinnedAnnotationIds={pinnedAnnotationIds}
       annotations={annotations}
       expandedIndex={expanded}
       onAnnotationClick={(index: number) =>
@@ -656,7 +645,6 @@ const InteractiveAnnotationsList = ({
 }
 
 const AnnotationsList = ({
-  pinnedAnnotationIds,
   annotations,
   expandedIndex,
   onAnnotationClick,
@@ -664,11 +652,7 @@ const AnnotationsList = ({
   onPin,
   onDelete
 }: {
-  pinnedAnnotationIds: Record<
-    number,
-    { x: number; selectedIndex: number } | null
-  >
-  annotations: Annotation[]
+  annotations: AnnotationWithPinState[]
   onEdit?: (annotation: Annotation) => void
   onPin?: (annotation: Annotation) => void
   onDelete?: (annotation: Annotation) => void
@@ -697,6 +681,7 @@ const AnnotationsList = ({
                 <div className="flex flex-row">
                   {typeof onEdit === 'function' && (
                     <Button
+                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
                       theme="ghost"
                       size="sm"
                       onClick={() => onEdit(annotation)}
@@ -706,8 +691,9 @@ const AnnotationsList = ({
                     </Button>
                   )}
                   {typeof onPin === 'function' &&
-                    (pinnedAnnotationIds[annotation.id] ? (
+                    (annotation.isPinned ? (
                       <Button
+                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
                         theme="ghost"
                         size="sm"
                         onClick={() => onPin(annotation)}
@@ -717,6 +703,7 @@ const AnnotationsList = ({
                       </Button>
                     ) : (
                       <Button
+                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
                         theme="ghost"
                         size="sm"
                         onClick={() => onPin(annotation)}
@@ -727,6 +714,7 @@ const AnnotationsList = ({
                     ))}
                   {typeof onDelete === 'function' && (
                     <Button
+                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
                       theme="ghost"
                       size="sm"
                       onClick={() => onDelete(annotation)}
@@ -910,7 +898,7 @@ const PinnedAnnotationsTooltip = ({
 }: {
   x: number
   maxX: number
-  annotations: Annotation[]
+  annotations: AnnotationWithPinState[]
   onClick: () => void
 }) => {
   const ref = useRef<HTMLDivElement>(null)
@@ -933,11 +921,7 @@ const PinnedAnnotationsTooltip = ({
           onClick()
         }}
       >
-        <AnnotationsList
-          annotations={annotations}
-          expandedIndex={null}
-          pinnedAnnotationIds={{}}
-        />
+        <AnnotationsList annotations={annotations} expandedIndex={null} />
       </div>
     </GraphTooltipWrapper>
   )
