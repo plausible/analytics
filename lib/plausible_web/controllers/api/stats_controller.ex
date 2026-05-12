@@ -175,10 +175,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, next_steps)
       else
         {:error, :rate_limit} ->
-          conn
-          |> put_status(429)
-          |> json(%{error: "Too many exploration requests"})
-          |> halt()
+          too_many_requests(conn, "Too many exploration requests")
 
         {:error, :journey_too_long} ->
           bad_request(conn, "The journey is too long")
@@ -197,10 +194,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, :rate_limit} ->
-          conn
-          |> put_status(429)
-          |> json(%{error: "Too many exploration requests"})
-          |> halt()
+          too_many_requests(conn, "Too many exploration requests")
 
         {:error, :empty_journey} ->
           bad_request(conn, "We are unable to show funnels when journey is empty")
@@ -230,10 +224,7 @@ defmodule PlausibleWeb.Api.StatsController do
           end
 
         {:error, :rate_limit} ->
-          conn
-          |> put_status(429)
-          |> json(%{error: "Too many exploration requests"})
-          |> halt()
+          too_many_requests(conn, "Too many exploration requests")
       end
     end
 
@@ -258,10 +249,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, %{next: next_steps, funnel: funnel})
       else
         {:error, :rate_limit} ->
-          conn
-          |> put_status(429)
-          |> json(%{error: "Too many exploration requests"})
-          |> halt()
+          too_many_requests(conn, "Too many exploration requests")
 
         _ ->
           bad_request(conn, "There was an error with your request")
@@ -1450,6 +1438,13 @@ defmodule PlausibleWeb.Api.StatsController do
     conn
     |> put_status(400)
     |> json(payload)
+    |> halt()
+  end
+
+  defp too_many_requests(conn, message) do
+    conn
+    |> put_status(429)
+    |> json(%{error: message})
     |> halt()
   end
 
