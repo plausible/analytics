@@ -104,10 +104,12 @@ function stepsToJourneyParam(steps) {
   )
 }
 
-function maybeEmptyResults(results) {
+function maybeEmptyResults(results, activeFilter) {
   if (
     results.length === 0 ||
-    (results.length === 1 && results[0].step.name === JOURNEY_END_EVENT)
+    (!activeFilter &&
+      results.length === 1 &&
+      results[0].step.name === JOURNEY_END_EVENT)
   ) {
     return []
   } else {
@@ -820,7 +822,10 @@ function useExplorationData(site, dashboardState, inViewport) {
                 if (!isStale())
                   setState((prev) => ({
                     ...prev,
-                    activeResults: maybeEmptyResults(r?.next ?? []),
+                    activeResults: maybeEmptyResults(
+                      r?.next ?? [],
+                      prev.activeFilter
+                    ),
                     rateLimited: false
                   }))
               })
@@ -865,7 +870,10 @@ function useExplorationData(site, dashboardState, inViewport) {
               if (!isStale())
                 setState((prev) => ({
                   ...prev,
-                  activeResults: maybeEmptyResults(r?.next ?? []),
+                  activeResults: maybeEmptyResults(
+                    r?.next ?? [],
+                    prev.activeFilter
+                  ),
                   rateLimited: false
                 }))
             })
@@ -916,7 +924,10 @@ function useExplorationData(site, dashboardState, inViewport) {
         setState((prev) => {
           const next = {
             ...prev,
-            activeResults: maybeEmptyResults(response?.next ?? []),
+            activeResults: maybeEmptyResults(
+              response?.next ?? [],
+              prev.activeFilter
+            ),
             rateLimited: false
           }
           if (includeFunnel) {
