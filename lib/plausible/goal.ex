@@ -1,9 +1,16 @@
 defmodule Plausible.Goal do
   use Plausible
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
+
+  on_ee do
+    @journey_end_event Plausible.Stats.Exploration.Journey.Step.journey_end_event()
+  else
+    @journey_end_event nil
+  end
 
   schema "goals" do
     field :event_name, :string
@@ -152,6 +159,10 @@ defmodule Plausible.Goal do
     cond do
       value == "engagement" ->
         {:error, "The event name 'engagement' is reserved and cannot be used as a goal"}
+
+      not is_nil(@journey_end_event) and value == @journey_end_event ->
+        {:error,
+         "The event name '#{@journey_end_event}' is reserved and cannot be used as a goal"}
 
       value && String.match?(value, ~r/^.+/) ->
         :ok
