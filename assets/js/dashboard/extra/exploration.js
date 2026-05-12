@@ -701,7 +701,6 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   const reset = useCallback(() => {
     ++journeyVersionRef.current
-    preloadFiredRef.current = false
     setState(EMPTY_JOURNEY_STATE)
   }, [])
 
