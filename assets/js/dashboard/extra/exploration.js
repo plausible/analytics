@@ -814,7 +814,11 @@ function useExplorationData(site, dashboardState, inViewport) {
         .catch((err) => {
           if (isStale()) return
           if (isRateLimitedError(err)) {
-            setState((prev) => ({ ...prev, rateLimited: true }))
+            setState((prev) => ({
+              ...prev,
+              rateLimited: true,
+              activeResults: []
+            }))
             setActiveLoading(false)
             return
           }
@@ -837,7 +841,11 @@ function useExplorationData(site, dashboardState, inViewport) {
             .catch((err) => {
               if (!isStale()) {
                 if (isRateLimitedError(err)) {
-                  setState((prev) => ({ ...prev, rateLimited: true }))
+                  setState((prev) => ({
+                    ...prev,
+                    rateLimited: true,
+                    activeResults: []
+                  }))
                 } else {
                   setState((prev) => ({ ...prev, activeResults: [] }))
                 }
@@ -925,7 +933,11 @@ function useExplorationData(site, dashboardState, inViewport) {
       .catch((err) => {
         if (isStale()) return
         if (isRateLimitedError(err)) {
-          setState((prev) => ({ ...prev, rateLimited: true }))
+          setState((prev) => ({
+            ...prev,
+            rateLimited: true,
+            activeResults: []
+          }))
         } else {
           setState((prev) => ({
             ...prev,
