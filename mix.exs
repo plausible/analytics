@@ -178,7 +178,8 @@ defmodule Plausible.MixProject do
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:phoenix_html_helpers, "~> 1.0"},
-      {:libcluster, "~> 3.5"}
+      {:libcluster, "~> 3.5"},
+      {:decimal, "~> 3.0", override: true}
     ]
   end
 
