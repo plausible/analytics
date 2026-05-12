@@ -1,4 +1,8 @@
 defmodule Plausible.Goal do
+  @moduledoc """
+  Goal schema.
+  """
+
   use Plausible
   use Ecto.Schema
 
