@@ -213,21 +213,22 @@ defmodule PlausibleWeb.Api.StatsController do
     def exploration_featured_funnel(conn, params) do
       site = conn.assigns.site
 
-      with :ok <- check_exploration_rate_limit(site) do
-        query = Query.from(site, params, debug_metadata: debug_metadata(conn))
+      case check_exploration_rate_limit(site) do
+        :ok ->
+          query = Query.from(site, params, debug_metadata: debug_metadata(conn))
 
-        include_wildcard? =
-          not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+          include_wildcard? =
+            not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
 
-        case Exploration.featured_funnel(site, query,
-               max_steps: params["max_steps"],
-               max_candidates: params["max_candidates"],
-               include_wildcard?: include_wildcard?
-             ) do
-          {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
-          {:error, :not_found} -> json(conn, [])
-        end
-      else
+          case Exploration.featured_funnel(site, query,
+                 max_steps: params["max_steps"],
+                 max_candidates: params["max_candidates"],
+                 include_wildcard?: include_wildcard?
+               ) do
+            {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
+            {:error, :not_found} -> json(conn, [])
+          end
+
         {:error, :rate_limit} ->
           conn
           |> put_status(429)
