@@ -575,6 +575,67 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.visitors == 1
       end
 
+      test "allows to filter by journey end event label" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -20)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -10)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -30)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        ]
+
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "no further")
+
+        assert next_step.step.label == "no further action"
+        assert next_step.visitors == 1
+      end
+
       test "includes root path (/) in suggestions" do
         site = new_site()
 
