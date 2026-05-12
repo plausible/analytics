@@ -796,7 +796,11 @@ function useExplorationData(site, dashboardState, inViewport) {
               .catch((err) => {
                 if (!isStale()) {
                   if (isRateLimitedError(err)) {
-                    setState((prev) => ({ ...prev, rateLimited: true }))
+                    setState((prev) => ({
+                      ...prev,
+                      rateLimited: true,
+                      activeResults: []
+                    }))
                   } else {
                     setState((prev) => ({ ...prev, activeResults: [] }))
                   }
