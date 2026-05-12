@@ -283,6 +283,67 @@ defmodule Plausible.Stats.ExplorationTest do
         assert step2.conversion_rate == "50"
         assert step2.conversion_rate_step == "50"
       end
+
+      test "handles wildcard step properly" do
+        journey = [
+          %Exploration.Journey.Step{
+            name: "pageview",
+            pathname: "/sites",
+            includes_subpaths: true,
+            subpaths_count: 2,
+            is_goal: true
+          },
+          %Exploration.Journey.Step{name: "pageview", pathname: "/dashboard"}
+        ]
+
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/sites",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/sites/settings",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/sites-are-cool",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 126,
+            pathname: "/sites/",
+            timestamp: DateTime.shift(now, minute: -50)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok, [step1, step2]} = Exploration.journey_funnel(query, journey)
+
+        assert step1.step.pathname == "/sites"
+        assert step1.visitors == 3
+        assert step1.dropoff == 0
+        assert step1.dropoff_percentage == "0"
+        assert step1.conversion_rate == "100"
+        assert step1.conversion_rate_step == "0"
+        assert step2.step.pathname == "/dashboard"
+        assert step2.visitors == 1
+        assert step2.dropoff == 2
+        assert step2.dropoff_percentage == "66.67"
+        assert step2.conversion_rate == "33.33"
+        assert step2.conversion_rate_step == "33.33"
+      end
     end
 
     describe "interesting_funnel" do
