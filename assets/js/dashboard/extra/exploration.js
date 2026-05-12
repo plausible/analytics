@@ -962,7 +962,14 @@ function useExplorationData(site, dashboardState, inViewport) {
       .finally(() => {
         if (!isStale()) setActiveLoading(false)
       })
-  }, [site, dashboardState, state.steps, state.activeFilter, inViewport, retryCount])
+  }, [
+    site,
+    dashboardState,
+    state.steps,
+    state.activeFilter,
+    inViewport,
+    retryCount
+  ])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
   // drives the re-run without double-firing.
