@@ -111,9 +111,12 @@ export const MainGraph = ({
   >({})
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   useEffect(() => {
-    setPinnedAnnotationIds({})
     setTooltip(initialTooltipState)
   }, [width])
+  
+  useEffect(() => {
+    setPinnedAnnotationIds({})
+  }, [width, data])
 
   const tooltipRef = useRef<HTMLDivElement>(null)
 
