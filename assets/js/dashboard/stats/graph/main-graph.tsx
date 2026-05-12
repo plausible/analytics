@@ -110,6 +110,11 @@ export const MainGraph = ({
     Record<number, PinPosition | null>
   >({})
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
+  useEffect(() => {
+    setPinnedAnnotationIds({})
+    setTooltip(initialTooltipState)
+  }, [width])
+
   const tooltipRef = useRef<HTMLDivElement>(null)
 
   const { selectedIndex } = tooltip
