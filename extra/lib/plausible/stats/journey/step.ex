@@ -12,6 +12,15 @@ defmodule Plausible.Stats.Exploration.Journey.Step do
             subpaths_count: 0,
             is_goal: false
 
+  @journey_end_event "__journey_end__"
+  @journey_end_label "no further action"
+
+  @spec journey_end_event() :: String.t()
+  def journey_end_event, do: @journey_end_event
+
+  @spec journey_end_label() :: String.t()
+  def journey_end_label, do: @journey_end_label
+
   @spec from(map()) :: t()
   def from(step) do
     new(step.name, step.pathname, step.includes_subpaths, step.subpaths_count, step.is_goal)
@@ -21,10 +30,15 @@ defmodule Plausible.Stats.Exploration.Journey.Step do
   def new(name, pathname, includes_subpaths \\ false, subpaths_count \\ 0, is_goal \\ false)
       when is_boolean(includes_subpaths) and is_integer(subpaths_count) do
     label =
-      if name != "pageview" do
-        name
-      else
-        pathname
+      cond do
+        name == @journey_end_event ->
+          @journey_end_label
+
+        name != "pageview" ->
+          name
+
+        true ->
+          pathname
       end
 
     %__MODULE__{

@@ -6,6 +6,9 @@ defmodule Plausible.Stats.ExplorationTest do
     alias Plausible.Stats.Exploration
     alias Plausible.Stats.QueryBuilder
 
+    @journey_end_event Exploration.Journey.Step.journey_end_event()
+    @journey_end_label Exploration.Journey.Step.journey_end_label()
+
     setup do
       site = new_site()
 
@@ -572,6 +575,67 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step.visitors == 1
       end
 
+      test "allows to filter by journey end event label" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -20)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -10)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -30)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        ]
+
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "no further")
+
+        assert next_step.step.label == "no further action"
+        assert next_step.visitors == 1
+      end
+
       test "includes root path (/) in suggestions" do
         site = new_site()
 
@@ -661,6 +725,40 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step2.visitors == 1
       end
 
+      test "there can be multiple journey suggestions for a single user/session" do
+        site = new_site()
+
+        now = DateTime.utc_now()
+
+        ago = fn ms -> DateTime.shift(now, minute: -1 * ms) end
+
+        populate_stats(site, [
+          build(:pageview, user_id: 123, pathname: "/home", timestamp: ago.(100)),
+          build(:pageview, user_id: 123, pathname: "/login", timestamp: ago.(99)),
+          build(:pageview, user_id: 123, pathname: "/dashboard", timestamp: ago.(98)),
+          build(:pageview, user_id: 123, pathname: "/home", timestamp: ago.(97)),
+          build(:pageview, user_id: 123, pathname: "/login", timestamp: ago.(96)),
+          build(:pageview, user_id: 123, pathname: "/sites", timestamp: ago.(95))
+        ])
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
+        ]
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok,
+                [
+                  %{step: %{pathname: "/dashboard"}, visitors: 1},
+                  %{step: %{pathname: "/sites"}, visitors: 1}
+                ]} =
+                 Exploration.next_steps(site, query, journey,
+                   search_term: "",
+                   direction: :forward
+                 )
+      end
+
       test "does not suggest the same path/pathname as in previous step (regression test)" do
         site = new_site()
 
@@ -720,6 +818,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
         assert {:ok,
                 [
+                  %{step: %{name: @journey_end_event}},
                   %{step: %{pathname: "/:dashboard"}}
                 ]} =
                  Exploration.next_steps(site, query, journey,
@@ -1166,9 +1265,12 @@ defmodule Plausible.Stats.ExplorationTest do
           }
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, journey)
 
-        assert next_step.step.label == "/a-blog"
+        assert next_step1.step.label == @journey_end_label
+        assert next_step1.visitors == 2
+        assert next_step2.step.label == "/a-blog"
+        assert next_step2.visitors == 1
       end
 
       test "suggestions matching goal pattern from previous step are excluded" do
@@ -1231,9 +1333,12 @@ defmodule Plausible.Stats.ExplorationTest do
           }
         ]
 
-        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+        assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, journey)
 
-        assert next_step.step.label == "/blog"
+        assert next_step1.step.label == @journey_end_label
+        assert next_step1.visitors == 3
+        assert next_step2.step.label == "/blog"
+        assert next_step2.visitors == 1
       end
     end
 

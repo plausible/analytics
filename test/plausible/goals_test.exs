@@ -346,6 +346,17 @@ defmodule Plausible.GoalsTest do
   end
 
   on_ee do
+    @journey_end_event Plausible.Stats.Exploration.Journey.Step.journey_end_event()
+
+    test "create/2 fails to create a goal with '#{@journey_end_event}' as event_name (reserved)" do
+      site = new_site()
+      assert {:error, changeset} = Goals.create(site, %{"event_name" => @journey_end_event})
+
+      assert {"The event name '#{@journey_end_event}' is reserved and cannot be used as a goal",
+              _} =
+               changeset.errors[:event_name]
+    end
+
     test "create/2 sets site.updated_at for revenue goal" do
       site_1 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
 

@@ -7,9 +7,9 @@ defmodule Plausible.Stats.Exploration do
   import Plausible.Stats.SQL.Fragments
   import Plausible.Stats.Util, only: [percentage: 2]
 
-  alias Plausible.Stats.Exploration.Journey
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
+  alias Plausible.Stats.Exploration.Journey
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
@@ -143,7 +143,7 @@ defmodule Plausible.Stats.Exploration do
            query,
            [],
            [],
-           MapSet.new(),
+           MapSet.new([{Journey.Step.journey_end_event(), ""}]),
            max_steps,
            max_candidates,
            include_wildcard?
@@ -241,7 +241,6 @@ defmodule Plausible.Stats.Exploration do
 
     q_matches =
       from(s in subquery(q_steps),
-        where: selected_as(:name) != "",
         select: %{
           user_id: s.user_id,
           name: selected_as(field(s, ^next_name), :name),
@@ -286,8 +285,12 @@ defmodule Plausible.Stats.Exploration do
     from(m in subquery(q_all_combined_matches),
       select: %{
         step: %Journey.Step{
-          label: selected_as(m.label, :label),
-          name: m.name,
+          label:
+            selected_as(
+              fragment("if(? != '', ?, ?)", m.name, m.label, ^Journey.Step.journey_end_label()),
+              :label
+            ),
+          name: fragment("if(? != '', ?, ?)", m.name, m.name, ^Journey.Step.journey_end_event()),
           pathname: m.pathname,
           includes_subpaths: m.includes_subpaths,
           subpaths_count: m.subpaths_count,

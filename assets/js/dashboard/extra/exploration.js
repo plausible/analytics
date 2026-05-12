@@ -22,6 +22,8 @@ import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
+const JOURNEY_END_EVENT = '__journey_end__'
+
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
 const DIRECTION_OPTIONS = [
@@ -100,6 +102,19 @@ function stepsToJourneyParam(steps) {
       })
     )
   )
+}
+
+function maybeEmptyResults(results, activeFilter) {
+  if (
+    results.length === 0 ||
+    (!activeFilter &&
+      results.length === 1 &&
+      results[0].step.name === JOURNEY_END_EVENT)
+  ) {
+    return []
+  } else {
+    return results
+  }
 }
 
 // Keep only entries with index < fromIndex, discarding everything at or after.
@@ -354,7 +369,9 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
-  const isCustomEvent = step.name !== 'pageview'
+  const isJourneyEnd = step.name === JOURNEY_END_EVENT
+  const isCustomEvent =
+    step.name !== 'pageview' && step.name !== JOURNEY_END_EVENT
   const isGoal = step.is_goal
 
   const visitorsToShow =
@@ -382,12 +399,16 @@ function CandidateCard({
     ? 'bg-gray-100/60 dark:bg-gray-850'
     : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
 
+  const pointer = isJourneyEnd ? 'pointer-events-none' : ''
+
+  const onSelectHandler = isJourneyEnd ? () => {} : onSelect
+
   return (
     <li>
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
-        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
-        onClick={() => onSelect(isSelected ? null : step)}
+        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg} ${pointer}`}
+        onClick={() => onSelectHandler(isSelected ? null : step)}
       >
         <div
           className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
@@ -801,7 +822,10 @@ function useExplorationData(site, dashboardState, inViewport) {
                 if (!isStale())
                   setState((prev) => ({
                     ...prev,
-                    activeResults: r?.next ?? [],
+                    activeResults: maybeEmptyResults(
+                      r?.next ?? [],
+                      prev.activeFilter
+                    ),
                     rateLimited: false
                   }))
               })
@@ -846,7 +870,10 @@ function useExplorationData(site, dashboardState, inViewport) {
               if (!isStale())
                 setState((prev) => ({
                   ...prev,
-                  activeResults: r?.next ?? [],
+                  activeResults: maybeEmptyResults(
+                    r?.next ?? [],
+                    prev.activeFilter
+                  ),
                   rateLimited: false
                 }))
             })
@@ -897,7 +924,10 @@ function useExplorationData(site, dashboardState, inViewport) {
         setState((prev) => {
           const next = {
             ...prev,
-            activeResults: response?.next ?? [],
+            activeResults: maybeEmptyResults(
+              response?.next ?? [],
+              prev.activeFilter
+            ),
             rateLimited: false
           }
           if (includeFunnel) {
