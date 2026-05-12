@@ -53,6 +53,13 @@ const EMPTY_SVG_DATA = {
   clipHeight: 0
 }
 
+function roundedPercentage(value, total) {
+  const percentage = (value / total) * 100
+  // Rounding to 2 decimal places using Math.round()
+  // (https://stackoverflow.com/a/11832950)
+  return Math.round((percentage + Number.EPSILON) * 100) / 100
+}
+
 // Two steps are identical when their identity fields match.
 function stepsEqual(a, b) {
   return (
@@ -349,7 +356,7 @@ function CandidateCard({
   const barWidth =
     isSelected && selectedConversionRate !== null
       ? Math.max(1, selectedConversionRate)
-      : Math.max(1, Math.round((visitors / stepMaxVisitors) * 100))
+      : Math.max(1, roundedPercentage(visitors, stepMaxVisitors))
 
   const textColor = isDimmed
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
@@ -586,7 +593,7 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
   if (!match) return {}
 
   const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
-  const conversionRate = Math.round((match.visitors / firstStepVisitors) * 100)
+  const conversionRate = roundedPercentage(match.visitors, firstStepVisitors)
   return {
     [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
   }
