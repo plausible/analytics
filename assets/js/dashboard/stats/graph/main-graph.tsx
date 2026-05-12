@@ -319,14 +319,8 @@ export const MainGraph = ({
     [remappedData, annotationsByTimeLabel]
   )
 
-  const verticalLineIndices = useMemo(
-    () =>
-      annotationsByIndex.reduce<number[]>((acc, { pinnedCount }, index) => {
-        if (pinnedCount < 1) {
-          return acc
-        }
-        return [...acc, index]
-      }, []),
+  const verticalLinesByIndex = useMemo(
+    () => annotationsByIndex.map(({ pinnedCount }) => pinnedCount >= 1),
     [annotationsByIndex]
   )
 
@@ -498,7 +492,7 @@ export const MainGraph = ({
       yFormat={yFormat}
       gradients={gradients}
       annotationsByIndex={annotationsByIndex}
-      verticalLineIndices={verticalLineIndices}
+      verticalLinesByIndex={verticalLinesByIndex}
     >
       {Object.values(annotationsByTimeLabel)
         .map((annotations) => {

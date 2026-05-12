@@ -58,7 +58,7 @@ type GraphProps<
   }[]
   children?: ReactNode
   highlightedIndex?: number | null
-  verticalLineIndices?: number[]
+  verticalLinesByIndex: boolean[]
 }
 
 /**
@@ -108,7 +108,7 @@ function InnerGraph<T extends GraphYValues>({
   gradients,
   highlightedIndex,
   annotationsByIndex,
-  verticalLineIndices
+  verticalLinesByIndex
 }: GraphProps<T>) {
   const [extraMarginLeft, setExtraMarginLeft] = useState(0)
   const [points, setPoints] = useState<Point<T>[]>([])
@@ -574,12 +574,14 @@ function InnerGraph<T extends GraphYValues>({
     const cleanup = () => {
       svg.selectAll(`#${annotationsGroupId} g`).remove()
     }
-    if (!points.length) {
+    if (!points.length || points.length !== annotationsByIndex.length) {
       return cleanup()
     }
+
     const pointsWithAnnotations = points.map((point, index) => {
       return { ...point, annotations: annotationsByIndex[index] }
     })
+
     for (const point of pointsWithAnnotations) {
       if (point.annotations.count > 0) {
         svg
@@ -606,23 +608,29 @@ function InnerGraph<T extends GraphYValues>({
     const cleanup = () => {
       svg.select(`#${verticalLinesGroupId}`).selectAll('line').remove()
     }
-    if (!points.length || !verticalLineIndices?.length) return cleanup()
+    if (!points.length || verticalLinesByIndex.length !== points.length) {
+      return cleanup()
+    }
 
-    for (const index of verticalLineIndices) {
-      const point = points[index]
-      if (!point) continue
-      svg
-        .select(`#${verticalLinesGroupId}`)
-        .append('line')
-        .attr('x1', 0)
-        .attr('x2', 0)
-        .attr('y1', marginTop)
-        .attr('y2', height - marginBottom)
-        .attr('transform', `translate(${point.x}, 0)`)
-        .attr('class', verticalDashedLineClass)
+    const pointsWithVerticalLines = points.map((point, index) => {
+      return { ...point, verticalLine: verticalLinesByIndex[index] }
+    })
+
+    for (const point of pointsWithVerticalLines) {
+      if (point.verticalLine) {
+        svg
+          .select(`#${verticalLinesGroupId}`)
+          .append('line')
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', marginTop)
+          .attr('y2', height - marginBottom)
+          .attr('transform', `translate(${point.x}, 0)`)
+          .attr('class', verticalDashedLineClass)
+      }
     }
     return cleanup
-  }, [points, verticalLineIndices, marginTop, marginBottom, height])
+  }, [points, verticalLinesByIndex, marginTop, marginBottom, height])
 
   return (
     <svg
