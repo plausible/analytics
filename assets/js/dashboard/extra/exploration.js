@@ -980,6 +980,7 @@ function useExplorationData(site, dashboardState, inViewport) {
         if (isRateLimitedError(err)) {
           setState((prev) => ({
             ...prev,
+            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             rateLimited: true,
             activeResults: [],
             ...(includeFunnel ? { provisional: {} } : {})
@@ -987,6 +988,7 @@ function useExplorationData(site, dashboardState, inViewport) {
         } else {
           setState((prev) => ({
             ...prev,
+            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             activeResults: [],
             ...(includeFunnel ? { funnel: [] } : {})
           }))
