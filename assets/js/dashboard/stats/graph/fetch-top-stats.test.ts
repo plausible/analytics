@@ -8,9 +8,10 @@ import { ComparisonMode, DashboardPeriod } from '../../dashboard-time-periods'
 import { PlausibleSite, siteContextDefaultValue } from '../../site-context'
 import { StatsQuery } from '../../stats-query'
 import { remapToApiFilters } from '../../util/filters'
+import { StatsReportQueryKey } from '../../hooks/use-query-api'
 import {
   chooseMetrics,
-  topStatsQuery,
+  getTopStatsQuery,
   getPartialDayTimeRange,
   formatTopStatsData
 } from './fetch-top-stats'
@@ -250,22 +251,18 @@ function makeTopStatsResponse(
         dimensions: [],
         comparison: { metrics: [80], change: [25] }
       }
-    ]
+    ],
+    extraContext: { isRealtime: false, hasConversionGoalFilter: false }
   }
 }
 
 describe(`${formatTopStatsData.name}`, () => {
-  const metrics = [{ key: 'visitors' as const, label: 'Visitors' }]
-
   it('sets comparisonTimeRange to "until HH:MM" when comparison period is also a partial day (Today vs Previous period)', () => {
     const response = makeTopStatsResponse(
       ['2026-04-21T00:00:00', '2026-04-21T10:25:00'],
       ['2026-04-20T00:00:00', '2026-04-20T10:25:00']
     )
-    const { timeRange, comparisonTimeRange } = formatTopStatsData(
-      response,
-      metrics
-    )
+    const { timeRange, comparisonTimeRange } = formatTopStatsData(response)
     expect(timeRange).toBe('until 10:25')
     expect(comparisonTimeRange).toBe('until 10:25')
   })
@@ -275,25 +272,33 @@ describe(`${formatTopStatsData.name}`, () => {
       ['2026-04-21T00:00:00', '2026-04-21T10:25:00'],
       ['2026-04-20T00:00:00', '2026-04-20T23:59:59']
     )
-    const { timeRange, comparisonTimeRange } = formatTopStatsData(
-      response,
-      metrics
-    )
+    const { timeRange, comparisonTimeRange } = formatTopStatsData(response)
     expect(timeRange).toBe('until 10:25')
     expect(comparisonTimeRange).toBeNull()
   })
 })
 
-describe(`${topStatsQuery.name}`, () => {
+describe(`${getTopStatsQuery.name}`, () => {
   test.each(cases)(
-    'for %s dashboard, queries are as expected',
+    'for %s dashboard, top stats query is as expected',
     (_, { site: _site, ...inputDashboardState }, metrics, expectedQuery) => {
       const dashboardState = {
         ...dashboardStateDefaultValue,
         resolvedFilters: inputDashboardState.filters,
         ...inputDashboardState
       }
-      expect(topStatsQuery(dashboardState, metrics)).toEqual(expectedQuery)
+      const queryKey: StatsReportQueryKey = [
+        'top-stats',
+        {
+          dashboardState,
+          reportParams: {
+            metrics,
+            dimensions: [],
+            include: { imports_meta: true }
+          }
+        }
+      ]
+      expect(getTopStatsQuery(queryKey)).toEqual(expectedQuery)
     }
   )
 })

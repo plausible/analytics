@@ -10,13 +10,16 @@ import { PlausibleSite } from '../site-context'
 import {
   createStatsQuery,
   NonTimeDimension,
-  ReportParams
+  ReportParams,
+  StatsQuery
 } from '../stats-query'
 import { useEffect, useState } from 'react'
 import { cleanToPageOne, getStaleTime, PAGINATION_LIMIT } from './api-client'
-import { QueryApiResponse, stats } from '../api'
+import { ExtraContext, QueryApiResponse, stats } from '../api'
 import { addDimensionSearchFilter } from '../stats/breakdowns'
 import { DashboardPeriod } from '../dashboard-time-periods'
+import { hasConversionGoalFilter, isRealTimeDashboard } from '../util/filters'
+import { MainGraphResponse } from '../stats/graph/fetch-main-graph'
 
 export type StatsReportId =
   | 'top-stats'
@@ -33,18 +36,41 @@ export type StatsReportQueryKey = [
   }
 ]
 
+type ReportOpts = {
+  enabled?: boolean
+  getStatsQuery?: (queryKey: StatsReportQueryKey) => StatsQuery
+}
+
+function withExtraContext<T extends QueryApiResponse | MainGraphResponse>(
+  response: T,
+  dashboardState: DashboardState
+): T {
+  const extraContext: ExtraContext = {
+    isRealtime: isRealTimeDashboard(dashboardState),
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  }
+  return { ...response, extraContext } as T
+}
+
+const defaultGetStatsQuery = (queryKey: StatsReportQueryKey): StatsQuery => {
+  const [_, keyOpts] = queryKey
+  return createStatsQuery(keyOpts.dashboardState, keyOpts.reportParams)
+}
+
 /**
  * Hook for POST /api/stats/:domain/query requests, calling TanStack useQuery
  * under the hood. Also sets up automatic realtime updates and allows passing
  * `opts = {enabled: false}` to prevent fetching anything, e.g. for until the
  * report is visible.
  */
-export function useQueryApi(
+export function useQueryApi<
+  TResponse extends QueryApiResponse | MainGraphResponse = QueryApiResponse
+>(
   site: PlausibleSite,
   statsReportQueryKey: StatsReportQueryKey,
-  opts: { enabled: boolean } = { enabled: true }
+  opts?: ReportOpts
 ): {
-  apiState: UseQueryResult<QueryApiResponse>
+  apiState: UseQueryResult<TResponse>
   isRealtimeSilentUpdate: boolean
 } {
   const statsReportId = statsReportQueryKey[0]
@@ -52,19 +78,20 @@ export function useQueryApi(
     statsReportQueryKey[1].dashboardState.period === DashboardPeriod.realtime
   const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState(false)
 
+  const enabled = opts?.enabled ?? true
+  const getStatsQuery = opts?.getStatsQuery ?? defaultGetStatsQuery
+
   const queryClient = useQueryClient()
 
   const apiState = useQuery({
     queryKey: statsReportQueryKey,
-    enabled: opts.enabled,
-    queryFn: ({ queryKey }) => {
+    enabled,
+    queryFn: async ({ queryKey }) => {
       const [_, keyOpts] = queryKey as StatsReportQueryKey
-      const statsQuery = createStatsQuery(
-        keyOpts.dashboardState,
-        keyOpts.reportParams
-      )
-      return stats(site, statsQuery)
+      const response = await stats<TResponse>(site, getStatsQuery(queryKey))
+      return withExtraContext(response, keyOpts.dashboardState)
     },
+    placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
       const [_, keyOpts] = queryKey as StatsReportQueryKey
       return getStaleTime({
@@ -76,7 +103,7 @@ export function useQueryApi(
   })
 
   useEffect(() => {
-    if (!opts.enabled || !isRealtime) return
+    if (!enabled || !isRealtime) return
 
     const onTick = () => {
       setIsRealtimeSilentUpdate(true)
@@ -96,7 +123,7 @@ export function useQueryApi(
     return () => {
       document.removeEventListener('tick', onTick)
     }
-  }, [queryClient, isRealtime, statsReportId, opts.enabled])
+  }, [queryClient, isRealtime, statsReportId, enabled])
 
   useEffect(() => {
     if (!apiState.isRefetching) {
@@ -150,10 +177,11 @@ export function useSearchAndPaginateQueryAPI({
         statsQuery = addDimensionSearchFilter(statsQuery, searchBy, search)
       }
 
-      return stats(site, {
+      const response = await stats<QueryApiResponse>(site, {
         ...statsQuery,
         pagination: { limit: PAGINATION_LIMIT, offset: pageParam as number }
       })
+      return withExtraContext(response, dashboardState)
     },
     getNextPageParam: (lastPage, _, lastPageParam) => {
       return lastPage.results.length === PAGINATION_LIMIT
