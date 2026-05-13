@@ -556,6 +556,7 @@ function ExplorationColumn({
   headerConversionRate,
   active,
   loading,
+  loadingInBackground,
   results,
   selected,
   selectedVisitors,
@@ -582,6 +583,8 @@ function ExplorationColumn({
   const stepMaxVisitors = maxVisitors ?? results[0]?.visitors
 
   const showSearch = active && !selected && (results.length > 0 || filter)
+
+  const onSelectHandler = loadingInBackground ? () => {} : onSelect
 
   return (
     <div
@@ -611,7 +614,7 @@ function ExplorationColumn({
           />
         )}
 
-        {headerConversionRate && (
+        {!showSearch && headerConversionRate && (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
           </span>
@@ -651,7 +654,7 @@ function ExplorationColumn({
               selectedConversionRate={selectedConversionRate}
               stepMaxVisitors={stepMaxVisitors}
               colIndex={colIndex}
-              onSelect={onSelect}
+              onSelect={onSelectHandler}
             />
           ))}
         </ul>
@@ -717,7 +720,7 @@ function useExplorationData(site, dashboardState, inViewport) {
           steps: prev.steps.slice(0, columnIndex),
           activeResults: [],
           activeFilter: '',
-          frozen: truncateFrozenAt(prev.frozen, columnIndex),
+          frozen: truncateFrozenAt(prev.frozen, columnIndex + 1),
           provisional: {},
           rateLimited: false
         }
@@ -1004,6 +1007,7 @@ function useExplorationData(site, dashboardState, inViewport) {
         if (isRateLimitedError(err)) {
           setState((prev) => ({
             ...prev,
+            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             rateLimited: true,
             activeResults: [],
             ...(includeFunnel ? { provisional: {} } : {})
@@ -1011,6 +1015,7 @@ function useExplorationData(site, dashboardState, inViewport) {
         } else {
           setState((prev) => ({
             ...prev,
+            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             activeResults: [],
             ...(includeFunnel ? { funnel: [] } : {})
           }))
@@ -1189,8 +1194,17 @@ export function FunnelExploration() {
               const isActive = i === activeColumnIndex
               const isReachable = steps.length >= i
 
-              const colResults = isActive ? activeResults : (frozen[i] ?? [])
-              const colLoading = isActive && (initialLoading || activeLoading)
+              const colFilter = isActive ? activeFilter : ''
+              const colFrozen = frozen[i] ?? []
+
+              const colResults =
+                isActive && (activeResults.length > 0 || colFilter)
+                  ? activeResults
+                  : colFrozen
+              const colLoadingInBackground =
+                isActive && (initialLoading || activeLoading)
+              const colLoading =
+                colLoadingInBackground && (!frozen[i] || !!colFilter)
 
               const colSelectedVisitors =
                 provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
@@ -1225,13 +1239,14 @@ export function FunnelExploration() {
                   header={columnHeader(i, direction)}
                   headerConversionRate={colHeaderConversionRate}
                   active={isReachable}
+                  loadingInBackground={colLoadingInBackground}
                   loading={colLoading}
                   results={colResults}
                   selected={steps[i] ?? null}
                   selectedVisitors={colSelectedVisitors}
                   selectedConversionRate={colSelectedConversionRate}
                   maxVisitors={funnel[0]?.visitors ?? null}
-                  filter={isActive ? activeFilter : ''}
+                  filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
                   onSelect={(step) => selectStep(i, step)}
                   rateLimited={isActive && rateLimited}
