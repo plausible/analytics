@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.InternalController do
          site <- Sites.get_by_domain(domain),
          true <-
            Plausible.Teams.Memberships.has_editor_access?(site, user) ||
-             Auth.is_super_admin?(user_id),
+             Auth.super_admin?(user_id),
          {:ok, mod} <- Map.fetch(@features, feature),
          {:ok, _site} <- mod.toggle(site, user, override: false) do
       json(conn, "ok")

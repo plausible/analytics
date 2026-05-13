@@ -12,7 +12,7 @@ defmodule PlausibleWeb.SuperAdminOnlyPlug do
   def call(conn, _opts) do
     current_user = conn.assigns[:current_user]
 
-    if current_user && Plausible.Auth.is_super_admin?(current_user) do
+    if current_user && Plausible.Auth.super_admin?(current_user) do
       conn
     else
       conn
