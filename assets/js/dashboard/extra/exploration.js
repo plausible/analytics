@@ -578,7 +578,7 @@ function ExplorationColumn({
           </span>
         )}
 
-        {showSearch && (
+        {!headerConversionRate && showSearch && (
           <input
             data-testid="search-input"
             type="text"
@@ -589,7 +589,7 @@ function ExplorationColumn({
           />
         )}
 
-        {!showSearch && headerConversionRate && (
+        {headerConversionRate && (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
           </span>
