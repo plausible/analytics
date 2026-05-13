@@ -534,6 +534,7 @@ function ExplorationColumn({
   headerConversionRate,
   active,
   loading,
+  loadingInBackground,
   results,
   selected,
   selectedVisitors,
@@ -561,6 +562,8 @@ function ExplorationColumn({
 
   const showSearch = active && !selected && (results.length > 0 || filter)
 
+  const onSelectHandler = loadingInBackground ? () => {} : onSelect
+
   return (
     <div
       data-exploration-column={colIndex}
@@ -578,7 +581,7 @@ function ExplorationColumn({
           </span>
         )}
 
-        {!headerConversionRate && showSearch && (
+        {showSearch && (
           <input
             data-testid="search-input"
             type="text"
@@ -589,7 +592,7 @@ function ExplorationColumn({
           />
         )}
 
-        {headerConversionRate && (
+        {!showSearch && headerConversionRate && (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
             {headerConversionRate}
           </span>
@@ -629,7 +632,7 @@ function ExplorationColumn({
               selectedConversionRate={selectedConversionRate}
               stepMaxVisitors={stepMaxVisitors}
               colIndex={colIndex}
-              onSelect={onSelect}
+              onSelect={onSelectHandler}
             />
           ))}
         </ul>
@@ -1162,13 +1165,17 @@ export function FunnelExploration() {
               const isActive = i === activeColumnIndex
               const isReachable = steps.length >= i
 
+              const colFilter = isActive ? activeFilter : ''
+
               const colResults = isActive
-                ? activeResults.length > 0
+                ? activeResults.length > 0 || colFilter
                   ? activeResults
                   : (frozen[i] ?? [])
                 : (frozen[i] ?? [])
+              const colLoadingInBackground =
+                isActive && (initialLoading || activeLoading)
               const colLoading =
-                isActive && (initialLoading || activeLoading) && !frozen[i]
+                colLoadingInBackground && (!frozen[i] || colFilter)
 
               const colSelectedVisitors =
                 provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
@@ -1193,13 +1200,14 @@ export function FunnelExploration() {
                   header={columnHeader(i, direction)}
                   headerConversionRate={colHeaderConversionRate}
                   active={isReachable}
+                  loadingInBackground={colLoadingInBackground}
                   loading={colLoading}
                   results={colResults}
                   selected={steps[i] ?? null}
                   selectedVisitors={colSelectedVisitors}
                   selectedConversionRate={colSelectedConversionRate}
                   maxVisitors={funnel[0]?.visitors ?? null}
-                  filter={isActive ? activeFilter : ''}
+                  filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
                   onSelect={(step) => selectStep(i, step)}
                   rateLimited={isActive && rateLimited}
