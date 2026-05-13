@@ -1,5 +1,5 @@
 import React from 'react'
-import ListReport, { MIN_HEIGHT } from '../reports/list'
+import ListReport, { MIN_HEIGHT } from '../reports/list-legacy'
 import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -59,7 +59,7 @@ export default function Properties({ propKey, afterFetchData }) {
 
   if (!propKey) {
     return (
-      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         No custom properties found
       </div>
     )

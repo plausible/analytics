@@ -19,15 +19,14 @@ import {
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
-  datemenuButtonClassName,
-  DateMenuChevron,
+  DateMenuCalendarIcon,
   PopoverMenuProps,
   linkClassName,
   CalendarPanel,
   hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
-import { formatISO, nowForSite } from '../../util/date'
+import { formatISO, now } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
 
 export const ComparisonPeriodMenuItems = ({
@@ -123,11 +122,18 @@ export const ComparisonPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+      <Popover.Button
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.ghost,
+          'bg-gray-150/80 dark:bg-gray-800'
+        )}
+        ref={buttonRef}
+      >
+        <DateMenuCalendarIcon />
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentComparisonPeriodDisplayName({ site, dashboardState })}
         </span>
-        <DateMenuChevron />
       </Popover.Button>
       <ComparisonPeriodMenuItems
         closeDropdown={closeDropdown}
@@ -163,7 +169,7 @@ export const ComparisonCalendarMenu = ({
             closeDropdown()
           }}
           minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
+          maxDate={formatISO(now(site.offset))}
           defaultDates={
             dashboardState.compare_from && dashboardState.compare_to
               ? [

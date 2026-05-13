@@ -77,7 +77,7 @@ class Modal extends React.Component {
             <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:3.2rem] flex h-full w-full items-center md:items-start justify-center p-[var(--gap)] box-border">
               <div
                 ref={this.node}
-                className={`max-h-[calc(100dvh_-_var(--gap)*2)] min-h-[66vh] md:min-h-120 w-full flex flex-col bg-white p-3 md:px-6 md:py-4 ${this.getOverflowClass()} box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden`}
+                className={`max-h-[calc(100dvh_-_var(--gap)*2)] w-full flex flex-col bg-white p-3 md:px-6 md:py-4 ${this.getOverflowClass()} box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden`}
                 style={this.getStyle()}
                 // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                 tabIndex={0}

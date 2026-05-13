@@ -31,7 +31,7 @@ defmodule Plausible.Segments do
            )
          )}
 
-      site_role in @roles_with_personal_segments or site_role in @roles_with_maybe_site_segments ->
+      site_role in roles_with_personal_segments() or site_role in roles_with_maybe_site_segments() ->
         fields = fields ++ [:owner_id]
 
         {:ok,
@@ -433,8 +433,31 @@ defmodule Plausible.Segments do
     |> Repo.aggregate(:count, :id)
   end
 
-  def roles_with_personal_segments(), do: [:viewer, :editor, :admin, :owner, :super_admin]
-  def roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
+  def to_response_map(%Segment{} = segment, %Plausible.Site{} = site) do
+    %{
+      id: segment.id,
+      name: segment.name,
+      type: segment.type,
+      segment_data: segment.segment_data,
+      owner_id: segment.owner_id,
+      owner_name: owner_name(segment),
+      inserted_at: shift_to_site_tz(segment.inserted_at, site.timezone),
+      updated_at: shift_to_site_tz(segment.updated_at, site.timezone)
+    }
+  end
+
+  defp owner_name(%Segment{owner_id: nil}), do: nil
+  defp owner_name(%Segment{owner: %Plausible.Auth.User{name: name}}), do: name
+  defp owner_name(%Segment{}), do: nil
+
+  defp shift_to_site_tz(%NaiveDateTime{} = naive_utc, timezone) do
+    naive_utc
+    |> DateTime.from_naive!("Etc/UTC")
+    |> Plausible.Times.to_naive_datetime!(timezone)
+  end
+
+  def roles_with_personal_segments(), do: @roles_with_personal_segments
+  def roles_with_maybe_site_segments(), do: @roles_with_maybe_site_segments
 
   def site_segments_available?(%Plausible.Site{} = site),
     do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok

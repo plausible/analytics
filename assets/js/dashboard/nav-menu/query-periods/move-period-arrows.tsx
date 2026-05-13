@@ -53,9 +53,9 @@ function ArrowIcon({
     <svg
       data-testid={testId}
       className={classNames(
-        'feather size-4',
+        'size-3.5',
         disabled
-          ? 'text-gray-400 dark:text-gray-600'
+          ? 'text-gray-400 dark:text-gray-500'
           : 'text-gray-700 dark:text-gray-300'
       )}
       xmlns="http://www.w3.org/2000/svg"
@@ -72,12 +72,13 @@ function ArrowIcon({
   )
 }
 
-export function MovePeriodArrows({ className }: { className?: string }) {
-  const periodsWithArrows = [
-    DashboardPeriod.year,
-    DashboardPeriod.month,
-    DashboardPeriod.day
-  ]
+export const periodsWithArrows = [
+  DashboardPeriod.year,
+  DashboardPeriod.month,
+  DashboardPeriod.day
+]
+
+export function MovePeriodArrows() {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
   const dashboardRouteMatch = useMatch(rootRoute.path)
@@ -91,24 +92,18 @@ export function MovePeriodArrows({ className }: { className?: string }) {
   const canGoForward =
     getDateForShiftedPeriod({ site, dashboardState, direction: 1 }) !== null
 
-  const sharedClass =
-    'flex items-center px-1 sm:px-2 dark:text-gray-100 transition-colors duration-150'
-  const enabledClass = 'hover:bg-gray-100 dark:hover:bg-gray-700'
-  const disabledClass = 'bg-gray-200 dark:bg-gray-850 cursor-not-allowed'
+  const arrowClass = (enabled: boolean) =>
+    classNames(
+      'flex items-center justify-center px-px h-full rounded-md',
+      enabled
+        ? 'text-gray-700 dark:text-gray-300'
+        : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+    )
 
   return (
-    <div
-      className={classNames(
-        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer focus:z-10 dark:bg-gray-750',
-        className
-      )}
-    >
+    <div className="flex pr-1">
       <AppNavigationLink
-        className={classNames(
-          sharedClass,
-          'rounded-l border-gray-300 dark:border-gray-500 focus:z-10',
-          { [enabledClass]: canGoBack, [disabledClass]: !canGoBack }
-        )}
+        className={arrowClass(canGoBack)}
         search={
           canGoBack
             ? shiftDashboardPeriod({
@@ -127,10 +122,7 @@ export function MovePeriodArrows({ className }: { className?: string }) {
         />
       </AppNavigationLink>
       <AppNavigationLink
-        className={classNames(sharedClass, 'rounded-r', {
-          [enabledClass]: canGoForward,
-          [disabledClass]: !canGoForward
-        })}
+        className={arrowClass(canGoForward)}
         search={
           canGoForward
             ? shiftDashboardPeriod({

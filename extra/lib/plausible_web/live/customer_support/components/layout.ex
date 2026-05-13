@@ -59,7 +59,7 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
         <div class="font-mono">
           <strong>site:</strong>input<br />
           <p class="font-sans pl-2 mb-1">
-            Search for sites exclusively. Input will be checked against site's domain, team's name, owners' names and e-mails.
+            Search for sites exclusively. Input will be checked against site's domain, team's name, owners' names and e-mails (fuzzy match) or against tracker script ID (exact match).
           </p>
           <strong>user:</strong>input<br />
           <p class="font-sans pl-2 mb-1">

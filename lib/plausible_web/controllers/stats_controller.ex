@@ -18,10 +18,6 @@ defmodule PlausibleWeb.StatsController do
     Api.StatsController --) Browser: {"top_stats": [...]}
     Note left of Browser: TopStats.render()
 
-    Browser -) Api.StatsController: GET /api/stats/mydomain.com/main-graph
-    Api.StatsController --) Browser: [{"plot": [...], "labels": [...]}, ...]
-    Note left of Browser: VisitorGraph.render()
-
     Browser -) Api.StatsController: GET /api/stats/mydomain.com/sources
     Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
     Note left of Browser: Sources.render()
@@ -63,6 +59,9 @@ defmodule PlausibleWeb.StatsController do
 
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
+    exploration_available? =
+      on_ee(do: Plausible.Auth.super_admin?(current_user), else: false)
+
     consolidated_view_available? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
@@ -72,6 +71,7 @@ defmodule PlausibleWeb.StatsController do
       conn.params["skip_to_dashboard"] == "true" or consolidated_view?
 
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
+    segments = Enum.map(segments, &Plausible.Segments.to_response_map(&1, site))
 
     cond do
       consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
@@ -94,12 +94,13 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: nil
         )
@@ -471,6 +472,9 @@ defmodule PlausibleWeb.StatsController do
 
         flags = get_flags(current_user, shared_link.site)
 
+        exploration_available? =
+          on_ee(do: Plausible.Auth.super_admin?(current_user), else: false)
+
         limited_to_segment_id =
           if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do
             shared_link.segment.id
@@ -481,17 +485,10 @@ defmodule PlausibleWeb.StatsController do
         segments =
           if is_nil(limited_to_segment_id) do
             {:ok, segments} = Plausible.Segments.get_all_for_site(shared_link.site, site_role)
-            segments
+            Enum.map(segments, &Plausible.Segments.to_response_map(&1, shared_link.site))
           else
             shared_link.segment
-            |> Map.take([
-              :id,
-              :name,
-              :type,
-              :inserted_at,
-              :updated_at,
-              :segment_data
-            ])
+            |> Plausible.Segments.to_response_map(shared_link.site)
             |> List.wrap()
           end
 
@@ -520,13 +517,14 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: flags,
-          is_dbip: is_dbip(),
+          dbip?: dbip?(),
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public),
           # no shared links for consolidated views
           consolidated_view?: false,
           consolidated_view_available?: false,
+          exploration_available?: exploration_available?,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id
         )
@@ -546,7 +544,7 @@ defmodule PlausibleWeb.StatsController do
       end)
       |> Map.new()
 
-  defp is_dbip() do
+  defp dbip?() do
     on_ee do
       false
     else

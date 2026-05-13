@@ -1,8 +1,9 @@
 import {
-  dateForSite,
   formatDayShort,
+  formatTime,
+  formatMonthYYYY,
   formatISO,
-  nowForSite,
+  now,
   parseNaiveDate,
   shiftMonths,
   yesterday
@@ -10,7 +11,7 @@ import {
 
 jest.useFakeTimers()
 
-describe(`${nowForSite.name} and ${formatISO.name}`, () => {
+describe(`${now.name} and ${formatISO.name}`, () => {
   /* prettier-ignore */
   const cases = [
     [ 'Los Angeles/America', -3600 * 6, '2024-11-01T20:00:00.000Z', '2024-11-01' ],
@@ -20,7 +21,7 @@ describe(`${nowForSite.name} and ${formatISO.name}`, () => {
     'in timezone of %s (offset %p) at %s, today is %s',
     (_tz, offset, utcTime, expectedToday) => {
       jest.setSystemTime(new Date(utcTime))
-      expect(formatISO(nowForSite({ offset }))).toEqual(expectedToday)
+      expect(formatISO(now(offset))).toEqual(expectedToday)
     }
   )
 })
@@ -92,11 +93,11 @@ for (const [timezone, suite] of sets) {
       ) => {
         jest.setSystemTime(new Date(utcTime))
         expect({
-          today: formatISO(nowForSite({ offset })),
-          yesterday: formatISO(yesterday({ offset })),
-          twoMonthsBack: formatISO(shiftMonths(nowForSite({ offset }), -2)),
-          twoMonthsAhead: formatISO(shiftMonths(nowForSite({ offset }), 2)),
-          oneYearBack: formatISO(shiftMonths(nowForSite({ offset }), -12))
+          today: formatISO(now(offset)),
+          yesterday: formatISO(yesterday(offset)),
+          twoMonthsBack: formatISO(shiftMonths(now(offset), -2)),
+          twoMonthsAhead: formatISO(shiftMonths(now(offset), 2)),
+          oneYearBack: formatISO(shiftMonths(now(offset), -12))
         }).toEqual({
           today: expectedToday,
           yesterday: expectedYesterday,
@@ -109,20 +110,94 @@ for (const [timezone, suite] of sets) {
   })
 }
 
-describe('formatting UTC dates from database', () => {
-  it('is able to enrich UTC date string with site timezone, formatting the value correctly', () => {
-    expect(
-      formatDayShort(
-        dateForSite('2025-01-01T14:00:00', { offset: 60 * 60 * 11 })
-      )
-    ).toEqual('2 Jan')
-  })
-})
-
 describe('formatting site-timezoned datetimes from database works flawlessly', () => {
   it('is able to enrich UTC date string with site timezone, formatting the value correctly', () => {
     expect(formatDayShort(parseNaiveDate('2025-01-01 14:00:00'))).toEqual(
       '1 Jan'
     )
+  })
+})
+
+describe(formatMonthYYYY.name, () => {
+  it('formats a date as "Month YYYY"', () => {
+    expect(formatMonthYYYY(parseNaiveDate('2025-06-15'))).toEqual('June 2025')
+  })
+
+  it('formats January correctly', () => {
+    expect(formatMonthYYYY(parseNaiveDate('2024-01-01'))).toEqual(
+      'January 2024'
+    )
+  })
+})
+
+describe(formatDayShort.name, () => {
+  it('formats without year by default', () => {
+    expect(formatDayShort(parseNaiveDate('2025-06-05'))).toEqual('5 Jun')
+  })
+
+  it('includes 2-digit year when requested', () => {
+    expect(formatDayShort(parseNaiveDate('2025-06-05'), true)).toEqual(
+      '5 Jun 25'
+    )
+  })
+})
+
+describe(formatTime.name, () => {
+  describe('12-hour clock', () => {
+    it('formats hour without minutes as ha', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 14:00:00'), {
+          use12HourClock: true,
+          includeMinutes: false
+        })
+      ).toEqual('2pm')
+    })
+
+    it('formats hour with minutes as h:mma', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 14:30:00'), {
+          use12HourClock: true,
+          includeMinutes: true
+        })
+      ).toEqual('2:30pm')
+    })
+
+    it('formats midnight correctly', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 00:00:00'), {
+          use12HourClock: true,
+          includeMinutes: false
+        })
+      ).toEqual('12am')
+    })
+  })
+
+  describe('24-hour clock', () => {
+    it('formats hour without minutes as HH:mm (not HH format because that would look weird) ', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 14:00:00'), {
+          use12HourClock: false,
+          includeMinutes: false
+        })
+      ).toEqual('14:00')
+    })
+
+    it('formats hour with minutes as HH:mm', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 14:30:00'), {
+          use12HourClock: false,
+          includeMinutes: true
+        })
+      ).toEqual('14:30')
+    })
+
+    it('pads single-digit hours', () => {
+      expect(
+        formatTime(parseNaiveDate('2025-06-15 09:00:00'), {
+          use12HourClock: false,
+          includeMinutes: false
+        })
+      ).toEqual('09:00')
+    })
   })
 })

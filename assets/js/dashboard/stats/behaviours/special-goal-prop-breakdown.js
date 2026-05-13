@@ -1,5 +1,5 @@
 import React from 'react'
-import ListReport from '../reports/list'
+import ListReport from '../reports/list-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import * as api from '../../api'

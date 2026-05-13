@@ -214,6 +214,84 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ nag_message
     end
 
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and team is not setup",
+         %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+
+      assert text_of_element(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             ) =~ "Upgrade"
+    end
+
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and is owner of a setup team",
+         %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+    end
+
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and has billing role in a setup team",
+         %{conn: base_conn} do
+      member = new_user()
+      owner = new_user(trial_expiry_date: Date.add(Date.utc_today(), 30))
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      team = Plausible.Teams.complete_setup(team)
+      add_member(team, user: member, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: member, conn: base_conn})
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+    end
+
+    @tag :ee_only
+    test "does not show upgrade button in header when user is on trial but has non-billing role in a setup team",
+         %{conn: base_conn} do
+      for role <- [:admin, :editor, :viewer] do
+        member = new_user()
+        owner = new_user()
+        {:ok, team} = Plausible.Teams.get_or_create(owner)
+        team = Plausible.Teams.complete_setup(team)
+        add_member(team, user: member, role: role)
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: base_conn})
+        conn = set_current_team(conn, team)
+        resp = conn |> get("/sites") |> html_response(200)
+
+        refute element_exists?(
+                 resp,
+                 ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ),
+               "expected no Upgrade button for role #{role}"
+      end
+    end
+
     test "filters by domain", %{conn: conn, user: user} do
       _site1 = new_site(domain: "alpha.example.com", owner: user)
       _site2 = new_site(domain: "beta.example.com", owner: user)
@@ -560,7 +638,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/"
+        assert redirected_to(conn) == "/example.com"
       end
     end
 

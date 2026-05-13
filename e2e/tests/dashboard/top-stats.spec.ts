@@ -244,15 +244,14 @@ test('different graph time intervals are available', async ({
     'Last 28 days'
   )
 
-  const intervalButton = page.getByTestId('current-graph-interval')
-  const intervalOptions = page.getByTestId('graph-interval')
-  await expect(intervalButton).toHaveText('Days')
-  await intervalButton.click()
-  await expect(intervalOptions).toHaveCount(2)
-  const intervalOptions28Days = await intervalOptions.allTextContents()
+  const optionsMenu = page.getByTestId('dashboard-options-menu')
 
-  expect(intervalOptions28Days.indexOf('Days') > -1).toBeTruthy()
-  expect(intervalOptions28Days.indexOf('Weeks') > -1).toBeTruthy()
+  await optionsMenu.click()
+  const graphIntervalSegments = page.getByTestId('graph-interval')
+  await expect(page.getByTestId('current-graph-interval')).toHaveText('Days')
+  await expect(graphIntervalSegments).toHaveCount(1)
+  await expect(graphIntervalSegments.filter({ hasText: 'Weeks' })).toBeVisible()
+  await optionsMenu.click()
 
   await page.getByTestId('current-query-period').click()
   await page
@@ -260,14 +259,11 @@ test('different graph time intervals are available', async ({
     .getByRole('link', { name: 'Today' })
     .click()
 
-  await expect(intervalButton).toHaveText('Hours')
-  await intervalButton.click()
-  // The popover does not appear right away
-  await expect(intervalOptions).toHaveCount(2)
-  const intervalOptionsToday = await intervalOptions.allTextContents()
-
-  expect(intervalOptionsToday.indexOf('Hours') > -1).toBeTruthy()
-  expect(intervalOptionsToday.indexOf('Minutes') > -1).toBeTruthy()
+  await optionsMenu.click()
+  await expect(page.getByTestId('current-graph-interval')).toHaveText('Hours')
+  await expect(graphIntervalSegments).toHaveCount(1)
+  await graphIntervalSegments.filter({ hasText: 'Min' }).click()
+  await expect(page.getByTestId('current-graph-interval')).toHaveText('Min')
 })
 
 test('navigating dates previous next time periods', async ({

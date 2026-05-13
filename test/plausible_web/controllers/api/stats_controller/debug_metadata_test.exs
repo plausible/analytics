@@ -5,10 +5,15 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
   describe "Debug metadata for logged in requests" do
     setup [:create_user, :log_in]
 
-    test "for main-graph", %{conn: conn, user: user} do
+    test "for /api/stats/:domain/query", %{conn: conn, user: user} do
       domain = :rand.bytes(20) |> Base.url_encode64()
       site = new_site(domain: domain, owner: user)
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph")
+
+      conn =
+        post(conn, "/api/stats/#{site.domain}/query", %{
+          "date_range" => "day",
+          "metrics" => ["visitors"]
+        })
 
       assert json_response(conn, 200)
 
@@ -24,11 +29,16 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
         decoded = Jason.decode!(unparsed_log_comment)
 
         assert_matches ^strict_map(%{
-                         "params" => ^strict_map(%{"domain" => ^site.domain}),
-                         "phoenix_action" => "main_graph",
+                         "params" =>
+                           ^strict_map(%{
+                             "domain" => ^site.domain,
+                             "date_range" => "day",
+                             "metrics" => ["visitors"]
+                           }),
+                         "phoenix_action" => "query",
                          "phoenix_controller" => "Elixir.PlausibleWeb.Api.StatsController",
-                         "request_method" => "GET",
-                         "request_path" => ^"/api/stats/#{site.domain}/main-graph",
+                         "request_method" => "POST",
+                         "request_path" => ^"/api/stats/#{site.domain}/query",
                          "site_domain" => ^site.domain,
                          "site_id" => ^site.id,
                          "team_id" => ^team_of(user).id,

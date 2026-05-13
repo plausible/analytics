@@ -5,13 +5,13 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { addFilter, revenueAvailable } from '../../dashboard-state'
-import { SortDirection } from '../../hooks/use-order-by'
+import { SortDirection } from '../../hooks/use-order-by-legacy'
 
 const VIEWS = {
   countries: {

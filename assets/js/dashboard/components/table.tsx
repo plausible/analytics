@@ -1,106 +1,27 @@
 import classNames from 'classnames'
-import React, { ReactNode } from 'react'
-import { SortDirection } from '../hooks/use-order-by'
-import { SortButton } from './sort-button'
-import { Tooltip } from '../util/tooltip'
+import React, { useState } from 'react'
+import { ColumnConfiguration } from '../stats/breakdowns'
 
-export type ColumnConfiguraton<T extends Record<string, unknown>> = {
-  /** Unique column ID, used for sorting purposes and to get the value of the cell using rowItem[key] */
-  key: keyof T
-  /** Column title */
-  label: string
-  /** If defined, the column is considered sortable. @see SortButton */
-  onSort?: () => void
-  sortDirection?: SortDirection
-  /** CSS class string. @example "w-24 md:w-32" */
-  width: string
-  /** Aligns column content. */
-  align?: 'left' | 'right'
-  /** A warning to be rendered as a tooltip for the column header */
-  metricWarning?: string
-  /**
-   * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
-   */
-  renderValue?: (item: T, isRowHovered?: boolean) => ReactNode
-  /** Function used to create richer cells */
-  renderItem?: (item: T) => ReactNode
-}
-
-export const TableHeaderCell = ({
-  children,
-  className,
-  align
-}: {
-  children: ReactNode
-  className: string
-  align?: 'left' | 'right'
-}) => {
-  return (
-    <th
-      data-testid="report-header"
-      className={classNames(
-        'p-2 text-xs font-semibold text-gray-500 dark:text-gray-400',
-        className
-      )}
-      align={align}
-    >
-      {children}
-    </th>
-  )
-}
-
-export const TableCell = ({
-  children,
-  className,
-  align
-}: {
-  children: ReactNode
-  className: string
-  align?: 'left' | 'right'
-}) => {
-  return (
-    <td
-      className={classNames(
-        'p-2 font-medium first:rounded-s-sm last:rounded-e-sm',
-        className
-      )}
-      align={align}
-    >
-      {children}
-    </td>
-  )
-}
-
-export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
-  rowIndex,
-  pageIndex,
-  item,
+function Row<T>({
+  row,
   columns,
-  tappedRowName,
-  onRowTap
+  rowKey,
+  tappedKey,
+  onTap
 }: {
-  rowIndex: number
-  pageIndex?: number
-  item: T
-  columns: ColumnConfiguraton<T>[]
-  tappedRowName?: string | null
-  onRowTap?: (rowName: string | null) => void
-}) => {
-  const [isHovered, setIsHovered] = React.useState(false)
+  row: T
+  columns: ColumnConfiguration<T>[]
+  rowKey: string
+  tappedKey: string | null
+  onTap: (key: string | null) => void
+}) {
+  const [isHovered, setIsHovered] = useState(false)
+  const isTapped = tappedKey === rowKey
+  const isActive = isHovered || isTapped
 
-  const rowName = (item as unknown as { name: string }).name
-  const isTapped = tappedRowName === rowName
-  const isRowActive = isHovered || isTapped
-
-  const handleRowClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     if (window.innerWidth < 768 && !(e.target as HTMLElement).closest('a')) {
-      if (onRowTap) {
-        if (isTapped) {
-          onRowTap(null)
-        } else {
-          onRowTap(rowName)
-        }
-      }
+      onTap(isTapped ? null : rowKey)
     }
   }
 
@@ -110,106 +31,67 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
       className="group text-sm dark:text-gray-200 md:cursor-default cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleRowClick}
+      onClick={handleClick}
     >
-      {columns.map(({ key, width, align, renderValue, renderItem }) => (
-        <TableCell
-          key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
-          className={width}
-          align={align}
+      {columns.map((col) => (
+        <td
+          key={`${col.key}_${rowKey}`}
+          className={classNames(
+            'p-2 font-medium first:rounded-s-sm last:rounded-e-sm',
+            col.width
+          )}
+          align={col.align}
         >
-          {renderItem
-            ? renderItem(item)
-            : renderValue
-              ? renderValue(item, isRowActive)
-              : (item[key] ?? '')}
-        </TableCell>
+          {col.renderCell(row, isActive)}
+        </td>
       ))}
     </tr>
   )
 }
 
-export const Table = <T extends Record<string, string | number | ReactNode>>({
+export function Table<T>({
   data,
-  columns
+  columns,
+  getRowKey
 }: {
-  columns: ColumnConfiguraton<T>[]
-  data: T[] | { pages: T[][] }
-}) => {
-  const [tappedRowName, setTappedRowName] = React.useState<string | null>(null)
-
-  const renderColumnLabel = (column: ColumnConfiguraton<T>) => {
-    if (column.metricWarning) {
-      return (
-        <Tooltip
-          info={warningSpan(column.metricWarning)}
-          className="inline-block"
-        >
-          {column.label + ' *'}
-        </Tooltip>
-      )
-    } else {
-      return column.label
-    }
-  }
-
-  const warningSpan = (warning: string) => {
-    return (
-      <span className="text-xs font-normal whitespace-nowrap">
-        {'* ' + warning}
-      </span>
-    )
-  }
+  data: { pages: T[][] }
+  columns: ColumnConfiguration<T>[]
+  getRowKey: (row: T) => string
+}) {
+  const [tappedKey, setTappedKey] = useState<string | null>(null)
 
   return (
     <table className="border-collapse table-striped table-fixed w-max min-w-full">
       <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
         <tr className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          {columns.map((column) => (
-            <TableHeaderCell
-              key={`header_${String(column.key)}`}
-              className={classNames('p-2', column.width)}
-              align={column.align}
+          {columns.map((col) => (
+            <th
+              key={`header_${col.key}`}
+              data-testid="report-header"
+              className={classNames('p-2', col.width)}
+              align={col.align}
             >
-              {column.onSort ? (
-                <SortButton
-                  toggleSort={column.onSort}
-                  sortDirection={column.sortDirection ?? null}
-                >
-                  {renderColumnLabel(column)}
-                </SortButton>
-              ) : (
-                renderColumnLabel(column)
-              )}
-            </TableHeaderCell>
+              {col.renderLabel()}
+            </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {Array.isArray(data)
-          ? data.map((item, rowIndex) => (
-              <ItemRow
-                item={item}
+        {data.pages.map((page, pageIndex) =>
+          page.map((row) => {
+            const rowKey = `${getRowKey(row)}_${pageIndex}`
+            return (
+              <Row
+                key={rowKey}
+                row={row}
                 columns={columns}
-                rowIndex={rowIndex}
-                key={rowIndex}
-                tappedRowName={tappedRowName}
-                onRowTap={setTappedRowName}
+                rowKey={rowKey}
+                tappedKey={tappedKey}
+                onTap={setTappedKey}
               />
-            ))
-          : data.pages.map((page, pageIndex) =>
-              page.map((item, rowIndex) => (
-                <ItemRow
-                  item={item}
-                  columns={columns}
-                  rowIndex={rowIndex}
-                  pageIndex={pageIndex}
-                  key={`page_${pageIndex}_row_${rowIndex}`}
-                  tappedRowName={tappedRowName}
-                  onRowTap={setTappedRowName}
-                />
-              ))
-            )}
+            )
+          })
+        )}
       </tbody>
     </table>
   )

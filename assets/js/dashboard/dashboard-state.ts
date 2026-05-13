@@ -1,5 +1,5 @@
 import {
-  nowForSite,
+  now,
   formatISO,
   shiftDays,
   shiftMonths,
@@ -152,7 +152,7 @@ export function isDateBeforeOrOnCurrentDate({
   date: string
   period: DashboardPeriod
 }) {
-  const currentDate = nowForSite(site)
+  const currentDate = now(site.offset)
   return !isAfter(parseUTCDate(date), currentDate, period)
 }
 

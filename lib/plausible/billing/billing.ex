@@ -1,10 +1,17 @@
 defmodule Plausible.Billing do
+  @moduledoc """
+  Handles Plausible billing subscription lifecycle events (creation, update, cancellation, payment success), 
+  Paddle API, team assignment, and notification logic. Provides helpers for formatting prices, 
+  managing subscription status, and updating team-related billing state.
+  """
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Auth
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
+
+  defmacro allowed_roles(), do: [:owner, :billing]
 
   def subscription_created(params) do
     Repo.transaction(fn ->

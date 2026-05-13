@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Email do
+  @moduledoc """
+  Email template rendering functions.
+  """
+
   use Plausible
   import Bamboo.Email
   import Bamboo.PostmarkHelper
@@ -551,7 +555,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(notification.email)
     |> tag("drop-traffic-warning-first")
-    |> subject("We'll stop counting your stats")
+    |> subject("Your stats stop collecting soon")
     |> render("approaching_accept_traffic_until.html",
       time: "next week",
       user: %{email: notification.email, name: notification.name},
@@ -563,7 +567,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(notification.email)
     |> tag("drop-traffic-warning-final")
-    |> subject("A reminder that we'll stop counting your stats tomorrow")
+    |> subject("Your stats stop tomorrow")
     |> render("approaching_accept_traffic_until.html",
       time: "tomorrow",
       user: %{email: notification.email, name: notification.name},

@@ -569,7 +569,8 @@ test.describe('location filtering tests', () => {
           name: 'pageview',
           country_code: 'EE',
           subdivision1_code: 'EE-37',
-          city_geoname_id: 588_409
+          city_geoname_id: 588_409,
+          browser: 'Chrome'
         }
       ]
     })
@@ -618,6 +619,18 @@ test.describe('location filtering tests', () => {
     await test.step('filtering by city', async () => {
       const cityFilterRow = filterRow(page, 'city')
       const cityInput = page.getByPlaceholder('Select a City')
+      const browserFilterRow = filterRow(page, 'browser')
+      const browserInput = page.getByPlaceholder('Select a Browser', {
+        exact: true
+      })
+
+      // Add a browser filter so city ends up as the 4th pill. This ensures it overflows
+      // into "See more" regardless of viewport width.
+      await filterButton(page).click()
+      await filterItemButton(page, 'Browser').click()
+      await browserInput.fill('chrom')
+      await suggestedItem(browserFilterRow, 'Chrome').click()
+      await applyFilterButton(page).click()
 
       await filterButton(page).click()
       await locationFilterButton(page).click()
@@ -627,10 +640,7 @@ test.describe('location filtering tests', () => {
 
       await applyFilterButton(page).click()
 
-      await page
-        .getByRole('button', { name: 'See 1 more filter and actions' })
-        .click()
-
+      await page.getByRole('button', { name: /See.*more/ }).click()
       await expect(
         page.getByRole('link', { name: 'City is Tallinn' })
       ).toBeVisible()
@@ -759,7 +769,9 @@ test.describe('operating system filtering tests', () => {
         {
           name: 'pageview',
           operating_system: 'Windows',
-          operating_system_version: '11'
+          operating_system_version: '11',
+          browser: 'Chrome',
+          browser_version: '14.0.7'
         },
         {
           name: 'pageview',
@@ -799,6 +811,28 @@ test.describe('operating system filtering tests', () => {
       const operatingSystemVersionInput = page.getByPlaceholder(
         'Select an Operating system version'
       )
+      const browserFilterRow = filterRow(page, 'browser')
+      const browserVersionFilterRow = filterRow(page, 'browser_version')
+      const browserInput = page.getByPlaceholder('Select a Browser', {
+        exact: true
+      })
+      const browserVersionInput = page.getByPlaceholder(
+        'Select a Browser Version'
+      )
+
+      // Add browser and browser version filters so OS version ends up as the 4th pill.
+      // This ensures it overflows into "See more" regardless of viewport width
+      await filterButton(page).click()
+      await filterItemButton(page, 'Browser').click()
+      await browserInput.fill('chrom')
+      await suggestedItem(browserFilterRow, 'Chrome').click()
+      await applyFilterButton(page).click()
+
+      await filterButton(page).click()
+      await filterItemButton(page, 'Browser').click()
+      await browserVersionInput.fill('14')
+      await suggestedItem(browserVersionFilterRow, '14.0.7').click()
+      await applyFilterButton(page).click()
 
       await filterButton(page).click()
       await operatingSystemFilterButton(page).click()
@@ -808,10 +842,7 @@ test.describe('operating system filtering tests', () => {
 
       await applyFilterButton(page).click()
 
-      await page
-        .getByRole('button', { name: 'See 1 more filter and actions' })
-        .click()
-
+      await page.getByRole('button', { name: /See.*more/ }).click()
       await expect(
         page.getByRole('link', { name: 'Operating system version is 11' })
       ).toBeVisible()

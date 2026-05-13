@@ -13,7 +13,7 @@ import { filterRoute } from '../router'
 import { canRemoveFilter } from '../filtering/segments'
 import { useSegmentsContext } from '../filtering/segments-context'
 
-export const PILL_X_GAP_PX = 16
+export const PILL_X_GAP_PX = 10
 export const PILL_Y_GAP_PX = 8
 
 type SliceStartEnd = {

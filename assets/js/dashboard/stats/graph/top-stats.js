@@ -2,7 +2,7 @@ import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
-import { formatDateRange } from '../../util/date'
+import { formatDateRange, formatDayShort, parseUTCDate } from '../../util/date'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
@@ -46,11 +46,6 @@ export default function TopStats({
           <div className="whitespace-nowrap">
             {topStatNumberLong(stat.metric, stat.value)} vs.{' '}
             {topStatNumberLong(stat.metric, stat.comparisonValue)} {statName}
-            <ChangeArrow
-              metric={stat.metric}
-              change={stat.change}
-              className="pl-4 text-xs text-gray-100"
-            />
           </div>
         )}
 
@@ -111,17 +106,15 @@ export default function TopStats({
     )
   }
 
-  function renderStatName(stat) {
-    const isSelected = stat.graphable && stat.metric === selectedMetric
-
+  function renderStatName(stat, isSelected) {
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
     const statDisplayNameClass = classNames(
-      'text-xs text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-fit border-b',
+      'text-xs uppercase whitespace-nowrap flex w-fit',
       {
-        'text-indigo-600 dark:text-indigo-500 font-bold tracking-[-.01em] border-indigo-600 dark:border-indigo-500':
+        'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]':
           isSelected,
-        'font-semibold group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent':
+        'font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100':
           !isSelected
       }
     )
@@ -140,11 +133,13 @@ export default function TopStats({
   }
 
   function renderStat(stat, index) {
+    const isSelected = stat.graphable && stat.metric === selectedMetric
+
     const className = classNames(
-      'px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none',
+      'lg:flex-1 px-4 w-1/2 my-2 lg:w-auto group select-none',
       {
         'cursor-pointer': stat.graphable,
-        'lg:border-l border-gray-300 dark:border-gray-700': index > 0,
+        'lg:border-l border-gray-200 dark:border-gray-750': index > 0,
         'border-r lg:border-r-0': index % 2 === 0
       }
     )
@@ -156,12 +151,19 @@ export default function TopStats({
         onClick={stat.graphable ? () => onMetricClick(stat.metric) : () => {}}
         boundary={tooltipBoundary}
       >
-        {renderStatName(stat)}
-        <div className="my-1 space-y-2">
+        <div
+          className={classNames(
+            'flex flex-col gap-y-1 p-2 -mx-2 rounded-md hover:bg-gray-100/80 dark:hover:bg-gray-800',
+            {
+              'bg-gray-100/70 dark:bg-gray-800': isSelected
+            }
+          )}
+        >
+          {renderStatName(stat, isSelected)}
           <div>
-            <span className="flex items-center justify-between whitespace-nowrap">
+            <span className="flex items-baseline whitespace-nowrap">
               <p
-                className="font-bold text-xl dark:text-gray-100"
+                className="font-semibold text-[1.2rem] text-gray-900 dark:text-gray-100"
                 id={
                   stat.name === 'Current visitors'
                     ? 'current_visitors'
@@ -170,31 +172,35 @@ export default function TopStats({
               >
                 {topStatNumberShort(stat.metric, stat.value)}
               </p>
-              {!isComparison && stat.change != null ? (
+              {stat.change != null ? (
                 <ChangeArrow
                   metric={stat.metric}
                   change={stat.change}
-                  className="pl-2 text-xs dark:text-gray-100"
+                  className="ml-2 text-xs font-medium text-gray-500 dark:text-gray-100"
                 />
               ) : null}
             </span>
             {isComparison ? (
-              <p className="text-xs dark:text-gray-100">
-                {formatDateRange(site, data.from, data.to)}
+              <p className="text-xs dark:text-gray-100 font-medium">
+                {data.timeRange
+                  ? `${formatDayShort(parseUTCDate(data.from))}, ${data.timeRange}`
+                  : formatDateRange(site, data.from, data.to)}
               </p>
             ) : null}
           </div>
 
           {isComparison ? (
-            <div>
+            <div className="mt-1">
               <p
                 id={`previous-${stat.metric}`}
-                className="font-bold text-xl text-gray-500 dark:text-gray-400"
+                className="font-semibold text-[1.2rem] text-gray-500/80 dark:text-gray-400"
               >
                 {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {formatDateRange(site, data.comparingFrom, data.comparingTo)}
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {data.comparisonTimeRange
+                  ? `${formatDayShort(parseUTCDate(data.comparingFrom))}, ${data.comparisonTimeRange}`
+                  : formatDateRange(site, data.comparingFrom, data.comparingTo)}
               </p>
             </div>
           ) : null}

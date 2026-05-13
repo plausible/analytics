@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react'
 import Modal from './../modal'
-import BreakdownModal from './../breakdown-modal'
+import BreakdownModal from '../breakdown-modal-legacy'
 import * as url from '../../../util/url'
 import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { screenSizeIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by'
+import { SortDirection } from '../../../hooks/use-order-by-legacy'
 
 function ScreenSizesModal() {
   const { dashboardState } = useDashboardStateContext()

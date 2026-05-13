@@ -69,6 +69,13 @@ defmodule Plausible.Times do
     |> DateTime.to_date()
   end
 
+  @spec to_naive_datetime!(DateTime.t(), String.t()) :: NaiveDateTime.t()
+  def to_naive_datetime!(%DateTime{} = dt, tz) do
+    dt
+    |> DateTime.shift_zone!(tz)
+    |> DateTime.to_naive()
+  end
+
   @spec humanize(DateTime.t()) :: String.t()
   def humanize(%DateTime{} = dt) do
     Timex.Format.DateTime.Formatters.Relative.format!(dt, "{relative}")

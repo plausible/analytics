@@ -9,6 +9,12 @@ export function FeatureSetupNotice({
   info,
   callToAction,
   onHideAction
+}: {
+  feature: keyof typeof MODES
+  title: React.ReactNode
+  info: React.ReactNode
+  callToAction: { link: string; action: string }
+  onHideAction: () => void
 }) {
   const site = useSiteContext()
   const sectionTitle = MODES[feature].title
@@ -72,14 +78,12 @@ export function FeatureSetupNotice({
   return (
     <div className="size-full flex items-center justify-center">
       <div className="py-3 max-w-2xl">
-        <div className="text-center text-pretty mt-2 text-gray-800 dark:text-gray-200 font-medium text-pretty">
+        <div className="text-center mt-2 text-gray-800 dark:text-gray-200 font-medium text-pretty">
           {title}
         </div>
-
-        <div className="text-center text-pretty mt-4 font-small text-sm text-gray-500 dark:text-gray-200 text-pretty">
+        <div className="text-center mt-4 font-small text-sm text-gray-500 dark:text-gray-200 text-pretty">
           {info}
         </div>
-
         <div className="text-xs sm:text-sm flex my-6 justify-center">
           {renderHideButton()}
           {renderCallToAction()}

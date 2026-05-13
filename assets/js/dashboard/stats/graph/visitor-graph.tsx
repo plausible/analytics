@@ -1,22 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
 import { fetchTopStats } from './fetch-top-stats'
-import { IntervalPicker, useStoredInterval } from './interval-picker'
-import StatsExport from './stats-export'
-import WithImportedSwitch from './with-imported-switch'
-import { NoticesIcon } from './notices'
-import * as url from '../../util/url'
-import LineGraphWithRouter, { LineGraphContainer } from './line-graph'
+import { fetchMainGraph } from './fetch-main-graph'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Metric } from '../../../types/query-api'
+import { Metric } from '../metrics'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { DashboardState } from '../../dashboard-state'
-import { nowForSite } from '../../util/date'
 import { getStaleTime } from '../../hooks/api-client'
+import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
+import { useGraphIntervalContext } from './graph-interval-context'
+import { useSetImportsIncluded } from './imports-included-context'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -27,18 +23,14 @@ export default function VisitorGraph({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const topStatsBoundary = useRef<HTMLDivElement>(null)
+  const mainGraphContainer = useRef<HTMLDivElement>(null)
+  const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const isRealtime = dashboardState.period === DashboardPeriod.realtime
   const queryClient = useQueryClient()
-  const startOfDay = nowForSite(site).startOf('day')
 
-  const { selectedInterval, onIntervalClick, availableIntervals } =
-    useStoredInterval(site, {
-      to: dashboardState.to,
-      from: dashboardState.from,
-      period: dashboardState.period
-    })
+  const { selectedInterval } = useGraphIntervalContext()
 
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
@@ -58,43 +50,48 @@ export default function VisitorGraph({
       return await fetchTopStats(site, opts.dashboardState)
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
+    staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
+    }
   })
 
   const mainGraphQuery = useQuery({
     enabled: !!selectedMetric,
     queryKey: [
       'main-graph',
-      { dashboardState, metric: selectedMetric, interval: selectedInterval }
+      { dashboardState, metric: selectedMetric!, interval: selectedInterval }
     ] as const,
     queryFn: async ({ queryKey }) => {
       const [_, opts] = queryKey
-      const data = await api.get(
-        url.apiPath(site, '/main-graph'),
+      const data = await fetchMainGraph(
+        site,
         opts.dashboardState,
-        {
-          metric: opts.metric,
-          interval: opts.interval
-        }
+        opts.metric,
+        opts.interval
       )
-      return { ...data, interval: opts.interval }
+
+      // pack dashboard period and interval used for the request next to data
+      // so they'd never be out of sync with each other
+      return {
+        ...data,
+        period: opts.dashboardState.period,
+        interval: opts.interval
+      }
     },
     placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
+    staleTime: ({ queryKey }) => {
       const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
+      return getStaleTime({
+        siteTimezoneOffset: site.offset,
+        siteStatsBegin: site.statsBegin,
+        ...opts.dashboardState
+      })
+    }
   })
 
   // update metric to one that exists
@@ -155,10 +152,6 @@ export default function VisitorGraph({
     }
   }, [topStatsQuery.data, updateImportedDataInView])
 
-  // fetch realtime stats
-  const refetchTopStats = topStatsQuery.refetch
-  const refetchMainGraph = mainGraphQuery.refetch
-
   useEffect(() => {
     const onTick = () => {
       setIsRealtimeSilentUpdate({ topStats: true, mainGraph: true })
@@ -173,8 +166,6 @@ export default function VisitorGraph({
           return realtimeTopStatsOrMainGraphQuery
         }
       })
-      refetchTopStats()
-      refetchMainGraph()
     }
 
     if (isRealtime) {
@@ -184,18 +175,27 @@ export default function VisitorGraph({
     return () => {
       document.removeEventListener('tick', onTick)
     }
-  }, [queryClient, isRealtime, refetchTopStats, refetchMainGraph])
+  }, [queryClient, isRealtime])
 
-  const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
+  const switchVisible = !['no_imported_data', 'out_of_range'].includes(
     topStatsQuery.data?.meta.imports_skip_reason as string
   )
+  const switchDisabled =
+    topStatsQuery.data?.meta.imports_skip_reason === 'unsupported_query'
 
-  const importedIntervalUnsupportedNotice =
-    ['hour', 'minute'].includes(selectedInterval) &&
-    importedSwitchVisible &&
-    dashboardState.with_imported
-      ? 'Interval is too short to graph imported data'
-      : null
+  const setImportsIncluded = useSetImportsIncluded()
+
+  useEffect(() => {
+    if (topStatsQuery.data) {
+      setImportsIncluded({ switchVisible, switchDisabled })
+    } else {
+      setImportsIncluded(null)
+    }
+  }, [topStatsQuery.data, switchVisible, switchDisabled, setImportsIncluded])
+
+  useEffect(() => {
+    return () => setImportsIncluded(null)
+  }, [setImportsIncluded])
 
   const { heightPx } = useGuessTopStatsHeight(site, topStatsBoundary)
 
@@ -211,7 +211,7 @@ export default function VisitorGraph({
     !showFullLoader
 
   return (
-    <div className="col-span-full relative w-full bg-white rounded-md shadow dark:bg-gray-900">
+    <div className="col-span-full relative w-full bg-white rounded-md shadow-sm dark:bg-gray-900">
       <>
         <div
           id="top-stats-container"
@@ -234,56 +234,17 @@ export default function VisitorGraph({
             ></div>
           )}
         </div>
-        <div className="relative px-2">
-          {topStatsQuery.data && (
-            <div className="absolute right-4 -top-8 py-1 flex items-center gap-x-4">
-              <NoticesIcon
-                notices={
-                  [importedIntervalUnsupportedNotice].filter(
-                    (n) => !!n
-                  ) as string[]
-                }
-              />
-              {!isRealtime && (
-                <StatsExport selectedInterval={selectedInterval} />
-              )}
-              {importedSwitchVisible && (
-                <WithImportedSwitch
-                  tooltipMessage={
-                    topStatsQuery.data.meta.imports_skip_reason ===
-                    'unsupported_query'
-                      ? 'Imported data cannot be included'
-                      : topStatsQuery.data.meta.imports_included
-                        ? 'Click to exclude imported data'
-                        : 'Click to include imported data'
-                  }
-                  disabled={
-                    topStatsQuery.data.meta.imports_skip_reason ===
-                    'unsupported_query'
-                  }
-                />
-              )}
-              <IntervalPicker
-                selectedInterval={selectedInterval}
-                onIntervalClick={onIntervalClick}
-                options={availableIntervals}
-              />
-            </div>
-          )}
-          <LineGraphContainer>
-            {mainGraphQuery.data && (
+        <div className="relative flex flex-col pl-3 pr-4">
+          <MainGraphContainer ref={mainGraphContainer}>
+            {!!mainGraphQuery.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <LineGraphWithRouter
-                    graphData={{
-                      ...mainGraphQuery.data
-                    }}
-                  />
+                  <MainGraph width={width} data={mainGraphQuery.data} />
                 )}
                 {showGraphLoader && <Loader />}
               </>
             )}
-          </LineGraphContainer>
+          </MainGraphContainer>
         </div>
       </>
       {(!(topStatsQuery.data && mainGraphQuery.data) || showFullLoader) && (

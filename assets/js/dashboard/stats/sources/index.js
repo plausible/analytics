@@ -4,7 +4,7 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import usePrevious from '../../hooks/use-previous'
-import ListReport from '../reports/list'
+import ListReport from '../reports/list-legacy'
 import * as metrics from '../reports/metrics'
 import {
   getFiltersByKeyPrefix,
