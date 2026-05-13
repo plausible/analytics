@@ -33,6 +33,7 @@ const DIRECTION_OPTIONS = [
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
+const MAX_JOURNEY_STEPS = 20
 const MAX_VISIBLE_CANDIDATES = 10
 const MIN_GRID_COLUMNS = 3
 const PRELOAD_MAX_STEPS = 2
@@ -526,6 +527,27 @@ function ColumnEmptyState({
   )
 }
 
+function MaxDepthColumn({ colIndex, header }) {
+  return (
+    <div
+      data-exploration-column={colIndex}
+      className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
+    >
+      <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center">
+        <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
+          {header}
+        </span>
+      </div>
+      <div className="h-92 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
+        <span className="flex flex-col items-center gap-2">
+          <FlagIcon className="size-4.5" />
+          {`You've reached the maximum journey depth of ${MAX_JOURNEY_STEPS} steps.`}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function ExplorationColumn({
   colIndex,
   direction,
@@ -771,6 +793,11 @@ function useExplorationData(site, dashboardState, inViewport) {
     const currentDirection = directionRef.current
     const steps = state.steps
     const activeFilter = state.activeFilter
+
+    if (steps.length >= MAX_JOURNEY_STEPS) {
+      setActiveLoading(false)
+      return
+    }
 
     const journeyChanged =
       prevStepsRef.current !== steps ||
@@ -1178,6 +1205,16 @@ export function FunnelExploration() {
                     ? '100%'
                     : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
                   : null
+
+              if (isActive && steps.length >= MAX_JOURNEY_STEPS) {
+                return (
+                  <MaxDepthColumn
+                    key={i}
+                    colIndex={i}
+                    header={columnHeader(i, direction)}
+                  />
+                )
+              }
 
               return (
                 <ExplorationColumn
