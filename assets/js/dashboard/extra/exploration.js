@@ -1166,16 +1166,16 @@ export function FunnelExploration() {
               const isReachable = steps.length >= i
 
               const colFilter = isActive ? activeFilter : ''
+              const colFrozen = frozen[i] ?? []
 
-              const colResults = isActive
-                ? activeResults.length > 0 || colFilter
+              const colResults =
+                isActive && (activeResults.length > 0 || colFilter)
                   ? activeResults
-                  : (frozen[i] ?? [])
-                : (frozen[i] ?? [])
+                  : colFrozen
               const colLoadingInBackground =
                 isActive && (initialLoading || activeLoading)
               const colLoading =
-                colLoadingInBackground && (!frozen[i] || colFilter)
+                colLoadingInBackground && (!frozen[i] || !!colFilter)
 
               const colSelectedVisitors =
                 provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
