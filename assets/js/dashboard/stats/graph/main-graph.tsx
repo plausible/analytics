@@ -1,5 +1,6 @@
 import React, {
   ReactNode,
+  RefObject,
   useCallback,
   useEffect,
   useMemo,
@@ -41,6 +42,17 @@ import { Metric, getMetricLabel } from '../metrics'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { Interval } from './intervals'
+import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
+import {
+  Annotation,
+  AnnotationType,
+  AnnotationWithPinState,
+  PinPosition,
+  enrichAnnotationsWithPinState,
+  getAnnotationGranularity,
+  groupAnnotationsByTimeLabel
+} from '../../annotations/annotations'
+import { Button } from '../../components/button'
 
 const height = 368
 const marginTop = 16
@@ -66,42 +78,92 @@ type MainGraphYValues = Readonly<
 
 type TooltipState = {
   x: number
+  y: number
   selectedIndex: number | null
   persistent: boolean
 }
+
 const initialTooltipState: TooltipState = {
   x: 0,
+  y: 0,
   selectedIndex: null,
   persistent: false
 }
 
 export const MainGraph = ({
   width,
-  data
+  data,
+  annotations
 }: {
   width: number
   data: MainGraphData
+  annotations: Annotation[]
 }) => {
   const site = useSiteContext()
   const { mode } = useTheme()
   const navigate = useAppNavigate()
+
   const { primaryGradient, secondaryGradient } = paletteByTheme[mode]
+
   const [isTouchDevice, setIsTouchDevice] = useState<null | boolean>(null)
+  const [pinnedAnnotationIds, setPinnedAnnotationIds] = useState<
+    Record<number, PinPosition | null>
+  >({})
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
+  useEffect(() => {
+    setTooltip(initialTooltipState)
+  }, [width])
+  
+  useEffect(() => {
+    setPinnedAnnotationIds({})
+  }, [width, data])
+
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
+
   const metric = data.query.metrics[0] as Metric
   const interval = data.interval
   const period = data.period
 
-  useEffect(() => {
-    setTooltip(initialTooltipState)
-  }, [data])
+  const enrichedAnnotations = useMemo(
+    () => enrichAnnotationsWithPinState(annotations, pinnedAnnotationIds),
+    [annotations, pinnedAnnotationIds]
+  )
+
+  const annotationsByTimeLabel = useMemo(
+    () => groupAnnotationsByTimeLabel(enrichedAnnotations, interval),
+    [enrichedAnnotations, interval]
+  )
 
   useEffect(() => {
-    const onPointerCancel = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') {
+    setTooltip(initialTooltipState)
+  }, [data, annotationsByTimeLabel])
+
+  useEffect(() => {
+    const onClickOutside = (event: MouseEvent) => {
+      if (!tooltipRef.current?.contains(event.target as Node)) {
+        setTooltip(initialTooltipState)
+      }
+    }
+    if (tooltip.persistent && isTouchDevice === false) {
+      document.addEventListener('click', onClickOutside)
+    } else {
+      document.removeEventListener('click', onClickOutside)
+    }
+    return () => {
+      document.removeEventListener('click', onClickOutside)
+    }
+  }, [tooltip.persistent, isTouchDevice])
+
+  useEffect(() => {
+    const onPointerCancel = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
         panGestureStartTimeRef.current = null
+        if (tooltipRef.current?.contains(event.target as Node)) {
+          return
+        }
         setTooltip(initialTooltipState)
       }
     }
@@ -246,6 +308,25 @@ export const MainGraph = ({
     }
   }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
 
+  const annotationsByIndex = useMemo(
+    () =>
+      remappedData.map((datum) => {
+        const annotationsOnDatum = datum.main.isDefined
+          ? (annotationsByTimeLabel[datum.main.timeLabel] ?? [])
+          : []
+        return {
+          count: annotationsOnDatum.length,
+          pinnedCount: annotationsOnDatum.filter((a) => a.isPinned).length
+        }
+      }),
+    [remappedData, annotationsByTimeLabel]
+  )
+
+  const verticalLinesByIndex = useMemo(
+    () => annotationsByIndex.map(({ pinnedCount }) => pinnedCount >= 1),
+    [annotationsByIndex]
+  )
+
   const getFormattedValue = useCallback(
     (value: MetricValue) => MetricFormatterShort[metric](value),
     [metric]
@@ -262,7 +343,7 @@ export const MainGraph = ({
         setIsTouchDevice(true)
         if (tooltip.persistent && inHoverableArea && closestPoint) {
           const now = Date.now()
-          // move the tooltip only when it is certain it's a y-pan
+          // move the tooltip only when it is certain it's not a y-pan
           if (panGestureStartTimeRef.current === null) {
             panGestureStartTimeRef.current = now
           } else if (
@@ -272,6 +353,7 @@ export const MainGraph = ({
             setTooltip({
               selectedIndex: closestPoint.index,
               x: closestPoint.x,
+              y: 0,
               persistent: true
             })
           }
@@ -279,26 +361,34 @@ export const MainGraph = ({
         return
       }
       setIsTouchDevice(false)
-      if (!inHoverableArea || !closestPoint) {
-        return setTooltip(initialTooltipState)
-      }
-      return setTooltip({
-        selectedIndex: closestPoint.index,
-        x: closestPoint.x,
-        persistent: false
+      setTooltip((currentState) => {
+        const currentlyPersistent = currentState.persistent
+        if (currentlyPersistent) {
+          return currentState
+        }
+        if (!inHoverableArea || !closestPoint) {
+          return initialTooltipState
+        }
+        return {
+          persistent: false,
+          selectedIndex: closestPoint.index,
+          x: closestPoint.x,
+          y: 0,
+          type: 'series'
+        }
       })
     },
     [tooltip.persistent]
   )
 
   const onGotPointerCapture = useCallback((event: unknown) => {
-    if (event instanceof PointerEvent && event.pointerType === 'touch') {
+    if (isTouchEvent(event)) {
       return setIsTouchDevice(true)
     }
   }, [])
 
   const onPointerEnter = useCallback((event: unknown) => {
-    if (event instanceof PointerEvent && event.pointerType === 'touch') {
+    if (isTouchEvent(event)) {
       return setIsTouchDevice(true)
     }
   }, [])
@@ -323,6 +413,11 @@ export const MainGraph = ({
       ? selectedDatum.main.timeLabel
       : null
 
+  const annotationDatetime =
+    selectedDatum && selectedDatum.main.isDefined
+      ? selectedDatum.main.timeLabel
+      : null
+
   const zoomToPeriod = useCallback(
     (date: string) => {
       setTooltip(initialTooltipState)
@@ -340,31 +435,46 @@ export const MainGraph = ({
     [navigate, interval]
   )
 
-  const onClick = useCallback<PointerHandler<MainGraphYValues>>(
+  const onChartClick = useCallback<PointerHandler<MainGraphYValues>>(
     ({ inHoverableArea, closestPoint }) => {
       if (isTouchDevice) {
         if (inHoverableArea && closestPoint) {
           return setTooltip({
             selectedIndex: closestPoint.index,
             x: closestPoint.x,
+            y: 0,
             persistent: true
           })
         }
         return setTooltip(initialTooltipState)
       }
+
+      if (tooltip.persistent) {
+        return
+      }
       if (typeof zoomDate === 'string') {
         return zoomToPeriod(zoomDate)
       }
     },
-    [zoomDate, zoomToPeriod, isTouchDevice]
+    [isTouchDevice, zoomDate, zoomToPeriod, tooltip.persistent]
+  )
+
+  const onContextMenu = useCallback<PointerHandler<MainGraphYValues>>(
+    ({ event }) => {
+      if (selectedDatum) {
+        ;(event as Event).preventDefault()
+        return setTooltip((current) => ({ ...current, persistent: true }))
+      }
+    },
+    [selectedDatum]
   )
 
   return (
     <Graph<MainGraphYValues>
-      className={classNames(
-        showZoomToPeriod && selectedDatum ? 'cursor-pointer' : '',
-        tooltip.persistent ? 'touch-pan-y' : ''
-      )}
+      className={classNames({
+        'cursor-pointer': selectedDatum && showZoomToPeriod,
+        'touch-pan-y': tooltip.persistent
+      })}
       highlightedIndex={selectedIndex}
       width={width}
       height={height}
@@ -380,10 +490,40 @@ export const MainGraph = ({
       onGotPointerCapture={onGotPointerCapture}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
-      onClick={onClick}
+      onClick={onChartClick}
+      onContextMenu={onContextMenu}
       yFormat={yFormat}
       gradients={gradients}
+      annotationsByIndex={annotationsByIndex}
+      verticalLinesByIndex={verticalLinesByIndex}
     >
+      {Object.values(annotationsByTimeLabel)
+        .map((annotations) => {
+          const pinnedAnnotations = annotations?.filter((a) => a.isPinned) ?? []
+          const pinPosition = pinnedAnnotations[0]?.pinPosition ?? null
+          return { pinPosition, pinnedAnnotations }
+        })
+        .filter(
+          ({ pinPosition }) =>
+            pinPosition !== null && pinPosition.selectedIndex !== selectedIndex
+        )
+        .sort((a, b) => a.pinPosition!.x - b.pinPosition!.x)
+        .map(({ pinPosition, pinnedAnnotations }) => (
+          <PinnedAnnotationsTooltip
+            key={pinPosition!.x}
+            x={pinPosition!.x}
+            maxX={width}
+            annotations={pinnedAnnotations}
+            onClick={() =>
+              setTooltip({
+                selectedIndex: pinPosition!.selectedIndex,
+                x: pinPosition!.x,
+                y: 0,
+                persistent: true
+              })
+            }
+          />
+        ))}
       {!!selectedDatum && isTouchDevice !== null && (
         <MainGraphTooltip
           getFormattedValue={getFormattedValue}
@@ -395,40 +535,242 @@ export const MainGraph = ({
           interval={interval}
           metric={metric}
           x={tooltip.x}
-          // aligned to top of graph
-          y={0}
+          y={tooltip.y}
           datum={selectedDatum}
           bucketIndex={selectedIndex}
           totalBuckets={remappedData.length}
           persistent={tooltip.persistent}
-          onClick={
-            tooltip.persistent && typeof zoomDate === 'string'
-              ? () => zoomToPeriod(zoomDate)
-              : undefined
-          }
-        />
+          tooltipRef={tooltipRef}
+          isTouchDevice={isTouchDevice}
+        >
+          {tooltip.persistent && (
+            <>
+              {!!annotationDatetime &&
+                !!annotationsByTimeLabel[annotationDatetime] && (
+                  <InteractiveAnnotationsList
+                    onPin={(annotation) =>
+                      setPinnedAnnotationIds((current) => ({
+                        ...current,
+                        [annotation.id]:
+                          current[annotation.id] != null
+                            ? null
+                            : {
+                                x: tooltip.x,
+                                selectedIndex: tooltip.selectedIndex ?? 0
+                              }
+                      }))
+                    }
+                    annotations={annotationsByTimeLabel[annotationDatetime]}
+                  />
+                )}
+              {!!annotationDatetime && (
+                <AddAnnotationButton
+                  interval={interval}
+                  timelabel={annotationDatetime}
+                />
+              )}
+              {!!zoomDate && (
+                <Button
+                  onClick={() => zoomToPeriod(zoomDate)}
+                >{`View ${interval}`}</Button>
+              )}
+            </>
+          )}
+          {!tooltip.persistent && (
+            <>
+              {!!annotationDatetime &&
+                !!annotationsByTimeLabel[annotationDatetime] && (
+                  <>
+                    <AnnotationsList
+                      expandedIndex={null}
+                      annotations={annotationsByTimeLabel[
+                        annotationDatetime
+                      ].slice(0, 1)}
+                      onAnnotationClick={() => {}}
+                    />
+                    {annotationsByTimeLabel[annotationDatetime].length == 2 &&
+                      `and 1 more note`}
+                    {annotationsByTimeLabel[annotationDatetime].length > 2 &&
+                      `and ${annotationsByTimeLabel[annotationDatetime].length - 1} more notes`}
+                  </>
+                )}
+              {(!!zoomDate || !!annotationDatetime) && (
+                <hr className="border-gray-600 dark:border-gray-800 my-1" />
+              )}
+              {!!zoomDate && (
+                <div className="text-gray-300 dark:text-gray-400 text-xs">
+                  {`Click to view ${interval}`}
+                </div>
+              )}
+              {!!annotationDatetime && (
+                <div className="text-gray-300 dark:text-gray-400 text-xs">
+                  Right click for more actions
+                </div>
+              )}
+            </>
+          )}
+        </MainGraphTooltip>
       )}
     </Graph>
   )
 }
 
-const MainGraphTooltip = ({
-  metric,
-  getFormattedValue,
-  interval,
-  period,
-  shouldShowDate,
-  shouldShowYear,
-  maxX,
-  x,
-  y,
-  datum,
-  showZoomToPeriod,
-  bucketIndex,
-  totalBuckets,
-  persistent,
-  onClick
+const InteractiveAnnotationsList = ({
+  annotations,
+  onPin
 }: {
+  onPin: (annotation: Annotation) => void
+  annotations: AnnotationWithPinState[]
+}) => {
+  const [expanded, setExpanded] = useState<number | null>(null)
+  useEffect(() => {
+    setExpanded(null)
+  }, [annotations])
+  const { setModal } = useRoutelessModalsContext()
+
+  return (
+    <AnnotationsList
+      annotations={annotations}
+      expandedIndex={expanded}
+      onAnnotationClick={(index: number) =>
+        setExpanded((current) => (current === index ? null : index))
+      }
+      onEdit={(annotation) =>
+        setModal({ type: 'update-annotation', annotation })
+      }
+      onDelete={(annotation) =>
+        setModal({ type: 'delete-annotation', annotation })
+      }
+      onPin={onPin}
+    />
+  )
+}
+
+const AnnotationsList = ({
+  annotations,
+  expandedIndex,
+  onAnnotationClick,
+  onEdit,
+  onPin,
+  onDelete
+}: {
+  annotations: AnnotationWithPinState[]
+  onEdit?: (annotation: Annotation) => void
+  onPin?: (annotation: Annotation) => void
+  onDelete?: (annotation: Annotation) => void
+  expandedIndex: number | null
+  onAnnotationClick?: (index: number) => void
+}) => {
+  return (
+    <div className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
+      {annotations.map((annotation, index) => {
+        const { id, note } = annotation
+        return (
+          <div className="flex flex-row gap-x-2" key={id}>
+            <div className="rounded-xs w-[3px] bg-green-500 shrink-0" />
+            <div className="flex flex-col gap-y-1 w-64">
+              {typeof onAnnotationClick === 'function' ? (
+                <button
+                  className="flex flex-row"
+                  onClick={() => onAnnotationClick(index)}
+                >
+                  <div className="text-left break-all">{note}</div>
+                </button>
+              ) : (
+                <div className="text-left break-all">{note}</div>
+              )}
+              {expandedIndex === index && (
+                <div className="flex flex-row">
+                  {typeof onEdit === 'function' && (
+                    <Button
+                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
+                      theme="ghost"
+                      size="sm"
+                      onClick={() => onEdit(annotation)}
+                    >
+                      {/* <PencilIcon className="w-4 h-4 block" /> */}
+                      Edit
+                    </Button>
+                  )}
+                  {typeof onPin === 'function' &&
+                    (annotation.isPinned ? (
+                      <Button
+                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
+                        theme="ghost"
+                        size="sm"
+                        onClick={() => onPin(annotation)}
+                      >
+                        {/* <BookmarkSlashIcon className="w-4 h-4 block" /> */}
+                        Unpin
+                      </Button>
+                    ) : (
+                      <Button
+                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
+                        theme="ghost"
+                        size="sm"
+                        onClick={() => onPin(annotation)}
+                      >
+                        {/* <BookmarkIcon className="w-4 h-4 block" /> */}
+                        Pin
+                      </Button>
+                    ))}
+                  {typeof onDelete === 'function' && (
+                    <Button
+                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
+                      theme="ghost"
+                      size="sm"
+                      onClick={() => onDelete(annotation)}
+                    >
+                      {/* <TrashIcon className="w-4 h-4 block" /> */}
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+const AddAnnotationButton = ({
+  interval,
+  timelabel
+}: {
+  interval: Interval
+  timelabel: string
+}) => {
+  const { setModal } = useRoutelessModalsContext()
+
+  return (
+    <Button
+      size="sm"
+      onClick={() =>
+        setModal({
+          type: 'create-annotation',
+          annotation: {
+            note: `Note on ${timelabel}`,
+            type: AnnotationType.personal,
+            datetime: timelabel,
+            granularity: getAnnotationGranularity(interval)
+          }
+        })
+      }
+    >
+      Add note
+    </Button>
+  )
+}
+
+const isTouchEvent = (event: unknown) =>
+  event instanceof PointerEvent && event.pointerType === 'touch'
+
+const mainGraphTooltipClassName =
+  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
+
+type MainGraphTooltipProps = {
   metric: Metric
   getFormattedValue: (value: MetricValue) => string
   interval: Interval
@@ -443,8 +785,29 @@ const MainGraphTooltip = ({
   totalBuckets: number
   maxX: number
   persistent: boolean
-  onClick?: () => void
-}) => {
+  children?: ReactNode
+  tooltipRef: RefObject<HTMLDivElement>
+  isTouchDevice: boolean
+}
+
+const MainGraphTooltip = ({
+  metric,
+  getFormattedValue,
+  interval,
+  period,
+  shouldShowDate,
+  shouldShowYear,
+  maxX,
+  x,
+  y,
+  datum,
+  bucketIndex,
+  totalBuckets,
+  persistent,
+  children,
+  tooltipRef,
+  isTouchDevice
+}: MainGraphTooltipProps) => {
   const { dashboardState } = useDashboardStateContext()
   const metricLabel = getMetricLabel(metric, {
     hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
@@ -452,14 +815,17 @@ const MainGraphTooltip = ({
   const { main, comparison, change } = datum
   return (
     <GraphTooltipWrapper
+      wrapperRef={tooltipRef}
+      horizontalAnchor="start"
+      verticalAnchor="topEdge"
       x={x}
       y={y}
       minWidth={200}
       maxX={maxX}
-      className={classNames(
-        'absolute select-none bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850',
-        typeof onClick !== 'function' && 'pointer-events-none'
-      )}
+      className={classNames(mainGraphTooltipClassName, {
+        'select-none': !persistent || isTouchDevice,
+        'pointer-events-none': !persistent
+      })}
     >
       <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
         <div className="flex justify-between items-center rounded-sm">
@@ -520,24 +886,45 @@ const MainGraphTooltip = ({
             </div>
           )}
         </div>
-
-        {!!showZoomToPeriod && (
-          <>
-            <hr className="border-gray-600 dark:border-gray-800 my-1" />
-            {!persistent && (
-              <span className="text-gray-300 dark:text-gray-400 text-xs">
-                {`Click to view ${interval}`}
-              </span>
-            )}
-            {persistent && (
-              <button
-                className="button"
-                onClick={onClick}
-              >{`View ${interval}`}</button>
-            )}
-          </>
-        )}
+        {children}
       </aside>
+    </GraphTooltipWrapper>
+  )
+}
+
+const PinnedAnnotationsTooltip = ({
+  x,
+  annotations,
+  maxX,
+  onClick
+}: {
+  x: number
+  maxX: number
+  annotations: AnnotationWithPinState[]
+  onClick: () => void
+}) => {
+  const ref = useRef<HTMLDivElement>(null)
+  return (
+    <GraphTooltipWrapper
+      horizontalAnchor="start"
+      verticalAnchor="topEdge"
+      x={x!}
+      y={0}
+      maxX={maxX}
+      minWidth={200}
+      wrapperRef={ref}
+      key={x}
+      className={mainGraphTooltipClassName}
+    >
+      <div
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClick()
+        }}
+      >
+        <AnnotationsList annotations={annotations} expandedIndex={null} />
+      </div>
     </GraphTooltipWrapper>
   )
 }

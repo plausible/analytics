@@ -1,0 +1,324 @@
+import React, { ReactNode, useState } from 'react'
+import {
+  Annotation,
+  ANNOTATION_TYPE_LABELS,
+  AnnotationPayload,
+  AnnotationType
+} from './annotations'
+import { MutationStatus } from '@tanstack/react-query'
+import { ApiError } from '../api'
+import { ErrorPanel } from '../components/error-panel'
+import {
+  ModalLayout,
+  ModalFooter,
+  SaveButton
+} from '../components/modal-layout'
+import {
+  LabeledTextInput,
+  TypeSelector,
+  TypeDisabledMessage,
+  getOptionDisabledMessage,
+  OptionDisabledMessageType
+} from '../components/form-elements'
+import { Button } from '../components/button'
+import { Role, UserContextValue } from '../user-context'
+
+interface ApiRequestProps {
+  status: MutationStatus
+  error?: unknown
+  reset: () => void
+}
+
+interface AnnotationModalProps {
+  user: UserContextValue
+  siteAnnotationsAvailable: boolean
+  onClose: () => void
+  notePlaceholder: string
+}
+
+export const CreateAnnotationModal = ({
+  onClose,
+  onSave,
+  user,
+  siteAnnotationsAvailable,
+  notePlaceholder,
+  initialDatetime,
+  initialGranularity,
+  initialType,
+  error,
+  reset,
+  status
+}: AnnotationModalProps &
+  ApiRequestProps & {
+    initialDatetime: AnnotationPayload['datetime']
+    initialGranularity: AnnotationPayload['granularity']
+    initialType: AnnotationPayload['type']
+  } & {
+    onSave: (input: AnnotationPayload) => void
+  }) => {
+  const defaultNote = ''
+  const [note, setNote] = useState(defaultNote)
+  const [type, setType] = useState(initialType)
+
+  const granularity = initialGranularity
+  const datetime = initialDatetime
+
+  const disabledMessage =
+    type === AnnotationType.site
+      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
+      : null
+
+  return (
+    <ModalLayout title={`Add note for ${datetime}`} onClose={onClose}>
+      <LabeledTextInput
+        label="Note"
+        id="note"
+        value={note}
+        onChange={setNote}
+        placeholder={notePlaceholder}
+      />
+      <AnnotationTypeSelector
+        value={type}
+        onChange={setType}
+        optionDisabledMessage={disabledMessage}
+      />
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <SaveButton
+          disabled={status === 'pending' || disabledMessage !== null}
+          onSave={() => {
+            const trimmedNote = note.trim()
+            const saveableNote = trimmedNote.length
+              ? trimmedNote
+              : notePlaceholder
+
+            onSave({
+              note: saveableNote,
+              type,
+              datetime,
+              granularity
+            })
+          }}
+        />
+      </ModalFooter>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong adding the note'
+          }
+          onClose={reset}
+        />
+      )}
+    </ModalLayout>
+  )
+}
+
+const AnnotationTypeSelector = ({
+  value,
+  onChange,
+  optionDisabledMessage
+}: {
+  value: AnnotationType
+  onChange: (value: AnnotationType) => void
+  optionDisabledMessage: OptionDisabledMessageType | null
+}) => (
+  <>
+    <TypeSelector<AnnotationType>
+      idPrefix="annotation-type"
+      value={value}
+      onChange={onChange}
+      options={[
+        {
+          type: AnnotationType.personal,
+          name: ANNOTATION_TYPE_LABELS[AnnotationType.personal],
+          description: 'Visible only to you'
+        },
+        {
+          type: AnnotationType.site,
+          name: ANNOTATION_TYPE_LABELS[AnnotationType.site],
+          description: 'Visible to others on the site'
+        }
+      ]}
+    />
+    {optionDisabledMessage !== null && (
+      <TypeDisabledMessage
+        message={
+          <AnnotationTypeDisabledMessage messageType={optionDisabledMessage} />
+        }
+      />
+    )}
+  </>
+)
+
+const AnnotationTypeDisabledMessage = ({
+  messageType
+}: {
+  messageType: OptionDisabledMessageType
+}): Exclude<ReactNode, undefined> => {
+  switch (messageType) {
+    case 'no-permissions':
+      return "You don't have enough permissions to change note to this type"
+    case 'upgrade-subscription-yourself':
+      return (
+        <>
+          To use this note type,{' '}
+          <a href="/billing/choose-plan" className="underline">
+            please upgrade your subscription
+          </a>
+        </>
+      )
+    case 'upgrade-subscription-reach-out':
+      return (
+        <>
+          To use this note type, please reach out to a team owner to upgrade
+          their subscription.
+        </>
+      )
+  }
+}
+
+const canSelectSiteAnnotation = (user: UserContextValue) =>
+  [Role.admin, Role.owner, Role.editor, 'super_admin'].includes(user.role)
+
+const getAnnotationTypeDisabledMessage = ({
+  siteAnnotationsAvailable,
+  user
+}: {
+  siteAnnotationsAvailable: boolean
+  user: UserContextValue
+}): OptionDisabledMessageType | null =>
+  getOptionDisabledMessage({
+    optionAvailable: siteAnnotationsAvailable,
+    userHasOptionPermissions: canSelectSiteAnnotation(user),
+    userCanUpgradeSubscription: user.role === Role.owner
+  })
+
+export const DeleteAnnotationModal = ({
+  annotation,
+  onClose,
+  onSave,
+  status,
+  error,
+  reset
+}: {
+  onClose: () => void
+  onSave: (input: Pick<Annotation, 'id'>) => void
+  annotation: Annotation
+} & ApiRequestProps) => {
+  const deleteDisabled = status === 'pending'
+
+  return (
+    <ModalLayout
+      title={
+        <>
+          Delete {ANNOTATION_TYPE_LABELS[annotation.type].toLowerCase()}
+          <span className="break-all">{` "${annotation.note}"?`}</span>
+        </>
+      }
+      onClose={onClose}
+    >
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          theme="danger"
+          size="sm"
+          disabled={deleteDisabled}
+          onClick={
+            deleteDisabled
+              ? () => {}
+              : () => {
+                  onSave({ id: annotation.id })
+                }
+          }
+        >
+          Delete
+        </Button>
+      </ModalFooter>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong deleting annotation'
+          }
+          onClose={reset}
+        />
+      )}
+    </ModalLayout>
+  )
+}
+
+export const UpdateAnnotationModal = ({
+  onClose,
+  onSave,
+  annotation,
+  siteAnnotationsAvailable,
+  user,
+  notePlaceholder,
+  status,
+  error,
+  reset
+}: AnnotationModalProps &
+  ApiRequestProps & {
+    onSave: (input: Pick<Annotation, 'id' | 'note' | 'type'>) => void
+    annotation: Annotation
+  }) => {
+  const [note, setNote] = useState(annotation.note)
+  const [type, setType] = useState<AnnotationType>(annotation.type)
+
+  const disabledMessage =
+    type === AnnotationType.site
+      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
+      : null
+
+  return (
+    <ModalLayout title="Update note" onClose={onClose}>
+      <LabeledTextInput
+        label="Note"
+        id="note"
+        value={note}
+        onChange={setNote}
+        placeholder={notePlaceholder}
+      />
+      <AnnotationTypeSelector
+        value={type}
+        onChange={setType}
+        optionDisabledMessage={disabledMessage}
+      />
+      <ModalFooter>
+        <Button theme="secondary" size="sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <SaveButton
+          disabled={status === 'pending' || disabledMessage !== null}
+          onSave={() => {
+            const trimmedNote = note.trim()
+            const saveableNote = trimmedNote.length
+              ? trimmedNote
+              : notePlaceholder
+            onSave({ id: annotation.id, note: saveableNote, type })
+          }}
+        />
+      </ModalFooter>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong updating note'
+          }
+          onClose={reset}
+        />
+      )}
+    </ModalLayout>
+  )
+}

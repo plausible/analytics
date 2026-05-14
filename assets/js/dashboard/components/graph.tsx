@@ -8,6 +8,7 @@ import React, {
 import * as d3 from 'd3'
 import classNames from 'classnames'
 
+const ANNOTATION_DIAMOND_SIZE_PX = 3
 const IDEAL_Y_TICK_COUNT = 5
 const MAX_X_TICK_COUNT = 8
 const X_TICK_LENGTH_PX = 4
@@ -35,12 +36,14 @@ type GraphProps<
   /** initial guess for left margin, automatically enlarged to fit y tick texts */
   defaultMarginLeft: number
   data: Datum<T>[]
+  annotationsByIndex: { count: number; pinnedCount: number }[]
   yMax: number
   onPointerEnter: (event: unknown) => void
   onPointerMove: PointerHandler<T>
   onPointerLeave: (event: unknown) => void
   onGotPointerCapture: (event: unknown) => void
   onClick?: PointerHandler<T>
+  onContextMenu?: PointerHandler<T>
   yFormat: (domainValue: d3.NumberValue, index: number) => string
   /**
    * Things are drawn in the order of settings,
@@ -55,6 +58,7 @@ type GraphProps<
   }[]
   children?: ReactNode
   highlightedIndex?: number | null
+  verticalLinesByIndex: boolean[]
 }
 
 /**
@@ -79,6 +83,8 @@ export function Graph<T extends GraphYValues>({
 }
 
 const highlightIndicatorGroupId = 'highlight-indicator'
+const annotationsGroupId = 'annotations'
+const verticalLinesGroupId = 'vertical-lines'
 
 function InnerGraph<T extends GraphYValues>({
   className,
@@ -96,10 +102,13 @@ function InnerGraph<T extends GraphYValues>({
   onGotPointerCapture,
   onPointerEnter,
   onClick,
+  onContextMenu,
   yFormat,
   settings,
   gradients,
-  highlightedIndex
+  highlightedIndex,
+  annotationsByIndex,
+  verticalLinesByIndex
 }: GraphProps<T>) {
   const [extraMarginLeft, setExtraMarginLeft] = useState(0)
   const [points, setPoints] = useState<Point<T>[]>([])
@@ -230,6 +239,8 @@ function InnerGraph<T extends GraphYValues>({
       })
     }
 
+    svg.append('g').attr('id', verticalLinesGroupId)
+
     // must be on top of gradients, but under lines and points
     svg.append('g').attr('id', highlightIndicatorGroupId)
 
@@ -290,6 +301,8 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
+
+    svg.append('g').attr('id', annotationsGroupId)
 
     setPoints(points)
 
@@ -366,7 +379,13 @@ function InnerGraph<T extends GraphYValues>({
         }
       }
     }
-  }, [onPointerMove, isInHoverableArea, points])
+  }, [
+    onPointerMove,
+    isInHoverableArea,
+    points,
+    annotationsByIndex,
+    yBottomEdge
+  ])
 
   useEffect(() => {
     const currentSvg = svgRef.current
@@ -465,7 +484,51 @@ function InnerGraph<T extends GraphYValues>({
         svg.on('click', null)
       }
     }
-  }, [onClick, isInHoverableArea, points])
+  }, [onClick, isInHoverableArea, points, annotationsByIndex, yBottomEdge])
+
+  useEffect(() => {
+    const currentSvg = svgRef.current
+    if (currentSvg && points.length) {
+      const svg = d3.select(currentSvg)
+      if (typeof onContextMenu !== 'function') {
+        svg.on('contextmenu', null)
+      } else {
+        svg.on('contextmenu', (event) => {
+          const { xPointer, yPointer } = getPosition(event)
+          const inHoverableArea = isInHoverableArea(xPointer, yPointer)
+          const closestIndexToPointer = inHoverableArea
+            ? getClosestIndexToPointer(xPointer, points)
+            : null
+          onContextMenu({
+            inHoverableArea,
+            closestPoint:
+              closestIndexToPointer !== null
+                ? {
+                    index: closestIndexToPointer,
+                    x: points[closestIndexToPointer].x,
+                    values: points[closestIndexToPointer].values
+                  }
+                : null,
+            xPointer,
+            yPointer,
+            event
+          })
+        })
+      }
+    }
+    return () => {
+      if (currentSvg) {
+        const svg = d3.select(currentSvg)
+        svg.on('contextmenu', null)
+      }
+    }
+  }, [
+    onContextMenu,
+    isInHoverableArea,
+    points,
+    annotationsByIndex,
+    yBottomEdge
+  ])
 
   useEffect(() => {
     points.forEach(({ dots }, index) =>
@@ -503,6 +566,72 @@ function InnerGraph<T extends GraphYValues>({
     }
   }, [height, highlightedIndex, marginBottom, marginTop, points])
 
+  useEffect(() => {
+    if (!svgRef.current) {
+      return
+    }
+    const svg = d3.select(svgRef.current)
+    const cleanup = () => {
+      svg.selectAll(`#${annotationsGroupId} g`).remove()
+    }
+    if (!points.length || points.length !== annotationsByIndex.length) {
+      return cleanup()
+    }
+
+    const pointsWithAnnotations = points.map((point, index) => {
+      return { ...point, annotations: annotationsByIndex[index] }
+    })
+
+    for (const point of pointsWithAnnotations) {
+      if (point.annotations.count > 0) {
+        svg
+          .select(`#${annotationsGroupId}`)
+          .append('g')
+          .call((g) =>
+            g
+              .append('polygon')
+              .attr(
+                'points',
+                `${-ANNOTATION_DIAMOND_SIZE_PX},0 0,${ANNOTATION_DIAMOND_SIZE_PX} ${ANNOTATION_DIAMOND_SIZE_PX},0 0,${-ANNOTATION_DIAMOND_SIZE_PX}`
+              )
+              .attr('transform', `translate(${point.x}, ${yBottomEdge})`)
+              .attr('class', annotationCircleClass)
+          )
+      }
+    }
+    return cleanup
+  }, [points, annotationsByIndex, yBottomEdge])
+
+  useEffect(() => {
+    if (!svgRef.current) return
+    const svg = d3.select(svgRef.current)
+    const cleanup = () => {
+      svg.select(`#${verticalLinesGroupId}`).selectAll('line').remove()
+    }
+    if (!points.length || verticalLinesByIndex.length !== points.length) {
+      return cleanup()
+    }
+
+    const pointsWithVerticalLines = points.map((point, index) => {
+      return { ...point, verticalLine: verticalLinesByIndex[index] }
+    })
+
+    for (const point of pointsWithVerticalLines) {
+      if (point.verticalLine) {
+        svg
+          .select(`#${verticalLinesGroupId}`)
+          .append('line')
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', marginTop)
+          .attr('y2', height - marginBottom)
+          .attr('transform', `translate(${point.x}, 0)`)
+          .attr('class', verticalDashedLineClass)
+      }
+    }
+    return cleanup
+  }, [points, verticalLinesByIndex, marginTop, marginBottom, height])
+
   return (
     <svg
       ref={svgRef}
@@ -514,10 +643,13 @@ function InnerGraph<T extends GraphYValues>({
 
 const currentlySelectedLineClass =
   'stroke-1 stroke-gray-300 dark:stroke-gray-700'
+const verticalDashedLineClass =
+  'stroke-1 stroke-gray-300 dark:stroke-gray-700 [stroke-dasharray:2,2]'
 const yTickLineClass =
   'stroke-gray-150 dark:stroke-gray-800/75 group-first:stroke-gray-300 dark:group-first:stroke-gray-700'
 const tickTextClass = 'fill-gray-500 dark:fill-gray-400 text-xs select-none'
 const xTickLineClass = 'stroke-gray-300 dark:stroke-gray-700'
+const annotationCircleClass = 'fill-indigo-500 stroke-indigo-500'
 
 export const getXDomain = (bucketCount: number): [number, number] => {
   const xMin = 0

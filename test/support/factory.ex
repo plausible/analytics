@@ -392,6 +392,15 @@ defmodule Plausible.Factory do
     }
   end
 
+  def annotation_factory do
+    %Plausible.Annotations.Annotation{
+      note: "a test annotation",
+      type: :personal,
+      datetime: ~U[2026-01-04 00:00:00Z],
+      granularity: :date
+    }
+  end
+
   defp hash_key() do
     Keyword.fetch!(
       Application.get_env(:plausible, PlausibleWeb.Endpoint),
