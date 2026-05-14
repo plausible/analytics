@@ -206,7 +206,7 @@ queried from a single table.</p></div>
 
   <section class="docstring">
 
-<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li><li>Updates event:hostname filters to also apply on visit level for sane results.</li><li>Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.</li><li>Trims the date range to the current time if query.include.trim_relative_date_range is true.</li><li>Sets the join_type for the query based on the query.</li></ol>
+<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li><li>Updates event:hostname filters to also apply on visit level for sane results.</li><li>[DEPRECATED AND WILL BE REMOVED] Removes revenue metrics from legacy queries if ineligible</li><li>Trims the date range to the current time if query.include.trim_relative_date_range is true.</li><li>Sets the join_type for the query based on the query.</li></ol>
   </section>
 </section>
 <section class="detail" id="split/1">
