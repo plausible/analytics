@@ -10,7 +10,10 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     propsAvailable: dataset.propsAvailable === 'true',
     explorationAvailable: dataset.explorationAvailable === 'true',
     explorationJourneyEndEvent: dataset.explorationJourneyEndEvent!,
-    explorationMaxJourneySteps: parseInt(dataset.explorationMaxJourneySteps!, 10),
+    explorationMaxJourneySteps: parseInt(
+      dataset.explorationMaxJourneySteps!,
+      10
+    ),
     siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
