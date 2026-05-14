@@ -136,21 +136,7 @@ function columnHeader(index, direction) {
   return `${index} step${index === 1 ? '' : 's'} ${word}`
 }
 
-function fetchExplorationConfig(site) {
-  return api.get(url.apiPath(site, '/exploration/config'))
-}
-
 const ExplorationConfigContext = createContext(null)
-
-function useExplorationConfig(site) {
-  const [config, setConfig] = useState(null)
-
-  useEffect(() => {
-    fetchExplorationConfig(site).then((data) => setConfig(data))
-  }, [site])
-
-  return { config }
-}
 
 function fetchNextWithFunnel(
   site,
@@ -1119,16 +1105,9 @@ function useScrollActiveColumnIntoView(containerRef, stepsLength) {
 
 export function FunnelExploration() {
   const site = useSiteContext()
-  const { config } = useExplorationConfig(site)
-
-  if (!config) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="mx-auto loading pt-4">
-          <div></div>
-        </div>
-      </div>
-    )
+  const config = {
+    journey_end_event: site.explorationJourneyEndEvent,
+    max_journey_steps: site.explorationMaxJourneySteps
   }
 
   return (

@@ -62,6 +62,14 @@ defmodule PlausibleWeb.StatsController do
     exploration_available? =
       on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
 
+    {exploration_journey_end_event, exploration_max_journey_steps} =
+      on_ee(
+        do:
+          {Plausible.Stats.Exploration.Journey.Step.journey_end_event(),
+           Plausible.Stats.Exploration.max_steps()},
+        else: {"", 0}
+      )
+
     consolidated_view_available? =
       on_ee(do: Plausible.ConsolidatedView.ok_to_display?(site.team), else: false)
 
@@ -101,6 +109,8 @@ defmodule PlausibleWeb.StatsController do
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
           exploration_available?: exploration_available?,
+          exploration_journey_end_event: exploration_journey_end_event,
+          exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
           limited_to_segment_id: nil
         )
@@ -475,6 +485,14 @@ defmodule PlausibleWeb.StatsController do
         exploration_available? =
           on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
 
+        {exploration_journey_end_event, exploration_max_journey_steps} =
+          on_ee(
+            do:
+              {Plausible.Stats.Exploration.Journey.Step.journey_end_event(),
+               Plausible.Stats.Exploration.max_steps()},
+            else: {"", 0}
+          )
+
         limited_to_segment_id =
           if Plausible.Site.SharedLink.limited_to_segment?(shared_link) do
             shared_link.segment.id
@@ -525,6 +543,8 @@ defmodule PlausibleWeb.StatsController do
           consolidated_view?: false,
           consolidated_view_available?: false,
           exploration_available?: exploration_available?,
+          exploration_journey_end_event: exploration_journey_end_event,
+          exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id
         )

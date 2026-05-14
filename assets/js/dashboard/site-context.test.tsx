@@ -16,6 +16,8 @@ describe('parseSiteFromDataset', () => {
       data-props-opted-out="false"
       data-funnels-available="true"
       data-exploration-available="false"
+      data-exploration-journey-end-event="__journey_end__"
+      data-exploration-max-journey-steps="20"
       data-site-segments-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
@@ -45,6 +47,8 @@ describe('parseSiteFromDataset', () => {
     funnelsAvailable: true,
     propsAvailable: true,
     explorationAvailable: false,
+    explorationJourneyEndEvent: '__journey_end__',
+    explorationMaxJourneySteps: 20,
     siteSegmentsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
