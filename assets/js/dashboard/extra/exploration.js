@@ -3,9 +3,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useRef,
-  useCallback,
-  createContext,
-  useContext
+  useCallback
 } from 'react'
 import LazyLoader from '../components/lazy-loader'
 import * as api from '../api'
@@ -135,8 +133,6 @@ function columnHeader(index, direction) {
   const word = direction === DIRECTION.BACKWARD ? 'before' : 'after'
   return `${index} step${index === 1 ? '' : 's'} ${word}`
 }
-
-const ExplorationConfigContext = createContext(null)
 
 function fetchNextWithFunnel(
   site,
@@ -371,9 +367,7 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
-  const { journey_end_event: JOURNEY_END_EVENT } = useContext(
-    ExplorationConfigContext
-  )
+  const { explorationJourneyEndEvent: JOURNEY_END_EVENT } = useSiteContext()
   const isJourneyEnd = step.name === JOURNEY_END_EVENT
   const isCustomEvent =
     step.name !== 'pageview' && step.name !== JOURNEY_END_EVENT
@@ -532,9 +526,7 @@ function ColumnEmptyState({
 }
 
 function MaxDepthColumn({ colIndex, header }) {
-  const { max_journey_steps: MAX_JOURNEY_STEPS } = useContext(
-    ExplorationConfigContext
-  )
+  const { explorationMaxJourneySteps: MAX_JOURNEY_STEPS } = useSiteContext()
   return (
     <div
       data-exploration-column={colIndex}
@@ -687,9 +679,9 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
 // journey state.
 function useExplorationData(site, dashboardState, inViewport) {
   const {
-    max_journey_steps: MAX_JOURNEY_STEPS,
-    journey_end_event: JOURNEY_END_EVENT
-  } = useContext(ExplorationConfigContext)
+    explorationMaxJourneySteps: MAX_JOURNEY_STEPS,
+    explorationJourneyEndEvent: JOURNEY_END_EVENT
+  } = useSiteContext()
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -1104,26 +1096,14 @@ function useScrollActiveColumnIntoView(containerRef, stepsLength) {
 }
 
 export function FunnelExploration() {
-  const site = useSiteContext()
-  const config = {
-    journey_end_event: site.explorationJourneyEndEvent,
-    max_journey_steps: site.explorationMaxJourneySteps
-  }
-
-  return (
-    <ExplorationConfigContext.Provider value={config}>
-      <FunnelExplorationInner />
-    </ExplorationConfigContext.Provider>
-  )
+  return <FunnelExplorationInner />
 }
 
 function FunnelExplorationInner() {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [inViewport, setInViewport] = useState(false)
-  const { max_journey_steps: MAX_JOURNEY_STEPS } = useContext(
-    ExplorationConfigContext
-  )
+  const MAX_JOURNEY_STEPS = site.explorationMaxJourneySteps
 
   const {
     state,
