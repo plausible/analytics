@@ -23,7 +23,7 @@ defmodule Plausible.Stats.ParsedQueryParams do
             skip_goal_existence_check: false
 
   def to_query!(%__MODULE__{} = parsed_query_params) do
-    query_fields = (Query.__struct__() |> Map.keys()) -- [:__struct__]
+    query_fields = %Query{} |> Map.from_struct() |> Map.keys()
     struct!(%Query{}, Map.take(parsed_query_params, query_fields))
   end
 
