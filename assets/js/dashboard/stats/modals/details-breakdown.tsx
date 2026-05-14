@@ -21,7 +21,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { StatsQuery, OrderByEntry } from '../../stats-query'
+import { OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -57,7 +57,7 @@ type PaginatedData = { pages: QueryApiResponse[] }
 type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
   defaultOrderBy?: MetricOrderBy
-  addSearchFilter?: (statsQuery: StatsQuery, search: string) => StatsQuery
+  searchEnabled?: boolean
   onDataReady?: (data: PaginatedData) => void
 }
 
@@ -88,7 +88,7 @@ export function DetailsBreakdown({
   defaultOrderBy = [] as MetricOrderBy,
   getFilterInfo,
   getExternalLinkUrl,
-  addSearchFilter,
+  searchEnabled = true,
   onDataReady
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
@@ -247,7 +247,7 @@ export function DetailsBreakdown({
       {...apiState}
       data={tableData}
       columns={columns}
-      onSearch={addSearchFilter ? setSearch : undefined}
+      onSearch={searchEnabled ? setSearch : undefined}
       getRowKey={(row) => row.dimensions[0]}
     />
   )
