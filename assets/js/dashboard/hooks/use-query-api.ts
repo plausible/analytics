@@ -87,13 +87,13 @@ export function useQueryApi<
     queryKey: statsReportQueryKey,
     enabled,
     queryFn: async ({ queryKey }) => {
-      const [_, keyOpts] = queryKey as StatsReportQueryKey
+      const [_, keyOpts] = queryKey
       const response = await stats<TResponse>(site, getStatsQuery(queryKey))
       return withExtraContext(response, keyOpts.dashboardState)
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
-      const [_, keyOpts] = queryKey as StatsReportQueryKey
+      const [_, keyOpts] = queryKey
       return getStaleTime({
         siteTimezoneOffset: site.offset,
         siteStatsBegin: site.statsBegin,
