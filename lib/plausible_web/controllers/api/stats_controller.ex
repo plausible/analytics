@@ -25,13 +25,15 @@ defmodule PlausibleWeb.Api.StatsController do
   @not_set "(not set)"
 
   on_ee do
-    plug PlausibleWeb.SuperAdminOnlyPlug
-         when action in [
-                :exploration_next,
-                :exploration_funnel,
-                :exploration_next_with_funnel,
-                :exploration_featured_funnel
-              ]
+    if Mix.env() != :e2e_test do
+      plug PlausibleWeb.SuperAdminOnlyPlug
+           when action in [
+                  :exploration_next,
+                  :exploration_funnel,
+                  :exploration_next_with_funnel,
+                  :exploration_featured_funnel
+                ]
+    end
   end
 
   plug(:date_validation_plug when action not in [:query])
@@ -140,8 +142,13 @@ defmodule PlausibleWeb.Api.StatsController do
     alias Plausible.Stats.Exploration
 
     @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
-    @exploration_hourly_limit 600
-    @exploration_burst_limit 10
+    if Mix.env() == :e2e_test do
+      @exploration_hourly_limit 100_000
+      @exploration_burst_limit 100_000
+    else
+      @exploration_hourly_limit 600
+      @exploration_burst_limit 10
+    end
 
     defp check_exploration_rate_limit(site) do
       key = "exploration:#{site.id}"
