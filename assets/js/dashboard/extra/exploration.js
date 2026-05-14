@@ -1096,10 +1096,6 @@ function useScrollActiveColumnIntoView(containerRef, stepsLength) {
 }
 
 export function FunnelExploration() {
-  return <FunnelExplorationInner />
-}
-
-function FunnelExplorationInner() {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [inViewport, setInViewport] = useState(false)
