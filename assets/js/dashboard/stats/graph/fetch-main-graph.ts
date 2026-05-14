@@ -61,7 +61,7 @@ function getMainGraphQuery(queryKey: StatsReportQueryKey): StatsQuery {
   const statsQuery = createStatsQuery(dashboardState, reportParams)
 
   if (isRealTimeDashboard(dashboardState)) {
-    statsQuery.date_range = DashboardPeriod.realtime_30m
+    return { ...statsQuery, date_range: DashboardPeriod.realtime_30m }
   }
 
   return statsQuery
