@@ -9,7 +9,6 @@ import * as api from '../../api'
 import { Interval } from './intervals'
 import { StatsReportQueryKey, useQueryApi } from '../../hooks/use-query-api'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { useMemo } from 'react'
 import { UseQueryResult } from '@tanstack/react-query'
 
 export function useMainGraphQuery(
@@ -22,26 +21,24 @@ export function useMainGraphQuery(
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 
-  const mainGraphQueryKey = useMemo((): StatsReportQueryKey => {
-    return [
-      'main-graph',
-      {
-        dashboardState,
-        reportParams: {
-          // Should default to visitors if metric is null? Currently possibly invalid
-          // query with `metrics: [null]` which will never run due to `enabled: false`
-          metrics: [metric!],
-          dimensions: [`time:${interval}`],
-          include: {
-            time_labels: true,
-            partial_time_labels: true,
-            empty_metrics: true,
-            present_index: true
-          }
+  const mainGraphQueryKey: StatsReportQueryKey = [
+    'main-graph',
+    {
+      dashboardState,
+      reportParams: {
+        // Should default to visitors if metric is null? Currently possibly invalid
+        // query with `metrics: [null]` which will never run due to `enabled: false`
+        metrics: [metric!],
+        dimensions: [`time:${interval}`],
+        include: {
+          time_labels: true,
+          partial_time_labels: true,
+          empty_metrics: true,
+          present_index: true
         }
       }
-    ]
-  }, [dashboardState, metric, interval])
+    }
+  ]
 
   const { apiState, isRealtimeSilentUpdate } = useQueryApi<MainGraphResponse>(
     site,
