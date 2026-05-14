@@ -1036,9 +1036,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     state.steps,
     state.activeFilter,
     inViewport,
-    retryCount,
-    JOURNEY_END_EVENT,
-    MAX_JOURNEY_STEPS
+    retryCount
   ])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
