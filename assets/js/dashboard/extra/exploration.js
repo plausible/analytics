@@ -22,8 +22,6 @@ import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
-const JOURNEY_END_EVENT = '__journey_end__'
-
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
 const DIRECTION_OPTIONS = [
@@ -33,7 +31,6 @@ const DIRECTION_OPTIONS = [
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
-const MAX_JOURNEY_STEPS = 20
 const MAX_VISIBLE_CANDIDATES = 10
 const MIN_GRID_COLUMNS = 3
 const PRELOAD_MAX_STEPS = 2
@@ -105,12 +102,12 @@ function stepsToJourneyParam(steps) {
   )
 }
 
-function maybeEmptyResults(results, activeFilter) {
+function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
   if (
     results.length === 0 ||
     (!activeFilter &&
       results.length === 1 &&
-      results[0].step.name === JOURNEY_END_EVENT)
+      results[0].step.name === journeyEndEvent)
   ) {
     return []
   } else {
@@ -370,9 +367,10 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
-  const isJourneyEnd = step.name === JOURNEY_END_EVENT
+  const { explorationJourneyEndEvent: journeyEndEvent } = useSiteContext()
+  const isJourneyEnd = step.name === journeyEndEvent
   const isCustomEvent =
-    step.name !== 'pageview' && step.name !== JOURNEY_END_EVENT
+    step.name !== 'pageview' && step.name !== journeyEndEvent
   const isGoal = step.is_goal
 
   const visitorsToShow =
@@ -528,6 +526,7 @@ function ColumnEmptyState({
 }
 
 function MaxDepthColumn({ colIndex, header }) {
+  const { explorationMaxJourneySteps: maxJourneySteps } = useSiteContext()
   return (
     <div
       data-exploration-column={colIndex}
@@ -541,7 +540,7 @@ function MaxDepthColumn({ colIndex, header }) {
       <div className="h-92 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
         <span className="flex flex-col items-center gap-2">
           <FlagIcon className="size-4.5" />
-          {`You've reached the maximum journey depth of ${MAX_JOURNEY_STEPS} steps.`}
+          {`You've reached the maximum journey depth of ${maxJourneySteps} steps.`}
         </span>
       </div>
     </div>
@@ -679,6 +678,10 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
 // useExplorationData manages all async data fetching, cancellation, and
 // journey state.
 function useExplorationData(site, dashboardState, inViewport) {
+  const {
+    explorationMaxJourneySteps: maxJourneySteps,
+    explorationJourneyEndEvent: journeyEndEvent
+  } = useSiteContext()
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -797,7 +800,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     const steps = state.steps
     const activeFilter = state.activeFilter
 
-    if (steps.length >= MAX_JOURNEY_STEPS) {
+    if (steps.length >= maxJourneySteps) {
       setActiveLoading(false)
       return
     }
@@ -854,7 +857,8 @@ function useExplorationData(site, dashboardState, inViewport) {
                     ...prev,
                     activeResults: maybeEmptyResults(
                       r?.next ?? [],
-                      prev.activeFilter
+                      prev.activeFilter,
+                      journeyEndEvent
                     ),
                     rateLimited: false
                   }))
@@ -902,7 +906,8 @@ function useExplorationData(site, dashboardState, inViewport) {
                   ...prev,
                   activeResults: maybeEmptyResults(
                     r?.next ?? [],
-                    prev.activeFilter
+                    prev.activeFilter,
+                    journeyEndEvent
                   ),
                   rateLimited: false
                 }))
@@ -956,7 +961,8 @@ function useExplorationData(site, dashboardState, inViewport) {
             ...prev,
             activeResults: maybeEmptyResults(
               response?.next ?? [],
-              prev.activeFilter
+              prev.activeFilter,
+              journeyEndEvent
             ),
             rateLimited: false
           }
@@ -1091,6 +1097,7 @@ export function FunnelExploration() {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [inViewport, setInViewport] = useState(false)
+  const maxJourneySteps = site.explorationMaxJourneySteps
 
   const {
     state,
@@ -1220,7 +1227,7 @@ export function FunnelExploration() {
                     : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
                   : null
 
-              if (isActive && steps.length >= MAX_JOURNEY_STEPS) {
+              if (isActive && steps.length >= maxJourneySteps) {
                 return (
                   <MaxDepthColumn
                     key={i}

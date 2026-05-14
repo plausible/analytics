@@ -9,6 +9,11 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     funnelsAvailable: dataset.funnelsAvailable === 'true',
     propsAvailable: dataset.propsAvailable === 'true',
     explorationAvailable: dataset.explorationAvailable === 'true',
+    explorationJourneyEndEvent: dataset.explorationJourneyEndEvent!,
+    explorationMaxJourneySteps: parseInt(
+      dataset.explorationMaxJourneySteps!,
+      10
+    ),
     siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
@@ -37,6 +42,8 @@ export const siteContextDefaultValue = {
   hasProps: false,
   funnelsAvailable: false,
   explorationAvailable: false,
+  explorationJourneyEndEvent: '',
+  explorationMaxJourneySteps: 0,
   propsAvailable: false,
   siteSegmentsAvailable: false,
   conversionsOptedOut: false,

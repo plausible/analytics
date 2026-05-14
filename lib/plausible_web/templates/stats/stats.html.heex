@@ -48,6 +48,8 @@
     data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
     data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
     data-exploration-available={Jason.encode!(@exploration_available?)}
+    data-exploration-journey-end-event={@exploration_journey_end_event}
+    data-exploration-max-journey-steps={@exploration_max_journey_steps}
     data-team-identifier={@team_identifier}
     data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
   >
