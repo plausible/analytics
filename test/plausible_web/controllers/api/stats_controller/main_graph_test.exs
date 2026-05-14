@@ -2037,6 +2037,67 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "revenue metric dropped" do
+    @describetag :ee_only
+    setup [:create_user, :log_in, :create_site]
+
+    for revenue_metric <- ["total_revenue", "average_revenue"] do
+      test "#{revenue_metric} without goal filter", %{
+        conn: conn,
+        site: site
+      } do
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+
+      test "#{revenue_metric} with filtered goals mixing currencies", %{
+        conn: conn,
+        site: site
+      } do
+        insert(:goal, site: site, event_name: "PurchaseEUR", currency: "EUR")
+        insert(:goal, site: site, event_name: "PurchaseUSD", currency: "USD")
+
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "filters" => [["is", "event:goal", ["PurchaseUSD", "PurchaseEUR"]]],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+
+      test "#{revenue_metric} with insufficient subscription", %{
+        conn: conn,
+        user: user,
+        site: site
+      } do
+        insert(:goal, site: site, event_name: "PurchaseEUR", currency: "EUR")
+        subscribe_to_growth_plan(user)
+
+        response =
+          do_query_fail(conn, site, %{
+            "date_range" => "day",
+            "metrics" => [unquote(revenue_metric)],
+            "filters" => [["is", "event:goal", ["PurchaseEUR"]]],
+            "dimensions" => ["time:hour"]
+          })
+
+        assert %{"error" => error} = json_response(response, 400)
+        assert error =~ "Revenue metrics were dropped"
+      end
+    end
+  end
+
   describe "total_revenue plot" do
     @describetag :ee_only
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
@@ -2202,6 +2263,49 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                    %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9}
                  ],
                  "change" => [51]
+               }
+             ]
+    end
+
+    test "silently ignores imported data", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.21"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "all",
+          "metrics" => ["total_revenue"],
+          "dimensions" => ["time:month"],
+          "filters" => [["is", "event:goal", ["Payment"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$26.50",
+                     "short" => "$26.5",
+                     "value" => 26.5
+                   }
+                 ]
                }
              ]
     end
@@ -2378,6 +2482,49 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                    %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9}
                  ],
                  "change" => [-25]
+               }
+             ]
+    end
+
+    test "silently ignores imported data", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("3.3"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("1.1"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
+      response =
+        do_query(conn, site, %{
+          "date_range" => "all",
+          "metrics" => ["average_revenue"],
+          "dimensions" => ["time:month"],
+          "filters" => [["is", "event:goal", ["Payment"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["2021-01-01"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$2.20",
+                     "short" => "$2.2",
+                     "value" => 2.2
+                   }
+                 ]
                }
              ]
     end
