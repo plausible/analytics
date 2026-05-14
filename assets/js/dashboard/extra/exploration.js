@@ -326,6 +326,7 @@ function DirectionDropdown({ direction, onChange }) {
   return (
     <div ref={containerRef} className="relative shrink-0">
       <button
+        data-testid={`exploration-direction-${direction}`}
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
       >
@@ -340,6 +341,7 @@ function DirectionDropdown({ direction, onChange }) {
           {DIRECTION_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
+              data-testid={`exploration-direction-${value}`}
               data-selected={direction === value}
               onClick={() => {
                 onChange(value)
@@ -403,7 +405,7 @@ function CandidateCard({
   const onSelectHandler = isJourneyEnd ? () => {} : onSelect
 
   return (
-    <li>
+    <li data-testid="exploration-row">
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
         className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg} ${pointer}`}
@@ -411,12 +413,14 @@ function CandidateCard({
       >
         <div
           className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
+          data-testid="metric-bar"
           style={{ width: `${barWidth}%` }}
         />
 
         <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
           <span
             className={`flex items-center gap-1.5 min-w-0 ${textColor}`}
+            data-testid="metric-label"
             title={
               step.includes_subpaths
                 ? `${step.label} > all (${step.subpaths_count})`
@@ -462,11 +466,11 @@ function VisitorsMetric({ visitors }) {
   if (showTooltip) {
     return (
       <Tooltip info={longNumber} containerRef={{ current: document.body }}>
-        {shortNumber}
+        <span data-testid="metric-value">{shortNumber}</span>
       </Tooltip>
     )
   } else {
-    return shortNumber
+    return <span data-testid="metric-value">{shortNumber}</span>
   }
 }
 
@@ -529,6 +533,7 @@ function MaxDepthColumn({ colIndex, header }) {
   const { explorationMaxJourneySteps: maxJourneySteps } = useSiteContext()
   return (
     <div
+      data-testid={`exploration-column-${colIndex}`}
       data-exploration-column={colIndex}
       className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
     >
@@ -587,6 +592,7 @@ function ExplorationColumn({
 
   return (
     <div
+      data-testid={`exploration-column-${colIndex}`}
       data-exploration-column={colIndex}
       className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
     >
@@ -1151,7 +1157,10 @@ export function FunnelExploration() {
     <LazyLoader onVisible={() => setInViewport(true)}>
       <div className="flex-1 flex flex-col gap-4 pt-4">
         <div className="flex flex-wrap items-center gap-x-3">
-          <h4 className="flex-1 text-base font-semibold dark:text-gray-100">
+          <h4
+            data-testid="exploration-title"
+            className="flex-1 text-base font-semibold dark:text-gray-100"
+          >
             {funnel.length >= 2
               ? `${funnel.length}-step user journey`
               : 'Explore user journeys'}
@@ -1180,6 +1189,7 @@ export function FunnelExploration() {
             }
           >
             <button
+              data-testid="exploration-deselect-all"
               onClick={reset}
               className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
             >
