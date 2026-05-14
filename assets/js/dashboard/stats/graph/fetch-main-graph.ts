@@ -26,8 +26,6 @@ export function useMainGraphQuery(
     {
       dashboardState,
       reportParams: {
-        // Should default to visitors if metric is null? Currently possibly invalid
-        // query with `metrics: [null]` which will never run due to `enabled: false`
         metrics: [metric!],
         dimensions: [`time:${interval}`],
         include: {

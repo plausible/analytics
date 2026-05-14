@@ -24,6 +24,12 @@ export default function VisitorGraph({
 
   const { selectedInterval } = useGraphIntervalContext()
 
+  // Possible future improvement -- currently, if there's no stored metric,
+  // the graph fetch doesn't run until Top Stats are loaded. That's because
+  // Top Stats tell us which metrics are available for the graph. However,
+  // as things stand today, the `visitors` metric is always available and
+  // could become the default selectedMetric, making it possible to fetch
+  // the graph instantly.
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
   )
