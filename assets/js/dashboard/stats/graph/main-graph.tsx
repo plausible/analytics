@@ -39,7 +39,7 @@ import {
 } from './main-graph-data'
 import { Metric, getMetricLabel } from '../metrics'
 
-import { Interval } from './intervals'
+import { extractIntervalFromDimensions, Interval } from './intervals'
 
 const height = 368
 const marginTop = 16
@@ -85,7 +85,7 @@ export const MainGraph = ({
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
   const metric = data.query.metrics[0] as Metric
-  const interval = data.query.dimensions[0].split(':')[1] as Interval
+  const interval = extractIntervalFromDimensions(data.query.dimensions)
   const isRealtime = data.extraContext.isRealtime
 
   useEffect(() => {

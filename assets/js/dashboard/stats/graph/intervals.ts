@@ -43,6 +43,10 @@ const INTERVAL_COARSENESS: Record<Interval, number> = {
   [Interval.month]: 4
 }
 
+export function extractIntervalFromDimensions(dimensions: string[]): Interval {
+  return dimensions[0].split(':')[1] as Interval
+}
+
 /**
  * Returns the intervals available for the current dashboard state.
  *
