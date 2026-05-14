@@ -63,6 +63,18 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
       {:ok, site: site}
     end
 
+    describe "exploration_config/2" do
+      test "returns journey_end_event and max_journey_steps", %{conn: conn, site: site} do
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/exploration/config")
+          |> json_response(200)
+
+        assert resp["journey_end_event"] == "__journey_end__"
+        assert resp["max_journey_steps"] == 20
+      end
+    end
+
     describe "exploration_next/2" do
       test "returns suggestions for the next step", %{conn: conn, site: site} do
         journey =

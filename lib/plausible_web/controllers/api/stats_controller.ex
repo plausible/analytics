@@ -156,6 +156,13 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     end
 
+    def exploration_config(conn, _params) do
+      json(conn, %{
+        journey_end_event: Exploration.Journey.Step.journey_end_event(),
+        max_journey_steps: Exploration.max_steps()
+      })
+    end
+
     def exploration_next(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""

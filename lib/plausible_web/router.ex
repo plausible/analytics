@@ -271,6 +271,8 @@ defmodule PlausibleWeb.Router do
       on_ee do
         get "/:domain/funnels/:id", StatsController, :funnel
 
+        get "/:domain/exploration/config", StatsController, :exploration_config
+
         post "/:domain/exploration/next", StatsController, :exploration_next
         post "/:domain/exploration/funnel", StatsController, :exploration_funnel
 

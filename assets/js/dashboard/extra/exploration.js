@@ -3,7 +3,9 @@ import React, {
   useEffect,
   useLayoutEffect,
   useRef,
-  useCallback
+  useCallback,
+  createContext,
+  useContext
 } from 'react'
 import LazyLoader from '../components/lazy-loader'
 import * as api from '../api'
@@ -22,8 +24,6 @@ import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
-const JOURNEY_END_EVENT = '__journey_end__'
-
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
 const DIRECTION_OPTIONS = [
@@ -33,7 +33,6 @@ const DIRECTION_OPTIONS = [
 
 const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
-const MAX_JOURNEY_STEPS = 20
 const MAX_VISIBLE_CANDIDATES = 10
 const MIN_GRID_COLUMNS = 3
 const PRELOAD_MAX_STEPS = 2
@@ -105,12 +104,12 @@ function stepsToJourneyParam(steps) {
   )
 }
 
-function maybeEmptyResults(results, activeFilter) {
+function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
   if (
     results.length === 0 ||
     (!activeFilter &&
       results.length === 1 &&
-      results[0].step.name === JOURNEY_END_EVENT)
+      results[0].step.name === journeyEndEvent)
   ) {
     return []
   } else {
@@ -135,6 +134,22 @@ function columnHeader(index, direction) {
   }
   const word = direction === DIRECTION.BACKWARD ? 'before' : 'after'
   return `${index} step${index === 1 ? '' : 's'} ${word}`
+}
+
+function fetchExplorationConfig(site) {
+  return api.get(url.apiPath(site, '/exploration/config'))
+}
+
+const ExplorationConfigContext = createContext(null)
+
+function useExplorationConfig(site) {
+  const [config, setConfig] = useState(null)
+
+  useEffect(() => {
+    fetchExplorationConfig(site).then((data) => setConfig(data))
+  }, [site])
+
+  return { config }
 }
 
 function fetchNextWithFunnel(
@@ -370,6 +385,9 @@ function CandidateCard({
   colIndex,
   onSelect
 }) {
+  const { journey_end_event: JOURNEY_END_EVENT } = useContext(
+    ExplorationConfigContext
+  )
   const isJourneyEnd = step.name === JOURNEY_END_EVENT
   const isCustomEvent =
     step.name !== 'pageview' && step.name !== JOURNEY_END_EVENT
@@ -528,6 +546,9 @@ function ColumnEmptyState({
 }
 
 function MaxDepthColumn({ colIndex, header }) {
+  const { max_journey_steps: MAX_JOURNEY_STEPS } = useContext(
+    ExplorationConfigContext
+  )
   return (
     <div
       data-exploration-column={colIndex}
@@ -679,6 +700,10 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
 // useExplorationData manages all async data fetching, cancellation, and
 // journey state.
 function useExplorationData(site, dashboardState, inViewport) {
+  const {
+    max_journey_steps: MAX_JOURNEY_STEPS,
+    journey_end_event: JOURNEY_END_EVENT
+  } = useContext(ExplorationConfigContext)
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
@@ -854,7 +879,8 @@ function useExplorationData(site, dashboardState, inViewport) {
                     ...prev,
                     activeResults: maybeEmptyResults(
                       r?.next ?? [],
-                      prev.activeFilter
+                      prev.activeFilter,
+                      JOURNEY_END_EVENT
                     ),
                     rateLimited: false
                   }))
@@ -902,7 +928,8 @@ function useExplorationData(site, dashboardState, inViewport) {
                   ...prev,
                   activeResults: maybeEmptyResults(
                     r?.next ?? [],
-                    prev.activeFilter
+                    prev.activeFilter,
+                    JOURNEY_END_EVENT
                   ),
                   rateLimited: false
                 }))
@@ -956,7 +983,8 @@ function useExplorationData(site, dashboardState, inViewport) {
             ...prev,
             activeResults: maybeEmptyResults(
               response?.next ?? [],
-              prev.activeFilter
+              prev.activeFilter,
+              JOURNEY_END_EVENT
             ),
             rateLimited: false
           }
@@ -1030,7 +1058,9 @@ function useExplorationData(site, dashboardState, inViewport) {
     state.steps,
     state.activeFilter,
     inViewport,
-    retryCount
+    retryCount,
+    JOURNEY_END_EVENT,
+    MAX_JOURNEY_STEPS
   ])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
@@ -1089,8 +1119,32 @@ function useScrollActiveColumnIntoView(containerRef, stepsLength) {
 
 export function FunnelExploration() {
   const site = useSiteContext()
+  const { config } = useExplorationConfig(site)
+
+  if (!config) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="mx-auto loading pt-4">
+          <div></div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <ExplorationConfigContext.Provider value={config}>
+      <FunnelExplorationInner />
+    </ExplorationConfigContext.Provider>
+  )
+}
+
+function FunnelExplorationInner() {
+  const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [inViewport, setInViewport] = useState(false)
+  const { max_journey_steps: MAX_JOURNEY_STEPS } = useContext(
+    ExplorationConfigContext
+  )
 
   const {
     state,
