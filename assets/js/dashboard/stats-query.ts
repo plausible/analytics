@@ -5,9 +5,15 @@ import {
   FilterKey,
   FilterClause
 } from './dashboard-state'
-import { OrderBy } from './hooks/use-order-by'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
+import {
+  Pagination,
+  SimpleFilterDimensions,
+  CustomPropertyFilterDimensions,
+  TimeDimensions,
+  SortDirection
+} from '../types/query-api'
 import { remapToApiFilters } from './util/filters'
 
 export type FilterModifiers = { case_sensitive?: boolean }
@@ -16,7 +22,14 @@ export type ApiFilter =
   | [FilterOperator, FilterKey, FilterClause[]]
   | [FilterOperator, FilterKey, FilterClause[], FilterModifiers]
 
-type Pagination = { limit: number; offset: number }
+export type NonTimeDimension =
+  | SimpleFilterDimensions
+  | CustomPropertyFilterDimensions
+
+export type Dimension = NonTimeDimension | TimeDimensions | 'time:minute'
+
+export type OrderByEntry = [Metric | NonTimeDimension, SortDirection]
+export type OrderBy = OrderByEntry[]
 
 type DateRange = DashboardPeriod | [string, string]
 type IncludeCompare =
@@ -38,7 +51,7 @@ type QueryInclude = {
 
 export type ReportParams = {
   metrics: Metric[]
-  dimensions?: string[]
+  dimensions: Dimension[]
   include?: Partial<QueryInclude>
   order_by?: OrderBy
   pagination?: Pagination
@@ -48,7 +61,7 @@ export type StatsQuery = {
   date_range: DateRange
   relative_date: string | null
   filters: ApiFilter[]
-  dimensions: string[]
+  dimensions: Dimension[]
   metrics: Metric[]
   include: QueryInclude
   order_by?: OrderBy | null

@@ -15,6 +15,7 @@ import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-cont
 import { SavedSegment, SavedSegments } from '../js/dashboard/filtering/segments'
 import { GraphIntervalProvider } from '../js/dashboard/stats/graph/graph-interval-context'
 import { ImportsIncludedProvider } from '../js/dashboard/stats/graph/imports-included-context'
+import { CurrentVisitorsProvider } from '../js/dashboard/current-visitors-context'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -96,11 +97,13 @@ export const TestContextProviders = ({
             <QueryClientProvider client={queryClient}>
               <RoutelessModalsContextProvider>
                 <DashboardStateContextProvider>
-                  <GraphIntervalProvider>
-                    <ImportsIncludedProvider>
-                      {children}
-                    </ImportsIncludedProvider>
-                  </GraphIntervalProvider>
+                  <CurrentVisitorsProvider>
+                    <GraphIntervalProvider>
+                      <ImportsIncludedProvider>
+                        {children}
+                      </ImportsIncludedProvider>
+                    </GraphIntervalProvider>
+                  </CurrentVisitorsProvider>
                 </DashboardStateContextProvider>
               </RoutelessModalsContextProvider>
             </QueryClientProvider>

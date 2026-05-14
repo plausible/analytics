@@ -6,19 +6,22 @@ import React, {
   useState
 } from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { usePaginatedQueryAPI } from '../../hooks/api-client'
+import {
+  StatsReportId,
+  StatsReportQueryKey,
+  useSearchAndPaginateQueryAPI
+} from '../../hooks/use-query-api'
 import { rootRoute } from '../../router'
 import {
   getStoredOrderBy,
-  Order,
-  OrderBy,
-  SortDirection,
-  useOrderBy,
+  MetricOrderBy,
+  useMetricOrderBy,
   useRememberOrderBy
-} from '../../hooks/use-order-by'
+} from '../../hooks/use-metric-order-by'
+import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { createStatsQuery, StatsQuery } from '../../stats-query'
+import { OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -53,8 +56,8 @@ type PaginatedData = { pages: QueryApiResponse[] }
 
 type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
-  defaultOrderBy?: OrderBy
-  addSearchFilter?: (statsQuery: StatsQuery, search: string) => StatsQuery
+  defaultOrderBy?: MetricOrderBy
+  searchEnabled?: boolean
   onDataReady?: (data: PaginatedData) => void
 }
 
@@ -82,10 +85,10 @@ export function DetailsBreakdown({
   dimensionLabel,
   dimensions,
   metrics,
-  defaultOrderBy = [] as OrderBy,
+  defaultOrderBy = [] as MetricOrderBy,
   getFilterInfo,
   getExternalLinkUrl,
-  addSearchFilter,
+  searchEnabled = true,
   onDataReady
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
@@ -99,7 +102,7 @@ export function DetailsBreakdown({
     fallbackValue: defaultOrderBy
   })
 
-  const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
+  const { orderBy, orderByDictionary, toggleSortByMetric } = useMetricOrderBy({
     metrics,
     defaultOrderBy: storedOrderBy
   })
@@ -110,32 +113,25 @@ export function DetailsBreakdown({
     dimensionLabel
   })
 
-  const effectiveOrderBy = (orderBy.length ? orderBy : storedOrderBy).concat(
-    dimensions.map((dim) => [dim, SortDirection.asc])
-  )
+  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
+    return [
+      dimensions.join(',') as StatsReportId,
+      {
+        dashboardState,
+        reportParams: {
+          metrics,
+          dimensions,
+          order_by: [
+            ...(orderBy.length ? orderBy : storedOrderBy),
+            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ]
+        },
+        search
+      }
+    ]
+  }, [dashboardState, metrics, dimensions, orderBy, storedOrderBy, search])
 
-  const baseStatsQuery: StatsQuery = useMemo(
-    () =>
-      createStatsQuery(dashboardState, {
-        metrics: metrics,
-        dimensions,
-        order_by: effectiveOrderBy as Order[]
-      }),
-    [dashboardState, metrics, dimensions, effectiveOrderBy]
-  )
-
-  const statsQuery: StatsQuery = useMemo(() => {
-    if (search && addSearchFilter) {
-      return addSearchFilter(baseStatsQuery, search)
-    }
-    return baseStatsQuery
-  }, [baseStatsQuery, search, addSearchFilter])
-
-  const apiState = usePaginatedQueryAPI({
-    site,
-    dashboardState,
-    statsQuery
-  })
+  const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
 
   useEffect(() => {
     const pages = apiState.data?.pages
@@ -251,7 +247,7 @@ export function DetailsBreakdown({
       {...apiState}
       data={tableData}
       columns={columns}
-      onSearch={addSearchFilter ? setSearch : undefined}
+      onSearch={searchEnabled ? setSearch : undefined}
       getRowKey={(row) => row.dimensions[0]}
     />
   )

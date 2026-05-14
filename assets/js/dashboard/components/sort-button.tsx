@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react'
-import { cycleSortDirection, SortDirection } from '../hooks/use-order-by-legacy'
+import { cycleSortDirection } from '../hooks/use-order-by-legacy'
+import { SortDirection } from '../../types/query-api'
 import classNames from 'classnames'
 
 export const SortButton = ({
@@ -29,8 +30,8 @@ export const SortButton = ({
           'rounded inline-block size-4',
           'ml-1',
           {
-            [SortDirection.asc]: 'rotate-180',
-            [SortDirection.desc]: 'rotate-0'
+            asc: 'rotate-180',
+            desc: 'rotate-0'
           }[sortDirection ?? next.direction],
           !sortDirection && 'opacity-0',
           !sortDirection && 'group-hover:opacity-100',

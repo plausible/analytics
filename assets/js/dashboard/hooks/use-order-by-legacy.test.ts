@@ -1,7 +1,6 @@
 import { Metric } from '../stats/reports/metrics'
 import {
   OrderBy,
-  SortDirection,
   cycleSortDirection,
   findOrderIndex,
   getOrderByStorageKey,
@@ -15,9 +14,9 @@ describe(`${findOrderIndex.name}`, () => {
   /* prettier-ignore */
   const cases: [OrderBy, Pick<Metric, 'key'>, number][] = [
     [[], { key: 'anything' }, -1],
-    [[['visitors', SortDirection.asc]], { key: 'anything' }, -1],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'bounce_rate'}, 0],
-    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'visitors'}, 1]
+    [[['visitors', 'asc']], { key: 'anything' }, -1],
+    [[['bounce_rate', 'desc'], ['visitors', 'asc']], {key: 'bounce_rate'}, 0],
+    [[['bounce_rate', 'desc'], ['visitors', 'asc']], {key: 'visitors'}, 1]
   ]
 
   test.each(cases)(
@@ -33,25 +32,25 @@ describe(`${cycleSortDirection.name}`, () => {
     [
       null,
       {
-        direction: SortDirection.desc,
+        direction: 'desc',
         hint: 'Press to sort column in descending order'
       }
     ],
     [
-      SortDirection.desc,
+      'desc',
       {
-        direction: SortDirection.asc,
+        direction: 'asc',
         hint: 'Press to sort column in ascending order'
       }
     ],
     [
-      SortDirection.asc,
+      'asc',
       {
-        direction: SortDirection.desc,
+        direction: 'desc',
         hint: 'Press to sort column in descending order'
       }
     ]
-  ])(
+  ] as const)(
     'for current direction %p returns %p',
     (currentDirection, expectedOutput) => {
       expect(cycleSortDirection(currentDirection)).toEqual(expectedOutput)
@@ -61,20 +60,12 @@ describe(`${cycleSortDirection.name}`, () => {
 
 describe(`${rearrangeOrderBy.name}`, () => {
   const cases: [Pick<Metric, 'key'>, OrderBy, OrderBy][] = [
-    [
-      { key: 'visitors' },
-      [['visitors', SortDirection.asc]],
-      [['visitors', SortDirection.desc]]
-    ],
-    [
-      { key: 'visitors' },
-      [['visitors', SortDirection.desc]],
-      [['visitors', SortDirection.asc]]
-    ],
+    [{ key: 'visitors' }, [['visitors', 'asc']], [['visitors', 'desc']]],
+    [{ key: 'visitors' }, [['visitors', 'desc']], [['visitors', 'asc']]],
     [
       { key: 'visit_duration' },
-      [['visitors', SortDirection.asc]],
-      [['visit_duration', SortDirection.desc]]
+      [['visitors', 'asc']],
+      [['visit_duration', 'desc']]
     ]
   ]
   it.each(cases)(
@@ -114,7 +105,7 @@ describe(`storing detailed report preferred order`, () => {
 
   it('does not store invalid value', () => {
     maybeStoreOrderBy({
-      orderBy: [['foo', SortDirection.desc]],
+      orderBy: [['foo', 'desc']],
       domain,
       reportInfo,
       metrics: [{ key: 'foo', sortable: false }]
@@ -126,7 +117,7 @@ describe(`storing detailed report preferred order`, () => {
 
   it('falls back to fallbackValue if metric has become unsortable between storing and retrieving', () => {
     maybeStoreOrderBy({
-      orderBy: [['c', SortDirection.desc]],
+      orderBy: [['c', 'desc']],
       domain,
       reportInfo,
       metrics: [{ key: 'c', sortable: true }]
@@ -140,13 +131,13 @@ describe(`storing detailed report preferred order`, () => {
         domain,
         reportInfo,
         metrics: [{ key: 'c', sortable: false }],
-        fallbackValue: [['visitors', SortDirection.desc]]
+        fallbackValue: [['visitors', 'desc']]
       })
-    ).toEqual([['visitors', SortDirection.desc]])
+    ).toEqual([['visitors', 'desc']])
   })
 
   it('retrieves stored value correctly', () => {
-    const input = [['any-column', SortDirection.asc]]
+    const input = [['any-column', 'asc']]
     localStorage.setItem(
       getOrderByStorageKey(domain, reportInfo),
       JSON.stringify(input)
@@ -156,7 +147,7 @@ describe(`storing detailed report preferred order`, () => {
         domain,
         reportInfo,
         metrics: [{ key: 'any-column', sortable: true }],
-        fallbackValue: [['visitors', SortDirection.desc]]
+        fallbackValue: [['visitors', 'desc']]
       })
     ).toEqual(input)
   })

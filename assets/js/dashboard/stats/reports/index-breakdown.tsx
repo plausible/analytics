@@ -4,9 +4,7 @@ import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { getStaleTime } from '../../hooks/api-client'
-import { createStatsQuery } from '../../stats-query'
-import type { StatsQuery } from '../../stats-query'
+import { OrderByEntry } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
@@ -18,12 +16,7 @@ import {
   extractMetricValue
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
-import {
-  QueryResultRow,
-  QueryResultQuery,
-  QueryApiResponse,
-  stats
-} from '../../api'
+import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
@@ -32,11 +25,11 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { DashboardPeriod } from '../../dashboard-time-periods'
-import { DashboardState } from '../../dashboard-state'
-import { SortDirection } from '../../hooks/use-order-by-legacy'
-import { OrderBy } from '../../hooks/use-order-by'
+import {
+  StatsReportId,
+  StatsReportQueryKey,
+  useQueryApi
+} from '../../hooks/use-query-api'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
@@ -71,71 +64,36 @@ export function IndexBreakdown({
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
-  const isRealtime = dashboardState.period === DashboardPeriod.realtime
-  const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState(false)
-  const queryClient = useQueryClient()
 
-  const statsQuery: StatsQuery = useMemo(() => {
-    return createStatsQuery(dashboardState, {
-      metrics,
-      dimensions,
-      order_by: [['visitors', SortDirection.desc]].concat(
-        dimensions.map((dim) => [dim, SortDirection.asc])
-      ) as OrderBy,
-      pagination: { limit: MAX_ITEMS, offset: 0 }
-    })
+  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
+    return [
+      dimensions.join(',') as StatsReportId,
+      {
+        dashboardState,
+        reportParams: {
+          metrics,
+          dimensions,
+          order_by: [
+            ['visitors', 'desc'],
+            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ],
+          pagination: { limit: MAX_ITEMS, offset: 0 }
+        }
+      }
+    ]
   }, [dashboardState, metrics, dimensions])
 
-  const dimensionKey = statsQuery.dimensions.join(',')
-
-  const apiState = useQuery<QueryApiResponse>({
-    queryKey: [dimensionKey, dashboardState],
-    enabled: visible,
-    queryFn: () => stats(site, statsQuery),
-    staleTime: getStaleTime({
-      siteTimezoneOffset: site.offset,
-      siteStatsBegin: site.statsBegin,
-      ...dashboardState
-    })
-  })
+  const { apiState, isRealtimeSilentUpdate } = useQueryApi(
+    site,
+    statsReportQueryKey,
+    { enabled: visible }
+  )
 
   useEffect(() => {
     if (apiState.data && typeof onDataReady === 'function') {
       onDataReady(apiState.data)
     }
   }, [apiState.data, onDataReady])
-
-  useEffect(() => {
-    if (!apiState.isRefetching) {
-      setIsRealtimeSilentUpdate(false)
-    }
-  }, [apiState.isRefetching])
-
-  useEffect(() => {
-    if (!isRealtime) {
-      setIsRealtimeSilentUpdate(false)
-    }
-  }, [isRealtime])
-
-  useEffect(() => {
-    const onTick = () => {
-      setIsRealtimeSilentUpdate(true)
-      queryClient.invalidateQueries({
-        predicate: ({ queryKey }) =>
-          queryKey[0] === dimensionKey &&
-          typeof queryKey[1] === 'object' &&
-          (queryKey[1] as DashboardState)?.period === DashboardPeriod.realtime
-      })
-    }
-
-    if (isRealtime) {
-      document.addEventListener('tick', onTick)
-    }
-
-    return () => {
-      document.removeEventListener('tick', onTick)
-    }
-  }, [queryClient, isRealtime, dimensionKey])
 
   const query: QueryResultQuery | null = apiState.data?.query ?? null
 

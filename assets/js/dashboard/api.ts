@@ -5,6 +5,7 @@ import { StatsQuery } from './stats-query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
+import { MainGraphResponse } from './stats/graph/fetch-main-graph'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
@@ -37,10 +38,21 @@ export type QueryResultRow = {
   comparison?: { metrics: Array<number>; change: Array<number> }
 }
 
+// Added client-side in the queryFn before storing to TanStack cache.
+// Needed to make sure that the time/metric labels we're constructing
+// in stats reports are in sync with the dashboardState that was used
+// to make that query. Otherwise, relying on current dashboardState
+// while rendering previous (placeholder) data, it'd be out of sync.
+export type ExtraContext = {
+  isRealtime: boolean
+  hasConversionGoalFilter: boolean
+}
+
 export type QueryApiResponse = {
   query: QueryResultQuery
   meta: QueryResultMeta
   results: QueryResultRow[]
+  extraContext: ExtraContext
 }
 
 export class ApiError extends Error {
@@ -141,7 +153,9 @@ function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
-export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
+export async function stats<
+  TResponse extends QueryApiResponse | MainGraphResponse
+>(site: PlausibleSite, statsQuery: StatsQuery) {
   const sharedLinkParams = getSharedLinkSearchParams()
   const queryString = sharedLinkParams.auth
     ? new URLSearchParams(sharedLinkParams).toString()
@@ -158,7 +172,7 @@ export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
     body: JSON.stringify(statsQuery)
   })
 
-  return handleApiResponse(response)
+  return (await handleApiResponse(response)) as TResponse
 }
 
 export async function get(

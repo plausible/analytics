@@ -38,9 +38,8 @@ import {
   MainGraphSeriesName
 } from './main-graph-data'
 import { Metric, getMetricLabel } from '../metrics'
-import { useDashboardStateContext } from '../../dashboard-state-context'
-import { hasConversionGoalFilter } from '../../util/filters'
-import { Interval } from './intervals'
+
+import { extractIntervalFromDimensions, Interval } from './intervals'
 
 const height = 368
 const marginTop = 16
@@ -49,11 +48,6 @@ const marginBottom = 32
 const defaultMarginLeft = 16 // this is adjusted by the Graph component based on y-axis label width
 const hoverBuffer = 4
 const HORIZONTAL_PAN_DELAY_MS = 100
-
-type MainGraphData = MainGraphResponse & {
-  period: DashboardPeriod
-  interval: Interval
-}
 
 type MainGraphYValues = Readonly<
   [
@@ -80,7 +74,7 @@ export const MainGraph = ({
   data
 }: {
   width: number
-  data: MainGraphData
+  data: MainGraphResponse
 }) => {
   const site = useSiteContext()
   const { mode } = useTheme()
@@ -91,8 +85,8 @@ export const MainGraph = ({
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
   const metric = data.query.metrics[0] as Metric
-  const interval = data.interval
-  const period = data.period
+  const interval = extractIntervalFromDimensions(data.query.dimensions)
+  const isRealtime = data.extraContext.isRealtime
 
   useEffect(() => {
     setTooltip(initialTooltipState)
@@ -160,7 +154,7 @@ export const MainGraph = ({
                   startEndLabels: mainSeriesStartEndLabels
                 }),
                 interval,
-                period,
+                isRealtime,
                 bucketIndex,
                 totalBuckets: remappedData.length
               })
@@ -244,7 +238,15 @@ export const MainGraph = ({
       settings,
       gradients
     }
-  }, [site, data, interval, period, primaryGradient, secondaryGradient, metric])
+  }, [
+    site,
+    data,
+    interval,
+    isRealtime,
+    primaryGradient,
+    secondaryGradient,
+    metric
+  ])
 
   const getFormattedValue = useCallback(
     (value: MetricValue) => MetricFormatterShort[metric](value),
@@ -391,7 +393,8 @@ export const MainGraph = ({
           showZoomToPeriod={!!zoomDate}
           shouldShowYear={!yearIsUnambiguous}
           shouldShowDate={!dateIsUnambiguous}
-          period={period}
+          isRealtime={isRealtime}
+          hasConversionGoalFilter={data.extraContext.hasConversionGoalFilter}
           interval={interval}
           metric={metric}
           x={tooltip.x}
@@ -416,7 +419,8 @@ const MainGraphTooltip = ({
   metric,
   getFormattedValue,
   interval,
-  period,
+  isRealtime,
+  hasConversionGoalFilter,
   shouldShowDate,
   shouldShowYear,
   maxX,
@@ -432,7 +436,8 @@ const MainGraphTooltip = ({
   metric: Metric
   getFormattedValue: (value: MetricValue) => string
   interval: Interval
-  period: DashboardPeriod
+  isRealtime: boolean
+  hasConversionGoalFilter: boolean
   shouldShowYear: boolean
   shouldShowDate: boolean
   x: number
@@ -445,10 +450,7 @@ const MainGraphTooltip = ({
   persistent: boolean
   onClick?: () => void
 }) => {
-  const { dashboardState } = useDashboardStateContext()
-  const metricLabel = getMetricLabel(metric, {
-    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
-  })
+  const metricLabel = getMetricLabel(metric, { hasConversionGoalFilter })
   const { main, comparison, change } = datum
   return (
     <GraphTooltipWrapper
@@ -481,7 +483,7 @@ const MainGraphTooltip = ({
                 <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
                 <div className="whitespace-nowrap">
                   {getFullBucketLabel(main.timeLabel, {
-                    period,
+                    isRealtime,
                     interval,
                     shouldShowYear,
                     shouldShowDate,
@@ -503,7 +505,7 @@ const MainGraphTooltip = ({
                 <div className="size-2 flex-none mr-2 rounded-full bg-gray-500"></div>
                 <div className="whitespace-nowrap">
                   {getFullBucketLabel(comparison.timeLabel, {
-                    period,
+                    isRealtime,
                     interval,
                     shouldShowYear,
                     shouldShowDate,
@@ -561,7 +563,7 @@ type BucketLabelParams = {
   shouldShowYear: boolean
   shouldShowDate: boolean
   interval: Interval
-  period: DashboardPeriod
+  isRealtime: boolean
   bucketIndex: number
   totalBuckets: number
 }
@@ -572,7 +574,7 @@ const getBucketLabel = (
   {
     shouldShowYear,
     shouldShowDate,
-    period,
+    isRealtime,
     interval,
     bucketIndex,
     totalBuckets
@@ -596,7 +598,7 @@ const getBucketLabel = (
       return time
     }
     case Interval.minute: {
-      if (period === DashboardPeriod.realtime) {
+      if (isRealtime) {
         const minutesAgo = totalBuckets - bucketIndex
         return `-${minutesAgo}m`
       }
@@ -618,7 +620,7 @@ const getFullBucketLabel = (
   {
     shouldShowYear,
     shouldShowDate,
-    period,
+    isRealtime,
     interval,
     bucketIndex,
     totalBuckets,
@@ -632,7 +634,7 @@ const getFullBucketLabel = (
         shouldShowYear,
         shouldShowDate,
         interval,
-        period,
+        isRealtime,
         bucketIndex,
         totalBuckets
       })
@@ -643,7 +645,7 @@ const getFullBucketLabel = (
         shouldShowYear,
         shouldShowDate,
         interval,
-        period,
+        isRealtime,
         bucketIndex,
         totalBuckets
       })
@@ -662,7 +664,7 @@ const getFullBucketLabel = (
       return time
     }
     case Interval.minute: {
-      if (period === DashboardPeriod.realtime) {
+      if (isRealtime) {
         const minutesAgo = totalBuckets - bucketIndex
         return minutesAgo === 1 ? `1 minute ago` : `${minutesAgo} minutes ago`
       }

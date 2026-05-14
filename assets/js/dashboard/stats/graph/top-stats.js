@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatTopStatsData } from './fetch-top-stats'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
@@ -6,6 +7,7 @@ import { formatDateRange, formatDayShort, parseUTCDate } from '../../util/date'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
+import { useCurrentVisitorsContext } from '../../current-visitors-context'
 import { ChangeArrow } from '../reports/change-arrow'
 import {
   MetricFormatterShort,
@@ -32,8 +34,19 @@ export default function TopStats({
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
+  const {
+    topStats,
+    meta,
+    from,
+    to,
+    comparingFrom,
+    comparingTo,
+    timeRange,
+    comparisonTimeRange
+  } = formatTopStatsData(data)
+
   const isComparison =
-    (dashboardState.comparison && data && data.comparingFrom !== null) || false
+    (dashboardState.comparison && comparingFrom !== null) || false
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
@@ -70,7 +83,7 @@ export default function TopStats({
   }
 
   function warningText(metric) {
-    const warning = data.meta.metric_warnings?.[metric]
+    const warning = meta.metric_warnings?.[metric]
     if (!warning) {
       return null
     }
@@ -182,9 +195,9 @@ export default function TopStats({
             </span>
             {isComparison ? (
               <p className="text-xs dark:text-gray-100 font-medium">
-                {data.timeRange
-                  ? `${formatDayShort(parseUTCDate(data.from))}, ${data.timeRange}`
-                  : formatDateRange(site, data.from, data.to)}
+                {timeRange
+                  ? `${formatDayShort(parseUTCDate(from))}, ${timeRange}`
+                  : formatDateRange(site, from, to)}
               </p>
             ) : null}
           </div>
@@ -198,9 +211,9 @@ export default function TopStats({
                 {topStatNumberShort(stat.metric, stat.comparisonValue)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                {data.comparisonTimeRange
-                  ? `${formatDayShort(parseUTCDate(data.comparingFrom))}, ${data.comparisonTimeRange}`
-                  : formatDateRange(site, data.comparingFrom, data.comparingTo)}
+                {comparisonTimeRange
+                  ? `${formatDayShort(parseUTCDate(comparingFrom))}, ${comparisonTimeRange}`
+                  : formatDateRange(site, comparingFrom, comparingTo)}
               </p>
             </div>
           ) : null}
@@ -209,8 +222,26 @@ export default function TopStats({
     )
   }
 
-  const stats =
-    data && data.topStats.filter((stat) => stat.value !== null).map(renderStat)
+  const currentVisitors = useCurrentVisitorsContext()
+
+  const currentVisitorsStat =
+    dashboardState.period === 'realtime' && currentVisitors !== null
+      ? {
+          metric: 'visitors',
+          value: currentVisitors,
+          name: 'Current visitors',
+          graphable: false
+        }
+      : null
+
+  const allTopStats = [
+    ...(currentVisitorsStat ? [currentVisitorsStat] : []),
+    ...topStats
+  ]
+
+  const stats = allTopStats
+    .filter((stat) => stat.value !== null)
+    .map(renderStat)
 
   if (stats && dashboardState.period === 'realtime') {
     stats.push(blinkingDot())

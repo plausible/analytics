@@ -1,77 +1,72 @@
 import * as api from '../../api'
 import { DashboardState } from '../../dashboard-state'
-import { Metric, getMetricLabel } from '../metrics'
+import { getMetricLabel, Metric } from '../metrics'
 import {
   ComparisonMode,
   DashboardPeriod,
   isComparisonEnabled,
   isComparisonForbidden
 } from '../../dashboard-time-periods'
-import { PlausibleSite } from '../../site-context'
-import { createStatsQuery, ReportParams, StatsQuery } from '../../stats-query'
+import { PlausibleSite, useSiteContext } from '../../site-context'
+import { createStatsQuery, StatsQuery } from '../../stats-query'
 import {
   hasConversionGoalFilter,
   hasPageFilter,
   isRealTimeDashboard
 } from '../../util/filters'
+import { StatsReportQueryKey, useQueryApi } from '../../hooks/use-query-api'
+import { useMemo } from 'react'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
-export function topStatsQueries(
-  dashboardState: DashboardState,
-  metrics: Metric[]
-): [StatsQuery, StatsQuery | null] {
-  let currentVisitorsQuery = null
+export function useTopStatsQuery() {
+  const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
+
+  const topStatsQueryKey = useMemo((): StatsReportQueryKey => {
+    return [
+      'top-stats',
+      {
+        dashboardState,
+        reportParams: {
+          metrics: chooseMetrics(site, dashboardState),
+          dimensions: [],
+          include: { imports_meta: true }
+        }
+      }
+    ]
+  }, [site, dashboardState])
+
+  const { apiState, isRealtimeSilentUpdate } = useQueryApi(
+    site,
+    topStatsQueryKey,
+    { getStatsQuery: getTopStatsQuery }
+  )
+
+  return { apiState, isRealtimeSilentUpdate }
+}
+
+export function getTopStatsQuery(queryKey: StatsReportQueryKey): StatsQuery {
+  const [_reportId, keyOpts] = queryKey
+  const { dashboardState, reportParams } = keyOpts
+
+  const statsQuery = createStatsQuery(dashboardState, reportParams)
+
+  if (
+    !isComparisonEnabled(dashboardState.comparison) &&
+    !isComparisonForbidden({
+      period: dashboardState.period,
+      segmentIsExpanded: false
+    })
+  ) {
+    statsQuery.include.compare = ComparisonMode.previous_period
+  }
 
   if (isRealTimeDashboard(dashboardState)) {
-    currentVisitorsQuery = createStatsQuery(dashboardState, {
-      metrics: ['visitors']
-    })
-
-    currentVisitorsQuery.filters = []
+    statsQuery.date_range = DashboardPeriod.realtime_30m
   }
-  const topStatsQuery = constructTopStatsQuery(dashboardState, metrics)
 
-  return [topStatsQuery, currentVisitorsQuery]
+  return statsQuery
 }
-
-export async function fetchTopStats(
-  site: PlausibleSite,
-  dashboardState: DashboardState
-) {
-  const metrics = chooseMetrics(site, dashboardState)
-  const [topStatsQuery, currentVisitorsQuery] = topStatsQueries(
-    dashboardState,
-    metrics
-  )
-  const topStatsPromise = api.stats(site, topStatsQuery)
-
-  const currentVisitorsPromise = currentVisitorsQuery
-    ? api.stats(site, currentVisitorsQuery)
-    : null
-
-  const [topStatsResponse, currentVisitorsResponse] = await Promise.all([
-    topStatsPromise,
-    currentVisitorsPromise
-  ])
-
-  const metricLabelSuffix = isRealTimeDashboard(dashboardState)
-    ? ' (last 30 min)'
-    : ''
-
-  const formattedMetrics = metrics.map((key) => ({
-    key,
-    label: `${getMetricLabel(key, {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
-    })}${metricLabelSuffix}`
-  }))
-
-  return formatTopStatsData(
-    topStatsResponse,
-    currentVisitorsResponse,
-    formattedMetrics
-  )
-}
-
-export type MetricDef = { key: Metric; label: string }
 
 export function chooseMetrics(
   site: Pick<PlausibleSite, 'revenueGoals'>,
@@ -110,32 +105,13 @@ export function chooseMetrics(
   }
 }
 
-function constructTopStatsQuery(
-  dashboardState: DashboardState,
-  metrics: Metric[]
-): StatsQuery {
-  const reportParams: ReportParams = {
-    metrics,
-    include: { imports_meta: true }
-  }
+function getTopStatMetricLabel(
+  metricKey: Metric,
+  { isRealtime, hasConversionGoalFilter }: api.ExtraContext
+) {
+  const metricLabelSuffix = isRealtime ? ' (last 30 min)' : ''
 
-  const statsQuery = createStatsQuery(dashboardState, reportParams)
-
-  if (
-    !isComparisonEnabled(dashboardState.comparison) &&
-    !isComparisonForbidden({
-      period: dashboardState.period,
-      segmentIsExpanded: false
-    })
-  ) {
-    statsQuery.include.compare = ComparisonMode.previous_period
-  }
-
-  if (isRealTimeDashboard(dashboardState)) {
-    statsQuery.date_range = DashboardPeriod.realtime_30m
-  }
-
-  return statsQuery
+  return `${getMetricLabel(metricKey, { hasConversionGoalFilter })}${metricLabelSuffix}`
 }
 
 type TopStatItem = {
@@ -147,36 +123,17 @@ type TopStatItem = {
   comparisonValue?: number
 }
 
-export function formatTopStatsData(
-  topStatsResponse: api.QueryApiResponse,
-  currentVisitorsResponse: api.QueryApiResponse | null,
-  metrics: MetricDef[]
-) {
-  const { query, meta, results } = topStatsResponse
+export function formatTopStatsData(topStatsResponse: api.QueryApiResponse) {
+  const { query, meta, results, extraContext } = topStatsResponse
 
   const topStats: TopStatItem[] = []
 
-  if (currentVisitorsResponse) {
-    topStats.push({
-      metric: currentVisitorsResponse.query.metrics[0],
-      value: currentVisitorsResponse.results[0].metrics[0],
-      name: 'Current visitors',
-      graphable: false
-    })
-  }
-
   for (let i = 0; i < query.metrics.length; i++) {
     const metricKey = query.metrics[i]
-    const metricDef = metrics.find((m) => m.key === metricKey)
-
-    if (!metricDef) {
-      throw new Error('API response returned a metric that was not asked for')
-    }
-
     topStats.push({
       metric: metricKey,
       value: results[0].metrics[i],
-      name: metricDef.label,
+      name: getTopStatMetricLabel(metricKey, extraContext),
       graphable: true,
       change: results[0].comparison?.change[i],
       comparisonValue: results[0].comparison?.metrics[i]
