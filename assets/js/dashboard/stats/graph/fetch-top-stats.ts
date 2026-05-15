@@ -15,26 +15,23 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 import { StatsReportQueryKey, useQueryApi } from '../../hooks/use-query-api'
-import { useMemo } from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 
 export function useTopStatsQuery() {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 
-  const topStatsQueryKey = useMemo((): StatsReportQueryKey => {
-    return [
-      'top-stats',
-      {
-        dashboardState,
-        reportParams: {
-          metrics: chooseMetrics(site, dashboardState),
-          dimensions: [],
-          include: { imports_meta: true }
-        }
+  const topStatsQueryKey: StatsReportQueryKey = [
+    'top-stats',
+    {
+      dashboardState,
+      reportParams: {
+        metrics: chooseMetrics(site, dashboardState),
+        dimensions: [],
+        include: { imports_meta: true }
       }
-    ]
-  }, [site, dashboardState])
+    }
+  ]
 
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,

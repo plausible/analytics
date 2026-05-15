@@ -65,23 +65,21 @@ export function IndexBreakdown({
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
 
-  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
-    return [
-      dimensions.join(',') as StatsReportId,
-      {
-        dashboardState,
-        reportParams: {
-          metrics,
-          dimensions,
-          order_by: [
-            ['visitors', 'desc'],
-            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-          ],
-          pagination: { limit: MAX_ITEMS, offset: 0 }
-        }
+  const statsReportQueryKey: StatsReportQueryKey = [
+    dimensions.join(',') as StatsReportId,
+    {
+      dashboardState,
+      reportParams: {
+        metrics,
+        dimensions,
+        order_by: [
+          ['visitors', 'desc'],
+          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+        ],
+        pagination: { limit: MAX_ITEMS, offset: 0 }
       }
-    ]
-  }, [dashboardState, metrics, dimensions])
+    }
+  ]
 
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,

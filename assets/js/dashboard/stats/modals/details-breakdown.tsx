@@ -113,23 +113,21 @@ export function DetailsBreakdown({
     dimensionLabel
   })
 
-  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
-    return [
-      dimensions.join(',') as StatsReportId,
-      {
-        dashboardState,
-        reportParams: {
-          metrics,
-          dimensions,
-          order_by: [
-            ...(orderBy.length ? orderBy : storedOrderBy),
-            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-          ]
-        },
-        search
-      }
-    ]
-  }, [dashboardState, metrics, dimensions, orderBy, storedOrderBy, search])
+  const statsReportQueryKey: StatsReportQueryKey = [
+    dimensions.join(',') as StatsReportId,
+    {
+      dashboardState,
+      reportParams: {
+        metrics,
+        dimensions,
+        order_by: [
+          ...(orderBy.length ? orderBy : storedOrderBy),
+          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+        ]
+      },
+      search
+    }
+  ]
 
   const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
 
