@@ -123,6 +123,20 @@ defmodule PlausibleWeb.AuthController do
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
 
+    with :ok <- Auth.rate_limit(:activation_ip, conn),
+         :ok <- Auth.rate_limit(:activation_user, user) do
+      do_activate(conn, user, code)
+    else
+      {:error, {:rate_limit, _}} ->
+        render_error(
+          conn,
+          429,
+          "Too many activation attempts. Wait a few minutes before trying again."
+        )
+    end
+  end
+
+  defp do_activate(conn, user, code) do
     has_any_invitations? = Plausible.Teams.Users.has_sites?(user, include_pending?: true)
     has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
 
@@ -167,11 +181,20 @@ defmodule PlausibleWeb.AuthController do
 
   def request_activation_code(conn, _params) do
     user = conn.assigns.current_user
-    Auth.EmailVerification.issue_code(user)
 
-    conn
-    |> put_flash(:success, "Activation code was sent to #{user.email}")
-    |> redirect(to: Routes.auth_path(conn, :activate_form))
+    with :ok <- Auth.rate_limit(:activation_request_ip, conn),
+         :ok <- Auth.rate_limit(:activation_request_user, user) do
+      Auth.EmailVerification.issue_code(user)
+
+      conn
+      |> put_flash(:success, "Activation code was sent to #{user.email}")
+      |> redirect(to: Routes.auth_path(conn, :activate_form))
+    else
+      {:error, {:rate_limit, _}} ->
+        conn
+        |> put_flash(:error, "Too many code requests. Please wait before requesting another.")
+        |> redirect(to: Routes.auth_path(conn, :activate_form))
+    end
   end
 
   def password_reset_request_form(conn, _) do
@@ -396,11 +419,21 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_setup(conn, %{"code" => code}) do
-    case Auth.TOTP.enable(conn.assigns.current_user, code) do
-      {:ok, _, %{recovery_codes: codes}} ->
-        conn
-        |> put_flash(:success, "Two-Factor Authentication is fully enabled")
-        |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: true)
+    user = conn.assigns.current_user
+
+    with :ok <- Auth.rate_limit(:totp_setup_ip, conn),
+         :ok <- Auth.rate_limit(:totp_setup_user, user),
+         {:ok, _, %{recovery_codes: codes}} <- Auth.TOTP.enable(user, code) do
+      conn
+      |> put_flash(:success, "Two-Factor Authentication is fully enabled")
+      |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: true)
+    else
+      {:error, {:rate_limit, _}} ->
+        render_error(
+          conn,
+          429,
+          "Too many attempts. Wait a minute before trying again."
+        )
 
       {:error, :invalid_code} ->
         conn

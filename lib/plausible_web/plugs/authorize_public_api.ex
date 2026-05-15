@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
 
         cond do
-          Auth.is_super_admin?(api_key.user) ->
+          Auth.super_admin?(api_key.user) ->
             :pass
 
           team_role_result == {:ok, :guest} ->
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     team = Repo.preload(site, :team).team
 
     is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
-    is_super_admin? = Auth.is_super_admin?(api_key.user_id)
+    is_super_admin? = Auth.super_admin?(api_key.user_id)
 
     cond do
       Plausible.Sites.consolidated?(site) && !allow_consolidated_views ->
@@ -291,7 +291,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   defp verify_team_access(api_key, team, feature) do
     is_member? = Plausible.Teams.Memberships.team_member?(team, api_key.user)
-    is_super_admin? = Auth.is_super_admin?(api_key.user_id)
+    is_super_admin? = Auth.super_admin?(api_key.user_id)
 
     cond do
       is_super_admin? ->

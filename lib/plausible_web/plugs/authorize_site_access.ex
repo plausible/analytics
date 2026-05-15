@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
           membership_role ->
             membership_role
 
-          Plausible.Auth.is_super_admin?(current_user) ->
+          Plausible.Auth.super_admin?(current_user) ->
             :super_admin
 
           site.public ->

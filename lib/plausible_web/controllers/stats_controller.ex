@@ -60,7 +60,7 @@ defmodule PlausibleWeb.StatsController do
     consolidated_view? = Plausible.Sites.consolidated?(site)
 
     exploration_available? =
-      on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
+      on_ee(do: Plausible.Auth.super_admin?(current_user), else: false)
 
     {exploration_journey_end_event, exploration_max_journey_steps} =
       on_ee(
@@ -483,7 +483,7 @@ defmodule PlausibleWeb.StatsController do
         flags = get_flags(current_user, shared_link.site)
 
         exploration_available? =
-          on_ee(do: Plausible.Auth.is_super_admin?(current_user), else: false)
+          on_ee(do: Plausible.Auth.super_admin?(current_user), else: false)
 
         {exploration_journey_end_event, exploration_max_journey_steps} =
           on_ee(

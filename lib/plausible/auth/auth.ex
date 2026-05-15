@@ -15,12 +15,33 @@ defmodule Plausible.Auth do
 
   require Logger
 
-  if Mix.env() == :e2e_test do
-    @ip_rate_limit 100_000
-    @user_rate_limit 100_000
-  else
-    @ip_rate_limit 5
-    @user_rate_limit 5
+  case Mix.env() do
+    :e2e_test ->
+      @ip_rate_limit 100_000
+      @user_rate_limit 100_000
+      @activation_limit 100_000
+      @activation_ip_limit 100_000
+      @activation_request_limit 100_000
+      @totp_setup_limit 100_000
+      @totp_setup_ip_limit 100_000
+
+    env when env in [:test, :ce_test] ->
+      @ip_rate_limit 5
+      @user_rate_limit 5
+      @activation_limit 10
+      @totp_setup_limit 10
+      @activation_ip_limit 100_000
+      @totp_setup_ip_limit 100_000
+      @activation_request_limit 100_000
+
+    _ ->
+      @ip_rate_limit 5
+      @user_rate_limit 5
+      @activation_limit 10
+      @totp_setup_limit 10
+      @activation_ip_limit 2
+      @totp_setup_ip_limit 2
+      @activation_request_limit 5
   end
 
   @rate_limits %{
@@ -43,6 +64,36 @@ defmodule Plausible.Auth do
       prefix: "password-change:user",
       limit: 5,
       interval: :timer.minutes(20)
+    },
+    activation_ip: %{
+      prefix: "activation:ip",
+      limit: @activation_ip_limit,
+      interval: :timer.minutes(1)
+    },
+    activation_user: %{
+      prefix: "activation:user",
+      limit: @activation_limit,
+      interval: :timer.minutes(5)
+    },
+    activation_request_ip: %{
+      prefix: "activation-request:ip",
+      limit: @activation_request_limit,
+      interval: :timer.minutes(1)
+    },
+    activation_request_user: %{
+      prefix: "activation-request:user",
+      limit: @activation_request_limit,
+      interval: :timer.minutes(10)
+    },
+    totp_setup_ip: %{
+      prefix: "totp-setup:ip",
+      limit: @totp_setup_ip_limit,
+      interval: :timer.minutes(1)
+    },
+    totp_setup_user: %{
+      prefix: "totp-setup:user",
+      limit: @totp_setup_limit,
+      interval: :timer.minutes(5)
     }
   }
 
@@ -181,14 +232,14 @@ defmodule Plausible.Auth do
   end
 
   on_ee do
-    def is_super_admin?(nil), do: false
-    def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
+    def super_admin?(nil), do: false
+    def super_admin?(%Plausible.Auth.User{id: id}), do: super_admin?(id)
 
-    def is_super_admin?(user_id) when is_integer(user_id) do
+    def super_admin?(user_id) when is_integer(user_id) do
       user_id in Application.get_env(:plausible, :super_admin_user_ids)
     end
   else
-    def is_super_admin?(_), do: always(false)
+    def super_admin?(_), do: always(false)
   end
 
   @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]

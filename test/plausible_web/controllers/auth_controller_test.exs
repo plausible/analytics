@@ -467,6 +467,26 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       refute Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
     end
+
+    test "limits activation attempts to 10 per 5 minutes", %{conn: conn} do
+      conn = put_req_header(conn, "x-forwarded-for", "10.9.8.7")
+
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..10, fn _ ->
+              post(conn, "/activate", %{code: "1111"})
+            end)
+
+            conn = post(conn, "/activate", %{code: "1111"})
+
+            {conn.status == 429, conn}
+          end,
+          500
+        )
+
+      assert html_response(response, 429) =~ "Too many activation attempts"
+    end
   end
 
   describe "GET /login_form" do
