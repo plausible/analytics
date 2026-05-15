@@ -10,7 +10,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { revenueAvailable, Filter } from '../../dashboard-state'
+import { revenueAvailable } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { getBreakdownMetrics } from '../breakdowns'
 import { PAGES_BAR_COLOR } from './pages'
@@ -23,13 +23,6 @@ const DETAILED_METRICS: Metric[] = [
   'bounce_rate',
   'visit_duration'
 ]
-
-function getFilterInfo(row: QueryResultRow) {
-  return {
-    prefix: 'entry_page',
-    filter: ['is', 'entry_page', [row.dimensions[0]]] as Filter
-  }
-}
 
 export function EntryPagesIndex({
   onDataReady
@@ -55,7 +48,6 @@ export function EntryPagesIndex({
       dimensions={[DIMENSION]}
       color={PAGES_BAR_COLOR}
       getExternalLinkUrl={getExternalLinkUrl}
-      getFilterInfo={getFilterInfo}
       dimensionLabel="Entry page"
       onDataReady={onDataReady}
     />
@@ -91,7 +83,6 @@ export function EntryPagesDetails() {
         dimensions={[DIMENSION]}
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
-        getFilterInfo={getFilterInfo}
         getExternalLinkUrl={getExternalLinkUrl}
       />
     </Modal>

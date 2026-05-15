@@ -10,7 +10,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { revenueAvailable, Filter } from '../../dashboard-state'
+import { revenueAvailable } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { getBreakdownMetrics } from '../breakdowns'
 import { PAGES_BAR_COLOR } from './pages'
@@ -22,13 +22,6 @@ const DETAILED_METRICS: Metric[] = [
   'visits',
   'exit_rate'
 ]
-
-function getFilterInfo(row: QueryResultRow) {
-  return {
-    prefix: 'exit_page',
-    filter: ['is', 'exit_page', [row.dimensions[0]]] as Filter
-  }
-}
 
 export function ExitPagesIndex({
   onDataReady
@@ -54,7 +47,6 @@ export function ExitPagesIndex({
       dimensions={[DIMENSION]}
       color={PAGES_BAR_COLOR}
       getExternalLinkUrl={getExternalLinkUrl}
-      getFilterInfo={getFilterInfo}
       dimensionLabel="Exit page"
       onDataReady={onDataReady}
     />
@@ -90,7 +82,6 @@ export function ExitPagesDetails() {
         dimensions={[DIMENSION]}
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
-        getFilterInfo={getFilterInfo}
         getExternalLinkUrl={getExternalLinkUrl}
       />
     </Modal>

@@ -10,7 +10,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { revenueAvailable, Filter } from '../../dashboard-state'
+import { revenueAvailable } from '../../dashboard-state'
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { getBreakdownMetrics } from '../breakdowns'
 
@@ -25,13 +25,6 @@ export const PAGES_DETAILED_METRICS: Metric[] = [
   'time_on_page',
   'scroll_depth'
 ]
-
-function getFilterInfo(row: QueryResultRow) {
-  return {
-    prefix: 'page',
-    filter: ['is', 'page', [row.dimensions[0]]] as Filter
-  }
-}
 
 export function PagesIndex({
   onDataReady
@@ -57,7 +50,6 @@ export function PagesIndex({
       dimensions={[DIMENSION]}
       color={PAGES_BAR_COLOR}
       getExternalLinkUrl={getExternalLinkUrl}
-      getFilterInfo={getFilterInfo}
       dimensionLabel="Page"
       onDataReady={onDataReady}
     />
@@ -93,7 +85,6 @@ export function PagesDetails() {
         dimensions={[DIMENSION]}
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
-        getFilterInfo={getFilterInfo}
         getExternalLinkUrl={getExternalLinkUrl}
       />
     </Modal>

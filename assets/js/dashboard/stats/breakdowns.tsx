@@ -12,12 +12,16 @@ import {
   NonTimeDimension,
   StatsQuery
 } from '../stats-query'
+import { Filter } from '../dashboard-state'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
+  getFilterInfo?: (
+    dimension: NonTimeDimension,
+    row: QueryResultRow
+  ) => FilterInfo | null
   getExternalLinkUrl?: (row: QueryResultRow) => string | null
 }
 
@@ -35,6 +39,18 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+}
+
+export function defaultGetFilterInfo(
+  dimension: NonTimeDimension,
+  row: QueryResultRow
+) {
+  const dimensionWithoutPrefix = dimension.replace(/^(event|visit):/, '')
+
+  return {
+    prefix: dimensionWithoutPrefix,
+    filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
+  }
 }
 
 export function MetricValueTooltipContent({

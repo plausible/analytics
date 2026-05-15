@@ -21,7 +21,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { OrderByEntry } from '../../stats-query'
+import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -31,7 +31,8 @@ import {
   SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
-  extractMetricValue
+  extractMetricValue,
+  defaultGetFilterInfo
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -86,7 +87,7 @@ export function DetailsBreakdown({
   dimensions,
   metrics,
   defaultOrderBy = [] as MetricOrderBy,
-  getFilterInfo,
+  getFilterInfo = defaultGetFilterInfo,
   getExternalLinkUrl,
   searchEnabled = true,
   onDataReady
@@ -158,6 +159,8 @@ export function DetailsBreakdown({
   const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
     if (!query) return null
 
+    const filterDimension = query.dimensions[0] as NonTimeDimension
+
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
@@ -169,7 +172,9 @@ export function DetailsBreakdown({
         renderCell: (row, isActive) => (
           <DimensionCell
             row={row}
-            getFilterInfo={getFilterInfo}
+            getFilterInfo={(row: QueryResultRow) =>
+              getFilterInfo(filterDimension, row)
+            }
             getExternalLinkUrl={getExternalLinkUrl}
             isActive={isActive}
           />

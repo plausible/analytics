@@ -4,7 +4,7 @@ import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { OrderByEntry } from '../../stats-query'
+import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
@@ -13,7 +13,8 @@ import {
   SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
-  extractMetricValue
+  extractMetricValue,
+  defaultGetFilterInfo
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -55,7 +56,7 @@ export function IndexBreakdown({
   metrics,
   dimensions,
   color,
-  getFilterInfo,
+  getFilterInfo = defaultGetFilterInfo,
   getExternalLinkUrl,
   dimensionLabel,
   onDataReady,
@@ -124,6 +125,7 @@ export function IndexBreakdown({
     // percentage is not its own column —- it's shown inline in the
     // visitors cell instead.
     const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+    const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
@@ -140,7 +142,9 @@ export function IndexBreakdown({
             barWidthPercent={
               ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
             }
-            getFilterInfo={getFilterInfo}
+            getFilterInfo={(row: QueryResultRow) =>
+              getFilterInfo(filterDimension, row)
+            }
             getExternalLinkUrl={getExternalLinkUrl}
             isActive={isActive}
           />
