@@ -73,18 +73,24 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           "imported_visitors"
         )
 
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
-          )
+        params = %{
+          "date_range" => "month",
+          "metrics" => ["visitors"],
+          "relative_date" => "2021-01-01",
+          "dimensions" => ["time:day"],
+          "include" => %{"imports" => true, "time_labels" => true}
+        }
 
-        assert %{"plot" => plot} = json_response(conn, 200)
+        conn = post(conn, "/api/stats/#{site.domain}/query", params)
 
-        assert Enum.count(plot) == 31
-        assert List.first(plot) == 2
-        assert List.last(plot) == 2
-        assert Enum.sum(plot) == 4
+        response = json_response(conn, 200)
+
+        assert length(response["meta"]["time_labels"]) == 31
+
+        assert response["results"] == [
+                 %{"dimensions" => ["2021-01-01"], "metrics" => [2]},
+                 %{"dimensions" => ["2021-01-31"], "metrics" => [2]}
+               ]
       end
 
       test "returns data grouped by week", %{conn: conn, site: site, import_id: import_id} do
@@ -121,18 +127,24 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           "imported_visitors"
         )
 
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true&interval=week"
-          )
+        params = %{
+          "date_range" => "month",
+          "metrics" => ["visitors"],
+          "relative_date" => "2021-01-01",
+          "dimensions" => ["time:week"],
+          "include" => %{"imports" => true, "time_labels" => true}
+        }
 
-        assert %{"plot" => plot} = json_response(conn, 200)
+        conn = post(conn, "/api/stats/#{site.domain}/query", params)
 
-        assert Enum.count(plot) == 5
-        assert List.first(plot) == 2
-        assert List.last(plot) == 2
-        assert Enum.sum(plot) == 4
+        response = json_response(conn, 200)
+
+        assert length(response["meta"]["time_labels"]) == 5
+
+        assert response["results"] == [
+                 %{"dimensions" => ["2021-01-01"], "metrics" => [2]},
+                 %{"dimensions" => ["2021-01-25"], "metrics" => [2]}
+               ]
       end
 
       test "Sources are imported", %{conn: conn, site: site, import_id: import_id} do
@@ -1296,17 +1308,19 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           "imported_visitors"
         )
 
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true"
-          )
+        params = %{
+          "metrics" => ["visit_duration"],
+          "date_range" => ["2021-01-01", "2021-01-31"],
+          "include" => %{"imports" => true},
+          "filters" => []
+        }
 
-        assert %{"top_stats" => top_stats} = json_response(conn, 200)
+        conn = post(conn, "/api/stats/#{site.domain}/query", params)
+        response = json_response(conn, 200)
 
-        visit_duration = Enum.find(top_stats, fn stat -> stat["name"] == "Visit duration" end)
-
-        assert visit_duration["value"] == 3_479_032
+        assert response["results"] == [
+                 %{"dimensions" => [], "metrics" => [3_479_032]}
+               ]
       end
 
       test "skips empty dates from import", %{conn: conn, site: site, import_id: import_id} do
@@ -1338,22 +1352,26 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           "imported_visitors"
         )
 
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true"
-          )
+        params = %{
+          "metrics" => [
+            "visitors",
+            "visits",
+            "pageviews",
+            "views_per_visit",
+            "bounce_rate",
+            "visit_duration"
+          ],
+          "date_range" => ["2021-01-01", "2021-01-31"],
+          "include" => %{"imports" => true},
+          "filters" => []
+        }
 
-        assert %{
-                 "top_stats" => [
-                   %{"name" => "Unique visitors", "value" => 1},
-                   %{"name" => "Total visits", "value" => 1},
-                   %{"name" => "Total pageviews", "value" => 1},
-                   %{"name" => "Views per visit", "value" => 1.0},
-                   %{"name" => "Bounce rate", "value" => 0},
-                   %{"name" => "Visit duration", "value" => 60}
-                 ]
-               } = json_response(conn, 200)
+        conn = post(conn, "/api/stats/#{site.domain}/query", params)
+        response = json_response(conn, 200)
+
+        assert response["results"] == [
+                 %{"dimensions" => [], "metrics" => [1, 1, 1, 1, 0, 60]}
+               ]
       end
     end
   end

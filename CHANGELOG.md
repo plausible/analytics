@@ -6,12 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Allow querying revenue metrics (`total_revenue`, `average_revenue`) with visit dimensions in Stats API v2
 - Allow querying `views_per_visit` with a time dimension in Stats API
 - Add `bounce_rate` to page-filtered Top Stats even when imports are included, but render a metric warning about imported data not included in `bounce_rate` tooltip.
-- Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view. 
+- Add `time_on_page` to page-filtered Top Stats even when imports are included, unless legacy time on page is in view.
 - Adds team_id to query debug metadata (saved in system.query_log log_comment column)
 - Add "Unknown" option to Countries shield, for when the country code is unrecognized
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
+- Always compare against the same time range in comparisons with "Today"
+- Added vertical indicator line to graph to make it easier to see what's hovered / selected
 
 ### Removed
 
@@ -19,12 +22,25 @@ All notable changes to this project will be documented in this file.
 
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
+- "Top referrers" and "Search terms" breakdowns are rendered side by side with other "Sources" tabs instead of replacing them
+- Improved top bar and top stats UI/styling
+- Moved graph interval picker, export button, imported data toggle and notices out of the graph and into a new options menu in the top bar
+- Standardised and improved segment and filter modals styling
+- Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
+- Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 
 ### Fixed
 
+- Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
+- Fixed comparison tooltip in the top pages report missing date labels
+- Fixed top bar not scrolling horizontally on mobile
+- Fixed incline/decline percentages not showing in top stats in comparison mode
+- Fixed issue with timestamps being rendered incorrectly in segment menus and modals for some timezones
+- Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
+- Fixed issue with users with billing role not being able to create personal segments
 
 ## v3.2.0 - 2026-01-16
 

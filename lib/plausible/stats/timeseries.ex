@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Comparisons, Query, QueryRunner, Metrics, Time, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, Metrics, Time, QueryOptimizer}
 
   @time_dimension %{
     "month" => "time:month",
@@ -28,17 +28,10 @@ defmodule Plausible.Stats.Timeseries do
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
       |> QueryOptimizer.optimize()
 
-    comparison_query =
-      if(query.include.compare,
-        do: Comparisons.get_comparison_query(query),
-        else: nil
-      )
-
     query_result = QueryRunner.run(site, query)
 
     {
-      build_result(query_result, query, fn entry -> entry end),
-      build_result(query_result, comparison_query, fn entry -> entry.comparison end),
+      build_result(query_result, query),
       query_result.meta
     }
   end
@@ -47,22 +40,20 @@ defmodule Plausible.Stats.Timeseries do
 
   # Given a query result, build a legacy timeseries result
   # Format is %{ date => %{ date: date_string, [metric] => value } } with a bunch of special cases for the UI
-  defp build_result(query_result, %Query{} = query, extract_entry) do
+  defp build_result(query_result, %Query{} = query) do
     query_result.results
-    |> Enum.map(&extract_entry.(&1))
-    |> Enum.map(fn %{dimensions: [time_dimension_value], metrics: metrics} ->
-      metrics_map = Enum.zip(query.metrics, metrics) |> Map.new()
+    |> Enum.map(fn
+      %{dimensions: [time_dimension_value], metrics: metrics} ->
+        metrics_map = Enum.zip(query.metrics, metrics) |> Map.new()
 
-      {
-        time_dimension_value,
-        Map.put(metrics_map, :date, time_dimension_value)
-      }
+        {
+          time_dimension_value,
+          Map.put(metrics_map, :date, time_dimension_value)
+        }
     end)
     |> Map.new()
     |> add_labels(query)
   end
-
-  defp build_result(_, _, _), do: nil
 
   defp add_labels(results_map, query) do
     query

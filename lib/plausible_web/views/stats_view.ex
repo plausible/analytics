@@ -2,6 +2,8 @@ defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
   use Plausible
 
+  require Plausible.Billing
+
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end

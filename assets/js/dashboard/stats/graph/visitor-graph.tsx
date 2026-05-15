@@ -1,22 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import * as api from '../../api'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
-import { fetchTopStats } from './fetch-top-stats'
-import { IntervalPicker, useStoredInterval } from './interval-picker'
-import StatsExport from './stats-export'
-import WithImportedSwitch from './with-imported-switch'
-import { NoticesIcon } from './notices'
-import * as url from '../../util/url'
-import LineGraphWithRouter, { LineGraphContainer } from './line-graph'
-import { useDashboardStateContext } from '../../dashboard-state-context'
+import { useTopStatsQuery } from './fetch-top-stats'
+import { useMainGraphQuery } from './fetch-main-graph'
 import { PlausibleSite, useSiteContext } from '../../site-context'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Metric } from '../../../types/query-api'
-import { DashboardPeriod } from '../../dashboard-time-periods'
-import { DashboardState } from '../../dashboard-state'
-import { nowForSite } from '../../util/date'
-import { getStaleTime } from '../../hooks/api-client'
+import { Metric } from '../metrics'
+import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
+import { useGraphIntervalContext } from './graph-interval-context'
+import { useSetImportsIncluded } from './imports-included-context'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -27,19 +18,18 @@ export default function VisitorGraph({
   updateImportedDataInView?: (v: boolean) => void
 }) {
   const topStatsBoundary = useRef<HTMLDivElement>(null)
+  const mainGraphContainer = useRef<HTMLDivElement>(null)
+  const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
-  const { dashboardState } = useDashboardStateContext()
-  const isRealtime = dashboardState.period === DashboardPeriod.realtime
-  const queryClient = useQueryClient()
-  const startOfDay = nowForSite(site).startOf('day')
 
-  const { selectedInterval, onIntervalClick, availableIntervals } =
-    useStoredInterval(site, {
-      to: dashboardState.to,
-      from: dashboardState.from,
-      period: dashboardState.period
-    })
+  const { selectedInterval } = useGraphIntervalContext()
 
+  // Possible future improvement -- currently, if there's no stored metric,
+  // the graph fetch doesn't run until Top Stats are loaded. That's because
+  // Top Stats tell us which metrics are available for the graph. However,
+  // as things stand today, the `visitors` metric is always available and
+  // could become the default selectedMetric, making it possible to fetch
+  // the graph instantly.
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(
     getStoredMetric(site)
   )
@@ -51,58 +41,20 @@ export default function VisitorGraph({
     [site]
   )
 
-  const topStatsQuery = useQuery({
-    queryKey: ['top-stats', { dashboardState }] as const,
-    queryFn: async ({ queryKey }) => {
-      const [_, opts] = queryKey
-      return await fetchTopStats(site, opts.dashboardState)
-    },
-    placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
-      const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
-  })
+  const {
+    apiState: topStatsApiState,
+    isRealtimeSilentUpdate: isTopStatsRealtimeSilentUpdate
+  } = useTopStatsQuery()
 
-  const mainGraphQuery = useQuery({
-    enabled: !!selectedMetric,
-    queryKey: [
-      'main-graph',
-      { dashboardState, metric: selectedMetric, interval: selectedInterval }
-    ] as const,
-    queryFn: async ({ queryKey }) => {
-      const [_, opts] = queryKey
-      const data = await api.get(
-        url.apiPath(site, '/main-graph'),
-        opts.dashboardState,
-        {
-          metric: opts.metric,
-          interval: opts.interval
-        }
-      )
-      return { ...data, interval: opts.interval }
-    },
-    placeholderData: (previousData) => previousData,
-    staleTime: ({ queryKey, meta }) => {
-      const [_, opts] = queryKey
-      return getStaleTime(
-        meta!.startOfDay as typeof startOfDay,
-        opts.dashboardState
-      )
-    },
-    meta: { startOfDay }
-  })
+  const {
+    apiState: mainGraphApiState,
+    isRealtimeSilentUpdate: isMainGraphRealtimeSilentUpdate
+  } = useMainGraphQuery(selectedMetric, selectedInterval)
 
   // update metric to one that exists
   useEffect(() => {
-    if (topStatsQuery.data) {
-      const availableMetrics = topStatsQuery.data.topStats
-        .filter((stat) => stat.graphable)
-        .map((stat) => stat.metric)
+    if (topStatsApiState.data) {
+      const availableMetrics = topStatsApiState.data.query.metrics
 
       setSelectedMetric((currentlySelectedMetric) => {
         if (
@@ -115,112 +67,64 @@ export default function VisitorGraph({
         }
       })
     }
-  }, [topStatsQuery.data])
-
-  const [isRealtimeSilentUpdate, setIsRealtimeSilentUpdate] = useState({
-    topStats: false,
-    mainGraph: false
-  })
-  useEffect(() => {
-    setIsRealtimeSilentUpdate((current) => ({ ...current, mainGraph: false }))
-  }, [selectedMetric])
-
-  useEffect(() => {
-    if (!mainGraphQuery.isRefetching) {
-      setIsRealtimeSilentUpdate((current) => ({ ...current, mainGraph: false }))
-    }
-  }, [mainGraphQuery.isRefetching])
-
-  useEffect(() => {
-    if (!topStatsQuery.isRefetching) {
-      setIsRealtimeSilentUpdate((current) => ({ ...current, topStats: false }))
-    }
-  }, [topStatsQuery.isRefetching])
-
-  useEffect(() => {
-    if (!isRealtime) {
-      setIsRealtimeSilentUpdate({
-        topStats: false,
-        mainGraph: false
-      })
-    }
-  }, [isRealtime])
+  }, [topStatsApiState.data])
 
   // sync import related info
   useEffect(() => {
-    if (topStatsQuery.data && typeof updateImportedDataInView === 'function') {
+    if (
+      topStatsApiState.data &&
+      typeof updateImportedDataInView === 'function'
+    ) {
       updateImportedDataInView(
-        topStatsQuery.data.meta.imports_included as boolean
+        topStatsApiState.data.meta.imports_included as boolean
       )
     }
-  }, [topStatsQuery.data, updateImportedDataInView])
+  }, [topStatsApiState.data, updateImportedDataInView])
 
-  // fetch realtime stats
-  const refetchTopStats = topStatsQuery.refetch
-  const refetchMainGraph = mainGraphQuery.refetch
+  const switchVisible = !['no_imported_data', 'out_of_range'].includes(
+    topStatsApiState.data?.meta.imports_skip_reason as string
+  )
+  const switchDisabled =
+    topStatsApiState.data?.meta.imports_skip_reason === 'unsupported_query'
+
+  const setImportsIncluded = useSetImportsIncluded()
 
   useEffect(() => {
-    const onTick = () => {
-      setIsRealtimeSilentUpdate({ topStats: true, mainGraph: true })
-      queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => {
-          const realtimeTopStatsOrMainGraphQuery =
-            ['top-stats', 'main-graph'].includes(queryKey[0] as string) &&
-            typeof queryKey[1] === 'object' &&
-            (queryKey[1] as { dashboardState?: DashboardState })?.dashboardState
-              ?.period === DashboardPeriod.realtime
-
-          return realtimeTopStatsOrMainGraphQuery
-        }
-      })
-      refetchTopStats()
-      refetchMainGraph()
+    if (topStatsApiState.data) {
+      setImportsIncluded({ switchVisible, switchDisabled })
+    } else {
+      setImportsIncluded(null)
     }
+  }, [topStatsApiState.data, switchVisible, switchDisabled, setImportsIncluded])
 
-    if (isRealtime) {
-      document.addEventListener('tick', onTick)
-    }
-
-    return () => {
-      document.removeEventListener('tick', onTick)
-    }
-  }, [queryClient, isRealtime, refetchTopStats, refetchMainGraph])
-
-  const importedSwitchVisible = !['no_imported_data', 'out_of_range'].includes(
-    topStatsQuery.data?.meta.imports_skip_reason as string
-  )
-
-  const importedIntervalUnsupportedNotice =
-    ['hour', 'minute'].includes(selectedInterval) &&
-    importedSwitchVisible &&
-    dashboardState.with_imported
-      ? 'Interval is too short to graph imported data'
-      : null
+  useEffect(() => {
+    return () => setImportsIncluded(null)
+  }, [setImportsIncluded])
 
   const { heightPx } = useGuessTopStatsHeight(site, topStatsBoundary)
 
   const showFullLoader =
-    topStatsQuery.isFetching &&
-    topStatsQuery.isStale &&
-    !isRealtimeSilentUpdate.topStats
+    topStatsApiState.isFetching &&
+    topStatsApiState.isStale &&
+    !isTopStatsRealtimeSilentUpdate
 
   const showGraphLoader =
-    mainGraphQuery.isFetching &&
-    mainGraphQuery.isStale &&
-    !isRealtimeSilentUpdate.mainGraph &&
+    mainGraphApiState.isFetching &&
+    mainGraphApiState.isStale &&
+    !isMainGraphRealtimeSilentUpdate &&
     !showFullLoader
 
   return (
-    <div className="col-span-full relative w-full bg-white rounded-md shadow dark:bg-gray-900">
+    <div className="col-span-full relative w-full bg-white rounded-md shadow-sm dark:bg-gray-900">
       <>
         <div
           id="top-stats-container"
           className="flex flex-wrap relative"
           ref={topStatsBoundary}
         >
-          {topStatsQuery.data ? (
+          {topStatsApiState.data ? (
             <TopStats
-              data={topStatsQuery.data}
+              data={topStatsApiState.data}
               selectedMetric={selectedMetric}
               onMetricClick={onMetricClick}
               tooltipBoundary={topStatsBoundary.current}
@@ -234,61 +138,21 @@ export default function VisitorGraph({
             ></div>
           )}
         </div>
-        <div className="relative px-2">
-          {topStatsQuery.data && (
-            <div className="absolute right-4 -top-8 py-1 flex items-center gap-x-4">
-              <NoticesIcon
-                notices={
-                  [importedIntervalUnsupportedNotice].filter(
-                    (n) => !!n
-                  ) as string[]
-                }
-              />
-              {!isRealtime && (
-                <StatsExport selectedInterval={selectedInterval} />
-              )}
-              {importedSwitchVisible && (
-                <WithImportedSwitch
-                  tooltipMessage={
-                    topStatsQuery.data.meta.imports_skip_reason ===
-                    'unsupported_query'
-                      ? 'Imported data cannot be included'
-                      : topStatsQuery.data.meta.imports_included
-                        ? 'Click to exclude imported data'
-                        : 'Click to include imported data'
-                  }
-                  disabled={
-                    topStatsQuery.data.meta.imports_skip_reason ===
-                    'unsupported_query'
-                  }
-                />
-              )}
-              <IntervalPicker
-                selectedInterval={selectedInterval}
-                onIntervalClick={onIntervalClick}
-                options={availableIntervals}
-              />
-            </div>
-          )}
-          <LineGraphContainer>
-            {mainGraphQuery.data && (
+        <div className="relative flex flex-col pl-3 pr-4">
+          <MainGraphContainer ref={mainGraphContainer}>
+            {!!mainGraphApiState.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <LineGraphWithRouter
-                    graphData={{
-                      ...mainGraphQuery.data
-                    }}
-                  />
+                  <MainGraph width={width} data={mainGraphApiState.data} />
                 )}
                 {showGraphLoader && <Loader />}
               </>
             )}
-          </LineGraphContainer>
+          </MainGraphContainer>
         </div>
       </>
-      {(!(topStatsQuery.data && mainGraphQuery.data) || showFullLoader) && (
-        <Loader />
-      )}
+      {(!(topStatsApiState.data && mainGraphApiState.data) ||
+        showFullLoader) && <Loader />}
     </div>
   )
 }

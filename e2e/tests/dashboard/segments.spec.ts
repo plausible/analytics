@@ -22,7 +22,13 @@ const setupSiteAndStats = async ({
     request,
     domain: context.domain,
     events: [
-      { name: 'pageview', referrer_source: 'Google', utm_source: 'Adwords' },
+      {
+        name: 'pageview',
+        referrer_source: 'Google',
+        utm_source: 'Adwords',
+        utm_medium: 'email',
+        utm_campaign: 'promo'
+      },
       { name: 'pageview', referrer_source: 'Facebook', utm_source: 'fb' },
       { name: 'pageview', referrer: 'https://theguardian.com' }
     ]
@@ -83,7 +89,7 @@ const createPersonalSegment = async (page: Page, name: string) => {
 test('saving a segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await test.step('creating personal segment using defaults', async () => {
     await addSourceFilter(page, 'Facebook')
@@ -220,20 +226,34 @@ test('creating a segment from a combination of segment and a filter is not allow
 }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
   await addUtmSourceFilter(page, 'Adwords')
 
+  // Add UTM medium and campaign filters so Segment ends up as the 4th pill.
+  // This ensures it overflows into "See more" regardless of viewport width
+  const utmMediumFilterRow = filterRow(page, 'utm_medium')
+  const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
+
+  await filterButton(page).click()
+  await utmTagsFilterButton(page).click()
+  await page.getByPlaceholder('Select a UTM Medium').click()
+  await suggestedItem(utmMediumFilterRow, 'email').click()
+  await applyFilterButton(page).click()
+
+  await filterButton(page).click()
+  await utmTagsFilterButton(page).click()
+  await page.getByPlaceholder('Select a UTM Campaign').click()
+  await suggestedItem(utmCampaignFilterRow, 'promo').click()
+  await applyFilterButton(page).click()
+
   await expect(
     page.getByRole('link', { name: 'UTM source is Adwords' })
   ).toBeVisible()
 
-  await page
-    .getByRole('button', { name: 'See 1 more filter and actions' })
-    .click()
-
+  await page.getByRole('button', { name: /See.*more/ }).click()
   await expect(
     page.getByRole('link', { name: 'Segment is Traffic from Google' })
   ).toBeVisible()
@@ -249,7 +269,7 @@ test('creating a segment from a combination of segment and a filter is not allow
 test('editing an existing segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -294,7 +314,7 @@ test('editing an existing segment', async ({ page, request }) => {
 test('saving edited segment as new', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -348,7 +368,7 @@ test('saving edited segment as new', async ({ page, request }) => {
 test('deleting segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
@@ -377,7 +397,7 @@ test('deleting segment', async ({ page, request }) => {
 test('closing edited segment without saving', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
-  await page.goto('/' + domain)
+  await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')

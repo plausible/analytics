@@ -14,7 +14,7 @@
 - regex: 'Trident'
   name: 'Trident'
 
-- regex: 'Chrome/(?!1?\d\.|2[0-7]\.)'
+- regex: 'Chr[o0]me/(?!1?\d\.|2[0-7]\.)'
   name: 'Blink'
 
 - regex: '(?:Apple)?WebKit'
@@ -41,9 +41,6 @@
 - regex: 'Servo'
   name: 'Servo'
 
-- regex: 'Goanna'
-  name: 'Goanna'
-
 - regex: 'Ekioh(?:Flow)?'
   name: 'EkiohFlow'
 
@@ -52,3 +49,9 @@
 
 - regex: 'LibWeb\+LibJs'
   name: 'LibWeb'
+
+- regex: 'ArkWeb/'
+  name: 'ArkWeb'
+
+- regex: 'Maple (?!III)(\d+[.\d]+)|Maple\d{4}'
+  name: 'Maple'

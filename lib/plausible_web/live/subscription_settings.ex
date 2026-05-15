@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   use PlausibleWeb, :live_view
   use Plausible
 
+  require Plausible.Billing
+
   import PlausibleWeb.Components.Billing.Helpers
 
   alias Plausible.Teams
@@ -12,42 +14,48 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
 
   def mount(_params, _session, socket) do
     team = socket.assigns.current_team
-    subscription = Teams.Billing.get_subscription(team)
-    invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
-    pageview_usage = Teams.Billing.monthly_pageview_usage(team)
-    site_usage = Teams.Billing.site_usage(team)
-    team_member_usage = Teams.Billing.team_member_usage(team)
 
-    usage = %{
-      monthly_pageviews: pageview_usage,
-      sites: site_usage,
-      team_members: team_member_usage
-    }
+    if Teams.setup?(team) &&
+         socket.assigns.current_team_role not in Plausible.Billing.allowed_roles() do
+      {:ok, redirect(socket, to: Routes.site_path(socket, :index))}
+    else
+      subscription = Teams.Billing.get_subscription(team)
+      invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
+      pageview_usage = Teams.Billing.monthly_pageview_usage(team)
+      site_usage = Teams.Billing.site_usage(team)
+      team_member_usage = Teams.Billing.team_member_usage(team)
 
-    notification_type = Plausible.Billing.Quota.usage_notification_type(team, usage)
+      usage = %{
+        monthly_pageviews: pageview_usage,
+        sites: site_usage,
+        team_members: team_member_usage
+      }
 
-    total_pageview_usage_domain =
-      if site_usage == 1 do
-        [site] = Plausible.Teams.owned_sites(team)
-        site.domain
-      else
-        on_ee(do: team && consolidated_view_domain(team), else: nil)
-      end
+      notification_type = Plausible.Billing.Quota.usage_notification_type(team, usage)
 
-    socket =
-      socket
-      |> assign(:subscription, subscription)
-      |> assign(:invoices, invoices)
-      |> assign(:pageview_limit, Teams.Billing.monthly_pageview_limit(subscription))
-      |> assign(:pageview_usage, pageview_usage)
-      |> assign(:site_usage, site_usage)
-      |> assign(:site_limit, Teams.Billing.site_limit(team))
-      |> assign(:team_member_limit, Teams.Billing.team_member_limit(team))
-      |> assign(:team_member_usage, team_member_usage)
-      |> assign(:notification_type, notification_type)
-      |> assign(:total_pageview_usage_domain, total_pageview_usage_domain)
+      total_pageview_usage_domain =
+        if site_usage == 1 do
+          [site] = Plausible.Teams.owned_sites(team)
+          site.domain
+        else
+          on_ee(do: team && consolidated_view_domain(team), else: nil)
+        end
 
-    {:ok, socket}
+      socket =
+        socket
+        |> assign(:subscription, subscription)
+        |> assign(:invoices, invoices)
+        |> assign(:pageview_limit, Teams.Billing.monthly_pageview_limit(subscription))
+        |> assign(:pageview_usage, pageview_usage)
+        |> assign(:site_usage, site_usage)
+        |> assign(:site_limit, Teams.Billing.site_limit(team))
+        |> assign(:team_member_limit, Teams.Billing.team_member_limit(team))
+        |> assign(:team_member_usage, team_member_usage)
+        |> assign(:notification_type, notification_type)
+        |> assign(:total_pageview_usage_domain, total_pageview_usage_domain)
+
+      {:ok, socket}
+    end
   end
 
   def render(assigns) do

@@ -1,4 +1,9 @@
 defmodule Plausible.Stats.Imported do
+  @moduledoc """
+  Module defining functions that merge imported query into a native one,
+  and also functions that decide whether imported data is eligible for
+  a given query.
+  """
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
@@ -360,7 +365,9 @@ defmodule Plausible.Stats.Imported do
     :bounce_rate,
     :conversion_rate,
     :group_conversion_rate,
-    :time_on_page
+    :time_on_page,
+    :total_revenue,
+    :average_revenue
   ]
 
   defp can_order_by?(query) do

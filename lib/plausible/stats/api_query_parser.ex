@@ -221,14 +221,14 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_dimensions(dimensions) when is_list(dimensions) do
+  def parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(
       dimensions,
       &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
     )
   end
 
-  defp parse_dimensions(nil), do: {:ok, []}
+  def parse_dimensions(nil), do: {:ok, []}
 
   def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
@@ -325,11 +325,11 @@ defmodule Plausible.Stats.ApiQueryParser do
   defp parse_include_entry(key, _value),
     do: {:error, %QueryError{code: :invalid_include, message: "Invalid include key'#{i(key)}'."}}
 
-  defp parse_pagination(pagination) when is_map(pagination) do
+  def parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp parse_pagination(nil), do: {:ok, @default_pagination}
+  def parse_pagination(nil), do: {:ok, @default_pagination}
 
   defp atomize_keys(map) when is_map(map) do
     Map.new(map, fn {key, value} ->

@@ -6,17 +6,19 @@ import { useDashboardStateContext } from '../dashboard-state-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
-import { isSegmentFilter } from '../filtering/segments'
+import {
+  canSeeSaveAsSegmentAction,
+  isSegmentFilter
+} from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardState } from '../dashboard-state'
+import { useUserContext } from '../user-context'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
 // where `..` represents an ideally equal length.
 // The following calculations guarantee that.
-const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
-const BUFFER_LEFT_PX = 16
-const SEE_MORE_WIDTH_PX = 36
+const SEE_MORE_WIDTH_PX = 32
 const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
 const SEE_MORE_LEFT_MARGIN_PX = 0
 
@@ -121,14 +123,16 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { dashboardState, expandedSegment } = useDashboardStateContext()
+  const user = useUserContext()
 
   const showingClearAll = canShowClearAllAction({
     filters: dashboardState.filters
   })
-  const showingSaveAsSegment = canShowSaveAsSegmentAction({
-    filters: dashboardState.filters,
-    isEditingSegment: !!expandedSegment
-  })
+  const showingSaveAsSegment =
+    canShowSaveAsSegmentAction({
+      filters: dashboardState.filters,
+      isEditingSegment: !!expandedSegment
+    }) && canSeeSaveAsSegmentAction({ user })
 
   const actionsInSeeMoreMenu = [
     showingSaveAsSegment && ('save as segment' as const),
@@ -156,9 +160,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
           topBar && leftSection && rightSection
             ? getElementWidthOrNull(topBar)! -
               getElementWidthOrNull(leftSection)! -
-              getElementWidthOrNull(rightSection)! -
-              BUFFER_LEFT_PX -
-              BUFFER_RIGHT_PX
+              getElementWidthOrNull(rightSection)!
             : null,
         seeMoreWidth:
           SEE_MORE_LEFT_MARGIN_PX +
@@ -184,7 +186,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
   return (
     <div
-      style={{ paddingRight: BUFFER_RIGHT_PX, paddingLeft: BUFFER_LEFT_PX }}
       className={classNames(
         'flex w-full items-center',
         visibility === null && 'invisible' // hide until we've calculated the positions
@@ -261,11 +262,11 @@ const SeeMoreMenu = ({
           marginRight: SEE_MORE_RIGHT_MARGIN_PX
         }}
       >
-        <EllipsisHorizontalIcon className="block h-5 w-5" />
+        <EllipsisHorizontalIcon className="block size-4" />
         {showMoreFilters && (
           <div
             aria-hidden="true"
-            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
+            className="absolute flex justify-end left-0 -right-1 bottom-0 translate-y-1/4"
           >
             <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
               +{filtersInMenuCount}

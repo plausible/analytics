@@ -37,9 +37,9 @@ export default function FilterModalGroup({
 
   return (
     <>
-      <div className="mt-6">
+      <div>
         {showTitle && (
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="text-sm font-medium text-gray-800 dark:text-gray-200">
             {formattedFilters[filterGroup]}
           </div>
         )}

@@ -216,5 +216,57 @@ defmodule PlausibleWeb.Team.NoticeTest do
       assert rendered =~ "exceeds your current"
       assert rendered =~ "site limit"
     end
+
+    test "renders upgrade link and accept without members button when only team member limit is exceeded" do
+      transfers = [
+        %{
+          transfer_id: "tr-over",
+          initiator: %{name: "Grace"},
+          site: %{domain: "big.io"},
+          ownership_check: {:error, {:over_plan_limits, [:team_member_limit]}}
+        }
+      ]
+
+      rendered =
+        render_component(&Notice.site_ownership_invitations/1,
+          site_ownership_invitations: transfers,
+          current_team: nil
+        )
+
+      assert rendered =~ "/billing/choose-plan"
+
+      assert rendered =~
+               ~r{data-to="[^"]*invitations/tr-over/accept\?skip_site_members_transfer=true"}
+
+      assert rendered =~ ~r{href="[^"]*invitations/tr-over/reject"}
+      assert rendered =~ "exceeds your current"
+      assert rendered =~ "team member limit"
+    end
+
+    test "does not render accept without members button when other limits than team member limit are exceeded" do
+      transfers = [
+        %{
+          transfer_id: "tr-over",
+          initiator: %{name: "Grace"},
+          site: %{domain: "big.io"},
+          ownership_check: {:error, {:over_plan_limits, [:site_limit, :team_member_limit]}}
+        }
+      ]
+
+      rendered =
+        render_component(&Notice.site_ownership_invitations/1,
+          site_ownership_invitations: transfers,
+          current_team: nil
+        )
+
+      assert rendered =~ "/billing/choose-plan"
+
+      refute rendered =~
+               ~r{data-to="[^"]*invitations/tr-over/accept\?skip_site_members_transfer=true"}
+
+      assert rendered =~ ~r{href="[^"]*invitations/tr-over/reject"}
+      assert rendered =~ "exceeds your current"
+      assert rendered =~ "team member limit"
+    end
   end
 end

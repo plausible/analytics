@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.Verification do
 
     private = Map.get(socket.private.connect_info, :private, %{})
 
-    super_admin? = Plausible.Auth.is_super_admin?(current_user)
+    super_admin? = Plausible.Auth.super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
 
     custom_url_input? = params["custom_url"] == "true"

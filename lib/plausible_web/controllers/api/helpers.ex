@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Api.Helpers do
+  @moduledoc """
+  Helper functions for API controllers.
+  """
+
   import Plug.Conn
 
   def unauthorized(conn, msg) do
@@ -15,10 +19,12 @@ defmodule PlausibleWeb.Api.Helpers do
     |> halt()
   end
 
-  def bad_request(conn, msg) do
+  def bad_request(conn, msg, extra \\ %{}) do
+    payload = Map.merge(extra, %{error: msg})
+
     conn
     |> put_status(400)
-    |> Phoenix.Controller.json(%{error: msg})
+    |> Phoenix.Controller.json(payload)
     |> halt()
   end
 

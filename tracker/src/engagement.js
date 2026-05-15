@@ -137,11 +137,21 @@ function getDocumentHeight() {
 }
 
 function getCurrentScrollDepthPx() {
-  var body = document.body || {}
-  var el = document.documentElement || {}
-  var viewportHeight = window.innerHeight || el.clientHeight || 0
-  var scrollTop = window.scrollY || el.scrollTop || body.scrollTop || 0
-
+  var viewportHeight, scrollTop
+  if (COMPILE_COMPAT) {
+    var el = document.documentElement || {}
+    var body = document.body || {}
+    viewportHeight = window.innerHeight || el.clientHeight || 0
+    scrollTop =
+      window.scrollY ||
+      window.pageYOffset ||
+      el.scrollTop ||
+      body.scrollTop ||
+      0
+  } else {
+    viewportHeight = window.innerHeight
+    scrollTop = window.scrollY
+  }
   return currentDocumentHeight <= viewportHeight
     ? currentDocumentHeight
     : scrollTop + viewportHeight
@@ -151,23 +161,22 @@ export function init() {
   currentDocumentHeight = getDocumentHeight()
   maxScrollDepthPx = getCurrentScrollDepthPx()
 
-  window.addEventListener('load', function () {
-    currentDocumentHeight = getDocumentHeight()
-
-    // Update the document height again after every 200ms during the
-    // next 3 seconds. This makes sure dynamically loaded content is
-    // also accounted for.
-    var count = 0
-    var interval = setInterval(function () {
+  if (COMPILE_COMPAT) {
+    window.addEventListener('load', function () {
       currentDocumentHeight = getDocumentHeight()
-      if (++count === 15) {
-        clearInterval(interval)
-      }
-    }, 200)
-  })
+      var count = 0
+      var interval = setInterval(function () {
+        currentDocumentHeight = getDocumentHeight()
+        if (++count === 15) clearInterval(interval)
+      }, 200)
+    })
+  } else {
+    new ResizeObserver(function () {
+      currentDocumentHeight = getDocumentHeight()
+    }).observe(document.documentElement)
+  }
 
   document.addEventListener('scroll', function () {
-    currentDocumentHeight = getDocumentHeight()
     var currentScrollDepthPx = getCurrentScrollDepthPx()
 
     if (currentScrollDepthPx > maxScrollDepthPx) {

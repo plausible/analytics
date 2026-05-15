@@ -5,7 +5,7 @@ import {
   hasConversionGoalFilter,
   isFilteringOnFixedValue
 } from '../../util/filters'
-import ListReport from '../reports/list'
+import ListReport from '../reports/list-legacy'
 import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'

@@ -34,9 +34,9 @@ export type SavedSegment = {
   id: number
   name: string
   type: SegmentType
-  /** datetime in site timezone, example 2025-02-26 10:00:00 */
+  /** naive site-timezone timestamp, example 2025-02-26T10:00:00 */
   inserted_at: string
-  /** datetime in site timezone, example 2025-02-26 10:00:00 */
+  /** naive site-timezone timestamp, example 2025-02-26T10:00:00 */
   updated_at: string
 } & SegmentOwnership
 
@@ -185,6 +185,15 @@ export function resolveFilters(
     }
   })
 }
+
+export const canSeeSaveAsSegmentAction = ({
+  user
+}: {
+  user: UserContextValue
+}) =>
+  user.loggedIn &&
+  (ROLES_WITH_MAYBE_SITE_SEGMENTS.includes(user.role) ||
+    ROLES_WITH_PERSONAL_SEGMENTS.includes(user.role))
 
 export function canExpandSegment({
   segment,

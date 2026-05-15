@@ -15,6 +15,9 @@ describe('parseSiteFromDataset', () => {
       data-funnels-opted-out="false"
       data-props-opted-out="false"
       data-funnels-available="true"
+      data-exploration-available="false"
+      data-exploration-journey-end-event="__journey_end__"
+      data-exploration-max-journey-steps="20"
       data-site-segments-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
@@ -43,6 +46,9 @@ describe('parseSiteFromDataset', () => {
     propsOptedOut: false,
     funnelsAvailable: true,
     propsAvailable: true,
+    explorationAvailable: false,
+    explorationJourneyEndEvent: '__journey_end__',
+    explorationMaxJourneySteps: 20,
     siteSegmentsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
@@ -53,20 +59,6 @@ describe('parseSiteFromDataset', () => {
     background: undefined,
     isDbip: false,
     flags: {},
-    validIntervalsByPeriod: {
-      '12mo': ['day', 'week', 'month'],
-      '7d': ['hour', 'day'],
-      '28d': ['day', 'week'],
-      '30d': ['day', 'week'],
-      '91d': ['day', 'week', 'month'],
-      '6mo': ['day', 'week', 'month'],
-      all: ['week', 'month'],
-      custom: ['day', 'week', 'month'],
-      day: ['minute', 'hour'],
-      month: ['day', 'week'],
-      realtime: ['minute'],
-      year: ['day', 'week', 'month']
-    },
     shared: false,
     isConsolidatedView: false
   }

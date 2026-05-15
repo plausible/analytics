@@ -4,6 +4,209 @@ defmodule Plausible.Stats.TimeTest do
   import Plausible.Stats.Time
   alias Plausible.Stats.DateTimeRange
 
+  @now DateTime.utc_now(:second)
+
+  describe "partial_time_labels/2" do
+    test "returns today as partial_time_label for time:day when today is still incomplete" do
+      now = ~U[2023-03-01 14:00:00Z]
+
+      assert partial_time_labels(["2023-03-01"], %{
+               dimensions: ["time:day"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 00:00:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == ["2023-03-01"]
+    end
+
+    test "time_label of today is not partial when it's 23:59:59" do
+      now = ~U[2023-03-01 23:59:59Z]
+
+      assert partial_time_labels(["2023-03-01"], %{
+               dimensions: ["time:day"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 00:00:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == []
+    end
+
+    test "returns current hour as partial time label when it's incomplete" do
+      now = ~U[2023-03-01 12:30:00Z]
+
+      assert partial_time_labels(["2023-03-01 12:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:00:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == ["2023-03-01 12:00:00"]
+    end
+
+    test "current hour is not partial when query.now is the last second of the hour" do
+      now = ~U[2023-03-01 12:59:59Z]
+
+      assert partial_time_labels(["2023-03-01 12:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:00:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == []
+    end
+
+    test "returns current minute as partial time label when it's incomplete" do
+      now = ~U[2023-03-01 12:30:30Z]
+
+      assert partial_time_labels(["2023-03-01 12:30:00"], %{
+               dimensions: ["time:minute"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:30:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == ["2023-03-01 12:30:00"]
+    end
+
+    test "current minute is not partial when query.now is the last second of the minute" do
+      now = ~U[2023-03-01 12:30:59Z]
+
+      assert partial_time_labels(["2023-03-01 12:30:00"], %{
+               dimensions: ["time:minute"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:30:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == []
+    end
+
+    test "first bucket is partial when query range starts mid-bucket (e.g. last 24h)" do
+      # time:day: range starts at 12:30, so the first day only has half a day of data
+      now = ~U[2023-03-02 12:30:00Z]
+
+      assert partial_time_labels(["2023-03-01", "2023-03-02"], %{
+               dimensions: ["time:day"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:30:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == ["2023-03-01", "2023-03-02"]
+
+      # time:hour: range starts at 12:30, so the first hour only has 30 minutes of data
+      now = ~U[2023-03-01 13:30:00Z]
+
+      assert partial_time_labels(["2023-03-01 12:00:00", "2023-03-01 13:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 12:30:00Z], now),
+               now: now,
+               timezone: "UTC"
+             }) == ["2023-03-01 12:00:00", "2023-03-01 13:00:00"]
+    end
+
+    test "handles timezone with non-whole-hour UTC offset (IST, UTC+05:30)" do
+      # 13:30 UTC = 19:00 IST (range starts exactly on the hour, so first bucket is not partial)
+      # 14:00 UTC = 19:30 IST, so the 19:00 IST hour is still in progress
+      now = ~U[2023-03-01 14:00:00Z]
+
+      assert partial_time_labels(["2023-03-01 19:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 13:30:00Z], now),
+               now: now,
+               timezone: "Asia/Kolkata"
+             }) == ["2023-03-01 19:00:00"]
+
+      # 14:30 UTC = 20:00 IST, so the 19:00 IST hour is now complete
+      now = ~U[2023-03-01 14:30:00Z]
+
+      assert partial_time_labels(["2023-03-01 19:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2023-03-01 13:30:00Z], now),
+               now: now,
+               timezone: "Asia/Kolkata"
+             }) == []
+    end
+
+    test "handles DST transition (America/New_York, UTC-04:00 -> UTC-05:00)" do
+      # Clocks fall back 02:00 -> 01:00, so 01:xx occurs twice.
+      # 05:00 UTC = 01:00 EDT (first occurrence, UTC-4)
+      # 06:00 UTC = 01:00 EST (second occurrence, UTC-5)
+      now = ~U[2026-11-01 06:30:00Z]
+
+      # 06:30 UTC = 01:30 EST
+      assert partial_time_labels(["2026-11-01 01:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2026-11-01 06:00:00Z], now),
+               now: now,
+               timezone: "America/New_York"
+             }) == ["2026-11-01 01:00:00"]
+
+      # 06:59:59 UTC = 01:59:59 EST
+      now = ~U[2026-11-01 06:59:59Z]
+
+      assert partial_time_labels(["2026-11-01 01:00:00"], %{
+               dimensions: ["time:hour"],
+               utc_time_range: DateTimeRange.new!(~U[2026-11-01 06:00:00Z], now),
+               now: now,
+               timezone: "America/New_York"
+             }) == []
+    end
+
+    test "first month bucket is partial if date range start is one second after actual month start" do
+      assert partial_time_labels(["2023-03-01"], %{
+               dimensions: ["time:month"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-01 00:00:01Z], ~U[2023-03-31 23:59:59Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == ["2023-03-01"]
+    end
+
+    test "last month bucket is partial if date range end is one second before actual month end" do
+      assert partial_time_labels(["2023-03-01"], %{
+               dimensions: ["time:month"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-01 00:00:00Z], ~U[2023-03-31 23:59:58Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == ["2023-03-01"]
+    end
+
+    test "a month bucket is not partial if date range starts and ends exactly at month start/end" do
+      assert partial_time_labels(["2023-03-01"], %{
+               dimensions: ["time:month"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-01 00:00:00Z], ~U[2023-03-31 23:59:59Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == []
+    end
+
+    test "first week bucket is partial if date range start is one second after actual week start" do
+      # Week of 2023-03-06 (Mon) to 2023-03-12 (Sun)
+      assert partial_time_labels(["2023-03-06"], %{
+               dimensions: ["time:week"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-06 00:00:01Z], ~U[2023-03-12 23:59:59Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == ["2023-03-06"]
+    end
+
+    test "last week bucket is partial if date range end is one second before actual week end" do
+      # Week of 2023-03-06 (Mon) to 2023-03-12 (Sun)
+      assert partial_time_labels(["2023-03-06"], %{
+               dimensions: ["time:week"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-06 00:00:00Z], ~U[2023-03-12 23:59:58Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == ["2023-03-06"]
+    end
+
+    test "a week bucket is not partial if date range starts and ends exactly at week start/end" do
+      # Week of 2023-03-06 (Mon) to 2023-03-12 (Sun)
+      assert partial_time_labels(["2023-03-06"], %{
+               dimensions: ["time:week"],
+               utc_time_range:
+                 DateTimeRange.new!(~U[2023-03-06 00:00:00Z], ~U[2023-03-12 23:59:59Z]),
+               now: @now,
+               timezone: "UTC"
+             }) == []
+    end
+  end
+
   describe "time_labels/1" do
     test "with time:month dimension" do
       assert time_labels(%{

@@ -5,13 +5,12 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { addFilter, revenueAvailable } from '../../dashboard-state'
-import { SortDirection } from '../../hooks/use-order-by'
 
 const VIEWS = {
   countries: {
@@ -19,21 +18,21 @@ const VIEWS = {
     dimension: 'country',
     endpoint: '/countries',
     dimensionLabel: 'Country',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   },
   regions: {
     title: 'Top regions',
     dimension: 'region',
     endpoint: '/regions',
     dimensionLabel: 'Region',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   },
   cities: {
     title: 'Top cities',
     dimension: 'city',
     endpoint: '/cities',
     dimensionLabel: 'City',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 }
 

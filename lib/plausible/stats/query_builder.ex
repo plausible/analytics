@@ -18,6 +18,8 @@ defmodule Plausible.Stats.QueryBuilder do
     QueryInclude
   }
 
+  alias Plausible.Times
+
   @doc """
   Runs various validations and builds a `%Query{}` from already parsed params.
 
@@ -28,11 +30,12 @@ defmodule Plausible.Stats.QueryBuilder do
 
   def build(site, %ParsedQueryParams{} = parsed_query_params, debug_metadata) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
-         query = do_build(parsed_query_params, site, debug_metadata),
+         {:ok, query} <- do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_case_sensitive_filter_modifier(query),
          :ok <- validate_toplevel_only_filter_dimension(query),
+         :ok <- validate_time_dimension_granularity(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_behavioral_filters(query),
          :ok <- validate_filtered_goals_exist(query, parsed_query_params),
@@ -96,8 +99,12 @@ defmodule Plausible.Stats.QueryBuilder do
     DateTimeRange.new!(first_datetime, last_datetime)
   end
 
-  defp build_datetime_range(:day, site, relative_date, _now) do
-    DateTimeRange.new!(relative_date, relative_date, site.timezone)
+  defp build_datetime_range(:day, site, relative_date, now) do
+    if Date.compare(Times.to_date(now, site.timezone), relative_date) == :eq do
+      DateTimeRange.new!(relative_date, now, site.timezone)
+    else
+      DateTimeRange.new!(relative_date, relative_date, site.timezone)
+    end
   end
 
   defp build_datetime_range(:"24h", _site, _relative_date, now) do
@@ -143,47 +150,58 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp do_build(parsed_query_params, site, debug_metadata) do
-    now = parsed_query_params.now || DateTime.utc_now(:second)
-
-    %ParsedQueryParams{
-      input_date_range: input_date_range,
-      relative_date: relative_date,
-      metrics: metrics,
-      filters: filters,
-      dimensions: dimensions
-    } = parsed_query_params
-
-    relative_date = relative_date || today_from_now(site, now)
-
-    utc_time_range =
-      input_date_range
-      |> build_datetime_range(site, relative_date, now)
-      |> DateTimeRange.to_timezone("Etc/UTC")
-
-    {preloaded_goals, revenue_warning, revenue_currencies} =
-      preload_goals_and_revenue(site, metrics, filters, dimensions)
-
-    consolidated_site_ids = get_consolidated_site_ids(site)
-
-    struct!(%Query{},
-      now: now,
-      input_date_range: input_date_range,
-      utc_time_range: utc_time_range,
+    parsed_query_params
+    |> ParsedQueryParams.to_query!()
+    |> set_now()
+    |> set_utc_time_range(site, Map.get(parsed_query_params, :relative_date))
+    |> set_preloaded_goals_and_revenue(site)
+    |> Query.set(
       site_id: site.id,
-      metrics: metrics,
-      dimensions: dimensions,
-      filters: filters,
-      order_by: parsed_query_params.order_by,
-      pagination: parsed_query_params.pagination,
-      include: parsed_query_params.include,
       site_native_stats_start_at: site.native_stats_start_at,
-      consolidated_site_ids: consolidated_site_ids,
       timezone: site.timezone,
-      preloaded_goals: preloaded_goals,
-      revenue_warning: revenue_warning,
-      revenue_currencies: revenue_currencies,
+      consolidated_site_ids: get_consolidated_site_ids(site),
       debug_metadata: debug_metadata
     )
+    |> maybe_drop_revenue_metrics()
+  end
+
+  defp set_now(%Query{now: nil} = query), do: Query.set(query, now: DateTime.utc_now(:second))
+  defp set_now(query), do: query
+
+  defp set_utc_time_range(query, site, relative_date) do
+    relative_date = relative_date || Times.to_date(query.now, site.timezone)
+
+    utc_time_range =
+      query.input_date_range
+      |> build_datetime_range(site, relative_date, query.now)
+      |> DateTimeRange.to_timezone("Etc/UTC")
+
+    Query.set(query, utc_time_range: utc_time_range)
+  end
+
+  defp set_preloaded_goals_and_revenue(query, site) do
+    {preloaded_goals, revenue_warning, revenue_currencies} =
+      preload_goals_and_revenue(site, query.metrics, query.filters, query.dimensions)
+
+    Query.set(query,
+      preloaded_goals: preloaded_goals,
+      revenue_warning: revenue_warning,
+      revenue_currencies: revenue_currencies
+    )
+  end
+
+  def preload_goals_and_revenue(site, metrics, filters, dimensions) do
+    preloaded_goals =
+      Plausible.Stats.Goals.preload_needed_goals(site, dimensions, filters)
+
+    {revenue_warning, revenue_currencies} =
+      preload_revenue(site, preloaded_goals, metrics, dimensions)
+
+    {
+      preloaded_goals,
+      revenue_warning,
+      revenue_currencies
+    }
   end
 
   on_ee do
@@ -212,20 +230,6 @@ defmodule Plausible.Stats.QueryBuilder do
     struct!(query, comparison_utc_time_range: datetime_range)
   end
 
-  def preload_goals_and_revenue(site, metrics, filters, dimensions) do
-    preloaded_goals =
-      Plausible.Stats.Goals.preload_needed_goals(site, dimensions, filters)
-
-    {revenue_warning, revenue_currencies} =
-      preload_revenue(site, preloaded_goals, metrics, dimensions)
-
-    {
-      preloaded_goals,
-      revenue_warning,
-      revenue_currencies
-    }
-  end
-
   on_ee do
     alias Plausible.Stats.Goal.Revenue
 
@@ -234,8 +238,7 @@ defmodule Plausible.Stats.QueryBuilder do
     end
 
     defp validate_revenue_metrics_access(site, query) do
-      if Revenue.requested?(query.metrics) and not Revenue.available?(site) and
-           not query.include.drop_unavailable_revenue_metrics do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
         {:error,
          %QueryError{
            code: :feature_access,
@@ -245,10 +248,32 @@ defmodule Plausible.Stats.QueryBuilder do
         :ok
       end
     end
+
+    defp maybe_drop_revenue_metrics(
+           %Query{
+             include: %QueryInclude{drop_unavailable_revenue_metrics: true},
+             revenue_currencies: revenue_currencies
+           } = query
+         )
+         when map_size(revenue_currencies) == 0 do
+      if Enum.all?(query.metrics, &(&1 in Revenue.revenue_metrics())) do
+        {:error,
+         %QueryError{
+           code: :all_metrics_dropped,
+           message: "Revenue metrics were dropped and no other metrics were left to query."
+         }}
+      else
+        {:ok, Query.set(query, metrics: query.metrics -- Revenue.revenue_metrics())}
+      end
+    end
+
+    defp maybe_drop_revenue_metrics(%Query{} = query), do: {:ok, query}
   else
     defp preload_revenue(_site, _preloaded_goals, _metrics, _dimensions), do: {nil, %{}}
 
     defp validate_revenue_metrics_access(_site, _query), do: :ok
+
+    defp maybe_drop_revenue_metrics(query), do: {:ok, query}
   end
 
   defp validate_order_by(query) do
@@ -317,6 +342,22 @@ defmodule Plausible.Stats.QueryBuilder do
          code: :invalid_filters,
          message:
            "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."
+       }}
+    else
+      :ok
+    end
+  end
+
+  @max_hours_for_minute_interval 30
+
+  defp validate_time_dimension_granularity(query) do
+    if Time.time_dimension(query) == "time:minute" and
+         DateTimeRange.length(query.utc_time_range, :minute) > @max_hours_for_minute_interval * 60 do
+      {:error,
+       %QueryError{
+         code: :invalid_dimensions,
+         message:
+           "Invalid dimensions. Dimension `time:minute` is only supported for time ranges up to 30 hours."
        }}
     else
       :ok
@@ -558,10 +599,6 @@ defmodule Plausible.Stats.QueryBuilder do
     else
       :ok
     end
-  end
-
-  defp today_from_now(site, now) do
-    now |> DateTime.shift_zone!(site.timezone) |> DateTime.to_date()
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)

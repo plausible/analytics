@@ -1,34 +1,68 @@
-import { Metric } from '../types/query-api'
+import { Metric } from './stats/metrics'
 import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import { StatsQuery } from './stats-query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
+import { MainGraphResponse } from './stats/graph/fetch-main-graph'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
 
+export type RevenueMetricValue = {
+  short: string
+  value: number
+  long: string
+  currency: string
+}
+
+export type MetricValue = null | number | RevenueMetricValue
+
+export type QueryResultQuery = {
+  metrics: Metric[]
+  dimensions: string[]
+  date_range: [string, string]
+  comparison_date_range?: [string, string] | null
+}
+
+export type QueryResultMeta = {
+  metric_warnings?: Record<string, Record<string, string>>
+  imports_included?: boolean
+  imports_skip_reason?: string
+}
+
+export type QueryResultRow = {
+  metrics: Array<MetricValue>
+  dimensions: Array<string>
+  comparison?: { metrics: Array<number>; change: Array<number> }
+}
+
+// Added client-side in the queryFn before storing to TanStack cache.
+// Needed to make sure that the time/metric labels we're constructing
+// in stats reports are in sync with the dashboardState that was used
+// to make that query. Otherwise, relying on current dashboardState
+// while rendering previous (placeholder) data, it'd be out of sync.
+export type ExtraContext = {
+  isRealtime: boolean
+  hasConversionGoalFilter: boolean
+}
+
 export type QueryApiResponse = {
-  query: {
-    metrics: Metric[]
-    date_range: [string, string]
-    comparison_date_range: [string, string]
-  }
-  meta: Record<string, unknown>
-  results: {
-    metrics: Array<number>
-    dimensions: Array<string>
-    comparison: { metrics: Array<number>; change: Array<number> }
-  }[]
+  query: QueryResultQuery
+  meta: QueryResultMeta
+  results: QueryResultRow[]
+  extraContext: ExtraContext
 }
 
 export class ApiError extends Error {
   payload: unknown
-  constructor(message: string, payload: unknown) {
+  status: number
+  constructor(message: string, payload: unknown, status: number) {
     super(message)
     this.name = 'ApiError'
     this.payload = payload
+    this.status = status
   }
 }
 
@@ -54,6 +88,13 @@ export function dashboardStateToSearchParams(
   dashboardState: DashboardState,
   extraQuery: unknown[] = []
 ): string {
+  return serializeUrlParams(dashboardStateToParams(dashboardState, extraQuery))
+}
+
+export function dashboardStateToParams(
+  dashboardState: DashboardState,
+  extraQuery: unknown[] = []
+): Record<string, string> {
   const queryObj: Record<string, string> = {}
   if (dashboardState.period) {
     queryObj.period = dashboardState.period
@@ -92,7 +133,7 @@ export function dashboardStateToSearchParams(
 
   Object.assign(queryObj, ...extraQuery)
 
-  return serializeUrlParams(queryObj)
+  return queryObj
 }
 
 function getHeaders(): Record<string, string> {
@@ -102,7 +143,7 @@ function getHeaders(): Record<string, string> {
 async function handleApiResponse(response: Response) {
   const payload = await response.json()
   if (!response.ok) {
-    throw new ApiError(payload.error, payload)
+    throw new ApiError(payload.error, payload, response.status)
   }
 
   return payload
@@ -112,7 +153,9 @@ function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
-export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
+export async function stats<
+  TResponse extends QueryApiResponse | MainGraphResponse
+>(site: PlausibleSite, statsQuery: StatsQuery) {
   const sharedLinkParams = getSharedLinkSearchParams()
   const queryString = sharedLinkParams.auth
     ? new URLSearchParams(sharedLinkParams).toString()
@@ -129,7 +172,7 @@ export async function stats(site: PlausibleSite, statsQuery: StatsQuery) {
     body: JSON.stringify(statsQuery)
   })
 
-  return handleApiResponse(response)
+  return (await handleApiResponse(response)) as TResponse
 }
 
 export async function get(
@@ -144,6 +187,28 @@ export async function get(
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
     headers: { ...getHeaders(), Accept: 'application/json' }
+  })
+
+  return handleApiResponse(response)
+}
+
+export async function post(
+  url: string,
+  dashboardState: DashboardState,
+  ...extraBodyParams: unknown[]
+) {
+  const queryString = serializeUrlParams(getSharedLinkSearchParams())
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
+    method: 'POST',
+    signal: abortController.signal,
+    headers: {
+      ...getHeaders(),
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(
+      dashboardStateToParams(dashboardState, [...extraBodyParams])
+    )
   })
 
   return handleApiResponse(response)

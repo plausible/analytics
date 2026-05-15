@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
   use Plausible
   import Phoenix.LiveView.Router
-  import PhoenixStorybook.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -109,15 +108,6 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails-api", Bamboo.SentEmailApiPlug
   end
 
-  scope "/" do
-    storybook_assets()
-  end
-
-  scope "/", PlausibleWeb do
-    pipe_through :browser
-    live_storybook("/storybook", backend_module: PlausibleWeb.Storybook)
-  end
-
   on_ee do
     scope alias: PlausibleWeb.Live,
           assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
@@ -181,6 +171,7 @@ defmodule PlausibleWeb.Router do
 
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
+        post "/goal", E2EController, :create_goal
       end
     end
   end
@@ -279,13 +270,22 @@ defmodule PlausibleWeb.Router do
     scope "/stats", PlausibleWeb.Api do
       on_ee do
         get "/:domain/funnels/:id", StatsController, :funnel
+
+        post "/:domain/exploration/next", StatsController, :exploration_next
+        post "/:domain/exploration/funnel", StatsController, :exploration_funnel
+
+        post "/:domain/exploration/next-with-funnel",
+             StatsController,
+             :exploration_next_with_funnel
+
+        post "/:domain/exploration/featured-funnel",
+             StatsController,
+             :exploration_featured_funnel
       end
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query
         get "/:domain/current-visitors", StatsController, :current_visitors
-        get "/:domain/main-graph", StatsController, :main_graph
-        get "/:domain/top-stats", StatsController, :top_stats
         get "/:domain/sources", StatsController, :sources
         get "/:domain/channels", StatsController, :channels
         get "/:domain/utm_mediums", StatsController, :utm_mediums
@@ -724,6 +724,7 @@ defmodule PlausibleWeb.Router do
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain/export", StatsController, :csv_export
+      get "/:domain", StatsController, :stats
       get "/:domain/*path", StatsController, :stats
     end
   end

@@ -67,7 +67,7 @@ export type SimpleFilterDimensions =
   | "visit:exit_page"
   | "visit:entry_page_hostname"
   | "visit:exit_page_hostname";
-export type CustomPropertyFilterDimensions = string;
+export type CustomPropertyFilterDimensions = `event:props:${string}`;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
@@ -90,7 +90,10 @@ export type FilterWithoutGoals =
  * filter operation
  */
 export type FilterOperationWithoutGoals = "is_not" | "contains_not";
-export type Clauses = (string | number)[];
+/**
+ * @minItems 1
+ */
+export type Clauses = [string | number, ...(string | number)[]];
 /**
  * @minItems 3
  * @maxItems 4
@@ -153,8 +156,12 @@ export type FilterHasDone = ["has_done" | "has_not_done", FilterTree];
  */
 export type OrderByEntry = [
   Metric | SimpleFilterDimensions | CustomPropertyFilterDimensions | TimeDimensions,
-  "asc" | "desc"
+  SortDirection
 ];
+/**
+ * Sorting order
+ */
+export type SortDirection = "asc" | "desc";
 
 export interface QueryApiSchema {
   /**
@@ -195,14 +202,15 @@ export interface QueryApiSchema {
      */
     trim_relative_date_range?: boolean;
   };
-  pagination?: {
-    /**
-     * Number of rows to limit result to.
-     */
-    limit?: number;
-    /**
-     * Pagination offset.
-     */
-    offset?: number;
-  };
+  pagination?: Pagination;
+}
+export interface Pagination {
+  /**
+   * Number of rows to limit result to.
+   */
+  limit?: number;
+  /**
+   * Pagination offset.
+   */
+  offset?: number;
 }

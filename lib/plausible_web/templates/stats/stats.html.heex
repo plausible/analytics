@@ -11,7 +11,6 @@
     </div>
   <% end %>
 
-  <div class="pt-6"></div>
   <div
     id="stats-react-container"
     style="overflow-anchor: none;"
@@ -39,18 +38,18 @@
     data-shared-link-auth={assigns[:shared_link_auth]}
     data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
-    data-is-dbip={to_string(@is_dbip)}
+    data-is-dbip={to_string(@dbip?)}
     data-current-user-role={@site_role}
     data-current-user-id={
       if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
     }
     data-flags={Jason.encode!(@flags)}
     data-segments={Jason.encode!(@segments)}
-    data-valid-intervals-by-period={
-      Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
-    }
     data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
     data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
+    data-exploration-available={Jason.encode!(@exploration_available?)}
+    data-exploration-journey-end-event={@exploration_journey_end_event}
+    data-exploration-max-journey-steps={@exploration_max_journey_steps}
     data-team-identifier={@team_identifier}
     data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
   >

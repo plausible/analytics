@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Team.Notice do
   import PlausibleWeb.Components.Icons
 
   alias Plausible.Teams
+  alias PlausibleWeb.Components.PrimaDropdown
 
   def owner_cta_banner(assigns) do
     ~H"""
@@ -115,26 +116,31 @@ defmodule PlausibleWeb.Team.Notice do
   end
 
   defp site_ownership_invitation(assigns) do
-    {can_accept?, exceeded_limits} =
+    {can_accept?, can_accept_without_members?, exceeded_limits} =
       case assigns.invitation.ownership_check do
         :ok ->
-          {true, nil}
+          {true, false, nil}
 
         {:error, {:over_plan_limits, limits}} ->
-          {false, PlausibleWeb.TextHelpers.pretty_list(limits)}
+          {false, limits == [:team_member_limit], PlausibleWeb.TextHelpers.pretty_list(limits)}
 
         _ ->
-          {false, nil}
+          {false, false, nil}
       end
 
     assigns =
-      assign(assigns, can_accept?: can_accept?, exceeded_limits: exceeded_limits)
+      assign(assigns,
+        can_accept?: can_accept?,
+        can_accept_without_members?: can_accept_without_members?,
+        exceeded_limits: exceeded_limits
+      )
 
     ~H"""
     <.notice
       id={"site-ownership-invitation-#{@invitation.transfer_id}"}
       title={"#{@invitation.initiator.name} has invited you to own #{@invitation.site.domain}"}
       theme={:white}
+      icon_class="hidden md:block"
     >
       <:icon>
         <div class="shrink-0 -mt-1 bg-green-100/80 dark:bg-green-900/30 rounded-lg p-1.5">
@@ -164,7 +170,7 @@ defmodule PlausibleWeb.Team.Notice do
           }
           theme="ghost"
           size="sm"
-          class="order-2 md:order-1"
+          class="order-3 md:order-1"
           mt?={false}
         >
           Reject
@@ -186,12 +192,48 @@ defmodule PlausibleWeb.Team.Notice do
         >
           Accept
         </.button_link>
+        <PrimaDropdown.dropdown
+          :if={@can_accept_without_members?}
+          id={"ownership-accept-#{@invitation.transfer_id}"}
+          class="order-1 md:order-2"
+        >
+          <PrimaDropdown.dropdown_trigger
+            id={"ownership-accept-trigger-#{@invitation.transfer_id}"}
+            theme="secondary"
+            size="sm"
+          >
+            Accept <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+          </PrimaDropdown.dropdown_trigger>
+          <PrimaDropdown.dropdown_menu id={"ownership-accept-menu-#{@invitation.transfer_id}"}>
+            <PrimaDropdown.dropdown_item
+              as={&link/1}
+              id={"ownership-accept-item-upgrade-#{@invitation.transfer_id}"}
+              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+            >
+              Upgrade to accept
+            </PrimaDropdown.dropdown_item>
+            <PrimaDropdown.dropdown_item
+              as={fn a -> link(Map.put(a, :method, "post")) end}
+              id={"ownership-accept-item-members-#{@invitation.transfer_id}"}
+              href={
+                Routes.invitation_path(
+                  PlausibleWeb.Endpoint,
+                  :accept_invitation,
+                  @invitation.transfer_id,
+                  skip_site_members_transfer: "true"
+                )
+              }
+            >
+              Accept without members
+            </PrimaDropdown.dropdown_item>
+          </PrimaDropdown.dropdown_menu>
+        </PrimaDropdown.dropdown>
         <.button_link
-          :if={not @can_accept?}
+          :if={not @can_accept? and not @can_accept_without_members?}
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
           theme="secondary"
           size="sm"
-          class="order-1 md:order-2"
+          class="order-1 md:order-3"
           mt?={false}
         >
           Upgrade to accept

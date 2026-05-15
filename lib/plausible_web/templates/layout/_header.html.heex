@@ -1,4 +1,4 @@
-<nav class="relative z-20 py-8">
+<nav class="relative z-20 py-5">
   <div class="container print:max-w-full">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
@@ -10,7 +10,7 @@
                 logo_path("logo_dark.svg")
               )
             }
-            class="w-32 hidden dark:inline"
+            class="w-30 hidden dark:inline"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -21,7 +21,7 @@
                 logo_path("logo_light.svg")
               )
             }
-            class="w-32 inline dark:hidden"
+            class="w-30 inline dark:hidden"
             alt="Plausible logo"
             loading="lazy"
           />
@@ -33,10 +33,10 @@
             <ul class="flex items-center gap-2 w-full sm:w-auto">
               <li :if={
                 ee?() && @conn.assigns[:site] &&
-                  Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
+                  Plausible.Auth.super_admin?(@conn.assigns[:current_user])
               }>
                 <.styled_link
-                  class="text-sm mr-6"
+                  class="text-sm font-medium"
                   href={"/cs/sites/site/#{@conn.assigns.site.id}"}
                   new_tab={true}
                 >
@@ -44,7 +44,11 @@
                 </.styled_link>
               </li>
               <li
-                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
+                :if={
+                  ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team]) and
+                    (not Plausible.Teams.setup?(@conn.assigns[:current_team]) or
+                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles())
+                }
                 class="hidden sm:block"
               >
                 <div class="flex items-center p-1 rounded-lg bg-yellow-100 dark:bg-yellow-600/35 overflow-hidden">

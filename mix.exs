@@ -109,8 +109,18 @@ defmodule Plausible.MixProject do
       {:observer_cli, "~> 1.7"},
       {:opentelemetry, "~> 1.7"},
       {:opentelemetry_api, "~> 1.5"},
+      {:opentelemetry_api_experimental,
+       git: "https://github.com/open-telemetry/opentelemetry-erlang.git",
+       ref: "b241ebf4feb7558738d009583bae8602b3c49fd0",
+       sparse: "apps/opentelemetry_api_experimental",
+       override: true},
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_exporter, "~> 1.10"},
+      {:opentelemetry_experimental,
+       git: "https://github.com/open-telemetry/opentelemetry-erlang.git",
+       ref: "b241ebf4feb7558738d009583bae8602b3c49fd0",
+       sparse: "apps/opentelemetry_experimental",
+       override: true},
       {:opentelemetry_phoenix, "~> 2.0.1"},
       {:opentelemetry_oban, "~> 1.1"},
       {:opentelemetry_cowboy, "~> 1.0"},
@@ -132,6 +142,7 @@ defmodule Plausible.MixProject do
       {:prom_ex, "~> 1.8"},
       {:peep, "~> 3.0"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
+      {:recon, "~> 2.5"},
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
       {:sentry, "~> 11.0.4"},
@@ -139,8 +150,7 @@ defmodule Plausible.MixProject do
       {:xml_builder, "~> 2.1"},
       {:siphash, "~> 3.2"},
       {:timex, "~> 3.7"},
-      {:ua_inspector,
-       git: "https://github.com/plausible/ua_inspector.git", branch: "sanitize-pre"},
+      {:ua_inspector, "~> 3.12"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:ex_money, "~> 5.12"},
       {:mjml_eex, "~> 0.12.0"},
@@ -167,8 +177,9 @@ defmodule Plausible.MixProject do
       {:odgn_json_pointer, "~> 3.1.0"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
-      {:phoenix_storybook, "~> 0.9"},
-      {:libcluster, "~> 3.5"}
+      {:phoenix_html_helpers, "~> 1.0"},
+      {:libcluster, "~> 3.5"},
+      {:decimal, "~> 3.0", override: true}
     ]
   end
 
@@ -197,12 +208,10 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "tailwind storybook",
         "esbuild default"
       ],
       "assets.deploy": [
         "tailwind default --minify",
-        "tailwind storybook --minify",
         "esbuild default --minify",
         "phx.digest"
       ]

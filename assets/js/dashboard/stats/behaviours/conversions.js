@@ -3,7 +3,7 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 
 import * as metrics from '../reports/metrics'
-import ListReport from '../reports/list'
+import ListReport from '../reports/list-legacy'
 import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 

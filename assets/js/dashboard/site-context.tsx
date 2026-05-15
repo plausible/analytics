@@ -8,6 +8,12 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     hasProps: dataset.hasProps === 'true',
     funnelsAvailable: dataset.funnelsAvailable === 'true',
     propsAvailable: dataset.propsAvailable === 'true',
+    explorationAvailable: dataset.explorationAvailable === 'true',
+    explorationJourneyEndEvent: dataset.explorationJourneyEndEvent!,
+    explorationMaxJourneySteps: parseInt(
+      dataset.explorationMaxJourneySteps!,
+      10
+    ),
     siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
@@ -20,7 +26,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     background: dataset.background,
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
-    validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
     shared: !!dataset.sharedLinkAuth,
     isConsolidatedView: dataset.isConsolidatedView === 'true'
   }
@@ -36,6 +41,9 @@ export const siteContextDefaultValue = {
   hasGoals: false,
   hasProps: false,
   funnelsAvailable: false,
+  explorationAvailable: false,
+  explorationJourneyEndEvent: '',
+  explorationMaxJourneySteps: 0,
   propsAvailable: false,
   siteSegmentsAvailable: false,
   conversionsOptedOut: false,
@@ -51,7 +59,6 @@ export const siteContextDefaultValue = {
   background: undefined as string | undefined,
   isDbip: false,
   flags: {} as FeatureFlags,
-  validIntervalsByPeriod: {} as Record<string, Array<string>>,
   shared: false,
   isConsolidatedView: false
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import Properties from './props'
-import { FeatureSetupNotice } from '../../components/notice'
+import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
   hasConversionGoalFilter,
   getGoalFilter,
@@ -41,7 +41,17 @@ function maybeRequire() {
   }
 }
 
+function maybeRequireExploration() {
+  if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../../extra/exploration')
+  } else {
+    return { FunnelExploration: null }
+  }
+}
+
 const Funnel = maybeRequire().default
+const { FunnelExploration } = maybeRequireExploration()
 
 function singleGoalFilterApplied(dashboardState) {
   const goalFilter = getGoalFilter(dashboardState)
@@ -290,6 +300,13 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
+  function renderExploration() {
+    if (FunnelExploration === null) {
+      return featureUnavailable()
+    }
+    return <FunnelExploration />
+  }
+
   function renderFunnels() {
     if (Funnel === null) {
       return featureUnavailable()
@@ -358,7 +375,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
 
   function noDataYet() {
     return (
-      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         No data yet
       </div>
     )
@@ -366,7 +383,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
 
   function featureUnavailable() {
     return (
-      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         This feature is unavailable
       </div>
     )
@@ -380,6 +397,8 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         return renderProps()
       case Mode.FUNNELS:
         return renderFunnels()
+      case Mode.EXPLORATION:
+        return renderExploration()
     }
   }
 
@@ -518,11 +537,19 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                   Funnels
                 </TabButton>
               ))}
+            {!site.isConsolidatedView && site.explorationAvailable && (
+              <TabButton
+                active={mode === Mode.EXPLORATION}
+                onClick={setTabFactory(Mode.EXPLORATION)}
+              >
+                Explore
+              </TabButton>
+            )}
           </TabWrapper>
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
           {renderImportedQueryUnsupportedWarning()}
         </div>
-        {mode !== Mode.FUNNELS && (
+        {![Mode.FUNNELS, Mode.EXPLORATION].includes(mode) && (
           <MoreLink state={moreLinkState} linkProps={getMoreLinkProps()} />
         )}
       </ReportHeader>

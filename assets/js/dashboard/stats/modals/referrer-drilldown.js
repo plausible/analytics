@@ -6,13 +6,12 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { addFilter, revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { SortDirection } from '../../hooks/use-order-by'
 import { SourceFavicon } from '../sources/source-favicon'
 
 function ReferrerDrilldownModal() {
@@ -32,7 +31,7 @@ function ReferrerDrilldownModal() {
       `/referrers/${url.maybeEncodeRouteParam(referrer)}`
     ),
     dimensionLabel: 'Referrer',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(

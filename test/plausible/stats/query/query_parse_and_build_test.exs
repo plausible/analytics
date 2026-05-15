@@ -5,6 +5,10 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
   alias Plausible.Stats.{Query, DateTimeRange, Filters, QueryError}
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
+  @date_range_today %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
+    last: @now
+  }
   @date_range_day %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
@@ -79,6 +83,19 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["exit_rate"],
+        "date_range" => "all"
+      }
+
+      assert {:error, %QueryError{message: error}} =
+               Query.parse_and_build(site, params, now: @now)
+
+      assert error =~ "Invalid metric"
+    end
+
+    test "public API does not recognize total_visitors metric", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["total_visitors"],
         "date_range" => "all"
       }
 
@@ -1217,7 +1234,7 @@ defmodule Plausible.Stats.Query.QueryParseAndBuildTest do
     end
 
     for {shortcut, expected_date_range} <- [
-          {"day", @date_range_day},
+          {"day", @date_range_today},
           {"7d", @date_range_7d},
           {"10d", @date_range_10d},
           {"30d", @date_range_30d},

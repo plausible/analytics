@@ -62,6 +62,20 @@ defmodule Plausible.Times do
     Timex.end_of_year(t)
   end
 
+  @spec to_date(DateTime.t(), String.t()) :: Date.t()
+  def to_date(%DateTime{} = dt, tz) do
+    dt
+    |> DateTime.shift_zone!(tz)
+    |> DateTime.to_date()
+  end
+
+  @spec to_naive_datetime!(DateTime.t(), String.t()) :: NaiveDateTime.t()
+  def to_naive_datetime!(%DateTime{} = dt, tz) do
+    dt
+    |> DateTime.shift_zone!(tz)
+    |> DateTime.to_naive()
+  end
+
   @spec humanize(DateTime.t()) :: String.t()
   def humanize(%DateTime{} = dt) do
     Timex.Format.DateTime.Formatters.Relative.format!(dt, "{relative}")

@@ -1,8 +1,7 @@
 import React from 'react'
-import { XMarkIcon } from '@heroicons/react/20/solid'
 import { useParams } from 'react-router-dom'
 
-import Modal from './modal'
+import { ModalLayout, ModalFooter } from '../../components/modal-layout'
 import {
   EVENT_PROPS_PREFIX,
   FILTER_GROUP_TO_MODAL_TYPE,
@@ -21,7 +20,7 @@ import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { SegmentModal } from '../../segments/segment-modals'
 import { findAppliedSegmentFilter } from '../../filtering/segments'
-import { removeFilterButtonClassname } from '../../components/remove-filter-button'
+import { Button } from '../../components/button'
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -178,27 +177,15 @@ class FilterModal extends React.Component {
 
   render() {
     return (
-      <Modal maxWidth="460px" allowScroll={true} onClose={this.closeModal}>
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-base md:text-lg font-bold dark:text-gray-100">
-            Filter by {formatFilterGroup(this.props.modalType)}
-          </h1>
-          <button
-            type="button"
-            onClick={this.closeModal}
-            aria-label="Close modal"
-            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-          >
-            <XMarkIcon className="size-5" />
-          </button>
-        </div>
-
-        <div className="mt-2 md:mt-4 border-b border-gray-300 dark:border-gray-700"></div>
-        <main>
-          <form
-            className="flex flex-col"
-            onSubmit={this.handleSubmit.bind(this)}
-          >
+      <ModalLayout
+        title={`Filter by ${formatFilterGroup(this.props.modalType)}`}
+        onClose={this.closeModal}
+      >
+        <form
+          className="flex flex-col gap-y-6"
+          onSubmit={this.handleSubmit.bind(this)}
+        >
+          <div className="flex flex-col gap-y-3 mb-2">
             {this.getFilterGroups().map((filterGroup) => (
               <FilterModalGroup
                 key={filterGroup}
@@ -210,33 +197,38 @@ class FilterModal extends React.Component {
                 onDeleteRow={this.onDeleteRow.bind(this)}
               />
             ))}
+          </div>
 
-            <div className="mt-6 mb-3 flex gap-x-4 items-center justify-start">
-              <button
-                type="submit"
-                className="button !px-3"
-                disabled={this.isDisabled()}
+          <ModalFooter>
+            {this.state.hasRelevantFilters ? (
+              <Button
+                theme="secondary"
+                size="sm"
+                onClick={() => {
+                  this.selectFiltersAndCloseModal(this.state.otherFilters)
+                }}
               >
-                Apply filter
-              </button>
+                {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1
+                  ? 'Remove filters'
+                  : 'Remove filter'}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                theme="secondary"
+                size="sm"
+                onClick={this.closeModal}
+              >
+                Cancel
+              </Button>
+            )}
 
-              {this.state.hasRelevantFilters && (
-                <button
-                  type="button"
-                  className={removeFilterButtonClassname}
-                  onClick={() => {
-                    this.selectFiltersAndCloseModal(this.state.otherFilters)
-                  }}
-                >
-                  {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1
-                    ? 'Remove filters'
-                    : 'Remove filter'}
-                </button>
-              )}
-            </div>
-          </form>
-        </main>
-      </Modal>
+            <Button type="submit" size="sm" disabled={this.isDisabled()}>
+              Apply filter
+            </Button>
+          </ModalFooter>
+        </form>
+      </ModalLayout>
     )
   }
 }

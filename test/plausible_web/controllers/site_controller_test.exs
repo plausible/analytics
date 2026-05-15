@@ -154,7 +154,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
       end
 
-      conn = get(initial_conn, "/sites")
+      conn = get(initial_conn, "/sites?sort_by=alnum&sort_direction=asc")
       resp = html_response(conn, 200)
 
       for i <- 1..24 do
@@ -212,6 +212,84 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       assert resp =~ nag_message
+    end
+
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and team is not setup",
+         %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+
+      assert text_of_element(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             ) =~ "Upgrade"
+    end
+
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and is owner of a setup team",
+         %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+    end
+
+    @tag :ee_only
+    test "shows upgrade button in header when user is on trial and has billing role in a setup team",
+         %{conn: base_conn} do
+      member = new_user()
+      owner = new_user(trial_expiry_date: Date.add(Date.utc_today(), 30))
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      team = Plausible.Teams.complete_setup(team)
+      add_member(team, user: member, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: member, conn: base_conn})
+      conn = set_current_team(conn, team)
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+             )
+    end
+
+    @tag :ee_only
+    test "does not show upgrade button in header when user is on trial but has non-billing role in a setup team",
+         %{conn: base_conn} do
+      for role <- [:admin, :editor, :viewer] do
+        member = new_user()
+        owner = new_user()
+        {:ok, team} = Plausible.Teams.get_or_create(owner)
+        team = Plausible.Teams.complete_setup(team)
+        add_member(team, user: member, role: role)
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: base_conn})
+        conn = set_current_team(conn, team)
+        resp = conn |> get("/sites") |> html_response(200)
+
+        refute element_exists?(
+                 resp,
+                 ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ),
+               "expected no Upgrade button for role #{role}"
+      end
     end
 
     test "filters by domain", %{conn: conn, user: user} do
@@ -463,7 +541,21 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "only letters, numbers, slashes and period allowed"
+      assert html_response(conn, 200) =~
+               "only letters, numbers, slashes, underscores and period allowed"
+    end
+
+    test "underscores are allowed in the domain", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London",
+            "domain" => "example.com/some_blog_site"
+          }
+        })
+
+      assert redirected_to(conn) ==
+               "/example.com%2Fsome_blog_site/installation?site_created=true&flow="
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
@@ -546,7 +638,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/"
+        assert redirected_to(conn) == "/example.com"
       end
     end
 

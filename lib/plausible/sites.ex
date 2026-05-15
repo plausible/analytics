@@ -459,7 +459,7 @@ defmodule Plausible.Sites do
     include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
 
     site =
-      if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
+      if :super_admin in roles and Plausible.Auth.super_admin?(user.id) do
         get_by_domain!(domain, include_consolidated?: include_consolidated?)
       else
         user.id
@@ -475,7 +475,7 @@ defmodule Plausible.Sites do
     roles = Keyword.fetch!(opts, :roles)
     include_consolidated? = Keyword.fetch!(opts, :include_consolidated?)
 
-    if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
+    if :super_admin in roles and Plausible.Auth.super_admin?(user.id) do
       get_by_domain(domain, include_consolidated?: include_consolidated?)
     else
       user.id

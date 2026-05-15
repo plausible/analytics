@@ -1,124 +1,53 @@
-import { Metric } from '../../../types/query-api'
 import * as api from '../../api'
 import { DashboardState } from '../../dashboard-state'
+import { getMetricLabel, Metric } from '../metrics'
 import {
   ComparisonMode,
   DashboardPeriod,
   isComparisonEnabled,
   isComparisonForbidden
 } from '../../dashboard-time-periods'
-import { PlausibleSite } from '../../site-context'
-import { createStatsQuery, ReportParams, StatsQuery } from '../../stats-query'
+import { PlausibleSite, useSiteContext } from '../../site-context'
+import { createStatsQuery, StatsQuery } from '../../stats-query'
 import {
   hasConversionGoalFilter,
   hasPageFilter,
   isRealTimeDashboard
 } from '../../util/filters'
+import { StatsReportQueryKey, useQueryApi } from '../../hooks/use-query-api'
+import { useMemo } from 'react'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
-export function topStatsQueries(
-  dashboardState: DashboardState,
-  metrics: MetricDef[]
-): [StatsQuery, StatsQuery | null] {
-  let currentVisitorsQuery = null
+export function useTopStatsQuery() {
+  const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
 
-  if (isRealTimeDashboard(dashboardState)) {
-    currentVisitorsQuery = createStatsQuery(dashboardState, {
-      metrics: ['visitors']
-    })
+  const topStatsQueryKey = useMemo((): StatsReportQueryKey => {
+    return [
+      'top-stats',
+      {
+        dashboardState,
+        reportParams: {
+          metrics: chooseMetrics(site, dashboardState),
+          dimensions: [],
+          include: { imports_meta: true }
+        }
+      }
+    ]
+  }, [site, dashboardState])
 
-    currentVisitorsQuery.filters = []
-  }
-  const topStatsQuery = constructTopStatsQuery(dashboardState, metrics)
-
-  return [topStatsQuery, currentVisitorsQuery]
-}
-
-export async function fetchTopStats(
-  site: PlausibleSite,
-  dashboardState: DashboardState
-) {
-  const metrics = chooseMetrics(site, dashboardState)
-  const [topStatsQuery, currentVisitorsQuery] = topStatsQueries(
-    dashboardState,
-    metrics
+  const { apiState, isRealtimeSilentUpdate } = useQueryApi(
+    site,
+    topStatsQueryKey,
+    { getStatsQuery: getTopStatsQuery }
   )
-  const topStatsPromise = api.stats(site, topStatsQuery)
 
-  const currentVisitorsPromise = currentVisitorsQuery
-    ? api.stats(site, currentVisitorsQuery)
-    : null
-
-  const [topStatsResponse, currentVisitorsResponse] = await Promise.all([
-    topStatsPromise,
-    currentVisitorsPromise
-  ])
-
-  return formatTopStatsData(topStatsResponse, currentVisitorsResponse, metrics)
+  return { apiState, isRealtimeSilentUpdate }
 }
 
-export type MetricDef = { key: Metric; label: string }
-
-export function chooseMetrics(
-  site: Pick<PlausibleSite, 'revenueGoals'>,
-  dashboardState: DashboardState
-): MetricDef[] {
-  const revenueMetrics: MetricDef[] =
-    site.revenueGoals.length > 0
-      ? [
-          { key: 'total_revenue', label: 'Total revenue' },
-          { key: 'average_revenue', label: 'Average revenue' }
-        ]
-      : []
-
-  if (
-    isRealTimeDashboard(dashboardState) &&
-    hasConversionGoalFilter(dashboardState)
-  ) {
-    return [
-      { key: 'visitors', label: 'Unique conversions (last 30 min)' },
-      { key: 'events', label: 'Total conversions (last 30 min)' }
-    ]
-  } else if (isRealTimeDashboard(dashboardState)) {
-    return [
-      { key: 'visitors', label: 'Unique visitors (last 30 min)' },
-      { key: 'pageviews', label: 'Pageviews (last 30 min)' }
-    ]
-  } else if (hasConversionGoalFilter(dashboardState)) {
-    return [
-      { key: 'visitors', label: 'Unique conversions' },
-      { key: 'events', label: 'Total conversions' },
-      ...revenueMetrics,
-      { key: 'conversion_rate', label: 'Conversion rate' }
-    ]
-  } else if (hasPageFilter(dashboardState)) {
-    return [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'scroll_depth', label: 'Scroll depth' },
-      { key: 'time_on_page', label: 'Time on page' }
-    ]
-  } else {
-    return [
-      { key: 'visitors', label: 'Unique visitors' },
-      { key: 'visits', label: 'Total visits' },
-      { key: 'pageviews', label: 'Total pageviews' },
-      { key: 'views_per_visit', label: 'Views per visit' },
-      { key: 'bounce_rate', label: 'Bounce rate' },
-      { key: 'visit_duration', label: 'Visit duration' }
-    ]
-  }
-}
-
-function constructTopStatsQuery(
-  dashboardState: DashboardState,
-  metrics: MetricDef[]
-): StatsQuery {
-  const reportParams: ReportParams = {
-    metrics: metrics.map((m) => m.key),
-    include: { imports_meta: true }
-  }
+export function getTopStatsQuery(queryKey: StatsReportQueryKey): StatsQuery {
+  const [_reportId, keyOpts] = queryKey
+  const { dashboardState, reportParams } = keyOpts
 
   const statsQuery = createStatsQuery(dashboardState, reportParams)
 
@@ -139,45 +68,72 @@ function constructTopStatsQuery(
   return statsQuery
 }
 
+export function chooseMetrics(
+  site: Pick<PlausibleSite, 'revenueGoals'>,
+  dashboardState: DashboardState
+): Metric[] {
+  const revenueMetrics: Metric[] =
+    site.revenueGoals.length > 0 ? ['total_revenue', 'average_revenue'] : []
+
+  if (
+    isRealTimeDashboard(dashboardState) &&
+    hasConversionGoalFilter(dashboardState)
+  ) {
+    return ['visitors', 'events']
+  } else if (isRealTimeDashboard(dashboardState)) {
+    return ['visitors', 'pageviews']
+  } else if (hasConversionGoalFilter(dashboardState)) {
+    return ['visitors', 'events', ...revenueMetrics, 'conversion_rate']
+  } else if (hasPageFilter(dashboardState)) {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'bounce_rate',
+      'scroll_depth',
+      'time_on_page'
+    ]
+  } else {
+    return [
+      'visitors',
+      'visits',
+      'pageviews',
+      'views_per_visit',
+      'bounce_rate',
+      'visit_duration'
+    ]
+  }
+}
+
+function getTopStatMetricLabel(
+  metricKey: Metric,
+  { isRealtime, hasConversionGoalFilter }: api.ExtraContext
+) {
+  const metricLabelSuffix = isRealtime ? ' (last 30 min)' : ''
+
+  return `${getMetricLabel(metricKey, { hasConversionGoalFilter })}${metricLabelSuffix}`
+}
+
 type TopStatItem = {
   metric: Metric
-  value: number
+  value: api.MetricValue
   name: string
   graphable: boolean
   change?: number
   comparisonValue?: number
 }
 
-function formatTopStatsData(
-  topStatsResponse: api.QueryApiResponse,
-  currentVisitorsResponse: api.QueryApiResponse | null,
-  metrics: MetricDef[]
-) {
-  const { query, meta, results } = topStatsResponse
+export function formatTopStatsData(topStatsResponse: api.QueryApiResponse) {
+  const { query, meta, results, extraContext } = topStatsResponse
 
   const topStats: TopStatItem[] = []
 
-  if (currentVisitorsResponse) {
-    topStats.push({
-      metric: currentVisitorsResponse.query.metrics[0],
-      value: currentVisitorsResponse.results[0].metrics[0],
-      name: 'Current visitors',
-      graphable: false
-    })
-  }
-
   for (let i = 0; i < query.metrics.length; i++) {
     const metricKey = query.metrics[i]
-    const metricDef = metrics.find((m) => m.key === metricKey)
-
-    if (!metricDef) {
-      throw new Error('API response returned a metric that was not asked for')
-    }
-
     topStats.push({
       metric: metricKey,
       value: results[0].metrics[i],
-      name: metricDef.label,
+      name: getTopStatMetricLabel(metricKey, extraContext),
       graphable: true,
       change: results[0].comparison?.change[i],
       comparisonValue: results[0].comparison?.metrics[i]
@@ -193,5 +149,41 @@ function formatTopStatsData(
     ? query.comparison_date_range[1].split('T')[0]
     : null
 
-  return { topStats, meta, from, to, comparingFrom, comparingTo }
+  const timeRange = getPartialDayTimeRange(query.date_range)
+
+  const comparisonTimeRange = query.comparison_date_range
+    ? getPartialDayTimeRange(query.comparison_date_range as [string, string])
+    : null
+
+  return {
+    topStats,
+    meta,
+    from,
+    to,
+    comparingFrom,
+    comparingTo,
+    timeRange,
+    comparisonTimeRange
+  }
+}
+
+const END_OF_DAY = '23:59:59'
+
+// Returns "until HH:MM" when the date range is a partial day (period=day for
+// today, where the range is trimmed to the current time). Returns null otherwise.
+export function getPartialDayTimeRange(
+  dateRange: [string, string]
+): string | null {
+  const [startIso, endIso] = dateRange
+  if (!endIso.includes('T')) return null
+
+  const [startDate, endDate] = [startIso, endIso].map(
+    (iso) => iso.split('T')[0]
+  )
+  if (startDate !== endDate) return null
+
+  const endTime = endIso.split('T')[1]
+  if (endTime.startsWith(END_OF_DAY)) return null
+
+  return `until ${endTime.substring(0, 5)}`
 }

@@ -10,9 +10,7 @@ defmodule PlausibleWeb.Api.StatsController do
     Query,
     Comparisons,
     Filters,
-    Time,
     TableDecider,
-    TimeOnPage,
     Dashboard,
     ParsedQueryParams,
     QueryBuilder,
@@ -26,471 +24,35 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
+  on_ee do
+    plug PlausibleWeb.SuperAdminOnlyPlug
+         when action in [
+                :exploration_next,
+                :exploration_funnel,
+                :exploration_next_with_funnel,
+                :exploration_featured_funnel
+              ]
+  end
+
   plug(:date_validation_plug when action not in [:query])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
 
   def query(conn, params) do
     site = conn.assigns.site
-
-    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params),
-         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
-      json(conn, Plausible.Stats.query(site, query))
-    else
-      {:error, %QueryError{message: message}} -> bad_request(conn, message)
-    end
-  end
-
-  @doc """
-  Returns a time-series based on given parameters.
-
-  ## Parameters
-
-  This API accepts the following parameters:
-
-    * `period` - x-axis of the graph, e.g. `12mo`, `day`, `custom`.
-
-    * `metric` - y-axis of the graph, e.g. `visits`, `visitors`, `pageviews`.
-      See the Stats API ["Metrics"](https://plausible.io/docs/stats-api#metrics)
-      section for more details. Defaults to `visitors`.
-
-    * `interval` - granularity of the time-series data. You can think of it as
-      a `GROUP BY` clause. Possible values are `minute`, `hour`, `date`, `week`,
-      and `month`. The default depends on the `period` parameter. Check
-      `Plausible.Query.from/2` for each default.
-
-    * `filters` - optional filters to drill down data. See the Stats API
-      ["Filtering"](https://plausible.io/docs/stats-api#filtering) section for
-      more details.
-
-    * `with_imported` - boolean indicating whether to include Google Analytics
-      imported data or not. Defaults to `false`.
-
-  Full example:
-  ```elixir
-  %{
-    "from" => "2021-09-06",
-    "interval" => "month",
-    "metric" => "visitors",
-    "period" => "custom",
-    "to" => "2021-12-13"
-  }
-  ```
-
-  ## Response
-
-  Returns a map with the following keys:
-
-    * `plot` - list of values for the requested metric representing the y-axis
-      of the graph.
-
-    * `labels` - list of date times representing the x-axis of the graph.
-
-    * `present_index` - index of the element representing the current date in
-      `labels` and `plot` lists.
-
-    * `interval` - the interval used for querying.
-
-    * `includes_imported` - boolean indicating whether imported data
-      was queried or not.
-
-    * `full_intervals` - map of dates indicating whether the interval has been
-      cut off by the requested date range or not. For example, if looking at a
-      month week-by-week, some weeks may be cut off by the month boundaries.
-      It's useful to adjust the graph display slightly in case the interval is
-      not 'full' so that the user understands why the numbers might be lower for
-      those partial periods.
-
-  Full example:
-  ```elixir
-  %{
-    "full_intervals" => %{
-      "2021-09-01" => false,
-      "2021-10-01" => true,
-      "2021-11-01" => true,
-      "2021-12-01" => false
-    },
-    "interval" => "month",
-    "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
-    "plot" => [0, 0, 0, 0],
-    "present_index" => nil,
-    "includes_imported" => false
-  }
-  ```
-
-  """
-  def main_graph(conn, params) do
-    site = conn.assigns[:site]
     now = conn.private[:now]
 
-    with {:ok, dates} <- parse_date_params(params),
-         :ok <- validate_interval(params),
-         :ok <- validate_interval_granularity(site, params, dates),
-         params <- realtime_period_to_30m(params),
-         query = Query.from(site, params, debug_metadata: debug_metadata(conn), now: now),
-         query <- Query.set_include(query, :trim_relative_date_range, true),
-         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
+    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params, now: now),
+         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
+      query =
+        if query.include.time_labels do
+          Query.set_include(query, :time_label_result_indices, true)
+        else
+          query
+        end
 
-      labels = label_timeseries(timeseries_result, comparison_result)
-      present_index = present_index_for(site, query, labels)
-      full_intervals = build_full_intervals(query, labels)
-
-      json(conn, %{
-        metric: metric,
-        plot: plot_timeseries(timeseries_result, metric),
-        labels: labels,
-        comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
-        comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
-        present_index: present_index,
-        full_intervals: full_intervals
-      })
+      json(conn, Plausible.Stats.query(site, query))
     else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
-  end
-
-  defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, & &1[metric])
-  end
-
-  defp label_timeseries(main_result, nil) do
-    Enum.map(main_result, & &1.date)
-  end
-
-  @blank_value "__blank__"
-  defp label_timeseries(main_result, comparison_result) do
-    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
-
-    if blanks_to_fill > 0 do
-      blanks = List.duplicate(@blank_value, blanks_to_fill)
-      Enum.map(main_result, & &1.date) ++ blanks
-    else
-      Enum.map(main_result, & &1.date)
-    end
-  end
-
-  defp build_full_intervals(
-         %Query{interval: "week"} = query,
-         labels
-       ) do
-    date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_week/1, &Date.end_of_week/1)
-  end
-
-  defp build_full_intervals(
-         %Query{interval: "month"} = query,
-         labels
-       ) do
-    date_range = Query.date_range(query)
-    build_intervals(labels, date_range, &Date.beginning_of_month/1, &Date.end_of_month/1)
-  end
-
-  defp build_full_intervals(_query, _labels) do
-    nil
-  end
-
-  def build_intervals(labels, date_range, start_fn, end_fn) do
-    for label <- labels, into: %{} do
-      case Date.from_iso8601(label) do
-        {:ok, date} ->
-          interval_start = start_fn.(date)
-          interval_end = end_fn.(date)
-
-          within_interval? =
-            Enum.member?(date_range, interval_start) && Enum.member?(date_range, interval_end)
-
-          {label, within_interval?}
-
-        _ ->
-          {label, false}
-      end
-    end
-  end
-
-  def top_stats(conn, params) do
-    site = conn.assigns[:site]
-
-    params = realtime_period_to_30m(params)
-
-    query =
-      site
-      |> Query.from(params, debug_metadata: debug_metadata(conn))
-      |> Query.set_include(:imports_meta, true)
-
-    %{
-      top_stats: top_stats,
-      meta: meta,
-      sample_percent: sample_percent,
-      graphable_metrics: graphable_metrics
-    } = fetch_top_stats(site, query)
-
-    comparison_query = comparison_query(query)
-
-    json(conn, %{
-      top_stats: top_stats,
-      meta: meta,
-      graphable_metrics: graphable_metrics,
-      interval: query.interval,
-      sample_percent: sample_percent,
-      with_imported_switch: with_imported_switch_info(meta),
-      includes_imported: meta[:imports_included] == true,
-      comparing_from: query.include.compare && Query.date_range(comparison_query).first,
-      comparing_to: query.include.compare && Query.date_range(comparison_query).last,
-      from: Query.date_range(query).first,
-      to: Query.date_range(query).last
-    })
-  end
-
-  defp with_imported_switch_info(%Jason.OrderedObject{} = meta) do
-    case {meta[:imports_included], meta[:imports_skip_reason]} do
-      {true, nil} ->
-        %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
-
-      {false, nil} ->
-        %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
-
-      {false, :unsupported_query} ->
-        %{visible: true, togglable: false, tooltip_msg: "Imported data cannot be included"}
-
-      {false, reason} when reason in [:no_imported_data, :out_of_range] ->
-        %{visible: false, togglable: false, tooltip_msg: nil}
-    end
-  end
-
-  defp present_index_for(site, query, dates) do
-    case query.interval do
-      "hour" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> Calendar.strftime("%Y-%m-%d %H:00:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "day" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "week" ->
-        date_range = Query.date_range(query)
-
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Time.date_or_weekstart(date_range)
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "month" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> DateTime.to_date()
-          |> Date.beginning_of_month()
-          |> Date.to_string()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "minute" ->
-        current_date =
-          DateTime.now!(site.timezone)
-          |> Calendar.strftime("%Y-%m-%d %H:%M:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
-    end
-  end
-
-  defp fetch_top_stats(site, query) do
-    goal_filter? =
-      toplevel_goal_filter?(query)
-
-    cond do
-      query.input_date_range == :realtime_30m && goal_filter? ->
-        fetch_goal_realtime_top_stats(site, query)
-
-      query.input_date_range == :realtime_30m ->
-        fetch_realtime_top_stats(site, query)
-
-      goal_filter? ->
-        fetch_goal_top_stats(site, query)
-
-      true ->
-        fetch_other_top_stats(site, query)
-    end
-  end
-
-  defp fetch_goal_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :compare, nil)
-
-    %{
-      results: %{
-        visitors: %{value: unique_conversions},
-        events: %{value: total_conversions}
-      },
-      meta: meta
-    } = Stats.aggregate(site, query, [:visitors, :events])
-
-    top_stats = [
-      %{
-        name: "Current visitors",
-        graph_metric: :current_visitors,
-        value: Stats.current_visitors(site)
-      },
-      %{
-        name: "Unique conversions (last 30 min)",
-        graph_metric: :visitors,
-        value: unique_conversions
-      },
-      %{
-        name: "Total conversions (last 30 min)",
-        graph_metric: :events,
-        value: total_conversions
-      }
-    ]
-
-    %{
-      top_stats: top_stats,
-      meta: meta,
-      graphable_metrics: [:visitors, :events],
-      sample_percent: 100
-    }
-  end
-
-  defp fetch_realtime_top_stats(site, query) do
-    query = Query.set_include(query, :compare, nil)
-
-    %{
-      results: %{
-        visitors: %{value: visitors},
-        pageviews: %{value: pageviews}
-      },
-      meta: meta
-    } = Stats.aggregate(site, query, [:visitors, :pageviews])
-
-    top_stats = [
-      %{
-        name: "Current visitors",
-        graph_metric: :current_visitors,
-        value: Stats.current_visitors(site)
-      },
-      %{
-        name: "Unique visitors (last 30 min)",
-        graph_metric: :visitors,
-        value: visitors
-      },
-      %{
-        name: "Pageviews (last 30 min)",
-        graph_metric: :pageviews,
-        value: pageviews
-      }
-    ]
-
-    %{
-      top_stats: top_stats,
-      meta: meta,
-      sample_percent: 100,
-      graphable_metrics: [:visitors, :pageviews]
-    }
-  end
-
-  defp fetch_goal_top_stats(site, query) do
-    metrics =
-      [:visitors, :events, :conversion_rate] ++ @revenue_metrics
-
-    %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)
-
-    top_stats =
-      [
-        top_stats_entry(results, "Unique conversions", :visitors),
-        top_stats_entry(results, "Total conversions", :events),
-        on_ee do
-          top_stats_entry(results, "Average revenue", :average_revenue)
-        end,
-        on_ee do
-          top_stats_entry(results, "Total revenue", :total_revenue)
-        end,
-        top_stats_entry(results, "Conversion rate", :conversion_rate)
-      ]
-      |> Enum.reject(&is_nil/1)
-
-    %{top_stats: top_stats, meta: meta, graphable_metrics: metrics, sample_percent: 100}
-  end
-
-  defp fetch_other_top_stats(site, query) do
-    page_filter? =
-      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
-
-    metrics = [:visitors, :visits, :pageviews, :sample_percent]
-
-    metrics =
-      cond do
-        page_filter? and query.include_imported ->
-          metrics ++ [:bounce_rate, :scroll_depth]
-
-        page_filter? ->
-          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
-
-        true ->
-          metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
-      end
-
-    %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)
-
-    top_stats =
-      [
-        top_stats_entry(results, "Unique visitors", :visitors),
-        top_stats_entry(results, "Total visits", :visits),
-        top_stats_entry(results, "Total pageviews", :pageviews),
-        top_stats_entry(results, "Views per visit", :views_per_visit),
-        top_stats_entry(results, "Bounce rate", :bounce_rate),
-        top_stats_entry(results, "Visit duration", :visit_duration),
-        top_stats_entry(results, "Time on page", :time_on_page,
-          formatter: fn
-            nil -> 0
-            value -> value
-          end
-        ),
-        top_stats_entry(results, "Scroll depth", :scroll_depth)
-      ]
-      |> Enum.filter(& &1)
-
-    sample_percent = results[:sample_percent][:value]
-
-    %{
-      top_stats: top_stats,
-      meta: meta,
-      graphable_metrics:
-        if(TimeOnPage.new_time_on_page_visible?(site),
-          do: metrics,
-          else: metrics -- [:time_on_page]
-        ),
-      sample_percent: sample_percent
-    }
-  end
-
-  defp top_stats_entry(current_results, name, key, opts \\ []) do
-    if current_results[key] do
-      formatter = Keyword.get(opts, :formatter, & &1)
-      value = get_in(current_results, [key, :value])
-
-      %{name: name, value: formatter.(value), graph_metric: key}
-      |> maybe_put_comparison(current_results, key, formatter)
-    end
-  end
-
-  defp maybe_put_comparison(entry, results, key, formatter) do
-    prev_value = get_in(results, [key, :comparison_value])
-    change = get_in(results, [key, :change])
-
-    if prev_value do
-      entry
-      |> Map.put(:comparison_value, formatter.(prev_value))
-      |> Map.put(:change, change)
-    else
-      entry
+      {:error, %QueryError{message: message}} -> H.bad_request(conn, message)
     end
   end
 
@@ -575,6 +137,163 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_ee do
+    alias Plausible.Stats.Exploration
+
+    @exploration_wildcard_disabled_flag :exploration_wildcard_disabled
+    @exploration_hourly_limit 600
+    @exploration_burst_limit 10
+
+    defp check_exploration_rate_limit(site) do
+      key = "exploration:#{site.id}"
+
+      with {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.hours(1), @exploration_hourly_limit),
+           {:allow, _} <-
+             Plausible.RateLimit.check_rate(key, :timer.seconds(10), @exploration_burst_limit) do
+        :ok
+      else
+        {:deny, _} -> {:error, :rate_limit}
+      end
+    end
+
+    def exploration_next(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
+      search_term = params["search_term"] || ""
+
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
+           {:ok, next_steps} <-
+             Exploration.next_steps(site, query, journey,
+               search_term: search_term,
+               direction: direction,
+               include_wildcard?: include_wildcard?
+             ) do
+        json(conn, next_steps)
+      else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
+        {:error, :journey_too_long} ->
+          H.bad_request(conn, "The journey is too long")
+      end
+    end
+
+    def exploration_funnel(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
+
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           {:ok, funnel} <-
+             Exploration.journey_funnel(query, journey, direction) do
+        json(conn, funnel)
+      else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
+        {:error, :empty_journey} ->
+          H.bad_request(conn, "We are unable to show funnels when journey is empty")
+
+        {:error, :journey_too_long} ->
+          H.bad_request(conn, "The journey is too long")
+      end
+    end
+
+    def exploration_featured_funnel(conn, params) do
+      site = conn.assigns.site
+
+      case check_exploration_rate_limit(site) do
+        :ok ->
+          query = Query.from(site, params, debug_metadata: debug_metadata(conn))
+
+          include_wildcard? =
+            not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
+
+          case Exploration.featured_funnel(site, query,
+                 max_steps: params["max_steps"],
+                 max_candidates: params["max_candidates"],
+                 include_wildcard?: include_wildcard?
+               ) do
+            {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
+            {:error, :not_found} -> json(conn, [])
+          end
+
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+      end
+    end
+
+    def exploration_next_with_funnel(conn, %{"journey" => steps} = params) do
+      site = conn.assigns.site
+      search_term = params["search_term"] || ""
+      include_funnel? = params["include_funnel"] == true
+
+      with :ok <- check_exploration_rate_limit(site),
+           {:ok, journey} <- parse_journey(steps),
+           {:ok, direction} <- parse_exploration_direction(params["direction"]),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           include_wildcard? =
+             not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site),
+           {:ok, next_steps} <-
+             Exploration.next_steps(site, query, journey,
+               search_term: search_term,
+               direction: direction,
+               include_wildcard?: include_wildcard?
+             ),
+           funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
+        json(conn, %{next: next_steps, funnel: funnel})
+      else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+
+        _ ->
+          H.bad_request(conn, "There was an error with your request")
+      end
+    end
+
+    defp maybe_include_funnel(true, query, journey, direction) do
+      case Exploration.journey_funnel(query, journey, direction) do
+        {:ok, funnel_data} -> funnel_data
+        {:error, :empty_journey} -> []
+      end
+    end
+
+    defp maybe_include_funnel(false, _, _, _), do: []
+
+    defp parse_journey(input) when is_binary(input) do
+      input
+      |> Jason.decode!()
+      |> Enum.map(&parse_journey_step/1)
+      |> then(&{:ok, &1})
+    end
+
+    defp parse_journey_step(%{
+           "name" => name,
+           "pathname" => pathname,
+           "includes_subpaths" => includes_subpaths,
+           "subpaths_count" => subpaths_count,
+           "is_goal" => is_goal
+         }) do
+      Exploration.Journey.Step.new(
+        name,
+        pathname,
+        includes_subpaths,
+        subpaths_count,
+        is_goal
+      )
+    end
+
+    defp parse_exploration_direction("backward"), do: {:ok, :backward}
+    defp parse_exploration_direction("forward"), do: {:ok, :forward}
+    defp parse_exploration_direction(_), do: {:ok, :forward}
+  end
+
+  on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do
       site = Plausible.Repo.preload(conn.assigns.site, :team)
 
@@ -586,7 +305,7 @@ defmodule PlausibleWeb.Api.StatsController do
         json(conn, funnel)
       else
         {:error, {:invalid_funnel_query, due_to}} ->
-          bad_request(
+          H.bad_request(
             conn,
             "We are unable to show funnels when the dashboard is filtered by #{due_to}",
             %{
@@ -607,7 +326,7 @@ defmodule PlausibleWeb.Api.StatsController do
           )
 
         _ ->
-          bad_request(conn, "There was an error with your request")
+          H.bad_request(conn, "There was an error with your request")
       end
     end
 
@@ -965,7 +684,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
-        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
+        meta: Map.new(meta.values) |> Map.merge(Stats.Breakdown.formatted_date_ranges(query)),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1081,49 +800,53 @@ defmodule PlausibleWeb.Api.StatsController do
       results
       |> transform_keys(%{country: :code})
 
-    if params["csv"] do
-      countries =
-        countries
-        |> Enum.map(fn country ->
-          country_info = get_country(country[:code])
-          Map.put(country, :name, country_info.name)
-        end)
+    countries_response(conn, query, meta, countries, !!params["csv"])
+  end
 
-      if toplevel_goal_filter?(query) do
-        countries
-        |> transform_keys(%{visitors: :conversions})
-        |> to_csv([:name, :conversions, :conversion_rate])
-      else
-        countries |> to_csv([:name, :visitors])
-      end
+  defp countries_response(_conn, query, _meta, countries, true = _csv?) do
+    countries =
+      countries
+      |> Enum.map(fn country ->
+        country_info = get_country(country[:code])
+        Map.put(country, :name, country_info.name)
+      end)
+
+    if toplevel_goal_filter?(query) do
+      countries
+      |> transform_keys(%{visitors: :conversions})
+      |> to_csv([:name, :conversions, :conversion_rate])
     else
-      countries =
-        Enum.map(countries, fn row ->
-          country = get_country(row[:code])
-
-          if country do
-            Map.merge(row, %{
-              name: country.name,
-              flag: country.flag,
-              alpha_3: country.alpha_3,
-              code: country.alpha_2
-            })
-          else
-            Map.merge(row, %{
-              name: row[:code],
-              flag: "",
-              alpha_3: "",
-              code: ""
-            })
-          end
-        end)
-
-      json(conn, %{
-        results: countries,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
-        skip_imported_reason: meta[:imports_skip_reason]
-      })
+      countries |> to_csv([:name, :visitors])
     end
+  end
+
+  defp countries_response(conn, query, meta, countries, _csv?) do
+    countries =
+      Enum.map(countries, fn row ->
+        country = get_country(row[:code])
+
+        if country do
+          Map.merge(row, %{
+            name: country.name,
+            flag: country.flag,
+            alpha_3: country.alpha_3,
+            code: country.alpha_2
+          })
+        else
+          Map.merge(row, %{
+            name: row[:code],
+            flag: "",
+            alpha_3: "",
+            code: ""
+          })
+        end
+      end)
+
+    json(conn, %{
+      results: countries,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
+      skip_imported_reason: meta[:imports_skip_reason]
+    })
   end
 
   def regions(conn, params) do
@@ -1637,7 +1360,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp date_validation_plug(conn, _opts) do
     case parse_date_params(conn.params) do
       {:ok, _dates} -> conn
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
+      {:error, message} when is_binary(message) -> H.bad_request(conn, message)
     end
   end
 
@@ -1654,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController do
         conn
 
       :error ->
-        bad_request(
+        H.bad_request(
           conn,
           "The first filter must be for the segment with id #{segment_id}"
         )
@@ -1707,84 +1430,6 @@ defmodule PlausibleWeb.Api.StatsController do
             "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
       end
     end)
-  end
-
-  defp validate_interval(params) do
-    with %{"interval" => interval} <- params,
-         true <- Plausible.Stats.Interval.valid?(interval) do
-      :ok
-    else
-      %{} ->
-        :ok
-
-      false ->
-        values = Enum.join(Plausible.Stats.Interval.list(), ", ")
-        {:error, "Invalid value for interval. Accepted values are: #{values}"}
-    end
-  end
-
-  defp validate_interval_granularity(site, params, dates) do
-    case params do
-      %{"interval" => interval, "period" => "custom", "from" => _, "to" => _} ->
-        if Plausible.Stats.Interval.valid_for_period?("custom", interval,
-             site: site,
-             from: dates["from"],
-             to: dates["to"]
-           ) do
-          :ok
-        else
-          {:error,
-           "Invalid combination of interval and period. Custom ranges over 12 months must come with greater granularity, e.g. `period=custom,interval=week`"}
-        end
-
-      %{"interval" => interval, "period" => period} ->
-        if Plausible.Stats.Interval.valid_for_period?(period, interval, site: site) do
-          :ok
-        else
-          {:error,
-           "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
-        end
-
-      _ ->
-        :ok
-    end
-  end
-
-  defp parse_and_validate_graph_metric(params, query) do
-    metric =
-      case params["metric"] do
-        nil -> :visitors
-        "conversions" -> :visitors
-        m -> Plausible.Stats.Metrics.from_string!(m)
-      end
-
-    requires_goal_filter? = metric in [:conversion_rate, :events]
-    has_goal_filter? = toplevel_goal_filter?(query)
-
-    requires_page_filter? = metric == :scroll_depth
-
-    has_page_filter? =
-      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
-
-    cond do
-      requires_goal_filter? and not has_goal_filter? ->
-        {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-
-      requires_page_filter? and not has_page_filter? ->
-        {:error, "Metric `#{metric}` can only be queried with a page filter"}
-
-      true ->
-        {:ok, metric}
-    end
-  end
-
-  defp bad_request(conn, message, extra \\ %{}) do
-    payload = Map.merge(extra, %{error: message})
-
-    conn
-    |> put_status(400)
-    |> json(payload)
-    |> halt()
   end
 
   def comparison_query(query) do

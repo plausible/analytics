@@ -9,12 +9,11 @@ import {
   getGoalFilter,
   hasConversionGoalFilter
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { SortDirection } from '../../hooks/use-order-by'
 
 function PropsModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -36,7 +35,7 @@ function PropsModal() {
       `/custom-prop-values/${url.maybeEncodeRouteParam(propKey)}`
     ),
     dimensionLabel: propKey,
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(

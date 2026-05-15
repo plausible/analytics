@@ -43,6 +43,7 @@ defmodule Plausible.FunnelsTest do
 
         assert funnel.inserted_at
         assert funnel.name == "From blog to signup and purchase"
+        assert funnel.strict_order == false
         assert [fg1, fg2, fg3] = funnel.steps
 
         assert fg1.goal_id == g1["goal_id"]
@@ -74,6 +75,36 @@ defmodule Plausible.FunnelsTest do
         assert fg2.step_order == 2
 
         assert funnel1.id == funnel2.id
+      end
+
+      test "update funnel strict_order", %{site: site, steps: [g1, g2, g3 | _]} do
+        {:ok, funnel} =
+          Funnels.create(
+            site,
+            "Sample funnel",
+            [g1, g2]
+          )
+
+        assert funnel.strict_order == false
+
+        {:ok, strict_funnel} =
+          Funnels.update(
+            funnel,
+            "Sample funnel",
+            [g1, g2, g3],
+            strict_order?: true
+          )
+
+        assert strict_funnel.strict_order == true
+
+        {:ok, preserved_funnel} =
+          Funnels.update(
+            strict_funnel,
+            "Sample funnel",
+            [g1, g2]
+          )
+
+        assert preserved_funnel.strict_order == true
       end
 
       test "retrieve a funnel by id and site, get steps in order", %{
@@ -297,6 +328,57 @@ defmodule Plausible.FunnelsTest do
                     }
                   ]
                 }} = funnel_data
+      end
+
+      test "strict-order funnels stop at intervention events", %{
+        site: site,
+        steps: [g1, g2, g3 | _]
+      } do
+        {:ok, non_strict_funnel} =
+          Funnels.create(
+            site,
+            "From blog to signup and purchase",
+            [g1, g2, g3]
+          )
+
+        {:ok, strict_funnel} =
+          Funnels.create(
+            site,
+            "Strict from blog to signup and purchase",
+            [g1, g2, g3],
+            strict_order?: true
+          )
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/go/to/blog/foo",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          build(:pageview,
+            pathname: "/some/other/page",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:01]
+          ),
+          build(:event,
+            name: "Signup",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:02]
+          ),
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:03]
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        {:ok, non_strict_funnel_data} = Stats.funnel(site, query, non_strict_funnel.id)
+        {:ok, strict_funnel_data} = Stats.funnel(site, query, strict_funnel.id)
+
+        assert Enum.at(non_strict_funnel_data.steps, 2).visitors == 1
+        assert Enum.at(strict_funnel_data.steps, 2).visitors == 0
       end
 
       test "funnels can be evaluated even where there are no visits yet", %{

@@ -1,13 +1,12 @@
 import React, { useCallback } from 'react'
 import Modal from './../modal'
 import { addFilter } from '../../../dashboard-state'
-import BreakdownModal from './../breakdown-modal'
+import BreakdownModal from '../breakdown-modal-legacy'
 import * as url from '../../../util/url'
 import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { browserIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by'
 
 function BrowserVersionsModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -18,7 +17,7 @@ function BrowserVersionsModal() {
     dimension: 'browser_version',
     endpoint: url.apiPath(site, '/browser-versions'),
     dimensionLabel: 'Browser version',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(

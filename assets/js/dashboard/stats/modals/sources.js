@@ -4,13 +4,12 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import BreakdownModal from './breakdown-modal'
+import BreakdownModal from './breakdown-modal-legacy'
 import * as metrics from '../reports/metrics'
 import * as url from '../../util/url'
 import { addFilter, revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { SortDirection } from '../../hooks/use-order-by'
 import { SourceFavicon } from '../sources/source-favicon'
 
 const VIEWS = {
@@ -20,7 +19,7 @@ const VIEWS = {
       dimension: 'source',
       endpoint: '/sources',
       dimensionLabel: 'Source',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     },
     renderIcon: (listItem) => {
       return (
@@ -37,7 +36,7 @@ const VIEWS = {
       dimension: 'channel',
       endpoint: '/channels',
       dimensionLabel: 'Channel',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   },
   utm_mediums: {
@@ -46,7 +45,7 @@ const VIEWS = {
       dimension: 'utm_medium',
       endpoint: '/utm_mediums',
       dimensionLabel: 'UTM medium',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   },
   utm_sources: {
@@ -55,7 +54,7 @@ const VIEWS = {
       dimension: 'utm_source',
       endpoint: '/utm_sources',
       dimensionLabel: 'UTM source',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   },
   utm_campaigns: {
@@ -64,7 +63,7 @@ const VIEWS = {
       dimension: 'utm_campaign',
       endpoint: '/utm_campaigns',
       dimensionLabel: 'UTM campaign',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   },
   utm_contents: {
@@ -73,7 +72,7 @@ const VIEWS = {
       dimension: 'utm_content',
       endpoint: '/utm_contents',
       dimensionLabel: 'UTM content',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   },
   utm_terms: {
@@ -82,7 +81,7 @@ const VIEWS = {
       dimension: 'utm_term',
       endpoint: '/utm_terms',
       dimensionLabel: 'UTM term',
-      defaultOrder: ['visitors', SortDirection.desc]
+      defaultOrder: ['visitors', 'desc']
     }
   }
 }

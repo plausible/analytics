@@ -67,22 +67,7 @@
       }
     },
     "pagination": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "limit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10000,
-          "description": "Number of rows to limit result to."
-        },
-        "offset": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0,
-          "description": "Pagination offset."
-        }
-      }
+      "$ref": "#/definitions/pagination"
     }
   },
   "required": ["site_id", "metrics", "date_range"],
@@ -290,6 +275,7 @@
     },
     "custom_property_filter_dimensions": {
       "type": "string",
+      "tsType": "`event:props:${string}`",
       "pattern": "^event:props:.+",
       "markdownDescription": "Custom property. See [documentation](https://plausible.io/docs/custom-props/introduction) for more information",
       "examples": ["event:props:url", "event:props:path"]
@@ -316,6 +302,7 @@
     },
     "clauses": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": ["string", "integer"]
       }
@@ -501,6 +488,29 @@
         { "$ref": "#/definitions/filter_tree" }
       ]
     },
+    "pagination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Number of rows to limit result to."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Pagination offset."
+        }
+      }
+    },
+    "sort_direction": {
+      "type": "string",
+      "enum": ["asc", "desc"],
+      "description": "Sorting order"
+    },
     "order_by_entry": {
       "type": "array",
       "additionalItems": false,
@@ -516,11 +526,7 @@
           ],
           "markdownDescription": "Metric or dimension to order by. Must be listed under `metrics` or `dimensions`"
         },
-        {
-          "type": "string",
-          "enum": ["asc", "desc"],
-          "description": "Sorting order"
-        }
+        { "$ref": "#/definitions/sort_direction" }
       ]
     }
   }

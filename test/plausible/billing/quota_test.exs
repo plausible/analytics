@@ -156,7 +156,33 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v4_1m_plan_id)
 
-      assert :ok = Quota.ensure_within_plan_limits(usage, plan, ignore_pageview_limit: true)
+      assert :ok = Quota.ensure_within_plan_limits(usage, plan, skip_pageview_limit_check?: true)
+    end
+
+    test "can skip checking the team member limit" do
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 1000}},
+        team_members: 4,
+        sites: 2
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert :ok =
+               Quota.ensure_within_plan_limits(usage, plan, skip_team_member_limit_check?: true)
+    end
+
+    test "can skip checking the site limit" do
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 1000}},
+        team_members: 1,
+        sites: 8
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert :ok =
+               Quota.ensure_within_plan_limits(usage, plan, skip_site_limit_check?: true)
     end
 
     test "by the last 30 days usage, pageview limit is exceeded when more than 10% over the limit" do

@@ -1,13 +1,12 @@
 import React, { useCallback } from 'react'
 import Modal from './../modal'
 import { addFilter } from '../../../dashboard-state'
-import BreakdownModal from './../breakdown-modal'
+import BreakdownModal from '../breakdown-modal-legacy'
 import * as url from '../../../util/url'
 import { useDashboardStateContext } from '../../../dashboard-state-context'
 import { useSiteContext } from '../../../site-context'
 import { osIconFor } from '../../devices'
 import chooseMetrics from './choose-metrics'
-import { SortDirection } from '../../../hooks/use-order-by'
 
 function OperatingSystemsModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -18,7 +17,7 @@ function OperatingSystemsModal() {
     dimension: 'os',
     endpoint: url.apiPath(site, '/operating-systems'),
     dimensionLabel: 'Operating system',
-    defaultOrder: ['visitors', SortDirection.desc]
+    defaultOrder: ['visitors', 'desc']
   }
 
   const getFilterInfo = useCallback(
