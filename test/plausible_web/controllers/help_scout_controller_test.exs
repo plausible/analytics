@@ -49,8 +49,9 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
         assert [] = Plug.Conn.get_resp_header(conn, "content-security-policy")
 
-        assert html_response(conn, 200) =~
-                 Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
+        html = html_response(conn, 200)
+        assert html =~ Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
+        assert text_of_attr("input[name=token]", "value") != ""
       end
 
       test "returns error on failure", %{conn: conn} do
@@ -60,7 +61,10 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
             "/helpscout/callback?conversation-id=123&customer-id=500&X-HelpScout-Signature=invalid"
           )
 
-        assert html_response(conn, 200) =~ "bad_signature"
+        html = html_response(conn, 200)
+
+        assert html =~ "bad_signature"
+        refute text_of_attr("input[name=token]", "value")
       end
 
       test "handles invalid parameters gracefully", %{conn: conn} do

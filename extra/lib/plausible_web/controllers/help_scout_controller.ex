@@ -8,11 +8,12 @@ defmodule PlausibleWeb.HelpScoutController do
   plug :make_iframe_friendly
 
   def callback(conn, %{"customer-id" => customer_id, "conversation-id" => conversation_id}) do
-    token = sign_token(conversation_id)
-    assigns = %{conversation_id: conversation_id, customer_id: customer_id, token: token}
+    assigns = %{conversation_id: conversation_id, customer_id: customer_id, token: ""}
 
     with :ok <- HelpScout.validate_signature(conn),
          {:ok, details} <- HelpScout.get_details_for_customer(customer_id, conversation_id) do
+      assigns = Map.put(assigns, :token, sign_token(conversation_id))
+
       conn
       |> render("callback.html", Map.merge(assigns, details))
     else
