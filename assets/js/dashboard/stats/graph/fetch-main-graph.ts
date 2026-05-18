@@ -1,8 +1,7 @@
 import { Metric } from '../metrics'
-import { DashboardState } from '../../dashboard-state'
 import { DashboardPeriod } from '../../dashboard-time-periods'
-import { PlausibleSite, useSiteContext } from '../../site-context'
-import { createStatsQuery, ReportParams, StatsQuery } from '../../stats-query'
+import { useSiteContext } from '../../site-context'
+import { createStatsQuery, StatsQuery } from '../../stats-query'
 import { isRealTimeDashboard } from '../../util/filters'
 import { MetricValue } from '../../api'
 import * as api from '../../api'
@@ -21,12 +20,15 @@ export function useMainGraphQuery(
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 
+  const metricToQuery =
+    metric === 'conversion_rate' ? 'group_conversion_rate' : metric
+
   const mainGraphQueryKey: StatsReportQueryKey = [
     'main-graph',
     {
       dashboardState,
       reportParams: {
-        metrics: [metric!],
+        metrics: [metricToQuery!],
         dimensions: [`time:${interval}`],
         include: {
           time_labels: true,
@@ -60,35 +62,6 @@ function getMainGraphQuery(queryKey: StatsReportQueryKey): StatsQuery {
   }
 
   return statsQuery
-}
-
-export function fetchMainGraph(
-  site: PlausibleSite,
-  dashboardState: DashboardState,
-  metric: Metric,
-  interval: Interval
-): Promise<MainGraphResponse> {
-  const metricToQuery =
-    metric === 'conversion_rate' ? 'group_conversion_rate' : metric
-
-  const reportParams: ReportParams = {
-    metrics: [metricToQuery],
-    dimensions: [`time:${interval}`],
-    include: {
-      time_labels: true,
-      partial_time_labels: true,
-      empty_metrics: true,
-      present_index: true
-    }
-  }
-
-  const statsQuery = createStatsQuery(dashboardState, reportParams)
-
-  if (isRealTimeDashboard(dashboardState)) {
-    statsQuery.date_range = DashboardPeriod.realtime_30m
-  }
-
-  return api.stats(site, statsQuery)
 }
 
 export type ResultItem = {
