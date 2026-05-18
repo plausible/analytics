@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Exploration.Journey.Step do
             is_goal: false
 
   @journey_end_event "__journey_end__"
-  @journey_end_label "no further action"
+  @journey_end_label "No further action"
 
   @spec journey_end_event() :: String.t()
   def journey_end_event, do: @journey_end_event
