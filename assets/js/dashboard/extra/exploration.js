@@ -685,6 +685,7 @@ function useExplorationData(site, dashboardState, inViewport) {
   const [state, setState] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const [directionKey, setDirectionKey] = useState(0)
   // Incremented whenever the dashboardState or site changes so that
   // PathConnectors re-runs its layout effect and recalculates connector
   // geometry against the freshly rendered DOM. Steps alone do not change
@@ -771,6 +772,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     directionRef.current = newDirection
     ++journeyVersionRef.current
     setState(EMPTY_JOURNEY_STATE)
+    setDirectionKey((k) => k + 1)
   }, [])
 
   const setActiveFilter = useCallback((filter) => {
@@ -1036,7 +1038,8 @@ function useExplorationData(site, dashboardState, inViewport) {
     state.steps,
     state.activeFilter,
     inViewport,
-    retryCount
+    retryCount,
+    directionKey
   ])
   // direction is intentionally excluded from the dep array. It lives in a ref
   // and resets state, which does appear above, so the state update itself
