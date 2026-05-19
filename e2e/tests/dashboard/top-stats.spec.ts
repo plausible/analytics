@@ -1,20 +1,8 @@
 import { test, expect } from '@playwright/test'
-import {
-  ZonedDateTime,
-  ZoneOffset,
-  ChronoUnit,
-  DateTimeFormatter
-} from '@js-joda/core'
+import { ChronoUnit, DateTimeFormatter } from '@js-joda/core'
 import { Locale } from '@js-joda/locale'
+import { currentTime, timeToISO } from '../test-utils'
 import { setupSite, populateStats, StatsEntry } from '../fixtures'
-
-function currentTime(): ZonedDateTime {
-  return ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
-}
-
-function timeToISO(ts: ZonedDateTime): string {
-  return ts.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-}
 
 test('site switcher allows switching between different sites', async ({
   page,
