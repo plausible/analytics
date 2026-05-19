@@ -8,14 +8,18 @@ import {
 } from '../../util/number-formatter'
 import { CursorIcon, FolderIcon } from '../../components/icons'
 import { popover } from '../../components/popover'
-import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import {
+  ChevronUpDownIcon,
+  EllipsisHorizontalIcon
+} from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { roundedPercentage } from './helpers'
 import { journeyStepsEqual, JourneyStep, JourneySuggestion } from './journey'
 import {
   DIRECTION,
   DIRECTION_OPTIONS,
-  MAX_VISIBLE_CANDIDATES,
+  INITIAL_VISIBLE_CANDIDATES,
+  SHOW_MORE_INCREMENT,
   ExplorationDirection
 } from './constants'
 
@@ -341,13 +345,40 @@ export function ExplorationColumn({
     onFilterChange((e.target as HTMLInputElement).value)
   )
 
+  // Track how many times the user has clicked "Show N more" for this column.
+  // Reset whenever the underlying results array reference changes so a new
+  // candidate list (filter change, journey change, etc.) starts collapsed.
+  const [expandCount, setExpandCount] = useState(0)
+  useEffect(() => {
+    setExpandCount(0)
+  }, [results])
+
+  // If the selected step lives beyond INITIAL_VISIBLE_CANDIDATES in a frozen
+  // column, make sure it is still visible by expanding the base window to
+  // include it. The user picked it from a list they could see, so it should
+  // remain visible after selection.
+  const selectedIndex =
+    selected && results.length > 0
+      ? results.findIndex(({ step }) => journeyStepsEqual(step, selected))
+      : -1
+  const baseVisibleCount = Math.max(
+    INITIAL_VISIBLE_CANDIDATES,
+    selectedIndex >= 0 ? selectedIndex + 1 : 0
+  )
+  const visibleCount = Math.min(
+    results.length,
+    baseVisibleCount + expandCount * SHOW_MORE_INCREMENT
+  )
+  const remainingCount = Math.max(0, results.length - visibleCount)
+  const showMoreCount = Math.min(SHOW_MORE_INCREMENT, remainingCount)
+
   // When a step is selected but there are no candidate results,
   // synthesise a single-item list from the funnel data so
   // the selected step is still rendered in the column.
   const listItems =
     selected && results.length === 0
       ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
-      : results.slice(0, MAX_VISIBLE_CANDIDATES)
+      : results.slice(0, visibleCount)
 
   const stepMaxVisitors = maxVisitors ?? results[0]?.visitors
 
@@ -427,6 +458,25 @@ export function ExplorationColumn({
               onSelect={onSelectHandler}
             />
           ))}
+          {showMoreCount > 0 && (
+            <li>
+              <button
+                onClick={() => setExpandCount((c) => c + 1)}
+                className="group w-full text-sm rounded-sm hover:bg-gray-100/60 dark:hover:bg-gray-850 focus:outline-none"
+              >
+                <div
+                  className={`flex items-center justify-between gap-2 px-2 py-1.5 ${
+                    selected
+                      ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
+                      : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100'
+                  }`}
+                >
+                  <span>{`Show ${showMoreCount} more`}</span>
+                  <EllipsisHorizontalIcon className="size-4 shrink-0" />
+                </div>
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

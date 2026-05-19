@@ -225,7 +225,8 @@ defmodule PlausibleWeb.Api.StatsController do
              Exploration.next_steps(site, query, journey,
                search_term: search_term,
                direction: direction,
-               include_wildcard?: include_wildcard?
+               include_wildcard?: include_wildcard?,
+               max_candidates: 20
              ),
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})

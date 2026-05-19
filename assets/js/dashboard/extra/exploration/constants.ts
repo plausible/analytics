@@ -16,5 +16,6 @@ export const DIRECTION_OPTIONS: ExplorationDirectionOption[] = [
 
 export const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
-export const MAX_VISIBLE_CANDIDATES = 10
+export const INITIAL_VISIBLE_CANDIDATES = 10
+export const SHOW_MORE_INCREMENT = 5
 export const MIN_GRID_COLUMNS = 3
