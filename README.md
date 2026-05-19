@@ -16,7 +16,7 @@
 [Plausible Analytics](https://plausible.io/) is an open source, privacy-first web analytics tool. Lightweight, cookie-free [alternative to Google Analytics](https://plausible.io/blog/remove-google-analytics). Available in managed cloud or self-hosted community edition.
 
 - 🔐 [Privacy-focused](https://plausible.io/privacy-focused-web-analytics)
-- 🛡️ [GDPR, CCPA, PECR compliant](https://plausible.io/data-policy)
+- 🛡️ [GDPR, CCPA, and PECR compliant](https://plausible.io/data-policy)
 - 📊 [Simple, fast dashboard](https://plausible.io/simple-web-analytics)
 - 🪶 [Lightweight script](https://plausible.io/lightweight-web-analytics)
 - 🇪🇺 [Made and hosted in the EU](https://plausible.io/eu-hosted-web-analytics)
