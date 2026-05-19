@@ -233,7 +233,7 @@ test('load a 3-step featured funnel', async ({ page, request }) => {
 
   await expect(
     secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-  ).toHaveText(['/login', 'no further action'])
+  ).toHaveText(['/login', 'No further action'])
 
   await expect(
     secondColumn.getByRole('button', { name: '/login' })
@@ -245,7 +245,7 @@ test('load a 3-step featured funnel', async ({ page, request }) => {
 
   await expect(
     thirdColumn.getByTestId('exploration-row').getByTestId('metric-label')
-  ).toHaveText(['no further action', '/dashboard'])
+  ).toHaveText(['No further action', '/dashboard'])
 
   await expect(
     thirdColumn.getByRole('button', { name: '/dashboard' })
@@ -371,7 +371,7 @@ test('select entries in a 1-step journey', async ({ page, request }) => {
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-    ).toHaveText(['no further action', '/dashboard'])
+    ).toHaveText(['No further action', '/dashboard'])
   })
 
   await test.step('select a different entry', async () => {
@@ -433,7 +433,7 @@ test('select entries in a 1-step journey', async ({ page, request }) => {
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-    ).toHaveText(['/login', 'no further action'])
+    ).toHaveText(['/login', 'No further action'])
 
     await expect(
       firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
@@ -603,21 +603,21 @@ test('select entries in a 3-step journey', async ({ page, request }) => {
 
   await expect(
     secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-  ).toHaveText(['/login', 'no further action', '/blog'])
+  ).toHaveText(['/login', 'No further action', '/blog'])
 
-  await test.step('filter for "no further action" in the second step', async () => {
+  await test.step('filter for "No further action" in the second step', async () => {
     await secondColumn.getByPlaceholder('Search').fill('no further')
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-    ).toHaveText(['no further action'])
+    ).toHaveText(['No further action'])
   })
 
   await secondColumn.getByPlaceholder('Search').fill('')
 
   await expect(
     secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-  ).toHaveText(['/login', 'no further action', '/blog'])
+  ).toHaveText(['/login', 'No further action', '/blog'])
 
   await test.step('select an entry in the 2nd step', async () => {
     await secondColumn.getByRole('button', { name: '/login' }).click()
@@ -652,7 +652,7 @@ test('select entries in a 3-step journey', async ({ page, request }) => {
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
-    ).toHaveText(['/login', 'no further action', '/blog'])
+    ).toHaveText(['/login', 'No further action', '/blog'])
   })
 
   await test.step('select a different entry in the 1st step', async () => {
@@ -1096,7 +1096,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
   await expect(
     thirdColumn.getByTestId('exploration-row').getByTestId('metric-label')
-  ).toHaveText(['no further action', '/dashboard'])
+  ).toHaveText(['No further action', '/dashboard'])
 
   await expect(
     thirdColumn.getByTestId('exploration-row').getByTestId('metric-value')
@@ -1217,7 +1217,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(
       thirdColumn.getByTestId('exploration-row').getByTestId('metric-label')
-    ).toHaveText(['no further action', '/dashboard'])
+    ).toHaveText(['No further action', '/dashboard'])
 
     await expect(
       thirdColumn.getByTestId('exploration-row').getByTestId('metric-value')
@@ -1339,12 +1339,23 @@ test('render various types of entries', async ({ page, request }) => {
   await expect(
     firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
   ).toHaveText([
-    /\/blog.*all \(2\)/,
-    /Custom event.*checkout/,
-    /Goal.*Create a site/,
+    '/blog',
+    'checkout',
+    'Create a site',
     '/blog/first-post',
     '/blog/second-post',
     '/home',
-    /Goal.*Visit \/login/
+    'Visit /login'
   ])
+
+  await firstColumn.getByTestId('exploration-row').nth(0).locator('svg').hover()
+  await expect(page.getByRole('tooltip')).toHaveText(
+    /Grouped pages: 2 pages with this prefix/
+  )
+
+  await firstColumn.getByTestId('exploration-row').nth(2).locator('svg').hover()
+  await expect(page.getByRole('tooltip')).toHaveText(/Goal/)
+
+  await firstColumn.getByTestId('exploration-row').nth(6).locator('svg').hover()
+  await expect(page.getByRole('tooltip')).toHaveText(/Goal/)
 })
