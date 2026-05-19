@@ -6,7 +6,7 @@ const getReport = (page: Page) => page.getByTestId('report-behaviours')
 const getExplorationTabButton = (report: Locator) =>
   tabButton(report, 'Explore')
 
-test('load featured tunnel with only a single step', async ({
+test('load featured funnel with only a single step', async ({
   page,
   request
 }) => {
@@ -58,7 +58,7 @@ test('load featured tunnel with only a single step', async ({
 })
 
 // current version is often stuck loading if the timing is unlucky
-test('load featured tunnel and switch to a period with no events without waiting for load', async ({
+test('load featured funnel and switch to a period with no events without waiting for load', async ({
   page,
   request
 }) => {
@@ -94,7 +94,7 @@ test('load featured tunnel and switch to a period with no events without waiting
   await expect(report).toHaveText(/No data yet/)
 })
 
-test('load featured tunnel and switch to a period with no events', async ({
+test('load featured funnel and switch to a period with no events', async ({
   page,
   request
 }) => {
@@ -906,7 +906,7 @@ test('explore from end point', async ({ page, request }) => {
     firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
   ).toHaveText(firstStepSuggestions)
 
-  await test.step('switch to end point, bact to start point and to end point again', async () => {
+  await test.step('switch to end point, back to start point and to end point again', async () => {
     await report.getByTestId('exploration-direction-forward').click()
     await report.getByTestId('exploration-direction-backward').click()
 
