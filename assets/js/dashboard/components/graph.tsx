@@ -280,7 +280,8 @@ function InnerGraph<T extends GraphYValues>({
           svg,
           series,
           x: point.x,
-          y: point.values[seriesIndex]
+          y: point.values[seriesIndex],
+          bucketIndex: i
         })
         points[i] = {
           ...point,
@@ -800,6 +801,7 @@ function drawLine<T extends GraphYValues>({
   svg
     .append('path')
     .attr('class', classNames(className))
+    .attr('data-testid', 'graph-line')
     .datum(datum)
     .attr('d', line)
 }
@@ -808,12 +810,14 @@ function drawDot({
   svg,
   series,
   x,
-  y
+  y,
+  bucketIndex
 }: {
   svg: SelectedSVG
   series: SeriesConfig
   x: number
   y: number | null
+  bucketIndex: number
 }): SelectedGroup {
   const group = svg.append('g').attr('class', 'group')
   if (series.dot && y !== null) {
@@ -822,6 +826,7 @@ function drawDot({
       .attr('r', 2.5)
       .attr('class', series.dot.dotClassName)
       .attr('transform', `translate(${x},${y})`)
+      .attr('data-testid', `graph-dot-group-${bucketIndex}`)
   }
   return group
 }

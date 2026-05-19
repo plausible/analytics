@@ -21,6 +21,7 @@ type Event = {
   name: string
   user_id?: number
   scroll_depth?: number
+  engagement_time?: number
   revenue_reporting_amount?: string
   revenue_reporting_currency?: string
   pathname?: string
