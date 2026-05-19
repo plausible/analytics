@@ -1217,6 +1217,46 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step7.visitors == 1
       end
 
+      test "allows searching for a pageview goal by its pathname" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{
+          "page_path" => "/page-foo",
+          "display_name" => "Foo"
+        })
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/page-foo",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+        ]
+
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "/page-foo")
+
+        assert {:ok, [^next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "Foo")
+
+        assert next_step.step.label == "Foo"
+        assert next_step.step.pathname == "/page-foo"
+        assert next_step.step.is_goal
+        assert next_step.visitors == 1
+      end
+
       test "suggestions matching implicit wildcard from previous step are excluded" do
         now = DateTime.utc_now()
         site = new_site()

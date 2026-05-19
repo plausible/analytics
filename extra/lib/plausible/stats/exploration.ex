@@ -675,7 +675,11 @@ defmodule Plausible.Stats.Exploration do
   defp maybe_search(query, search_term) do
     case String.trim(search_term) do
       term when byte_size(term) > 2 ->
-        from(s in query, where: ilike(selected_as(:label), ^"%#{term}%"))
+        from(s in query,
+          where:
+            ilike(selected_as(:label), ^"%#{term}%") or
+              ilike(s.pathname, ^"%#{term}%")
+        )
 
       _ ->
         query
