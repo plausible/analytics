@@ -1,26 +1,20 @@
 import { test, expect, Page } from '@playwright/test'
-import {
-  setupSite,
-  populateStats
-  // addGoal,
-  // addCustomGoal,
-  // addPageviewGoal
-} from '../fixtures'
+import { setupSite, populateStats, addGoal } from '../fixtures'
 import { tabButton } from '../test-utils'
 
 /*
  * V - Loading featured funnel
  * V - Loading featured funnel when there are no events for a given set of conditions and time range
- * - Rendering entries for:
- *   - pageview
- *   - custom event
- *   - wildcard pathname
- *   - custom goal
- *   - pageview goal
- *   - pageview pattern goal
- *   - long event name and long pathname
- *   - 1k events and up with tooltip/label
- *   - bar with computed ratio below minimum
+ * V - Rendering entries for:
+ * V  - pageview
+ * V  - custom event
+ * V  - wildcard pathname
+ * V  - custom goal
+ * V  - pageview goal
+ * V  - pageview pattern goal
+ * X - long event name and long pathname
+ * X - 1k events and up with tooltip/label
+ * X - bar with computed ratio below minimum
  * X - Rapidly reloading dashboard until rate limit error kicks in
  * V - Deselecting all
  * V - Selecting different entry at first step with an empty journey
@@ -1323,4 +1317,74 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(fourthColumn).toBeHidden()
   })
+})
+
+test('render various types of entries', async ({ page, request }) => {
+  const report = getReport(page)
+  const explorationTabButton = getExplorationTabButton(report)
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        name: 'pageview',
+        pathname: '/home'
+      },
+      {
+        name: 'pageview',
+        pathname: '/login'
+      },
+      {
+        name: 'checkout'
+      },
+      {
+        name: 'create_site'
+      },
+      {
+        name: 'pageview',
+        pathname: '/blog/first-post'
+      },
+      {
+        name: 'pageview',
+        pathname: '/blog/second-post'
+      }
+    ]
+  })
+
+  await addGoal({
+    request,
+    domain,
+    params: { event_name: 'create_site', display_name: 'Create a site' }
+  })
+
+  await addGoal({ request, domain, params: { page_path: '/login' } })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+
+  await explorationTabButton.scrollIntoViewIfNeeded()
+  await explorationTabButton.click()
+
+  await expect(report.getByTestId('exploration-title')).toHaveText(
+    'Explore user journeys'
+  )
+
+  await expect(
+    report.getByTestId('exploration-direction-forward')
+  ).toBeVisible()
+
+  const firstColumn = report.getByTestId('exploration-column-0')
+
+  await expect(
+    firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
+  ).toHaveText([
+    /\/blog.*all \(2\)/,
+    /Custom event.*checkout/,
+    /Goal.*Create a site/,
+    '/blog/first-post',
+    '/blog/second-post',
+    '/home',
+    /Goal.*Visit \/login/
+  ])
 })
