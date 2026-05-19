@@ -2,46 +2,6 @@ import { test, expect, Page } from '@playwright/test'
 import { setupSite, populateStats, addGoal } from '../fixtures'
 import { tabButton } from '../test-utils'
 
-/*
- * V - Loading featured funnel
- * V - Loading featured funnel when there are no events for a given set of conditions and time range
- * V - Rendering entries for:
- * V  - pageview
- * V  - custom event
- * V  - wildcard pathname
- * V  - custom goal
- * V  - pageview goal
- * V  - pageview pattern goal
- * X - long event name and long pathname
- * X - 1k events and up with tooltip/label
- * X - bar with computed ratio below minimum
- * X - Rapidly reloading dashboard until rate limit error kicks in
- * V - Deselecting all
- * V - Selecting different entry at first step with an empty journey
- * X - Rapidly selecting different entries until rate limit kicks in
- * X - Rapidly deselecting and selecting again the same entry until rate limit kicks in
- * V - Deselecting entry at first step with with an empty journey
- * V - Searching entries in the first step, with match
- * V - Searching entries in the first step, with no match
- * V - Selecting different entry with filtering applied
- * V - Deselecting and selecting again with filtering applied at first
- * V - Selecting entry in the second step
- * X - Rapidly selecting different entries in the second step until rate limit kicks in
- * X - Rapidly deselecting and selecting again the same entry in second step until rate limit kicks in
- * V - Filtering for "no further action" in the second step
- * X - Resizing viewport for a 3-step journey
- * V - Switching from "Starting point" to "End point" and back
- * V - Switching to "End point" and exploring a 3-step journey, switching back
- * V - Selecting a different 2nd step in a 3-step journey
- * V - Deselecting 2nd step in a 3-step journey
- * V - Selecting a different 1st step in a 3-step journey
- * V - Deselecting 1st step in a 3-step journey
- * V - Changing period with a 3-step journey with results present in all steps
- * V - Changing period with a 3-step journey where there are no results for any of the steps
- * V - Changing period with a 3-step funnel where there are no results for the 3rd step
- * V - Exploring journey hitting the 20-step limit
- */
-
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
 const getExplorationTabButton = (report: Locator) =>
   tabButton(report, 'Explore')
