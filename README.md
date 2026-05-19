@@ -108,7 +108,7 @@ Plausible is [open source web analytics](https://plausible.io/open-source-websit
 
 Interested in self-hosting Plausible CE on your server? Take a look at our [Plausible CE installation instructions](https://github.com/plausible/community-edition/).
 
-Plausible CE is a community supported project and there are no guarantees that you will get support from the creators of Plausible to troubleshoot your self-hosting issues. There is a [community supported forum](https://github.com/plausible/analytics/discussions/categories/self-hosted-support) where you can ask for help.
+Plausible CE is a community supported project and there are no guarantees that you will get support from the creators of Plausible to troubleshoot your self-hosting issues. There is a [community-supported forum](https://github.com/plausible/analytics/discussions/categories/self-hosted-support) where you can ask for help.
 
 Our only source of funding is our premium, managed service for running Plausible in the cloud.
  
