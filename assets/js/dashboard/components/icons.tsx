@@ -79,26 +79,56 @@ export const RefreshIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export const CursorIcon = ({
-  className,
-  title
-}: {
-  className?: string
-  title?: string
-}) => (
+export const CursorIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
     className={className}
   >
-    {title && <title>{title}</title>}
     <path
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"
       d="m4.63 3.711 15.23 5.565c.641.235.623 1.148-.028 1.358l-6.97 2.23-2.232 6.971c-.208.65-1.122.67-1.357.028L3.71 4.631a.717.717 0 0 1 .92-.92"
+    />
+  </svg>
+)
+
+export const DocumentIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <g
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+    >
+      <path d="M20.216 8.333h-4.547a1.334 1.334 0 0 1-1.333-1.334V2.47" />
+      <path d="M3.668 18.999v-14a2.666 2.666 0 0 1 2.667-2.667h7.448c.353 0 .693.14.942.39l5.219 5.22c.25.25.39.589.39.942v10.115a2.666 2.666 0 0 1-2.666 2.666H6.335A2.666 2.666 0 0 1 3.668 19" />
+    </g>
+  </svg>
+)
+
+export const FolderIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeMiterlimit="10"
+      strokeWidth="1.5"
+      d="M2 5v13a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-3-3H4a2 2 0 0 0-2 2"
     />
   </svg>
 )

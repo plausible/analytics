@@ -15,10 +15,11 @@ import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import {
   numberShortFormatter,
-  numberLongFormatter
+  numberLongFormatter,
+  percentageFormatter
 } from '../util/number-formatter'
-import { RefreshIcon, CursorIcon } from '../components/icons'
-import { ChevronUpDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
+import { RefreshIcon, CursorIcon, FolderIcon } from '../components/icons'
+import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
@@ -386,15 +387,13 @@ function CandidateCard({
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
     : 'text-gray-900 dark:text-gray-100'
 
-  const subpathColor = isDimmed
-    ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'
-    : 'text-gray-500 dark:text-gray-400'
-
-  const barBg = isSelected
-    ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
-    : isDimmed
-      ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
-      : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
+  const barBg = isJourneyEnd
+    ? 'bg-gray-100 dark:bg-gray-700/50'
+    : isSelected
+      ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
+      : isDimmed
+        ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
+        : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
 
   const rowBg = isSelected
     ? 'bg-gray-100/60 dark:bg-gray-850'
@@ -403,6 +402,29 @@ function CandidateCard({
   const pointer = isJourneyEnd ? 'pointer-events-none' : ''
 
   const onSelectHandler = isJourneyEnd ? () => {} : onSelect
+
+  const iconClassName = `size-4 shrink-0 ${textColor}`
+  const iconTooltipInfo =
+    isCustomEvent || isGoal
+      ? isGoal
+        ? 'Goal'
+        : 'Custom event'
+      : step.includes_subpaths
+        ? `Grouped pages: ${numberShortFormatter(step.subpaths_count)} pages with this prefix`
+        : 'Pageview'
+
+  const iconSvg =
+    isCustomEvent || isGoal ? (
+      <CursorIcon className={iconClassName} />
+    ) : step.includes_subpaths ? (
+      <FolderIcon className={iconClassName} />
+    ) : null
+
+  const iconElement = !iconSvg ? null : (
+    <Tooltip info={iconTooltipInfo} containerRef={{ current: document.body }}>
+      {iconSvg}
+    </Tooltip>
+  )
 
   return (
     <li data-testid="exploration-row">
@@ -419,34 +441,12 @@ function CandidateCard({
 
         <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
           <span
-            className={`flex items-center gap-1.5 min-w-0 ${textColor}`}
+            className={`flex items-center gap-2 min-w-0 ${textColor}`}
+            title={step.label}
             data-testid="metric-label"
-            title={
-              step.includes_subpaths
-                ? `${step.label} > all (${step.subpaths_count})`
-                : step.label
-            }
           >
-            {(isCustomEvent || isGoal) && (
-              <CursorIcon
-                title={isGoal ? 'Goal' : 'Custom event'}
-                className={`size-4 shrink-0 ${textColor}`}
-              />
-            )}
+            {iconElement}
             <span className="truncate">{step.label}</span>
-            {step.includes_subpaths && (
-              <>
-                <ChevronRightIcon
-                  className={`mt-0.5 size-3 shrink-0 ${subpathColor}`}
-                />
-                <span className={`shrink-0 ${subpathColor}`}>
-                  all{' '}
-                  <span className="text-[0.85rem]">
-                    ({numberShortFormatter(step.subpaths_count)})
-                  </span>
-                </span>
-              </>
-            )}
           </span>
 
           <span className={`shrink-0 font-medium ${textColor}`}>
@@ -596,7 +596,7 @@ function ExplorationColumn({
       data-exploration-column={colIndex}
       className="border border-gray-200 dark:border-gray-750 rounded-lg overflow-hidden"
     >
-      <div className="h-[42px] py-2 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
+      <div className="h-[44px] py-1.5 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
           <DirectionDropdown
             direction={direction}
@@ -615,7 +615,7 @@ function ExplorationColumn({
             defaultValue={filter}
             placeholder="Search"
             onChange={debouncedFilterChange}
-            className="peer max-w-48 w-full text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+            className="peer max-w-48 w-full h-full py-0 text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
 
@@ -1170,7 +1170,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  Conversion: {parseFloat(overallConversionRate).toFixed(1)}%{' '}
+                  CR: {percentageFormatter(parseFloat(overallConversionRate))}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors)})
@@ -1207,7 +1207,7 @@ export function FunnelExploration() {
             ref={containerRef}
             className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
             style={{
-              gridTemplateColumns: `repeat(${gridColumns}, minmax(18rem, 1fr))`
+              gridTemplateColumns: `repeat(${gridColumns}, minmax(19rem, 1fr))`
             }}
           >
             {Array.from({ length: numColumns }, (_, i) => {

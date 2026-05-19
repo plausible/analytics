@@ -632,7 +632,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:ok, [next_step]} =
                  Exploration.next_steps(site, query, journey, search_term: "no further")
 
-        assert next_step.step.label == "no further action"
+        assert next_step.step.label == "No further action"
         assert next_step.visitors == 1
       end
 
