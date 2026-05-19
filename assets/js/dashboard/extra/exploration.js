@@ -15,20 +15,12 @@ import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import {
   numberShortFormatter,
-  numberLongFormatter
+  numberLongFormatter,
+  percentageFormatter
 } from '../util/number-formatter'
-import {
-  RefreshIcon,
-  CursorIcon,
-  FolderIcon,
-  DocumentIcon
-} from '../components/icons'
+import { RefreshIcon, CursorIcon, FolderIcon } from '../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
-import {
-  FlagIcon,
-  MagnifyingGlassIcon,
-  NoSymbolIcon
-} from '@heroicons/react/24/outline'
+import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../components/popover'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
@@ -418,22 +410,17 @@ function CandidateCard({
         ? 'Goal'
         : 'Custom event'
       : step.includes_subpaths
-        ? `Pageview group: ${numberShortFormatter(step.subpaths_count)} pages with this prefix`
+        ? `Grouped pages: ${numberShortFormatter(step.subpaths_count)} pages with this prefix`
         : 'Pageview'
 
-  const iconSvg = isJourneyEnd ? (
-    <NoSymbolIcon className={iconClassName} />
-  ) : isCustomEvent || isGoal ? (
-    <CursorIcon className={iconClassName} />
-  ) : step.includes_subpaths ? (
-    <FolderIcon className={iconClassName} />
-  ) : (
-    <DocumentIcon className={iconClassName} />
-  )
+  const iconSvg =
+    isCustomEvent || isGoal ? (
+      <CursorIcon className={iconClassName} />
+    ) : step.includes_subpaths ? (
+      <FolderIcon className={iconClassName} />
+    ) : null
 
-  const iconElement = isJourneyEnd ? (
-    iconSvg
-  ) : (
+  const iconElement = !iconSvg ? null : (
     <Tooltip info={iconTooltipInfo} containerRef={{ current: document.body }}>
       {iconSvg}
     </Tooltip>
@@ -1183,7 +1170,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  Conversion: {parseFloat(overallConversionRate).toFixed(1)}%{' '}
+                  CR: {percentageFormatter(parseFloat(overallConversionRate))}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors)})
