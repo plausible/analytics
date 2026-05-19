@@ -1,5 +1,19 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect } from '@playwright/test'
+import {
+  ZonedDateTime,
+  ZoneOffset,
+  ChronoUnit,
+  DateTimeFormatter
+} from '@js-joda/core'
+
+export function currentTime(): ZonedDateTime {
+  return ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS)
+}
+
+export function timeToISO(ts: ZonedDateTime): string {
+  return ts.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+}
 
 export async function expectLiveViewConnected(page: Page) {
   await expect
