@@ -29,7 +29,9 @@ import {
   clearJourneyFrozen,
   clearJourneyFunnel,
   clearJourneyRateLimit,
-  updateJourney
+  updateJourneyOnSuccess,
+  updateJourneyOnError,
+  updateJourneyOnRateLimitError
 } from './journey'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
@@ -97,16 +99,6 @@ function stepsToJourneyParam(steps) {
       })
     )
   )
-}
-
-// Keep only entries with index < fromIndex, discarding everything at or after.
-// Used to truncate frozen candidate snapshots when the journey is shortened.
-function truncateFrozenAt(frozen, fromIndex) {
-  const result = {}
-  for (const key of Object.keys(frozen)) {
-    if (Number(key) < fromIndex) result[key] = frozen[key]
-  }
-  return result
 }
 
 // Column header label based on index and direction.
@@ -761,26 +753,24 @@ function useExplorationData(site, dashboardState, inViewport) {
       .then((response) => {
         if (isStale()) return
         setJourney((journey) =>
-          updateJourney({ journey, response, includeFunnel, journeyEndEvent })
+          updateJourneyOnSuccess({
+            journey,
+            response,
+            includeFunnel,
+            journeyEndEvent
+          })
         )
       })
       .catch((err) => {
         if (isStale()) return
         if (isRateLimitedError(err)) {
-          setJourney((prev) => ({
-            ...prev,
-            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
-            rateLimited: true,
-            activeResults: [],
-            ...(includeFunnel ? { provisional: {} } : {})
-          }))
+          setJourney((journey) =>
+            updateJourneyOnRateLimitError({ journey, includeFunnel })
+          )
         } else {
-          setJourney((prev) => ({
-            ...prev,
-            frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
-            activeResults: [],
-            ...(includeFunnel ? { funnel: [] } : {})
-          }))
+          setJourney((journey) =>
+            updateJourneyOnError({ journey, includeFunnel })
+          )
         }
       })
       .finally(() => {

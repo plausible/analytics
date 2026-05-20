@@ -131,7 +131,12 @@ export function clearJourneyRateLimit(journey) {
   return { ...journey, rateLimited: false }
 }
 
-export function updateJourney({ journey, response, includeFunnel, journeyEndEvent }) {
+export function updateJourneyOnSuccess({
+  journey,
+  response,
+  includeFunnel,
+  journeyEndEvent
+}) {
   const newJourney = {
     ...journey,
     activeResults: maybeEmptyResults(
@@ -181,4 +186,23 @@ export function updateJourney({ journey, response, includeFunnel, journeyEndEven
     }
   }
   return newJourney
+}
+
+export function updateJourneyOnRateLimitError({ journey, includeFunnel }) {
+  return {
+    ...journey,
+    frozen: truncateFrozenAt(journey.frozen, journey.steps.length),
+    rateLimited: true,
+    activeResults: [],
+    ...(includeFunnel ? { provisional: {} } : {})
+  }
+}
+
+export function updateJourneyOnError({ journey, includeFunnel }) {
+  return {
+    ...journey,
+    frozen: truncateFrozenAt(journey.frozen, journey.steps.length),
+    activeResults: [],
+    ...(includeFunnel ? { funnel: [] } : {})
+  }
 }
