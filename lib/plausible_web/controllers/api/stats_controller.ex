@@ -30,8 +30,7 @@ defmodule PlausibleWeb.Api.StatsController do
            when action in [
                   :exploration_next,
                   :exploration_funnel,
-                  :exploration_next_with_funnel,
-                  :exploration_featured_funnel
+                  :exploration_next_with_funnel
                 ]
     end
   end
@@ -208,30 +207,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
         {:error, :journey_too_long} ->
           H.bad_request(conn, "The journey is too long")
-      end
-    end
-
-    def exploration_featured_funnel(conn, params) do
-      site = conn.assigns.site
-
-      case check_exploration_rate_limit(site) do
-        :ok ->
-          query = Query.from(site, params, debug_metadata: debug_metadata(conn))
-
-          include_wildcard? =
-            not FunWithFlags.enabled?(@exploration_wildcard_disabled_flag, for: site)
-
-          case Exploration.featured_funnel(site, query,
-                 max_steps: params["max_steps"],
-                 max_candidates: params["max_candidates"],
-                 include_wildcard?: include_wildcard?
-               ) do
-            {:ok, funnel_and_candidates} -> json(conn, funnel_and_candidates)
-            {:error, :not_found} -> json(conn, [])
-          end
-
-        {:error, :rate_limit} ->
-          H.too_many_requests(conn, "Too many exploration requests")
       end
     end
 

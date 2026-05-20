@@ -6,10 +6,7 @@ const getReport = (page: Page) => page.getByTestId('report-behaviours')
 const getExplorationTabButton = (report: Locator) =>
   tabButton(report, 'Explore')
 
-test('load featured funnel with only a single step', async ({
-  page,
-  request
-}) => {
+test('load user journey', async ({ page, request }) => {
   const report = getReport(page)
   const explorationTabButton = getExplorationTabButton(report)
   const { domain } = await setupSite({ page, request })
@@ -54,11 +51,18 @@ test('load featured funnel with only a single step', async ({
   ).toHaveText(['1'])
 
   await expect(secondColumn).toHaveText(/1 step after/)
+  await expect(secondColumn).toHaveText(/Select a starting point to continue/)
+
+  await firstColumn.getByRole('button', { name: '/page' }).click()
+
+  await expect(
+    firstColumn.getByRole('button', { name: '/page' })
+  ).toHaveAttribute('data-exploration-step', '0')
+
   await expect(secondColumn).toHaveText(/No further steps found/)
 })
 
-// current version is often stuck loading if the timing is unlucky
-test('load featured funnel and switch to a period with no events without waiting for load', async ({
+test('load user journey and switch to a period with no events without waiting for load', async ({
   page,
   request
 }) => {
@@ -94,7 +98,7 @@ test('load featured funnel and switch to a period with no events without waiting
   await expect(report).toHaveText(/No data yet/)
 })
 
-test('load featured funnel and switch to a period with no events', async ({
+test('load user journey and switch to a period with no events', async ({
   page,
   request
 }) => {
@@ -138,7 +142,7 @@ test('load featured funnel and switch to a period with no events', async ({
   await expect(report).toHaveText(/No data yet/)
 })
 
-test('load a 3-step featured funnel', async ({ page, request }) => {
+test('explore a 3-step funnel', async ({ page, request }) => {
   const report = getReport(page)
   const explorationTabButton = getExplorationTabButton(report)
   const { domain } = await setupSite({ page, request })
@@ -215,6 +219,24 @@ test('load a 3-step featured funnel', async ({ page, request }) => {
   const secondColumn = report.getByTestId('exploration-column-1')
   const thirdColumn = report.getByTestId('exploration-column-2')
 
+  await firstColumn.getByRole('button', { name: '/home' }).click()
+
+  await expect(
+    firstColumn.getByRole('button', { name: '/home' })
+  ).toHaveAttribute('data-exploration-step', '0')
+
+  await secondColumn.getByRole('button', { name: '/login' }).click()
+
+  await expect(
+    secondColumn.getByRole('button', { name: '/login' })
+  ).toHaveAttribute('data-exploration-step', '1')
+
+  await thirdColumn.getByRole('button', { name: '/dashboard' }).click()
+
+  await expect(
+    thirdColumn.getByRole('button', { name: '/dashboard' })
+  ).toHaveAttribute('data-exploration-step', '2')
+
   await expect(firstColumn).toBeVisible()
   await expect(secondColumn).toBeVisible()
   await expect(thirdColumn).toBeVisible()
@@ -249,7 +271,7 @@ test('load a 3-step featured funnel', async ({ page, request }) => {
 
   await expect(
     thirdColumn.getByRole('button', { name: '/dashboard' })
-  ).not.toHaveAttribute('data-exploration-step')
+  ).toHaveAttribute('data-exploration-step', '2')
 
   await expect(
     thirdColumn.getByTestId('exploration-row').getByTestId('metric-value')
@@ -346,8 +368,6 @@ test('select entries in a 1-step journey', async ({ page, request }) => {
   await expect(
     report.getByTestId('exploration-direction-forward')
   ).toBeVisible()
-
-  await report.getByTestId('exploration-deselect-all').click()
 
   const firstColumn = report.getByTestId('exploration-column-0')
   const secondColumn = report.getByTestId('exploration-column-1')
@@ -590,8 +610,6 @@ test('select entries in a 3-step journey', async ({ page, request }) => {
     report.getByTestId('exploration-direction-forward')
   ).toBeVisible()
 
-  await report.getByTestId('exploration-deselect-all').click()
-
   const firstColumn = report.getByTestId('exploration-column-0')
   const secondColumn = report.getByTestId('exploration-column-1')
   const thirdColumn = report.getByTestId('exploration-column-2')
@@ -737,8 +755,6 @@ test('explore journey hitting 20 step limit', async ({ page, request }) => {
   await expect(
     report.getByTestId('exploration-direction-forward')
   ).toBeVisible()
-
-  await report.getByTestId('exploration-deselect-all').click()
 
   const firstColumn = report.getByTestId('exploration-column-0')
   const lastColumn = report.getByTestId('exploration-column-20')
@@ -1069,6 +1085,18 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
   const secondColumn = report.getByTestId('exploration-column-1')
   const thirdColumn = report.getByTestId('exploration-column-2')
   const fourthColumn = report.getByTestId('exploration-column-3')
+
+  await firstColumn.getByRole('button', { name: '/home' }).click()
+
+  await expect(
+    firstColumn.getByRole('button', { name: '/home' })
+  ).toHaveAttribute('data-exploration-step', '0')
+
+  await secondColumn.getByRole('button', { name: '/login' }).click()
+
+  await expect(
+    secondColumn.getByRole('button', { name: '/login' })
+  ).toHaveAttribute('data-exploration-step', '1')
 
   await thirdColumn.getByRole('button', { name: '/dashboard' }).click()
 
