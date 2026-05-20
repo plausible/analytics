@@ -678,7 +678,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     explorationMaxJourneySteps: maxJourneySteps,
     explorationJourneyEndEvent: journeyEndEvent
   } = useSiteContext()
-  const [state, setState] = useState(EMPTY_JOURNEY_STATE)
+  const [journey, setJourney] = useState(EMPTY_JOURNEY_STATE)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
   const [directionKey, setDirectionKey] = useState(0)
@@ -690,7 +690,7 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   // Ref-copies of the previous dependency values so the main effect can detect
   // which dimension changed without adding them to the dep array.
-  const prevStepsRef = useRef(state.steps)
+  const prevStepsRef = useRef(journey.steps)
   const prevDirectionRef = useRef(DIRECTION.FORWARD)
   const prevDashboardStateRef = useRef(dashboardState)
 
@@ -706,7 +706,7 @@ function useExplorationData(site, dashboardState, inViewport) {
   const selectStep = useCallback((columnIndex, step) => {
     journeyVersionRef.current++
 
-    setState((prev) => {
+    setJourney((prev) => {
       if (step === null) {
         // Deselect: truncate journey at columnIndex.
         return {
@@ -754,19 +754,19 @@ function useExplorationData(site, dashboardState, inViewport) {
   const reset = useCallback(() => {
     ++journeyVersionRef.current
     setActiveLoading(true)
-    setState(EMPTY_JOURNEY_STATE)
+    setJourney(EMPTY_JOURNEY_STATE)
   }, [])
 
   const setDirection = useCallback((newDirection) => {
     if (newDirection === directionRef.current) return
     directionRef.current = newDirection
     ++journeyVersionRef.current
-    setState(EMPTY_JOURNEY_STATE)
+    setJourney(EMPTY_JOURNEY_STATE)
     setDirectionKey((k) => k + 1)
   }, [])
 
   const setActiveFilter = useCallback((filter) => {
-    setState((prev) => ({ ...prev, activeFilter: filter }))
+    setJourney((prev) => ({ ...prev, activeFilter: filter }))
   }, [])
 
   // Frozen candidate lists were fetched against a specific site and dashboard
@@ -781,7 +781,7 @@ function useExplorationData(site, dashboardState, inViewport) {
       return
     }
     ++journeyVersionRef.current
-    setState((prev) => ({ ...prev, frozen: {} }))
+    setJourney((prev) => ({ ...prev, frozen: {} }))
     setLayoutKey((k) => k + 1)
   }, [site, dashboardState])
 
@@ -789,8 +789,8 @@ function useExplorationData(site, dashboardState, inViewport) {
     if (!inViewport) return
 
     const currentDirection = directionRef.current
-    const steps = state.steps
-    const activeFilter = state.activeFilter
+    const steps = journey.steps
+    const activeFilter = journey.activeFilter
 
     if (steps.length >= maxJourneySteps) {
       setActiveLoading(false)
@@ -816,7 +816,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     const includeFunnel = journeyChanged && steps.length > 0
 
     if (journeyChanged && steps.length === 0) {
-      setState((prev) => ({ ...prev, funnel: [] }))
+      setJourney((prev) => ({ ...prev, funnel: [] }))
     }
 
     fetchNextWithFunnel(
@@ -829,7 +829,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     )
       .then((response) => {
         if (isStale()) return
-        setState((prev) => {
+        setJourney((prev) => {
           const next = {
             ...prev,
             activeResults: maybeEmptyResults(
@@ -884,7 +884,7 @@ function useExplorationData(site, dashboardState, inViewport) {
       .catch((err) => {
         if (isStale()) return
         if (isRateLimitedError(err)) {
-          setState((prev) => ({
+          setJourney((prev) => ({
             ...prev,
             frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             rateLimited: true,
@@ -892,7 +892,7 @@ function useExplorationData(site, dashboardState, inViewport) {
             ...(includeFunnel ? { provisional: {} } : {})
           }))
         } else {
-          setState((prev) => ({
+          setJourney((prev) => ({
             ...prev,
             frozen: truncateFrozenAt(prev.frozen, prev.steps.length),
             activeResults: [],
@@ -906,8 +906,8 @@ function useExplorationData(site, dashboardState, inViewport) {
   }, [
     site,
     dashboardState,
-    state.steps,
-    state.activeFilter,
+    journey.steps,
+    journey.activeFilter,
     inViewport,
     retryCount,
     directionKey
@@ -917,16 +917,16 @@ function useExplorationData(site, dashboardState, inViewport) {
   // drives the re-run without double-firing.
 
   const retry = useCallback(() => {
-    setState((prev) => ({ ...prev, rateLimited: false }))
+    setJourney((prev) => ({ ...prev, rateLimited: false }))
     setRetryCount((c) => c + 1)
   }, [])
 
   return {
-    state,
+    journey,
     direction: directionRef.current,
     activeLoading,
     layoutKey,
-    rateLimited: state.rateLimited,
+    rateLimited: journey.rateLimited,
     selectStep,
     reset,
     retry,
@@ -974,7 +974,7 @@ export function FunnelExploration() {
   const maxJourneySteps = site.explorationMaxJourneySteps
 
   const {
-    state,
+    journey,
     direction,
     activeLoading,
     layoutKey,
@@ -987,7 +987,7 @@ export function FunnelExploration() {
   } = useExplorationData(site, dashboardState, inViewport)
 
   const { steps, funnel, activeResults, activeFilter, frozen, provisional } =
-    state
+    journey
 
   const containerRef = useRef(null)
   useScrollActiveColumnIntoView(containerRef, steps.length)
