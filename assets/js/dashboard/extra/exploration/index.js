@@ -22,6 +22,7 @@ import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../../components/popover'
+import { toggleStep } from './journey'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
@@ -705,50 +706,7 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   const selectStep = useCallback((columnIndex, step) => {
     journeyVersionRef.current++
-
-    setJourney((prev) => {
-      if (step === null) {
-        // Deselect: truncate journey at columnIndex.
-        return {
-          ...prev,
-          steps: prev.steps.slice(0, columnIndex),
-          activeResults: [],
-          activeFilter: '',
-          frozen: truncateFrozenAt(prev.frozen, columnIndex + 1),
-          provisional: {},
-          rateLimited: false
-        }
-      }
-
-      // Select: determine source results for provisional values.
-      const sourceResults =
-        columnIndex === prev.steps.length
-          ? prev.activeResults
-          : (prev.frozen[columnIndex] ?? [])
-
-      const newFrozen =
-        columnIndex === prev.steps.length
-          ? {
-              ...truncateFrozenAt(prev.frozen, columnIndex),
-              [columnIndex]: prev.activeResults
-            }
-          : truncateFrozenAt(prev.frozen, columnIndex + 1)
-
-      return {
-        ...prev,
-        steps: [...prev.steps.slice(0, columnIndex), step],
-        activeResults: [],
-        activeFilter: '',
-        frozen: newFrozen,
-        provisional: provisionalEntry(
-          step,
-          columnIndex,
-          sourceResults,
-          prev.funnel
-        ),
-        rateLimited: false
-      }
-    })
+    setJourney((journey) => toggleStep({ journey, columnIndex, newStep: step }))
   }, [])
 
   const reset = useCallback(() => {
