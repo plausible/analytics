@@ -210,6 +210,47 @@ defmodule Plausible.Stats.ExplorationTest do
         assert {:error, :journey_too_long} = Exploration.journey_funnel(query, journey)
       end
 
+      test "excludes revenue events from journey funnel steps" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Purchase",
+            pathname: "/checkout",
+            revenue_reporting_amount: Decimal.new("100"),
+            revenue_reporting_currency: "USD",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/thank-you",
+            timestamp: DateTime.shift(now, minute: -30)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/thank-you"}
+        ]
+
+        assert {:ok, [step1, step2]} = Exploration.journey_funnel(query, journey)
+
+        # Revenue event is skipped
+        assert step1.step.pathname == "/home"
+        assert step1.visitors == 1
+        assert step2.step.pathname == "/thank-you"
+        assert step2.visitors == 1
+      end
+
       test "supports backward journey funnel", %{site: site} do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
@@ -370,6 +411,47 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step3.step.label == "/logout"
         assert next_step3.step.pathname == "/logout"
         assert next_step3.visitors == 1
+      end
+
+      test "excludes revenue events from next step suggestions" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "Purchase",
+            pathname: "/checkout",
+            revenue_reporting_amount: Decimal.new("100"),
+            revenue_reporting_currency: "USD",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/thank-you",
+            timestamp: DateTime.shift(now, minute: -30)
+          )
+        ])
+
+        {:ok, _} =
+          Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        assert {:ok, steps} = Exploration.next_steps(site, query, [])
+
+        refute "Purchase" in Enum.map(steps, & &1.step.name)
+        refute "/checkout" in Enum.map(steps, & &1.step.pathname)
+
+        journey = [%Exploration.Journey.Step{name: "pageview", pathname: "/home"}]
+        assert {:ok, [next_step]} = Exploration.next_steps(site, query, journey)
+        assert next_step.step.pathname == "/thank-you"
+        assert next_step.step.name == "pageview"
       end
 
       test "respects max_candidates", %{site: site} do

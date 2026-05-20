@@ -451,7 +451,7 @@ defmodule Plausible.Stats.Exploration do
           pathname: fragment("if(? = 'pageview', ?, '')", e.name, e.pathname),
           timestamp: e.timestamp
         },
-        where: e.name != "engagement"
+        where: e.name != "engagement" and e.revenue_reporting_currency == ""
       )
       |> select_previous(direction)
 
