@@ -5,23 +5,23 @@ import React, {
   useRef,
   useCallback
 } from 'react'
-import LazyLoader from '../components/lazy-loader'
-import * as api from '../api'
-import { ApiError } from '../api'
-import * as url from '../util/url'
-import { Tooltip } from '../util/tooltip'
-import { useDebounce } from '../custom-hooks'
-import { useSiteContext } from '../site-context'
-import { useDashboardStateContext } from '../dashboard-state-context'
+import LazyLoader from '../../components/lazy-loader'
+import * as api from '../../api'
+import { ApiError } from '../../api'
+import * as url from '../../util/url'
+import { Tooltip } from '../../util/tooltip'
+import { useDebounce } from '../../custom-hooks'
+import { useSiteContext } from '../../site-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import {
   numberShortFormatter,
   numberLongFormatter,
   percentageFormatter
-} from '../util/number-formatter'
-import { RefreshIcon, CursorIcon, FolderIcon } from '../components/icons'
+} from '../../util/number-formatter'
+import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { popover } from '../components/popover'
+import { popover } from '../../components/popover'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
