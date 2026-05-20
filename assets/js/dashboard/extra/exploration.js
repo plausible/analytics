@@ -34,8 +34,6 @@ const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
 const MAX_VISIBLE_CANDIDATES = 10
 const MIN_GRID_COLUMNS = 3
-const PRELOAD_MAX_STEPS = 2
-const PRELOAD_MAX_CANDIDATES = MAX_VISIBLE_CANDIDATES
 
 const EMPTY_JOURNEY_STATE = {
   steps: [],
@@ -152,14 +150,6 @@ function fetchNextWithFunnel(
       direction,
       include_funnel: includeFunnel
     }
-  )
-}
-
-function fetchFeaturedFunnel(site, dashboardState) {
-  return api.post(
-    url.apiPath(site, '/exploration/featured-funnel'),
-    dashboardState,
-    { max_steps: PRELOAD_MAX_STEPS, max_candidates: PRELOAD_MAX_CANDIDATES }
   )
 }
 
@@ -576,8 +566,8 @@ function ExplorationColumn({
     onFilterChange(e.target.value)
   )
 
-  // When a step is selected but there are no candidate results, e.g. from a
-  // preloaded journey, synthesise a single-item list from the funnel data so
+  // When a step is selected but there are no candidate results,
+  // synthesise a single-item list from the funnel data so
   // the selected step is still rendered in the column.
   const listItems =
     selected && results.length === 0
@@ -697,12 +687,6 @@ function useExplorationData(site, dashboardState, inViewport) {
   // geometry against the freshly rendered DOM. Steps alone do not change
   // on a context switch, so without this the SVG paths would be stale.
   const [layoutKey, setLayoutKey] = useState(0)
-
-  // Track whether the initial preload has fired and whether the most recent
-  // funnel data came from that preload, so we skip an immediately redundant
-  // funnel refetch.
-  const preloadFiredRef = useRef(false)
-  const funnelFromPreloadRef = useRef(false)
 
   // Ref-copies of the previous dependency values so the main effect can detect
   // which dimension changed without adding them to the dep array.
@@ -829,126 +813,7 @@ function useExplorationData(site, dashboardState, inViewport) {
 
     setActiveLoading(true)
 
-    // On first render fire the featured-funnel preload. Once the preload
-    // resolves it sets steps and funnel, which re-triggers this effect for
-    // the active-column candidate fetch.
-    if (!preloadFiredRef.current) {
-      preloadFiredRef.current = true
-
-      fetchFeaturedFunnel(site, dashboardState)
-        .then((response) => {
-          if (isStale()) return
-          if (response?.funnel?.length > 0) {
-            funnelFromPreloadRef.current = true
-            setState((prev) => ({
-              ...prev,
-              steps: response.funnel.map(({ step }) => step),
-              funnel: response.funnel,
-              frozen: response.candidates ?? {},
-              rateLimited: false
-            }))
-            // The preload populates steps, which re-triggers this effect for
-            // the active-column candidate fetch, so leave loading=true.
-          } else {
-            // No featured funnel found; fall back to plain candidates for column 0.
-            fetchNextWithFunnel(
-              site,
-              dashboardState,
-              [],
-              '',
-              currentDirection,
-              false
-            )
-              .then((r) => {
-                if (!isStale())
-                  setState((prev) => ({
-                    ...prev,
-                    activeResults: maybeEmptyResults(
-                      r?.next ?? [],
-                      prev.activeFilter,
-                      journeyEndEvent
-                    ),
-                    rateLimited: false
-                  }))
-              })
-              .catch((err) => {
-                if (!isStale()) {
-                  if (isRateLimitedError(err)) {
-                    setState((prev) => ({
-                      ...prev,
-                      rateLimited: true,
-                      activeResults: []
-                    }))
-                  } else {
-                    setState((prev) => ({ ...prev, activeResults: [] }))
-                  }
-                }
-              })
-              .finally(() => {
-                if (!isStale()) setActiveLoading(false)
-              })
-          }
-        })
-        .catch((err) => {
-          if (isStale()) return
-          if (isRateLimitedError(err)) {
-            setState((prev) => ({
-              ...prev,
-              rateLimited: true,
-              activeResults: []
-            }))
-            setActiveLoading(false)
-            return
-          }
-          fetchNextWithFunnel(
-            site,
-            dashboardState,
-            [],
-            '',
-            currentDirection,
-            false
-          )
-            .then((r) => {
-              if (!isStale())
-                setState((prev) => ({
-                  ...prev,
-                  activeResults: maybeEmptyResults(
-                    r?.next ?? [],
-                    prev.activeFilter,
-                    journeyEndEvent
-                  ),
-                  rateLimited: false
-                }))
-            })
-            .catch((err) => {
-              if (!isStale()) {
-                if (isRateLimitedError(err)) {
-                  setState((prev) => ({
-                    ...prev,
-                    rateLimited: true,
-                    activeResults: []
-                  }))
-                } else {
-                  setState((prev) => ({ ...prev, activeResults: [] }))
-                }
-              }
-            })
-            .finally(() => {
-              if (!isStale()) setActiveLoading(false)
-            })
-        })
-
-      return
-    }
-
-    // On subsequent renders fetch next steps and, if the journey changed,
-    // also refetch the funnel.
-
-    const funnelAlreadyLoaded = funnelFromPreloadRef.current
-    funnelFromPreloadRef.current = false
-
-    const includeFunnel =
-      journeyChanged && steps.length > 0 && !funnelAlreadyLoaded
+    const includeFunnel = journeyChanged && steps.length > 0
 
     if (journeyChanged && steps.length === 0) {
       setState((prev) => ({ ...prev, funnel: [] }))
