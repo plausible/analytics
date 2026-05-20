@@ -31,8 +31,10 @@ import {
   clearJourneyRateLimit,
   updateJourneyOnSuccess,
   updateJourneyOnError,
-  updateJourneyOnRateLimitError
+  updateJourneyOnRateLimitError,
+  journeyStepsEqual
 } from './journey'
+import { roundedPercentage } from './helpers'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
@@ -54,24 +56,8 @@ const EMPTY_SVG_DATA = {
   clipHeight: 0
 }
 
-function roundedPercentage(value, total) {
-  const percentage = (value / total) * 100
-  // Rounding to 2 decimal places using Math.round()
-  // (https://stackoverflow.com/a/11832950)
-  return Math.round((percentage + Number.EPSILON) * 100) / 100
-}
-
 function isRateLimitedError(err) {
   return err instanceof ApiError && err.status === 429
-}
-
-// Two steps are identical when their identity fields match.
-function stepsEqual(a, b) {
-  return (
-    a.name === b.name &&
-    a.pathname === b.pathname &&
-    a.includes_subpaths === b.includes_subpaths
-  )
 }
 
 // Strip page-related filters from the dashboard state when a journey is
@@ -620,8 +606,8 @@ function ExplorationColumn({
               key={`${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
               step={step}
               visitors={visitors}
-              isSelected={!!selected && stepsEqual(step, selected)}
-              isDimmed={!!selected && !stepsEqual(step, selected)}
+              isSelected={!!selected && journeyStepsEqual(step, selected)}
+              isDimmed={!!selected && !journeyStepsEqual(step, selected)}
               selectedVisitors={selectedVisitors}
               selectedConversionRate={selectedConversionRate}
               stepMaxVisitors={stepMaxVisitors}
