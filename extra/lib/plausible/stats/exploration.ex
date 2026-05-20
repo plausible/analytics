@@ -33,7 +33,7 @@ defmodule Plausible.Stats.Exploration do
         }
 
   @max_steps 20
-  @max_candidates 20
+  @max_candidates 50
 
   @next_steps_defaults [
     search_term: "",
