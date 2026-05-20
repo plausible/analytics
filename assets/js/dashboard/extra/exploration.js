@@ -704,7 +704,7 @@ function useExplorationData(site, dashboardState, inViewport) {
   const directionRef = useRef(DIRECTION.FORWARD)
 
   const selectStep = useCallback((columnIndex, step) => {
-    ++journeyVersionRef.current
+    journeyVersionRef.current++
 
     setState((prev) => {
       if (step === null) {
