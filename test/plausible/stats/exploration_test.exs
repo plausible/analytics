@@ -1294,12 +1294,12 @@ defmodule Plausible.Stats.ExplorationTest do
         site = new_site()
 
         Plausible.Goals.create(site, %{
-          "name" => "actress",
+          "event_name" => "actress",
           "display_name" => "Scarlett"
         })
 
         Plausible.Goals.create(site, %{
-          "name" => "bishop",
+          "event_name" => "bishop",
           "display_name" => "Knight"
         })
 
@@ -1324,12 +1324,11 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "actress", pathname: ""}
         ]
 
-        assert {:ok, [_next_step]} =
+        assert {:ok, [next_step]} =
                  Exploration.next_steps(site, query, journey, search_term: "bishop")
 
-        # This will fail, but we're not keeping display name - separate issue?
-        # assert {:ok, [^next_step]} =
-        #          Exploration.next_steps(site, query, journey, search_term: "Knight")
+        assert {:ok, [^next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "Knight")
       end
 
       test "suggestions matching implicit wildcard from previous step are excluded" do
