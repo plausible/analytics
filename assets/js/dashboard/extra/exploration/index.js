@@ -6,9 +6,6 @@ import React, {
   useCallback
 } from 'react'
 import LazyLoader from '../../components/lazy-loader'
-import * as api from '../../api'
-import { ApiError } from '../../api'
-import * as url from '../../util/url'
 import { Tooltip } from '../../util/tooltip'
 import { useDebounce } from '../../custom-hooks'
 import { useSiteContext } from '../../site-context'
@@ -22,31 +19,15 @@ import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../../components/popover'
-import {
-  emptyJourney,
-  toggleJourneyStep,
-  setJourneyActiveFilter,
-  clearJourneyFrozen,
-  clearJourneyFunnel,
-  clearJourneyRateLimit,
-  updateJourneyOnSuccess,
-  updateJourneyOnError,
-  updateJourneyOnRateLimitError,
-  journeyStepsEqual
-} from './journey'
+import { useExplorationData } from './exploration-state'
 import { roundedPercentage } from './helpers'
-
-const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
-
-const DIRECTION_OPTIONS = [
-  { value: DIRECTION.FORWARD, label: 'Starting point' },
-  { value: DIRECTION.BACKWARD, label: 'End point' }
-]
-
-const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
-
-const MAX_VISIBLE_CANDIDATES = 10
-const MIN_GRID_COLUMNS = 3
+import { journeyStepsEqual } from './journey'
+import {
+  DIRECTION,
+  DIRECTION_OPTIONS,
+  MAX_VISIBLE_CANDIDATES,
+  MIN_GRID_COLUMNS
+} from './constants'
 
 const EMPTY_SVG_DATA = {
   paths: [],
@@ -56,37 +37,6 @@ const EMPTY_SVG_DATA = {
   clipHeight: 0
 }
 
-function isRateLimitedError(err) {
-  return err instanceof ApiError && err.status === 429
-}
-
-// Strip page-related filters from the dashboard state when a journey is
-// active - the journey itself defines the page scope.
-function dashboardStateForQuery(dashboardState, steps) {
-  if (steps.length === 0) return dashboardState
-  return {
-    ...dashboardState,
-    filters: dashboardState.filters.filter(
-      ([_op, key]) => !PAGE_FILTER_KEYS.includes(key)
-    )
-  }
-}
-
-// Serialize steps into the wire format expected by the API.
-function stepsToJourneyParam(steps) {
-  return JSON.stringify(
-    steps.map(
-      ({ name, pathname, includes_subpaths, subpaths_count, is_goal }) => ({
-        name,
-        pathname,
-        includes_subpaths,
-        subpaths_count,
-        is_goal
-      })
-    )
-  )
-}
-
 // Column header label based on index and direction.
 function columnHeader(index, direction) {
   if (index === 0) {
@@ -94,26 +44,6 @@ function columnHeader(index, direction) {
   }
   const word = direction === DIRECTION.BACKWARD ? 'before' : 'after'
   return `${index} step${index === 1 ? '' : 's'} ${word}`
-}
-
-function fetchNextWithFunnel(
-  site,
-  dashboardState,
-  steps,
-  filter,
-  direction,
-  includeFunnel
-) {
-  return api.post(
-    url.apiPath(site, '/exploration/next-with-funnel'),
-    dashboardStateForQuery(dashboardState, steps),
-    {
-      journey: stepsToJourneyParam(steps),
-      search_term: filter,
-      direction,
-      include_funnel: includeFunnel
-    }
-  )
 }
 
 // x-coordinate of a column element's left or right edge in the coordinate
@@ -621,179 +551,6 @@ function ExplorationColumn({
   )
 }
 
-// useExplorationData manages all async data fetching, cancellation, and
-// journey state.
-function useExplorationData(site, dashboardState, inViewport) {
-  const {
-    explorationMaxJourneySteps: maxJourneySteps,
-    explorationJourneyEndEvent: journeyEndEvent
-  } = useSiteContext()
-  const [journey, setJourney] = useState(emptyJourney)
-  const [activeLoading, setActiveLoading] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
-  const [directionKey, setDirectionKey] = useState(0)
-  // Incremented whenever the dashboardState or site changes so that
-  // PathConnectors re-runs its layout effect and recalculates connector
-  // geometry against the freshly rendered DOM. Steps alone do not change
-  // on a context switch, so without this the SVG paths would be stale.
-  const [layoutKey, setLayoutKey] = useState(0)
-
-  // Ref-copies of the previous dependency values so the main effect can detect
-  // which dimension changed without adding them to the dep array.
-  const prevStepsRef = useRef(journey.steps)
-  const prevDirectionRef = useRef(DIRECTION.FORWARD)
-  const prevDashboardStateRef = useRef(dashboardState)
-
-  // Incremented on every user-driven journey mutation. Stale async callbacks
-  // capture the version at dispatch time and abort if it no longer matches.
-  const journeyVersionRef = useRef(0)
-
-  // Direction lives in a ref so that changing it resets state in one render
-  // without causing a double-fetch from a direction state update racing with
-  // a steps state update.
-  const directionRef = useRef(DIRECTION.FORWARD)
-
-  const selectStep = useCallback((columnIndex, step) => {
-    journeyVersionRef.current++
-    setJourney((journey) =>
-      toggleJourneyStep({ journey, columnIndex, newStep: step })
-    )
-  }, [])
-
-  const reset = useCallback(() => {
-    ++journeyVersionRef.current
-    setActiveLoading(true)
-    setJourney(emptyJourney)
-  }, [])
-
-  const setDirection = useCallback((newDirection) => {
-    if (newDirection === directionRef.current) return
-    directionRef.current = newDirection
-    ++journeyVersionRef.current
-    setJourney(emptyJourney)
-    setDirectionKey((k) => k + 1)
-  }, [])
-
-  const setActiveFilter = useCallback((filter) => {
-    setJourney((journey) => setJourneyActiveFilter({ journey, filter }))
-  }, [])
-
-  // Frozen candidate lists were fetched against a specific site and dashboard
-  // filter context. When either changes the cached candidates become stale, so
-  // drop them. We also bump layoutKey so PathConnectors recalculates geometry
-  // after the DOM settles. Skip the initial run to avoid clobbering freshly
-  // populated state on mount.
-  const isFirstContextChangeRef = useRef(true)
-  useEffect(() => {
-    if (isFirstContextChangeRef.current) {
-      isFirstContextChangeRef.current = false
-      return
-    }
-    ++journeyVersionRef.current
-    setJourney(clearJourneyFrozen)
-    setLayoutKey((k) => k + 1)
-  }, [site, dashboardState])
-
-  useEffect(() => {
-    if (!inViewport) return
-
-    const currentDirection = directionRef.current
-    const steps = journey.steps
-    const activeFilter = journey.activeFilter
-
-    if (steps.length >= maxJourneySteps) {
-      setActiveLoading(false)
-      return
-    }
-
-    const journeyChanged =
-      prevStepsRef.current !== steps ||
-      prevDirectionRef.current !== currentDirection ||
-      prevDashboardStateRef.current !== dashboardState
-
-    prevStepsRef.current = steps
-    prevDirectionRef.current = currentDirection
-    prevDashboardStateRef.current = dashboardState
-
-    // Capture the version at effect-dispatch time so stale responses are
-    // discarded if the user mutates the journey before the response arrives.
-    const capturedVersion = journeyVersionRef.current
-    const isStale = () => journeyVersionRef.current !== capturedVersion
-
-    setActiveLoading(true)
-
-    const includeFunnel = journeyChanged && steps.length > 0
-
-    if (journeyChanged && steps.length === 0) {
-      setJourney(clearJourneyFunnel)
-    }
-
-    fetchNextWithFunnel(
-      site,
-      dashboardState,
-      steps,
-      activeFilter,
-      currentDirection,
-      includeFunnel
-    )
-      .then((response) => {
-        if (isStale()) return
-        setJourney((journey) =>
-          updateJourneyOnSuccess({
-            journey,
-            response,
-            includeFunnel,
-            journeyEndEvent
-          })
-        )
-      })
-      .catch((err) => {
-        if (isStale()) return
-        if (isRateLimitedError(err)) {
-          setJourney((journey) =>
-            updateJourneyOnRateLimitError({ journey, includeFunnel })
-          )
-        } else {
-          setJourney((journey) =>
-            updateJourneyOnError({ journey, includeFunnel })
-          )
-        }
-      })
-      .finally(() => {
-        if (!isStale()) setActiveLoading(false)
-      })
-  }, [
-    site,
-    dashboardState,
-    journey.steps,
-    journey.activeFilter,
-    inViewport,
-    retryCount,
-    directionKey
-  ])
-  // direction is intentionally excluded from the dep array. It lives in a ref
-  // and resets state, which does appear above, so the state update itself
-  // drives the re-run without double-firing.
-
-  const retry = useCallback(() => {
-    setJourney(clearJourneyRateLimit)
-    setRetryCount((c) => c + 1)
-  }, [])
-
-  return {
-    journey,
-    direction: directionRef.current,
-    activeLoading,
-    layoutKey,
-    rateLimited: journey.rateLimited,
-    selectStep,
-    reset,
-    retry,
-    setDirection,
-    setActiveFilter
-  }
-}
-
 // Scrolls the active column into view whenever the journey length changes.
 function useScrollActiveColumnIntoView(containerRef, stepsLength) {
   const prevLengthRef = useRef(0)
@@ -843,7 +600,7 @@ export function FunnelExploration() {
     retry,
     setDirection,
     setActiveFilter
-  } = useExplorationData(site, dashboardState, inViewport)
+  } = useExplorationData({ site, dashboardState, inViewport })
 
   const { steps, funnel, activeResults, activeFilter, frozen, provisional } =
     journey
