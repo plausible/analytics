@@ -1,6 +1,26 @@
-import React, { useLayoutEffect, useCallback, useState } from 'react'
+import React, {
+  useLayoutEffect,
+  useCallback,
+  useState,
+  ReactNode,
+  RefObject
+} from 'react'
+import { JourneyStep } from './journey'
 
-function emptySVGData() {
+type ClipRect = {
+  y: number
+  height: number
+}
+
+type SVGData = {
+  paths: string[]
+  width: number
+  height: number
+  clipY: number
+  clipHeight: number
+}
+
+function emptySVGData(): SVGData {
   return {
     paths: [],
     width: 0,
@@ -12,20 +32,25 @@ function emptySVGData() {
 
 // x-coordinate of a column element's left or right edge in the coordinate
 // space of the scroll container, stable across horizontal scrolling.
-function columnEdgeX(colEl, side, containerRect, scrollLeft) {
+function columnEdgeX(
+  colEl: Element,
+  side: 'left' | 'right',
+  containerRect: DOMRect,
+  scrollLeft: number
+): number {
   const rect = colEl.getBoundingClientRect()
   const edgeX = side === 'right' ? rect.right : rect.left
   return edgeX - containerRect.left + scrollLeft
 }
 
 // Vertical midpoint of a step row relative to the top of the container.
-function stepRowMidY(stepRowEl, containerRect) {
+function stepRowMidY(stepRowEl: Element, containerRect: DOMRect): number {
   const rect = stepRowEl.getBoundingClientRect()
   return (rect.top + rect.bottom) / 2 - containerRect.top
 }
 
 // SVG path for a stepped connector with rounded corners.
-function steppedPath(x1, y1, x2, y2) {
+function steppedPath(x1: number, y1: number, x2: number, y2: number): string {
   const mx = (x1 + x2) / 2
   const dy = y2 - y1
 
@@ -44,14 +69,14 @@ function steppedPath(x1, y1, x2, y2) {
 
 // Clip rect that keeps connectors inside the list area,
 // preventing them from bleeding into column headers.
-function listClipRect(container, containerRect) {
+function listClipRect(container: Element, containerRect: DOMRect): ClipRect {
   const firstList = container.querySelector('[data-exploration-list]')
   if (!firstList) return { y: 0, height: container.clientHeight }
   const rect = firstList.getBoundingClientRect()
   return { y: rect.top - containerRect.top, height: rect.height }
 }
 
-function computeConnectors(container, steps) {
+function computeConnectors(container: Element, steps: JourneyStep[]): SVGData {
   const containerRect = container.getBoundingClientRect()
   const paths = []
 
@@ -85,7 +110,15 @@ function computeConnectors(container, steps) {
 // layoutKey is bumped whenever the DOM may have changed in a way that is not
 // reflected by a steps reference change, e.g. a dashboardState update. It
 // is the caller's responsibility to increment it after such changes.
-export function PathConnectors({ steps, containerRef, layoutKey }) {
+export function PathConnectors({
+  steps,
+  containerRef,
+  layoutKey
+}: {
+  steps: JourneyStep[]
+  containerRef: RefObject<Element>
+  layoutKey: number
+}): ReactNode | null {
   const [svgData, setSvgData] = useState(emptySVGData)
 
   const recalculate = useCallback(() => {
@@ -107,15 +140,19 @@ export function PathConnectors({ steps, containerRef, layoutKey }) {
     observer.observe(container)
     window.addEventListener('resize', recalculate)
 
-    const lists = Array.from(
+    const lists: Element[] = Array.from(
       container.querySelectorAll('[data-exploration-list]')
     )
-    lists.forEach((list) => list.addEventListener('scroll', recalculate))
+    lists.forEach((list: Element): void =>
+      list.addEventListener('scroll', recalculate)
+    )
 
-    return () => {
+    return (): void => {
       observer.disconnect()
       window.removeEventListener('resize', recalculate)
-      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
+      lists.forEach((list: Element): void =>
+        list.removeEventListener('scroll', recalculate)
+      )
     }
     // layoutKey is intentionally included: it forces this effect to re-run
     // and recalculate geometry after DOM updates that don't change steps.
@@ -138,16 +175,18 @@ export function PathConnectors({ steps, containerRef, layoutKey }) {
           />
         </clipPath>
       </defs>
-      {svgData.paths.map((d, i) => (
-        <path
-          key={i}
-          d={d}
-          fill="none"
-          clipPath="url(#exploration-list-clip)"
-          className="stroke-indigo-500 dark:stroke-indigo-400"
-          strokeWidth="1.5"
-        />
-      ))}
+      {svgData.paths.map(
+        (d: string, i: number): ReactNode => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            clipPath="url(#exploration-list-clip)"
+            className="stroke-indigo-500 dark:stroke-indigo-400"
+            strokeWidth="1.5"
+          />
+        )
+      )}
     </svg>
   )
 }
