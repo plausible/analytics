@@ -81,6 +81,19 @@ function selectStep(journey, columnIndex, newStep) {
   }
 }
 
+function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
+  if (
+    results.length === 0 ||
+    (!activeFilter &&
+      results.length === 1 &&
+      results[0].step.name === journeyEndEvent)
+  ) {
+    return []
+  } else {
+    return results
+  }
+}
+
 export function emptyJourney() {
   return {
     steps: [],
@@ -100,4 +113,72 @@ export function toggleJourneyStep({ journey, columnIndex, newStep }) {
   }
 
   return selectStep(journey, columnIndex, newStep)
+}
+
+export function setJourneyActiveFilter({ journey, filter }) {
+  return { ...journey, activeFilter: filter }
+}
+
+export function clearJourneyFrozen(journey) {
+  return { ...journey, frozen: {} }
+}
+
+export function clearJourneyFunnel(journey) {
+  return { ...journey, funnel: [] }
+}
+
+export function clearJourneyRateLimit(journey) {
+  return { ...journey, rateLimited: false }
+}
+
+export function updateJourney({ journey, response, includeFunnel, journeyEndEvent }) {
+  const newJourney = {
+    ...journey,
+    activeResults: maybeEmptyResults(
+      response?.next ?? [],
+      journey.activeFilter,
+      journeyEndEvent
+    ),
+    rateLimited: false
+  }
+
+  if (includeFunnel) {
+    let newFunnel = response?.funnel ?? []
+    newJourney.provisional = {}
+
+    // Truncate the funnel at first 0-visitors step.
+    // This happens when the dashboard state narrows (e.g. shorter time range)
+    // and the existing steps can no longer be fulfilled.
+    const firstZeroIdx = newFunnel.findIndex((f) => f.visitors === 0)
+    if (firstZeroIdx !== -1) {
+      newFunnel = newFunnel.slice(0, firstZeroIdx)
+      newJourney.steps = journey.steps.slice(0, firstZeroIdx)
+      newJourney.frozen = truncateFrozenAt(journey.frozen, firstZeroIdx)
+      newJourney.activeResults = []
+    }
+
+    newJourney.funnel = newFunnel
+
+    // Sync subpaths_count on existing steps from the refreshed funnel
+    // so that step identity stays consistent with what the API now
+    // reports for the current period. Without this, a period change
+    // leaves stale subpaths_count values in steps while frozen
+    // candidates and new results carry fresh values, causing duplicate
+    // entries and double-highlighted rows.
+    const currentSteps = newJourney.steps ?? journey.steps
+    if (newFunnel.length > 0 && currentSteps.length > 0) {
+      const synced = currentSteps.map((s, idx) =>
+        newFunnel[idx]
+          ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
+          : s
+      )
+      // Only replace the steps reference when something actually changed
+      // to avoid re-triggering the main effect (steps is a dep array entry).
+      const changed = synced.some(
+        (s, idx) => s.subpaths_count !== currentSteps[idx].subpaths_count
+      )
+      if (changed) newJourney.steps = synced
+    }
+  }
+  return newJourney
 }

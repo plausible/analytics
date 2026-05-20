@@ -22,7 +22,15 @@ import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../../components/popover'
-import { emptyJourney, toggleJourneyStep } from './journey'
+import {
+  emptyJourney,
+  toggleJourneyStep,
+  setJourneyActiveFilter,
+  clearJourneyFrozen,
+  clearJourneyFunnel,
+  clearJourneyRateLimit,
+  updateJourney
+} from './journey'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
@@ -89,19 +97,6 @@ function stepsToJourneyParam(steps) {
       })
     )
   )
-}
-
-function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
-  if (
-    results.length === 0 ||
-    (!activeFilter &&
-      results.length === 1 &&
-      results[0].step.name === journeyEndEvent)
-  ) {
-    return []
-  } else {
-    return results
-  }
 }
 
 // Keep only entries with index < fromIndex, discarding everything at or after.
@@ -648,19 +643,6 @@ function ExplorationColumn({
   )
 }
 
-// Compute provisional funnel entries for a newly selected step so the UI
-// displays sensible values immediately before the API responds.
-function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
-  const match = sourceResults.find(({ step: s }) => stepsEqual(s, step))
-  if (!match) return {}
-
-  const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
-  const conversionRate = roundedPercentage(match.visitors, firstStepVisitors)
-  return {
-    [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
-  }
-}
-
 // useExplorationData manages all async data fetching, cancellation, and
 // journey state.
 function useExplorationData(site, dashboardState, inViewport) {
@@ -695,7 +677,9 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   const selectStep = useCallback((columnIndex, step) => {
     journeyVersionRef.current++
-    setJourney((journey) => toggleJourneyStep({ journey, columnIndex, newStep: step }))
+    setJourney((journey) =>
+      toggleJourneyStep({ journey, columnIndex, newStep: step })
+    )
   }, [])
 
   const reset = useCallback(() => {
@@ -713,7 +697,7 @@ function useExplorationData(site, dashboardState, inViewport) {
   }, [])
 
   const setActiveFilter = useCallback((filter) => {
-    setJourney((prev) => ({ ...prev, activeFilter: filter }))
+    setJourney((journey) => setJourneyActiveFilter({ journey, filter }))
   }, [])
 
   // Frozen candidate lists were fetched against a specific site and dashboard
@@ -728,7 +712,7 @@ function useExplorationData(site, dashboardState, inViewport) {
       return
     }
     ++journeyVersionRef.current
-    setJourney((prev) => ({ ...prev, frozen: {} }))
+    setJourney(clearJourneyFrozen)
     setLayoutKey((k) => k + 1)
   }, [site, dashboardState])
 
@@ -763,7 +747,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     const includeFunnel = journeyChanged && steps.length > 0
 
     if (journeyChanged && steps.length === 0) {
-      setJourney((prev) => ({ ...prev, funnel: [] }))
+      setJourney(clearJourneyFunnel)
     }
 
     fetchNextWithFunnel(
@@ -776,57 +760,9 @@ function useExplorationData(site, dashboardState, inViewport) {
     )
       .then((response) => {
         if (isStale()) return
-        setJourney((prev) => {
-          const next = {
-            ...prev,
-            activeResults: maybeEmptyResults(
-              response?.next ?? [],
-              prev.activeFilter,
-              journeyEndEvent
-            ),
-            rateLimited: false
-          }
-          if (includeFunnel) {
-            let newFunnel = response?.funnel ?? []
-            next.provisional = {}
-
-            // Truncate the funnel at first 0-visitors step.
-            // This happens when the dashboard state narrows (e.g. shorter time range)
-            // and the existing steps can no longer be fulfilled.
-            const firstZeroIdx = newFunnel.findIndex((f) => f.visitors === 0)
-            if (firstZeroIdx !== -1) {
-              newFunnel = newFunnel.slice(0, firstZeroIdx)
-              next.steps = prev.steps.slice(0, firstZeroIdx)
-              next.frozen = truncateFrozenAt(prev.frozen, firstZeroIdx)
-              next.activeResults = []
-            }
-
-            next.funnel = newFunnel
-
-            // Sync subpaths_count on existing steps from the refreshed funnel
-            // so that step identity stays consistent with what the API now
-            // reports for the current period. Without this, a period change
-            // leaves stale subpaths_count values in steps while frozen
-            // candidates and new results carry fresh values, causing duplicate
-            // entries and double-highlighted rows.
-            const currentSteps = next.steps ?? prev.steps
-            if (newFunnel.length > 0 && currentSteps.length > 0) {
-              const synced = currentSteps.map((s, idx) =>
-                newFunnel[idx]
-                  ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
-                  : s
-              )
-              // Only replace the steps reference when something actually changed
-              // to avoid re-triggering the main effect (steps is a dep array entry).
-              const changed = synced.some(
-                (s, idx) =>
-                  s.subpaths_count !== currentSteps[idx].subpaths_count
-              )
-              if (changed) next.steps = synced
-            }
-          }
-          return next
-        })
+        setJourney((journey) =>
+          updateJourney({ journey, response, includeFunnel, journeyEndEvent })
+        )
       })
       .catch((err) => {
         if (isStale()) return
@@ -864,7 +800,7 @@ function useExplorationData(site, dashboardState, inViewport) {
   // drives the re-run without double-firing.
 
   const retry = useCallback(() => {
-    setJourney((prev) => ({ ...prev, rateLimited: false }))
+    setJourney(clearJourneyRateLimit)
     setRetryCount((c) => c + 1)
   }, [])
 
