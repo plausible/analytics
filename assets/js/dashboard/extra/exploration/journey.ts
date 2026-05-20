@@ -1,9 +1,58 @@
 import { roundedPercentage } from './helpers'
 
+type JourneyStep = {
+  name: string
+  pathname: string
+  includes_subpaths: boolean
+  subpaths_count: number
+  is_goal: boolean
+}
+
+type JourneySuggestion = {
+  step: JourneyStep
+  visitors: number
+}
+
+type FunnelStep = {
+  step: JourneyStep
+  visitors: number
+  dropoff: number
+  dropoff_percentage: number
+  conversion_rate: number
+  conversion_rate_step: number
+}
+
+type ProvisionalFunnelStep = {
+  visitors: number
+  conversion_rate: number
+}
+
+type FrozenSuggestions = { [columnIndex: string]: JourneySuggestion[] }
+type ProvisionalFunnelSteps = { [columnIndex: string]: ProvisionalFunnelStep }
+
+type Journey = {
+  steps: JourneyStep[]
+  funnel: FunnelStep[]
+  activeResults: JourneySuggestion[]
+  activeFilter: string
+  // list of suggestions the user saw when picking step
+  frozen: FrozenSuggestions
+  provisional: ProvisionalFunnelSteps
+  rateLimited: boolean
+}
+
+type JourneyResponse = {
+  next: JourneySuggestion[] | null
+  funnel: FunnelStep[] | null
+} | null
+
 // Keep only entries with index < fromIndex, discarding everything at or after.
 // Used to truncate frozen candidate snapshots when the journey is shortened.
-function truncateFrozenAt(frozen, fromIndex) {
-  const result = {}
+function truncateFrozenAt(
+  frozen: FrozenSuggestions,
+  fromIndex: number
+): FrozenSuggestions {
+  const result: FrozenSuggestions = {}
   for (const key of Object.keys(frozen)) {
     if (Number(key) < fromIndex) result[key] = frozen[key]
   }
@@ -12,8 +61,15 @@ function truncateFrozenAt(frozen, fromIndex) {
 
 // Compute provisional funnel entries for a newly selected step so the UI
 // displays sensible values immediately before the API responds.
-function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
-  const match = sourceResults.find(({ step: s }) => journeyStepsEqual(s, step))
+function provisionalEntry(
+  step: JourneyStep,
+  columnIndex: number,
+  sourceResults: JourneySuggestion[],
+  existingFunnel: FunnelStep[]
+): ProvisionalFunnelSteps {
+  const match = sourceResults.find(({ step: s }: JourneySuggestion): boolean =>
+    journeyStepsEqual(s, step)
+  )
   if (!match) return {}
 
   const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
@@ -23,7 +79,7 @@ function provisionalEntry(step, columnIndex, sourceResults, existingFunnel) {
   }
 }
 
-function deselectStep(journey, columnIndex) {
+function deselectStep(journey: Journey, columnIndex: number): Journey {
   // Deselect: truncate journey at columnIndex.
   return {
     ...journey,
@@ -36,7 +92,11 @@ function deselectStep(journey, columnIndex) {
   }
 }
 
-function selectStep(journey, columnIndex, newStep) {
+function selectStep(
+  journey: Journey,
+  columnIndex: number,
+  newStep: JourneyStep
+): Journey {
   // Select: determine source results for provisional values.
   const sourceResults =
     columnIndex === journey.steps.length
@@ -67,7 +127,11 @@ function selectStep(journey, columnIndex, newStep) {
   }
 }
 
-function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
+function maybeEmptyResults(
+  results: JourneySuggestion[],
+  activeFilter: string,
+  journeyEndEvent: string
+): JourneySuggestion[] {
   if (
     results.length === 0 ||
     (!activeFilter &&
@@ -81,7 +145,7 @@ function maybeEmptyResults(results, activeFilter, journeyEndEvent) {
 }
 
 // Two steps are identical when their identity fields match.
-export function journeyStepsEqual(a, b) {
+export function journeyStepsEqual(a: JourneyStep, b: JourneyStep): boolean {
   return (
     a.name === b.name &&
     a.pathname === b.pathname &&
@@ -89,7 +153,7 @@ export function journeyStepsEqual(a, b) {
   )
 }
 
-export function emptyJourney() {
+export function emptyJourney(): Journey {
   return {
     steps: [],
     funnel: [],
@@ -102,7 +166,15 @@ export function emptyJourney() {
   }
 }
 
-export function toggleJourneyStep({ journey, columnIndex, newStep }) {
+export function toggleJourneyStep({
+  journey,
+  columnIndex,
+  newStep
+}: {
+  journey: Journey
+  columnIndex: number
+  newStep: JourneyStep
+}): Journey {
   if (newStep === null) {
     return deselectStep(journey, columnIndex)
   }
@@ -110,19 +182,25 @@ export function toggleJourneyStep({ journey, columnIndex, newStep }) {
   return selectStep(journey, columnIndex, newStep)
 }
 
-export function setJourneyActiveFilter({ journey, filter }) {
+export function setJourneyActiveFilter({
+  journey,
+  filter
+}: {
+  journey: Journey
+  filter: string
+}): Journey {
   return { ...journey, activeFilter: filter }
 }
 
-export function clearJourneyFrozen(journey) {
+export function clearJourneyFrozen(journey: Journey): Journey {
   return { ...journey, frozen: {} }
 }
 
-export function clearJourneyFunnel(journey) {
+export function clearJourneyFunnel(journey: Journey): Journey {
   return { ...journey, funnel: [] }
 }
 
-export function clearJourneyRateLimit(journey) {
+export function clearJourneyRateLimit(journey: Journey): Journey {
   return { ...journey, rateLimited: false }
 }
 
@@ -131,7 +209,12 @@ export function updateJourneyOnSuccess({
   response,
   includeFunnel,
   journeyEndEvent
-}) {
+}: {
+  journey: Journey
+  response: JourneyResponse
+  includeFunnel: boolean
+  journeyEndEvent: string
+}): Journey {
   const newJourney = {
     ...journey,
     activeResults: maybeEmptyResults(
@@ -149,7 +232,10 @@ export function updateJourneyOnSuccess({
     // Truncate the funnel at first 0-visitors step.
     // This happens when the dashboard state narrows (e.g. shorter time range)
     // and the existing steps can no longer be fulfilled.
-    const firstZeroIdx = newFunnel.findIndex((f) => f.visitors === 0)
+    const firstZeroIdx = newFunnel.findIndex(
+      (f: FunnelStep): boolean => f.visitors === 0
+    )
+
     if (firstZeroIdx !== -1) {
       newFunnel = newFunnel.slice(0, firstZeroIdx)
       newJourney.steps = journey.steps.slice(0, firstZeroIdx)
@@ -167,15 +253,17 @@ export function updateJourneyOnSuccess({
     // entries and double-highlighted rows.
     const currentSteps = newJourney.steps ?? journey.steps
     if (newFunnel.length > 0 && currentSteps.length > 0) {
-      const synced = currentSteps.map((s, idx) =>
-        newFunnel[idx]
-          ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
-          : s
+      const synced = currentSteps.map(
+        (s: JourneyStep, idx: number): JourneyStep =>
+          newFunnel[idx]
+            ? { ...s, subpaths_count: newFunnel[idx].step.subpaths_count }
+            : s
       )
       // Only replace the steps reference when something actually changed
       // to avoid re-triggering the main effect (steps is a dep array entry).
       const changed = synced.some(
-        (s, idx) => s.subpaths_count !== currentSteps[idx].subpaths_count
+        (s: JourneyStep, idx: number): boolean =>
+          s.subpaths_count !== currentSteps[idx].subpaths_count
       )
       if (changed) newJourney.steps = synced
     }
@@ -183,7 +271,13 @@ export function updateJourneyOnSuccess({
   return newJourney
 }
 
-export function updateJourneyOnRateLimitError({ journey, includeFunnel }) {
+export function updateJourneyOnRateLimitError({
+  journey,
+  includeFunnel
+}: {
+  journey: Journey
+  includeFunnel: boolean
+}): Journey {
   return {
     ...journey,
     frozen: truncateFrozenAt(journey.frozen, journey.steps.length),
@@ -193,7 +287,13 @@ export function updateJourneyOnRateLimitError({ journey, includeFunnel }) {
   }
 }
 
-export function updateJourneyOnError({ journey, includeFunnel }) {
+export function updateJourneyOnError({
+  journey,
+  includeFunnel
+}: {
+  journey: Journey
+  includeFunnel: boolean
+}): Journey {
   return {
     ...journey,
     frozen: truncateFrozenAt(journey.frozen, journey.steps.length),
