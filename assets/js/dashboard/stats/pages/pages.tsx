@@ -17,7 +17,7 @@ import { getBreakdownMetrics } from '../breakdowns'
 export const PAGES_BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
 
 const DIMENSION = 'event:page'
-const DETAILED_METRICS: Metric[] = [
+export const PAGES_DETAILED_METRICS: Metric[] = [
   'visitors',
   'percentage',
   'pageviews',
@@ -77,7 +77,7 @@ export function PagesDetails() {
     isRealtime: isRealTimeDashboard(dashboardState),
     isDetailed: true,
     isRevenueAvailable: isRevenueAvailable,
-    detailedMetrics: DETAILED_METRICS
+    detailedMetrics: PAGES_DETAILED_METRICS
   })
 
   const getExternalLinkUrl = useCallback(
