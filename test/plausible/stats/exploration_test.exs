@@ -1088,6 +1088,120 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step7.visitors == 1
       end
 
+      test "allows searching for a pageview goal by its pathname" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{
+          "page_path" => "/page-foo",
+          "display_name" => "Foo"
+        })
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/page-foo",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+        ]
+
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "/page-foo")
+
+        assert {:ok, [^next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "Foo")
+
+        assert next_step.step.label == "Foo"
+        assert next_step.step.pathname == "/page-foo"
+        assert next_step.step.is_goal
+        assert next_step.visitors == 1
+      end
+
+      test "won't find pageview event with verbatim `pageview` search" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{
+          "page_path" => "/page-foo",
+          "display_name" => "Foo"
+        })
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/page-foo",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
+        ]
+
+        assert {:ok, []} =
+                 Exploration.next_steps(site, query, journey, search_term: "pageview")
+      end
+
+      test "allows searching for a literal event name" do
+        now = DateTime.utc_now()
+        site = new_site()
+
+        Plausible.Goals.create(site, %{
+          "event_name" => "actress",
+          "display_name" => "Scarlett"
+        })
+
+        Plausible.Goals.create(site, %{
+          "event_name" => "bishop",
+          "display_name" => "Knight"
+        })
+
+        populate_stats(site, [
+          build(:event,
+            user_id: 123,
+            name: "actress",
+            pathname: "/lookup",
+            timestamp: DateTime.shift(now, minute: -300)
+          ),
+          build(:event,
+            user_id: 123,
+            name: "bishop",
+            pathname: "/lookup",
+            timestamp: DateTime.shift(now, minute: -290)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "actress", pathname: ""}
+        ]
+
+        assert {:ok, [next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "bishop")
+
+        assert {:ok, [^next_step]} =
+                 Exploration.next_steps(site, query, journey, search_term: "Knight")
+      end
+
       test "suggestions matching implicit wildcard from previous step are excluded" do
         now = DateTime.utc_now()
         site = new_site()
