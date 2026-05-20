@@ -22,7 +22,7 @@ import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../../components/popover'
-import { emptyJourney, toggleStep } from './journey'
+import { emptyJourney, toggleJourneyStep } from './journey'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
@@ -695,7 +695,7 @@ function useExplorationData(site, dashboardState, inViewport) {
 
   const selectStep = useCallback((columnIndex, step) => {
     journeyVersionRef.current++
-    setJourney((journey) => toggleStep({ journey, columnIndex, newStep: step }))
+    setJourney((journey) => toggleJourneyStep({ journey, columnIndex, newStep: step }))
   }, [])
 
   const reset = useCallback(() => {

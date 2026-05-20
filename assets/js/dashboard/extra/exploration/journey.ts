@@ -94,7 +94,7 @@ export function emptyJourney() {
   }
 }
 
-export function toggleStep({ journey, columnIndex, newStep }) {
+export function toggleJourneyStep({ journey, columnIndex, newStep }) {
   if (newStep === null) {
     return deselectStep(journey, columnIndex)
   }
