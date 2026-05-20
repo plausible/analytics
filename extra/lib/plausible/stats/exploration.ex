@@ -678,7 +678,8 @@ defmodule Plausible.Stats.Exploration do
         from(s in query,
           where:
             ilike(selected_as(:label), ^"%#{term}%") or
-              ilike(s.pathname, ^"%#{term}%")
+              ilike(s.pathname, ^"%#{term}%") or
+              (s.name != "pageview" and ilike(s.name, ^"%#{term}%"))
         )
 
       _ ->
