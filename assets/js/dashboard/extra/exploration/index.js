@@ -22,7 +22,7 @@ import { RefreshIcon, CursorIcon, FolderIcon } from '../../components/icons'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { popover } from '../../components/popover'
-import { toggleStep } from './journey'
+import { emptyJourney, toggleStep } from './journey'
 
 const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
 
@@ -35,17 +35,6 @@ const PAGE_FILTER_KEYS = ['page', 'entry_page', 'exit_page']
 
 const MAX_VISIBLE_CANDIDATES = 10
 const MIN_GRID_COLUMNS = 3
-
-const EMPTY_JOURNEY_STATE = {
-  steps: [],
-  funnel: [],
-  activeResults: [],
-  activeFilter: '',
-  // list of suggestions the user saw when picking step
-  frozen: {},
-  provisional: {},
-  rateLimited: false
-}
 
 const EMPTY_SVG_DATA = {
   paths: [],
@@ -679,7 +668,7 @@ function useExplorationData(site, dashboardState, inViewport) {
     explorationMaxJourneySteps: maxJourneySteps,
     explorationJourneyEndEvent: journeyEndEvent
   } = useSiteContext()
-  const [journey, setJourney] = useState(EMPTY_JOURNEY_STATE)
+  const [journey, setJourney] = useState(emptyJourney)
   const [activeLoading, setActiveLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
   const [directionKey, setDirectionKey] = useState(0)
@@ -712,14 +701,14 @@ function useExplorationData(site, dashboardState, inViewport) {
   const reset = useCallback(() => {
     ++journeyVersionRef.current
     setActiveLoading(true)
-    setJourney(EMPTY_JOURNEY_STATE)
+    setJourney(emptyJourney)
   }, [])
 
   const setDirection = useCallback((newDirection) => {
     if (newDirection === directionRef.current) return
     directionRef.current = newDirection
     ++journeyVersionRef.current
-    setJourney(EMPTY_JOURNEY_STATE)
+    setJourney(emptyJourney)
     setDirectionKey((k) => k + 1)
   }, [])
 

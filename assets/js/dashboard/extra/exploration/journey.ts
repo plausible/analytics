@@ -81,6 +81,19 @@ function selectStep(journey, columnIndex, newStep) {
   }
 }
 
+export function emptyJourney() {
+  return {
+    steps: [],
+    funnel: [],
+    activeResults: [],
+    activeFilter: '',
+    // list of suggestions the user saw when picking step
+    frozen: {},
+    provisional: {},
+    rateLimited: false
+  }
+}
+
 export function toggleStep({ journey, columnIndex, newStep }) {
   if (newStep === null) {
     return deselectStep(journey, columnIndex)
