@@ -2,6 +2,7 @@
   "name": "e2e",
   "scripts": {
     "lint": "eslint",
+    "format": "prettier --write \"**/*.{js,mjs,ts,html,json,md}\"",
     "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "typecheck": "tsc --noEmit --pretty",
     "test": "npx playwright test"
