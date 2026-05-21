@@ -133,12 +133,15 @@ export function useExplorationData({
   // a steps state update.
   const directionRef = useRef(DIRECTION.FORWARD)
 
-  const selectStep = useCallback((columnIndex: number, step: JourneyStep | null) => {
-    journeyVersionRef.current++
-    setJourney((journey) =>
-      toggleJourneyStep({ journey, columnIndex, newStep: step })
-    )
-  }, [])
+  const selectStep = useCallback(
+    (columnIndex: number, step: JourneyStep | null) => {
+      journeyVersionRef.current++
+      setJourney((journey) =>
+        toggleJourneyStep({ journey, columnIndex, newStep: step })
+      )
+    },
+    []
+  )
 
   const reset = useCallback(() => {
     ++journeyVersionRef.current
@@ -146,16 +149,13 @@ export function useExplorationData({
     setJourney(emptyJourney)
   }, [])
 
-  const setDirection = useCallback(
-    (newDirection: ExplorationDirection) => {
-      if (newDirection === directionRef.current) return
-      directionRef.current = newDirection
-      ++journeyVersionRef.current
-      setJourney(emptyJourney)
-      setDirectionKey((k) => k + 1)
-    },
-    []
-  )
+  const setDirection = useCallback((newDirection: ExplorationDirection) => {
+    if (newDirection === directionRef.current) return
+    directionRef.current = newDirection
+    ++journeyVersionRef.current
+    setJourney(emptyJourney)
+    setDirectionKey((k) => k + 1)
+  }, [])
 
   const setActiveFilter = useCallback((filter: string) => {
     setJourney((journey) => setJourneyActiveFilter({ journey, filter }))
