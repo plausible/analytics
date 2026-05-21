@@ -651,7 +651,7 @@ test('pages breakdown modal', async ({ page, request }) => {
   ).toBeVisible()
 
   await expectHeaders(modal(page), [
-    'Page url',
+    'Page',
     /Visitors/,
     /Pageviews/,
     /Bounce rate/,
@@ -819,7 +819,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
-      'Page url',
+      'Page',
       /Total visitors/,
       /Conversions/,
       /CR/
@@ -856,7 +856,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
-      'Page url',
+      'Page',
       /Total visitors/,
       /Conversions/,
       /CR/,
