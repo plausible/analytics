@@ -19,18 +19,18 @@ import {
   JourneySuggestion,
   FunnelStep
 } from './journey'
-import { DIRECTION, PAGE_FILTER_KEYS, ExploratioDirection } from './constants'
+import { DIRECTION, PAGE_FILTER_KEYS, ExplorationDirection } from './constants'
 
 export type ExplorationData = {
   journey: Journey
-  direction: ExploratioDirection
+  direction: ExplorationDirection
   activeLoading: boolean
   layoutKey: number
   rateLimited: boolean
-  selectStep: (columnIndex: number, step: JourneyStep) => void
+  selectStep: (columnIndex: number, step: JourneyStep | null) => void
   reset: () => void
   retry: () => void
-  setDirection: (direction: ExploratioDirection) => void
+  setDirection: (direction: ExplorationDirection) => void
   setActiveFilter: (filter: string) => void
 }
 
@@ -78,7 +78,7 @@ function fetchNextWithFunnel(
   dashboardState: DashboardState,
   steps: JourneyStep[],
   filter: string,
-  direction: ExploratioDirection,
+  direction: ExplorationDirection,
   includeFunnel: boolean
 ): Promise<ExplorationResponse> {
   return api.post(
@@ -133,7 +133,7 @@ export function useExplorationData({
   // a steps state update.
   const directionRef = useRef(DIRECTION.FORWARD)
 
-  const selectStep = useCallback((columnIndex: number, step: JourneyStep) => {
+  const selectStep = useCallback((columnIndex: number, step: JourneyStep | null) => {
     journeyVersionRef.current++
     setJourney((journey) =>
       toggleJourneyStep({ journey, columnIndex, newStep: step })
@@ -147,7 +147,7 @@ export function useExplorationData({
   }, [])
 
   const setDirection = useCallback(
-    (newDirection: ExploratioDirection): void => {
+    (newDirection: ExplorationDirection): void => {
       if (newDirection === directionRef.current) return
       directionRef.current = newDirection
       ++journeyVersionRef.current

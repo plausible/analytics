@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, RefObject } from 'react'
 import LazyLoader from '../../components/lazy-loader'
 import { Tooltip } from '../../util/tooltip'
 import { useSiteContext } from '../../site-context'
@@ -12,10 +12,10 @@ import { popover } from '../../components/popover'
 import { PathConnectors } from './path-connectors'
 import { ExplorationColumn, MaxDepthColumn } from './exploration-column'
 import { useExplorationData } from './exploration-state'
-import { DIRECTION, MIN_GRID_COLUMNS } from './constants'
+import { DIRECTION, MIN_GRID_COLUMNS, ExplorationDirection } from './constants'
 
 // Column header label based on index and direction.
-function columnHeader(index, direction) {
+function columnHeader(index: number, direction: ExplorationDirection): string {
   if (index === 0) {
     return direction === DIRECTION.BACKWARD ? 'End point' : 'Starting point'
   }
@@ -24,7 +24,10 @@ function columnHeader(index, direction) {
 }
 
 // Scrolls the active column into view whenever the journey length changes.
-function useScrollActiveColumnIntoView(containerRef, stepsLength) {
+function useScrollActiveColumnIntoView(
+  containerRef: RefObject<HTMLElement>,
+  stepsLength: number
+) {
   const prevLengthRef = useRef(0)
 
   useEffect(() => {
@@ -123,10 +126,10 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {percentageFormatter(parseFloat(overallConversionRate))}{' '}
+                  CR: {percentageFormatter(parseFloat(overallConversionRate!))}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
-                  ({numberShortFormatter(overallConversionVisitors)})
+                  ({numberShortFormatter(overallConversionVisitors!)})
                 </span>
               </span>
               <span className="hidden sm:inline text-gray-300 dark:text-gray-600 select-none">

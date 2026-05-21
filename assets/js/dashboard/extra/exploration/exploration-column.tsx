@@ -16,15 +16,15 @@ import {
   DIRECTION,
   DIRECTION_OPTIONS,
   MAX_VISIBLE_CANDIDATES,
-  ExploratioDirection
+  ExplorationDirection
 } from './constants'
 
 function DirectionDropdown({
   direction,
   onChange
 }: {
-  direction: ExploratioDirection
-  onChange: (direction: ExploratioDirection) => void
+  direction: ExplorationDirection
+  onChange: (direction: ExplorationDirection) => void
 }): ReactNode {
   const [open, setOpen] = useState(false)
   const containerRef: RefObject<HTMLDivElement> = useRef(null)
@@ -218,7 +218,7 @@ function ColumnEmptyState({
   active: boolean
   filter: string
   colIndex: number
-  direction: ExploratioDirection
+  direction: ExplorationDirection
   rateLimited: boolean
   onRetry: () => void
 }): ReactNode {
@@ -319,10 +319,10 @@ export function ExplorationColumn({
   onRetry
 }: {
   colIndex: number
-  direction: ExploratioDirection
-  onDirectionChange: (direction: ExploratioDirection) => void
+  direction: ExplorationDirection
+  onDirectionChange: ((direction: ExplorationDirection) => void) | undefined
   header: string
-  headerConversionRate: number
+  headerConversionRate: string | null
   active: boolean
   loading: boolean
   loadingInBackground: boolean

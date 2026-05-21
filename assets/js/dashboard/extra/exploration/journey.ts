@@ -19,8 +19,8 @@ export type FunnelStep = {
   visitors: number
   dropoff: number
   dropoff_percentage: number
-  conversion_rate: number
-  conversion_rate_step: number
+  conversion_rate: string
+  conversion_rate_step: string
 }
 
 type ProvisionalFunnelStep = {
@@ -174,7 +174,7 @@ export function toggleJourneyStep({
 }: {
   journey: Journey
   columnIndex: number
-  newStep: JourneyStep
+  newStep: JourneyStep | null
 }): Journey {
   if (newStep === null) {
     return deselectStep(journey, columnIndex)
