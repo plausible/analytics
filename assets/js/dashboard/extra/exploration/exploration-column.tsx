@@ -459,7 +459,7 @@ export function ExplorationColumn({
             />
           ))}
           {showMoreCount > 0 && (
-            <li>
+            <li data-testid="exploration-row">
               <button
                 onClick={() => setExpandCount((c) => c + 1)}
                 className="group w-full text-sm rounded-sm hover:bg-gray-100/60 dark:hover:bg-gray-850 focus:outline-none"
