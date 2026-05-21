@@ -1,4 +1,8 @@
 defmodule Plausible.Goals do
+ `@moduledoc` """
+ Context functions for creating, updating, and querying goals.
+ """
+   use Plausible
   use Plausible
   use Plausible.Repo
   use Plausible.Funnel.Const
