@@ -245,6 +245,8 @@ export function useExplorationData({
       .finally(() => {
         if (!isStale()) setActiveLoading(false)
       })
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     site,
     dashboardState,
