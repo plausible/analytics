@@ -2,6 +2,7 @@ import React, { ReactNode, useState } from 'react'
 import {
   Annotation,
   ANNOTATION_TYPE_LABELS,
+  AnnotationGranularity,
   AnnotationPayload,
   AnnotationType
 } from './annotations'
@@ -14,14 +15,38 @@ import {
   SaveButton
 } from '../components/modal-layout'
 import {
-  LabeledTextInput,
+  LabeledTextarea,
   TypeSelector,
   TypeDisabledMessage,
   getOptionDisabledMessage,
+  isOverMaxLength,
   OptionDisabledMessageType
 } from '../components/form-elements'
 import { Button } from '../components/button'
 import { Role, UserContextValue } from '../user-context'
+import {
+  formatDay,
+  formatTime,
+  is12HourClock,
+  parseUTCDate
+} from '../util/date'
+
+const formatAnnotationDatetime = (
+  datetime: string,
+  granularity: AnnotationGranularity
+): string => {
+  const date = parseUTCDate(datetime)
+  if (granularity === AnnotationGranularity.minute) {
+    const time = formatTime(date, {
+      use12HourClock: is12HourClock(),
+      includeMinutes: true
+    })
+    return `${formatDay(date)} at ${time}`
+  }
+  return formatDay(date)
+}
+
+const NOTE_RECOMMENDED_MAX_LENGTH = 250
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -68,14 +93,20 @@ export const CreateAnnotationModal = ({
       ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
       : null
 
+  const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
+
   return (
-    <ModalLayout title={`Add note for ${datetime}`} onClose={onClose}>
-      <LabeledTextInput
+    <ModalLayout
+      title={`Add note for ${formatAnnotationDatetime(datetime, granularity)}`}
+      onClose={onClose}
+    >
+      <LabeledTextarea
         label="Note"
         id="note"
         value={note}
         onChange={setNote}
         placeholder={notePlaceholder}
+        recommendedMaxLength={NOTE_RECOMMENDED_MAX_LENGTH}
       />
       <AnnotationTypeSelector
         value={type}
@@ -87,7 +118,9 @@ export const CreateAnnotationModal = ({
           Cancel
         </Button>
         <SaveButton
-          disabled={status === 'pending' || disabledMessage !== null}
+          disabled={
+            status === 'pending' || overLimit || disabledMessage !== null
+          }
           onSave={() => {
             const trimmedNote = note.trim()
             const saveableNote = trimmedNote.length
@@ -259,6 +292,7 @@ export const DeleteAnnotationModal = ({
 export const UpdateAnnotationModal = ({
   onClose,
   onSave,
+  onDelete,
   annotation,
   siteAnnotationsAvailable,
   user,
@@ -269,6 +303,7 @@ export const UpdateAnnotationModal = ({
 }: AnnotationModalProps &
   ApiRequestProps & {
     onSave: (input: Pick<Annotation, 'id' | 'note' | 'type'>) => void
+    onDelete?: (annotation: Annotation) => void
     annotation: Annotation
   }) => {
   const [note, setNote] = useState(annotation.note)
@@ -279,14 +314,20 @@ export const UpdateAnnotationModal = ({
       ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
       : null
 
+  const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
+
   return (
-    <ModalLayout title="Update note" onClose={onClose}>
-      <LabeledTextInput
+    <ModalLayout
+      title={`Update note for ${formatAnnotationDatetime(annotation.datetime, annotation.granularity)}`}
+      onClose={onClose}
+    >
+      <LabeledTextarea
         label="Note"
         id="note"
         value={note}
         onChange={setNote}
         placeholder={notePlaceholder}
+        recommendedMaxLength={NOTE_RECOMMENDED_MAX_LENGTH}
       />
       <AnnotationTypeSelector
         value={type}
@@ -294,11 +335,23 @@ export const UpdateAnnotationModal = ({
         optionDisabledMessage={disabledMessage}
       />
       <ModalFooter>
+        {typeof onDelete === 'function' && (
+          <Button
+            theme="danger"
+            size="sm"
+            className="mr-auto"
+            onClick={() => onDelete(annotation)}
+          >
+            Delete note
+          </Button>
+        )}
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
         <SaveButton
-          disabled={status === 'pending' || disabledMessage !== null}
+          disabled={
+            status === 'pending' || overLimit || disabledMessage !== null
+          }
           onSave={() => {
             const trimmedNote = note.trim()
             const saveableNote = trimmedNote.length

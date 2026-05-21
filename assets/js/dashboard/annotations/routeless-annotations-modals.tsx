@@ -131,6 +131,9 @@ export const RoutelessAnnotationModals = () => {
               type
             })
           }
+          onDelete={(annotation) =>
+            setModal({ type: 'delete-annotation', annotation })
+          }
           status={patchAnnotation.status}
           error={patchAnnotation.error}
           reset={patchAnnotation.reset}
