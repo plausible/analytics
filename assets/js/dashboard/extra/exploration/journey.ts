@@ -1,6 +1,7 @@
 import { roundedPercentage } from './helpers'
 
 export type JourneyStep = {
+  label: string
   name: string
   pathname: string
   includes_subpaths: boolean

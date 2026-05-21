@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, ReactNode, RefObject } from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { useSiteContext } from '../../site-context'
 import { useDebounce } from '../../custom-hooks'
@@ -11,21 +11,31 @@ import { popover } from '../../components/popover'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { roundedPercentage } from './helpers'
-import { journeyStepsEqual } from './journey'
+import { journeyStepsEqual, JourneyStep, JourneySuggestion } from './journey'
 import {
   DIRECTION,
   DIRECTION_OPTIONS,
-  MAX_VISIBLE_CANDIDATES
+  MAX_VISIBLE_CANDIDATES,
+  ExploratioDirection
 } from './constants'
 
-function DirectionDropdown({ direction, onChange }) {
+function DirectionDropdown({
+  direction,
+  onChange
+}: {
+  direction: ExploratioDirection
+  onChange: (direction: ExploratioDirection) => void
+}): ReactNode {
   const [open, setOpen] = useState(false)
-  const containerRef = useRef(null)
+  const containerRef: RefObject<HTMLDivElement> = useRef(null)
 
   useEffect(() => {
     if (!open) return
-    function onClickOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+    function onClickOutside(e: Event) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as HTMLElement)
+      ) {
         setOpen(false)
       }
     }
@@ -82,7 +92,17 @@ function CandidateCard({
   stepMaxVisitors,
   colIndex,
   onSelect
-}) {
+}: {
+  step: JourneyStep
+  visitors: number
+  isSelected: boolean
+  isDimmed: boolean
+  selectedVisitors: number
+  selectedConversionRate: number
+  stepMaxVisitors: number
+  colIndex: number
+  onSelect: (step: JourneyStep | null) => void
+}): ReactNode {
   const { explorationJourneyEndEvent: journeyEndEvent } = useSiteContext()
   const isJourneyEnd = step.name === journeyEndEvent
   const isCustomEvent =
@@ -171,7 +191,7 @@ function CandidateCard({
   )
 }
 
-function VisitorsMetric({ visitors }) {
+function VisitorsMetric({ visitors }: { visitors: number }): ReactNode {
   const shortNumber = numberShortFormatter(visitors)
   const longNumber = numberLongFormatter(visitors)
   const showTooltip = shortNumber !== longNumber
@@ -194,7 +214,14 @@ function ColumnEmptyState({
   direction,
   rateLimited,
   onRetry
-}) {
+}: {
+  active: boolean
+  filter: string
+  colIndex: number
+  direction: ExploratioDirection
+  rateLimited: boolean
+  onRetry: () => void
+}): ReactNode {
   if (active && rateLimited) {
     return (
       <span>
@@ -242,7 +269,13 @@ function ColumnEmptyState({
   )
 }
 
-export function MaxDepthColumn({ colIndex, header }) {
+export function MaxDepthColumn({
+  colIndex,
+  header
+}: {
+  colIndex: number
+  header: string
+}): ReactNode {
   const { explorationMaxJourneySteps: maxJourneySteps } = useSiteContext()
   return (
     <div
@@ -284,9 +317,28 @@ export function ExplorationColumn({
   onSelect,
   rateLimited,
   onRetry
-}) {
-  const debouncedFilterChange = useDebounce((e) =>
-    onFilterChange(e.target.value)
+}: {
+  colIndex: number
+  direction: ExploratioDirection
+  onDirectionChange: (direction: ExploratioDirection) => void
+  header: string
+  headerConversionRate: number
+  active: boolean
+  loading: boolean
+  loadingInBackground: boolean
+  results: JourneySuggestion[]
+  selected: JourneyStep
+  selectedVisitors: number
+  selectedConversionRate: number
+  maxVisitors: number
+  filter: string
+  onFilterChange: (filter: string) => void
+  onSelect: (step: JourneyStep | null) => void
+  rateLimited: boolean
+  onRetry: () => void
+}): ReactNode {
+  const debouncedFilterChange = useDebounce((e: InputEvent) =>
+    onFilterChange((e.target as HTMLInputElement).value)
   )
 
   // When a step is selected but there are no candidate results,
