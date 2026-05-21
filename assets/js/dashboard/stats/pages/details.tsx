@@ -4,6 +4,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   hasConversionGoalFilter,
+  hasEventFilters,
   isRealTimeDashboard
 } from '../../util/filters'
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
@@ -28,15 +29,16 @@ export function PagesDetails({
   const isRevenueAvailable =
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable: isRevenueAvailable
-    }
-  )
+  let metrics = chooseBreakdownMetricsByContext(reportConfig.metricsByContext, {
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRealtime: isRealTimeDashboard(dashboardState),
+    isDetailed: true,
+    isRevenueAvailable: isRevenueAvailable
+  })
+
+  if (metrics.includes('exit_rate') && hasEventFilters(dashboardState)) {
+    metrics = metrics.filter((m) => m !== 'exit_rate')
+  }
 
   return (
     <Modal>
