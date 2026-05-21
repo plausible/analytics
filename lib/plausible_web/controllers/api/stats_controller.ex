@@ -210,6 +210,8 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     end
 
+    @exploration_max_candidates 50
+
     def exploration_next_with_funnel(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
@@ -225,7 +227,8 @@ defmodule PlausibleWeb.Api.StatsController do
              Exploration.next_steps(site, query, journey,
                search_term: search_term,
                direction: direction,
-               include_wildcard?: include_wildcard?
+               include_wildcard?: include_wildcard?,
+               max_candidates: @exploration_max_candidates
              ),
            funnel <- maybe_include_funnel(include_funnel?, query, journey, direction) do
         json(conn, %{next: next_steps, funnel: funnel})
