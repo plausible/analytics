@@ -615,15 +615,28 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
-    [site_id, redirected_to | _] = Jason.decode!(state)
+    {site_id, redirected_to} =
+      case Phoenix.Token.verify(conn, "google-oauth-state", state, max_age: 3600) do
+        {:ok, [site_id, redirected_to | _]} ->
+          {site_id, redirected_to}
 
-    site = Repo.get(Plausible.Site, site_id)
+        {:error, _} ->
+          # Fallback: treat as invalid state; we cannot safely redirect to the site
+          {nil, nil}
+      end
+
+    site = site_id && Repo.get(Plausible.Site, site_id)
 
     redirect_route =
-      if redirected_to == "import" do
-        Routes.site_path(conn, :settings_imports_exports, site.domain)
-      else
-        Routes.site_path(conn, :settings_integrations, site.domain)
+      cond do
+        redirected_to == "import" and site ->
+          Routes.site_path(conn, :settings_imports_exports, site.domain)
+
+        site ->
+          Routes.site_path(conn, :settings_integrations, site.domain)
+
+        true ->
+          Routes.auth_path(conn, :login_form)
       end
 
     case error do
@@ -656,42 +669,59 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
-    res = Plausible.Google.API.fetch_access_token!(code)
+    case Phoenix.Token.verify(conn, "google-oauth-state", state, max_age: 3600) do
+      {:ok, [site_id, redirect_to | _]} ->
+        current_user = conn.assigns[:current_user]
+        candidate = Repo.get(Plausible.Site, site_id)
 
-    [site_id, redirect_to | _] = Jason.decode!(state)
-
-    site = Repo.get(Plausible.Site, site_id)
-    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
-
-    case redirect_to do
-      "import" ->
-        redirect(conn,
-          to:
-            Routes.google_analytics_path(conn, :property_form, site.domain,
-              access_token: res["access_token"],
-              refresh_token: res["refresh_token"],
-              expires_at: NaiveDateTime.to_iso8601(expires_at)
+        site =
+          candidate &&
+            Plausible.Sites.get_for_user(current_user, candidate.domain,
+              roles: [:owner, :admin, :super_admin]
             )
-        )
 
-      _ ->
-        id_token = res["id_token"]
-        [_, body, _] = String.split(id_token, ".")
-        id = body |> Base.decode64!(padding: false) |> Jason.decode!()
+        if site do
+          res = Plausible.Google.API.fetch_access_token!(code)
+          expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
 
-        Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-          email: id["email"],
-          refresh_token: res["refresh_token"],
-          access_token: res["access_token"],
-          expires: expires_at,
-          user_id: conn.assigns[:current_user].id,
-          site_id: site_id
-        })
-        |> Repo.insert!()
+          case redirect_to do
+            "import" ->
+              redirect(conn,
+                to:
+                  Routes.google_analytics_path(conn, :property_form, site.domain,
+                    access_token: res["access_token"],
+                    refresh_token: res["refresh_token"],
+                    expires_at: NaiveDateTime.to_iso8601(expires_at)
+                  )
+              )
 
-        site = Repo.get(Plausible.Site, site_id)
+            _ ->
+              id_token = res["id_token"]
+              [_, body, _] = String.split(id_token, ".")
+              id = body |> Base.decode64!(padding: false) |> Jason.decode!()
 
-        redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+              Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+                email: id["email"],
+                refresh_token: res["refresh_token"],
+                access_token: res["access_token"],
+                expires: expires_at,
+                user_id: current_user.id,
+                site_id: site_id
+              })
+              |> Repo.insert!()
+
+              redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+          end
+        else
+          conn
+          |> put_flash(:error, "You do not have sufficient access to link Google for this site.")
+          |> redirect(to: Routes.auth_path(conn, :login_form))
+        end
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Invalid or expired Google OAuth state. Please try again.")
+        |> redirect(to: Routes.auth_path(conn, :login_form))
     end
   end
 

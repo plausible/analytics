@@ -82,6 +82,7 @@ defmodule Plausible.Goals do
   @spec update(Plausible.Goal.t(), map()) ::
           {:ok, Goal.t()} | {:error, Changeset.t()} | {:error, :upgrade_required}
   def update(goal, params) do
+    params = Map.drop(params, ["site_id", :site_id, "id", :id])
     changeset = Goal.changeset(goal, params)
 
     Repo.transaction(fn ->

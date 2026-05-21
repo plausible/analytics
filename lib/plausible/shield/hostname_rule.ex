@@ -22,7 +22,7 @@ defmodule Plausible.Shield.HostnameRule do
 
   def changeset(rule \\ %__MODULE__{}, attrs) do
     rule
-    |> cast(attrs, [:site_id, :hostname])
+    |> cast(attrs, [:hostname])
     |> validate_required([:site_id, :hostname])
     |> validate_length(:hostname, max: 250)
     |> store_regex()

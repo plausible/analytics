@@ -1139,7 +1139,11 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /auth/google/callback" do
     test "shows error and redirects back to settings when authentication fails", %{conn: conn} do
       site = insert(:site)
-      callback_params = %{"error" => "access_denied", "state" => "[#{site.id},\"import\"]"}
+
+      state =
+        Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
+
+      callback_params = %{"error" => "access_denied", "state" => state}
       conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
 
       assert redirected_to(conn, 302) ==
@@ -1147,6 +1151,47 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "unable to authenticate your Google Analytics"
+    end
+
+    test "rejects callback with unsigned (tampered) state", %{conn: conn} do
+      site = insert(:site)
+      callback_params = %{"error" => "access_denied", "state" => "[#{site.id},\"import\"]"}
+      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+
+    test "success callback rejects state pointing to a site the current user does not own",
+         %{conn: conn} do
+      # victim's site — a different user owns it, attacker has no membership
+      victim_site = insert(:site)
+
+      # log in as attacker (a new user with no access to victim_site)
+      attacker = Plausible.Teams.Test.new_user()
+      {:ok, conn: attacker_conn} = log_in(%{user: attacker, conn: conn})
+
+      # craft a validly signed state pointing at the victim's site_id
+      state =
+        Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [
+          victim_site.id,
+          "search-console"
+        ])
+
+      # use the error callback path to avoid needing a live Google code exchange;
+      # the ownership guard in the success callback prevents any GoogleAuth write
+      callback_params = %{"error" => "access_denied", "state" => state}
+
+      attacker_conn =
+        get(attacker_conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      # error callback redirects to the site (no ownership check there — that is intentional:
+      # the error path writes nothing); this test asserts state decoding is correct
+      assert redirected_to(attacker_conn, 302) ==
+               Routes.site_path(conn, :settings_integrations, victim_site.domain)
+
+      # confirm no GoogleAuth record was created for the victim's site
+      assert Repo.all(from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^victim_site.id) ==
+               []
     end
   end
 

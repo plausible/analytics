@@ -221,6 +221,7 @@ defmodule Plausible.Shields do
             schema
             |> struct(site_id: site_id)
             |> schema.changeset(params)
+            |> Ecto.Changeset.force_change(:site_id, site_id)
             |> Ecto.Changeset.add_error(field, "maximum reached")
 
           {:error, changeset}
@@ -228,6 +229,7 @@ defmodule Plausible.Shields do
           schema
           |> struct(site_id: site_id, added_by: format_added_by(opts[:added_by]))
           |> schema.changeset(params)
+          |> Ecto.Changeset.force_change(:site_id, site_id)
           |> Repo.insert()
         end
 

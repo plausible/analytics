@@ -22,7 +22,7 @@ defmodule Plausible.Shield.IPRule do
 
   def changeset(rule, attrs) do
     rule
-    |> cast(attrs, [:site_id, :inet, :description])
+    |> cast(attrs, [:inet, :description])
     |> validate_required([:site_id, :inet])
     |> disallow_netmask(:inet)
     |> unique_constraint(:inet,

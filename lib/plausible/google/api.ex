@@ -17,13 +17,19 @@ defmodule Plausible.Google.API do
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
   def search_console_authorize_url(site_id) do
+    state =
+      Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site_id, "search-console"])
+
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@search_console_scope}&state=" <>
-      Jason.encode!([site_id, "search-console"])
+      state
   end
 
   def import_authorize_url(site_id) do
+    state =
+      Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site_id, "import"])
+
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, "import"])
+      state
   end
 
   def fetch_access_token!(code) do

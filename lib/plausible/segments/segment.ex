@@ -29,7 +29,6 @@ defmodule Plausible.Segments.Segment do
     |> cast(attrs, [
       :name,
       :segment_data,
-      :site_id,
       :type,
       :owner_id
     ])
