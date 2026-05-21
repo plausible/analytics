@@ -11,9 +11,8 @@ import Dashboard from './index'
 import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
-import { PagesDetails } from './stats/pages/pages'
-import { EntryPagesDetails } from './stats/pages/entry-pages'
-import { ExitPagesDetails } from './stats/pages/exit-pages'
+import { PagesDetails } from './stats/pages/details'
+import { BREAKDOWN_REPORTS } from './stats/reports/reports-config'
 import LocationsModal from './stats/modals/locations-modal'
 import BrowsersModal from './stats/modals/devices/browsers-modal'
 import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
@@ -100,18 +99,18 @@ export const referrersGoogleRoute = {
 }
 
 export const topPagesRoute = {
-  path: 'pages',
-  element: <PagesDetails />
+  path: BREAKDOWN_REPORTS.pages.detailsPath,
+  element: <PagesDetails breakdownReportKey={'pages'} />
 }
 
 export const entryPagesRoute = {
-  path: 'entry-pages',
-  element: <EntryPagesDetails />
+  path: BREAKDOWN_REPORTS.entryPages.detailsPath,
+  element: <PagesDetails breakdownReportKey={'entryPages'} />
 }
 
 export const exitPagesRoute = {
-  path: 'exit-pages',
-  element: <ExitPagesDetails />
+  path: BREAKDOWN_REPORTS.exitPages.detailsPath,
+  element: <PagesDetails breakdownReportKey={'exitPages'} />
 }
 
 export const countriesRoute = {

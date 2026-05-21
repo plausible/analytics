@@ -1,17 +1,21 @@
 import React, { useState, Dispatch, SetStateAction } from 'react'
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
-import { PAGES_DETAILED_METRICS, PagesDetails } from '../pages/pages'
+import { PagesDetails } from '../pages/details'
 import { MockAPI } from '../../../../test-utils/mock-api'
 import { PAGINATION_LIMIT } from '../../hooks/api-client'
 import { QueryApiResponse } from '../../api'
 import { StatsQuery } from '../../stats-query'
 import { DEBOUNCE_DELAY } from '../../custom-hooks'
+import { BREAKDOWN_REPORTS } from '../reports/reports-config'
 
 const domain = 'dummy.site'
 const queryPath = `/api/stats/${domain}/query/`
 const MOCK_RESPONSE_DELAY_MS = 50
 const SMALL_LOADING_SPINNER_TEST_ID = 'small-loading-spinner'
+
+const PAGES_DETAILED_METRICS =
+  BREAKDOWN_REPORTS.pages.metricsByContext.defaultDetailedMetrics
 
 function buildResponse(
   results: { dimensions: string[]; metrics: number[] }[] = []
@@ -124,7 +128,7 @@ function renderModal() {
   function ToggleableModal() {
     const [open, s] = useState(false)
     toggle = s
-    return open ? <PagesDetails /> : null
+    return open ? <PagesDetails breakdownReportKey={'pages'} /> : null
   }
 
   render(

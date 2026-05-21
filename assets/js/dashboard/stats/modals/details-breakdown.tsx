@@ -165,6 +165,11 @@ export function DetailsBreakdown({
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
 
+    const externalLinkForRow =
+      typeof getExternalLinkUrl === 'function'
+        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
+        : undefined
+
     return [
       {
         key: 'dimension',
@@ -175,7 +180,7 @@ export function DetailsBreakdown({
             getFilterInfo={(row: QueryResultRow) =>
               getFilterInfo(filterDimension, row)
             }
-            getExternalLinkUrl={getExternalLinkUrl}
+            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -230,6 +235,7 @@ export function DetailsBreakdown({
         )
     ]
   }, [
+    site,
     dimensionLabel,
     query,
     meta,
@@ -473,12 +479,12 @@ function MetricLabel({
 function DimensionCell({
   row,
   getFilterInfo,
-  getExternalLinkUrl,
+  externalLinkForRow,
   isActive
 }: {
   row: QueryResultRow
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
 }) {
   return (
@@ -486,8 +492,8 @@ function DimensionCell({
       <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
         {row.dimensions[0]}
       </DrilldownLink>
-      {typeof getExternalLinkUrl === 'function' && (
-        <ExternalLink href={getExternalLinkUrl(row)} isActive={isActive} />
+      {typeof externalLinkForRow === 'function' && (
+        <ExternalLink href={externalLinkForRow(row)} isActive={isActive} />
       )}
     </div>
   )

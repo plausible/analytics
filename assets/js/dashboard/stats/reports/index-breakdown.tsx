@@ -131,6 +131,11 @@ export function IndexBreakdown({
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
 
+    const externalLinkForRow =
+      typeof getExternalLinkUrl === 'function'
+        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
+        : undefined
+
     return [
       {
         key: 'dimension',
@@ -145,7 +150,7 @@ export function IndexBreakdown({
             getFilterInfo={(row: QueryResultRow) =>
               getFilterInfo(filterDimension, row)
             }
-            getExternalLinkUrl={getExternalLinkUrl}
+            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -183,6 +188,7 @@ export function IndexBreakdown({
       )
     ]
   }, [
+    site,
     dimensionLabel,
     color,
     barMetricIndex,
@@ -210,17 +216,17 @@ function DimensionCell({
   color,
   barWidthPercent,
   getFilterInfo,
-  getExternalLinkUrl,
+  externalLinkForRow,
   isActive
 }: {
   row: QueryResultRow
   color: string
   barWidthPercent: number
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
 }) {
-  const externalUrl = getExternalLinkUrl?.(row)
+  const externalUrl = externalLinkForRow?.(row)
   return (
     <div className="w-full h-full relative">
       <div
@@ -440,18 +446,20 @@ function MetricValueCell({
 export function IndexBreakdownRenderer({
   data,
   isPending,
+  isPlaceholderData,
   isRealtimeSilentUpdate,
   columns
 }: {
   data?: QueryApiResponse
   isPending: boolean
+  isPlaceholderData: boolean
   isRealtimeSilentUpdate: boolean
   columns: ColumnConfiguration<QueryResultRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
   const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
-  if (!columns || isPending) {
+  if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
       <div
         className="w-full flex flex-col justify-center"
