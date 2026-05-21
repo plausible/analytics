@@ -143,16 +143,12 @@ export function PathConnectors({
     const lists: Element[] = Array.from(
       container.querySelectorAll('[data-exploration-list]')
     )
-    lists.forEach((list: Element): void =>
-      list.addEventListener('scroll', recalculate)
-    )
+    lists.forEach((list) => list.addEventListener('scroll', recalculate))
 
-    return (): void => {
+    return () => {
       observer.disconnect()
       window.removeEventListener('resize', recalculate)
-      lists.forEach((list: Element): void =>
-        list.removeEventListener('scroll', recalculate)
-      )
+      lists.forEach((list) => list.removeEventListener('scroll', recalculate))
     }
     // layoutKey is intentionally included: it forces this effect to re-run
     // and recalculate geometry after DOM updates that don't change steps.

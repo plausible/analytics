@@ -147,7 +147,7 @@ export function useExplorationData({
   }, [])
 
   const setDirection = useCallback(
-    (newDirection: ExplorationDirection): void => {
+    (newDirection: ExplorationDirection) => {
       if (newDirection === directionRef.current) return
       directionRef.current = newDirection
       ++journeyVersionRef.current
@@ -157,7 +157,7 @@ export function useExplorationData({
     []
   )
 
-  const setActiveFilter = useCallback((filter: string): void => {
+  const setActiveFilter = useCallback((filter: string) => {
     setJourney((journey) => setJourneyActiveFilter({ journey, filter }))
   }, [])
 
