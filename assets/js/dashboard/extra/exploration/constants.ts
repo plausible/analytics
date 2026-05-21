@@ -1,6 +1,16 @@
-export const DIRECTION = { FORWARD: 'forward', BACKWARD: 'backward' }
+export type ExploratioDirection = 'forward' | 'backward'
 
-export const DIRECTION_OPTIONS = [
+export const DIRECTION: { [label: string]: ExploratioDirection } = {
+  FORWARD: 'forward',
+  BACKWARD: 'backward'
+}
+
+export type ExplorationDirectionOption = {
+  value: ExploratioDirection
+  label: string
+}
+
+export const DIRECTION_OPTIONS: ExplorationDirectionOption[] = [
   { value: DIRECTION.FORWARD, label: 'Starting point' },
   { value: DIRECTION.BACKWARD, label: 'End point' }
 ]

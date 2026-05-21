@@ -1,6 +1,6 @@
 import { roundedPercentage } from './helpers'
 
-type JourneyStep = {
+export type JourneyStep = {
   name: string
   pathname: string
   includes_subpaths: boolean
@@ -8,12 +8,12 @@ type JourneyStep = {
   is_goal: boolean
 }
 
-type JourneySuggestion = {
+export type JourneySuggestion = {
   step: JourneyStep
   visitors: number
 }
 
-type FunnelStep = {
+export type FunnelStep = {
   step: JourneyStep
   visitors: number
   dropoff: number
@@ -30,7 +30,7 @@ type ProvisionalFunnelStep = {
 type FrozenSuggestions = { [columnIndex: string]: JourneySuggestion[] }
 type ProvisionalFunnelSteps = { [columnIndex: string]: ProvisionalFunnelStep }
 
-type Journey = {
+export type Journey = {
   steps: JourneyStep[]
   funnel: FunnelStep[]
   activeResults: JourneySuggestion[]

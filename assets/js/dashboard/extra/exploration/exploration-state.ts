@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ApiError } from '../../api'
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { useSiteContext } from '../../site-context'
+import { useSiteContext, PlausibleSite } from '../../site-context'
+import { DashboardState } from '../../dashboard-state'
 import {
   emptyJourney,
   toggleJourneyStep,
@@ -12,17 +13,42 @@ import {
   clearJourneyRateLimit,
   updateJourneyOnSuccess,
   updateJourneyOnError,
-  updateJourneyOnRateLimitError
+  updateJourneyOnRateLimitError,
+  JourneyStep,
+  Journey,
+  JourneySuggestion,
+  FunnelStep
 } from './journey'
-import { DIRECTION, PAGE_FILTER_KEYS } from './constants'
+import { DIRECTION, PAGE_FILTER_KEYS, ExploratioDirection } from './constants'
 
-function isRateLimitedError(err) {
+export type ExplorationData = {
+  journey: Journey
+  direction: ExploratioDirection
+  activeLoading: boolean
+  layoutKey: number
+  rateLimited: boolean
+  selectStep: (columnIndex: number, step: JourneyStep) => void
+  reset: () => void
+  retry: () => void
+  setDirection: (direction: ExploratioDirection) => void
+  setActiveFilter: (filter: string) => void
+}
+
+type ExplorationResponse = {
+  next: JourneySuggestion[] | null
+  funnel: FunnelStep[] | null
+} | null
+
+function isRateLimitedError(err: Error): boolean {
   return err instanceof ApiError && err.status === 429
 }
 
 // Strip page-related filters from the dashboard state when a journey is
 // active - the journey itself defines the page scope.
-function dashboardStateForQuery(dashboardState, steps) {
+function dashboardStateForQuery(
+  dashboardState: DashboardState,
+  steps: JourneyStep[]
+): DashboardState {
   if (steps.length === 0) return dashboardState
   return {
     ...dashboardState,
@@ -33,7 +59,7 @@ function dashboardStateForQuery(dashboardState, steps) {
 }
 
 // Serialize steps into the wire format expected by the API.
-function stepsToJourneyParam(steps) {
+function stepsToJourneyParam(steps: JourneyStep[]): string {
   return JSON.stringify(
     steps.map(
       ({ name, pathname, includes_subpaths, subpaths_count, is_goal }) => ({
@@ -48,13 +74,13 @@ function stepsToJourneyParam(steps) {
 }
 
 function fetchNextWithFunnel(
-  site,
-  dashboardState,
-  steps,
-  filter,
-  direction,
-  includeFunnel
-) {
+  site: PlausibleSite,
+  dashboardState: DashboardState,
+  steps: JourneyStep[],
+  filter: string,
+  direction: ExploratioDirection,
+  includeFunnel: boolean
+): Promise<ExplorationResponse> {
   return api.post(
     url.apiPath(site, '/exploration/next-with-funnel'),
     dashboardStateForQuery(dashboardState, steps),
@@ -69,7 +95,15 @@ function fetchNextWithFunnel(
 
 // useExplorationData manages all async data fetching, cancellation, and
 // journey state.
-export function useExplorationData({ site, dashboardState, inViewport }) {
+export function useExplorationData({
+  site,
+  dashboardState,
+  inViewport
+}: {
+  site: PlausibleSite
+  dashboardState: DashboardState
+  inViewport: boolean
+}): ExplorationData {
   const {
     explorationMaxJourneySteps: maxJourneySteps,
     explorationJourneyEndEvent: journeyEndEvent
@@ -99,7 +133,7 @@ export function useExplorationData({ site, dashboardState, inViewport }) {
   // a steps state update.
   const directionRef = useRef(DIRECTION.FORWARD)
 
-  const selectStep = useCallback((columnIndex, step) => {
+  const selectStep = useCallback((columnIndex: number, step: JourneyStep) => {
     journeyVersionRef.current++
     setJourney((journey) =>
       toggleJourneyStep({ journey, columnIndex, newStep: step })
@@ -112,15 +146,18 @@ export function useExplorationData({ site, dashboardState, inViewport }) {
     setJourney(emptyJourney)
   }, [])
 
-  const setDirection = useCallback((newDirection) => {
-    if (newDirection === directionRef.current) return
-    directionRef.current = newDirection
-    ++journeyVersionRef.current
-    setJourney(emptyJourney)
-    setDirectionKey((k) => k + 1)
-  }, [])
+  const setDirection = useCallback(
+    (newDirection: ExploratioDirection): void => {
+      if (newDirection === directionRef.current) return
+      directionRef.current = newDirection
+      ++journeyVersionRef.current
+      setJourney(emptyJourney)
+      setDirectionKey((k) => k + 1)
+    },
+    []
+  )
 
-  const setActiveFilter = useCallback((filter) => {
+  const setActiveFilter = useCallback((filter: string): void => {
     setJourney((journey) => setJourneyActiveFilter({ journey, filter }))
   }, [])
 
