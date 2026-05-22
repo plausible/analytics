@@ -536,6 +536,12 @@ defmodule Plausible.Stats.Exploration do
             fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
         )
 
+      step.name == Journey.Step.journey_end_event() ->
+        dynamic(
+          [s],
+          field(s, ^:"name#{count}") == ""
+        )
+
       true ->
         dynamic(
           [s],
