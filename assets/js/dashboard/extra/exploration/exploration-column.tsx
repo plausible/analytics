@@ -108,7 +108,6 @@ function CandidateCard({
   onSelect: (step: JourneyStep | null) => void
 }): ReactNode {
   const { explorationJourneyEndEvent: journeyEndEvent } = useSiteContext()
-  const isJourneyEnd = step.name === journeyEndEvent
   const isCustomEvent =
     step.name !== 'pageview' && step.name !== journeyEndEvent
   const isGoal = step.is_goal
@@ -124,21 +123,15 @@ function CandidateCard({
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
     : 'text-gray-900 dark:text-gray-100'
 
-  const barBg = isJourneyEnd
-    ? 'bg-gray-100 dark:bg-gray-700/50'
-    : isSelected
-      ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
-      : isDimmed
-        ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
-        : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
+  const barBg = isSelected
+    ? 'bg-indigo-150 group-hover:bg-indigo-150 dark:bg-indigo-500/50 dark:group-hover:bg-indigo-500/50'
+    : isDimmed
+      ? 'bg-indigo-50/80 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/25'
+      : 'bg-indigo-50 group-hover:bg-indigo-100 dark:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30'
 
   const rowBg = isSelected
     ? 'bg-gray-100/60 dark:bg-gray-850'
     : 'hover:bg-gray-100/60 dark:hover:bg-gray-850'
-
-  const pointer = isJourneyEnd ? 'pointer-events-none' : ''
-
-  const onSelectHandler = isJourneyEnd ? () => {} : onSelect
 
   const iconClassName = `size-4 shrink-0 ${textColor}`
   const iconTooltipInfo =
@@ -167,8 +160,8 @@ function CandidateCard({
     <li data-testid="exploration-row">
       <button
         data-exploration-step={isSelected ? colIndex : undefined}
-        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg} ${pointer}`}
-        onClick={() => onSelectHandler(isSelected ? null : step)}
+        className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
+        onClick={() => onSelect(isSelected ? null : step)}
       >
         <div
           className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}

@@ -158,6 +158,72 @@ defmodule Plausible.Stats.ExplorationTest do
         assert step4.step.label == "Create site"
       end
 
+      test "handles journey end event step" do
+        site = new_site()
+        now = DateTime.utc_now()
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 123,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 123,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -30)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -20)
+          ),
+          build(:pageview,
+            user_id: 124,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -10)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/home",
+            timestamp: DateTime.shift(now, minute: -50)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/login",
+            timestamp: DateTime.shift(now, minute: -40)
+          ),
+          build(:pageview,
+            user_id: 125,
+            pathname: "/dashboard",
+            timestamp: DateTime.shift(now, minute: -30)
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        journey = [
+          %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
+          %Exploration.Journey.Step{name: "pageview", pathname: "/login"},
+          %Exploration.Journey.Step{name: Exploration.Journey.Step.journey_end_event()}
+        ]
+
+        assert {:ok, [_step1, _step2, step3]} = Exploration.journey_funnel(query, journey)
+
+        assert step3.step.label == Exploration.Journey.Step.journey_end_label()
+        assert step3.step.name == Exploration.Journey.Step.journey_end_event()
+        assert step3.visitors == 1
+        assert step3.dropoff == 2
+        assert step3.dropoff_percentage == "66.67"
+        assert step3.conversion_rate == "33.33"
+        assert step3.conversion_rate_step == "33.33"
+      end
+
       test "respects filters in the query", %{site: site} do
         query =
           QueryBuilder.build!(site,
