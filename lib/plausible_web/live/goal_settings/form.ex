@@ -330,14 +330,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         }
         """
       else
-        """
-        {
-          scrollThreshold: '#{assigns.goal.scroll_threshold}',
-          pagePath: '#{assigns.goal.page_path}',
-          displayName: '#{assigns.goal.display_name}',
-          updateDisplayName() {}
-        }
-        """
+        data =
+          Jason.encode!(%{
+            scrollThreshold: to_string(assigns.goal.scroll_threshold),
+            pagePath: assigns.goal.page_path,
+            displayName: assigns.goal.display_name
+          })
+
+        "{...#{data}, updateDisplayName() {}}"
       end
 
     assigns = assign(assigns, :js, js)

@@ -33,7 +33,7 @@ defmodule Plausible.Stats.Exploration do
         }
 
   @max_steps 20
-  @max_candidates 20
+  @max_candidates 50
 
   @next_steps_defaults [
     search_term: "",
@@ -534,6 +534,12 @@ defmodule Plausible.Stats.Exploration do
           [s],
           field(s, ^:"name#{count}") == ^step.name and
             fragment("match(?, ?)", field(s, ^:"pathname#{count}"), ^pattern)
+        )
+
+      step.name == Journey.Step.journey_end_event() ->
+        dynamic(
+          [s],
+          field(s, ^:"name#{count}") == ""
         )
 
       true ->

@@ -1387,3 +1387,129 @@ test('render various types of entries', async ({ page, request }) => {
   await firstColumn.getByTestId('exploration-row').nth(6).locator('svg').hover()
   await expect(page.getByRole('tooltip')).toHaveText(/Goal/)
 })
+
+test('load more suggestions', async ({ page, request }) => {
+  const report = getReport(page)
+  const explorationTabButton = getExplorationTabButton(report)
+  const { domain } = await setupSite({ page, request })
+
+  const events1 = [...Array(25).keys()].map((i) => {
+    return {
+      name: 'pageview',
+      pathname: `/pageone${String(i).padStart(2, '0')}`
+    }
+  })
+
+  const events2 = [...Array(25).keys()].map((i) => {
+    return {
+      name: 'pageview',
+      pathname: `/pagetwo${String(i).padStart(2, '0')}`
+    }
+  })
+
+  await populateStats({
+    request,
+    domain,
+    events: events1.concat(events2)
+  })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+
+  await explorationTabButton.scrollIntoViewIfNeeded()
+  await explorationTabButton.click()
+
+  await expect(report.getByTestId('exploration-title')).toHaveText(
+    'Explore user journeys'
+  )
+
+  await expect(
+    report.getByTestId('exploration-direction-forward')
+  ).toBeVisible()
+
+  const firstColumn = report.getByTestId('exploration-column-0')
+
+  const columnRow = (i: number) =>
+    firstColumn.getByTestId('exploration-row').nth(i)
+
+  const firstPage = [
+    '/pageone00',
+    '/pageone01',
+    '/pageone02',
+    '/pageone03',
+    '/pageone04',
+    '/pageone05',
+    '/pageone06',
+    '/pageone07',
+    '/pageone08',
+    '/pageone09'
+  ]
+
+  const secondPage = [
+    '/pageone10',
+    '/pageone11',
+    '/pageone12',
+    '/pageone13',
+    '/pageone14',
+    '/pageone15',
+    '/pageone16',
+    '/pageone17',
+    '/pageone18',
+    '/pageone19'
+  ]
+
+  await expect(
+    firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
+  ).toHaveText(firstPage)
+
+  await expect(columnRow(10)).toHaveText(/Show 10 more/)
+  await columnRow(10).click()
+
+  await expect(
+    firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
+  ).toHaveText(firstPage.concat(secondPage))
+
+  await expect(columnRow(20)).toHaveText(/Show 10 more/)
+
+  await test.step('reset state when suggestions change', async () => {
+    await firstColumn.getByPlaceholder('Search').fill('pagetwo')
+
+    const newFirstPage = [
+      '/pagetwo00',
+      '/pagetwo01',
+      '/pagetwo02',
+      '/pagetwo03',
+      '/pagetwo04',
+      '/pagetwo05',
+      '/pagetwo06',
+      '/pagetwo07',
+      '/pagetwo08',
+      '/pagetwo09'
+    ]
+
+    const newSecondPage = [
+      '/pagetwo10',
+      '/pagetwo11',
+      '/pagetwo12',
+      '/pagetwo13',
+      '/pagetwo14',
+      '/pagetwo15',
+      '/pagetwo16',
+      '/pagetwo17',
+      '/pagetwo18',
+      '/pagetwo19'
+    ]
+
+    await expect(
+      firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
+    ).toHaveText(newFirstPage)
+
+    await expect(columnRow(10)).toHaveText(/Show 10 more/)
+    await columnRow(10).click()
+
+    await expect(
+      firstColumn.getByTestId('exploration-row').getByTestId('metric-label')
+    ).toHaveText(newFirstPage.concat(newSecondPage))
+
+    await expect(columnRow(20)).toHaveText(/Show 5 more/)
+  })
+})
