@@ -201,7 +201,13 @@ const VISIT_PREFIX = 'visit:'
 
 export function hasEventFilters(dashboardState) {
   return dashboardState.resolvedFilters.some(
-    ([_operation, filterKey, _clauses]) => EVENT_FILTER_KEYS.has(filterKey)
+    ([_operation, filterKey, _clauses]) => isEventFilterKey(filterKey)
+  )
+}
+
+function isEventFilterKey(filterKey) {
+  return (
+    EVENT_FILTER_KEYS.has(filterKey) || filterKey.startsWith(EVENT_PROPS_PREFIX)
   )
 }
 
@@ -209,10 +215,7 @@ function remapFilterKey(filterKey) {
   if (NO_PREFIX_KEYS.has(filterKey)) {
     return filterKey
   }
-  if (
-    EVENT_FILTER_KEYS.has(filterKey) ||
-    filterKey.startsWith(EVENT_PROPS_PREFIX)
-  ) {
+  if (isEventFilterKey(filterKey)) {
     return `${EVENT_PREFIX}${filterKey}`
   }
   return `${VISIT_PREFIX}${filterKey}`
