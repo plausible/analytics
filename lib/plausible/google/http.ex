@@ -1,4 +1,8 @@
 defmodule Plausible.Google.HTTP do
+  @moduledoc """
+  HTTP client implementation for Google APIs.
+  """
+
   require Logger
   alias Plausible.HTTPClient
 

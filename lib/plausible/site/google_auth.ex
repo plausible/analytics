@@ -1,4 +1,8 @@
 defmodule Plausible.Site.GoogleAuth do
+  @moduledoc """
+  Struct for storing google auth token info used by search console.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
