@@ -24,6 +24,22 @@ export class MockAPI {
     urlWithoutQueryString: string,
     responseHandler: typeof fetch | Record<string, unknown> | number | null
   ): jest.Mock {
+    return this.register('get', urlWithoutQueryString, responseHandler)
+  }
+
+  // sets post handler
+  public post(
+    urlWithoutQueryString: string,
+    responseHandler: typeof fetch | Record<string, unknown>
+  ): jest.Mock {
+    return this.register('post', urlWithoutQueryString, responseHandler)
+  }
+
+  private register(
+    method: string,
+    urlWithoutQueryString: string,
+    responseHandler: typeof fetch | Record<string, unknown> | number | null
+  ): jest.Mock {
     const handler: typeof fetch =
       typeof responseHandler === 'function'
         ? responseHandler
@@ -36,7 +52,7 @@ export class MockAPI {
               } as Response)
             )
     const jestWrappedHandler = jest.fn(handler)
-    this.setHandler('get', urlWithoutQueryString, jestWrappedHandler)
+    this.setHandler(method, urlWithoutQueryString, jestWrappedHandler)
     return jestWrappedHandler
   }
 
@@ -55,7 +71,7 @@ export class MockAPI {
       if (typeof input !== 'string') {
         throw new Error(`Unmocked request ${input.toString()}`)
       }
-      const method = init?.method ?? 'get'
+      const method = (init?.method ?? 'get').toLowerCase()
       const urlWithoutQueryString = input.split('?')[0]
       const handler = this.getHandler(method, urlWithoutQueryString)
       if (!handler) {

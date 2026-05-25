@@ -463,9 +463,15 @@ const MainGraphTooltip = ({
         typeof onClick !== 'function' && 'pointer-events-none'
       )}
     >
-      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
+      <aside
+        data-testid="graph-tooltip"
+        className="text-sm font-normal text-gray-100 flex flex-col gap-1.5"
+      >
         <div className="flex justify-between items-center rounded-sm">
-          <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
+          <div
+            data-testid="metric-label"
+            className="font-semibold mr-4 text-xs uppercase whitespace-nowrap"
+          >
             {metricLabel}
           </div>
           {comparison.isDefined && typeof change === 'number' && (
@@ -481,7 +487,10 @@ const MainGraphTooltip = ({
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
                 <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
-                <div className="whitespace-nowrap">
+                <div
+                  data-testid="main-time-label"
+                  className="whitespace-nowrap"
+                >
                   {getFullBucketLabel(main.timeLabel, {
                     isRealtime,
                     interval,
@@ -493,7 +502,10 @@ const MainGraphTooltip = ({
                   })}
                 </div>
               </div>
-              <div className="font-bold whitespace-nowrap">
+              <div
+                data-testid="main-value"
+                className="font-bold whitespace-nowrap"
+              >
                 {getFormattedValue(main.value)}
               </div>
             </div>
@@ -515,7 +527,10 @@ const MainGraphTooltip = ({
                   })}
                 </div>
               </div>
-              <div className="font-bold whitespace-nowrap">
+              <div
+                data-testid="comparison-value"
+                className="font-bold whitespace-nowrap"
+              >
                 {' '}
                 {getFormattedValue(comparison.value)}
               </div>

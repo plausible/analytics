@@ -15,7 +15,7 @@ export function useMountedEffect(fn, deps) {
   }, deps)
 }
 
-const DEBOUNCE_DELAY = 300
+export const DEBOUNCE_DELAY = 300
 
 export function useDebounce(fn, delay = DEBOUNCE_DELAY) {
   const timerRef = useRef(null)

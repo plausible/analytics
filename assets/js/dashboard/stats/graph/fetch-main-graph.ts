@@ -11,7 +11,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { UseQueryResult } from '@tanstack/react-query'
 
 export function useMainGraphQuery(
-  metric: Metric | null,
+  metric: Metric,
   interval: Interval
 ): {
   apiState: UseQueryResult<MainGraphResponse>
@@ -28,7 +28,7 @@ export function useMainGraphQuery(
     {
       dashboardState,
       reportParams: {
-        metrics: [metricToQuery!],
+        metrics: [metricToQuery],
         dimensions: [`time:${interval}`],
         include: {
           time_labels: true,
@@ -43,10 +43,7 @@ export function useMainGraphQuery(
   const { apiState, isRealtimeSilentUpdate } = useQueryApi<MainGraphResponse>(
     site,
     mainGraphQueryKey,
-    {
-      getStatsQuery: getMainGraphQuery,
-      enabled: !!metric
-    }
+    { getStatsQuery: getMainGraphQuery }
   )
 
   return { apiState, isRealtimeSilentUpdate }

@@ -102,7 +102,7 @@ const InitialLoadingSpinner = () => (
 )
 
 const SmallLoadingSpinner = () => (
-  <div className="loading sm">
+  <div data-testid="small-loading-spinner" className="loading sm">
     <div />
   </div>
 )
