@@ -1385,6 +1385,54 @@ defmodule PlausibleWeb.AuthControllerTest do
                          from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^site.id
                        )
     end
+
+    test "success callback for search console handles repeat callback for the same site gracefully",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      another_email = new_user().email
+
+      mock_google_access_token(user.email)
+      mock_google_access_token(another_email)
+
+      state =
+        Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [
+          site.id,
+          "search-console"
+        ])
+
+      callback_params = %{"code" => "CodeForToken", "state" => state}
+      conn_first = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      assert redirected_to(conn_first, 302) ==
+               Routes.site_path(conn, :settings_integrations, site.domain)
+
+      assert_matches %{
+                       access_token: "SomeAccessToken",
+                       refresh_token: "SomeRefreshToken",
+                       user_id: ^user.id,
+                       email: ^user.email,
+                       expires: %NaiveDateTime{}
+                     } =
+                       Repo.one(
+                         from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^site.id
+                       )
+
+      conn_second = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      assert redirected_to(conn_second, 302) ==
+               Routes.site_path(conn, :settings_integrations, site.domain)
+
+      assert_matches %{
+                       access_token: "SomeAccessToken",
+                       refresh_token: "SomeRefreshToken",
+                       user_id: ^user.id,
+                       email: ^another_email,
+                       expires: %NaiveDateTime{}
+                     } =
+                       Repo.one(
+                         from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^site.id
+                       )
+    end
   end
 
   describe "POST /2fa/setup/initiate" do

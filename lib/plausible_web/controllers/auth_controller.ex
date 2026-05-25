@@ -696,17 +696,33 @@ defmodule PlausibleWeb.AuthController do
     id_token = Map.fetch!(token_data, "id_token")
     [_, body, _] = String.split(id_token, ".")
     id = body |> Base.decode64!(padding: false) |> Jason.decode!()
+    email = Map.fetch!(id, "email")
+    refresh_token = Map.fetch!(token_data, "refresh_token")
+    access_token = Map.fetch!(token_data, "access_token")
 
     Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-      email: Map.fetch!(id, "email"),
-      refresh_token: Map.fetch!(token_data, "refresh_token"),
-      access_token: Map.fetch!(token_data, "access_token"),
+      email: email,
+      refresh_token: refresh_token,
+      access_token: access_token,
       expires: expires_at,
       user_id: current_user.id
     })
     |> Ecto.Changeset.put_assoc(:site, site)
     |> Ecto.Changeset.put_assoc(:user, current_user)
-    |> Repo.insert!()
+    |> Repo.insert!(
+      on_conflict: [
+        set: [
+          email: email,
+          refresh_token: refresh_token,
+          access_token: access_token,
+          expires: expires_at,
+          user_id: current_user.id,
+          updated_at: NaiveDateTime.utc_now(:second),
+          property: nil
+        ]
+      ],
+      conflict_target: :site_id
+    )
 
     redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
