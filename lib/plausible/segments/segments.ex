@@ -158,8 +158,8 @@ defmodule Plausible.Segments do
     with :ok <- can_insert_one?(site, site_role, params),
          %{valid?: true} = changeset <-
            Segment.changeset(
-             %Segment{},
-             Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
+             %Segment{site_id: site.id},
+             Map.merge(params, %{"owner_id" => user_id})
            ),
          :ok <-
            Segment.validate_segment_data(site, params["segment_data"], true) do
