@@ -19,7 +19,7 @@ test('load user journey', async ({ page, request }) => {
         user_id: 123,
         name: 'pageview',
         pathname: '/page',
-        timestamp: { hoursAgo: 40 }
+        timestamp: { daysAgo: 7 }
       }
     ]
   })
@@ -114,7 +114,7 @@ test('load user journey and switch to a period with no events', async ({
         user_id: 123,
         name: 'pageview',
         pathname: '/page',
-        timestamp: { hoursAgo: 40 }
+        timestamp: { daysAgo: 7 }
       }
     ]
   })
