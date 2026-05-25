@@ -1,4 +1,8 @@
 defmodule Plausible.Site.GoogleAuth do
+  @moduledoc """
+  Struct for storing google auth token info used by search console.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -17,8 +21,8 @@ defmodule Plausible.Site.GoogleAuth do
 
   def changeset(auth, attrs \\ %{}) do
     auth
-    |> cast(attrs, [:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
-    |> validate_required([:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
+    |> cast(attrs, [:refresh_token, :access_token, :expires, :email])
+    |> validate_required([:refresh_token, :access_token, :expires, :email])
     |> unique_constraint(:site)
   end
 

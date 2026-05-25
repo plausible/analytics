@@ -615,84 +615,137 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
-    [site_id, redirected_to | _] = Jason.decode!(state)
+    case Plausible.Google.API.verify_oauth_state(state) do
+      {:ok, %{site: site, context: context}} ->
+        redirect_url =
+          if context == "import" do
+            Routes.site_path(conn, :settings_imports_exports, site.domain)
+          else
+            Routes.site_path(conn, :settings_integrations, site.domain)
+          end
 
-    site = Repo.get(Plausible.Site, site_id)
+        cond do
+          error == "access_denied" ->
+            conn
+            |> put_flash(
+              :error,
+              "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+            )
+            |> redirect(to: redirect_url)
 
-    redirect_route =
-      if redirected_to == "import" do
-        Routes.site_path(conn, :settings_imports_exports, site.domain)
-      else
-        Routes.site_path(conn, :settings_integrations, site.domain)
-      end
+          error in ["server_error", "temporarily_unavailable"] ->
+            conn
+            |> put_flash(
+              :error,
+              "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
+            )
+            |> redirect(to: redirect_url)
 
-    case error do
-      "access_denied" ->
-        conn
-        |> put_flash(
-          :error,
-          "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+          true ->
+            Sentry.capture_message("Google OAuth callback failed. Params: #{inspect(params)}")
+            generic_oauth_error_response(conn, redirect_url)
+        end
+
+      {:error, reason} ->
+        Sentry.capture_message(
+          "Google OAuth callback failed. Reason: #{inspect(reason)}. Params: #{inspect(params)}"
         )
-        |> redirect(to: redirect_route)
 
-      message when message in ["server_error", "temporarily_unavailable"] ->
-        conn
-        |> put_flash(
-          :error,
-          "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
-        )
-        |> redirect(to: redirect_route)
-
-      _any ->
-        Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
-
-        conn
-        |> put_flash(
-          :error,
-          "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
-        )
-        |> redirect(to: redirect_route)
+        generic_oauth_error_response(conn)
     end
   end
 
-  def google_auth_callback(conn, %{"code" => code, "state" => state}) do
-    res = Plausible.Google.API.fetch_access_token!(code)
+  def google_auth_callback(conn, %{"code" => code, "state" => state} = params) do
+    current_user = conn.assigns[:current_user]
 
-    [site_id, redirect_to | _] = Jason.decode!(state)
+    with {:ok, %{site: site, context: context}} <- Plausible.Google.API.verify_oauth_state(state),
+         :ok <- check_callback_site_permission(site, current_user) do
+      token_data = Plausible.Google.API.fetch_access_token!(code)
+      expires_in = Map.fetch!(token_data, "expires_in")
+      expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
 
-    site = Repo.get(Plausible.Site, site_id)
-    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
-
-    case redirect_to do
-      "import" ->
-        redirect(conn,
-          to:
-            Routes.google_analytics_path(conn, :property_form, site.domain,
-              access_token: res["access_token"],
-              refresh_token: res["refresh_token"],
-              expires_at: NaiveDateTime.to_iso8601(expires_at)
-            )
+      if context == "import" do
+        google_import_callback(conn, site, token_data, expires_at)
+      else
+        google_search_console_callback(conn, site, token_data, expires_at)
+      end
+    else
+      {:error, reason} ->
+        Sentry.capture_message(
+          "Google OAuth callback failed. Reason: #{inspect(reason)}. Params: #{inspect(params)}"
         )
 
-      _ ->
-        id_token = res["id_token"]
-        [_, body, _] = String.split(id_token, ".")
-        id = body |> Base.decode64!(padding: false) |> Jason.decode!()
-
-        Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-          email: id["email"],
-          refresh_token: res["refresh_token"],
-          access_token: res["access_token"],
-          expires: expires_at,
-          user_id: conn.assigns[:current_user].id,
-          site_id: site_id
-        })
-        |> Repo.insert!()
-
-        site = Repo.get(Plausible.Site, site_id)
-
-        redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+        generic_oauth_error_response(conn)
     end
+  end
+
+  defp google_import_callback(conn, site, token_data, expires_at) do
+    redirect(conn,
+      to:
+        Routes.google_analytics_path(conn, :property_form, site.domain,
+          access_token: Map.fetch!(token_data, "access_token"),
+          refresh_token: Map.fetch!(token_data, "refresh_token"),
+          expires_at: NaiveDateTime.to_iso8601(expires_at)
+        )
+    )
+  end
+
+  defp google_search_console_callback(conn, site, token_data, expires_at) do
+    current_user = conn.assigns.current_user
+
+    id_token = Map.fetch!(token_data, "id_token")
+    [_, body, _] = String.split(id_token, ".")
+    id = body |> Base.decode64!(padding: false) |> Jason.decode!()
+    email = Map.fetch!(id, "email")
+    refresh_token = Map.fetch!(token_data, "refresh_token")
+    access_token = Map.fetch!(token_data, "access_token")
+
+    Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+      email: email,
+      refresh_token: refresh_token,
+      access_token: access_token,
+      expires: expires_at,
+      user_id: current_user.id
+    })
+    |> Ecto.Changeset.put_assoc(:site, site)
+    |> Ecto.Changeset.put_assoc(:user, current_user)
+    |> Repo.insert!(
+      on_conflict: [
+        set: [
+          email: email,
+          refresh_token: refresh_token,
+          access_token: access_token,
+          expires: expires_at,
+          user_id: current_user.id,
+          updated_at: NaiveDateTime.utc_now(:second),
+          property: nil
+        ]
+      ],
+      conflict_target: :site_id
+    )
+
+    redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+  end
+
+  defp check_callback_site_permission(site, current_user) do
+    if Plausible.Sites.get_for_user(current_user, site.domain,
+         roles: [:owner, :admin, :super_admin]
+       ) do
+      :ok
+    else
+      {:error, :permission_denied}
+    end
+  end
+
+  defp generic_oauth_error_response(conn, redirect_url \\ nil) do
+    redirect_url = redirect_url || Routes.auth_path(conn, :login_form)
+
+    conn
+    |> put_flash(
+      :error,
+      "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
+    )
+    |> redirect(to: redirect_url)
   end
 
   defp redirect_to_login(conn) do

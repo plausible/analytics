@@ -89,7 +89,7 @@
       <% else %>
         <PlausibleWeb.Components.Google.button
           id="search-console-connect"
-          to={Plausible.Google.API.search_console_authorize_url(@site.id)}
+          to={Plausible.Google.API.search_console_authorize_url(@site)}
         />
         <div class="mt-8 text-sm">
           NB: You also need to set up your site on

@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           <div class="flex gap-x-4 mt-4">
             <.button_link
               theme="secondary"
-              href={Plausible.Google.API.import_authorize_url(@site.id)}
+              href={Plausible.Google.API.import_authorize_url(@site)}
               disabled={@import_in_progress? or @at_maximum?}
               mt?={false}
             >
@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         <div class="flex gap-x-4">
           <.button_link
             theme="secondary"
-            href={Plausible.Google.API.import_authorize_url(@site.id)}
+            href={Plausible.Google.API.import_authorize_url(@site)}
             disabled={@import_in_progress? or @at_maximum?}
             mt?={false}
           >
