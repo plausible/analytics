@@ -657,7 +657,7 @@ defmodule Plausible.GoalsTest do
       refute Plausible.Funnels.get(site.id, f2.id)
       assert Repo.all(from(fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id)) == []
 
-      assert [^g3, ^g2] = Goals.for_site(site)
+      assert_matches [%{id: ^g3.id}, %{id: ^g2.id}] = Goals.for_site(site)
     end
   end
 
