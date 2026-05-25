@@ -1,20 +1,37 @@
 import React from 'react'
+import classNames from 'classnames'
 import { MODES } from '../stats/behaviours/modes-context'
 import * as api from '../api'
 import { useSiteContext } from '../site-context'
+import { Pill } from './pill'
+import { DiamondIcon } from './icons'
+import { buttonClassName } from './button'
+
+function BusinessPill() {
+  return (
+    <Pill color="yellow">
+      <DiamondIcon className="size-3.5 [&_path]:stroke-2" />
+      Business
+    </Pill>
+  )
+}
 
 export function FeatureSetupNotice({
   feature,
   title,
   info,
   callToAction,
-  onHideAction
+  secondaryCallToAction,
+  onHideAction,
+  previewMock
 }: {
   feature: keyof typeof MODES
   title: React.ReactNode
   info: React.ReactNode
   callToAction: { link: string; action: string }
-  onHideAction: () => void
+  secondaryCallToAction?: { link: string; action: string }
+  onHideAction: (() => void) | null
+  previewMock?: React.ReactNode
 }) {
   const site = useSiteContext()
   const sectionTitle = MODES[feature].title
@@ -30,7 +47,7 @@ export function FeatureSetupNotice({
           method: 'PUT',
           body: { feature: feature }
         })
-        .then(() => onHideAction())
+        .then(() => onHideAction?.())
         .catch((error) => {
           if (!(error instanceof api.ApiError)) {
             throw error
@@ -43,23 +60,12 @@ export function FeatureSetupNotice({
     return (
       <a
         href={callToAction.link}
-        className="flex items-center gap-x-1.5 ml-2 sm:ml-4 button px-2 sm:px-4"
+        className={buttonClassName({
+          theme: 'primary',
+          className: 'ml-2 sm:ml-4'
+        })}
       >
-        <p className="text-xs sm:text-sm font-medium">{callToAction.action}</p>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-4"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-          />
-        </svg>
+        {callToAction.action} &rarr;
       </a>
     )
   }
@@ -68,24 +74,65 @@ export function FeatureSetupNotice({
     return (
       <button
         onClick={requestHideSection}
-        className="inline-block px-2 sm:px-4 py-2 font-medium leading-5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white hover:shadow-sm transition-all duration-150"
+        className={buttonClassName({ theme: 'secondary' })}
       >
         Hide this report
       </button>
     )
   }
 
+  function renderSecondaryCallToAction() {
+    if (!secondaryCallToAction) {
+      return null
+    }
+    return (
+      <a
+        href={secondaryCallToAction.link}
+        className={buttonClassName({
+          theme: 'secondary'
+        })}
+      >
+        {secondaryCallToAction.action}
+      </a>
+    )
+  }
+
   return (
-    <div className="size-full flex items-center justify-center">
-      <div className="py-3 max-w-2xl">
+    <div
+      className={classNames(
+        'relative size-full flex items-center justify-center',
+        previewMock && 'md:h-[400px]'
+      )}
+    >
+      {previewMock && (
+        <div
+          aria-hidden="true"
+          className="hidden md:block pointer-events-none absolute inset-0 blur-sm opacity-50"
+        >
+          {previewMock}
+        </div>
+      )}
+      <div
+        className={classNames(
+          'relative py-3 max-w-2xl',
+          previewMock &&
+            'max-w-[600px] md:p-8 md:bg-white md:dark:bg-gray-800 md:border md:border-gray-100 md:dark:border-gray-750 md:rounded-lg md:shadow-xl'
+        )}
+      >
+        {previewMock && (
+          <div className="flex justify-center mb-3">
+            <BusinessPill />
+          </div>
+        )}
         <div className="text-center mt-2 text-gray-800 dark:text-gray-200 font-medium text-pretty">
           {title}
         </div>
-        <div className="text-center mt-4 font-small text-sm text-gray-500 dark:text-gray-200 text-pretty">
+        <div className="text-center mt-4 font-small text-sm text-gray-500 dark:text-gray-300 text-pretty">
           {info}
         </div>
-        <div className="text-xs sm:text-sm flex my-6 justify-center">
+        <div className="text-xs sm:text-sm flex mt-6 mb-1 justify-center">
           {typeof onHideAction === 'function' && renderHideButton()}
+          {renderSecondaryCallToAction()}
           {renderCallToAction()}
         </div>
       </div>

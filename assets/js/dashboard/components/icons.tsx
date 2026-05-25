@@ -133,6 +133,23 @@ export const FolderIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+export const DiamondIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M2.734 9h18.531M3.023 8.164l3.205-3.408c.255-.27.61-.424.984-.424h9.57c.374 0 .73.153.985.424l3.205 3.408c.44.468.48 1.18.093 1.693l-7.99 10.608a1.352 1.352 0 0 1-2.155 0L2.93 9.857a1.31 1.31 0 0 1 .093-1.693"
+    />
+  </svg>
+)
+
 export const Spinner = ({ className }: { className?: string }) => (
   <svg
     className={className}

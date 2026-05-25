@@ -4,6 +4,11 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
+  ExplorationPreviewMock,
+  FunnelsPreviewMock,
+  PropertiesPreviewMock
+} from '../../components/feature-preview-mocks'
+import {
   hasConversionGoalFilter,
   getGoalFilter,
   FILTER_OPERATIONS
@@ -316,10 +321,12 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         feature={Mode.EXPLORATION}
         title={'Discover how visitors navigate your site'}
         info={
-          'See where visitors continue, convert or leave with detailed path exploration'
+          'User journeys allow you to see how visitors navigate your site, where they convert and where they drop off.'
         }
         callToAction={callToAction}
+        secondaryCallToAction={{ action: 'Learn more', link: '#' }}
         onHideAction={null}
+        previewMock={<ExplorationPreviewMock />}
       />
     )
   }
@@ -350,6 +357,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.FUNNELS)}
+          previewMock={
+            !site.funnelsAvailable ? <FunnelsPreviewMock /> : undefined
+          }
         />
       )
     } else {
@@ -383,6 +393,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.PROPS)}
+          previewMock={
+            !site.propsAvailable ? <PropertiesPreviewMock /> : undefined
+          }
         />
       )
     } else {
