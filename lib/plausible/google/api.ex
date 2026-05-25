@@ -16,14 +16,37 @@ defmodule Plausible.Google.API do
 
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
-  def search_console_authorize_url(site_id) do
+  @valid_oauth_contexts ["search-console", "import"]
+
+  @oauth_salt "google-oauth-state"
+
+  def search_console_authorize_url(site) do
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@search_console_scope}&state=" <>
-      Jason.encode!([site_id, "search-console"])
+      sign_oauth_state(site, "search-console")
   end
 
-  def import_authorize_url(site_id) do
+  def import_authorize_url(site) do
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, "import"])
+      sign_oauth_state(site, "import")
+  end
+
+  @doc false
+  def sign_oauth_state(site, context) do
+    Phoenix.Token.sign(PlausibleWeb.Endpoint, @oauth_salt, [site.id, context])
+  end
+
+  def verify_oauth_state(state) do
+    case Phoenix.Token.verify(PlausibleWeb.Endpoint, @oauth_salt, state, max_age: 3600) do
+      {:ok, [site_id, context]} when context in @valid_oauth_contexts ->
+        if site = Plausible.Repo.get(Plausible.Site, site_id) do
+          {:ok, %{site: site, context: context}}
+        else
+          {:error, {:invalid_oauth_state, :missing_site}}
+        end
+
+      {:error, token_error} ->
+        {:error, {:invalid_oauth_state, token_error}}
+    end
   end
 
   def fetch_access_token!(code) do
