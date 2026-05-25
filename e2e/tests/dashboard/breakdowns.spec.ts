@@ -611,6 +611,29 @@ test('pages breakdown', async ({ page, request }) => {
 
     await closeModalButton(page).click()
   })
+
+  await test.step('exit pages modal with an event filter applied', async () => {
+    await page.goto('/' + domain + '?f=is,page,/page1', { waitUntil: 'commit' })
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Exit pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Exit page',
+      /Unique exits/,
+      /Total exits/
+    ])
+
+    await expectRows(modal(page), ['/page1', '/page2', '/page3'])
+
+    await expectMetricValues(modal(page), '/page1', ['1', '1'])
+    await expectMetricValues(modal(page), '/page2', ['1', '1'])
+    await expectMetricValues(modal(page), '/page3', ['1', '1'])
+
+    await closeModalButton(page).click()
+  })
 })
 
 test('pages breakdown modal', async ({ page, request }) => {
@@ -651,7 +674,7 @@ test('pages breakdown modal', async ({ page, request }) => {
   ).toBeVisible()
 
   await expectHeaders(modal(page), [
-    'Page url',
+    'Page',
     /Visitors/,
     /Pageviews/,
     /Bounce rate/,
@@ -819,7 +842,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
-      'Page url',
+      'Page',
       /Total visitors/,
       /Conversions/,
       /CR/
@@ -856,7 +879,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
-      'Page url',
+      'Page',
       /Total visitors/,
       /Conversions/,
       /CR/,

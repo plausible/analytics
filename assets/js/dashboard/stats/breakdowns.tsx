@@ -12,13 +12,22 @@ import {
   NonTimeDimension,
   StatsQuery
 } from '../stats-query'
+import { Filter } from '../dashboard-state'
+import { MetricsByContext } from './reports/reports-config'
+import { PlausibleSite } from '../site-context'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  getFilterInfo?: (
+    dimension: NonTimeDimension,
+    row: QueryResultRow
+  ) => FilterInfo | null
+  getExternalLinkUrl?: (
+    site: PlausibleSite,
+    row: QueryResultRow
+  ) => string | null
 }
 
 export type ColumnConfiguration<T> = {
@@ -35,6 +44,18 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+}
+
+export function defaultGetFilterInfo(
+  dimension: NonTimeDimension,
+  row: QueryResultRow
+) {
+  const dimensionWithoutPrefix = dimension.replace(/^(event|visit):/, '')
+
+  return {
+    prefix: dimensionWithoutPrefix,
+    filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
+  }
 }
 
 export function MetricValueTooltipContent({
@@ -153,48 +174,44 @@ export function extractMetricValue(
   return { metricIndex, value, comparison }
 }
 
-const DEFAULT_DETAILED_METRICS = [
-  'visitors',
-  'percentage',
-  'bounce_rate',
-  'visit_duration'
-] as Metric[]
-
-export const getBreakdownMetrics = ({
-  hasConversionGoalFilter,
-  isRealtime,
-  isDetailed = false,
-  isRevenueAvailable = false,
-  detailedMetrics = DEFAULT_DETAILED_METRICS
-}: {
-  hasConversionGoalFilter: boolean
+type MetricContext = {
   isRealtime: boolean
-  isDetailed?: boolean
-  isRevenueAvailable?: boolean
-  detailedMetrics?: Metric[]
-}): Metric[] => {
+  isDetailed: boolean
+  hasConversionGoalFilter: boolean
+  isRevenueAvailable: boolean
+}
+
+export const chooseBreakdownMetricsByContext = (
+  metricsByContext: MetricsByContext,
+  context: MetricContext
+): Metric[] => {
+  const {
+    isRealtime,
+    isDetailed,
+    hasConversionGoalFilter,
+    isRevenueAvailable
+  } = context
+
   if (hasConversionGoalFilter && isDetailed && isRevenueAvailable) {
     return [
-      'total_visitors',
-      'visitors',
-      'group_conversion_rate',
+      ...metricsByContext.goalFilterDetailedMetrics,
       'total_revenue',
       'average_revenue'
     ]
   }
   if (hasConversionGoalFilter && isDetailed) {
-    return ['total_visitors', 'visitors', 'group_conversion_rate']
+    return metricsByContext.goalFilterDetailedMetrics
   }
   if (hasConversionGoalFilter) {
-    return ['visitors', 'group_conversion_rate']
+    return metricsByContext.goalFilterIndexMetrics
   }
   if (isRealtime) {
-    return ['visitors', 'percentage']
+    return metricsByContext.realtimeMetrics
   }
   if (isDetailed) {
-    return detailedMetrics
+    return metricsByContext.defaultDetailedMetrics
   }
-  return ['visitors', 'percentage']
+  return metricsByContext.defaultIndexMetrics
 }
 
 export function addDimensionSearchFilter(

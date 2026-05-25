@@ -3,8 +3,12 @@ import classNames from 'classnames'
 
 export function ReportLayout({
   children,
-  testId = undefined,
-  className = undefined
+  testId,
+  className
+}: {
+  children: React.ReactNode
+  testId?: string
+  className?: string
 }) {
   return (
     <div

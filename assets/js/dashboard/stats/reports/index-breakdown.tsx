@@ -4,7 +4,7 @@ import LazyLoader from '../../components/lazy-loader'
 import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { OrderByEntry } from '../../stats-query'
+import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
@@ -13,7 +13,8 @@ import {
   SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
-  extractMetricValue
+  extractMetricValue,
+  defaultGetFilterInfo
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -55,7 +56,7 @@ export function IndexBreakdown({
   metrics,
   dimensions,
   color,
-  getFilterInfo,
+  getFilterInfo = defaultGetFilterInfo,
   getExternalLinkUrl,
   dimensionLabel,
   onDataReady,
@@ -65,23 +66,21 @@ export function IndexBreakdown({
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
 
-  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
-    return [
-      dimensions.join(',') as StatsReportId,
-      {
-        dashboardState,
-        reportParams: {
-          metrics,
-          dimensions,
-          order_by: [
-            ['visitors', 'desc'],
-            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-          ],
-          pagination: { limit: MAX_ITEMS, offset: 0 }
-        }
+  const statsReportQueryKey: StatsReportQueryKey = [
+    dimensions.join(',') as StatsReportId,
+    {
+      dashboardState,
+      reportParams: {
+        metrics,
+        dimensions,
+        order_by: [
+          ['visitors', 'desc'],
+          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+        ],
+        pagination: { limit: MAX_ITEMS, offset: 0 }
       }
-    ]
-  }, [dashboardState, metrics, dimensions])
+    }
+  ]
 
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,
@@ -126,10 +125,16 @@ export function IndexBreakdown({
     // percentage is not its own column —- it's shown inline in the
     // visitors cell instead.
     const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+    const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
+
+    const externalLinkForRow =
+      typeof getExternalLinkUrl === 'function'
+        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
+        : undefined
 
     return [
       {
@@ -142,8 +147,10 @@ export function IndexBreakdown({
             barWidthPercent={
               ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
             }
-            getFilterInfo={getFilterInfo}
-            getExternalLinkUrl={getExternalLinkUrl}
+            getFilterInfo={(row: QueryResultRow) =>
+              getFilterInfo(filterDimension, row)
+            }
+            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -181,6 +188,7 @@ export function IndexBreakdown({
       )
     ]
   }, [
+    site,
     dimensionLabel,
     color,
     barMetricIndex,
@@ -208,17 +216,17 @@ function DimensionCell({
   color,
   barWidthPercent,
   getFilterInfo,
-  getExternalLinkUrl,
+  externalLinkForRow,
   isActive
 }: {
   row: QueryResultRow
   color: string
   barWidthPercent: number
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
 }) {
-  const externalUrl = getExternalLinkUrl?.(row)
+  const externalUrl = externalLinkForRow?.(row)
   return (
     <div className="w-full h-full relative">
       <div
@@ -438,18 +446,20 @@ function MetricValueCell({
 export function IndexBreakdownRenderer({
   data,
   isPending,
+  isPlaceholderData,
   isRealtimeSilentUpdate,
   columns
 }: {
   data?: QueryApiResponse
   isPending: boolean
+  isPlaceholderData: boolean
   isRealtimeSilentUpdate: boolean
   columns: ColumnConfiguration<QueryResultRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
   const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
-  if (!columns || isPending) {
+  if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
       <div
         className="w-full flex flex-col justify-center"

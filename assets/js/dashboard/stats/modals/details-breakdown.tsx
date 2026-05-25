@@ -21,7 +21,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { OrderByEntry } from '../../stats-query'
+import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
@@ -31,7 +31,8 @@ import {
   SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
-  extractMetricValue
+  extractMetricValue,
+  defaultGetFilterInfo
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -86,7 +87,7 @@ export function DetailsBreakdown({
   dimensions,
   metrics,
   defaultOrderBy = [] as MetricOrderBy,
-  getFilterInfo,
+  getFilterInfo = defaultGetFilterInfo,
   getExternalLinkUrl,
   searchEnabled = true,
   onDataReady
@@ -113,23 +114,21 @@ export function DetailsBreakdown({
     dimensionLabel
   })
 
-  const statsReportQueryKey: StatsReportQueryKey = useMemo(() => {
-    return [
-      dimensions.join(',') as StatsReportId,
-      {
-        dashboardState,
-        reportParams: {
-          metrics,
-          dimensions,
-          order_by: [
-            ...(orderBy.length ? orderBy : storedOrderBy),
-            ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-          ]
-        },
-        search
-      }
-    ]
-  }, [dashboardState, metrics, dimensions, orderBy, storedOrderBy, search])
+  const statsReportQueryKey: StatsReportQueryKey = [
+    dimensions.join(',') as StatsReportId,
+    {
+      dashboardState,
+      reportParams: {
+        metrics,
+        dimensions,
+        order_by: [
+          ...(orderBy.length ? orderBy : storedOrderBy),
+          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+        ]
+      },
+      search
+    }
+  ]
 
   const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
 
@@ -160,9 +159,16 @@ export function DetailsBreakdown({
   const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
     if (!query) return null
 
+    const filterDimension = query.dimensions[0] as NonTimeDimension
+
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
+
+    const externalLinkForRow =
+      typeof getExternalLinkUrl === 'function'
+        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
+        : undefined
 
     return [
       {
@@ -171,8 +177,10 @@ export function DetailsBreakdown({
         renderCell: (row, isActive) => (
           <DimensionCell
             row={row}
-            getFilterInfo={getFilterInfo}
-            getExternalLinkUrl={getExternalLinkUrl}
+            getFilterInfo={(row: QueryResultRow) =>
+              getFilterInfo(filterDimension, row)
+            }
+            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -227,6 +235,7 @@ export function DetailsBreakdown({
         )
     ]
   }, [
+    site,
     dimensionLabel,
     query,
     meta,
@@ -470,12 +479,12 @@ function MetricLabel({
 function DimensionCell({
   row,
   getFilterInfo,
-  getExternalLinkUrl,
+  externalLinkForRow,
   isActive
 }: {
   row: QueryResultRow
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  getExternalLinkUrl?: (row: QueryResultRow) => string | null
+  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
 }) {
   return (
@@ -483,8 +492,8 @@ function DimensionCell({
       <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
         {row.dimensions[0]}
       </DrilldownLink>
-      {typeof getExternalLinkUrl === 'function' && (
-        <ExternalLink href={getExternalLinkUrl(row)} isActive={isActive} />
+      {typeof externalLinkForRow === 'function' && (
+        <ExternalLink href={externalLinkForRow(row)} isActive={isActive} />
       )}
     </div>
   )

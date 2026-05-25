@@ -199,6 +199,12 @@ const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
 const EVENT_PREFIX = 'event:'
 const VISIT_PREFIX = 'visit:'
 
+export function hasEventFilters(dashboardState) {
+  return dashboardState.resolvedFilters.some(
+    ([_operation, filterKey, _clauses]) => EVENT_FILTER_KEYS.has(filterKey)
+  )
+}
+
 function remapFilterKey(filterKey) {
   if (NO_PREFIX_KEYS.has(filterKey)) {
     return filterKey
