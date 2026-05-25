@@ -1337,7 +1337,7 @@ defmodule PlausibleWeb.AuthControllerTest do
              )
     end
 
-    test "sucess callback for import redirects to property selection", %{conn: conn, user: user} do
+    test "success callback for import redirects to property selection", %{conn: conn, user: user} do
       mock_google_access_token(user.email)
 
       site = new_site(owner: user)
@@ -1356,7 +1356,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirect_url =~ "expires_at="
     end
 
-    test "sucess callback for search console creates a google auth entry and redirects to integrations form",
+    test "success callback for search console creates a google auth entry and redirects to integrations form",
          %{conn: conn, user: user} do
       site = new_site(owner: user)
 
