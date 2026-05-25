@@ -74,7 +74,7 @@ export function ExplorationPreviewMock() {
         <div
           key={colIdx}
           className={classNames(
-            'flex-1 flex-col rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden',
+            'flex-1 flex-col rounded-lg border border-gray-400 dark:border-gray-500 overflow-hidden',
             colIdx === 2 ? 'hidden lg:flex' : 'flex'
           )}
         >
