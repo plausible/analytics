@@ -324,7 +324,10 @@ function Behaviours({ importedDataInView, setMode, mode }) {
           'See how visitors move between pages and events to understand browsing behavior.'
         }
         callToAction={callToAction}
-        secondaryCallToAction={{ action: 'Learn more', link: '#' }}
+        secondaryCallToAction={{
+          action: 'Learn more',
+          link: 'https://plausible.io/docs/user-journeys'
+        }}
         onHideAction={null}
         previewMock={<ExplorationPreviewMock />}
       />
@@ -389,7 +392,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
           feature={Mode.PROPS}
           title={'Attach your own data to the stats'}
           info={
-            "Create custom metrics and analyze data specific to your business."
+            'Create custom metrics and analyze data specific to your business.'
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.PROPS)}
