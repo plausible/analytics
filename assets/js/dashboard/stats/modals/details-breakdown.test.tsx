@@ -7,7 +7,10 @@ import { PAGINATION_LIMIT } from '../../hooks/api-client'
 import { QueryApiResponse } from '../../api'
 import { StatsQuery } from '../../stats-query'
 import { DEBOUNCE_DELAY } from '../../custom-hooks'
-import { BREAKDOWN_REPORTS } from '../reports/reports-config'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from '../reports/reports-config'
 
 const domain = 'dummy.site'
 const queryPath = `/api/stats/${domain}/query/`
@@ -128,7 +131,9 @@ function renderModal() {
   function ToggleableModal() {
     const [open, s] = useState(false)
     toggle = s
-    return open ? <PagesDetails breakdownReportKey={'pages'} /> : null
+    return open ? (
+      <PagesDetails breakdownReportKey={BreakdownReportKey.pages} />
+    ) : null
   }
 
   render(

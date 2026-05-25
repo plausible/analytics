@@ -49,13 +49,17 @@ function getExternalLinkUrlForPage(
   return url.externalLinkForPage(site, row.dimensions[0])
 }
 
-export type BreakdownReportKey = 'pages' | 'entryPages' | 'exitPages'
+export enum BreakdownReportKey {
+  'pages' = 'pages',
+  'entryPages' = 'entryPages',
+  'exitPages' = 'exitPages'
+}
 
 export const BREAKDOWN_REPORTS: Record<
   BreakdownReportKey,
   BreakdownReportConfig
 > = {
-  pages: {
+  [BreakdownReportKey.pages]: {
     dimensions: ['event:page'],
     metricsByContext: {
       ...COMMON_METRICS_BY_CONTEXT,
@@ -73,7 +77,7 @@ export const BREAKDOWN_REPORTS: Record<
     dimensionLabel: 'Page',
     getExternalLinkUrl: getExternalLinkUrlForPage
   },
-  entryPages: {
+  [BreakdownReportKey.entryPages]: {
     dimensions: ['visit:entry_page'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'Entry pages',
@@ -81,7 +85,7 @@ export const BREAKDOWN_REPORTS: Record<
     dimensionLabel: 'Entry page',
     getExternalLinkUrl: getExternalLinkUrlForPage
   },
-  exitPages: {
+  [BreakdownReportKey.exitPages]: {
     dimensions: ['visit:exit_page'],
     metricsByContext: {
       ...COMMON_METRICS_BY_CONTEXT,

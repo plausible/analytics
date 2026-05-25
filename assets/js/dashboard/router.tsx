@@ -12,7 +12,10 @@ import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import { PagesDetails } from './stats/pages/details'
-import { BREAKDOWN_REPORTS } from './stats/reports/reports-config'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from './stats/reports/reports-config'
 import LocationsModal from './stats/modals/locations-modal'
 import BrowsersModal from './stats/modals/devices/browsers-modal'
 import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
@@ -100,17 +103,17 @@ export const referrersGoogleRoute = {
 
 export const topPagesRoute = {
   path: BREAKDOWN_REPORTS.pages.detailsPath,
-  element: <PagesDetails breakdownReportKey={'pages'} />
+  element: <PagesDetails breakdownReportKey={BreakdownReportKey.pages} />
 }
 
 export const entryPagesRoute = {
   path: BREAKDOWN_REPORTS.entryPages.detailsPath,
-  element: <PagesDetails breakdownReportKey={'entryPages'} />
+  element: <PagesDetails breakdownReportKey={BreakdownReportKey.entryPages} />
 }
 
 export const exitPagesRoute = {
   path: BREAKDOWN_REPORTS.exitPages.detailsPath,
-  element: <PagesDetails breakdownReportKey={'exitPages'} />
+  element: <PagesDetails breakdownReportKey={BreakdownReportKey.exitPages} />
 }
 
 export const countriesRoute = {

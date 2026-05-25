@@ -14,20 +14,23 @@ import MoreLink from '../more-link'
 import { MoreLinkState } from '../more-link-state'
 import { QueryApiResponse } from '../../api'
 import ImportedWarningBubble from '../imported-warning-bubble'
-import { BREAKDOWN_REPORTS } from '../reports/reports-config'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from '../reports/reports-config'
 import { IndexBreakdown } from '../reports/index-breakdown'
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
 
-type Mode = 'pages' | 'entryPages' | 'exitPages'
+type Mode = Extract<BreakdownReportKey, 'pages' | 'entryPages' | 'exitPages'>
 
 const initMode = (storedMode: string): Mode => {
-  if (['entry-pages', 'entryPages'].includes(storedMode)) {
-    return 'entryPages'
+  if (['entry-pages', BreakdownReportKey.entryPages].includes(storedMode)) {
+    return BreakdownReportKey.entryPages
   }
-  if (['exit-pages', 'exitPages'].includes(storedMode)) {
-    return 'exitPages'
+  if (['exit-pages', BreakdownReportKey.exitPages].includes(storedMode)) {
+    return BreakdownReportKey.exitPages
   }
-  return 'pages'
+  return BreakdownReportKey.pages
 }
 
 const BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
@@ -94,10 +97,10 @@ export default function Pages() {
                   label: hasConversionGoalFilter(dashboardState)
                     ? 'Conversion pages'
                     : 'Top pages',
-                  value: 'pages'
+                  value: BreakdownReportKey.pages
                 },
-                { label: 'Entry pages', value: 'entryPages' },
-                { label: 'Exit pages', value: 'exitPages' }
+                { label: 'Entry pages', value: BreakdownReportKey.entryPages },
+                { label: 'Exit pages', value: BreakdownReportKey.exitPages }
               ] as const
             ).map(({ value, label }) => (
               <TabButton
