@@ -319,9 +319,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     return (
       <FeatureSetupNotice
         feature={Mode.EXPLORATION}
-        title={'Discover how visitors navigate your site'}
+        title={'Explore user journeys'}
         info={
-          'User journeys allow you to see how visitors navigate your site, where they convert and where they drop off.'
+          'See how visitors move between pages and events to understand browsing behavior.'
         }
         callToAction={callToAction}
         secondaryCallToAction={{ action: 'Learn more', link: '#' }}
@@ -351,9 +351,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       return (
         <FeatureSetupNotice
           feature={Mode.FUNNELS}
-          title={'Follow the visitor journey from entry to conversion'}
+          title={'Analyze conversion funnels'}
           info={
-            'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'
+            'Measure conversion rates between each step and identify where visitors drop off.'
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.FUNNELS)}
@@ -387,9 +387,9 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       return (
         <FeatureSetupNotice
           feature={Mode.PROPS}
-          title={'Send custom data to create your own metrics'}
+          title={'Attach your own data to the stats'}
           info={
-            "You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don't track automatically."
+            "Create custom metrics and analyze data specific to your business."
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.PROPS)}

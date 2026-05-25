@@ -116,7 +116,7 @@ export function FeatureSetupNotice({
         className={classNames(
           'relative py-3 max-w-2xl',
           previewMock &&
-            'max-w-[600px] md:p-8 md:bg-white md:dark:bg-gray-800 md:border md:border-gray-100 md:dark:border-gray-750 md:rounded-lg md:shadow-xl'
+            'max-w-lg md:p-8 md:bg-white md:dark:bg-gray-800 md:border md:border-gray-100 md:dark:border-gray-750 md:rounded-lg md:shadow-xl'
         )}
       >
         {previewMock && (
