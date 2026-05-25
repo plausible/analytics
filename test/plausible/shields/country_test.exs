@@ -82,6 +82,16 @@ defmodule Plausible.Shields.CountryTest do
 
       assert rule.added_by == "Joe <joe@example.com>"
     end
+
+    test "ignores site_id supplied in params", %{site: site} do
+      victim = insert(:site)
+
+      assert {:ok, rule} =
+               add_country_rule(site, %{"country_code" => "US", "site_id" => victim.id})
+
+      assert rule.site_id == site.id
+      assert count_country_rules(victim) == 0
+    end
   end
 
   describe "remove_country_rule/2" do

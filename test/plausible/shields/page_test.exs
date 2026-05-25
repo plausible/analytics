@@ -94,6 +94,13 @@ defmodule Plausible.Shields.PageTest do
 
       assert rule.added_by == "Joe <joe@example.com>"
     end
+
+    test "ignores site_id supplied in params", %{site: site} do
+      victim = insert(:site)
+      assert {:ok, rule} = add_page_rule(site, %{"page_path" => "/test", "site_id" => victim.id})
+      assert rule.site_id == site.id
+      assert count_page_rules(victim) == 0
+    end
   end
 
   describe "page pattern matching" do
