@@ -185,13 +185,19 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
   end
 
   def handle_event("edit-shared-link", %{"slug" => slug}, socket) do
+    site_id = socket.assigns.site.id
+
     shared_link =
       Plausible.Site.SharedLink
-      |> Plausible.Repo.get_by(slug: slug)
+      |> Plausible.Repo.get_by(slug: slug, site_id: site_id)
       |> Plausible.Repo.preload(:segment)
 
     socket =
-      socket |> assign(form_shared_link: shared_link) |> Modal.open("shared-links-form-modal")
+      if shared_link do
+        socket |> assign(form_shared_link: shared_link) |> Modal.open("shared-links-form-modal")
+      else
+        put_live_flash(socket, :error, "Could not find Shared Link")
+      end
 
     {:noreply, socket}
   end
