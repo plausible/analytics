@@ -34,7 +34,7 @@ defmodule Plausible.Google.HTTP do
       redirect_uri: redirect_uri()
     }
 
-    {:ok, response} = HTTPClient.post(url, headers, params)
+    {:ok, response} = HTTPClient.impl().post(url, headers, params)
 
     response.body
   end

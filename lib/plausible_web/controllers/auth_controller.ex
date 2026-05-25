@@ -643,7 +643,7 @@ defmodule PlausibleWeb.AuthController do
 
           true ->
             Sentry.capture_message("Google OAuth callback failed. Params: #{inspect(params)}")
-            generic_oauth_error_response(conn)
+            generic_oauth_error_response(conn, redirect_url)
         end
 
       {:error, reason} ->
@@ -656,7 +656,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state} = params) do
-    current_user = conn.assigns.current_user
+    current_user = conn.assigns[:current_user]
 
     with {:ok, %{site: site, context: context}} <- Plausible.Google.API.verify_oauth_state(state),
          :ok <- check_callback_site_permission(site, current_user) do
@@ -721,13 +721,15 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  defp generic_oauth_error_response(conn) do
+  defp generic_oauth_error_response(conn, redirect_url \\ nil) do
+    redirect_url = redirect_url || Routes.auth_path(conn, :login_form)
+
     conn
     |> put_flash(
       :error,
       "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
     )
-    |> redirect_to_login()
+    |> redirect(to: redirect_url)
   end
 
   defp redirect_to_login(conn) do
