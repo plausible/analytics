@@ -38,7 +38,6 @@ defmodule Plausible.Goal do
   end
 
   @fields [
-            :id,
             :event_name,
             :page_path,
             :scroll_threshold,
