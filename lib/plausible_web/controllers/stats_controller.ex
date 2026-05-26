@@ -105,7 +105,6 @@ defmodule PlausibleWeb.StatsController do
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public),
           consolidated_view?: consolidated_view?,
           consolidated_view_available?: consolidated_view_available?,
-          exploration_available?: exploration_available?(current_user),
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
@@ -536,23 +535,12 @@ defmodule PlausibleWeb.StatsController do
           # no shared links for consolidated views
           consolidated_view?: false,
           consolidated_view_available?: false,
-          exploration_available?: exploration_available?(current_user),
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id
         )
     end
-  end
-
-  if Mix.env() != :e2e_test do
-    on_ee do
-      defp exploration_available?(user), do: Plausible.Auth.super_admin?(user)
-    else
-      defp exploration_available?(_user), do: false
-    end
-  else
-    defp exploration_available?(_user), do: true
   end
 
   defp get_fallback_site_role(conn),

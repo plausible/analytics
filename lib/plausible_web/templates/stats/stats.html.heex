@@ -47,7 +47,9 @@
     data-segments={Jason.encode!(@segments)}
     data-is-consolidated-view={Jason.encode!(@consolidated_view?)}
     data-consolidated-view-available={Jason.encode!(@consolidated_view_available?)}
-    data-exploration-available={Jason.encode!(@exploration_available?)}
+    data-exploration-available={
+      to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.team) == :ok)
+    }
     data-exploration-journey-end-event={@exploration_journey_end_event}
     data-exploration-max-journey-steps={@exploration_max_journey_steps}
     data-team-identifier={@team_identifier}
