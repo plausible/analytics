@@ -674,8 +674,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   def allowed_features_for(team) do
-    team =
-      Teams.with_subscription(team)
+    team = Teams.with_subscription(team)
 
     features =
       case Plans.get_subscription_plan(team.subscription) do
