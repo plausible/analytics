@@ -64,6 +64,7 @@ const PagesDimensionElement = (props: DimensionCellProps) => {
   const site = useSiteContext()
   return (
     <DimensionCell
+      text={props.row.dimensions[0]}
       externalLink={
         <DetailsExternalLink
           href={externalLinkForPage(site, props.row.dimensions[0])}
@@ -71,8 +72,6 @@ const PagesDimensionElement = (props: DimensionCellProps) => {
         />
       }
       {...props}
-    >
-      {props.row.dimensions[0]}
-    </DimensionCell>
+    />
   )
 }

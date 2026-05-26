@@ -476,17 +476,20 @@ export type DimensionCellProps = {
 }
 
 export const DimensionCell = ({
-  children,
+  text,
+  icon,
   externalLink,
   getFilterInfo,
   row
 }: {
-  children: ReactNode
+  text: string
+  icon?: ReactNode
   externalLink?: ReactNode
 } & DimensionCellProps) => (
   <div className="break-all flex items-center gap-x-1">
     <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
-      {children}
+      {icon}
+      {text}
     </DrilldownLink>
     {externalLink}
   </div>
