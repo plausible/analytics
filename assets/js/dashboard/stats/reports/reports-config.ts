@@ -1,8 +1,5 @@
-import { PlausibleSite } from '../../site-context'
 import { NonTimeDimension } from '../../stats-query'
 import { Metric } from '../metrics'
-import * as url from '../../util/url'
-import { QueryResultRow } from '../../api'
 
 export type MetricsByContext = {
   realtimeMetrics: Metric[]
@@ -35,13 +32,6 @@ const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
     'visitors',
     'group_conversion_rate'
   ]
-}
-
-export function getExternalLinkUrlForPage(
-  site: PlausibleSite,
-  row: QueryResultRow
-): string | null {
-  return url.externalLinkForPage(site, row.dimensions[0])
 }
 
 export enum BreakdownReportKey {

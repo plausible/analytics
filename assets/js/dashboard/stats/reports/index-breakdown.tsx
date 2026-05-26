@@ -50,7 +50,7 @@ const BAR_METRIC = 'visitors'
 
 type IndexBreakdownProps = SharedBreakdownReportProps & {
   metricColumnWidth?: string
-  DimensionElement: (props: IndexBreakdownDimensionCellProps) => ReactNode
+  DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
   onDataReady?: (data: QueryApiResponse) => void
 }
 
@@ -203,7 +203,7 @@ export function IndexBreakdown({
   )
 }
 
-export type IndexBreakdownDimensionCellProps = {
+export type DimensionCellWithBarProps = {
   row: QueryResultRow
   barWidthPercent: number
   isActive?: boolean
@@ -223,7 +223,7 @@ export const DimensionCellWithBar = ({
   icon?: ReactNode
   externalLink?: ReactNode
   barClassName: string
-} & IndexBreakdownDimensionCellProps) => (
+} & DimensionCellWithBarProps) => (
   <div className="w-full h-full relative">
     <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
     <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">

@@ -10,8 +10,7 @@ import {
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
-  BreakdownReportKey,
-  getExternalLinkUrlForPage
+  BreakdownReportKey
 } from '../reports/reports-config'
 import {
   DetailsBreakdown,
@@ -20,6 +19,7 @@ import {
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
 import { DetailsExternalLink } from './external-link'
+import { externalLinkForPage } from '../../util/url'
 
 export function PagesDetails({
   breakdownReportKey
@@ -66,7 +66,7 @@ const PagesDimensionElement = (props: DimensionCellProps) => {
     <DimensionCell
       externalLink={
         <DetailsExternalLink
-          href={getExternalLinkUrlForPage(site, props.row)}
+          href={externalLinkForPage(site, props.row.dimensions[0])}
           isActive={props.isActive}
         />
       }

@@ -16,16 +16,15 @@ import { QueryApiResponse } from '../../api'
 import ImportedWarningBubble from '../imported-warning-bubble'
 import {
   BREAKDOWN_REPORTS,
-  BreakdownReportKey,
-  getExternalLinkUrlForPage
+  BreakdownReportKey
 } from '../reports/reports-config'
 import {
   DimensionCellWithBar,
   IndexBreakdown,
-  IndexBreakdownDimensionCellProps
+  DimensionCellWithBarProps
 } from '../reports/index-breakdown'
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
-import { trimURL } from '../../util/url'
+import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
 
 type Mode = Extract<BreakdownReportKey, 'pages' | 'entryPages' | 'exitPages'>
@@ -128,9 +127,9 @@ export default function Pages() {
   )
 }
 
-function PagesDimensionCell(props: IndexBreakdownDimensionCellProps) {
+function PagesDimensionCell(props: DimensionCellWithBarProps) {
   const site = useSiteContext()
-  const externalUrl = getExternalLinkUrlForPage(site, props.row)
+  const externalUrl = externalLinkForPage(site, props.row.dimensions[0])
   const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
   return (
     <DimensionCellWithBar
