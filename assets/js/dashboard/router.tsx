@@ -12,16 +12,12 @@ import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import { PagesDetails } from './stats/pages/details'
+import { DevicesDetails } from './stats/devices/details'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from './stats/reports/reports-config'
 import LocationsModal from './stats/modals/locations-modal'
-import BrowsersModal from './stats/modals/devices/browsers-modal'
-import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
-import OperatingSystemsModal from './stats/modals/devices/operating-systems-modal'
-import OperatingSystemVersionsModal from './stats/modals/devices/operating-system-versions-modal'
-import ScreenSizesModal from './stats/modals/devices/screen-sizes'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
@@ -132,28 +128,35 @@ export const citiesRoute = {
 }
 
 export const browsersRoute = {
-  path: 'browsers',
-  element: <BrowsersModal />
+  path: BREAKDOWN_REPORTS.browsers.detailsPath,
+  element: <DevicesDetails reportKey={BreakdownReportKey.browsers} />
 }
 
 export const browserVersionsRoute = {
-  path: 'browser-versions',
-  element: <BrowserVersionsModal />
+  path: BREAKDOWN_REPORTS.browserVersions.detailsPath,
+  element: <DevicesDetails reportKey={BreakdownReportKey.browserVersions} />
 }
 
 export const operatingSystemsRoute = {
-  path: 'operating-systems',
-  element: <OperatingSystemsModal />
+  path: BREAKDOWN_REPORTS.operatingSystems.detailsPath,
+  element: <DevicesDetails reportKey={BreakdownReportKey.operatingSystems} />
 }
 
 export const operatingSystemVersionsRoute = {
-  path: 'operating-system-versions',
-  element: <OperatingSystemVersionsModal />
+  path: BREAKDOWN_REPORTS.operatingSystemVersions.detailsPath,
+  element: (
+    <DevicesDetails reportKey={BreakdownReportKey.operatingSystemVersions} />
+  )
 }
 
 export const screenSizesRoute = {
-  path: 'screen-sizes',
-  element: <ScreenSizesModal />
+  path: BREAKDOWN_REPORTS.screenSizes.detailsPath,
+  element: (
+    <DevicesDetails
+      reportKey={BreakdownReportKey.screenSizes}
+      searchEnabled={false}
+    />
+  )
 }
 
 export const conversionsRoute = {

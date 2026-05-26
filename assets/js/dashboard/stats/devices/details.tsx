@@ -1,0 +1,115 @@
+import React from 'react'
+import { useDashboardStateContext } from '../../dashboard-state-context'
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
+import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from '../reports/reports-config'
+import {
+  DetailsBreakdown,
+  DimensionCell,
+  DimensionCellProps
+} from '../modals/details-breakdown'
+import Modal from '../modals/modal'
+import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
+import { getScreenFilterInfo } from '.'
+
+type DevicesReportKey =
+  | BreakdownReportKey.browsers
+  | BreakdownReportKey.browserVersions
+  | BreakdownReportKey.operatingSystems
+  | BreakdownReportKey.operatingSystemVersions
+  | BreakdownReportKey.screenSizes
+
+export function DevicesDetails({
+  reportKey,
+  searchEnabled
+}: {
+  reportKey: DevicesReportKey
+  searchEnabled?: boolean
+}) {
+  const { dashboardState } = useDashboardStateContext()
+  const reportConfig = BREAKDOWN_REPORTS[reportKey]
+
+  const metrics = chooseBreakdownMetricsByContext(
+    reportConfig.metricsByContext,
+    {
+      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+      isRealtime: isRealTimeDashboard(dashboardState),
+      isDetailed: true,
+      isRevenueAvailable: false
+    }
+  )
+
+  const DimensionElement = {
+    [BreakdownReportKey.browsers]: BrowsersDimensionCell,
+    [BreakdownReportKey.browserVersions]: BrowserVersionsDimensionCell,
+    [BreakdownReportKey.operatingSystems]: OperatingSystemsDimensionCell,
+    [BreakdownReportKey.operatingSystemVersions]:
+      OperatingSystemVersionsDimensionCell,
+    [BreakdownReportKey.screenSizes]: ScreenSizesDimensionCell
+  }[reportKey]
+
+  return (
+    <Modal>
+      <DetailsBreakdown
+        title={reportConfig.detailsTitle}
+        dimensionLabel={reportConfig.dimensionLabel}
+        dimensions={reportConfig.dimensions}
+        metrics={metrics}
+        defaultOrderBy={[['visitors', 'desc']]}
+        searchEnabled={searchEnabled}
+        DimensionElement={DimensionElement}
+        getFilterInfo={
+          reportKey === BreakdownReportKey.screenSizes
+            ? getScreenFilterInfo
+            : undefined
+        }
+      />
+    </Modal>
+  )
+}
+
+const BrowsersDimensionCell = (props: DimensionCellProps) => (
+  <DimensionCell
+    {...props}
+    text={props.row.dimensions[0]}
+    icon={<BrowserIcon dimensionValue={props.row.dimensions[0]} />}
+  />
+)
+
+const BrowserVersionsDimensionCell = (props: DimensionCellProps) => (
+  <DimensionCell
+    {...props}
+    text={props.row.dimensions[0]}
+    icon={<BrowserIcon dimensionValue={props.row.dimensions[1]} />}
+  />
+)
+
+const OperatingSystemsDimensionCell = (props: DimensionCellProps) => (
+  <DimensionCell
+    {...props}
+    text={props.row.dimensions[0]}
+    icon={<OsIcon dimensionValue={props.row.dimensions[0]} />}
+  />
+)
+
+const OperatingSystemVersionsDimensionCell = (props: DimensionCellProps) => (
+  <DimensionCell
+    {...props}
+    text={props.row.dimensions[0]}
+    icon={<OsIcon dimensionValue={props.row.dimensions[1]} />}
+  />
+)
+
+const ScreenSizesDimensionCell = (props: DimensionCellProps) => (
+  <DimensionCell
+    {...props}
+    text={props.row.dimensions[0]}
+    icon={<ScreenSizeIcon dimensionValue={props.row.dimensions[0]} />}
+  />
+)
