@@ -85,7 +85,7 @@ export function FeatureSetupNotice({
           {info}
         </div>
         <div className="text-xs sm:text-sm flex my-6 justify-center">
-          {renderHideButton()}
+          {typeof onHideAction === 'function' && renderHideButton()}
           {renderCallToAction()}
         </div>
       </div>

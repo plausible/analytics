@@ -32,7 +32,7 @@ import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
 
 /*global BUILD_EXTRA*/
 /*global require*/
-function maybeRequire() {
+function maybeRequireFunnels() {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/funnel')
@@ -46,12 +46,12 @@ function maybeRequireExploration() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/exploration')
   } else {
-    return { FunnelExploration: null }
+    return { default: null }
   }
 }
 
-const Funnel = maybeRequire().default
-const { FunnelExploration } = maybeRequireExploration()
+const Funnel = maybeRequireFunnels().default
+const FunnelExploration = maybeRequireExploration().default
 
 function singleGoalFilterApplied(dashboardState) {
   const goalFilter = getGoalFilter(dashboardState)
@@ -304,7 +304,24 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     if (FunnelExploration === null) {
       return featureUnavailable()
     }
-    return <FunnelExploration />
+
+    if (site.explorationAvailable) {
+      return <FunnelExploration />
+    }
+
+    const callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
+
+    return (
+      <FeatureSetupNotice
+        feature={Mode.EXPLORATION}
+        title={'Discover how visitors navigate your site'}
+        info={
+          'See where visitors continue, convert or leave with detailed path exploration'
+        }
+        callToAction={callToAction}
+        onHideAction={null}
+      />
+    )
   }
 
   function renderFunnels() {
@@ -383,8 +400,14 @@ function Behaviours({ importedDataInView, setMode, mode }) {
 
   function featureUnavailable() {
     return (
-      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
-        This feature is unavailable
+      <div className="flex-1 flex flex-col items-center justify-center font-medium text-gray-500 dark:text-gray-400">
+        <span>This report is available in Plausible Cloud</span>
+        <a
+          className="flex items-center gap-x-1.5 mt-4 button px-2 sm:px-4"
+          href="https://plausible.io"
+        >
+          Learn more
+        </a>
       </div>
     )
   }
@@ -537,7 +560,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                   Funnels
                 </TabButton>
               ))}
-            {!site.isConsolidatedView && site.explorationAvailable && (
+            {!site.isConsolidatedView && isEnabled(Mode.EXPLORATION) && (
               <TabButton
                 active={mode === Mode.EXPLORATION}
                 onClick={setTabFactory(Mode.EXPLORATION)}
