@@ -251,6 +251,7 @@ export const MainCalendar = ({
           }}
           minDate={site.statsBegin}
           maxDate={formatISO(now(site.offset))}
+          today={formatISO(now(site.offset))}
           defaultDates={
             dashboardState.from && dashboardState.to
               ? [formatISO(dashboardState.from), formatISO(dashboardState.to)]

@@ -1,9 +1,7 @@
 @import 'tailwindcss' source(none);
-@import 'flatpickr/dist/flatpickr.min.css' layer(components);
 @import './modal.css' layer(components);
 @import './loader.css' layer(components);
 @import './tooltip.css' layer(components);
-@import './flatpickr-colors.css' layer(components);
 
 @plugin "@tailwindcss/forms";
 

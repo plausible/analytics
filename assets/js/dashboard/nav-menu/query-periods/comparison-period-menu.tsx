@@ -170,6 +170,7 @@ export const ComparisonCalendarMenu = ({
           }}
           minDate={site.statsBegin}
           maxDate={formatISO(now(site.offset))}
+          today={formatISO(now(site.offset))}
           defaultDates={
             dashboardState.compare_from && dashboardState.compare_to
               ? [
