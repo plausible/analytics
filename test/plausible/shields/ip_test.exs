@@ -87,6 +87,13 @@ defmodule Plausible.Shields.IPTest do
 
       assert rule.added_by == "Joe <joe@example.com>"
     end
+
+    test "ignores site_id supplied in params", %{site: site} do
+      victim = insert(:site)
+      assert {:ok, rule} = add_ip_rule(site, %{"inet" => "1.2.3.4", "site_id" => victim.id})
+      assert rule.site_id == site.id
+      assert count_ip_rules(victim) == 0
+    end
   end
 
   describe "remove_ip_rule/2" do

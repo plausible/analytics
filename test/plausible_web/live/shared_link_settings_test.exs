@@ -117,6 +117,27 @@ defmodule PlausibleWeb.Live.SharedLinkSettingsTest do
 
       assert html =~ "Create your first shared link"
     end
+
+    test "cannot edit shared link from another site by passing its slug as a param", %{
+      conn: conn,
+      site: site,
+      session: session
+    } do
+      _own_link = insert(:shared_link, site: site, name: "Own Link")
+      victim_site = insert(:site)
+      victim_link = insert(:shared_link, site: victim_site, name: "Victim Link")
+
+      lv = get_liveview(conn, session)
+
+      html = render_click(lv, "edit-shared-link", %{"slug" => victim_link.slug})
+
+      refute html =~ "Edit shared link"
+      assert html =~ "Could not find Shared Link"
+
+      # Verify the victim's shared link is unchanged in the database
+      reloaded = Plausible.Repo.reload!(victim_link)
+      assert reloaded.name == "Victim Link"
+    end
   end
 
   defp get_liveview(conn, session) do

@@ -22,8 +22,8 @@ defmodule Plausible.Shield.IPRule do
 
   def changeset(rule, attrs) do
     rule
-    |> cast(attrs, [:site_id, :inet, :description])
-    |> validate_required([:site_id, :inet])
+    |> cast(attrs, [:inet, :description])
+    |> validate_required([:inet])
     |> disallow_netmask(:inet)
     |> unique_constraint(:inet,
       name: :shield_rules_ip_site_id_inet_index

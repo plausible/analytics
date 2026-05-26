@@ -26,8 +26,8 @@ defmodule Plausible.Shield.CountryRule do
 
   def changeset(rule, attrs) do
     rule
-    |> cast(attrs, [:site_id, :country_code])
-    |> validate_required([:site_id, :country_code])
+    |> cast(attrs, [:country_code])
+    |> validate_required([:country_code])
     |> validate_length(:country_code, is: 2)
     |> validate_change(:country_code, fn :country_code, cc ->
       valid_codes = [@unknown_country_code | Enum.map(Location.Country.all(), & &1.alpha_2)]

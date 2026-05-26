@@ -88,6 +88,16 @@ defmodule Plausible.Shields.HostnameTest do
 
       assert rule.added_by == "Joe <joe@example.com>"
     end
+
+    test "ignores site_id supplied in params", %{site: site} do
+      victim = insert(:site)
+
+      assert {:ok, rule} =
+               add_hostname_rule(site, %{"hostname" => "example.com", "site_id" => victim.id})
+
+      assert rule.site_id == site.id
+      assert count_hostname_rules(victim) == 0
+    end
   end
 
   describe "hostname pattern matching" do
