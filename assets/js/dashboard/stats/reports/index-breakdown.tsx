@@ -20,7 +20,7 @@ import {
   extractMetricValue,
   defaultGetFilterInfo
 } from '../breakdowns'
-import { FilterInfo } from '../../components/drilldown-link'
+import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -209,6 +209,32 @@ export type IndexBreakdownDimensionCellProps = {
   isActive?: boolean
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
 }
+
+export const DimensionCellWithBar = ({
+  children,
+  externalLink,
+  getFilterInfo,
+  barWidthPercent,
+  barClassName,
+  row
+}: {
+  children: ReactNode
+  externalLink?: ReactNode
+  barClassName: string
+} & IndexBreakdownDimensionCellProps) => (
+  <div className="w-full h-full relative">
+    <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
+    <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+      <DrilldownLink
+        filterInfo={getFilterInfo(row)}
+        extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+      >
+        {children}
+      </DrilldownLink>
+      {externalLink}
+    </div>
+  </div>
+)
 
 function VisitorsWithPercentageCell({
   row,
@@ -512,3 +538,19 @@ export function IndexBreakdownRenderer({
     </div>
   )
 }
+
+const Bar = ({
+  barWidthPercent,
+  className
+}: {
+  barWidthPercent: number
+  className: string
+}) => (
+  <div
+    className={classNames(
+      `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
+      className
+    )}
+    style={{ width: `${barWidthPercent}%` }}
+  />
+)

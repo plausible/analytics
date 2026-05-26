@@ -22,7 +22,7 @@ import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
 import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
-import { FilterInfo } from '../../components/drilldown-link'
+import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import {
   ColumnConfiguration,
   MetricValueTooltipContent,
@@ -50,6 +50,7 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 import { SortButton } from '../../components/sort-button'
+import { rootRoute } from '../../router'
 
 type PaginatedData = { pages: QueryApiResponse[] }
 
@@ -473,3 +474,20 @@ export type DimensionCellProps = {
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
   isActive?: boolean
 }
+
+export const DimensionCell = ({
+  children,
+  externalLink,
+  getFilterInfo,
+  row
+}: {
+  children: ReactNode
+  externalLink?: ReactNode
+} & DimensionCellProps) => (
+  <div className="break-all flex items-center gap-x-1">
+    <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
+      {children}
+    </DrilldownLink>
+    {externalLink}
+  </div>
+)

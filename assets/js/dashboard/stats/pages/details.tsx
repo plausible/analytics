@@ -15,11 +15,10 @@ import {
 } from '../reports/reports-config'
 import {
   DetailsBreakdown,
+  DimensionCell,
   DimensionCellProps
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
-import { rootRoute } from '../../router'
-import { DrilldownLink } from '../../components/drilldown-link'
 import { DetailsExternalLink } from './external-link'
 
 export function PagesDetails({
@@ -61,21 +60,19 @@ export function PagesDetails({
   )
 }
 
-const PagesDimensionElement = ({
-  row,
-  getFilterInfo,
-  isActive
-}: DimensionCellProps) => {
+const PagesDimensionElement = (props: DimensionCellProps) => {
   const site = useSiteContext()
   return (
-    <div className="break-all flex items-center gap-x-1">
-      <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
-        {row.dimensions[0]}
-      </DrilldownLink>
-      <DetailsExternalLink
-        href={getExternalLinkUrlForPage(site, row)}
-        isActive={isActive}
-      />
-    </div>
+    <DimensionCell
+      externalLink={
+        <DetailsExternalLink
+          href={getExternalLinkUrlForPage(site, props.row)}
+          isActive={props.isActive}
+        />
+      }
+      {...props}
+    >
+      {props.row.dimensions[0]}
+    </DimensionCell>
   )
 }

@@ -20,13 +20,12 @@ import {
   getExternalLinkUrlForPage
 } from '../reports/reports-config'
 import {
+  DimensionCellWithBar,
   IndexBreakdown,
   IndexBreakdownDimensionCellProps
 } from '../reports/index-breakdown'
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { trimURL } from '../../util/url'
-import classNames from 'classnames'
-import { DrilldownLink } from '../../components/drilldown-link'
 import { IndexExternalLink } from './external-link'
 
 type Mode = Extract<BreakdownReportKey, 'pages' | 'entryPages' | 'exitPages'>
@@ -82,7 +81,7 @@ export default function Pages() {
         metrics={currentModeMetrics}
         dimensions={currentModeReportConfig.dimensions}
         dimensionLabel={currentModeReportConfig.dimensionLabel}
-        DimensionElement={DimensionCell}
+        DimensionElement={PagesDimensionCell}
         onDataReady={setCurrentData}
       />
     )
@@ -129,35 +128,21 @@ export default function Pages() {
   )
 }
 
-function DimensionCell({
-  row,
-  barWidthPercent,
-  getFilterInfo,
-  isActive
-}: IndexBreakdownDimensionCellProps) {
+function PagesDimensionCell(props: IndexBreakdownDimensionCellProps) {
   const site = useSiteContext()
-  const externalUrl = getExternalLinkUrlForPage(site, row)
-  const displayValue = trimURL(row.dimensions[0], MAX_DIMENSION_LENGTH)
+  const externalUrl = getExternalLinkUrlForPage(site, props.row)
+  const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
   return (
-    <div className="w-full h-full relative">
-      <div
-        className={classNames(
-          `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
-          BAR_COLOR
-        )}
-        style={{ width: `${barWidthPercent}%` }}
-      />
-      <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
-        <DrilldownLink
-          filterInfo={getFilterInfo(row)}
-          extraClass="max-w-max w-full flex items-center md:overflow-hidden"
-        >
-          <span className="w-full md:truncate">{displayValue}</span>
-        </DrilldownLink>
-        {externalUrl && (
-          <IndexExternalLink href={externalUrl} isActive={isActive} />
-        )}
-      </div>
-    </div>
+    <DimensionCellWithBar
+      barClassName={BAR_COLOR}
+      externalLink={
+        externalUrl && (
+          <IndexExternalLink href={externalUrl} isActive={props.isActive} />
+        )
+      }
+      {...props}
+    >
+      {displayValue}
+    </DimensionCellWithBar>
   )
 }
