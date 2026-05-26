@@ -27,7 +27,7 @@ export const MODES = {
   },
   [Mode.EXPLORATION]: {
     title: 'Exploration',
-    isAvailableKey: null, // always available
+    isAvailableKey: `${Mode.FUNNELS}Available`,
     optedOutKey: null
   }
 } as const

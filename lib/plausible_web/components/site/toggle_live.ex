@@ -73,9 +73,9 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
 
         message =
           if new_setting do
-            "#{feature_mod.display_name()} are now visible again on your dashboard"
+            "#{feature_mod.toggle_display_name()} are now visible again on your dashboard"
           else
-            "#{feature_mod.display_name()} are now hidden from your dashboard"
+            "#{feature_mod.toggle_display_name()} are now hidden from your dashboard"
           end
 
         send(self(), {:feature_toggled, message, updated_site})

@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert %{
                  "error" =>
-                   "Funnels is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+                   "Funnels and user journeys is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
                } == resp
       end
     end
