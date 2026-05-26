@@ -640,6 +640,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    @tag :ee_only
     test "does not return revenue metrics if no revenue goals are returned", %{
       conn: conn,
       site: site
