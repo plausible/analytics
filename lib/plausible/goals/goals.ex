@@ -1,4 +1,8 @@
 defmodule Plausible.Goals do
+  @moduledoc """
+  Goals API.
+  """
+
   use Plausible
   use Plausible.Repo
   use Plausible.Funnel.Const
