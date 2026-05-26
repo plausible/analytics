@@ -12,8 +12,14 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from '../reports/reports-config'
-import { DetailsBreakdown } from '../modals/details-breakdown'
+import {
+  DetailsBreakdown,
+  DimensionCell,
+  DimensionCellProps
+} from '../modals/details-breakdown'
 import Modal from '../modals/modal'
+import { DetailsExternalLink } from './external-link'
+import { externalLinkForPage } from '../../util/url'
 
 export function PagesDetails({
   breakdownReportKey
@@ -48,8 +54,24 @@ export function PagesDetails({
         dimensions={reportConfig.dimensions}
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
-        getExternalLinkUrl={reportConfig.getExternalLinkUrl}
+        DimensionElement={PagesDimensionElement}
       />
     </Modal>
+  )
+}
+
+const PagesDimensionElement = (props: DimensionCellProps) => {
+  const site = useSiteContext()
+  return (
+    <DimensionCell
+      text={props.row.dimensions[0]}
+      externalLink={
+        <DetailsExternalLink
+          href={externalLinkForPage(site, props.row.dimensions[0])}
+          isActive={props.isActive}
+        />
+      }
+      {...props}
+    />
   )
 }

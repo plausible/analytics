@@ -1,8 +1,5 @@
-import { PlausibleSite } from '../../site-context'
 import { NonTimeDimension } from '../../stats-query'
 import { Metric } from '../metrics'
-import * as url from '../../util/url'
-import { QueryResultRow } from '../../api'
 
 export type MetricsByContext = {
   realtimeMetrics: Metric[]
@@ -12,16 +9,12 @@ export type MetricsByContext = {
   goalFilterDetailedMetrics: Metric[]
 }
 
-type BreakdownReportConfig = {
+export type BreakdownReportConfig = {
   dimensions: [NonTimeDimension] | [NonTimeDimension, NonTimeDimension]
   metricsByContext: MetricsByContext
   detailsTitle: string
   detailsPath: string
   dimensionLabel: string
-  getExternalLinkUrl?: (
-    site: PlausibleSite,
-    row: QueryResultRow
-  ) => string | null
 }
 
 const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
@@ -30,7 +23,6 @@ const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
   defaultDetailedMetrics: [
     'visitors',
     'percentage',
-    'visits',
     'bounce_rate',
     'visit_duration'
   ],
@@ -40,13 +32,6 @@ const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
     'visitors',
     'group_conversion_rate'
   ]
-}
-
-function getExternalLinkUrlForPage(
-  site: PlausibleSite,
-  row: QueryResultRow
-): string | null {
-  return url.externalLinkForPage(site, row.dimensions[0])
 }
 
 export enum BreakdownReportKey {
@@ -74,16 +59,23 @@ export const BREAKDOWN_REPORTS: Record<
     },
     detailsTitle: 'Top pages',
     detailsPath: 'pages',
-    dimensionLabel: 'Page',
-    getExternalLinkUrl: getExternalLinkUrlForPage
+    dimensionLabel: 'Page'
   },
   [BreakdownReportKey.entryPages]: {
     dimensions: ['visit:entry_page'],
-    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: [
+        'visitors',
+        'percentage',
+        'visits',
+        'bounce_rate',
+        'visit_duration'
+      ]
+    },
     detailsTitle: 'Entry pages',
     detailsPath: 'entry-pages',
-    dimensionLabel: 'Entry page',
-    getExternalLinkUrl: getExternalLinkUrlForPage
+    dimensionLabel: 'Entry page'
   },
   [BreakdownReportKey.exitPages]: {
     dimensions: ['visit:exit_page'],
@@ -93,7 +85,6 @@ export const BREAKDOWN_REPORTS: Record<
     },
     detailsTitle: 'Exit pages',
     detailsPath: 'exit-pages',
-    dimensionLabel: 'Exit page',
-    getExternalLinkUrl: getExternalLinkUrlForPage
+    dimensionLabel: 'Exit page'
   }
 }
