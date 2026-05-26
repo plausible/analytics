@@ -211,14 +211,16 @@ export type IndexBreakdownDimensionCellProps = {
 }
 
 export const DimensionCellWithBar = ({
-  children,
+  text,
+  icon,
   externalLink,
   getFilterInfo,
   barWidthPercent,
   barClassName,
   row
 }: {
-  children: ReactNode
+  text: string
+  icon?: ReactNode
   externalLink?: ReactNode
   barClassName: string
 } & IndexBreakdownDimensionCellProps) => (
@@ -229,7 +231,8 @@ export const DimensionCellWithBar = ({
         filterInfo={getFilterInfo(row)}
         extraClass="max-w-max w-full flex items-center md:overflow-hidden"
       >
-        {children}
+        {icon}
+        <span className="w-full md:truncate">{text}</span>
       </DrilldownLink>
       {externalLink}
     </div>

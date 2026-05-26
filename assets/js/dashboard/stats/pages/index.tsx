@@ -134,6 +134,7 @@ function PagesDimensionCell(props: IndexBreakdownDimensionCellProps) {
   const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
   return (
     <DimensionCellWithBar
+      text={displayValue}
       barClassName={BAR_COLOR}
       externalLink={
         externalUrl && (
@@ -141,8 +142,6 @@ function PagesDimensionCell(props: IndexBreakdownDimensionCellProps) {
         )
       }
       {...props}
-    >
-      {displayValue}
-    </DimensionCellWithBar>
+    />
   )
 }
