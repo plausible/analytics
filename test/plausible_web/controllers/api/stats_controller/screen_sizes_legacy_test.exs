@@ -1,21 +1,8 @@
-defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
+defmodule PlausibleWeb.Api.StatsController.ScreenSizesLegacyTest do
+  @moduledoc """
+  [DEPRECATED] Still used for CSV export but to be removed.
+  """
   use PlausibleWeb.ConnCase
-
-  defp query_screen_sizes(conn, site, opts) do
-    params = %{
-      "dimensions" => Keyword.get(opts, :dimensions, ["visit:device"]),
-      "date_range" => Keyword.get(opts, :date_range, "all"),
-      "filters" => Keyword.get(opts, :filters, []),
-      "metrics" => Keyword.get(opts, :metrics, ["visitors", "percentage"]),
-      "include" => Keyword.get(opts, :include, nil),
-      "pagination" => Keyword.get(opts, :pagination, nil),
-      "order_by" => Keyword.get(opts, :order_by, nil)
-    }
-
-    conn
-    |> post("/api/stats/#{site.domain}/query", params)
-    |> json_response(200)
-  end
 
   describe "GET /api/stats/:domain/screen-sizes" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
@@ -27,11 +14,11 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:pageview, screen_size: "Laptop")
       ])
 
-      response = query_screen_sizes(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 66.67]},
-               %{"dimensions" => ["Laptop"], "metrics" => [1, 33.33]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 
@@ -51,15 +38,27 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Laptop")
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          metrics: ["visitors", "bounce_rate", "visit_duration", "percentage"]
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/screen-sizes?period=day&date=2021-01-01&detailed=true"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 50, 300, 66.67]},
-               %{"dimensions" => ["Laptop"], "metrics" => [1, 100, 0, 33.33]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Desktop",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 300,
+                 "percentage" => 66.67
+               },
+               %{
+                 "name" => "Laptop",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 33.33
+               }
              ]
     end
 
@@ -77,15 +76,15 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          order_by: [["visit:device", "asc"]]
-        )
+      conn =
+        get(conn, "/api/stats/#{site.domain}/screen-sizes", %{
+          "period" => "day",
+          "date" => "2021-01-01"
+        })
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [1, 100.0]},
-               %{"dimensions" => ["Laptop"], "metrics" => [1, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 100},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 100}
              ]
     end
 
@@ -99,25 +98,18 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      response1 =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          order_by: [["visit:device", "asc"]]
-        )
+      conn1 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
-      assert response1["results"] == [
-               %{"dimensions" => ["(not set)"], "metrics" => [1, 50.0]},
-               %{"dimensions" => ["Desktop"], "metrics" => [1, 50.0]}
+      assert json_response(conn1, 200)["results"] == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 50}
              ]
 
-      response2 =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is", "visit:device", ["(not set)"]]]
-        )
+      filters = Jason.encode!([[:is, "visit:screen", ["(not set)"]]])
+      conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
-      assert response2["results"] == [
-               %{"dimensions" => ["(not set)"], "metrics" => [1, 100.0]}
+      assert json_response(conn2, 200)["results"] == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
              ]
     end
 
@@ -131,11 +123,10 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 1)
       ])
 
-      response =
-        query_screen_sizes(conn, site, date_range: "day", include: %{"imports" => true})
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
 
-      assert response["results"] == [
-               %{"dimensions" => ["(not set)"], "metrics" => [2, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
 
@@ -164,14 +155,11 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is", "event:props:author", ["John Doe"]]]
-        )
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [1, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 100}
              ]
     end
 
@@ -202,16 +190,12 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is_not", "event:props:author", ["John Doe"]]],
-          order_by: [["visit:device", "asc"]]
-        )
+      filters = Jason.encode!([["is_not", "event:props:author", ["John Doe"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Mobile"], "metrics" => [1, 50.0]},
-               %{"dimensions" => ["Tablet"], "metrics" => [1, 50.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Tablet", "visitors" => 1, "percentage" => 50}
              ]
     end
 
@@ -228,20 +212,19 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      response1 = query_screen_sizes(conn, site, date_range: "day")
+      conn1 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
-      assert response1["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 66.67]},
-               %{"dimensions" => ["Laptop"], "metrics" => [1, 33.33]}
+      assert json_response(conn1, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.33}
              ]
 
-      response2 =
-        query_screen_sizes(conn, site, date_range: "day", include: %{"imports" => true})
+      conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
 
-      assert response2["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 40.0]},
-               %{"dimensions" => ["Laptop"], "metrics" => [2, 40.0]},
-               %{"dimensions" => ["Mobile"], "metrics" => [1, 20.0]}
+      assert json_response(conn2, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 40},
+               %{"name" => "Laptop", "visitors" => 2, "percentage" => 40},
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 20}
              ]
     end
 
@@ -253,15 +236,16 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is", "visit:device", ["Desktop"]]],
-          include: %{"imports" => true}
+      filters = Jason.encode!([[:is, "visit:screen", ["Desktop"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/screen-sizes?filters=#{filters}&period=day&with_imported=true"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 100.0}
              ]
     end
 
@@ -286,16 +270,16 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 1, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          include: %{"imports" => true},
-          order_by: [["visit:device", "asc"]]
-        )
+      conn =
+        get(conn, "/api/stats/#{site.domain}/screen-sizes", %{
+          "period" => "day",
+          "date" => "2021-01-01",
+          "with_imported" => "true"
+        })
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 100.0]},
-               %{"dimensions" => ["Laptop"], "metrics" => [2, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 100},
+               %{"name" => "Laptop", "visitors" => 2, "percentage" => 100}
              ]
     end
 
@@ -308,15 +292,17 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Signup"]]],
-          metrics: ["visitors", "total_visitors", "group_conversion_rate"]
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50.0]}
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Desktop",
+                 "total_visitors" => 2,
+                 "visitors" => 1,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
 
@@ -332,15 +318,13 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is_not", "visit:source", ["Bad source", "Second bad source"]]]
-        )
+      filters = Jason.encode!([["is_not", "visit:source", ["Bad source", "Second bad source"]]])
 
-      assert response["results"] == [
-               %{"dimensions" => ["Desktop"], "metrics" => [2, 66.67]},
-               %{"dimensions" => ["Mobile"], "metrics" => [1, 33.33]}
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.67},
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33.33}
              ]
     end
 
@@ -387,80 +371,67 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      response =
-        query_screen_sizes(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Payment"]]],
-          metrics: [
-            "visitors",
-            "total_visitors",
-            "group_conversion_rate",
-            "average_revenue",
-            "total_revenue"
-          ],
-          order_by: [["visitors", "desc"], ["visit:device", "asc"]]
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
+      order_by = Jason.encode!([["visitors", "desc"]])
 
-      assert response["results"] == [
+      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes#{q}")
+
+      assert json_response(conn, 200)["results"] == [
                %{
-                 "dimensions" => ["(not set)"],
-                 "metrics" => [
-                   2,
-                   2,
-                   100.0,
-                   %{
-                     "currency" => "USD",
-                     "long" => "$600.00",
-                     "short" => "$600.0",
-                     "value" => 600.0
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$600.00",
-                     "short" => "$600.0",
-                     "value" => 600.0
-                   }
-                 ]
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "conversion_rate" => 100.0,
+                 "name" => "(not set)",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$600.00",
+                   "short" => "$600.0",
+                   "value" => 600.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 2
                },
                %{
-                 "dimensions" => ["Mobile"],
-                 "metrics" => [
-                   2,
-                   3,
-                   66.67,
-                   %{
-                     "currency" => "USD",
-                     "long" => "$1,500.00",
-                     "short" => "$1.5K",
-                     "value" => 1500.0
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$3,000.00",
-                     "short" => "$3.0K",
-                     "value" => 3000.0
-                   }
-                 ]
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$1,500.00",
+                   "short" => "$1.5K",
+                   "value" => 1500.0
+                 },
+                 "conversion_rate" => 66.67,
+                 "name" => "Mobile",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$3,000.00",
+                   "short" => "$3.0K",
+                   "value" => 3000.0
+                 },
+                 "total_visitors" => 3,
+                 "visitors" => 2
                },
                %{
-                 "dimensions" => ["Desktop"],
-                 "metrics" => [
-                   1,
-                   2,
-                   50.0,
-                   %{
-                     "currency" => "USD",
-                     "long" => "$500.00",
-                     "short" => "$500.0",
-                     "value" => 500.0
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$500.00",
-                     "short" => "$500.0",
-                     "value" => 500.0
-                   }
-                 ]
+                 "average_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "conversion_rate" => 50.0,
+                 "name" => "Desktop",
+                 "total_revenue" => %{
+                   "currency" => "USD",
+                   "long" => "$500.00",
+                   "short" => "$500.0",
+                   "value" => 500.0
+                 },
+                 "total_visitors" => 2,
+                 "visitors" => 1
                }
              ]
     end
