@@ -10,10 +10,17 @@ import {
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
-  BreakdownReportKey
+  BreakdownReportKey,
+  getExternalLinkUrlForPage
 } from '../reports/reports-config'
-import { DetailsBreakdown } from '../modals/details-breakdown'
+import {
+  DetailsBreakdown,
+  DimensionCellProps
+} from '../modals/details-breakdown'
 import Modal from '../modals/modal'
+import { rootRoute } from '../../router'
+import { DrilldownLink } from '../../components/drilldown-link'
+import { DetailsExternalLink } from './external-link'
 
 export function PagesDetails({
   breakdownReportKey
@@ -48,8 +55,27 @@ export function PagesDetails({
         dimensions={reportConfig.dimensions}
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
-        getExternalLinkUrl={reportConfig.getExternalLinkUrl}
+        DimensionElement={PagesDimensionElement}
       />
     </Modal>
+  )
+}
+
+const PagesDimensionElement = ({
+  row,
+  getFilterInfo,
+  isActive
+}: DimensionCellProps) => {
+  const site = useSiteContext()
+  return (
+    <div className="break-all flex items-center gap-x-1">
+      <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
+        {row.dimensions[0]}
+      </DrilldownLink>
+      <DetailsExternalLink
+        href={getExternalLinkUrlForPage(site, row)}
+        isActive={isActive}
+      />
+    </div>
   )
 }

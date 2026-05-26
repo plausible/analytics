@@ -14,7 +14,6 @@ import {
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
 import { MetricsByContext } from './reports/reports-config'
-import { PlausibleSite } from '../site-context'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
@@ -24,10 +23,6 @@ export type SharedBreakdownReportProps = {
     dimension: NonTimeDimension,
     row: QueryResultRow
   ) => FilterInfo | null
-  getExternalLinkUrl?: (
-    site: PlausibleSite,
-    row: QueryResultRow
-  ) => string | null
 }
 
 export type ColumnConfiguration<T> = {

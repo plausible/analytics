@@ -11,7 +11,6 @@ import {
   StatsReportQueryKey,
   useSearchAndPaginateQueryAPI
 } from '../../hooks/use-query-api'
-import { rootRoute } from '../../router'
 import {
   getStoredOrderBy,
   MetricOrderBy,
@@ -23,10 +22,9 @@ import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
 import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
-import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { FilterInfo } from '../../components/drilldown-link'
 import {
   ColumnConfiguration,
-  ExternalLinkIcon,
   MetricValueTooltipContent,
   SharedBreakdownReportProps,
   formatDateRangeLabel,
@@ -60,6 +58,7 @@ type DetailsBreakdownProps = SharedBreakdownReportProps & {
   defaultOrderBy?: MetricOrderBy
   searchEnabled?: boolean
   onDataReady?: (data: PaginatedData) => void
+  DimensionElement: (props: DimensionCellProps) => ReactNode
 }
 
 const getMetricCellWidthClass = (
@@ -88,7 +87,7 @@ export function DetailsBreakdown({
   metrics,
   defaultOrderBy = [] as MetricOrderBy,
   getFilterInfo = defaultGetFilterInfo,
-  getExternalLinkUrl,
+  DimensionElement,
   searchEnabled = true,
   onDataReady
 }: DetailsBreakdownProps) {
@@ -165,22 +164,16 @@ export function DetailsBreakdown({
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
 
-    const externalLinkForRow =
-      typeof getExternalLinkUrl === 'function'
-        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
-        : undefined
-
     return [
       {
         key: 'dimension',
         renderLabel: () => dimensionLabel,
         renderCell: (row, isActive) => (
-          <DimensionCell
+          <DimensionElement
             row={row}
             getFilterInfo={(row: QueryResultRow) =>
               getFilterInfo(filterDimension, row)
             }
-            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -235,12 +228,11 @@ export function DetailsBreakdown({
         )
     ]
   }, [
-    site,
+    DimensionElement,
     dimensionLabel,
     query,
     meta,
     getFilterInfo,
-    getExternalLinkUrl,
     orderByDictionary,
     toggleSortByMetric,
     metricLabelFor
@@ -476,48 +468,8 @@ function MetricLabel({
   }
 }
 
-function DimensionCell({
-  row,
-  getFilterInfo,
-  externalLinkForRow,
-  isActive
-}: {
+export type DimensionCellProps = {
   row: QueryResultRow
   getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
-}) {
-  return (
-    <div className="break-all flex items-center gap-x-1">
-      <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
-        {row.dimensions[0]}
-      </DrilldownLink>
-      {typeof externalLinkForRow === 'function' && (
-        <ExternalLink href={externalLinkForRow(row)} isActive={isActive} />
-      )}
-    </div>
-  )
-}
-
-function ExternalLink({
-  href,
-  isActive
-}: {
-  href: string | null
-  isActive?: boolean
-}) {
-  return (
-    <div className="w-4 min-w-4 self-stretch flex flex-col justify-center">
-      {href && (
-        <a
-          target="_blank"
-          rel="noreferrer"
-          href={href}
-          className={isActive ? 'block' : 'hidden'}
-        >
-          <ExternalLinkIcon />
-        </a>
-      )}
-    </div>
-  )
 }
