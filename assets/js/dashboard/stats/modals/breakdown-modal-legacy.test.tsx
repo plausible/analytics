@@ -1,10 +1,22 @@
 import React, { useState, Dispatch, SetStateAction } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
-import BrowsersModal from './devices/browsers-modal'
+import BreakdownModal from './breakdown-modal-legacy'
+import Modal from './modal'
+import { createVisitors } from '../reports/metrics'
 import { MockAPI } from '../../../../test-utils/mock-api'
 
 const domain = 'dummy.site'
+const endpoint = `/api/stats/${domain}/test-dimension/`
+
+const reportInfo = {
+  title: 'Test breakdown',
+  endpoint,
+  dimensionLabel: 'Test',
+  defaultOrder: ['visitors', 'desc'] as ['visitors', 'desc']
+}
+
+const metrics = [createVisitors({ renderLabel: () => 'Visitors' })]
 
 let mockAPI: MockAPI
 
@@ -37,17 +49,22 @@ describe('BreakdownModal', () => {
       meta: { date_range_label: 'Last 30 days', metric_warnings: undefined }
     }
 
-    const browsersHandler = mockAPI.get(
-      `/api/stats/${domain}/browsers/`,
-      response
-    )
+    const handler = mockAPI.get(endpoint, response)
 
     let setOpen: Dispatch<SetStateAction<boolean>>
 
     function ToggleableModal() {
       const [open, s] = useState(false)
       setOpen = s
-      return open ? <BrowsersModal /> : null
+      return open ? (
+        <Modal>
+          <BreakdownModal
+            reportInfo={reportInfo}
+            metrics={metrics}
+            getFilterInfo={() => null}
+          />
+        </Modal>
+      ) : null
     }
 
     render(
@@ -56,11 +73,11 @@ describe('BreakdownModal', () => {
       </TestContextProviders>
     )
 
-    expect(browsersHandler).toHaveBeenCalledTimes(0)
+    expect(handler).toHaveBeenCalledTimes(0)
     act(() => setOpen(true))
-    expect(screen.getByText('Browsers')).toBeVisible()
-    expect(browsersHandler).toHaveBeenCalledTimes(1)
-    expect(browsersHandler).toHaveBeenNthCalledWith(
+    expect(screen.getByText('Test breakdown')).toBeVisible()
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(handler).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining(
         'order_by=%5B%5B%22visitors%22%2C%22desc%22%5D%5D&limit=100&page=1'
@@ -69,10 +86,10 @@ describe('BreakdownModal', () => {
     )
 
     act(() => setOpen(false))
-    expect(screen.queryByText('Browsers')).not.toBeInTheDocument()
+    expect(screen.queryByText('Test breakdown')).not.toBeInTheDocument()
     act(() => setOpen(true))
-    expect(screen.getByText('Browsers')).toBeVisible()
+    expect(screen.getByText('Test breakdown')).toBeVisible()
 
-    expect(browsersHandler).toHaveBeenCalledTimes(1)
+    expect(handler).toHaveBeenCalledTimes(1)
   })
 })

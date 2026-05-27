@@ -37,7 +37,12 @@ const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
 export enum BreakdownReportKey {
   'pages' = 'pages',
   'entryPages' = 'entryPages',
-  'exitPages' = 'exitPages'
+  'exitPages' = 'exitPages',
+  'browsers' = 'browsers',
+  'browserVersions' = 'browserVersions',
+  'operatingSystems' = 'operatingSystems',
+  'operatingSystemVersions' = 'operatingSystemVersions',
+  'screenSizes' = 'screenSizes'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -86,5 +91,40 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'Exit pages',
     detailsPath: 'exit-pages',
     dimensionLabel: 'Exit page'
+  },
+  [BreakdownReportKey.browsers]: {
+    dimensions: ['visit:browser'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Browsers',
+    detailsPath: 'browsers',
+    dimensionLabel: 'Browser'
+  },
+  [BreakdownReportKey.browserVersions]: {
+    dimensions: ['visit:browser_version', 'visit:browser'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Browser versions',
+    detailsPath: 'browser-versions',
+    dimensionLabel: 'Browser version'
+  },
+  [BreakdownReportKey.operatingSystems]: {
+    dimensions: ['visit:os'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Operating systems',
+    detailsPath: 'operating-systems',
+    dimensionLabel: 'Operating system'
+  },
+  [BreakdownReportKey.operatingSystemVersions]: {
+    dimensions: ['visit:os_version', 'visit:os'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Operating system versions',
+    detailsPath: 'operating-system-versions',
+    dimensionLabel: 'Operating system version'
+  },
+  [BreakdownReportKey.screenSizes]: {
+    dimensions: ['visit:device'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Devices',
+    detailsPath: 'screen-sizes',
+    dimensionLabel: 'Device'
   }
 }
