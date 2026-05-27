@@ -204,15 +204,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
   def handle_event(
         "save-shared-link",
         %{"shared_link" => shared_link_params},
-        %{assigns: %{shared_link: %Plausible.Site.SharedLink{} = shared_link}} = socket
+        %{assigns: %{shared_link: %Plausible.Site.SharedLink{} = shared_link, site: site}} =
+          socket
       ) do
-    changeset =
-      Plausible.Site.SharedLink.changeset(
-        shared_link,
-        shared_link_params
-      )
-
-    case Plausible.Repo.update(changeset) do
+    case Sites.update_shared_link(shared_link, site, shared_link_params) do
       {:ok, updated_shared_link} ->
         socket = socket.assigns.on_save_shared_link.(updated_shared_link, socket)
         {:noreply, socket}
