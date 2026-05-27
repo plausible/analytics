@@ -194,8 +194,10 @@ export function IndexBreakdown({
 
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
-      <IndexBreakdownRenderer
+      <IndexBreakdownRenderer<QueryResultRow>
         {...apiState}
+        rows={apiState.data?.results?.slice(0, MAX_ITEMS) ?? []}
+        getDimensionValue={(row) => row.dimensions[0]}
         isRealtimeSilentUpdate={isRealtimeSilentUpdate}
         columns={columns}
       />
@@ -437,21 +439,22 @@ function MetricValueCell({
   )
 }
 
-export function IndexBreakdownRenderer({
-  data,
+function IndexBreakdownRenderer<TRow>({
+  rows,
+  getDimensionValue,
   isPending,
   isPlaceholderData,
   isRealtimeSilentUpdate,
   columns
 }: {
-  data?: QueryApiResponse
+  rows: TRow[]
+  getDimensionValue: (row: TRow) => string
   isPending: boolean
   isPlaceholderData: boolean
   isRealtimeSilentUpdate: boolean
-  columns: ColumnConfiguration<QueryResultRow>[] | null
+  columns: ColumnConfiguration<TRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
-  const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
   if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
@@ -504,20 +507,20 @@ export function IndexBreakdownRenderer({
       >
         <FlipMove disableAllAnimations={!isRealtimeSilentUpdate}>
           {rows.map((row) => {
-            const dimension = row.dimensions[0]
-            const isActive = tappedRow === dimension
+            const dimensionValue = getDimensionValue(row)
+            const isActive = tappedRow === dimensionValue
 
             const handleClick = (e: React.MouseEvent) => {
               if (
                 window.innerWidth < 768 &&
                 !(e.target as HTMLElement).closest('a')
               ) {
-                setTappedRow(isActive ? null : dimension)
+                setTappedRow(isActive ? null : dimensionValue)
               }
             }
 
             return (
-              <div key={dimension} style={{ minHeight: ROW_HEIGHT }}>
+              <div key={dimensionValue} style={{ minHeight: ROW_HEIGHT }}>
                 <div
                   data-testid="report-row"
                   className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
