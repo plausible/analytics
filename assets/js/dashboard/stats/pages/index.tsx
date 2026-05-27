@@ -18,8 +18,14 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from '../reports/reports-config'
-import { IndexBreakdown } from '../reports/index-breakdown'
+import {
+  DimensionCellWithBar,
+  IndexBreakdown,
+  DimensionCellWithBarProps
+} from '../reports/index-breakdown'
 import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import { externalLinkForPage, trimURL } from '../../util/url'
+import { IndexExternalLink } from './external-link'
 
 type Mode = Extract<BreakdownReportKey, 'pages' | 'entryPages' | 'exitPages'>
 
@@ -34,6 +40,7 @@ const initMode = (storedMode: string): Mode => {
 }
 
 const BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
+const MAX_DIMENSION_LENGTH = 70
 
 export default function Pages() {
   const { dashboardState } = useDashboardStateContext()
@@ -73,8 +80,7 @@ export default function Pages() {
         metrics={currentModeMetrics}
         dimensions={currentModeReportConfig.dimensions}
         dimensionLabel={currentModeReportConfig.dimensionLabel}
-        color={BAR_COLOR}
-        getExternalLinkUrl={currentModeReportConfig.getExternalLinkUrl}
+        DimensionElement={PagesDimensionCell}
         onDataReady={setCurrentData}
       />
     )
@@ -118,5 +124,23 @@ export default function Pages() {
       </ReportHeader>
       {renderContent()}
     </ReportLayout>
+  )
+}
+
+function PagesDimensionCell(props: DimensionCellWithBarProps) {
+  const site = useSiteContext()
+  const externalUrl = externalLinkForPage(site, props.row.dimensions[0])
+  const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
+  return (
+    <DimensionCellWithBar
+      text={displayValue}
+      barClassName={BAR_COLOR}
+      externalLink={
+        externalUrl && (
+          <IndexExternalLink href={externalUrl} isActive={props.isActive} />
+        )
+      }
+      {...props}
+    />
   )
 }

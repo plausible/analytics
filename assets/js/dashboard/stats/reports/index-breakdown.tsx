@@ -1,14 +1,18 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react'
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+  useEffect,
+  ReactNode
+} from 'react'
 import FlipMove from 'react-flip-move'
 import LazyLoader from '../../components/lazy-loader'
-import { trimURL } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
-  ExternalLinkIcon,
   MetricValueTooltipContent,
   SharedBreakdownReportProps,
   formatDateRangeLabel,
@@ -39,25 +43,22 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 
-const MAX_DIMENSION_LENGTH = 70
-
 const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
 const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
 const BAR_METRIC = 'visitors'
 
 type IndexBreakdownProps = SharedBreakdownReportProps & {
-  color: string
   metricColumnWidth?: string
+  DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
   onDataReady?: (data: QueryApiResponse) => void
 }
 
 export function IndexBreakdown({
   metrics,
   dimensions,
-  color,
+  DimensionElement,
   getFilterInfo = defaultGetFilterInfo,
-  getExternalLinkUrl,
   dimensionLabel,
   onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
@@ -131,26 +132,19 @@ export function IndexBreakdown({
     const isVisitorsWithPercentageCell = (m: Metric) =>
       hasPercentage && m === 'visitors'
 
-    const externalLinkForRow =
-      typeof getExternalLinkUrl === 'function'
-        ? (row: QueryResultRow) => getExternalLinkUrl(site, row)
-        : undefined
-
     return [
       {
         key: 'dimension',
         renderLabel: () => dimensionLabel,
         renderCell: (row, isActive) => (
-          <DimensionCell
+          <DimensionElement
             row={row}
-            color={color}
             barWidthPercent={
               ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
             }
             getFilterInfo={(row: QueryResultRow) =>
               getFilterInfo(filterDimension, row)
             }
-            externalLinkForRow={externalLinkForRow}
             isActive={isActive}
           />
         ),
@@ -188,15 +182,13 @@ export function IndexBreakdown({
       )
     ]
   }, [
-    site,
     dimensionLabel,
-    color,
+    DimensionElement,
     barMetricIndex,
     metricLabelFor,
     barMaxValue,
     query,
     getFilterInfo,
-    getExternalLinkUrl,
     metricColumnWidth
   ])
 
@@ -211,42 +203,41 @@ export function IndexBreakdown({
   )
 }
 
-function DimensionCell({
-  row,
-  color,
-  barWidthPercent,
-  getFilterInfo,
-  externalLinkForRow,
-  isActive
-}: {
+export type DimensionCellWithBarProps = {
   row: QueryResultRow
-  color: string
   barWidthPercent: number
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
-  externalLinkForRow?: (row: QueryResultRow) => string | null
   isActive?: boolean
-}) {
-  const externalUrl = externalLinkForRow?.(row)
-  return (
-    <div className="w-full h-full relative">
-      <div
-        className={`absolute top-0 left-0 h-full rounded-sm ${color} dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`}
-        style={{ width: `${barWidthPercent}%` }}
-      />
-      <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
-        <DrilldownLink
-          filterInfo={getFilterInfo(row)}
-          extraClass="max-w-max w-full flex items-center md:overflow-hidden"
-        >
-          <span className="w-full md:truncate">
-            {trimURL(row.dimensions[0], MAX_DIMENSION_LENGTH)}
-          </span>
-        </DrilldownLink>
-        {externalUrl && <ExternalLink href={externalUrl} isActive={isActive} />}
-      </div>
-    </div>
-  )
+  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
 }
+
+export const DimensionCellWithBar = ({
+  text,
+  icon,
+  externalLink,
+  getFilterInfo,
+  barWidthPercent,
+  barClassName,
+  row
+}: {
+  text: string
+  icon?: ReactNode
+  externalLink?: ReactNode
+  barClassName: string
+} & DimensionCellWithBarProps) => (
+  <div className="w-full h-full relative">
+    <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
+    <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+      <DrilldownLink
+        filterInfo={getFilterInfo(row)}
+        extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+      >
+        {icon}
+        <span className="w-full md:truncate">{text}</span>
+      </DrilldownLink>
+      {externalLink}
+    </div>
+  </div>
+)
 
 function VisitorsWithPercentageCell({
   row,
@@ -551,25 +542,18 @@ export function IndexBreakdownRenderer({
   )
 }
 
-function ExternalLink({
-  href,
-  isActive
+const Bar = ({
+  barWidthPercent,
+  className
 }: {
-  href: string
-  isActive?: boolean
-}) {
-  return (
-    <a
-      target="_blank"
-      rel="noreferrer"
-      href={href}
-      className={
-        isActive
-          ? 'visible md:invisible md:group-hover/row:visible'
-          : 'invisible md:group-hover/row:visible'
-      }
-    >
-      <ExternalLinkIcon />
-    </a>
-  )
-}
+  barWidthPercent: number
+  className: string
+}) => (
+  <div
+    className={classNames(
+      `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
+      className
+    )}
+    style={{ width: `${barWidthPercent}%` }}
+  />
+)

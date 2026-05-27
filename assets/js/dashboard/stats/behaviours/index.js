@@ -4,6 +4,11 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
+  ExplorationPreviewMock,
+  FunnelsPreviewMock,
+  PropertiesPreviewMock
+} from '../../components/feature-preview-mocks'
+import {
   hasConversionGoalFilter,
   getGoalFilter,
   FILTER_OPERATIONS
@@ -32,7 +37,7 @@ import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
 
 /*global BUILD_EXTRA*/
 /*global require*/
-function maybeRequire() {
+function maybeRequireFunnels() {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/funnel')
@@ -46,12 +51,12 @@ function maybeRequireExploration() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/exploration')
   } else {
-    return { FunnelExploration: null }
+    return { default: null }
   }
 }
 
-const Funnel = maybeRequire().default
-const { FunnelExploration } = maybeRequireExploration()
+const Funnel = maybeRequireFunnels().default
+const FunnelExploration = maybeRequireExploration().default
 
 function singleGoalFilterApplied(dashboardState) {
   const goalFilter = getGoalFilter(dashboardState)
@@ -304,7 +309,29 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     if (FunnelExploration === null) {
       return featureUnavailable()
     }
-    return <FunnelExploration />
+
+    if (site.explorationAvailable) {
+      return <FunnelExploration />
+    }
+
+    const callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
+
+    return (
+      <FeatureSetupNotice
+        feature={Mode.EXPLORATION}
+        title={'Explore user journeys'}
+        info={
+          'See how visitors move between pages and events to understand browsing behavior.'
+        }
+        callToAction={callToAction}
+        secondaryCallToAction={{
+          action: 'Learn more',
+          link: 'https://plausible.io/docs/user-journeys'
+        }}
+        onHideAction={null}
+        previewMock={<ExplorationPreviewMock />}
+      />
+    )
   }
 
   function renderFunnels() {
@@ -327,12 +354,15 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       return (
         <FeatureSetupNotice
           feature={Mode.FUNNELS}
-          title={'Follow the visitor journey from entry to conversion'}
+          title={'Analyze conversion funnels'}
           info={
-            'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'
+            'Measure conversion rates between each step and identify where visitors drop off.'
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.FUNNELS)}
+          previewMock={
+            !site.funnelsAvailable ? <FunnelsPreviewMock /> : undefined
+          }
         />
       )
     } else {
@@ -360,12 +390,15 @@ function Behaviours({ importedDataInView, setMode, mode }) {
       return (
         <FeatureSetupNotice
           feature={Mode.PROPS}
-          title={'Send custom data to create your own metrics'}
+          title={'Attach your own data to the stats'}
           info={
-            "You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don't track automatically."
+            'Create custom metrics and analyze data specific to your business.'
           }
           callToAction={callToAction}
           onHideAction={() => disableMode(Mode.PROPS)}
+          previewMock={
+            !site.propsAvailable ? <PropertiesPreviewMock /> : undefined
+          }
         />
       )
     } else {
@@ -383,8 +416,14 @@ function Behaviours({ importedDataInView, setMode, mode }) {
 
   function featureUnavailable() {
     return (
-      <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
-        This feature is unavailable
+      <div className="flex-1 flex flex-col items-center justify-center font-medium text-gray-500 dark:text-gray-400">
+        <span>This report is available in Plausible Cloud</span>
+        <a
+          className="flex items-center gap-x-1.5 mt-4 button px-2 sm:px-4"
+          href="https://plausible.io"
+        >
+          Learn more
+        </a>
       </div>
     )
   }
@@ -537,7 +576,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
                   Funnels
                 </TabButton>
               ))}
-            {!site.isConsolidatedView && site.explorationAvailable && (
+            {!site.isConsolidatedView && isEnabled(Mode.EXPLORATION) && (
               <TabButton
                 active={mode === Mode.EXPLORATION}
                 onClick={setTabFactory(Mode.EXPLORATION)}

@@ -729,7 +729,7 @@ defmodule PlausibleWeb.AuthController do
 
   defp check_callback_site_permission(site, current_user) do
     if Plausible.Sites.get_for_user(current_user, site.domain,
-         roles: [:owner, :admin, :super_admin]
+         roles: [:owner, :admin, :editor, :super_admin]
        ) do
       :ok
     else

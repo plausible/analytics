@@ -38,8 +38,6 @@ defmodule Plausible.Goal do
   end
 
   @fields [
-            :id,
-            :site_id,
             :event_name,
             :page_path,
             :scroll_threshold,
@@ -59,8 +57,6 @@ defmodule Plausible.Goal do
   def changeset(goal, attrs \\ %{}) do
     goal
     |> cast(attrs, @fields)
-    |> validate_required([:site_id])
-    |> cast_assoc(:site)
     |> update_leading_slash()
     |> validate_event_name_and_page_path()
     |> validate_page_path_for_scroll_goal()

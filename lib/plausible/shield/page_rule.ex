@@ -22,8 +22,8 @@ defmodule Plausible.Shield.PageRule do
 
   def changeset(rule \\ %__MODULE__{}, attrs) do
     rule
-    |> cast(attrs, [:site_id, :page_path])
-    |> validate_required([:site_id, :page_path])
+    |> cast(attrs, [:page_path])
+    |> validate_required([:page_path])
     |> validate_length(:page_path, max: 250)
     |> validate_change(:page_path, fn :page_path, p ->
       if not String.starts_with?(p, "/") do

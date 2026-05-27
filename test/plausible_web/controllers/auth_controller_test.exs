@@ -1386,6 +1386,37 @@ defmodule PlausibleWeb.AuthControllerTest do
                        )
     end
 
+    test "success callback for search console creates a google auth entry and redirects to integrations form for editor",
+         %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
+
+      mock_google_access_token(user.email)
+
+      state =
+        Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [
+          site.id,
+          "search-console"
+        ])
+
+      callback_params = %{"code" => "CodeForToken", "state" => state}
+      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      assert redirected_to(conn, 302) ==
+               Routes.site_path(conn, :settings_integrations, site.domain)
+
+      assert_matches %{
+                       access_token: "SomeAccessToken",
+                       refresh_token: "SomeRefreshToken",
+                       user_id: ^user.id,
+                       email: ^user.email,
+                       expires: %NaiveDateTime{}
+                     } =
+                       Repo.one(
+                         from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^site.id
+                       )
+    end
+
     test "success callback for search console handles repeat callback for the same site gracefully",
          %{conn: conn, user: user} do
       site = new_site(owner: user)

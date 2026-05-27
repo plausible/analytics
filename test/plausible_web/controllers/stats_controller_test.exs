@@ -22,7 +22,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-props-available") == "true"
       assert text_of_attr(resp, @react_container, "data-site-segments-available") == "true"
       assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
-      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
+      assert text_of_attr(resp, @react_container, "data-exploration-available") == "true"
       assert text_of_attr(resp, @react_container, "data-has-props") == "false"
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
@@ -150,17 +150,39 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
-    test "non-superadmin can't see exploration funnel UI", %{conn: conn, site: site} do
-      populate_stats(site, [build(:pageview)])
-      conn = get(conn, "/" <> site.domain)
-      resp = html_response(conn, 200)
-      assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
-    end
-
     on_ee do
-      test "superadmin can see exploration funnel UI", %{conn: conn, site: site, user: user} do
-        patch_env(:super_admin_user_ids, [user.id])
+      test "can't see exploration funnel UI if funnels feature unavailable", %{
+        conn: conn,
+        site: site,
+        user: user
+      } do
+        subscribe_to_growth_plan(user)
         populate_stats(site, [build(:pageview)])
+        conn = get(conn, "/" <> site.domain)
+        resp = html_response(conn, 200)
+        assert text_of_attr(resp, @react_container, "data-exploration-available") == "false"
+      end
+
+      test "can see exploration funnel UI on trial", %{conn: conn, site: site} do
+        populate_stats(site, [build(:pageview)])
+        conn = get(conn, "/" <> site.domain)
+        resp = html_response(conn, 200)
+        assert text_of_attr(resp, @react_container, "data-exploration-available") == "true"
+      end
+
+      test "can see exploration funnel UI past trial with funnels feature enabled", %{
+        conn: conn,
+        site: site,
+        user: user
+      } do
+        populate_stats(site, [build(:pageview)])
+
+        site.team
+        |> Plausible.Teams.Team.end_trial()
+        |> Plausible.Repo.update!()
+
+        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.Funnels])
+
         conn = get(conn, "/" <> site.domain)
         resp = html_response(conn, 200)
         assert text_of_attr(resp, @react_container, "data-exploration-available") == "true"

@@ -1,4 +1,8 @@
 defmodule Plausible.Goals do
+  @moduledoc """
+  Goals API.
+  """
+
   use Plausible
   use Plausible.Repo
   use Plausible.Funnel.Const
@@ -371,7 +375,10 @@ defmodule Plausible.Goals do
         []
       end
 
-    changeset = Goal.changeset(%Goal{site_id: site.id}, params)
+    changeset =
+      %Goal{}
+      |> Goal.changeset(params)
+      |> Ecto.Changeset.put_assoc(:site, site)
 
     with :ok <- maybe_check_feature_access(site, changeset),
          :ok <- check_no_currency_if_consolidated(site, changeset),
