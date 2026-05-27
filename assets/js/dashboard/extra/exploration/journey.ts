@@ -1,4 +1,4 @@
-import { roundedPercentage } from './helpers'
+import { roundedNumberFormatter } from '../../util/number-formatter'
 
 export type JourneyStep = {
   label: string
@@ -74,7 +74,10 @@ function provisionalEntry(
   if (!match) return {}
 
   const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
-  const conversionRate = roundedPercentage(match.visitors, firstStepVisitors).toString()
+  const conversionRate = roundedNumberFormatter(
+    (match.visitors / firstStepVisitors) * 100
+  )
+
   return {
     [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
   }

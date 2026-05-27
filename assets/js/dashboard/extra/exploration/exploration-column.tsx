@@ -4,7 +4,8 @@ import { useSiteContext } from '../../site-context'
 import { useDebounce } from '../../custom-hooks'
 import {
   numberShortFormatter,
-  numberLongFormatter
+  numberLongFormatter,
+  roundedNumberFormatter
 } from '../../util/number-formatter'
 import { CursorIcon, FolderIcon } from '../../components/icons'
 import { popover } from '../../components/popover'
@@ -13,7 +14,6 @@ import {
   EllipsisHorizontalIcon
 } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { roundedPercentage } from './helpers'
 import { journeyStepsEqual, JourneyStep, JourneySuggestion } from './journey'
 import {
   DIRECTION,
@@ -117,7 +117,10 @@ function CandidateCard({
   const barWidth =
     isSelected && selectedConversionRate !== null
       ? Math.max(1, Number(selectedConversionRate))
-      : Math.max(1, roundedPercentage(visitors, stepMaxVisitors))
+      : Math.max(
+          1,
+          Number(roundedNumberFormatter((visitors / stepMaxVisitors) * 100))
+        )
 
   const textColor = isDimmed
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
