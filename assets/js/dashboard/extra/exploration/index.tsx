@@ -13,6 +13,7 @@ import { PathConnectors } from './path-connectors'
 import { ExplorationColumn, MaxDepthColumn } from './exploration-column'
 import { useExplorationData } from './exploration-state'
 import { DIRECTION, MIN_GRID_COLUMNS, ExplorationDirection } from './constants'
+import { getSelectedSuggestion } from './journey'
 
 // Column header label based on index and direction.
 function columnHeader(index: number, direction: ExplorationDirection): string {
@@ -182,12 +183,12 @@ export function FunnelExploration() {
               const colLoading =
                 colLoadingInBackground && (!frozen[i] || !!colFilter)
 
-              const colSelectedVisitors =
-                provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
-              const colSelectedConversionRate =
-                provisional[i]?.conversion_rate ??
-                funnel[i]?.conversion_rate ??
-                null
+              const selected = getSelectedSuggestion({
+                i,
+                steps,
+                provisional,
+                funnel
+              })
 
               const colHeaderConversionRate =
                 funnel[i]?.conversion_rate != null
@@ -218,9 +219,7 @@ export function FunnelExploration() {
                   loadingInBackground={colLoadingInBackground}
                   loading={colLoading}
                   results={colResults}
-                  selected={steps[i] ?? null}
-                  selectedVisitors={colSelectedVisitors}
-                  selectedConversionRate={colSelectedConversionRate}
+                  selected={selected}
                   maxVisitors={funnel[0]?.visitors ?? null}
                   filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}

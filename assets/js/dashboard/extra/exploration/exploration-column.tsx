@@ -14,7 +14,12 @@ import {
   EllipsisHorizontalIcon
 } from '@heroicons/react/20/solid'
 import { FlagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { journeyStepsEqual, JourneyStep, JourneySuggestion } from './journey'
+import {
+  journeyStepsEqual,
+  JourneyStep,
+  JourneySuggestion,
+  SelectedSuggestion
+} from './journey'
 import {
   DIRECTION,
   DIRECTION_OPTIONS,
@@ -89,34 +94,33 @@ function DirectionDropdown({
 function CandidateCard({
   step,
   visitors,
-  isSelected,
-  isDimmed,
-  selectedVisitors,
-  selectedConversionRate,
+  selected,
   stepMaxVisitors,
   colIndex,
   onSelect
 }: {
   step: JourneyStep
   visitors: number
-  isSelected: boolean
-  isDimmed: boolean
-  selectedVisitors: number | null
-  selectedConversionRate: string | null
+  selected: SelectedSuggestion | null
   stepMaxVisitors: number
   colIndex: number
   onSelect: (step: JourneyStep | null) => void
 }): ReactNode {
   const { explorationJourneyEndEvent: journeyEndEvent } = useSiteContext()
+
+  const isSelected = !!selected && journeyStepsEqual(step, selected.step)
+  const isDimmed = !!selected && !journeyStepsEqual(step, selected.step)
+
   const isCustomEvent =
     step.name !== 'pageview' && step.name !== journeyEndEvent
   const isGoal = step.is_goal
 
   const visitorsToShow =
-    isSelected && selectedVisitors !== null ? selectedVisitors : visitors
+    isSelected && selected.visitors !== null ? selected.visitors : visitors
+
   const barWidth =
-    isSelected && selectedConversionRate !== null
-      ? Math.max(1, Number(selectedConversionRate))
+    isSelected && selected.conversion_rate !== null
+      ? Math.max(1, Number(selected.conversion_rate))
       : Math.max(
           1,
           Number(roundedNumberFormatter((visitors / stepMaxVisitors) * 100))
@@ -309,8 +313,6 @@ export function ExplorationColumn({
   loadingInBackground,
   results,
   selected,
-  selectedVisitors,
-  selectedConversionRate,
   maxVisitors,
   filter,
   onFilterChange,
@@ -327,9 +329,7 @@ export function ExplorationColumn({
   loading: boolean
   loadingInBackground: boolean
   results: JourneySuggestion[]
-  selected: JourneyStep | null
-  selectedVisitors: number | null
-  selectedConversionRate: string | null
+  selected: SelectedSuggestion | null
   maxVisitors: number
   filter: string
   onFilterChange: (filter: string) => void
@@ -355,7 +355,7 @@ export function ExplorationColumn({
   // remain visible after selection.
   const selectedIndex =
     selected && results.length > 0
-      ? results.findIndex(({ step }) => journeyStepsEqual(step, selected))
+      ? results.findIndex(({ step }) => journeyStepsEqual(step, selected.step))
       : -1
   const baseVisibleCount = Math.max(
     INITIAL_VISIBLE_CANDIDATES,
@@ -373,7 +373,7 @@ export function ExplorationColumn({
   // the selected step is still rendered in the column.
   const listItems =
     selected && results.length === 0
-      ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
+      ? [{ step: selected.step, visitors: selected.visitors ?? 0 }]
       : results.slice(0, visibleCount)
 
   const stepMaxVisitors = maxVisitors ?? results[0]?.visitors ?? 1
@@ -445,10 +445,7 @@ export function ExplorationColumn({
               key={`${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
               step={step}
               visitors={visitors}
-              isSelected={!!selected && journeyStepsEqual(step, selected)}
-              isDimmed={!!selected && !journeyStepsEqual(step, selected)}
-              selectedVisitors={selectedVisitors}
-              selectedConversionRate={selectedConversionRate}
+              selected={selected}
               stepMaxVisitors={stepMaxVisitors}
               colIndex={colIndex}
               onSelect={onSelectHandler}

@@ -14,6 +14,12 @@ export type JourneySuggestion = {
   visitors: number
 }
 
+export type SelectedSuggestion = {
+  step: JourneyStep
+  visitors: number | null
+  conversion_rate: string | null
+}
+
 export type FunnelStep = {
   step: JourneyStep
   visitors: number
@@ -29,7 +35,9 @@ type ProvisionalFunnelStep = {
 }
 
 type FrozenSuggestions = { [columnIndex: string]: JourneySuggestion[] }
-type ProvisionalFunnelSteps = { [columnIndex: string]: ProvisionalFunnelStep }
+type ProvisionalFunnelSteps = {
+  [columnIndex: string]: ProvisionalFunnelStep
+}
 
 export type Journey = {
   steps: JourneyStep[]
@@ -145,6 +153,36 @@ function maybeEmptyResults(
     return []
   } else {
     return results
+  }
+}
+
+// Build selected suggestion at index on the basis of current steps,
+// provisional entries and a funnel.
+export function getSelectedSuggestion({
+  i,
+  steps,
+  provisional,
+  funnel
+}: {
+  i: number
+  steps: JourneyStep[]
+  provisional: ProvisionalFunnelSteps
+  funnel: FunnelStep[]
+}): SelectedSuggestion | null {
+  const step = steps[i] ?? null
+
+  if (step !== null) {
+    const visitors = provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
+    const conversionRate =
+      provisional[i]?.conversion_rate ?? funnel[i]?.conversion_rate ?? null
+
+    return {
+      step: step,
+      visitors: visitors,
+      conversion_rate: conversionRate
+    }
+  } else {
+    return null
   }
 }
 
