@@ -373,7 +373,7 @@ export function ExplorationColumn({
       ? [{ step: selected, visitors: selectedVisitors ?? 0 }]
       : results.slice(0, visibleCount)
 
-  const stepMaxVisitors = maxVisitors ?? results[0]?.visitors
+  const stepMaxVisitors = maxVisitors ?? results[0]?.visitors ?? 1
 
   const showSearch = active && !selected && (results.length > 0 || filter)
 
