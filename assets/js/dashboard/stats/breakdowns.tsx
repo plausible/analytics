@@ -14,6 +14,10 @@ import {
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
 import { MetricsByContext } from './reports/reports-config'
+import {
+  defaultGetStatsQuery,
+  StatsReportQueryKey
+} from '../hooks/use-query-api'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
@@ -39,6 +43,37 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+}
+
+const FILTER_DIMENSIONS_NOT = {
+  'visit:city': [0],
+  'visit:country': ['\0\0', 'ZZ'],
+  'visit:region': [''],
+  'visit:utm_medium': [''],
+  'visit:utm_source': [''],
+  'visit:utm_campaign': [''],
+  'visit:utm_content': [''],
+  'visit:utm_term': [''],
+  'visit:entry_page': [''],
+  'visit:exit_page': ['']
+}
+
+export function getStatsQueryWithImplicitNotEmptyFilter(
+  queryKey: StatsReportQueryKey
+) {
+  let statsQuery = defaultGetStatsQuery(queryKey)
+
+  const dimension = queryKey[1].reportParams.dimensions[0]
+
+  if (Object.keys(FILTER_DIMENSIONS_NOT).includes(dimension)) {
+    statsQuery = addFilter(statsQuery, [
+      'is_not',
+      dimension,
+      FILTER_DIMENSIONS_NOT[dimension as keyof typeof FILTER_DIMENSIONS_NOT]
+    ])
+  }
+
+  return statsQuery
 }
 
 export function defaultGetFilterInfo(

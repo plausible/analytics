@@ -18,7 +18,8 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  defaultGetFilterInfo
+  defaultGetFilterInfo,
+  getStatsQueryWithImplicitNotEmptyFilter
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -86,7 +87,7 @@ export function IndexBreakdown({
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,
     statsReportQueryKey,
-    { enabled: visible }
+    { enabled: visible, getStatsQuery: getStatsQueryWithImplicitNotEmptyFilter }
   )
 
   useEffect(() => {

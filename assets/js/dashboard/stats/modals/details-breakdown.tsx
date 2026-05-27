@@ -30,7 +30,8 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  defaultGetFilterInfo
+  defaultGetFilterInfo,
+  getStatsQueryWithImplicitNotEmptyFilter
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -130,7 +131,9 @@ export function DetailsBreakdown({
     }
   ]
 
-  const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
+  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey, {
+    getStatsQuery: getStatsQueryWithImplicitNotEmptyFilter
+  })
 
   useEffect(() => {
     const pages = apiState.data?.pages

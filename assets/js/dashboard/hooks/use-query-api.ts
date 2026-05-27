@@ -52,7 +52,9 @@ function withExtraContext<T extends QueryApiResponse | MainGraphResponse>(
   return { ...response, extraContext } as T
 }
 
-const defaultGetStatsQuery = (queryKey: StatsReportQueryKey): StatsQuery => {
+export const defaultGetStatsQuery = (
+  queryKey: StatsReportQueryKey
+): StatsQuery => {
   const [_, keyOpts] = queryKey
   return createStatsQuery(keyOpts.dashboardState, keyOpts.reportParams)
 }
@@ -145,16 +147,15 @@ export function useQueryApi<
  * Optionally supports search, appending a `['contains', dimensions[0], search]`
  * filter to the query filters.
  */
-export function useSearchAndPaginateQueryAPI({
-  site,
-  statsReportQueryKey
-}: {
-  site: PlausibleSite
-  statsReportQueryKey: StatsReportQueryKey
-}) {
+export function useSearchAndPaginateQueryAPI(
+  site: PlausibleSite,
+  statsReportQueryKey: StatsReportQueryKey,
+  opts?: Pick<ReportOpts, 'getStatsQuery'>
+) {
   const queryClient = useQueryClient()
   const key = statsReportQueryKey[0]
   const { dashboardState } = statsReportQueryKey[1]
+  const getStatsQuery = opts?.getStatsQuery ?? defaultGetStatsQuery
 
   useEffect(() => {
     return () => {
@@ -170,7 +171,7 @@ export function useSearchAndPaginateQueryAPI({
     queryFn: async ({ pageParam, queryKey }): Promise<QueryApiResponse> => {
       const { dashboardState, reportParams, search } = queryKey[1]
 
-      let statsQuery = createStatsQuery(dashboardState, reportParams)
+      let statsQuery = getStatsQuery(queryKey)
 
       if (search && search !== '') {
         const searchBy = reportParams.dimensions[0]
