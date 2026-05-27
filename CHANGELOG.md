@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Standardised and improved segment and filter modals styling
 - Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
 - Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
+- Update custom range datepicker styles
 
 ### Fixed
 
