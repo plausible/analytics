@@ -29,63 +29,18 @@ import { DashboardState } from '../../dashboard-state'
 import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
 import { FilterInfo } from '../../components/drilldown-link'
 
-type SelectedTab =
-  | BreakdownReportKey.browsers
-  | BreakdownReportKey.operatingSystems
-  | BreakdownReportKey.screenSizes
-
-type SelectedReport =
-  | SelectedTab
-  | BreakdownReportKey.browserVersions
-  | BreakdownReportKey.operatingSystemVersions
-
-const initMode = (storedMode: string): SelectedTab => {
-  switch (storedMode) {
-    case 'os':
-    case BreakdownReportKey.operatingSystems:
-      return BreakdownReportKey.operatingSystems
-    case 'size':
-    case BreakdownReportKey.screenSizes:
-      return BreakdownReportKey.screenSizes
-    case 'browser':
-    case BreakdownReportKey.browsers:
-    default:
-      return BreakdownReportKey.browsers
-  }
-}
-
 const BAR_COLOR = 'bg-green-50 group-hover/row:bg-green-100'
-
-function getSelectedReport(
-  mode: SelectedTab,
-  dashboardState: DashboardState
-): SelectedReport {
-  switch (mode) {
-    case BreakdownReportKey.browsers:
-      return isFilteringOnFixedValue(dashboardState, 'browser')
-        ? BreakdownReportKey.browserVersions
-        : BreakdownReportKey.browsers
-    case BreakdownReportKey.operatingSystems:
-      return isFilteringOnFixedValue(dashboardState, 'os')
-        ? BreakdownReportKey.operatingSystemVersions
-        : BreakdownReportKey.operatingSystems
-    case BreakdownReportKey.screenSizes:
-      return BreakdownReportKey.screenSizes
-  }
-}
 
 export function Devices() {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
-  const tabKey = `deviceTab__${site.domain}`
-  const [mode, setMode] = useState<SelectedTab>(
-    initMode(storage.getItem(tabKey))
-  )
+  const storageKey = `deviceTab__${site.domain}`
+  const [tab, setTab] = useState<TabKey>(initTab(storage.getItem(storageKey)))
   const [currentData, setCurrentData] = useState<QueryApiResponse | null>(null)
 
-  const selectedReportKey = getSelectedReport(mode, dashboardState)
-  const reportConfig = BREAKDOWN_REPORTS[selectedReportKey]
+  const reportKey = getReportKey(tab, dashboardState)
+  const reportConfig = BREAKDOWN_REPORTS[reportKey]
   const DimensionElement = {
     [BreakdownReportKey.browsers]: BrowsersDimensionCell,
     [BreakdownReportKey.browserVersions]: BrowserVersionsDimensionCell,
@@ -93,7 +48,7 @@ export function Devices() {
     [BreakdownReportKey.operatingSystemVersions]:
       OperatingSystemVersionsDimensionCell,
     [BreakdownReportKey.screenSizes]: ScreenSizesDimensionCell
-  }[selectedReportKey]
+  }[reportKey]
 
   const metrics = chooseBreakdownMetricsByContext(
     reportConfig.metricsByContext,
@@ -105,9 +60,9 @@ export function Devices() {
     }
   )
 
-  function switchTab(mode: SelectedTab) {
-    storage.setItem(tabKey, mode)
-    setMode(mode)
+  function switchTab(tab: TabKey) {
+    storage.setItem(storageKey, tab)
+    setTab(tab)
   }
 
   const moreLinkState = currentData
@@ -133,7 +88,7 @@ export function Devices() {
             ).map(({ label, value }) => (
               <TabButton
                 key={value}
-                active={mode === value}
+                active={tab === value}
                 onClick={() => switchTab(value)}
               >
                 {label}
@@ -157,7 +112,7 @@ export function Devices() {
         DimensionElement={DimensionElement}
         onDataReady={setCurrentData}
         getFilterInfo={
-          selectedReportKey === BreakdownReportKey.screenSizes
+          reportKey === BreakdownReportKey.screenSizes
             ? getScreenFilterInfo
             : undefined
         }
@@ -225,3 +180,49 @@ export const getScreenFilterInfo = (
   filter: ['is', 'screen', [row.dimensions[0]]],
   prefix: 'screen'
 })
+
+function getReportKey(tab: TabKey, dashboardState: DashboardState): ReportKey {
+  switch (tab) {
+    case BreakdownReportKey.browsers:
+      return isFilteringOnFixedValue(dashboardState, 'browser')
+        ? BreakdownReportKey.browserVersions
+        : BreakdownReportKey.browsers
+    case BreakdownReportKey.operatingSystems:
+      return isFilteringOnFixedValue(dashboardState, 'os')
+        ? BreakdownReportKey.operatingSystemVersions
+        : BreakdownReportKey.operatingSystems
+    case BreakdownReportKey.screenSizes:
+      return BreakdownReportKey.screenSizes
+  }
+}
+
+type TabKey =
+  | BreakdownReportKey.browsers
+  | BreakdownReportKey.operatingSystems
+  | BreakdownReportKey.screenSizes
+
+type ReportKey =
+  | TabKey
+  | BreakdownReportKey.browserVersions
+  | BreakdownReportKey.operatingSystemVersions
+
+const initTab = (storedTab: string): TabKey => {
+  switch (storedTab) {
+    case LegacyTabKey.operatingSystems:
+    case BreakdownReportKey.operatingSystems:
+      return BreakdownReportKey.operatingSystems
+    case LegacyTabKey.screenSizes:
+    case BreakdownReportKey.screenSizes:
+      return BreakdownReportKey.screenSizes
+    case LegacyTabKey.browsers:
+    case BreakdownReportKey.browsers:
+    default:
+      return BreakdownReportKey.browsers
+  }
+}
+
+enum LegacyTabKey {
+  browsers = 'browser',
+  operatingSystems = 'os',
+  screenSizes = 'size'
+}

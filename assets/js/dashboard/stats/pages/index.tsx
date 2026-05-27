@@ -27,18 +27,6 @@ import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
 
-type Mode = Extract<BreakdownReportKey, 'pages' | 'entryPages' | 'exitPages'>
-
-const initMode = (storedMode: string): Mode => {
-  if (['entry-pages', BreakdownReportKey.entryPages].includes(storedMode)) {
-    return BreakdownReportKey.entryPages
-  }
-  if (['exit-pages', BreakdownReportKey.exitPages].includes(storedMode)) {
-    return BreakdownReportKey.exitPages
-  }
-  return BreakdownReportKey.pages
-}
-
 const BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
 const MAX_DIMENSION_LENGTH = 70
 
@@ -46,14 +34,15 @@ export default function Pages() {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
-  const tabKey = `pageTab__${site.domain}`
-  const [mode, setMode] = useState<Mode>(initMode(storage.getItem(tabKey)))
+  const storageKey = `pageTab__${site.domain}`
+  const [tab, setTab] = useState<TabKey>(initTab(storage.getItem(storageKey)))
   const [currentData, setCurrentData] = useState<QueryApiResponse | null>(null)
 
-  const currentModeReportConfig = BREAKDOWN_REPORTS[mode]
+  const reportKey = getReportKey(tab)
+  const reportConfig = BREAKDOWN_REPORTS[reportKey]
 
-  const currentModeMetrics = chooseBreakdownMetricsByContext(
-    currentModeReportConfig.metricsByContext,
+  const metrics = chooseBreakdownMetricsByContext(
+    reportConfig.metricsByContext,
     {
       isRealtime: isRealTimeDashboard(dashboardState),
       isDetailed: false,
@@ -62,14 +51,14 @@ export default function Pages() {
     }
   )
 
-  function switchTab(mode: Mode) {
-    storage.setItem(tabKey, mode)
-    setMode(mode)
+  function switchTab(tab: TabKey) {
+    storage.setItem(storageKey, tab)
+    setTab(tab)
   }
 
   function moreLinkProps() {
     return {
-      path: currentModeReportConfig.detailsPath,
+      path: reportConfig.detailsPath,
       search: (search: string) => search
     }
   }
@@ -77,9 +66,9 @@ export default function Pages() {
   function renderContent() {
     return (
       <IndexBreakdown
-        metrics={currentModeMetrics}
-        dimensions={currentModeReportConfig.dimensions}
-        dimensionLabel={currentModeReportConfig.dimensionLabel}
+        metrics={metrics}
+        dimensions={reportConfig.dimensions}
+        dimensionLabel={reportConfig.dimensionLabel}
         DimensionElement={PagesDimensionCell}
         onDataReady={setCurrentData}
       />
@@ -111,7 +100,7 @@ export default function Pages() {
             ).map(({ value, label }) => (
               <TabButton
                 key={value}
-                active={mode === value}
+                active={tab === value}
                 onClick={() => switchTab(value)}
               >
                 {label}
@@ -143,4 +132,32 @@ function PagesDimensionCell(props: DimensionCellWithBarProps) {
       {...props}
     />
   )
+}
+
+const initTab = (storedTab: string): TabKey => {
+  switch (storedTab) {
+    case LegacyTabKey.entryPages:
+    case BreakdownReportKey.entryPages:
+      return BreakdownReportKey.entryPages
+    case LegacyTabKey.exitPages:
+    case BreakdownReportKey.exitPages:
+      return BreakdownReportKey.exitPages
+    case BreakdownReportKey.pages:
+    default:
+      return BreakdownReportKey.pages
+  }
+}
+
+const getReportKey = (tab: TabKey): ReportKey => tab
+
+type TabKey =
+  | BreakdownReportKey.pages
+  | BreakdownReportKey.entryPages
+  | BreakdownReportKey.exitPages
+
+type ReportKey = TabKey
+
+enum LegacyTabKey {
+  entryPages = 'entry-pages',
+  exitPages = 'exit-pages'
 }
