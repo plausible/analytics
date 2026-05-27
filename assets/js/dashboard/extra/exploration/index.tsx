@@ -127,7 +127,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {percentageFormatter(parseFloat(overallConversionRate!))}{' '}
+                  CR: {percentageFormatter(Number(overallConversionRate!))}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors!)})
@@ -194,7 +194,7 @@ export function FunnelExploration() {
                 funnel[i]?.conversion_rate != null
                   ? i === 0
                     ? '100%'
-                    : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
+                    : `${Number(funnel[i].conversion_rate).toFixed(1)}%`
                   : null
 
               if (isActive && steps.length >= maxJourneySteps) {
