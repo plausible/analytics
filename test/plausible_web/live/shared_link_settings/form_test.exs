@@ -376,6 +376,91 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       assert is_nil(updated.segment_id)
     end
 
+    test "does not associate a personal segment from the same site when creating a shared link",
+         %{conn: conn, site: site, session: session} do
+      # Personal segment on the same site — should be blocked by the ACL fix
+      personal_segment =
+        insert(:segment, type: :personal, site: site, name: "My Personal Segment")
+
+      lv = get_liveview(conn, session)
+      lv |> element("button#add-shared-link-button") |> render_click()
+
+      lv
+      |> find_form()
+      |> render_submit(%{
+        shared_link: %{name: "Attacker Link", segment_id: personal_segment.id}
+      })
+
+      html = render(lv)
+      assert html =~ "Shared link saved"
+
+      shared_link =
+        Plausible.Repo.get_by(Plausible.Site.SharedLink,
+          name: "Attacker Link",
+          site_id: site.id
+        )
+
+      assert shared_link
+      assert is_nil(shared_link.segment_id),
+             "Personal segment must not be attached to a shared link"
+    end
+
+    test "does not associate a personal segment from the same site when editing a shared link",
+         %{conn: conn, site: site, session: session} do
+      own_segment = insert(:segment, type: :site, site: site, name: "Own Site Segment")
+      shared_link = insert(:shared_link, site: site, name: "My Link", segment: own_segment)
+
+      personal_segment =
+        insert(:segment, type: :personal, site: site, name: "My Personal Segment")
+
+      lv = get_liveview(conn, session)
+
+      lv
+      |> element(~s/button[phx-click="edit-shared-link"][phx-value-slug="#{shared_link.slug}"]/)
+      |> render_click()
+
+      lv
+      |> find_form()
+      |> render_submit(%{
+        shared_link: %{name: "My Link", segment_id: personal_segment.id}
+      })
+
+      html = render(lv)
+      assert html =~ "Shared link saved"
+
+      updated = Plausible.Repo.reload!(shared_link)
+
+      assert is_nil(updated.segment_id),
+             "Personal segment must not replace the existing segment on a shared link"
+    end
+
+    test "cannot overwrite the shared link slug via form params", %{
+      conn: conn,
+      site: site,
+      session: session
+    } do
+      shared_link = insert(:shared_link, site: site, name: "Original Link")
+      original_slug = shared_link.slug
+
+      lv = get_liveview(conn, session)
+
+      lv
+      |> element(~s/button[phx-click="edit-shared-link"][phx-value-slug="#{original_slug}"]/)
+      |> render_click()
+
+      # Attempt to inject a custom slug through the form params
+      lv
+      |> find_form()
+      |> render_submit(%{shared_link: %{name: "Original Link", slug: "evil-custom-slug"}})
+
+      html = render(lv)
+      assert html =~ "Shared link saved"
+
+      updated = Plausible.Repo.reload!(shared_link)
+      assert updated.slug == original_slug, "Slug must remain unchanged after update"
+      refute updated.slug == "evil-custom-slug"
+    end
+
     test "shows upgrade required error when subscription doesn't include Shared Links", %{
       conn: conn,
       site: site,

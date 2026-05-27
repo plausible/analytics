@@ -17,7 +17,7 @@ defmodule Plausible.Site.SharedLink do
 
   def changeset(link, attrs \\ %{}, opts \\ []) do
     link
-    |> cast(attrs, [:slug, :password, :name])
+    |> cast(attrs, [:password, :name])
     |> validate_required([:slug, :name])
     |> validate_special_name(opts)
     |> unique_constraint(:slug)

@@ -449,7 +449,8 @@ defmodule Plausible.Sites do
 
   defp fetch_segment_id_for_site(id, site) do
     with {int, ""} when int > 0 <- Integer.parse(to_string(id)),
-         %{id: segment_id} <- Repo.get_by(Plausible.Segments.Segment, id: int, site_id: site.id) do
+         %{id: segment_id} <-
+           Repo.get_by(Plausible.Segments.Segment, id: int, site_id: site.id, type: :site) do
       segment_id
     else
       _ -> nil
