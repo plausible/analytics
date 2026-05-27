@@ -26,6 +26,7 @@ import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
 import { RoutelessModalsContextProvider } from './navigation/routeless-modals-context'
 import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
+import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,7 +94,7 @@ export const utmTermsRoute = {
 }
 
 export const referrersGoogleRoute = {
-  path: 'referrers/Google',
+  path: GOOGLE_SEARCH_TERMS_DETAILS_PATH,
   element: <GoogleKeywordsModal />
 }
 

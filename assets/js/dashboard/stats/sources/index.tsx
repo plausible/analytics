@@ -32,6 +32,11 @@ import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import ImportedWarningBubble from '../imported-warning-bubble'
 import { IndexExternalLink } from '../pages/external-link'
 import { FilterInfo } from '../../components/drilldown-link'
+import { SearchTerms } from './search-terms'
+import {
+  GOOGLE_SEARCH_TERMS_DETAILS_PATH,
+  SearchTermsSuccessResponse
+} from './fetch-search-terms'
 
 const BAR_COLOR = 'bg-blue-50 group-hover/row:bg-blue-100'
 const MAX_DIMENSION_LENGTH = 70
@@ -125,9 +130,11 @@ export default function Sources() {
   const [currentTab, setTab] = useState<TabKey>(
     initTab(storage.getItem(tabStorageKey))
   )
-  const [currentData, setCurrentData] = useState<api.QueryApiResponse | null>(
-    null
-  )
+  const [currentQueryApiData, setCurrentQueryApiData] =
+    useState<api.QueryApiResponse | null>(null)
+  const [currentSearchTermsData, setCurrentSearchTermsData] =
+    useState<SearchTermsSuccessResponse | null>(null)
+
   const previousDashboardState = usePrevious(dashboardState)
 
   const currentReportKey = getCurrentReportKey(currentTab, dashboardState)
@@ -143,7 +150,7 @@ export default function Sources() {
   function moreLinkProps() {
     if (currentReportKey === SEARCH_TERMS_KEY) {
       return {
-        path: 'google-search-terms',
+        path: GOOGLE_SEARCH_TERMS_DETAILS_PATH,
         search: (search: string) => search
       }
     }
@@ -178,13 +185,7 @@ export default function Sources() {
 
   function renderContent() {
     if (currentReportKey === SEARCH_TERMS_KEY) {
-      // Todo
-      // return (<SearchTerms
-      //   loading={loading}
-      //   afterFetchData={afterFetchData as (res: object | null) => void}
-      //   onLoadStart={onLoadStart}
-      // />)
-      return null
+      return <SearchTerms onDataReady={setCurrentSearchTermsData} />
     }
 
     const reportConfig = BREAKDOWN_REPORTS[currentReportKey]
@@ -216,7 +217,7 @@ export default function Sources() {
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
         DimensionElement={DimensionElement}
-        onDataReady={setCurrentData}
+        onDataReady={setCurrentQueryApiData}
         // Possible improvement: getFilterInfo can be dropped from IndexBreakdown props
         // and be given directly to DimensionCell element (which would also provide the
         // default function)
@@ -229,8 +230,13 @@ export default function Sources() {
     )
   }
 
-  const moreLinkState = currentData
-    ? currentData.results.length > 0
+  const activeData =
+    currentReportKey === SEARCH_TERMS_KEY
+      ? currentSearchTermsData
+      : currentQueryApiData
+
+  const moreLinkState = activeData
+    ? activeData.results.length > 0
       ? MoreLinkState.READY
       : MoreLinkState.HIDDEN
     : MoreLinkState.LOADING
@@ -296,7 +302,9 @@ export default function Sources() {
                 : 'Campaigns'}
             </DropdownTabButton>
           </TabWrapper>
-          <ImportedWarningBubble queryApiResponse={currentData} />
+          {currentReportKey !== SEARCH_TERMS_KEY && (
+            <ImportedWarningBubble queryApiResponse={currentQueryApiData} />
+          )}
         </div>
         <MoreLink state={moreLinkState} linkProps={moreLinkProps()} />
       </ReportHeader>

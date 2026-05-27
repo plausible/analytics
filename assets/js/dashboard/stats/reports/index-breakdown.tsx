@@ -43,7 +43,7 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 
-const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
+export const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
 const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
 const BAR_METRIC = 'visitors'
@@ -439,7 +439,7 @@ function MetricValueCell({
   )
 }
 
-function IndexBreakdownRenderer<TRow>({
+export function IndexBreakdownRenderer<TRow>({
   rows,
   getDimensionValue,
   isPending,
@@ -548,7 +548,7 @@ function IndexBreakdownRenderer<TRow>({
   )
 }
 
-const Bar = ({
+export const Bar = ({
   barWidthPercent,
   className
 }: {
