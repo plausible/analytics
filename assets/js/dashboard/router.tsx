@@ -8,8 +8,6 @@ import {
   SomethingWentWrongMessage
 } from './error/something-went-wrong'
 import Dashboard from './index'
-import SourcesModal from './stats/modals/sources'
-import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import { PagesDetails } from './stats/pages/details'
 import { DevicesDetails } from './stats/devices/details'
@@ -27,6 +25,7 @@ import LastLoadContextProvider from './last-load-context'
 import { RoutelessModalsContextProvider } from './navigation/routeless-modals-context'
 import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
+import { SourcesDetails } from './stats/sources/details'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,37 +59,37 @@ export const rootRoute = {
 
 export const sourcesRoute = {
   path: BREAKDOWN_REPORTS.sources.detailsPath,
-  element: <SourcesModal currentView="sources" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.sources} />
 }
 
 export const channelsRoute = {
   path: BREAKDOWN_REPORTS.channels.detailsPath,
-  element: <SourcesModal currentView="channels" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.channels} />
 }
 
 export const utmMediumsRoute = {
   path: BREAKDOWN_REPORTS.utmMediums.detailsPath,
-  element: <SourcesModal currentView="utm_mediums" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.utmMediums} />
 }
 
 export const utmSourcesRoute = {
   path: BREAKDOWN_REPORTS.utmSources.detailsPath,
-  element: <SourcesModal currentView="utm_sources" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.utmSources} />
 }
 
 export const utmCampaignsRoute = {
   path: BREAKDOWN_REPORTS.utmCampaigns.detailsPath,
-  element: <SourcesModal currentView="utm_campaigns" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.utmCampaigns} />
 }
 
 export const utmContentsRoute = {
   path: BREAKDOWN_REPORTS.utmContents.detailsPath,
-  element: <SourcesModal currentView="utm_contents" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.utmContents} />
 }
 
 export const utmTermsRoute = {
   path: BREAKDOWN_REPORTS.utmTerms.detailsPath,
-  element: <SourcesModal currentView="utm_terms" />
+  element: <SourcesDetails reportKey={BreakdownReportKey.utmTerms} />
 }
 
 export const referrersGoogleRoute = {
@@ -167,7 +166,7 @@ export const conversionsRoute = {
 
 export const referrersDrilldownRoute = {
   path: BREAKDOWN_REPORTS.referrers.detailsPath,
-  element: <ReferrersDrilldownModal />
+  element: <SourcesDetails reportKey={BreakdownReportKey.referrers} />
 }
 
 export const customPropsRoute = {

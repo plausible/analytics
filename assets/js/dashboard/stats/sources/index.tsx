@@ -41,7 +41,7 @@ import {
 const BAR_COLOR = 'bg-blue-50 group-hover/row:bg-blue-100'
 const MAX_DIMENSION_LENGTH = 70
 const SEARCH_TERMS_KEY = 'searchTerms'
-const DIRECT_NONE = 'Direct / None'
+export const DIRECT_NONE = 'Direct / None'
 
 const UTM_TAB_KEYS = [
   BreakdownReportKey.utmMediums,
