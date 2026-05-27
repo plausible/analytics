@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.PagesLegacyTest do
   @moduledoc """
-  [DEPRECATED] Tests for the pages, entry_pages, and exit_pages
-  actions in StatsController which are no longer used by the
-  dashboard pages reports. Still used by Dashboard CSV export
-  though, which is why we're keeping it around until the CSV
-  export is migrated to v2 API.
+  [DEPRECATED] Still used for CSV export but to be removed.
   """
   use PlausibleWeb.ConnCase
 

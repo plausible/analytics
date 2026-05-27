@@ -1,22 +1,10 @@
-defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
+defmodule PlausibleWeb.Api.StatsController.ConversionsLegacyTest do
+  @moduledoc """
+  [DEPRECATED] Still used for CSV export but to be removed.
+  """
   use PlausibleWeb.ConnCase
 
   @user_id Enum.random(1000..9999)
-
-  defp query_conversions(conn, site, opts) do
-    params = %{
-      "dimensions" => Keyword.get(opts, :dimensions, ["event:goal"]),
-      "date_range" => Keyword.get(opts, :date_range, "all"),
-      "filters" => Keyword.get(opts, :filters, []),
-      "metrics" => Keyword.get(opts, :metrics, ["visitors", "events", "conversion_rate"]),
-      "include" => Keyword.get(opts, :include, nil),
-      "order_by" => Keyword.get(opts, :order_by, nil)
-    }
-
-    conn
-    |> post("/api/stats/#{site.domain}/query", params)
-    |> json_response(200)
-  end
 
   describe "GET /api/stats/:domain/conversions" do
     setup [:create_user, :log_in, :create_site]
@@ -49,11 +37,21 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response = query_conversions(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [3, 4, 42.86]},
-               %{"dimensions" => ["Visit /register"], "metrics" => [2, 2, 28.57]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 3,
+                 "events" => 4,
+                 "conversion_rate" => 42.86
+               },
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 28.57
+               }
              ]
     end
 
@@ -131,11 +129,21 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         display_name: "Scroll 75 /blog/posts/1"
       })
 
-      response = query_conversions(conn, site, date_range: ["2020-01-01", "2020-01-01"])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2020-01-01")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Scroll 50 /blog/**"], "metrics" => [2, nil, 100.0]},
-               %{"dimensions" => ["Scroll 75 /blog/posts/1"], "metrics" => [1, nil, 50.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Scroll 50 /blog/**",
+                 "visitors" => 2,
+                 "events" => nil,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "Scroll 75 /blog/posts/1",
+                 "visitors" => 1,
+                 "events" => nil,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
 
@@ -167,14 +175,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:props:logged_in", ["true"]]]
-        )
+      filters = Jason.encode!([[:is, "event:props:logged_in", ["true"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [1, 2, 33.33]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 1,
+                 "events" => 2,
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 
@@ -205,14 +215,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is_not", "event:props:logged_in", ["true"]]]
-        )
+      filters = Jason.encode!([[:is_not, "event:props:logged_in", ["true"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [2, 2, 66.67]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 66.67
+               }
              ]
     end
 
@@ -241,14 +253,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:props:logged_in", ["(none)"]]]
-        )
+      filters = Jason.encode!([[:is, "event:props:logged_in", ["(none)"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [2, 3, 66.67]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 2,
+                 "events" => 3,
+                 "conversion_rate" => 66.67
+               }
              ]
     end
 
@@ -279,32 +293,31 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is_not", "event:props:logged_in", ["(none)"]]]
-        )
+      filters = Jason.encode!([[:is_not, "event:props:logged_in", ["(none)"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [2, 3, 66.67]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 2,
+                 "events" => 3,
+                 "conversion_rate" => 66.67
+               }
              ]
     end
 
-    test "garbage filters result in a 400 response", %{conn: conn, site: site} do
-      params = %{
-        "date_range" => "all",
-        "metrics" => ["visitors", "events", "conversion_rate"],
-        "filters" => [
-          ["is", "visit:city AND 2*3*8=6*8 AND 'L9sv'!='L9sv%", ["a"]]
-        ]
-      }
+    @tag capture_log: true
+    test "garbage filters don't crash the call", %{conn: conn, site: site} do
+      filters =
+        "{\"source\":\"Direct / None\",\"screen\":\"Desktop\",\"browser\":\"Chrome\",\"os\":\"Mac\",\"os_version\":\"10.15\",\"country\":\"DE\",\"city\":\"2950159\"}%' AND 2*3*8=6*8 AND 'L9sv'!='L9sv%"
 
-      response =
+      resp =
         conn
-        |> post("/api/stats/#{site.domain}/query", params)
-        |> json_response(400)
+        |> get("/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+        |> json_response(200)
+        |> Map.get("results")
 
-      assert response["error"] =~ "filter"
+      assert resp == []
     end
 
     test "filtering by session attribute and multiple goals", %{
@@ -334,15 +347,22 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, event_name: "Payment"})
       insert(:goal, %{site: site, page_path: "/register"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "visit:browser", ["Firefox"]]]
-        )
+      filters = Jason.encode!([[:is, "visit:browser", ["Firefox"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [1, 2, 33.33]},
-               %{"dimensions" => ["Visit /register"], "metrics" => [1, 1, 33.33]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 1,
+                 "events" => 2,
+                 "conversion_rate" => 33.33
+               },
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 
@@ -375,33 +395,26 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          metrics: ["visitors", "events", "conversion_rate", "average_revenue", "total_revenue"],
-          include: %{"imports" => true}
-        )
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&with_imported=true")
 
-      assert response["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
-                 "dimensions" => ["Payment"],
-                 "metrics" => [
-                   5,
-                   5,
-                   100.0,
-                   %{
-                     "short" => "€166.7M",
-                     "long" => "€166,733,566.75",
-                     "value" => 166_733_566.748,
-                     "currency" => "EUR"
-                   },
-                   %{
-                     "short" => "€500.2M",
-                     "long" => "€500,200,700.25",
-                     "value" => 500_200_700.246,
-                     "currency" => "EUR"
-                   }
-                 ]
+                 "name" => "Payment",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0,
+                 "average_revenue" => %{
+                   "short" => "€166.7M",
+                   "long" => "€166,733,566.75",
+                   "value" => 166_733_566.748,
+                   "currency" => "EUR"
+                 },
+                 "total_revenue" => %{
+                   "short" => "€500.2M",
+                   "long" => "€500,200,700.25",
+                   "value" => 500_200_700.246,
+                   "currency" => "EUR"
+                 }
                }
              ]
     end
@@ -439,16 +452,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          metrics: ["visitors", "events", "conversion_rate", "average_revenue", "total_revenue"]
-        )
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert response["query"]["metrics"] == ["visitors", "events", "conversion_rate"]
-
-      assert response["results"] == [
-               %{"dimensions" => ["Payment"], "metrics" => [5, 5, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0
+               }
              ]
     end
 
@@ -466,8 +478,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       populate_stats(site, [
         build(:event, name: "Signup"),
         build(:event, name: "Signup"),
-        build(:event, name: "Signup"),
-        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"])
+        build(:event, name: "Signup")
       ])
 
       {:ok, _goal_with_props} =
@@ -478,10 +489,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response = query_conversions(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [3, 3, 75.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 100.0
+               }
              ]
     end
 
@@ -501,19 +517,21 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "custom_props" => %{"product" => "Shirt"}
         })
 
-      response = query_conversions(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert response["results"] == [
-               %{"dimensions" => ["Purchase"], "metrics" => [2, 2, 100.0]}
-             ]
+      results = json_response(conn, 200)["results"]
+
+      assert length(results) == 1
+      assert hd(results)["name"] == "Purchase"
+      assert hd(results)["visitors"] == 2
     end
 
+    @tag :ee_only
     test "returns correct conversion stats for goals with and without custom properties", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
-        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
         build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
         build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Jacket"])
       ])
@@ -547,13 +565,31 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           }
         )
 
-      response = query_conversions(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
+      results = response["results"]
 
-      assert response["results"] == [
-               %{"dimensions" => ["Purchase - All"], "metrics" => [3, 3, 100.0]},
-               %{"dimensions" => ["Purchase - Shirt"], "metrics" => [2, 2, 66.67]},
-               %{"dimensions" => ["Purchase - Jacket"], "metrics" => [1, 1, 33.33]}
-             ]
+      assert [
+               %{
+                 "conversion_rate" => 100.0,
+                 "events" => 2,
+                 "name" => "Purchase - All",
+                 "visitors" => 2
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Shirt",
+                 "visitors" => 1
+               },
+               %{
+                 "conversion_rate" => 50.0,
+                 "events" => 1,
+                 "name" => "Purchase - Jacket",
+                 "visitors" => 1
+               }
+             ] =
+               results
     end
 
     @tag :ee_only
@@ -563,7 +599,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     } do
       populate_stats(site, [
         build(:event, name: "Signup"),
-        build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"]),
         build(:event, name: "Purchase", "meta.key": ["product"], "meta.value": ["Shirt"])
       ])
 
@@ -578,12 +613,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response = query_conversions(conn, site, date_range: "day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
+      results = response["results"]
 
       assert [
-               %{"dimensions" => ["Purchase"], "metrics" => [2, 2, 66.67]},
-               %{"dimensions" => ["Signup"], "metrics" => [1, 1, 33.33]}
-             ] = response["results"]
+               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Purchase", "visitors" => 1},
+               %{"conversion_rate" => 50.0, "events" => 1, "name" => "Signup", "visitors" => 1}
+             ] =
+               results
     end
 
     @tag :ee_only
@@ -607,40 +645,47 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/checkout"})
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          metrics: ["visitors", "events", "conversion_rate", "average_revenue", "total_revenue"],
-          order_by: [["visitors", "asc"]]
-        )
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)["results"]
 
-      assert response["results"] == [
+      assert [
                %{
-                 "dimensions" => ["Payment"],
-                 "metrics" => [
-                   1,
-                   1,
-                   16.67,
-                   %{
-                     "long" => "€10.00",
-                     "short" => "€10.0",
-                     "value" => 10.0,
-                     "currency" => "EUR"
-                   },
-                   %{
-                     "long" => "€10.00",
-                     "short" => "€10.0",
-                     "value" => 10.0,
-                     "currency" => "EUR"
-                   }
-                 ]
+                 "average_revenue" => %{
+                   "long" => "€10.00",
+                   "short" => "€10.0",
+                   "value" => 10.0,
+                   "currency" => "EUR"
+                 },
+                 "conversion_rate" => 16.67,
+                 "name" => "Payment",
+                 "events" => 1,
+                 "total_revenue" => %{
+                   "long" => "€10.00",
+                   "short" => "€10.0",
+                   "value" => 10.0,
+                   "currency" => "EUR"
+                 },
+                 "visitors" => 1
                },
-               %{"dimensions" => ["Signup"], "metrics" => [2, 2, 33.33, nil, nil]},
-               %{"dimensions" => ["Visit /checkout"], "metrics" => [3, 3, 50.0, nil, nil]}
-             ]
+               %{
+                 "average_revenue" => nil,
+                 "conversion_rate" => 33.33,
+                 "name" => "Signup",
+                 "events" => 2,
+                 "total_revenue" => nil,
+                 "visitors" => 2
+               },
+               %{
+                 "average_revenue" => nil,
+                 "conversion_rate" => 50.0,
+                 "name" => "Visit /checkout",
+                 "events" => 3,
+                 "total_revenue" => nil,
+                 "visitors" => 3
+               }
+             ] == Enum.sort_by(response, & &1["name"])
     end
 
-    @tag :ee_only
     test "does not return revenue metrics if no revenue goals are returned", %{
       conn: conn,
       site: site
@@ -651,22 +696,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          metrics: [
-            "visitors",
-            "events",
-            "conversion_rate",
-            "average_revenue",
-            "total_revenue"
-          ]
-        )
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert response["query"]["metrics"] == ["visitors", "events", "conversion_rate"]
-
-      assert response["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [1, 1, 100.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 100.0
+               }
              ]
     end
   end
@@ -687,23 +725,32 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      get_with_filters = fn filters ->
-        query_conversions(conn, site, date_range: "day", filters: filters)
+      get_with_filter = fn filters ->
+        path = "/api/stats/#{site.domain}/conversions"
+        query = "?period=day&filters=#{Jason.encode!(filters)}"
+
+        get(conn, path <> query)
+        |> json_response(200)
         |> Map.get("results")
       end
 
       expected = [
-        %{"dimensions" => ["Signup"], "metrics" => [1, 1, 33.33]}
+        %{
+          "name" => "Signup",
+          "visitors" => 1,
+          "events" => 1,
+          "conversion_rate" => 33.33
+        }
       ]
 
       # {:is, {:event, event}} filter type
-      assert get_with_filters.([["is", "event:goal", ["Signup"]]]) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup"]]]) == expected
 
       # {:member, clauses} filter type
-      assert get_with_filters.([["is", "event:goal", ["Signup", "Whatever"]]]) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup", "Whatever"]]]) == expected
 
       # {:matches_member, clauses} filter type
-      assert get_with_filters.([["is", "event:goal", ["Signup", "Visit /whatever*"]]]) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup", "Visit /whatever*"]]]) == expected
     end
 
     test "does not return custom events with the filtered pageview goal pathname", %{
@@ -719,14 +766,23 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Visit /register"]]]
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
-      assert response["results"] == [
-               %{"dimensions" => ["Visit /register"], "metrics" => [1, 1, 33.33]}
+      results =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert results == [
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 
@@ -743,15 +799,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Signup", "Visit /register"]]]
+      filters = Jason.encode!([[:is, "event:goal", ["Signup", "Visit /register"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [2, 2, 33.33]},
-               %{"dimensions" => ["Visit /register"], "metrics" => [1, 1, 16.67]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 33.33
+               },
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 16.67
+               }
              ]
     end
 
@@ -765,15 +833,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/blog/**"})
       insert(:goal, %{site: site, page_path: "/billing/upgrade"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Visit /blog/**", "Visit /billing/upgrade"]]]
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog/**", "Visit /billing/upgrade"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Visit /blog/**"], "metrics" => [2, 2, 66.67]},
-               %{"dimensions" => ["Visit /billing/upgrade"], "metrics" => [1, 1, 33.33]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Visit /blog/**",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 66.67
+               },
+               %{
+                 "name" => "Visit /billing/upgrade",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 
@@ -791,15 +871,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, event_name: "CTA"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["is", "event:goal", ["Signup", "Visit /blog**"]]]
+      filters = Jason.encode!([[:is, "event:goal", ["Signup", "Visit /blog**"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Visit /blog**"], "metrics" => [2, 2, 33.33]},
-               %{"dimensions" => ["Signup"], "metrics" => [1, 1, 16.67]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Visit /blog**",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 33.33
+               },
+               %{
+                 "name" => "Signup",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 16.67
+               }
              ]
     end
   end
@@ -817,17 +909,25 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [
-            ["is", "event:goal", ["Signup"]],
-            ["is", "event:props:variant", ["(none)"]]
-          ]
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:props:variant", ["(none)"]]
+        ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [1, 1, 50.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Signup",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 50
+               }
              ]
     end
   end
@@ -854,14 +954,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           timestamp: ~N[2019-07-01 23:00:00]
         ),
         build(:pageview,
-          user_id: @user_id,
           pathname: "/reg",
           timestamp: ~N[2019-07-01 23:00:00]
-        ),
-        build(:pageview,
-          user_id: @user_id,
-          pathname: "/reg123",
-          timestamp: ~N[2019-07-01 23:10:00]
         ),
         build(:pageview,
           pathname: "/billing/success",
@@ -885,18 +979,43 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2019-07-01", "2019-07-01"],
-          order_by: [["visitors", "desc"], ["events", "asc"]]
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&date=2019-07-01"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Visit /*"], "metrics" => [8, 9, 100.0]},
-               %{"dimensions" => ["Visit /signup/*"], "metrics" => [3, 3, 37.5]},
-               %{"dimensions" => ["Visit /billing*/success"], "metrics" => [2, 2, 25.0]},
-               %{"dimensions" => ["Visit /reg*"], "metrics" => [2, 3, 25.0]},
-               %{"dimensions" => ["Visit /register"], "metrics" => [1, 1, 12.5]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "visitors" => 8,
+                 "name" => "Visit /*",
+                 "events" => 8
+               },
+               %{
+                 "conversion_rate" => 37.5,
+                 "visitors" => 3,
+                 "name" => "Visit /signup/*",
+                 "events" => 3
+               },
+               %{
+                 "conversion_rate" => 25.0,
+                 "visitors" => 2,
+                 "name" => "Visit /billing*/success",
+                 "events" => 2
+               },
+               %{
+                 "conversion_rate" => 25.0,
+                 "visitors" => 2,
+                 "name" => "Visit /reg*",
+                 "events" => 2
+               },
+               %{
+                 "conversion_rate" => 12.5,
+                 "visitors" => 1,
+                 "name" => "Visit /register",
+                 "events" => 1
+               }
              ]
     end
   end
@@ -938,16 +1057,23 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          include: %{"imports" => true}
-        )
+      url_query_params = "?period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
       assert [
-               %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 62.5]},
-               %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 37.5]}
-             ] = response["results"]
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 62.5
+               },
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "returns only custom event goals with a custom event goal filter", %{
@@ -988,16 +1114,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          filters: [["is", "event:goal", ["Purchase"]]],
-          include: %{"imports" => true}
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Purchase"]]])
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
       assert [
-               %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 62.5]}
-             ] = response["results"]
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 62.5
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "returns custom event goals with more than one option in goal filter", %{
@@ -1048,17 +1176,24 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          filters: [["is", "event:goal", ["Purchase", "Activation"]]],
-          include: %{"imports" => true}
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Purchase", "Activation"]]])
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
       assert [
-               %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 55.56]},
-               %{"dimensions" => ["Activation"], "metrics" => [3, 5, 33.33]}
-             ] = response["results"]
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 55.56
+               },
+               %{
+                 "name" => "Activation",
+                 "visitors" => 3,
+                 "events" => 5,
+                 "conversion_rate" => 33.33
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "returns only pageview goals with a pageview goal filter", %{
@@ -1099,16 +1234,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          filters: [["is", "event:goal", ["Visit /test"]]],
-          include: %{"imports" => true}
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /test"]]])
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
       assert [
-               %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 37.5]}
-             ] = response["results"]
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "returns pageview goals with more than one option in pageview goal filter", %{
@@ -1160,17 +1297,24 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          filters: [["is", "event:goal", ["Visit /test", "Visit /blog"]]],
-          include: %{"imports" => true}
-        )
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /test", "Visit /blog"]]])
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
       assert [
-               %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 33.33]},
-               %{"dimensions" => ["Visit /blog"], "metrics" => [2, 2, 22.22]}
-             ] = response["results"]
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 33.33
+               },
+               %{
+                 "name" => "Visit /blog",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 22.22
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "returns pageview goals with a page filter", %{
@@ -1206,17 +1350,24 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 10, date: ~D[2021-01-01])
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: ["2021-01-01", "2021-01-01"],
-          filters: [["is", "event:page", ["/blog/one", "/blog/two"]]],
-          include: %{"imports" => true}
-        )
+      filters = Jason.encode!([[:is, "event:page", ["/blog/one", "/blog/two"]]])
+      q = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{q}")
 
       assert [
-               %{"dimensions" => ["Visit /blog/*"], "metrics" => [5, 5, 100.0]},
-               %{"dimensions" => ["Visit /blog/two"], "metrics" => [3, 3, 60.0]}
-             ] = response["results"]
+               %{
+                 "name" => "Visit /blog/*",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "Visit /blog/two",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 60.0
+               }
+             ] = json_response(conn, 200)["results"]
     end
 
     test "calculates conversion_rate for goals with glob pattern with imported data", %{
@@ -1225,7 +1376,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     } do
       site_import =
         insert(:site_import,
-          site: site,
           start_date: ~D[2005-01-01],
           end_date: Date.utc_today(),
           source: :universal_analytics
@@ -1242,12 +1392,19 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, page_path: "/blog**"})
 
-      response = query_conversions(conn, site, date_range: "day", include: %{"imports" => true})
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day"
+        )
 
-      assert response["meta"]["imports_included"]
-
-      assert response["results"] == [
-               %{"dimensions" => ["Visit /blog**"], "metrics" => [3, 3, 60.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Visit /blog**",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 50
+               }
              ]
     end
 
@@ -1278,16 +1435,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 4)
       ])
 
-      response =
-        query_conversions(conn, site,
-          date_range: "day",
-          filters: [["contains", "event:goal", ["Onboarding"]]],
-          include: %{"imports" => true}
+      filters = Jason.encode!([[:contains, "event:goal", ["Onboarding"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}&with_imported=true"
         )
 
-      assert response["results"] == [
-               %{"dimensions" => ["Onboarding: Step 1"], "metrics" => [4, 4, 50.0]},
-               %{"dimensions" => ["Onboarding: Step 2"], "metrics" => [2, 2, 25.0]}
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Onboarding: Step 1",
+                 "visitors" => 4,
+                 "events" => 4,
+                 "conversion_rate" => 50
+               },
+               %{
+                 "name" => "Onboarding: Step 2",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 25
+               }
              ]
     end
   end
