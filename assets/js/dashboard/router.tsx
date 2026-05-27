@@ -58,37 +58,37 @@ export const rootRoute = {
 }
 
 export const sourcesRoute = {
-  path: 'sources',
+  path: BREAKDOWN_REPORTS.sources.detailsPath,
   element: <SourcesModal currentView="sources" />
 }
 
 export const channelsRoute = {
-  path: 'channels',
+  path: BREAKDOWN_REPORTS.channels.detailsPath,
   element: <SourcesModal currentView="channels" />
 }
 
 export const utmMediumsRoute = {
-  path: 'utm_mediums',
+  path: BREAKDOWN_REPORTS.utmMediums.detailsPath,
   element: <SourcesModal currentView="utm_mediums" />
 }
 
 export const utmSourcesRoute = {
-  path: 'utm_sources',
+  path: BREAKDOWN_REPORTS.utmSources.detailsPath,
   element: <SourcesModal currentView="utm_sources" />
 }
 
 export const utmCampaignsRoute = {
-  path: 'utm_campaigns',
+  path: BREAKDOWN_REPORTS.utmCampaigns.detailsPath,
   element: <SourcesModal currentView="utm_campaigns" />
 }
 
 export const utmContentsRoute = {
-  path: 'utm_contents',
+  path: BREAKDOWN_REPORTS.utmContents.detailsPath,
   element: <SourcesModal currentView="utm_contents" />
 }
 
 export const utmTermsRoute = {
-  path: 'utm_terms',
+  path: BREAKDOWN_REPORTS.utmTerms.detailsPath,
   element: <SourcesModal currentView="utm_terms" />
 }
 
@@ -165,7 +165,7 @@ export const conversionsRoute = {
 }
 
 export const referrersDrilldownRoute = {
-  path: 'referrers/:referrer',
+  path: BREAKDOWN_REPORTS.referrers.detailsPath,
   element: <ReferrersDrilldownModal />
 }
 

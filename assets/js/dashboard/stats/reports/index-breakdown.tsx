@@ -213,6 +213,7 @@ export type DimensionCellWithBarProps = {
 export const DimensionCellWithBar = ({
   text,
   icon,
+  onClick,
   externalLink,
   getFilterInfo,
   barWidthPercent,
@@ -221,6 +222,7 @@ export const DimensionCellWithBar = ({
 }: {
   text: string
   icon?: ReactNode
+  onClick?: () => void
   externalLink?: ReactNode
   barClassName: string
 } & DimensionCellWithBarProps) => (
@@ -228,6 +230,7 @@ export const DimensionCellWithBar = ({
     <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
     <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
       <DrilldownLink
+        onClick={onClick}
         filterInfo={getFilterInfo(row)}
         extraClass="max-w-max w-full flex items-center md:overflow-hidden"
       >
