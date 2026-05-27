@@ -25,7 +25,7 @@ export type FunnelStep = {
 
 type ProvisionalFunnelStep = {
   visitors: number
-  conversion_rate: number
+  conversion_rate: string
 }
 
 type FrozenSuggestions = { [columnIndex: string]: JourneySuggestion[] }
@@ -74,7 +74,7 @@ function provisionalEntry(
   if (!match) return {}
 
   const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
-  const conversionRate = roundedPercentage(match.visitors, firstStepVisitors)
+  const conversionRate = roundedPercentage(match.visitors, firstStepVisitors).toString()
   return {
     [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
   }

@@ -101,8 +101,8 @@ function CandidateCard({
   visitors: number
   isSelected: boolean
   isDimmed: boolean
-  selectedVisitors: number
-  selectedConversionRate: number
+  selectedVisitors: number | null
+  selectedConversionRate: string | null
   stepMaxVisitors: number
   colIndex: number
   onSelect: (step: JourneyStep | null) => void
@@ -116,7 +116,7 @@ function CandidateCard({
     isSelected && selectedVisitors !== null ? selectedVisitors : visitors
   const barWidth =
     isSelected && selectedConversionRate !== null
-      ? Math.max(1, selectedConversionRate)
+      ? Math.max(1, Number(selectedConversionRate))
       : Math.max(1, roundedPercentage(visitors, stepMaxVisitors))
 
   const textColor = isDimmed
@@ -324,9 +324,9 @@ export function ExplorationColumn({
   loading: boolean
   loadingInBackground: boolean
   results: JourneySuggestion[]
-  selected: JourneyStep
-  selectedVisitors: number
-  selectedConversionRate: number
+  selected: JourneyStep | null
+  selectedVisitors: number | null
+  selectedConversionRate: string | null
   maxVisitors: number
   filter: string
   onFilterChange: (filter: string) => void
