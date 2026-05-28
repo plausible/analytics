@@ -324,12 +324,19 @@ defmodule Plausible.Auth.TOTP do
 
     time = System.os_time(:second)
 
-    case validate_with_secret(user.totp_secret, code, last_used, time) do
+    case validate_with_secret(:main, user, user.totp_secret, code, last_used, time) do
       :ok ->
         {:ok, bump_last_used!(user)}
 
       {:error, :invalid_code} ->
-        case validate_with_secret(user.totp_secret_fallback, code, last_used, time) do
+        case validate_with_secret(
+               :fallback,
+               user,
+               user.totp_secret_fallback,
+               code,
+               last_used,
+               time
+             ) do
           :ok ->
             {:ok, bump_last_used!(user)}
 
@@ -339,7 +346,7 @@ defmodule Plausible.Auth.TOTP do
     end
   end
 
-  defp validate_with_secret(secret, code, last_used, time) do
+  defp validate_with_secret(label, user, secret, code, last_used, time) do
     valid? =
       NimbleTOTP.valid?(secret, code, since: last_used, time: time) or
         NimbleTOTP.valid?(secret, code, since: last_used, time: time - 30)
@@ -351,6 +358,7 @@ defmodule Plausible.Auth.TOTP do
     end
   rescue
     _ ->
+      Sentry.capture_message("Failed to decode #{label} totp secret", user_id: user.id)
       {:error, :invalid_code}
   end
 
