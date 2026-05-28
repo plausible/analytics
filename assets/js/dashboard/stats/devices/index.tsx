@@ -24,10 +24,13 @@ import {
   DimensionCellWithBarProps,
   IndexBreakdown
 } from '../reports/index-breakdown'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo,
+  getScreenFilterInfo
+} from '../breakdowns'
 import { DashboardState } from '../../dashboard-state'
 import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
-import { FilterInfo } from '../../components/drilldown-link'
 
 const BAR_COLOR = 'bg-green-50 group-hover/row:bg-green-100'
 
@@ -111,11 +114,6 @@ export function Devices() {
         dimensionLabel={reportConfig.dimensionLabel}
         DimensionElement={DimensionElement}
         onDataReady={setCurrentData}
-        getFilterInfo={
-          reportKey === BreakdownReportKey.screenSizes
-            ? getScreenFilterInfo
-            : undefined
-        }
       />
     </ReportLayout>
   )
@@ -125,6 +123,7 @@ const BrowsersDimensionCell = (props: DimensionCellWithBarProps) => (
   <DimensionCellWithBar
     {...props}
     barClassName={BAR_COLOR}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -134,6 +133,7 @@ const BrowserVersionsDimensionCell = (props: DimensionCellWithBarProps) => (
   <DimensionCellWithBar
     {...props}
     barClassName={BAR_COLOR}
+    getFilterInfo={defaultGetFilterInfo}
     text={formatTwoDimensionsText(props.row)}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -143,6 +143,7 @@ const OperatingSystemsDimensionCell = (props: DimensionCellWithBarProps) => (
   <DimensionCellWithBar
     {...props}
     barClassName={BAR_COLOR}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<OsIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -154,6 +155,7 @@ const OperatingSystemVersionsDimensionCell = (
   <DimensionCellWithBar
     {...props}
     barClassName={BAR_COLOR}
+    getFilterInfo={defaultGetFilterInfo}
     text={formatTwoDimensionsText(props.row)}
     icon={<OsIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -163,6 +165,7 @@ const ScreenSizesDimensionCell = (props: DimensionCellWithBarProps) => (
   <DimensionCellWithBar
     {...props}
     barClassName={BAR_COLOR}
+    getFilterInfo={getScreenFilterInfo}
     text={props.row.dimensions[0]}
     icon={<ScreenSizeIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -172,14 +175,6 @@ const formatTwoDimensionsText = (row: QueryResultRow) =>
   row.dimensions[0] === '(not set)' && row.dimensions[1] === '(not set)'
     ? '(not set)'
     : `${row.dimensions[1]} ${row.dimensions[0]}`
-
-export const getScreenFilterInfo = (
-  _dimension: string,
-  row: QueryResultRow
-): FilterInfo => ({
-  filter: ['is', 'screen', [row.dimensions[0]]],
-  prefix: 'screen'
-})
 
 function getReportKey(tab: TabKey, dashboardState: DashboardState): ReportKey {
   switch (tab) {

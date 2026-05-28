@@ -18,11 +18,11 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  defaultGetFilterInfo,
   getStatsQueryWithImplicitNotEmptyFilter,
-  MetricValueWrapper
+  MetricValueWrapper,
+  GetFilterInfo
 } from '../breakdowns'
-import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -60,7 +60,6 @@ export function IndexBreakdown({
   metrics,
   dimensions,
   DimensionElement,
-  getFilterInfo = defaultGetFilterInfo,
   dimensionLabel,
   onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
@@ -128,6 +127,7 @@ export function IndexBreakdown({
     // percentage is not its own column —- it's shown inline in the
     // visitors cell instead.
     const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
@@ -140,12 +140,10 @@ export function IndexBreakdown({
         renderLabel: () => dimensionLabel,
         renderCell: (row, isActive) => (
           <DimensionElement
+            filterDimension={filterDimension}
             row={row}
             barWidthPercent={
               ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
-            }
-            getFilterInfo={(row: QueryResultRow) =>
-              getFilterInfo(filterDimension, row)
             }
             isActive={isActive}
           />
@@ -190,7 +188,6 @@ export function IndexBreakdown({
     metricLabelFor,
     barMaxValue,
     query,
-    getFilterInfo,
     metricColumnWidth
   ])
 
@@ -208,10 +205,10 @@ export function IndexBreakdown({
 }
 
 export type DimensionCellWithBarProps = {
+  filterDimension: NonTimeDimension
   row: QueryResultRow
   barWidthPercent: number
   isActive?: boolean
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
 }
 
 export const DimensionCellWithBar = ({
@@ -220,6 +217,7 @@ export const DimensionCellWithBar = ({
   onClick,
   externalLink,
   getFilterInfo,
+  filterDimension,
   barWidthPercent,
   barClassName,
   row
@@ -228,13 +226,14 @@ export const DimensionCellWithBar = ({
   icon?: ReactNode
   onClick?: () => void
   externalLink?: ReactNode
+  getFilterInfo: GetFilterInfo
   barClassName: string
 } & DimensionCellWithBarProps) => (
   <Bar barWidthPercent={barWidthPercent} className={barClassName}>
     <div className="flex justify-start items-center gap-x-1.5 w-full">
       <DrilldownLink
         onClick={onClick}
-        filterInfo={getFilterInfo(row)}
+        filterInfo={getFilterInfo(filterDimension, row)}
         extraClass="max-w-max w-full flex items-center md:overflow-hidden"
       >
         {icon}

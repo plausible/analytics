@@ -6,7 +6,11 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo,
+  getReferrerUrlFilterInfo
+} from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -18,7 +22,7 @@ import {
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
 import { SourceFavicon } from './source-favicon'
-import { DIRECT_NONE, getReferrerUrlFilterInfo } from '.'
+import { DIRECT_NONE } from '.'
 import { DetailsExternalLink } from '../pages/external-link'
 
 type SourcesReportKey =
@@ -67,11 +71,6 @@ export function SourcesDetails({ reportKey }: { reportKey: SourcesReportKey }) {
         metrics={metrics}
         defaultOrderBy={[['visitors', 'desc']]}
         DimensionElement={DimensionElement}
-        getFilterInfo={
-          reportKey === BreakdownReportKey.referrers
-            ? getReferrerUrlFilterInfo
-            : undefined
-        }
       />
     </Modal>
   )
@@ -87,6 +86,7 @@ const SourcesDimensionCell = (props: DimensionCellProps) => {
         />
       }
       text={props.row.dimensions[0]}
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )
@@ -112,11 +112,18 @@ const ReferrerUrlDimensionCell = (props: DimensionCellProps) => {
           <DetailsExternalLink href={externalUrl} isActive={props.isActive} />
         )
       }
+      getFilterInfo={getReferrerUrlFilterInfo}
       {...props}
     />
   )
 }
 
 const SimpleDimensionCell = (props: DimensionCellProps) => {
-  return <DimensionCell text={props.row.dimensions[0]} {...props} />
+  return (
+    <DimensionCell
+      text={props.row.dimensions[0]}
+      getFilterInfo={defaultGetFilterInfo}
+      {...props}
+    />
+  )
 }

@@ -28,10 +28,12 @@ import {
   DimensionCellWithBarProps,
   IndexBreakdown
 } from '../reports/index-breakdown'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo
+} from '../breakdowns'
 import ImportedWarningBubble from '../imported-warning-bubble'
 import { IndexExternalLink } from '../pages/external-link'
-import { FilterInfo } from '../../components/drilldown-link'
 import { SearchTerms } from './search-terms'
 import {
   GOOGLE_SEARCH_TERMS_DETAILS_PATH,
@@ -177,6 +179,7 @@ export default function Sources() {
         text={url.trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)}
         onClick={() => setAndStoreTab(BreakdownReportKey.sources)}
         barClassName={BAR_COLOR}
+        getFilterInfo={defaultGetFilterInfo}
         {...props}
       />
     ),
@@ -218,14 +221,6 @@ export default function Sources() {
         dimensionLabel={reportConfig.dimensionLabel}
         DimensionElement={DimensionElement}
         onDataReady={setCurrentQueryApiData}
-        // Possible improvement: getFilterInfo can be dropped from IndexBreakdown props
-        // and be given directly to DimensionCell element (which would also provide the
-        // default function)
-        getFilterInfo={
-          currentReportKey === BreakdownReportKey.referrers
-            ? getReferrerUrlFilterInfo
-            : undefined
-        }
       />
     )
   }
@@ -313,19 +308,6 @@ export default function Sources() {
   )
 }
 
-export const getReferrerUrlFilterInfo = (
-  _dimension: string,
-  row: api.QueryResultRow
-): FilterInfo | null => {
-  if (row.dimensions[0] === DIRECT_NONE) {
-    return null
-  }
-  return {
-    prefix: 'referrer',
-    filter: ['is', 'referrer', [row.dimensions[0]]]
-  }
-}
-
 function UtmDimensionCell(props: DimensionCellWithBarProps) {
   const displayValue = url.trimURL(
     props.row.dimensions[0],
@@ -335,6 +317,7 @@ function UtmDimensionCell(props: DimensionCellWithBarProps) {
     <DimensionCellWithBar
       text={displayValue}
       barClassName={BAR_COLOR}
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )
@@ -353,6 +336,7 @@ function SourcesDimensionCell(props: DimensionCellWithBarProps) {
         <SourceFavicon name={props.row.dimensions[0]} className="size-4 mr-2" />
       }
       barClassName={BAR_COLOR}
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )
@@ -375,6 +359,7 @@ function ReferrerUrlDimensionCell(props: DimensionCellWithBarProps) {
         )
       }
       barClassName={BAR_COLOR}
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )

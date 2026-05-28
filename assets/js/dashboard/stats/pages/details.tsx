@@ -7,7 +7,10 @@ import {
   hasEventFilters,
   isRealTimeDashboard
 } from '../../util/filters'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo
+} from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -71,6 +74,7 @@ const PagesDimensionElement = (props: DimensionCellProps) => {
           isActive={props.isActive}
         />
       }
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )

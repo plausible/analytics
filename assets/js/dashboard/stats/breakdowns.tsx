@@ -19,15 +19,12 @@ import {
   StatsReportQueryKey
 } from '../hooks/use-query-api'
 import classNames from 'classnames'
+import { DIRECT_NONE } from './sources'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
-  getFilterInfo?: (
-    dimension: NonTimeDimension,
-    row: QueryResultRow
-  ) => FilterInfo | null
 }
 
 export type ColumnConfiguration<T> = {
@@ -77,10 +74,15 @@ export function getStatsQueryWithImplicitNotEmptyFilter(
   return statsQuery
 }
 
+export type GetFilterInfo = (
+  dimension: NonTimeDimension,
+  row: QueryResultRow
+) => FilterInfo | null
+
 export function defaultGetFilterInfo(
   dimension: NonTimeDimension,
   row: QueryResultRow
-) {
+): FilterInfo {
   const dimensionWithoutPrefix = dimension.replace(/^(event|visit):/, '')
 
   return {
@@ -88,6 +90,27 @@ export function defaultGetFilterInfo(
     filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
   }
 }
+
+export function getReferrerUrlFilterInfo(
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo | null {
+  if (row.dimensions[0] === DIRECT_NONE) {
+    return null
+  }
+  return {
+    prefix: 'referrer',
+    filter: ['is', 'referrer', [row.dimensions[0]]]
+  }
+}
+
+export const getScreenFilterInfo = (
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo => ({
+  filter: ['is', 'screen', [row.dimensions[0]]],
+  prefix: 'screen'
+})
 
 export function MetricValueWrapper({
   className,
