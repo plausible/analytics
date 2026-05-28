@@ -33,7 +33,7 @@ afterEach(() => {
 describe('GoogleKeywordsModal', () => {
   test('opening the modal for a second time with the same dashboardState gets response from cache', async () => {
     const googleKeywordsHandler = mockAPI.get(
-      `/api/stats/${domain}/referrers/Google/`,
+      `/api/stats/${domain}/google-search-terms/`,
       { results: [] }
     )
 
