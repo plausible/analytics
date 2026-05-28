@@ -153,7 +153,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                 class="ml-7 mt-1 flex flex-col gap-y-2"
               >
                 <p class="text-sm text-gray-500 dark:text-gray-400 text-pretty">
-                  The recipient will receive an email to accept the transfer within 48 hours. You'll keep Guest Editor access by default.
+                  The recipient will receive an email and have 48 hours to accept the transfer. You'll keep Guest Editor access by default.
                 </p>
                 <.input
                   type="email"

@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
-  use Bamboo.Test, shared: :true
+  use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
 
@@ -50,6 +50,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert html =~ "The site will immediately move to the selected team"
       refute html =~ "joe@example.com"
+
       refute text_of_element(html, "#site-transfer-form") =~
                "You aren't a member of any other teams"
     end
