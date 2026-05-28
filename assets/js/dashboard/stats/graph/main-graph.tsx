@@ -16,6 +16,7 @@ import {
   formatTime,
   is12HourClock,
   parseNaiveDate,
+  parseUTCDate,
   formatDay,
   isThisYear
 } from '../../util/date'
@@ -45,6 +46,7 @@ import { Interval } from './intervals'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
 import {
   Annotation,
+  AnnotationGranularity,
   AnnotationType,
   AnnotationWithPinState,
   PinPosition,
@@ -594,6 +596,7 @@ export const MainGraph = ({
                       annotations={annotationsByTimeLabel[
                         annotationDatetime
                       ].slice(0, 2)}
+                      clampNotes
                     />
                     {annotationsByTimeLabel[annotationDatetime].length == 3 &&
                       `and 1 more note`}
@@ -652,24 +655,37 @@ const AnnotationsList = ({
   annotations,
   onEdit,
   canEdit,
-  isTouchDevice
+  isTouchDevice,
+  clampNotes
 }: {
   annotations: AnnotationWithPinState[]
   onEdit?: (annotation: Annotation) => void
   canEdit?: (annotation: Annotation) => boolean
   isTouchDevice?: boolean
+  clampNotes?: boolean
 }) => {
   return (
-    <div className="text-sm font-normal text-gray-100 flex flex-col gap-2">
+    <div className="max-h-[200px] overflow-y-auto -mr-2.5 pr-2.5 text-sm font-normal text-gray-100 flex flex-col gap-2 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.600)_transparent]">
       {annotations.map((annotation) => {
         const { id, note } = annotation
         const attribution = getAnnotationAttribution(annotation)
+        const attributionDate = getAttributionDateLabel(annotation)
         const interactive =
           typeof onEdit === 'function' && (!canEdit || canEdit(annotation))
         const content = (
           <>
-            <div className="text-xs text-gray-300 pr-8">{attribution}</div>
-            <div className="text-left whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:normal]">
+            <div className="flex items-baseline gap-x-1 text-xs text-gray-300 pr-8">
+              <span className="truncate min-w-0">{attribution}</span>
+              <span className="whitespace-nowrap shrink-0">
+                {`• ${attributionDate}`}
+              </span>
+            </div>
+            <div
+              className={classNames(
+                'text-left whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:normal]',
+                { 'line-clamp-3': clampNotes }
+              )}
+            >
               {note}
             </div>
             {interactive && !isTouchDevice && (
@@ -737,6 +753,21 @@ const AddAnnotationButton = ({
 
 const isTouchEvent = (event: unknown) =>
   event instanceof PointerEvent && event.pointerType === 'touch'
+
+const getAttributionDateLabel = (
+  annotation: Pick<Annotation, 'datetime' | 'granularity'>
+): string => {
+  const date = parseUTCDate(annotation.datetime)
+  const dayLabel = formatDayShort(date)
+  if (annotation.granularity === AnnotationGranularity.minute) {
+    const time = formatTime(date, {
+      use12HourClock: is12HourClock(),
+      includeMinutes: true
+    })
+    return `${dayLabel} ${time}`
+  }
+  return dayLabel
+}
 
 const mainGraphTooltipClassName =
   'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
