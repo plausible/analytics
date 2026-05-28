@@ -15,7 +15,7 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from './stats/reports/reports-config'
-import LocationsModal from './stats/modals/locations-modal'
+import { LocationsDetails } from './stats/locations/details'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
@@ -113,18 +113,18 @@ export const exitPagesRoute = {
 }
 
 export const countriesRoute = {
-  path: 'countries',
-  element: <LocationsModal currentView="countries" />
+  path: BREAKDOWN_REPORTS.countries.detailsPath,
+  element: <LocationsDetails reportKey={BreakdownReportKey.countries} />
 }
 
 export const regionsRoute = {
-  path: 'regions',
-  element: <LocationsModal currentView="regions" />
+  path: BREAKDOWN_REPORTS.regions.detailsPath,
+  element: <LocationsDetails reportKey={BreakdownReportKey.regions} />
 }
 
 export const citiesRoute = {
-  path: 'cities',
-  element: <LocationsModal currentView="cities" />
+  path: BREAKDOWN_REPORTS.cities.detailsPath,
+  element: <LocationsDetails reportKey={BreakdownReportKey.cities} />
 }
 
 export const browsersRoute = {

@@ -293,5 +293,6 @@ jobs:
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix format --check-formatted
       - run: mix deps.unlock --check-unused
+      - run: mix generate_countries_meta && git diff --exit-code -- assets/data/countries_meta.json
       - run: mix credo diff --from-git-merge-base origin/master
       - run: mix dialyzer

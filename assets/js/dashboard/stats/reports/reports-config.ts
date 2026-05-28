@@ -10,7 +10,7 @@ export type MetricsByContext = {
 }
 
 export type BreakdownReportConfig = {
-  dimensions: [NonTimeDimension] | [NonTimeDimension, NonTimeDimension]
+  dimensions: [NonTimeDimension, ...NonTimeDimension[]]
   metricsByContext: MetricsByContext
   detailsTitle: string
   detailsPath: string
@@ -50,7 +50,10 @@ export enum BreakdownReportKey {
   'utmSources' = 'utmSources',
   'utmCampaigns' = 'utmCampaigns',
   'utmContents' = 'utmContents',
-  'utmTerms' = 'utmTerms'
+  'utmTerms' = 'utmTerms',
+  'countries' = 'countries',
+  'regions' = 'regions',
+  'cities' = 'cities'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -190,5 +193,28 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'UTM terms',
     detailsPath: 'utm_terms',
     dimensionLabel: 'UTM term'
+  },
+  [BreakdownReportKey.countries]: {
+    dimensions: ['visit:country', 'visit:country_name'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Top countries',
+    detailsPath: 'countries',
+    dimensionLabel: 'Country'
+  },
+  [BreakdownReportKey.regions]: {
+    // the 3rd dimension "visit:country" is needed to render the country flag
+    dimensions: ['visit:region', 'visit:region_name', 'visit:country'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Top regions',
+    detailsPath: 'regions',
+    dimensionLabel: 'Region'
+  },
+  [BreakdownReportKey.cities]: {
+    // the 3rd dimension "visit:country" is needed to render the country flag
+    dimensions: ['visit:city', 'visit:city_name', 'visit:country'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Top cities',
+    detailsPath: 'cities',
+    dimensionLabel: 'City'
   }
 }
