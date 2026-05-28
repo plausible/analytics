@@ -19,7 +19,8 @@ import {
   useBodyPortalRef,
   extractMetricValue,
   defaultGetFilterInfo,
-  getStatsQueryWithImplicitNotEmptyFilter
+  getStatsQueryWithImplicitNotEmptyFilter,
+  MetricValueWrapper
 } from '../breakdowns'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -229,9 +230,8 @@ export const DimensionCellWithBar = ({
   externalLink?: ReactNode
   barClassName: string
 } & DimensionCellWithBarProps) => (
-  <div className="w-full h-full relative">
-    <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
-    <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+  <Bar barWidthPercent={barWidthPercent} className={barClassName}>
+    <div className="flex justify-start items-center gap-x-1.5 w-full">
       <DrilldownLink
         onClick={onClick}
         filterInfo={getFilterInfo(row)}
@@ -242,7 +242,7 @@ export const DimensionCellWithBar = ({
       </DrilldownLink>
       {externalLink}
     </div>
-  </div>
+  </Bar>
 )
 
 function VisitorsWithPercentageCell({
@@ -395,13 +395,7 @@ function MetricValueCell({
   const showTooltip = !!comparison || isAbbreviated
 
   const valueContent = (
-    <span
-      className={classNames(
-        'font-medium text-sm block text-gray-800 dark:text-gray-200',
-        showTooltip && 'cursor-default'
-      )}
-      data-testid="metric-value"
-    >
+    <MetricValueWrapper className={showTooltip ? 'cursor-default' : undefined}>
       {shortFormatter(value)}
       {comparison && (
         <ChangeArrow
@@ -411,7 +405,7 @@ function MetricValueCell({
           hideNumber
         />
       )}
-    </span>
+    </MetricValueWrapper>
   )
 
   if (!showTooltip) return valueContent
@@ -551,16 +545,23 @@ export function IndexBreakdownRenderer<TRow>({
 
 export const Bar = ({
   barWidthPercent,
-  className
+  className,
+  children
 }: {
   barWidthPercent: number
   className: string
+  children: ReactNode
 }) => (
-  <div
-    className={classNames(
-      `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
-      className
-    )}
-    style={{ width: `${barWidthPercent}%` }}
-  />
+  <div className="w-full h-full relative">
+    <div
+      className={classNames(
+        `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
+        className
+      )}
+      style={{ width: `${barWidthPercent}%` }}
+    ></div>
+    <div className="px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all">
+      {children}
+    </div>
+  </div>
 )

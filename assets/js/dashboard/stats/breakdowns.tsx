@@ -18,6 +18,7 @@ import {
   defaultGetStatsQuery,
   StatsReportQueryKey
 } from '../hooks/use-query-api'
+import classNames from 'classnames'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
@@ -86,6 +87,26 @@ export function defaultGetFilterInfo(
     prefix: dimensionWithoutPrefix,
     filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
   }
+}
+
+export function MetricValueWrapper({
+  className,
+  children
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <span
+      className={classNames(
+        'font-medium text-sm block text-gray-800 dark:text-gray-200',
+        className
+      )}
+      data-testid="metric-value"
+    >
+      {children}
+    </span>
+  )
 }
 
 export function MetricValueTooltipContent({

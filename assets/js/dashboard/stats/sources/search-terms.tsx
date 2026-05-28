@@ -15,7 +15,7 @@ import {
   DEFAULT_METRIC_COLUMN_WIDTH,
   IndexBreakdownRenderer
 } from '../reports/index-breakdown'
-import { ColumnConfiguration } from '../breakdowns'
+import { ColumnConfiguration, MetricValueWrapper } from '../breakdowns'
 
 function ErrorMessage({ code }: { code: SearchTermsErrorCode }): JSX.Element {
   if (code === 'not_configured') {
@@ -100,15 +100,12 @@ export function SearchTerms({
         key: 'dimension',
         renderLabel: () => 'Search term',
         renderCell: (item, _isActive) => (
-          <div className="relative h-full w-full">
-            <Bar
-              barWidthPercent={(item.visitors / barMaxValue) * 100}
-              className="bg-blue-50 group-hover/row:bg-blue-100"
-            />
-            <span className="flex px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all">
-              {item.name}
-            </span>
-          </div>
+          <Bar
+            barWidthPercent={(item.visitors / barMaxValue) * 100}
+            className="bg-blue-50 group-hover/row:bg-blue-100"
+          >
+            {item.name}
+          </Bar>
         ),
         align: 'left'
       },
@@ -116,12 +113,9 @@ export function SearchTerms({
         key: 'visitors',
         renderLabel: () => 'Visitors',
         renderCell: (item, _isActive) => (
-          <span
-            className="font-medium font-medium text-sm block text-gray-800 dark:text-gray-200"
-            data-testid="metric-value"
-          >
+          <MetricValueWrapper>
             {numberShortFormatter(item.visitors)}
-          </span>
+          </MetricValueWrapper>
         ),
         width: DEFAULT_METRIC_COLUMN_WIDTH,
         align: 'right'
