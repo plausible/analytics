@@ -244,7 +244,7 @@ test('sources breakdown', async ({ page, request }) => {
       'true'
     )
 
-    await expectHeaders(report, ['Medium', 'Visitors'])
+    await expectHeaders(report, ['UTM medium', 'Visitors'])
 
     await expectRows(report, ['SomeUTMMedium', 'paid'])
 
@@ -256,7 +256,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top UTM mediums' })
+      modal(page).getByRole('heading', { name: 'UTM mediums' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -282,7 +282,7 @@ test('sources breakdown', async ({ page, request }) => {
       'true'
     )
 
-    await expectHeaders(report, ['Source', 'Visitors'])
+    await expectHeaders(report, ['UTM source', 'Visitors'])
 
     await expectRows(report, ['SomeUTMSource', 'fb'])
 
@@ -294,7 +294,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top UTM sources' })
+      modal(page).getByRole('heading', { name: 'UTM sources' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -322,7 +322,7 @@ test('sources breakdown', async ({ page, request }) => {
       'true'
     )
 
-    await expectHeaders(report, ['Campaign', 'Visitors'])
+    await expectHeaders(report, ['UTM campaign', 'Visitors'])
 
     await expectRows(report, ['SomeUTMCampaign'])
 
@@ -333,7 +333,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top UTM campaigns' })
+      modal(page).getByRole('heading', { name: 'UTM campaigns' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -363,7 +363,7 @@ test('sources breakdown', async ({ page, request }) => {
       'true'
     )
 
-    await expectHeaders(report, ['Content', 'Visitors'])
+    await expectHeaders(report, ['UTM content', 'Visitors'])
 
     await expectRows(report, ['SomeUTMContent'])
 
@@ -374,7 +374,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top UTM contents' })
+      modal(page).getByRole('heading', { name: 'UTM contents' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -400,7 +400,7 @@ test('sources breakdown', async ({ page, request }) => {
       'true'
     )
 
-    await expectHeaders(report, ['Term', 'Visitors'])
+    await expectHeaders(report, ['UTM term', 'Visitors'])
 
     await expectRows(report, ['SomeUTMTerm'])
 
@@ -411,7 +411,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top UTM terms' })
+      modal(page).getByRole('heading', { name: 'UTM terms' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [

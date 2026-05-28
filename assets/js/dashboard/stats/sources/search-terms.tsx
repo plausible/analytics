@@ -84,17 +84,14 @@ export function SearchTerms({
   }, [apiState.data, onDataReady])
 
   const barMaxValue = useMemo(() => {
-    if (apiState.data?.results?.length) {
-      return Math.max(...apiState.data.results.map((item) => item.visitors))
-    } else {
-      return null
-    }
+    if (!apiState.data) return null
+    return Math.max(...apiState.data.results.map((item) => item.visitors))
   }, [apiState.data])
 
   const columns = useMemo(():
     | ColumnConfiguration<SearchTermsResultItem>[]
     | null => {
-    if (!barMaxValue) {
+    if (barMaxValue === null) {
       return null
     }
 

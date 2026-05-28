@@ -145,7 +145,7 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.sources]: {
     dimensions: ['visit:source'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'Top source',
+    detailsTitle: 'Top sources',
     detailsPath: 'sources',
     dimensionLabel: 'Source'
   },
@@ -159,36 +159,36 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.utmMediums]: {
     dimensions: ['visit:utm_medium'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'UTM Mediums',
+    detailsTitle: 'UTM mediums',
     detailsPath: 'utm_mediums',
-    dimensionLabel: 'Medium'
+    dimensionLabel: 'UTM medium'
   },
   [BreakdownReportKey.utmSources]: {
     dimensions: ['visit:utm_source'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'UTM Sources',
+    detailsTitle: 'UTM sources',
     detailsPath: 'utm_sources',
-    dimensionLabel: 'Source'
+    dimensionLabel: 'UTM source'
   },
   [BreakdownReportKey.utmCampaigns]: {
     dimensions: ['visit:utm_campaign'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'UTM Campaigns',
+    detailsTitle: 'UTM campaigns',
     detailsPath: 'utm_campaigns',
-    dimensionLabel: 'Campaign'
+    dimensionLabel: 'UTM campaign'
   },
   [BreakdownReportKey.utmContents]: {
     dimensions: ['visit:utm_content'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'UTM Contents',
+    detailsTitle: 'UTM contents',
     detailsPath: 'utm_contents',
-    dimensionLabel: 'Content'
+    dimensionLabel: 'UTM content'
   },
   [BreakdownReportKey.utmTerms]: {
     dimensions: ['visit:utm_term'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
-    detailsTitle: 'UTM Terms',
+    detailsTitle: 'UTM terms',
     detailsPath: 'utm_terms',
-    dimensionLabel: 'Term'
+    dimensionLabel: 'UTM term'
   }
 }
