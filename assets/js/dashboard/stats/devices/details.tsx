@@ -4,7 +4,11 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo,
+  getScreenFilterInfo
+} from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -16,7 +20,6 @@ import {
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
 import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
-import { getScreenFilterInfo } from '.'
 
 type DevicesReportKey =
   | BreakdownReportKey.browsers
@@ -64,11 +67,6 @@ export function DevicesDetails({
         defaultOrderBy={[['visitors', 'desc']]}
         searchEnabled={searchEnabled}
         DimensionElement={DimensionElement}
-        getFilterInfo={
-          reportKey === BreakdownReportKey.screenSizes
-            ? getScreenFilterInfo
-            : undefined
-        }
       />
     </Modal>
   )
@@ -77,6 +75,7 @@ export function DevicesDetails({
 const BrowsersDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -85,6 +84,7 @@ const BrowsersDimensionCell = (props: DimensionCellProps) => (
 const BrowserVersionsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -93,6 +93,7 @@ const BrowserVersionsDimensionCell = (props: DimensionCellProps) => (
 const OperatingSystemsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<OsIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -101,6 +102,7 @@ const OperatingSystemsDimensionCell = (props: DimensionCellProps) => (
 const OperatingSystemVersionsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<OsIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -108,6 +110,7 @@ const OperatingSystemVersionsDimensionCell = (props: DimensionCellProps) => (
 
 const ScreenSizesDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
+    getFilterInfo={getScreenFilterInfo}
     {...props}
     text={props.row.dimensions[0]}
     icon={<ScreenSizeIcon dimensionValue={props.row.dimensions[0]} />}

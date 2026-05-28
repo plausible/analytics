@@ -14,15 +14,17 @@ import {
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
 import { MetricsByContext } from './reports/reports-config'
+import {
+  defaultGetStatsQuery,
+  StatsReportQueryKey
+} from '../hooks/use-query-api'
+import classNames from 'classnames'
+import { DIRECT_NONE } from './sources'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
-  getFilterInfo?: (
-    dimension: NonTimeDimension,
-    row: QueryResultRow
-  ) => FilterInfo | null
 }
 
 export type ColumnConfiguration<T> = {
@@ -41,16 +43,93 @@ export type ColumnConfiguration<T> = {
   align?: 'left' | 'right'
 }
 
+const FILTER_DIMENSIONS_NOT = {
+  'visit:city': [0],
+  'visit:country': ['\0\0', 'ZZ'],
+  'visit:region': [''],
+  'visit:utm_medium': [''],
+  'visit:utm_source': [''],
+  'visit:utm_campaign': [''],
+  'visit:utm_content': [''],
+  'visit:utm_term': [''],
+  'visit:entry_page': [''],
+  'visit:exit_page': ['']
+}
+
+export function getStatsQueryWithImplicitNotEmptyFilter(
+  queryKey: StatsReportQueryKey
+) {
+  let statsQuery = defaultGetStatsQuery(queryKey)
+
+  const dimension = queryKey[1].reportParams.dimensions[0]
+
+  if (Object.keys(FILTER_DIMENSIONS_NOT).includes(dimension)) {
+    statsQuery = addFilter(statsQuery, [
+      'is_not',
+      dimension,
+      FILTER_DIMENSIONS_NOT[dimension as keyof typeof FILTER_DIMENSIONS_NOT]
+    ])
+  }
+
+  return statsQuery
+}
+
+export type GetFilterInfo = (
+  dimension: NonTimeDimension,
+  row: QueryResultRow
+) => FilterInfo | null
+
 export function defaultGetFilterInfo(
   dimension: NonTimeDimension,
   row: QueryResultRow
-) {
+): FilterInfo {
   const dimensionWithoutPrefix = dimension.replace(/^(event|visit):/, '')
 
   return {
     prefix: dimensionWithoutPrefix,
     filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
   }
+}
+
+export function getReferrerUrlFilterInfo(
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo | null {
+  if (row.dimensions[0] === DIRECT_NONE) {
+    return null
+  }
+  return {
+    prefix: 'referrer',
+    filter: ['is', 'referrer', [row.dimensions[0]]]
+  }
+}
+
+export const getScreenFilterInfo = (
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo => ({
+  filter: ['is', 'screen', [row.dimensions[0]]],
+  prefix: 'screen'
+})
+
+export function MetricValueWrapper({
+  className,
+  children
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <span
+      className={classNames(
+        'font-medium text-sm block text-gray-800 dark:text-gray-200',
+        className
+      )}
+      data-testid="metric-value"
+    >
+      {children}
+    </span>
+  )
 }
 
 export function MetricValueTooltipContent({

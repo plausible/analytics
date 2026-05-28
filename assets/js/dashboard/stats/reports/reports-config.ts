@@ -42,7 +42,15 @@ export enum BreakdownReportKey {
   'browserVersions' = 'browserVersions',
   'operatingSystems' = 'operatingSystems',
   'operatingSystemVersions' = 'operatingSystemVersions',
-  'screenSizes' = 'screenSizes'
+  'screenSizes' = 'screenSizes',
+  'channels' = 'channels',
+  'sources' = 'sources',
+  'referrers' = 'referrers',
+  'utmMediums' = 'utmMediums',
+  'utmSources' = 'utmSources',
+  'utmCampaigns' = 'utmCampaigns',
+  'utmContents' = 'utmContents',
+  'utmTerms' = 'utmTerms'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -126,5 +134,61 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'Devices',
     detailsPath: 'screen-sizes',
     dimensionLabel: 'Device'
+  },
+  [BreakdownReportKey.channels]: {
+    dimensions: ['visit:channel'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Top acquisition channels',
+    detailsPath: 'channels',
+    dimensionLabel: 'Channel'
+  },
+  [BreakdownReportKey.sources]: {
+    dimensions: ['visit:source'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Top sources',
+    detailsPath: 'sources',
+    dimensionLabel: 'Source'
+  },
+  [BreakdownReportKey.referrers]: {
+    dimensions: ['visit:referrer'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'Referrer drilldown',
+    detailsPath: 'referrers/:referrer',
+    dimensionLabel: 'Referrer'
+  },
+  [BreakdownReportKey.utmMediums]: {
+    dimensions: ['visit:utm_medium'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'UTM mediums',
+    detailsPath: 'utm_mediums',
+    dimensionLabel: 'UTM medium'
+  },
+  [BreakdownReportKey.utmSources]: {
+    dimensions: ['visit:utm_source'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'UTM sources',
+    detailsPath: 'utm_sources',
+    dimensionLabel: 'UTM source'
+  },
+  [BreakdownReportKey.utmCampaigns]: {
+    dimensions: ['visit:utm_campaign'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'UTM campaigns',
+    detailsPath: 'utm_campaigns',
+    dimensionLabel: 'UTM campaign'
+  },
+  [BreakdownReportKey.utmContents]: {
+    dimensions: ['visit:utm_content'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'UTM contents',
+    detailsPath: 'utm_contents',
+    dimensionLabel: 'UTM content'
+  },
+  [BreakdownReportKey.utmTerms]: {
+    dimensions: ['visit:utm_term'],
+    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    detailsTitle: 'UTM terms',
+    detailsPath: 'utm_terms',
+    dimensionLabel: 'UTM term'
   }
 }

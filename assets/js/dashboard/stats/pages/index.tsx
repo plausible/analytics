@@ -23,7 +23,10 @@ import {
   IndexBreakdown,
   DimensionCellWithBarProps
 } from '../reports/index-breakdown'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import {
+  chooseBreakdownMetricsByContext,
+  defaultGetFilterInfo
+} from '../breakdowns'
 import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
 
@@ -122,6 +125,7 @@ function PagesDimensionCell(props: DimensionCellWithBarProps) {
   const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
   return (
     <DimensionCellWithBar
+      getFilterInfo={defaultGetFilterInfo}
       text={displayValue}
       barClassName={BAR_COLOR}
       externalLink={

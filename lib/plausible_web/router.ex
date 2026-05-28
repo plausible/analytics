@@ -281,6 +281,7 @@ defmodule PlausibleWeb.Router do
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query
+        get "/:domain/google-search-terms", StatsController, :google_search_terms
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/sources", StatsController, :sources
         get "/:domain/channels", StatsController, :channels

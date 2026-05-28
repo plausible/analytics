@@ -2501,7 +2501,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     setup [:create_user, :log_in, :create_site]
 
     test "gets keywords from Google", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day")
 
       assert %{
                "results" => [
@@ -2529,7 +2529,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       filters = Jason.encode!([[:is, "event:page", ["/empty"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=30d&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=30d&filters=#{filters}")
 
       assert json_response(conn, 200) == %{"results" => []}
     end
@@ -2540,7 +2541,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       filters = Jason.encode!([[:is, "event:page", ["/empty"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day&filters=#{filters}")
 
       assert json_response(conn, 422) == %{"error_code" => "period_too_recent"}
     end
@@ -2551,7 +2553,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       filters = Jason.encode!([[:is, "event:page", ["/not-configured"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day&filters=#{filters}")
 
       assert %{"error_code" => "not_configured", "is_admin" => true} = json_response(conn, 422)
     end
@@ -2561,7 +2564,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       filters = Jason.encode!([[:is, "event:page", ["/not-configured"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day&filters=#{filters}")
 
       %{
         "error_code" => "not_configured",
@@ -2572,7 +2576,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns 422 with error when unsupported filters used", %{conn: conn, site: site} do
       filters = Jason.encode!([[:is, "event:page", ["/unsupported-filters"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day&filters=#{filters}")
 
       assert %{"error_code" => "unsupported_filters"} = json_response(conn, 422)
     end
@@ -2584,7 +2589,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       filters = Jason.encode!([[:is, "event:page", ["/unexpected-error"]]])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/google-search-terms?period=day&filters=#{filters}")
 
       assert %{"error_code" => "not_configured"} = json_response(conn, 502)
     end

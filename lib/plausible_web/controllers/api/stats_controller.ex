@@ -524,7 +524,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
+  def google_search_terms(conn, params) do
     site = conn.assigns[:site]
 
     query = Query.from(site, params, debug_metadata: debug_metadata(conn))
