@@ -36,6 +36,7 @@ defmodule Plausible.Application do
         Plausible.Session.BalancerSupervisor,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
+        {Plausible.Auth.TOTP.FallbackVault, key: totp_fallback_vault_key()},
         Plausible.Repo,
         Plausible.ClickhouseRepo,
         Plausible.IngestRepo,
@@ -244,6 +245,12 @@ defmodule Plausible.Application do
     :plausible
     |> Application.fetch_env!(Plausible.Auth.TOTP)
     |> Keyword.fetch!(:vault_key)
+  end
+
+  defp totp_fallback_vault_key() do
+    :plausible
+    |> Application.fetch_env!(Plausible.Auth.TOTP)
+    |> Keyword.fetch!(:fallback_vault_key)
   end
 
   defp finch_pool_config() do
