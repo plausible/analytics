@@ -194,6 +194,10 @@ export function IndexBreakdown({
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
       <IndexBreakdownRenderer<QueryResultRow>
+        // The key forces remount on every query change so that fade-in
+        // animation could trigger, even when results are instantly
+        // available from TanStack cache.
+        key={JSON.stringify(statsReportQueryKey)}
         {...apiState}
         rows={apiState.data?.results?.slice(0, MAX_ITEMS) ?? []}
         getDimensionValue={(row) => row.dimensions[0]}
@@ -453,6 +457,7 @@ export function IndexBreakdownRenderer<TRow>({
   if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
       <div
+        key="loading"
         className="w-full flex flex-col justify-center"
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
@@ -466,6 +471,7 @@ export function IndexBreakdownRenderer<TRow>({
   if (rows.length === 0) {
     return (
       <div
+        key="empty"
         className="w-full h-full flex flex-col justify-center"
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
@@ -477,7 +483,10 @@ export function IndexBreakdownRenderer<TRow>({
   }
 
   return (
-    <div className="h-full flex flex-col opacity-100 transition-opacity duration-300 starting:opacity-0">
+    <div
+      key="data"
+      className="h-full flex flex-col opacity-100 transition-opacity duration-300 starting:opacity-0"
+    >
       <div
         style={{ height: ROW_HEIGHT }}
         className="pt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center"

@@ -3,6 +3,7 @@ import { numberShortFormatter } from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import LazyLoader from '../../components/lazy-loader'
 import { PlausibleSite, useSiteContext } from '../../site-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 import {
   SearchTermsErrorCode,
   SearchTermsErrorPayload,
@@ -72,6 +73,7 @@ export function SearchTerms({
   onDataReady: (data: SearchTermsSuccessResponse) => void
 }) {
   const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
 
   const [visible, setVisible] = React.useState(false)
 
@@ -140,6 +142,10 @@ export function SearchTerms({
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
       <IndexBreakdownRenderer<SearchTermsResultItem>
+        // The key forces remount on every query change so that fade-in
+        // animation could trigger, even when results are instantly
+        // available from TanStack cache.
+        key={JSON.stringify(dashboardState)}
         {...apiState}
         rows={apiState.data?.results ?? []}
         getDimensionValue={(row) => row.name}
