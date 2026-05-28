@@ -58,10 +58,22 @@ defmodule Plausible.Billing do
       |> format_subscription()
       |> add_last_bill_date(params)
 
-    team
-    |> Subscription.create_changeset(subscription_params)
-    |> Repo.insert!()
-    |> after_subscription_update()
+    changeset = Subscription.create_changeset(team, subscription_params)
+
+    case Repo.insert(changeset,
+           on_conflict: :nothing,
+           conflict_target: :paddle_subscription_id
+         ) do
+      {:ok, %{id: nil}} ->
+        handle_conflict(
+          "subscription_created",
+          subscription_params.paddle_subscription_id,
+          changeset
+        )
+
+      {:ok, subscription} ->
+        after_subscription_update(subscription)
+    end
   end
 
   defp handle_subscription_updated(params) do
@@ -259,6 +271,37 @@ defmodule Plausible.Billing do
     end
 
     team
+  end
+
+  defp handle_conflict(webhook_type, paddle_subscription_id, changeset) do
+    existing =
+      Repo.get_by!(Subscription,
+        paddle_subscription_id: paddle_subscription_id
+      )
+
+    diff = changeset_diff(changeset, existing)
+
+    if diff != %{} do
+      Sentry.capture_message(
+        "Duplicate #{webhook_type} webhook for paddle_subscription_id=#{existing.paddle_subscription_id}.",
+        extra: %{
+          paddle_subscription_id: existing.paddle_subscription_id,
+          team_id: existing.team_id,
+          diff: diff
+        }
+      )
+    end
+
+    existing
+  end
+
+  defp changeset_diff(%Ecto.Changeset{changes: changes}, existing) do
+    for {key, incoming_val} <- changes,
+        not is_struct(incoming_val, Ecto.Changeset),
+        existing_val = Map.get(existing, key),
+        existing_val != incoming_val,
+        into: %{},
+        do: {key, %{existing: existing_val, incoming: incoming_val}}
   end
 
   def dashboard_locked_notice_title(), do: "Dashboard locked"
