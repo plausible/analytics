@@ -190,7 +190,32 @@ totp_vault_key =
     Plug.Crypto.KeyGenerator.generate(secret_key_base, "totp", length: 32, iterations: 100_000)
   end
 
+fallback_totp_vault_key =
+  if totp_vault_key_base64 = get_var_from_path_or_env(config_dir, "TOTP_VAULT_KEY_FALLBACK") do
+    case Base.decode64(totp_vault_key_base64) do
+      {:ok, totp_vault_key} ->
+        if byte_size(totp_vault_key) == 32 do
+          totp_vault_key
+        else
+          raise ArgumentError, """
+          TOTP_VAULT_KEY_FALLBACK must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`.
+          Got Base64 encoded #{byte_size(totp_vault_key)} bytes.
+          More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
+          """
+        end
+
+      :error ->
+        raise ArgumentError, """
+        TOTP_VAULT_KEY_FALLBACK must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`
+        More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
+        """
+    end
+  end
+
 config :plausible, Plausible.Auth.TOTP, vault_key: totp_vault_key
+
+config :plausible, Plausible.Auth.TOTP,
+  fallback_vault_key: fallback_totp_vault_key || totp_vault_key
 
 build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
 
