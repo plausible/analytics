@@ -379,12 +379,13 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
           filters: [
             ["is", "segment", [segment_alfa]],
             ["is", "segment", [segment_beta]]
-          ]
+          ],
+          order_by: [["visitors", "desc"], ["visit:country", "asc"]]
         )
 
       assert response["results"] == [
-               %{"dimensions" => ["IE", "Ireland"], "metrics" => [1, 50.0]},
-               %{"dimensions" => ["GB", "United Kingdom"], "metrics" => [1, 50.0]}
+               %{"dimensions" => ["GB", "United Kingdom"], "metrics" => [1, 50.0]},
+               %{"dimensions" => ["IE", "Ireland"], "metrics" => [1, 50.0]}
              ]
     end
 
