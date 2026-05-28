@@ -82,7 +82,10 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
-    test "filtering by A1 returns only anonymous VPN visitors", %{conn: conn, site: site} do
+    test "searching for 'Anonymous' returns VPN visitors", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, country_code: "A1"),
         build(:pageview, country_code: "A1"),
@@ -93,7 +96,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       response =
         query_countries(conn, site,
           date_range: "day",
-          filters: [["is", "visit:country", ["A1"]]]
+          filters: [["contains", "visit:country_name", ["Anonymous"]]]
         )
 
       assert response["results"] == [
