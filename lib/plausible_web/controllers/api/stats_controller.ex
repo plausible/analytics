@@ -46,6 +46,20 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def csv_export_v2(conn, params) do
+    dummy_csvs = [
+      {~c"visitors.csv", "date,visitors,\n2026-05-01,100\n"},
+      {~c"sources.csv", "name,visitors,\nGoogle,100\n"}
+    ]
+
+    {:ok, {_, zip_content}} = :zip.create(~c"export.zip", dummy_csvs, [:memory])
+
+    conn
+    |> put_resp_content_type("application/zip")
+    |> put_resp_header("content-disposition", Plausible.Exports.content_disposition("export.zip"))
+    |> send_resp(200, zip_content)
+  end
+
   def sources(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:source")

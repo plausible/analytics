@@ -47,7 +47,7 @@ export const DEFAULT_SITE: PlausibleSite = {
   embedded: false,
   background: '',
   isDbip: false,
-  flags: {},
+  flags: { dashboard_csv_export_v2: false },
   shared: false,
   isConsolidatedView: false
 }

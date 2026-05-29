@@ -20,6 +20,7 @@ import { Notice } from '../components/notice'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
+import { CsvExportV2 } from '../stats/csv-export/csv-export'
 
 function ExportItem({ selectedInterval }: { selectedInterval: string }) {
   const site = useSiteContext()
@@ -91,6 +92,7 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
 }
 
 function DashboardOptionsMenuItems() {
+  const site = useSiteContext()
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useGraphIntervalContext()
   const imports = useImportsIncludedContext()
@@ -146,7 +148,11 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
-          <ExportItem selectedInterval={selectedInterval} />
+          {site.flags.dashboard_csv_export_v2 ? (
+            <CsvExportV2 />
+          ) : (
+            <ExportItem selectedInterval={selectedInterval} />
+          )}
           {imports.status === 'visible' && (
             <>
               <ImportedSwitchItem disabled={imports.disabled} />
