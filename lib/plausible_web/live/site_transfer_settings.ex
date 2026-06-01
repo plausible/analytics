@@ -44,9 +44,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
         :account ->
           changeset
           |> validate_required(:email, message: "Please enter an email address")
-
-        nil ->
-          changeset
       end
     end
   end
