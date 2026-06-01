@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                   type="email"
                   field={f[:email]}
                   label="Email address"
-                  placeholder="joe@example.com"
+                  placeholder="example@email.com"
                   mt?={false}
                 />
               </div>

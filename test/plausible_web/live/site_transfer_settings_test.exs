@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
         |> render_change(%{"form" => %{"destination" => "account"}})
 
       assert html =~ "Email address"
-      assert html =~ "joe@example.com"
+      assert html =~ "example@email.com"
       refute html =~ "The site will immediately move to the selected team"
 
       assert text_of_attr(html, ~s|button[type=submit]|, "phx-disable-with") ==
