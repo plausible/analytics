@@ -311,13 +311,14 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
   defp join_2nd_team(user, opts \\ []) do
     role = Keyword.get(opts, :role, :admin)
     another = new_user()
-    new_site(owner: another)
-    team2 = team_of(another)
-    add_member(team2, user: user, role: role)
 
     if opts[:subscribe?] do
       subscribe_to_growth_plan(another)
     end
+
+    new_site(owner: another)
+    team2 = another |> team_of() |> Plausible.Teams.complete_setup()
+    add_member(team2, user: user, role: role)
 
     team2
   end

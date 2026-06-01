@@ -49,21 +49,23 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     site =
       Plausible.Sites.get_for_user!(user, domain, roles: [:owner, :admin, :super_admin])
 
-    transferable_teams =
+    team_options =
       user
       |> Teams.Users.teams(roles: [:owner, :admin])
-      |> Enum.reject(&(&1.id == site.team_id))
+      |> Enum.reject(&(&1.id == site.team_id || not &1.setup_complete))
       |> Enum.map(&{&1.name, &1.identifier})
 
-    show_team? = transferable_teams != []
-    initial_destination = if show_team?, do: :team, else: :account
+    show_teams? = team_options != []
+    show_my_team? = not is_nil(socket.assigns.my_team)
+    initial_destination = if show_teams?, do: :team, else: :account
 
     socket =
       socket
       |> assign(
         site: site,
-        transferable_teams: transferable_teams,
-        show_team?: show_team?
+        team_options: team_options,
+        show_teams?: show_teams?,
+        show_my_team?: show_my_team?
       )
       |> assign_form(%{"destination" => initial_destination})
 
@@ -90,19 +92,19 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
             <.label>Destination</.label>
 
             <div class="flex flex-col">
-              <div class={not @show_team? && "opacity-40 cursor-not-allowed"}>
+              <div class={not @show_teams? && "opacity-40 cursor-not-allowed"}>
                 <.input
                   type="radio"
                   id="destination-team"
                   name={f[:destination].name}
                   value={:team}
-                  checked={f[:destination].value == :team and @show_team?}
-                  disabled={not @show_team?}
+                  checked={f[:destination].value == :team and @show_teams?}
+                  disabled={not @show_teams?}
                   label="Team"
                 />
               </div>
               <div
-                :if={f[:destination].value == :team and @show_team?}
+                :if={f[:destination].value == :team and @show_teams?}
                 class="ml-7 mt-1 flex flex-col gap-y-2"
               >
                 <p class="text-sm text-gray-500 dark:text-gray-400 text-pretty">
@@ -111,13 +113,13 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                 <.input
                   type="select"
                   field={f[:team_identifier]}
-                  options={@transferable_teams}
+                  options={@team_options}
                   prompt="Select a team"
                   mt?={false}
                 />
               </div>
               <p
-                :if={not @show_team?}
+                :if={not @show_teams?}
                 class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
               >
                 You aren't a member of any other teams.
