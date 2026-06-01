@@ -377,6 +377,41 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "import emails" do
+    setup do
+      user = new_user()
+      site = new_site(owner: user)
+
+      {:ok, user: user, site: site}
+    end
+
+    for {source, success_phrase, failure_phrase} <- [
+          {:google_analytics_4, "Your Google Analytics import has completed successfully",
+           "Unfortunately, your Google Analytics import for"},
+          {:universal_analytics, "Your Google Analytics import has completed successfully",
+           "Unfortunately, your Google Analytics import for"},
+          {:csv, "Your CSV import has completed successfully",
+           "Unfortunately, your CSV import for"}
+        ] do
+      test "success email for #{source}", %{user: user, site: site} do
+        site_import = insert(:site_import, site: site, source: unquote(source))
+        PlausibleWeb.Email.import_success(site_import, user)
+
+        email = PlausibleWeb.Email.import_success(site_import, user)
+
+        assert email.text_body =~ unquote(success_phrase)
+      end
+
+      test "failure email for #{source}", %{user: user, site: site} do
+        site_import = insert(:site_import, site: site, source: unquote(source))
+
+        email = PlausibleWeb.Email.import_failure(site_import, user)
+
+        assert email.text_body =~ unquote(failure_phrase)
+      end
+    end
+  end
+
   describe "text_body" do
     test "welcome email" do
       email =
