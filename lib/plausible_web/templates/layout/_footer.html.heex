@@ -17,8 +17,10 @@
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
           <%= if ee?() do %>
-            Made and hosted in the EU <span class="text-lg">🇪🇺</span> <br />
-            Solely funded by our subscribers.
+            <a href="/eu-hosted-web-analytics" class="text-gray-300 hover:text-white">
+              Made and hosted in the EU <span class="text-lg">🇪🇺</span>
+            </a>
+            <br /> Funded entirely by our subscribers.
           <% end %>
 
           <%= if ce?() do %>
@@ -38,16 +40,14 @@
             <ul class="mt-4">
               <li>
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/docs/integration-guides"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
-                  Integration guides
+                  Installation guides
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/wordpress-analytics-plugin"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -56,52 +56,54 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
+                  href="https://plausible.io/gtm-template"
+                  class="text-base text-gray-300 leading-6 hover:text-white"
+                >
+                  GTM setup
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
                   href="https://plausible.io/docs/troubleshoot-integration"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
-                  Troubleshooting
+                  Verify installation
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
-                  href="https://plausible.io/docs/script-extensions"
-                  class="text-base text-gray-300 leading-6 hover:text-white"
-                >
-                  Script extensions
-                </a>
-              </li>
-              <li class="mt-4">
-                <a
-                  rel="noreferrer"
                   href="https://plausible.io/docs/google-analytics-import"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
-                  Import stats
+                  GA4 migration
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
-                  href="https://plausible.io/docs/google-search-console-integration"
+                  href="https://plausible.io/docs/script-extensions"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
-                  Search Console
+                  Enhanced measurement
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/docs/users-roles"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
-                  Invite team members
+                  Create a team
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
+                  href="https://plausible.io/docs/2fa"
+                  class="text-base leading-6 text-gray-300 hover:text-white"
+                >
+                  Enable 2FA
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
                   href="https://plausible.io/docs/excluding"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -112,21 +114,19 @@
           </div>
           <div class="mt-32 md:mt-0">
             <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
-              Help guides
+              Explore
             </h4>
             <ul class="mt-4">
               <li>
                 <a
-                  rel="noferrer"
-                  href="https://plausible.io/docs/compare-stats"
+                  href="https://plausible.io/docs/guided-tour"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
-                  Compare stats
+                  Dashboard Tour
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/docs/filters-segments"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -135,8 +135,7 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
-                  href="https://plausible.io/docs/manual-link-tagging"
+                  href="https://plausible.io/docs/top-referrers"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
                   Track campaigns
@@ -144,7 +143,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/docs/goal-conversions"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -153,7 +151,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/docs/funnel-analysis"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -162,7 +159,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/docs/ecommerce-revenue-tracking"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -171,7 +167,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
                   href="https://plausible.io/docs/custom-props/introduction"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -180,7 +175,14 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noferrer"
+                  href="https://plausible.io/docs/google-search-console-integration"
+                  class="text-base leading-6 text-gray-300 hover:text-white"
+                >
+                  Search Console integration
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
                   href="https://plausible.io/docs/proxy/introduction"
                   class="text-base text-gray-300 leading-6 hover:text-white"
                 >
@@ -193,12 +195,11 @@
         <div class="md:grid md:grid-cols-2 md:gap-8 print:hidden">
           <div>
             <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
-              Community
+              Resources
             </h4>
             <ul class="mt-4">
               <li>
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/changelog"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -207,7 +208,7 @@
               </li>
               <li class="mt-4">
                 <a
-                  ref="noreferrer"
+                  rel="noreferrer"
                   target="_blank"
                   href="https://plausible.io/status"
                   class="text-base leading-6 text-gray-300 hover:text-white"
@@ -217,7 +218,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  ref="noreferrer"
                   href="https://plausible.io/blog"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -226,7 +226,14 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
+                  href="https://plausible.io/tools"
+                  class="text-base leading-6 text-gray-300 hover:text-white"
+                >
+                  Tools
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
                   href="https://plausible.io/docs"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -257,7 +264,16 @@
                 <a
                   rel="noreferrer"
                   target="_blank"
-                  rel="me"
+                  href="https://bsky.app/profile/plausible.io"
+                  class="text-base leading-6 text-gray-300 hover:text-white"
+                >
+                  Bluesky
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
+                  rel="noreferrer me"
+                  target="_blank"
                   href="https://fosstodon.org/@plausible"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -283,7 +299,6 @@
             <ul class="mt-4">
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/about"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -292,7 +307,14 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
+                  href="https://plausible.io/#pricing"
+                  class="text-base leading-6 text-gray-300 hover:text-white"
+                >
+                  Pricing
+                </a>
+              </li>
+              <li class="mt-4">
+                <a
                   href="https://plausible.io/contact"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -301,16 +323,14 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/privacy"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
-                  Privacy
+                  Privacy policy
                 </a>
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/data-policy"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -319,7 +339,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/terms"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -328,7 +347,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/dpa"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -337,7 +355,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/security"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
@@ -346,7 +363,6 @@
               </li>
               <li class="mt-4">
                 <a
-                  rel="noreferrer"
                   href="https://plausible.io/imprint"
                   class="text-base leading-6 text-gray-300 hover:text-white"
                 >
