@@ -196,7 +196,10 @@ export const BREAKDOWN_REPORTS: Record<
   },
   [BreakdownReportKey.countries]: {
     dimensions: ['visit:country', 'visit:country_name'],
-    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
     detailsTitle: 'Top countries',
     detailsPath: 'countries',
     dimensionLabel: 'Country'
@@ -204,7 +207,10 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.regions]: {
     // the 3rd dimension "visit:country" is needed to render the country flag
     dimensions: ['visit:region', 'visit:region_name', 'visit:country'],
-    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
     detailsTitle: 'Top regions',
     detailsPath: 'regions',
     dimensionLabel: 'Region'
@@ -212,7 +218,10 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.cities]: {
     // the 3rd dimension "visit:country" is needed to render the country flag
     dimensions: ['visit:city', 'visit:city_name', 'visit:country'],
-    metricsByContext: COMMON_METRICS_BY_CONTEXT,
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
     detailsTitle: 'Top cities',
     detailsPath: 'cities',
     dimensionLabel: 'City'
