@@ -13,6 +13,7 @@ import { PathConnectors } from './path-connectors'
 import { ExplorationColumn, MaxDepthColumn } from './exploration-column'
 import { useExplorationData } from './exploration-state'
 import { DIRECTION, MIN_GRID_COLUMNS, ExplorationDirection } from './constants'
+import { getSelectedSuggestion } from './journey'
 
 // Column header label based on index and direction.
 function columnHeader(index: number, direction: ExplorationDirection): string {
@@ -126,7 +127,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {percentageFormatter(parseFloat(overallConversionRate!))}{' '}
+                  CR: {percentageFormatter(Number(overallConversionRate!))}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors!)})
@@ -182,18 +183,18 @@ export function FunnelExploration() {
               const colLoading =
                 colLoadingInBackground && (!frozen[i] || !!colFilter)
 
-              const colSelectedVisitors =
-                provisional[i]?.visitors ?? funnel[i]?.visitors ?? null
-              const colSelectedConversionRate =
-                provisional[i]?.conversion_rate ??
-                funnel[i]?.conversion_rate ??
-                null
+              const selected = getSelectedSuggestion({
+                i,
+                steps,
+                provisional,
+                funnel
+              })
 
               const colHeaderConversionRate =
                 funnel[i]?.conversion_rate != null
                   ? i === 0
                     ? '100%'
-                    : `${parseFloat(funnel[i].conversion_rate).toFixed(1)}%`
+                    : `${Number(funnel[i].conversion_rate).toFixed(1)}%`
                   : null
 
               if (isActive && steps.length >= maxJourneySteps) {
@@ -218,9 +219,7 @@ export function FunnelExploration() {
                   loadingInBackground={colLoadingInBackground}
                   loading={colLoading}
                   results={colResults}
-                  selected={steps[i] ?? null}
-                  selectedVisitors={colSelectedVisitors}
-                  selectedConversionRate={colSelectedConversionRate}
+                  selected={selected}
                   maxVisitors={funnel[0]?.visitors ?? null}
                   filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
