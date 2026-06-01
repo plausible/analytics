@@ -25,25 +25,20 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
       field :email, :string
     end
 
-    def changeset(params, opts \\ []) do
+    def changeset(params) do
       %__MODULE__{}
       |> cast(params, [:destination, :team_identifier, :email])
       |> validate_required(:destination)
-      |> validate_destination_fields(opts)
+      |> validate_destination_fields()
     end
 
-    defp validate_destination_fields(changeset, opts) do
+    defp validate_destination_fields(changeset) do
       case get_field(changeset, :destination) do
         :team ->
-          allowed = Keyword.get(opts, :team_identifiers, [])
-
-          changeset
-          |> validate_required(:team_identifier, message: "Please select a team")
-          |> validate_inclusion(:team_identifier, allowed, message: "Please select a team")
+          validate_required(changeset, :team_identifier, message: "Please select a team")
 
         :account ->
-          changeset
-          |> validate_required(:email, message: "Please enter an email address")
+          validate_required(changeset, :email, message: "Please enter an email address")
       end
     end
   end
@@ -175,10 +170,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   end
 
   def handle_event("save", %{"form" => params}, socket) do
-    changeset =
-      Form.changeset(params,
-        team_identifiers: Enum.map(socket.assigns.transferable_teams, &elem(&1, 1))
-      )
+    changeset = Form.changeset(params)
 
     case Ecto.Changeset.apply_action(changeset, :insert) do
       {:ok, %Form{destination: :team, team_identifier: identifier}} ->
@@ -197,21 +189,29 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     site = socket.assigns.site
 
     destination_team =
-      Repo.one!(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
+      Repo.one(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
 
-    case Teams.Sites.Transfer.change_team(site, user, destination_team) do
-      :ok ->
-        {:noreply,
-         socket
-         |> put_flash(:success, "Site team was changed")
-         |> redirect(to: Routes.site_path(socket, :index, __team: identifier))}
+    if destination_team do
+      case Teams.Sites.Transfer.change_team(site, user, destination_team) do
+        :ok ->
+          {:noreply,
+           socket
+           |> put_flash(:success, "Site team was changed")
+           |> redirect(to: Routes.site_path(socket, :index, __team: identifier))}
 
-      {:error, reason} ->
-        {:noreply,
-         assign_form(socket, params,
-           action: :insert,
-           field_errors: [{:team_identifier, change_team_error_message(reason)}]
-         )}
+        {:error, reason} ->
+          {:noreply,
+           assign_form(socket, params,
+             action: :insert,
+             field_errors: [{:team_identifier, change_team_error_message(reason)}]
+           )}
+      end
+    else
+      {:noreply,
+       assign_form(socket, params,
+         action: :insert,
+         field_errors: [{:team_identifier, "Please select a team"}]
+       )}
     end
   end
 
@@ -242,11 +242,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   end
 
   defp assign_form(socket, params, opts \\ []) do
-    changeset =
-      params
-      |> Form.changeset(
-        team_identifiers: Enum.map(socket.assigns.transferable_teams, &elem(&1, 1))
-      )
+    changeset = Form.changeset(params)
 
     changeset =
       Enum.reduce(Keyword.get(opts, :field_errors, []), changeset, fn {field, message}, cs ->

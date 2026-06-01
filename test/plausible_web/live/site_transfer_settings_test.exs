@@ -278,6 +278,29 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert html =~ "Please select a team"
     end
+
+    test "rejects a team identifier the user has no transfer permissions for", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      _team2 = join_2nd_team(user)
+      team3 = join_2nd_team(user, role: :viewer)
+
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      html =
+        lv
+        |> element("#site-transfer-form")
+        |> render_submit(%{
+          "form" => %{
+            "destination" => "team",
+            "team_identifier" => team3.identifier
+          }
+        })
+
+      assert html =~ "Please select a team"
+    end
   end
 
   defp get_liveview(conn, site) do
@@ -286,10 +309,11 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
   end
 
   defp join_2nd_team(user, opts \\ []) do
+    role = Keyword.get(opts, :role, :admin)
     another = new_user()
     new_site(owner: another)
     team2 = team_of(another)
-    add_member(team2, user: user, role: :admin)
+    add_member(team2, user: user, role: role)
 
     if opts[:subscribe?] do
       subscribe_to_growth_plan(another)
