@@ -9,7 +9,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
   use PlausibleWeb, :live_view
 
-  alias Plausible.Repo
   alias Plausible.Teams
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -20,7 +19,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
     @primary_key false
     embedded_schema do
-      field :destination, Ecto.Enum, values: [:team, :account]
+      field :destination, Ecto.Enum, values: [:team, :my_team, :account]
       field :team_identifier, :string
       field :email, :string
     end
@@ -39,6 +38,9 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
         :account ->
           validate_required(changeset, :email, message: "Please enter an email address")
+
+        :my_team ->
+          changeset
       end
     end
   end
@@ -49,6 +51,8 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     site =
       Plausible.Sites.get_for_user!(user, domain, roles: [:owner, :admin, :super_admin])
 
+    teams = Teams.Users.teams(user, roles: [:owner, :admin])
+
     team_options =
       user
       |> Teams.Users.teams(roles: [:owner, :admin])
@@ -56,13 +60,22 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
       |> Enum.map(&{&1.name, &1.identifier})
 
     show_teams? = team_options != []
-    show_my_team? = not is_nil(socket.assigns.my_team)
-    initial_destination = if show_teams?, do: :team, else: :account
+
+    show_my_team? =
+      not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id != site.team_id
+
+    initial_destination =
+      cond do
+        show_teams? -> :team
+        show_my_team? -> :my_team
+        true -> :account
+      end
 
     socket =
       socket
       |> assign(
         site: site,
+        teams: teams,
         team_options: team_options,
         show_teams?: show_teams?,
         show_my_team?: show_my_team?
@@ -126,6 +139,24 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
               </p>
             </div>
 
+            <div :if={@show_my_team?} class="flex flex-col">
+              <div>
+                <.input
+                  type="radio"
+                  id="destination-my_team"
+                  name={f[:destination].name}
+                  value={:my_team}
+                  checked={f[:destination].value == :my_team}
+                  label="My Personal Sites"
+                />
+                <.input
+                  type="hidden"
+                  field={f[:team_identifier]}
+                  options={@my_team.identifier}
+                />
+              </div>
+            </div>
+
             <div class="flex flex-col">
               <.input
                 type="radio"
@@ -175,7 +206,11 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
     case Ecto.Changeset.apply_action(changeset, :insert) do
       {:ok, %Form{destination: :team, team_identifier: identifier}} ->
-        do_change_team(socket, identifier, params)
+        team = Enum.find(socket.assigns.teams, &(&1.identifier == identifier))
+        do_change_team(socket, team, params)
+
+      {:ok, %Form{destination: :my_team}} ->
+        do_change_team(socket, socket.assigns[:my_team], params)
 
       {:ok, %Form{destination: :account, email: email}} ->
         do_transfer_ownership(socket, email, params)
@@ -185,20 +220,17 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     end
   end
 
-  defp do_change_team(socket, identifier, params) do
-    user = socket.assigns.current_user
-    site = socket.assigns.site
-
-    destination_team =
-      Repo.one(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
-
+  defp do_change_team(socket, destination_team, params) do
     if destination_team do
+      user = socket.assigns.current_user
+      site = socket.assigns.site
+
       case Teams.Sites.Transfer.change_team(site, user, destination_team) do
         :ok ->
           {:noreply,
            socket
            |> put_flash(:success, "Site team was changed")
-           |> redirect(to: Routes.site_path(socket, :index, __team: identifier))}
+           |> redirect(to: Routes.site_path(socket, :index, __team: destination_team.identifier))}
 
         {:error, reason} ->
           {:noreply,
@@ -260,6 +292,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   end
 
   defp submit_label(:team), do: "Move site"
+  defp submit_label(:my_team), do: "Move site"
   defp submit_label(_), do: "Send transfer request"
 
   defp change_team_error_message(:no_plan) do
