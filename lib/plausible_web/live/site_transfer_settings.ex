@@ -20,35 +20,32 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
     @primary_key false
     embedded_schema do
-      field :destination, :string
+      field :destination, Ecto.Enum, values: [:team, :account]
       field :team_identifier, :string
       field :email, :string
     end
-
-    @valid_destinations ~w(team account)
 
     def changeset(params, opts \\ []) do
       %__MODULE__{}
       |> cast(params, [:destination, :team_identifier, :email])
       |> validate_required(:destination)
-      |> validate_inclusion(:destination, @valid_destinations)
       |> validate_destination_fields(opts)
     end
 
     defp validate_destination_fields(changeset, opts) do
       case get_field(changeset, :destination) do
-        "team" ->
+        :team ->
           allowed = Keyword.get(opts, :team_identifiers, [])
 
           changeset
           |> validate_required(:team_identifier, message: "Please select a team")
           |> validate_inclusion(:team_identifier, allowed, message: "Please select a team")
 
-        "account" ->
+        :account ->
           changeset
           |> validate_required(:email, message: "Please enter an email address")
 
-        _ ->
+        nil ->
           changeset
       end
     end
@@ -67,7 +64,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
       |> Enum.map(&{&1.name, &1.identifier})
 
     show_team? = transferable_teams != []
-    initial_destination = if show_team?, do: "team", else: "account"
+    initial_destination = if show_team?, do: :team, else: :account
 
     socket =
       socket
@@ -107,14 +104,14 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                   type="radio"
                   id="destination-team"
                   name={f[:destination].name}
-                  value="team"
-                  checked={f[:destination].value == "team" and @show_team?}
+                  value={:team}
+                  checked={f[:destination].value == :team and @show_team?}
                   disabled={not @show_team?}
                   label="Team"
                 />
               </div>
               <div
-                :if={f[:destination].value == "team" and @show_team?}
+                :if={f[:destination].value == :team and @show_team?}
                 class="ml-7 mt-1 flex flex-col gap-y-2"
               >
                 <p class="text-sm text-gray-500 dark:text-gray-400 text-pretty">
@@ -141,12 +138,12 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                 type="radio"
                 id="destination-account"
                 name={f[:destination].name}
-                value="account"
-                checked={f[:destination].value == "account"}
+                value={:account}
+                checked={f[:destination].value == :account}
                 label="Another Plausible account"
               />
               <div
-                :if={f[:destination].value == "account"}
+                :if={f[:destination].value == :account}
                 class="ml-7 mt-1 flex flex-col gap-y-2"
               >
                 <p class="text-sm text-gray-500 dark:text-gray-400 text-pretty">
@@ -187,10 +184,10 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
       )
 
     case Ecto.Changeset.apply_action(changeset, :insert) do
-      {:ok, %Form{destination: "team", team_identifier: identifier}} ->
+      {:ok, %Form{destination: :team, team_identifier: identifier}} ->
         do_change_team(socket, identifier, params)
 
-      {:ok, %Form{destination: "account", email: email}} ->
+      {:ok, %Form{destination: :account, email: email}} ->
         do_transfer_ownership(socket, email, params)
 
       {:error, changeset} ->
@@ -268,7 +265,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     assign(socket, form: to_form(changeset, as: :form))
   end
 
-  defp submit_label("team"), do: "Move site"
+  defp submit_label(:team), do: "Move site"
   defp submit_label(_), do: "Send transfer request"
 
   defp change_team_error_message(:no_plan) do
