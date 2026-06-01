@@ -92,7 +92,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
       assert resp =~ "Login"
-      assert resp =~ "Want these stats for your website?"
+      assert resp =~ "You just saw how Plausible tracks plausible.io"
+      assert resp =~ "Start free trial"
+      assert resp =~ "See pricing"
       assert resp =~ "Getting started"
     end
 
