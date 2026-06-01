@@ -433,7 +433,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
-  describe "GET /:domain/export" do
+  describe "[LEGACY] GET /:domain/export" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
@@ -937,7 +937,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     |> Enum.map(&String.split(&1, ","))
   end
 
-  describe "GET /:domain/export - via shared link" do
+  describe "[LEGACY] GET /:domain/export - via shared link" do
     setup [:create_user, :create_site]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
@@ -956,7 +956,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - for past 6 months" do
+  describe "[LEGACY] GET /:domain/export - for past 6 months" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
@@ -966,7 +966,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - with path filter" do
+  describe "[LEGACY] GET /:domain/export - with path filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
@@ -1039,7 +1039,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - with a custom prop filter" do
+  describe "[LEGACY] GET /:domain/export - with a custom prop filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "custom-props.csv only returns the prop and its value in filter", %{
@@ -1260,7 +1260,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     insert(:goal, %{site: site, event_name: "Signup"})
   end
 
-  describe "GET /:domain/export - with goal filter" do
+  describe "[LEGACY] GET /:domain/export - with goal filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
