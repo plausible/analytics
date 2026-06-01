@@ -1,10 +1,11 @@
 <%= if @success do %>
   Your CSV import has completed successfully. The Plausible dashboard for {@site_import.site.domain} now contains historical data from {date_format(
     @site_import.start_date
-  )} to {date_format(@site_import.end_date)}.
-  <br /><br />
+  )} to {date_format(@site_import.end_date)}. <br /><br />
   <a href={@link}>View your dashboard</a>.
 <% else %>
   Unfortunately, your CSV import for {@site_import.site.domain} did not complete successfully. Sorry about that!
-  <br /><br /> Please ensure that your CSV files follow <a href="https://plausible.io/docs/csv-import#csv-format-guidelines">our format guidelines</a> and try the import again.
+  <br /><br /> Please ensure that your CSV files follow
+  <a href="https://plausible.io/docs/csv-import#csv-format-guidelines">our format guidelines</a>
+  and try the import again.
 <% end %>
