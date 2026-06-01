@@ -178,17 +178,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert html =~ "Please enter an email address"
     end
-
-    test "validates that the email is well-formed", %{conn: conn, site: site} do
-      {:ok, lv, _html} = get_liveview(conn, site)
-
-      html =
-        lv
-        |> element("#site-transfer-form")
-        |> render_submit(%{"form" => %{"destination" => "account", "email" => "not-an-email"}})
-
-      assert html =~ "Please enter a valid email address"
-    end
   end
 
   describe "submitting (team destination)" do

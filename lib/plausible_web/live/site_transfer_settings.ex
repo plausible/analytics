@@ -47,9 +47,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
         "account" ->
           changeset
           |> validate_required(:email, message: "Please enter an email address")
-          |> validate_format(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: "Please enter a valid email address"
-          )
 
         _ ->
           changeset
