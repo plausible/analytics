@@ -85,7 +85,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           id="site-transfer-form"
           phx-change="validate"
           phx-submit="save"
-          novalidate
         >
           <fieldset class="max-w-lg flex flex-col gap-y-4">
             <.label>Destination</.label>
