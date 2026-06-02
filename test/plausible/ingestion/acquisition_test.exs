@@ -96,6 +96,8 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{referrer_source: "Newsletter-UK", utm_source: "Newsletter-UK", expected: "Email"},
     %{referrer_source: "temu.com", expected: "Organic Shopping"},
     %{referrer_source: "Telegram", utm_source: "Telegram", expected: "Organic Social"},
+    %{referrer_source: "Bluesky", expected: "Organic Social"},
+    %{referrer_source: "Mastodon", expected: "Organic Social"},
     %{referrer_source: "chatgpt.com", expected: "Organic Search"},
     %{referrer_source: "Slack", expected: "Organic Social"},
     %{referrer_source: "producthunt", expected: "Organic Social"},
