@@ -12,8 +12,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
   @force_2fa_exceptions [
     ["2fa", "setup", "force-initiate"],
     ["2fa", "setup", "initiate"],
-    ["2fa", "setup", "verify"],
-    ["team", "select"]
+    ["2fa", "setup", "verify"]
   ]
 
   def init(options) do

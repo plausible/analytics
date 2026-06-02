@@ -166,7 +166,6 @@ defmodule PlausibleWeb.LayoutView do
   attr :teams, :list, required: true
   attr :my_team, :any, default: nil
   attr :current_team, :any, default: nil
-  attr :more_teams?, :boolean, required: true
 
   def team_switcher(assigns) do
     teams = assigns[:teams]
@@ -202,26 +201,25 @@ defmodule PlausibleWeb.LayoutView do
       <.dropdown_item>
         <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
       </.dropdown_item>
-      <.dropdown_item
-        :for={team <- @teams}
-        href={Routes.site_path(@conn, :index, __team: team.identifier)}
-      >
-        <p
-          class={[
-            if(team.id == @selected_id,
-              do: "border-r-4 border-indigo-400 font-bold",
-              else: "font-medium"
-            ),
-            "truncate text-gray-900 dark:text-gray-100 pr-4"
-          ]}
-          role="none"
+      <div class="max-h-[200px] overflow-y-auto">
+        <.dropdown_item
+          :for={team <- @teams}
+          href={Routes.site_path(@conn, :index, __team: team.identifier)}
         >
-          {Teams.name(team)}
-        </p>
-      </.dropdown_item>
-      <.dropdown_item :if={@more_teams?} href={Routes.auth_path(@conn, :select_team)}>
-        Switch to Another Team
-      </.dropdown_item>
+          <p
+            class={[
+              if(team.id == @selected_id,
+                do: "border-r-4 border-indigo-400 font-bold",
+                else: "font-medium"
+              ),
+              "truncate text-gray-900 dark:text-gray-100 pr-4"
+            ]}
+            role="none"
+          >
+            {Teams.name(team)}
+          </p>
+        </.dropdown_item>
+      </div>
       """
     else
       ~H""
