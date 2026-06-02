@@ -223,6 +223,7 @@ export function Locations() {
           metrics={metrics}
           dimensions={reportConfig.dimensions}
           dimensionLabel={reportConfig.dimensionLabel}
+          alwaysOnFilters={reportConfig.alwaysOnFilters}
           DimensionElement={DimensionElement}
           onDataReady={setCurrentData}
         />
@@ -234,7 +235,7 @@ export function Locations() {
 const CountriesDimensionCell = (
   props: DimensionCellWithBarProps & { onClick: () => void }
 ) => {
-  const [countryCode, countryName] = props.row.dimensions
+  const [countryName, countryCode] = props.row.dimensions
   return (
     <DimensionCellWithBar
       {...props}
@@ -249,7 +250,7 @@ const CountriesDimensionCell = (
 const RegionsDimensionCell = (
   props: DimensionCellWithBarProps & { onClick: () => void }
 ) => {
-  const [_regionCode, regionName, countryCode] = props.row.dimensions
+  const [regionName, _regionCode, countryCode] = props.row.dimensions
   return (
     <DimensionCellWithBar
       {...props}
@@ -262,7 +263,7 @@ const RegionsDimensionCell = (
 }
 
 const CitiesDimensionCell = (props: DimensionCellWithBarProps) => {
-  const [_cityCode, cityName, countryCode] = props.row.dimensions
+  const [cityName, _cityCode, countryCode] = props.row.dimensions
   return (
     <DimensionCellWithBar
       {...props}
@@ -278,7 +279,7 @@ export const getCountriesFilterInfo = (
   _dimension: NonTimeDimension,
   row: QueryResultRow
 ): FilterInfo => {
-  const [countryCode, countryName] = row.dimensions
+  const [countryName, countryCode] = row.dimensions
 
   return {
     prefix: 'country',
@@ -291,7 +292,7 @@ export const getRegionsFilterInfo = (
   _dimension: NonTimeDimension,
   row: QueryResultRow
 ): FilterInfo => {
-  const [regionCode, regionName, _countryCode] = row.dimensions
+  const [regionName, regionCode, _countryCode] = row.dimensions
 
   return {
     prefix: 'region',
@@ -304,7 +305,7 @@ export const getCitiesFilterInfo = (
   _dimension: NonTimeDimension,
   row: QueryResultRow
 ): FilterInfo => {
-  const [cityCode, cityName, _countryCode] = row.dimensions
+  const [cityName, cityCode, _countryCode] = row.dimensions
 
   return {
     prefix: 'city',

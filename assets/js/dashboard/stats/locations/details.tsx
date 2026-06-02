@@ -50,8 +50,8 @@ export function LocationsDetails({
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
-        searchEnabled={false}
         DimensionElement={DimensionElement}
       />
     </Modal>
@@ -59,7 +59,7 @@ export function LocationsDetails({
 }
 
 const CountryDimensionCell = (props: DimensionCellProps) => {
-  const [countryCode, countryName] = props.row.dimensions
+  const [countryName, countryCode] = props.row.dimensions
   return (
     <DimensionCell
       {...props}
@@ -71,7 +71,7 @@ const CountryDimensionCell = (props: DimensionCellProps) => {
 }
 
 const RegionsDimensionCell = (props: DimensionCellProps) => {
-  const [_regionCode, regionName, countryCode] = props.row.dimensions
+  const [regionName, _regionCode, countryCode] = props.row.dimensions
   return (
     <DimensionCell
       {...props}
@@ -83,7 +83,7 @@ const RegionsDimensionCell = (props: DimensionCellProps) => {
 }
 
 const CitiesDimensionCell = (props: DimensionCellProps) => {
-  const [_cityCode, cityName, countryCode] = props.row.dimensions
+  const [cityName, _cityCode, countryCode] = props.row.dimensions
   return (
     <DimensionCell
       {...props}

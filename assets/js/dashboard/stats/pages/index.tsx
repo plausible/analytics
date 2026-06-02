@@ -72,6 +72,7 @@ export default function Pages() {
         metrics={metrics}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         DimensionElement={PagesDimensionCell}
         onDataReady={setCurrentData}
       />

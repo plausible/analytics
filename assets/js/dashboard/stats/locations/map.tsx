@@ -23,7 +23,10 @@ import {
   parseWorldTopoJsonToGeoJsonFeatures,
   WorldJsonCountryData
 } from './countries'
-import { getStatsQueryWithImplicitNotEmptyFilter } from '../breakdowns'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from '../reports/reports-config'
 
 const width = 475
 const height = 335
@@ -68,22 +71,20 @@ const WorldMap = ({
     [dashboardState]
   )
 
-  const { apiState } = useQueryApi(
-    site,
-    [
-      'visit:country',
-      {
-        dashboardState,
-        reportParams: {
-          metrics: ['visitors'],
-          dimensions: ['visit:country', 'visit:country_name'],
-          order_by: [['visitors', 'desc']],
-          pagination: { limit: 300, offset: 0 }
-        }
+  const { apiState } = useQueryApi(site, [
+    'visit:country',
+    {
+      dashboardState,
+      reportParams: {
+        metrics: ['visitors'],
+        dimensions: BREAKDOWN_REPORTS[BreakdownReportKey.countries].dimensions,
+        alwaysOnFilters:
+          BREAKDOWN_REPORTS[BreakdownReportKey.countries].alwaysOnFilters,
+        order_by: [['visitors', 'desc']],
+        pagination: { limit: 300, offset: 0 }
       }
-    ],
-    { getStatsQuery: getStatsQueryWithImplicitNotEmptyFilter }
-  )
+    }
+  ])
   const { data, isFetching, isError } = apiState
 
   useEffect(() => {

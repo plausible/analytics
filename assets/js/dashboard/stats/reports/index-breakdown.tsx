@@ -18,7 +18,6 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  getStatsQueryWithImplicitNotEmptyFilter,
   MetricValueWrapper,
   GetFilterInfo
 } from '../breakdowns'
@@ -61,6 +60,7 @@ export function IndexBreakdown({
   dimensions,
   DimensionElement,
   dimensionLabel,
+  alwaysOnFilters,
   onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
 }: IndexBreakdownProps) {
@@ -79,6 +79,7 @@ export function IndexBreakdown({
           ['visitors', 'desc'],
           ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
         ],
+        alwaysOnFilters,
         pagination: { limit: MAX_ITEMS, offset: 0 }
       }
     }
@@ -87,7 +88,7 @@ export function IndexBreakdown({
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,
     statsReportQueryKey,
-    { enabled: visible, getStatsQuery: getStatsQueryWithImplicitNotEmptyFilter }
+    { enabled: visible }
   )
 
   useEffect(() => {

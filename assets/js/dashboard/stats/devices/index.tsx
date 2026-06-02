@@ -112,6 +112,7 @@ export function Devices() {
         metrics={metrics}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         DimensionElement={DimensionElement}
         onDataReady={setCurrentData}
       />
