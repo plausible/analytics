@@ -31,7 +31,7 @@ defmodule Mix.Tasks.GenerateCountriesMeta do
                     } ->
         {code, %{alpha_3: alpha_3, flag: flag}}
       end)
-      |> Jason.encode!()
+      |> Jason.encode!(pretty: true)
 
     File.write!(@output_path, json)
     Mix.shell().info("Wrote #{byte_size(json)} bytes to #{@output_path}")
