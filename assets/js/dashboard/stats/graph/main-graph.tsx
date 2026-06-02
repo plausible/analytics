@@ -665,7 +665,7 @@ const AnnotationsList = ({
   clampNotes?: boolean
 }) => {
   return (
-    <div className="max-h-[200px] overflow-y-auto -mr-2.5 pr-2.5 text-sm font-normal text-gray-100 flex flex-col gap-2 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.600)_transparent]">
+    <div className="max-h-[100px] sm:max-h-[200px] overflow-y-auto -mr-2.5 pr-2.5 text-sm font-normal text-gray-100 flex flex-col gap-2 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.600)_transparent]">
       {annotations.map((annotation) => {
         const { id, note } = annotation
         const attribution = getAnnotationAttribution(annotation)
@@ -770,7 +770,7 @@ const getAttributionDateLabel = (
 }
 
 const mainGraphTooltipClassName =
-  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
+  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[220px] sm:max-w-[300px]'
 
 type MainGraphTooltipProps = {
   metric: Metric
