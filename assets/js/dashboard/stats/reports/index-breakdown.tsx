@@ -234,10 +234,11 @@ export const DimensionCellWithBar = ({
       <DrilldownLink
         onClick={onClick}
         filterInfo={getFilterInfo(filterDimension, row)}
-        extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+        className="max-w-max w-full flex items-center md:overflow-hidden"
+        icon={icon}
+        textClassName="w-full md:truncate"
       >
-        {icon}
-        <span className="w-full md:truncate">{text}</span>
+        {text}
       </DrilldownLink>
       {externalLink}
     </div>

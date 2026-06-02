@@ -9,5 +9,5 @@ export const FlagEmoji = ({ countryCode }: { countryCode: string | null }) => {
   if (!entry?.flag) {
     return null
   }
-  return <span className="mr-1">{entry.flag}</span>
+  return <span className="mr-1.5">{entry.flag}</span>
 }

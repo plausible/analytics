@@ -491,8 +491,8 @@ export const DimensionCell = ({
     <DrilldownLink
       path={rootRoute.path}
       filterInfo={getFilterInfo(filterDimension, row)}
+      icon={icon}
     >
-      {icon}
       {text}
     </DrilldownLink>
     {externalLink}
