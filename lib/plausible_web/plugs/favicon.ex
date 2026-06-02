@@ -39,7 +39,18 @@ defmodule PlausibleWeb.Favicon do
     "Discord" => "discord.com",
     "Perplexity" => "perplexity.ai",
     "Microsoft Teams" => "microsoft.com",
-    "LinkedIn" => "linkedin.com"
+    "LinkedIn" => "linkedin.com",
+    "Linktree" => "linktr.ee",
+    "Bluesky" => "bsky.app",
+    "Mastodon" => "mastodon.social",
+    "Google Gemini" => "gemini.google.com",
+    "ChatGPT" => "chatgpt.com",
+    "Claude" => "claude.ai",
+    "Phind" => "phind.com",
+    "DeepSeek" => "deepseek.com",
+    "Copilot" => "copilot.microsoft.com",
+    "Grok" => "grok.com",
+    "X (Twitter)" => "x.com"
   }
 
   def init(_) do
