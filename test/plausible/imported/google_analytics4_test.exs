@@ -105,6 +105,238 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         assert await_clickhouse_count(query, count)
       end)
 
+      # Assert exact shape of stored rows for each imported_* table.
+      # Rows are ordered by the ClickHouse sort key declared in
+      # priv/ingest_repo/migrations to keep first/last deterministic.
+      ctx = %{site_id: site.id, import_id: site_import.id}
+
+      assert_first_and_last(ctx, Plausible.Imported.Visitor, [:date],
+        first: %{
+          date: ~D[2024-01-01],
+          visitors: 191,
+          pageviews: 224,
+          bounces: 71,
+          visits: 197,
+          visit_duration: 8080
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          visitors: 141,
+          pageviews: 195,
+          bounces: 56,
+          visits: 146,
+          visit_duration: 4815
+        }
+      )
+
+      assert_first_and_last(ctx, Plausible.Imported.Source, [:date, :source],
+        first: %{
+          date: ~D[2024-01-01],
+          source: "",
+          channel: "Direct",
+          referrer: "",
+          utm_source: "",
+          utm_medium: "",
+          utm_campaign: "(direct)",
+          utm_content: "",
+          utm_term: "",
+          visitors: 47,
+          visits: 48,
+          visit_duration: 1580,
+          pageviews: 50,
+          bounces: 18
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          source: "Pinterest",
+          channel: "Organic Social",
+          referrer: "",
+          utm_source: "",
+          utm_medium: "referral",
+          utm_campaign: "(referral)",
+          utm_content: "",
+          utm_term: "",
+          visitors: 6,
+          visits: 6,
+          visit_duration: 10,
+          pageviews: 6,
+          bounces: 5
+        }
+      )
+
+      assert_first_and_last(ctx, Plausible.Imported.Page, [:date, :hostname, :page],
+        first: %{
+          date: ~D[2024-01-01],
+          hostname: "kuhinjskeprice.com",
+          page: "/",
+          visits: 4,
+          visitors: 4,
+          pageviews: 4,
+          exits: 0,
+          total_scroll_depth: 0,
+          total_scroll_depth_visits: 0,
+          total_time_on_page: 30,
+          total_time_on_page_visits: 4
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          hostname: "kuhinjskeprice.com",
+          page: "/wakame-alge/",
+          visits: 1,
+          visitors: 1,
+          pageviews: 1,
+          exits: 0,
+          total_scroll_depth: 0,
+          total_scroll_depth_visits: 0,
+          total_time_on_page: 0,
+          total_time_on_page_visits: 1
+        }
+      )
+
+      assert_first_and_last(ctx, Plausible.Imported.EntryPage, [:date, :entry_page],
+        first: %{
+          date: ~D[2024-01-01],
+          entry_page: "(not set)",
+          visitors: 1,
+          entrances: 1,
+          visit_duration: 0,
+          pageviews: 0,
+          bounces: 1
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          entry_page: "/wakame-alge",
+          visitors: 1,
+          entrances: 1,
+          visit_duration: 0,
+          pageviews: 1,
+          bounces: 1
+        }
+      )
+
+      # imported_exit_pages is not populated by the GA4 importer.
+      assert [] ==
+               Plausible.Imported.ExitPage
+               |> from(where: [site_id: ^site.id])
+               |> Plausible.ClickhouseRepo.all()
+
+      assert_first_and_last(ctx, Plausible.Imported.CustomEvent, [:date, :name],
+        first: %{
+          date: ~D[2024-01-01],
+          name: "scroll",
+          link_url: "",
+          path: "",
+          visitors: 20,
+          events: 20
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          name: "scroll",
+          link_url: "",
+          path: "",
+          visitors: 40,
+          events: 55
+        }
+      )
+
+      assert_first_and_last(
+        ctx,
+        Plausible.Imported.Location,
+        [:date, :country, :region, :city],
+        first: %{
+          date: ~D[2024-01-01],
+          country: "AT",
+          region: "Styria",
+          city: 2_778_067,
+          visitors: 1,
+          visits: 1,
+          visit_duration: 98,
+          pageviews: 1,
+          bounces: 0
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          country: "XK",
+          region: "District of Prishtine",
+          city: 786_714,
+          visitors: 1,
+          visits: 1,
+          visit_duration: 0,
+          pageviews: 1,
+          bounces: 1
+        }
+      )
+
+      assert_first_and_last(ctx, Plausible.Imported.Device, [:date, :device],
+        first: %{
+          date: ~D[2024-01-01],
+          device: "Desktop",
+          visitors: 10,
+          visits: 10,
+          visit_duration: 697,
+          pageviews: 12,
+          bounces: 3
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          device: "Tablet",
+          visitors: 3,
+          visits: 3,
+          visit_duration: 13,
+          pageviews: 3,
+          bounces: 2
+        }
+      )
+
+      assert_first_and_last(ctx, Plausible.Imported.Browser, [:date, :browser],
+        first: %{
+          date: ~D[2024-01-01],
+          browser: "Chrome",
+          browser_version: "",
+          visitors: 144,
+          visits: 148,
+          visit_duration: 7037,
+          pageviews: 170,
+          bounces: 44
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          browser: "Samsung Internet",
+          browser_version: "",
+          visitors: 10,
+          visits: 10,
+          visit_duration: 707,
+          pageviews: 22,
+          bounces: 2
+        }
+      )
+
+      assert_first_and_last(
+        ctx,
+        Plausible.Imported.OperatingSystem,
+        [:date, :operating_system],
+        first: %{
+          date: ~D[2024-01-01],
+          operating_system: "Android",
+          operating_system_version: "8.0",
+          visitors: 1,
+          visits: 1,
+          visit_duration: 0,
+          pageviews: 1,
+          bounces: 1
+        },
+        last: %{
+          date: ~D[2024-01-31],
+          operating_system: "iOS",
+          operating_system_version: "17.2.1",
+          visitors: 14,
+          visits: 17,
+          visit_duration: 98,
+          pageviews: 20,
+          bounces: 13
+        }
+      )
+
       # NOTE: Consider using GoogleAnalytics.run_import instead of import_data
       # to avoid having to set SiteImport to completed manually
       site_import
@@ -457,6 +689,23 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         end)
       end
     end
+  end
+
+  defp assert_first_and_last(ctx, schema, order, first: first_attrs, last: last_attrs) do
+    rows =
+      schema
+      |> from(where: [site_id: ^ctx.site_id], order_by: ^order)
+      |> Plausible.ClickhouseRepo.all()
+      |> Enum.map(&(&1 |> Map.from_struct() |> Map.delete(:__meta__)))
+
+    expected_first =
+      first_attrs |> Map.put(:site_id, ctx.site_id) |> Map.put(:import_id, ctx.import_id)
+
+    expected_last =
+      last_attrs |> Map.put(:site_id, ctx.site_id) |> Map.put(:import_id, ctx.import_id)
+
+    assert List.first(rows) == expected_first
+    assert List.last(rows) == expected_last
   end
 
   defp assert_custom_events(conn, params) do
