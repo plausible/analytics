@@ -52,4 +52,25 @@ defmodule Plausible.Ingestion.SourceTest do
   test "fosstodon.org referrer is Mastodon" do
     assert Source.resolve(%{@base_request | referrer: "https://fosstodon.org"}) == "Mastodon"
   end
+
+  test "gemini.google.com referrer is Google Gemini, not Google" do
+    assert Source.resolve(%{@base_request | referrer: "https://gemini.google.com"}) ==
+             "Google Gemini"
+  end
+
+  test "chatgpt.com referrer is ChatGPT" do
+    assert Source.resolve(%{@base_request | referrer: "https://chatgpt.com"}) == "ChatGPT"
+  end
+
+  test "chat.openai.com referrer is ChatGPT" do
+    assert Source.resolve(%{@base_request | referrer: "https://chat.openai.com"}) == "ChatGPT"
+  end
+
+  test "claude.ai referrer is Claude" do
+    assert Source.resolve(%{@base_request | referrer: "https://claude.ai"}) == "Claude"
+  end
+
+  test "phind.com referrer is Phind" do
+    assert Source.resolve(%{@base_request | referrer: "https://phind.com"}) == "Phind"
+  end
 end
