@@ -925,6 +925,10 @@ test('locations breakdown', async ({ page, request }) => {
         country_code: 'PL',
         subdivision1_code: 'PL-14',
         city_geoname_id: 756_135
+      },
+      {
+        name: 'pageview',
+        country_code: ''
       }
     ]
   })
@@ -968,6 +972,14 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectMetricValues(modal(page), 'Estonia', ['2'])
 
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Esto')
+    await expectRows(modal(page), [/Estonia/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Estonia/, /Poland/])
+
     await closeModalButton(page).click()
   })
 
@@ -990,7 +1002,7 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(report, ['Region', 'Visitors'])
 
-    await expectRows(report, [/Harjumaa/, /Tartumaa/, /Mazovia/])
+    await expectRows(report, [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await expectMetricValues(report, 'Harjumaa', ['1', '33.3%'])
     await expectMetricValues(report, 'Tartumaa', ['1', '33.3%'])
@@ -1006,9 +1018,17 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(modal(page), ['Region', /Visitors/])
 
-    await expectRows(modal(page), [/Harjumaa/, /Tartumaa/, /Mazovia/])
+    await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await expectMetricValues(modal(page), 'Harjumaa', ['1'])
+
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Harju')
+    await expectRows(modal(page), [/Harjumaa/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await closeModalButton(page).click()
   })
@@ -1032,7 +1052,7 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(report, ['City', 'Visitors'])
 
-    await expectRows(report, [/Tartu/, /Tallinn/, /Warsaw/])
+    await expectRows(report, [/Tallinn/, /Tartu/, /Warsaw/])
 
     await expectMetricValues(report, 'Tartu', ['1', '33.3%'])
     await expectMetricValues(report, 'Tallinn', ['1', '33.3%'])
@@ -1048,9 +1068,17 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(modal(page), ['City', /Visitors/])
 
-    await expectRows(modal(page), [/Tartu/, /Tallinn/, /Warsaw/])
+    await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
 
     await expectMetricValues(modal(page), 'Tartu', ['1'])
+
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Tallinn')
+    await expectRows(modal(page), [/Tallinn/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
 
     await closeModalButton(page).click()
   })
