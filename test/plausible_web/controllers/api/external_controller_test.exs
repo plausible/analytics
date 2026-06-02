@@ -3713,6 +3713,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Organic Social"
     end
 
+    test "l.threads.com is Threads and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://l.threads.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Threads"
+      assert session.acquisition_channel == "Organic Social"
+    end
+
     test "kagi.com is Kagi and Organic Search", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
