@@ -1,4 +1,8 @@
 defmodule Plausible.Auth.User do
+  @moduledoc """
+  User schema.
+  """
+
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset

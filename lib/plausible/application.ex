@@ -320,36 +320,32 @@ defmodule Plausible.Application do
   defp maybe_add_paddle_pool(pool_config, default) do
     paddle_conf = Application.get_env(:plausible, :paddle)
 
-    cond do
-      paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
-        Map.put(
-          pool_config,
-          Plausible.Billing.PaddleApi.vendors_domain(),
-          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
-        )
-
-      true ->
-        pool_config
+    if paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] do
+      Map.put(
+        pool_config,
+        Plausible.Billing.PaddleApi.vendors_domain(),
+        Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
+      )
+    else
+      pool_config
     end
   end
 
   defp maybe_add_google_pools(pool_config, default) do
     google_conf = Application.get_env(:plausible, :google)
 
-    cond do
-      google_conf[:client_id] && google_conf[:client_secret] ->
-        pool_config
-        |> Map.put(
-          google_conf[:api_url],
-          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
-        )
-        |> Map.put(
-          google_conf[:reporting_api_url],
-          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
-        )
-
-      true ->
-        pool_config
+    if google_conf[:client_id] && google_conf[:client_secret] do
+      pool_config
+      |> Map.put(
+        google_conf[:api_url],
+        Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
+      )
+      |> Map.put(
+        google_conf[:reporting_api_url],
+        Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
+      )
+    else
+      pool_config
     end
   end
 
