@@ -68,10 +68,10 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     my_team_notice =
       cond do
         not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id == site.team_id ->
-          "The site is already in My Personal Sites."
+          "The site is already in your personal sites."
 
         is_nil(socket.assigns[:my_team]) ->
-          "My Personal Sites does not have an active subscription."
+          "My personal sites does not have an active subscription."
 
         true ->
           nil
@@ -154,32 +154,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
             </div>
 
             <div class="flex flex-col">
-              <div class={not @show_my_team? && "opacity-40 cursor-not-allowed"}>
-                <.input
-                  type="radio"
-                  id="destination-my_team"
-                  name={f[:destination].name}
-                  value={:my_team}
-                  checked={f[:destination].value == :my_team}
-                  disabled={not @show_my_team?}
-                  label="My Personal Sites"
-                />
-                <.input
-                  :if={@show_my_team?}
-                  type="hidden"
-                  field={f[:my_team_available]}
-                  value={true}
-                />
-              </div>
-              <p
-                :if={@my_team_notice}
-                class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
-              >
-                {@my_team_notice}
-              </p>
-            </div>
-
-            <div class="flex flex-col">
               <.input
                 type="radio"
                 id="destination-account"
@@ -203,6 +177,35 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                   mt?={false}
                 />
               </div>
+            </div>
+
+            <div class="flex flex-col">
+              <div class={not @show_my_team? && "opacity-40 cursor-not-allowed"}>
+                <.input
+                  type="radio"
+                  id="destination-my_team"
+                  name={f[:destination].name}
+                  value={:my_team}
+                  checked={f[:destination].value == :my_team}
+                  disabled={not @show_my_team?}
+                  label="My personal sites"
+                />
+                <div class="ml-7">
+                  <.input
+                    :if={@show_my_team?}
+                    type="hidden"
+                    field={f[:my_team_available]}
+                    value={true}
+                    mt?={false}
+                  />
+                </div>
+              </div>
+              <p
+                :if={@my_team_notice}
+                class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
+              >
+                {@my_team_notice}
+              </p>
             </div>
           </fieldset>
 
@@ -343,6 +346,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   end
 
   defp change_team_error_message(_, true = _my_team?) do
-    "Sorry, My Personal Sites cannot be used."
+    "Sorry, My personal sites cannot be used."
   end
 end
