@@ -2641,7 +2641,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
-      assert session.acquisition_channel == "Organic Search"
+      assert session.acquisition_channel == "AI Assistants"
     end
 
     test "utm_source=perplexity is Perplexity", %{
@@ -2663,7 +2663,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
-      assert session.acquisition_channel == "Organic Search"
+      assert session.acquisition_channel == "AI Assistants"
     end
 
     test "statics.teams.cdn.office.net is Microsoft Teams", %{
@@ -3313,29 +3313,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Organic Social"
     end
 
-    test "chatgpt.com is search channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://chatgpt.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "chatgpt.com"
-      assert session.acquisition_channel == "Organic Search"
-    end
-
     test "Slack is social channel", %{
       conn: conn,
       site: site
@@ -3574,6 +3551,106 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Mastodon"
       assert session.acquisition_channel == "Organic Social"
+    end
+
+    test "gemini.google.com is Google Gemini and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://gemini.google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Google Gemini"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "chatgpt.com is ChatGPT and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://chatgpt.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "ChatGPT"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "chat.openai.com is ChatGPT and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://chat.openai.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "ChatGPT"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "claude.ai is Claude and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://claude.ai",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Claude"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "phind.com is Phind and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://phind.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Phind"
+      assert session.acquisition_channel == "AI Assistants"
     end
   end
 

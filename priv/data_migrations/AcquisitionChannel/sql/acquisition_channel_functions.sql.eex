@@ -81,6 +81,10 @@ CREATE OR REPLACE FUNCTION acquisition_channel_has_category_email <%= @on_cluste
 (referrer_source) ->
     dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_EMAIL';
 
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_ai_assistants <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_AI_ASSISTANTS';
+
 CREATE OR REPLACE FUNCTION acquisition_channel_paid_utm_source <%= @on_cluster_statement %> AS
 (referrer_source) ->
     dictHas('acquisition_channel_paid_sources_dict', referrer_source);
@@ -218,6 +222,7 @@ CREATE OR REPLACE FUNCTION acquisition_channel_lowered <%= @on_cluster_statement
         acquisition_channel_organic_shopping(referrer_source, utm_campaign), 'Organic Shopping',
         acquisition_channel_organic_social(referrer_source, utm_medium), 'Organic Social',
         acquisition_channel_organic_video(referrer_source, utm_medium), 'Organic Video',
+        acquisition_channel_has_category_ai_assistants(referrer_source), 'AI Assistants',
         acquisition_channel_has_category_search(referrer_source), 'Organic Search',
         acquisition_channel_email(referrer_source, utm_source, utm_medium), 'Email',
         acquisition_channel_affiliates(utm_medium), 'Affiliates',
