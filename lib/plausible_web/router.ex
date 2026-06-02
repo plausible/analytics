@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    live_session :customer_support,
+    live_session :flags,
       on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
       scope path: "/flags" do
         pipe_through :flags
