@@ -44,7 +44,7 @@ defmodule Plausible.Ingestion.Acquisition do
     {"claude", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"phind", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"deepseek", "SOURCE_CATEGORY_AI_ASSISTANTS"},
-    {"copilot", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"microsoft copilot", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"grok", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"google gemini", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"perplexity", "SOURCE_CATEGORY_AI_ASSISTANTS"},

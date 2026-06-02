@@ -104,7 +104,7 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{referrer_source: "Claude", expected: "AI Assistants"},
     %{referrer_source: "Phind", expected: "AI Assistants"},
     %{referrer_source: "DeepSeek", expected: "AI Assistants"},
-    %{referrer_source: "Copilot", expected: "AI Assistants"},
+    %{referrer_source: "Microsoft Copilot", expected: "AI Assistants"},
     %{referrer_source: "Grok", expected: "AI Assistants"},
     %{referrer_source: "Slack", expected: "Organic Social"},
     %{referrer_source: "producthunt", expected: "Organic Social"},
