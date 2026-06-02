@@ -64,39 +64,50 @@ defmodule Plausible.Ingestion.Source do
   perfectly, but at least we're making an effort for the most commonly used ones. For example, `ig -> Instagram` and `adwords -> Google`.
   """
   def resolve(request) do
-    tagged_source =
-      request.query_params["utm_source"] ||
-        request.query_params["source"] ||
-        request.query_params["ref"]
-
-    source =
-      cond do
-        tagged_source -> tagged_source
-        has_valid_referral?(request) -> parse(request.referrer)
-        true -> nil
-      end
-
-    find_mapping(source)
-  end
-
-  def parse(ref) do
-    case RefInspector.parse(ref).source do
-      :unknown ->
-        uri = URI.parse(String.trim(ref))
-        format_referrer_host(uri)
-
-      source ->
-        source
+    cond do
+      tagged = tagged_param(request) -> canonical(tagged)
+      has_valid_referral?(request) -> from_referrer(request.referrer)
+      true -> nil
     end
   end
 
-  def find_mapping(nil), do: nil
+  @doc """
+  Resolves a source from a bare referrer URL. This is also the entry point used
+  when importing referrers from Google Analytics, so that imported data 
+  is normalized identically to live ingestion.
+  """
+  def from_referrer(referrer) do
+    host =
+      referrer
+      |> String.trim()
+      |> URI.parse()
+      |> format_referrer_host()
 
-  def find_mapping(source) do
-    case src(String.downcase(source)) do
-      name when is_binary(name) -> name
-      _ -> source
+    # Prefer custom source overrides over RefInspector so subdomain matches win
+    # (e.g. gemini.google.com resolves to Google Gemini, not Google).
+    case src(String.downcase(host)) do
+      name when is_binary(name) ->
+        name
+
+      _ ->
+        case RefInspector.parse(referrer).source do
+          :unknown -> host
+          # Normalize RefInspector names through our aliases (e.g. Twitter to X (Twitter)).
+          name -> canonical(name)
+        end
     end
+  end
+
+  defp tagged_param(request) do
+    request.query_params["utm_source"] ||
+      request.query_params["source"] ||
+      request.query_params["ref"]
+  end
+
+  # Maps a source name/alias to its canonical form, or returns it unchanged.
+  # Idempotent: every canonical value's lowercased form maps back to itself.
+  defp canonical(source) do
+    src(String.downcase(source)) || source
   end
 
   def format_referrer(request) do
