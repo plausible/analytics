@@ -12,7 +12,15 @@ defmodule Plausible.DataMigration.OverwriteTotpSecret do
 
   def run(opts \\ []) do
     IO.puts("""
-    **WARNING**: This is might lead to valid TOTP keys loss!
+    **!!!IMPORTANT!!!**: Please make sure you are following a proper
+    rotation procedure!
+
+    1. Set TOTP_VAULT_KEY to a new value
+    2. Run: DataMigration.OverwriteTotpSecret(dry_run?: false) <== YOU ARE HERE
+    3. Set TOTP_VAULT_KEY_FALLBACK to the same value as TOTP_VAULT_KEY
+    4. Run: DataMigration.BackfillTotpSecretFallback(dry_run?: false)
+
+    **!!!WARNING!!!**: This is might lead to valid TOTP keys loss!
     Please make sure you have valid TOTP_VAULT_KEY_FALLBACK 
     set and that the previous backfill of `totp_secret_fallback` 
     completed successfully.
