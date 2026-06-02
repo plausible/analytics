@@ -51,6 +51,20 @@ export const ANNOTATION_TYPE_LABELS = {
   [AnnotationType.site]: 'Site-wide note'
 }
 
+export const getAnnotationAttribution = (
+  annotation: Pick<Annotation, 'type' | 'owner_name'>
+): string => {
+  if (annotation.type === AnnotationType.site && annotation.owner_name) {
+    return annotation.owner_name
+  }
+  return ANNOTATION_TYPE_LABELS[annotation.type]
+}
+
+export const canEditAnnotation = (
+  annotation: Pick<Annotation, 'owner_id'>,
+  userId: number | null
+): boolean => userId !== null && annotation.owner_id === userId
+
 export const getAnnotationTimeLabel = (
   annotation: Pick<Annotation, 'datetime' | 'granularity'>,
   interval: Interval

@@ -16,6 +16,7 @@ import {
   formatTime,
   is12HourClock,
   parseNaiveDate,
+  parseUTCDate,
   formatDay,
   isThisYear
 } from '../../util/date'
@@ -45,14 +46,19 @@ import { Interval } from './intervals'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
 import {
   Annotation,
+  AnnotationGranularity,
   AnnotationType,
   AnnotationWithPinState,
   PinPosition,
+  canEditAnnotation,
   enrichAnnotationsWithPinState,
+  getAnnotationAttribution,
   getAnnotationGranularity,
   groupAnnotationsByTimeLabel
 } from '../../annotations/annotations'
+import { useUserContext } from '../../user-context'
 import { Button } from '../../components/button'
+import { PencilIcon } from '../../components/icons'
 
 const height = 368
 const marginTop = 16
@@ -113,7 +119,7 @@ export const MainGraph = ({
   useEffect(() => {
     setTooltip(initialTooltipState)
   }, [width])
-  
+
   useEffect(() => {
     setPinnedAnnotationIds({})
   }, [width, data])
@@ -561,19 +567,24 @@ export const MainGraph = ({
                       }))
                     }
                     annotations={annotationsByTimeLabel[annotationDatetime]}
+                    isTouchDevice={!!isTouchDevice}
                   />
                 )}
-              {!!annotationDatetime && (
-                <AddAnnotationButton
-                  interval={interval}
-                  timelabel={annotationDatetime}
-                />
-              )}
-              {!!zoomDate && (
-                <Button
-                  onClick={() => zoomToPeriod(zoomDate)}
-                >{`View ${interval}`}</Button>
-              )}
+              <div className="flex flex-row gap-x-2 mt-2">
+                {!!annotationDatetime && (
+                  <AddAnnotationButton
+                    interval={interval}
+                    timelabel={annotationDatetime}
+                  />
+                )}
+                {!!zoomDate && (
+                  <Button
+                    size="xs"
+                    className="flex-1 bg-gray-600/70 border-gray-600/70 hover:bg-gray-600 hover:border-gray-600"
+                    onClick={() => zoomToPeriod(zoomDate)}
+                  >{`View ${interval}`}</Button>
+                )}
+              </div>
             </>
           )}
           {!tooltip.persistent && (
@@ -582,31 +593,32 @@ export const MainGraph = ({
                 !!annotationsByTimeLabel[annotationDatetime] && (
                   <>
                     <AnnotationsList
-                      expandedIndex={null}
                       annotations={annotationsByTimeLabel[
                         annotationDatetime
-                      ].slice(0, 1)}
-                      onAnnotationClick={() => {}}
+                      ].slice(0, 2)}
+                      clampNotes
                     />
-                    {annotationsByTimeLabel[annotationDatetime].length == 2 &&
+                    {annotationsByTimeLabel[annotationDatetime].length == 3 &&
                       `and 1 more note`}
-                    {annotationsByTimeLabel[annotationDatetime].length > 2 &&
-                      `and ${annotationsByTimeLabel[annotationDatetime].length - 1} more notes`}
+                    {annotationsByTimeLabel[annotationDatetime].length > 3 &&
+                      `and ${annotationsByTimeLabel[annotationDatetime].length - 2} more notes`}
                   </>
                 )}
               {(!!zoomDate || !!annotationDatetime) && (
                 <hr className="border-gray-600 dark:border-gray-800 my-1" />
               )}
-              {!!zoomDate && (
-                <div className="text-gray-300 dark:text-gray-400 text-xs">
-                  {`Click to view ${interval}`}
-                </div>
-              )}
-              {!!annotationDatetime && (
-                <div className="text-gray-300 dark:text-gray-400 text-xs">
-                  Right click for more actions
-                </div>
-              )}
+              <div className="flex flex-col gap-y-0.5">
+                {!!zoomDate && (
+                  <div className="text-gray-300 dark:text-gray-400 text-xs">
+                    {`Click to view ${interval}`}
+                  </div>
+                )}
+                {!!annotationDatetime && (
+                  <div className="text-gray-300 dark:text-gray-400 text-xs">
+                    Right click for more actions
+                  </div>
+                )}
+              </div>
             </>
           )}
         </MainGraphTooltip>
@@ -617,117 +629,91 @@ export const MainGraph = ({
 
 const InteractiveAnnotationsList = ({
   annotations,
-  onPin
+  isTouchDevice,
+  onPin: _onPin
 }: {
   onPin: (annotation: Annotation) => void
   annotations: AnnotationWithPinState[]
+  isTouchDevice: boolean
 }) => {
-  const [expanded, setExpanded] = useState<number | null>(null)
-  useEffect(() => {
-    setExpanded(null)
-  }, [annotations])
   const { setModal } = useRoutelessModalsContext()
+  const user = useUserContext()
 
   return (
     <AnnotationsList
       annotations={annotations}
-      expandedIndex={expanded}
-      onAnnotationClick={(index: number) =>
-        setExpanded((current) => (current === index ? null : index))
-      }
       onEdit={(annotation) =>
         setModal({ type: 'update-annotation', annotation })
       }
-      onDelete={(annotation) =>
-        setModal({ type: 'delete-annotation', annotation })
-      }
-      onPin={onPin}
+      canEdit={(annotation) => canEditAnnotation(annotation, user.id)}
+      isTouchDevice={isTouchDevice}
     />
   )
 }
 
 const AnnotationsList = ({
   annotations,
-  expandedIndex,
-  onAnnotationClick,
   onEdit,
-  onPin,
-  onDelete
+  canEdit,
+  isTouchDevice,
+  clampNotes
 }: {
   annotations: AnnotationWithPinState[]
   onEdit?: (annotation: Annotation) => void
-  onPin?: (annotation: Annotation) => void
-  onDelete?: (annotation: Annotation) => void
-  expandedIndex: number | null
-  onAnnotationClick?: (index: number) => void
+  canEdit?: (annotation: Annotation) => boolean
+  isTouchDevice?: boolean
+  clampNotes?: boolean
 }) => {
   return (
-    <div className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
-      {annotations.map((annotation, index) => {
+    <div className="max-h-[100px] sm:max-h-[200px] overflow-y-auto -mr-2.5 pr-2.5 text-sm font-normal text-gray-100 flex flex-col gap-2 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.600)_transparent]">
+      {annotations.map((annotation) => {
         const { id, note } = annotation
-        return (
-          <div className="flex flex-row gap-x-2" key={id}>
-            <div className="rounded-xs w-[3px] bg-green-500 shrink-0" />
-            <div className="flex flex-col gap-y-1 w-64">
-              {typeof onAnnotationClick === 'function' ? (
-                <button
-                  className="flex flex-row"
-                  onClick={() => onAnnotationClick(index)}
-                >
-                  <div className="text-left break-all">{note}</div>
-                </button>
-              ) : (
-                <div className="text-left break-all">{note}</div>
-              )}
-              {expandedIndex === index && (
-                <div className="flex flex-row">
-                  {typeof onEdit === 'function' && (
-                    <Button
-                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
-                      theme="ghost"
-                      size="sm"
-                      onClick={() => onEdit(annotation)}
-                    >
-                      {/* <PencilIcon className="w-4 h-4 block" /> */}
-                      Edit
-                    </Button>
-                  )}
-                  {typeof onPin === 'function' &&
-                    (annotation.isPinned ? (
-                      <Button
-                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
-                        theme="ghost"
-                        size="sm"
-                        onClick={() => onPin(annotation)}
-                      >
-                        {/* <BookmarkSlashIcon className="w-4 h-4 block" /> */}
-                        Unpin
-                      </Button>
-                    ) : (
-                      <Button
-                        className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
-                        theme="ghost"
-                        size="sm"
-                        onClick={() => onPin(annotation)}
-                      >
-                        {/* <BookmarkIcon className="w-4 h-4 block" /> */}
-                        Pin
-                      </Button>
-                    ))}
-                  {typeof onDelete === 'function' && (
-                    <Button
-                      className="not-dark:text-gray-100 not-dark:hover:text-gray-800"
-                      theme="ghost"
-                      size="sm"
-                      onClick={() => onDelete(annotation)}
-                    >
-                      {/* <TrashIcon className="w-4 h-4 block" /> */}
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              )}
+        const attribution = getAnnotationAttribution(annotation)
+        const attributionDate = getAttributionDateLabel(annotation)
+        const interactive =
+          typeof onEdit === 'function' && (!canEdit || canEdit(annotation))
+        const content = (
+          <>
+            <div className="flex items-baseline gap-x-1 text-xs text-gray-300 pr-8">
+              <span className="truncate min-w-0">{attribution}</span>
+              <span className="whitespace-nowrap shrink-0">
+                {`• ${attributionDate}`}
+              </span>
             </div>
+            <div
+              className={classNames(
+                'text-left whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:normal]',
+                { 'line-clamp-3': clampNotes }
+              )}
+            >
+              {note}
+            </div>
+            {interactive && !isTouchDevice && (
+              <button
+                aria-label="Edit note"
+                className="absolute top-px right-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-gray-300 hover:text-gray-100 focus:outline-none"
+                onClick={() => onEdit!(annotation)}
+              >
+                <PencilIcon className="size-4" />
+              </button>
+            )}
+          </>
+        )
+        return (
+          <div className="group flex flex-row gap-x-2" key={id}>
+            <div className="rounded-xs w-[3px] bg-green-500 shrink-0" />
+            {interactive && isTouchDevice ? (
+              <button
+                className="relative flex flex-col gap-y-px w-full max-w-64 text-left focus:outline-none"
+                onClick={() => onEdit!(annotation)}
+              >
+                {content}
+              </button>
+            ) : (
+              <div className="relative flex flex-col gap-y-px w-full max-w-64">
+                {content}
+              </div>
+            )}
           </div>
         )
       })}
@@ -746,12 +732,13 @@ const AddAnnotationButton = ({
 
   return (
     <Button
-      size="sm"
+      size="xs"
+      className="flex-1 bg-gray-600/70 border-gray-600/70 hover:bg-gray-600 hover:border-gray-600"
       onClick={() =>
         setModal({
           type: 'create-annotation',
           annotation: {
-            note: `Note on ${timelabel}`,
+            note: `E.g. 'Campaign started' or 'Feature released'`,
             type: AnnotationType.personal,
             datetime: timelabel,
             granularity: getAnnotationGranularity(interval)
@@ -767,8 +754,23 @@ const AddAnnotationButton = ({
 const isTouchEvent = (event: unknown) =>
   event instanceof PointerEvent && event.pointerType === 'touch'
 
+const getAttributionDateLabel = (
+  annotation: Pick<Annotation, 'datetime' | 'granularity'>
+): string => {
+  const date = parseUTCDate(annotation.datetime)
+  const dayLabel = formatDayShort(date)
+  if (annotation.granularity === AnnotationGranularity.minute) {
+    const time = formatTime(date, {
+      use12HourClock: is12HourClock(),
+      includeMinutes: true
+    })
+    return `${dayLabel} ${time}`
+  }
+  return dayLabel
+}
+
 const mainGraphTooltipClassName =
-  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[300px]'
+  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[220px] sm:max-w-[300px]'
 
 type MainGraphTooltipProps = {
   metric: Metric
@@ -827,7 +829,7 @@ const MainGraphTooltip = ({
         'pointer-events-none': !persistent
       })}
     >
-      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-1.5">
+      <aside className="text-sm font-normal text-gray-100 flex flex-col gap-2">
         <div className="flex justify-between items-center rounded-sm">
           <div className="font-semibold mr-4 text-xs uppercase whitespace-nowrap">
             {metricLabel}
@@ -923,7 +925,7 @@ const PinnedAnnotationsTooltip = ({
           onClick()
         }}
       >
-        <AnnotationsList annotations={annotations} expandedIndex={null} />
+        <AnnotationsList annotations={annotations} />
       </div>
     </GraphTooltipWrapper>
   )

@@ -1,36 +1,139 @@
 import React, { ReactNode } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import classNames from 'classnames'
+
+export const getCharacterCount = (value: string): number => [...value].length
+
+export const isOverMaxLength = (value: string, maxLength: number): boolean =>
+  getCharacterCount(value) > maxLength
+
+const fieldClassName =
+  'block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500'
+
+interface LabeledFieldProps {
+  label: string
+  id: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  recommendedMaxLength?: number
+}
+
+const LabeledField = ({
+  label,
+  id,
+  value,
+  recommendedMaxLength,
+  children
+}: Pick<
+  LabeledFieldProps,
+  'label' | 'id' | 'value' | 'recommendedMaxLength'
+> & {
+  children: ReactNode
+}) => (
+  <div className="flex flex-col">
+    <label
+      htmlFor={id}
+      className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
+    >
+      {label}
+    </label>
+    {children}
+    {recommendedMaxLength !== undefined && (
+      <CharacterCounter
+        id={`${id}-counter`}
+        length={getCharacterCount(value)}
+        recommendedMaxLength={recommendedMaxLength}
+      />
+    )}
+  </div>
+)
 
 export const LabeledTextInput = ({
   label,
   id,
   value,
   onChange,
-  placeholder
+  placeholder,
+  recommendedMaxLength
+}: LabeledFieldProps) => (
+  <LabeledField
+    label={label}
+    id={id}
+    value={value}
+    recommendedMaxLength={recommendedMaxLength}
+  >
+    <input
+      autoComplete="off"
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      aria-describedby={
+        recommendedMaxLength !== undefined ? `${id}-counter` : undefined
+      }
+      className={fieldClassName}
+    />
+  </LabeledField>
+)
+
+export const LabeledTextarea = ({
+  label,
+  id,
+  value,
+  onChange,
+  placeholder,
+  recommendedMaxLength,
+  rows = 3
+}: LabeledFieldProps & {
+  rows?: number
+}) => (
+  <LabeledField
+    label={label}
+    id={id}
+    value={value}
+    recommendedMaxLength={recommendedMaxLength}
+  >
+    <textarea
+      autoComplete="off"
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={rows}
+      aria-describedby={
+        recommendedMaxLength !== undefined ? `${id}-counter` : undefined
+      }
+      className={classNames(fieldClassName, 'resize-y leading-5')}
+    />
+  </LabeledField>
+)
+
+const CharacterCounter = ({
+  id,
+  length,
+  recommendedMaxLength
 }: {
-  label: string
   id: string
-  value: string
-  onChange: (value: string) => void
-  placeholder: string
+  length: number
+  recommendedMaxLength: number
 }) => {
+  const overLimit = length > recommendedMaxLength
   return (
-    <div className="flex flex-col">
-      <label
-        htmlFor={id}
-        className="block mb-1.5 text-sm font-medium dark:text-gray-100 text-gray-700 dark:text-gray-300"
+    <p
+      id={id}
+      className="mt-1.5 text-xs text-gray-500 dark:text-gray-400"
+      aria-live="polite"
+    >
+      {`Recommended: ${recommendedMaxLength} characters. You've used `}
+      <span
+        className={classNames('font-semibold', {
+          'text-red-500 dark:text-red-400': overLimit
+        })}
       >
-        {label}
-      </label>
-      <input
-        autoComplete="off"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        id={id}
-        className="block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
-      />
-    </div>
+        {length}
+      </span>
+    </p>
   )
 }
 

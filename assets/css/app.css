@@ -63,6 +63,10 @@
       disabled:cursor-not-allowed;
   }
 
+  .btn-xs {
+    @apply px-2 py-1;
+  }
+
   .btn-sm {
     @apply px-3 py-2;
   }
