@@ -97,7 +97,7 @@ const WorldMap = ({
     const dataByAlpha3Code: Map<string, CountryData> = new Map()
     let maxValue = 0
     for (const row of data?.results ?? []) {
-      const [countryCode, countryName] = row.dimensions
+      const [countryName, countryCode] = row.dimensions
       const [visitors] = row.metrics as [number]
       const entry = COUNTRIES_BY_TWO_LETTER_CODE[countryCode]
       if (!entry || !entry.alpha_3) continue
