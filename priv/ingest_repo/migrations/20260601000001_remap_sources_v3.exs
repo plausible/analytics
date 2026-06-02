@@ -18,6 +18,7 @@ defmodule Plausible.IngestRepo.Migrations.RemapSourcesV3 do
     "grok.com" => "Grok",
     "x.ai" => "Grok",
     "gemini.google.com" => "Google Gemini",
+    "pplx.ai" => "Perplexity",
     "kagi.com" => "Kagi",
     "l.threads.com" => "Threads",
     "mastodon.social" => "Mastodon",

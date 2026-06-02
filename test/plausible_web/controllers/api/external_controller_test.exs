@@ -2644,6 +2644,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "AI Assistants"
     end
 
+    test "pplx.ai is Perplexity", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://pplx.ai",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Perplexity"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
     test "utm_source=perplexity is Perplexity", %{
       conn: conn,
       site: site

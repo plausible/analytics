@@ -96,6 +96,10 @@ defmodule Plausible.Ingestion.SourceTest do
     assert Source.resolve(%{@base_request | referrer: "https://l.threads.com"}) == "Threads"
   end
 
+  test "pplx.ai referrer is Perplexity" do
+    assert Source.resolve(%{@base_request | referrer: "https://pplx.ai"}) == "Perplexity"
+  end
+
   test "RefInspector-resolved aliases are normalized (t.co referrer is 'X (Twitter)')" do
     # t.co is a Twitter domain known to RefInspector but not in custom_sources.json,
     # so it exercises the RefInspector branch and canonical mapping ('Twitter' to 'X (Twitter)').
