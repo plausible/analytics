@@ -6,11 +6,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import {
-  chooseBreakdownMetricsByContext,
-  defaultGetFilterInfo,
-  getReferrerUrlFilterInfo
-} from '../breakdowns'
+import { defaultGetFilterInfo, getReferrerUrlFilterInfo } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -45,15 +41,12 @@ export function SourcesDetails({ reportKey }: { reportKey: SourcesReportKey }) {
   const isRevenueAvailable =
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable: isRevenueAvailable
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRealtime: isRealTimeDashboard(dashboardState),
+    isDetailed: true,
+    isRevenueAvailable: isRevenueAvailable
+  })
 
   const DimensionElement =
     reportKey === BreakdownReportKey.sources

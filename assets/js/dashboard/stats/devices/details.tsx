@@ -6,11 +6,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import {
-  chooseBreakdownMetricsByContext,
-  defaultGetFilterInfo,
-  getScreenFilterInfo
-} from '../breakdowns'
+import { defaultGetFilterInfo, getScreenFilterInfo } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -45,15 +41,12 @@ export function DevicesDetails({
   const isRevenueAvailable =
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable: isRevenueAvailable
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRealtime: isRealTimeDashboard(dashboardState),
+    isDetailed: true,
+    isRevenueAvailable: isRevenueAvailable
+  })
 
   const DimensionElement = {
     [BreakdownReportKey.browsers]: BrowsersDimensionCell,
