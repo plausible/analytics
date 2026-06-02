@@ -13,6 +13,7 @@ defmodule Plausible.Auth.TOTP.RotationTest do
   test "run full TOTP vault key rotation scenario" do
     Plausible.Test.Support.Sentry.setup(self())
 
+    old_fallback_key = :crypto.strong_rand_bytes(32)
     old_key = :crypto.strong_rand_bytes(32)
     new_key = :crypto.strong_rand_bytes(32)
 
@@ -21,7 +22,7 @@ defmodule Plausible.Auth.TOTP.RotationTest do
     :sys.replace_state(Vault, fn _ -> config end)
     GenServer.call(Vault, :save_config)
 
-    {:ok, config} = FallbackVault.init(key: old_key)
+    {:ok, config} = FallbackVault.init(key: old_fallback_key)
     :sys.replace_state(FallbackVault, fn _ -> config end)
     GenServer.call(FallbackVault, :save_config)
 
@@ -55,7 +56,12 @@ defmodule Plausible.Auth.TOTP.RotationTest do
 
     assert [] = Sentry.Test.pop_sentry_reports()
 
-    # run backfill as a part of initial migration
+    # set the existing key as the key for the fallback vault - first step of rotation
+    {:ok, config} = FallbackVault.init(key: new_key)
+    :sys.replace_state(FallbackVault, fn _ -> config end)
+    GenServer.call(FallbackVault, :save_config)
+
+    # run backfill of the fallback secrets - second step of rotation
     assert capture_io(
              [input: "BACKFILL TOTP_SECRET_FALLBACK WITH TOTP_SECRET", capture_prompt: false],
              fn ->
@@ -78,7 +84,7 @@ defmodule Plausible.Auth.TOTP.RotationTest do
                      totp_secret_fallback: nil
                    } = Repo.reload!(user_without_totp)
 
-    # set a new key for the main vault - first step of rotation
+    # set a new key for the main vault - third step of rotation
     {:ok, config} = Vault.init(key: new_key)
     :sys.replace_state(Vault, fn _ -> config end)
     GenServer.call(Vault, :save_config)
@@ -100,7 +106,7 @@ defmodule Plausible.Auth.TOTP.RotationTest do
     assert sentry_error.message.formatted == "Failed to decode main totp secret"
     assert sentry_error.extra.user_id == user_with_totp.id
 
-    # run overwrite - second step of rotation
+    # run overwrite - fourth step of rotation
     assert capture_io(
              [input: "OVERWRITE TOTP_SECRET WITH TOTP_SECRET_FALLBACK", capture_prompt: false],
              fn ->
@@ -121,39 +127,22 @@ defmodule Plausible.Auth.TOTP.RotationTest do
 
     assert [] = Sentry.Test.pop_sentry_reports()
 
-    # set a new key for the fallback vault - third step of rotation
-    {:ok, config} = FallbackVault.init(key: new_key)
+    # set fallback vault key to a random new value - fifth step of rotation
+    {:ok, config} = FallbackVault.init(key: :crypto.strong_rand_bytes(32))
     :sys.replace_state(FallbackVault, fn _ -> config end)
     GenServer.call(FallbackVault, :save_config)
 
-    # run backfill of the fallback secrets - fourth step of rotation
-    assert capture_io(
-             [input: "BACKFILL TOTP_SECRET_FALLBACK WITH TOTP_SECRET", capture_prompt: false],
-             fn ->
-               BackfillTotpSecretFallback.run(dry_run?: false)
-             end
-           ) =~ "Finished backfilling totp_secret_fallback with totp_secret for 2 users."
-
-    # start another rotation and make sure the fallback is correct
-    another_new_key = :crypto.strong_rand_bytes(32)
-    {:ok, config} = Vault.init(key: another_new_key)
-    :sys.replace_state(Vault, fn _ -> config end)
-    GenServer.call(Vault, :save_config)
-
+    # verify that everything still works
     user_with_totp_legacy = Repo.reload!(user_with_totp_legacy)
     user_with_totp = Repo.reload!(user_with_totp)
 
-    assert {:ok, user_with_totp_legacy} =
+    assert {:ok, _user_with_totp_legacy} =
              TOTP.validate_code(user_with_totp_legacy, code_legacy, allow_reuse?: true)
 
-    assert [sentry_error] = Sentry.Test.pop_sentry_reports()
-    assert sentry_error.message.formatted == "Failed to decode main totp secret"
-    assert sentry_error.extra.user_id == user_with_totp_legacy.id
+    assert [] = Sentry.Test.pop_sentry_reports()
 
-    assert {:ok, user_with_totp} = TOTP.validate_code(user_with_totp, code, allow_reuse?: true)
+    assert {:ok, _user_with_totp} = TOTP.validate_code(user_with_totp, code, allow_reuse?: true)
 
-    assert [sentry_error] = Sentry.Test.pop_sentry_reports()
-    assert sentry_error.message.formatted == "Failed to decode main totp secret"
-    assert sentry_error.extra.user_id == user_with_totp.id
+    assert [] = Sentry.Test.pop_sentry_reports()
   end
 end

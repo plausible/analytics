@@ -15,15 +15,17 @@ defmodule Plausible.DataMigration.OverwriteTotpSecret do
     **!!!IMPORTANT!!!**: Please make sure you are following a proper
     rotation procedure!
 
-    1. Set TOTP_VAULT_KEY to a new value
-    2. Run: DataMigration.OverwriteTotpSecret(dry_run?: false) <== YOU ARE HERE
-    3. Set TOTP_VAULT_KEY_FALLBACK to the same value as TOTP_VAULT_KEY
-    4. Run: DataMigration.BackfillTotpSecretFallback(dry_run?: false)
+    1. Set TOTP_VAULT_KEY_FALLBACK to the same value as TOTP_VAULT_KEY
+    2. Run: DataMigration.BackfillTotpSecretFallback(dry_run?: false)
+    3. Set TOTP_VAULT_KEY to a new value
+    4. Run: DataMigration.OverwriteTotpSecret(dry_run?: false) <== YOU ARE HERE
+    5. Set TOTP_VAULT_KEY_FALLBACK to a new random value
 
     **!!!WARNING!!!**: This is might lead to valid TOTP keys loss!
-    Please make sure you have valid TOTP_VAULT_KEY_FALLBACK 
-    set and that the previous backfill of `totp_secret_fallback` 
-    completed successfully.
+    Please make sure you have a new TOTP_VAULT_KEY set and that 
+    TOTP_VAULT_KEY_FALLBACK was set to the current value of
+    TOTP_VAULT_KEY and that the preceding backfill of 
+    `totp_secret_fallback` completed successfully.
 
     To confirm that you know what you are doing, please type in:
 
