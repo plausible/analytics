@@ -1,4 +1,4 @@
-defmodule Plausible.Auth.TOTP.FallbackTest do
+defmodule Plausible.Auth.TOTP.RotationTest do
   use Plausible.DataCase, async: false
 
   import ExUnit.CaptureIO
@@ -10,7 +10,7 @@ defmodule Plausible.Auth.TOTP.FallbackTest do
   alias Plausible.DataMigration.OverwriteTotpSecret
   alias Plausible.Repo
 
-  test "cycling TOTP secrets scenario" do
+  test "run full TOTP vault key rotation scenario" do
     Plausible.Test.Support.Sentry.setup(self())
 
     old_key = :crypto.strong_rand_bytes(32)
