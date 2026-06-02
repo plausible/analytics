@@ -101,8 +101,7 @@ export function Locations() {
       prevFilters.current = { countryFiltersApplied, regionFiltersApplied }
 
       if (
-        (currentTab === BreakdownReportKey.regions ||
-          currentTab === BreakdownReportKey.cities) &&
+        currentTab === BreakdownReportKey.regions &&
         prev.countryFiltersApplied &&
         !countryFiltersApplied
       ) {
