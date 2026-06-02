@@ -36,7 +36,9 @@ defmodule Plausible.Ingestion.Acquisition do
     {"temu.com", "SOURCE_CATEGORY_SHOPPING"},
     {"discord", "SOURCE_CATEGORY_SOCIAL"},
     {"sogou", "SOURCE_CATEGORY_SEARCH"},
-    {"microsoft teams", "SOURCE_CATEGORY_SOCIAL"}
+    {"microsoft teams", "SOURCE_CATEGORY_SOCIAL"},
+    {"bluesky", "SOURCE_CATEGORY_SOCIAL"},
+    {"mastodon", "SOURCE_CATEGORY_SOCIAL"}
   ]
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()

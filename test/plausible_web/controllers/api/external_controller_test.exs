@@ -3495,6 +3495,86 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "Ecosia"
       assert session.acquisition_channel == "Organic Search"
     end
+
+    test "bsky.app is Bluesky and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://bsky.app",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Bluesky"
+      assert session.acquisition_channel == "Organic Social"
+    end
+
+    test "go.bsky.app is Bluesky and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://go.bsky.app",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Bluesky"
+      assert session.acquisition_channel == "Organic Social"
+    end
+
+    test "mastodon.social is Mastodon and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://mastodon.social",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Mastodon"
+      assert session.acquisition_channel == "Organic Social"
+    end
+
+    test "fosstodon.org is Mastodon and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://fosstodon.org",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Mastodon"
+      assert session.acquisition_channel == "Organic Social"
+    end
   end
 
   describe "user_id generation" do

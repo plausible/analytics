@@ -36,4 +36,20 @@ defmodule Plausible.Ingestion.SourceTest do
     assert Source.resolve(%{@base_request | referrer: "https://www.markosaric.com"}) ==
              "markosaric.com"
   end
+
+  test "bsky.app referrer is Bluesky" do
+    assert Source.resolve(%{@base_request | referrer: "https://bsky.app"}) == "Bluesky"
+  end
+
+  test "go.bsky.app referrer is Bluesky" do
+    assert Source.resolve(%{@base_request | referrer: "https://go.bsky.app"}) == "Bluesky"
+  end
+
+  test "mastodon.social referrer is Mastodon" do
+    assert Source.resolve(%{@base_request | referrer: "https://mastodon.social"}) == "Mastodon"
+  end
+
+  test "fosstodon.org referrer is Mastodon" do
+    assert Source.resolve(%{@base_request | referrer: "https://fosstodon.org"}) == "Mastodon"
+  end
 end
