@@ -46,7 +46,8 @@ defmodule Plausible.Ingestion.Acquisition do
     {"copilot", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"grok", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"google gemini", "SOURCE_CATEGORY_AI_ASSISTANTS"},
-    {"perplexity", "SOURCE_CATEGORY_AI_ASSISTANTS"}
+    {"perplexity", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"x (twitter)", "SOURCE_CATEGORY_SOCIAL"}
   ]
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()

@@ -73,4 +73,22 @@ defmodule Plausible.Ingestion.SourceTest do
   test "phind.com referrer is Phind" do
     assert Source.resolve(%{@base_request | referrer: "https://phind.com"}) == "Phind"
   end
+
+  test "x.com referrer is X (Twitter)" do
+    assert Source.resolve(%{@base_request | referrer: "https://x.com"}) == "X (Twitter)"
+  end
+
+  test "RefInspector-resolved aliases are normalized (t.co referrer is 'X (Twitter)')" do
+    # t.co is a Twitter domain known to RefInspector but not in custom_sources.json,
+    # so it exercises the RefInspector branch and canonical mapping ('Twitter' to 'X (Twitter)').
+    assert Source.resolve(%{@base_request | referrer: "https://t.co"}) == "X (Twitter)"
+  end
+
+  test "from_referrer normalizes RefInspector aliases like resolve does" do
+    # The importer calls from_referrer directly, so it must apply the same aliasing
+    # as live ingestion (previously it returned the raw "Twitter").
+    assert Source.from_referrer("https://t.co") == "X (Twitter)"
+    assert Source.from_referrer("https://gemini.google.com") == "Google Gemini"
+    assert Source.from_referrer("https://www.markosaric.com") == "markosaric.com"
+  end
 end

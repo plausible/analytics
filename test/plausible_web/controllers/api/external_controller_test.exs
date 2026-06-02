@@ -2575,7 +2575,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Paid Search"
     end
 
-    test "twitter-ads is Twitter", %{
+    test "twitter-ads is X (Twitter)", %{
       conn: conn,
       site: site
     } do
@@ -2593,7 +2593,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Twitter"
+      assert session.referrer_source == "X (Twitter)"
       assert session.utm_source == "twitter-ads"
       assert session.acquisition_channel == "Paid Social"
     end
@@ -3651,6 +3651,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Phind"
       assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "x.com is X (Twitter) and Organic Social", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://x.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "X (Twitter)"
+      assert session.acquisition_channel == "Organic Social"
     end
   end
 
