@@ -212,9 +212,8 @@ fallback_totp_vault_key =
     end
   end
 
-config :plausible, Plausible.Auth.TOTP, vault_key: totp_vault_key
-
 config :plausible, Plausible.Auth.TOTP,
+  vault_key: totp_vault_key,
   fallback_vault_key: fallback_totp_vault_key || totp_vault_key
 
 build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
