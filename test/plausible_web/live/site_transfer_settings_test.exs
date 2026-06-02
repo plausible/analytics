@@ -29,9 +29,17 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert text_of_element(html, "#site-transfer-form") =~
                "You aren't a member of any other teams"
+
+      assert element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][disabled]|
+             )
+
+      assert text_of_element(html, "#site-transfer-form") =~
+               "The site is already in your personal sites"
     end
 
-    test "renders both destinations enabled when the user has another team", %{
+    test "renders team destinations enabled when the user has another team", %{
       conn: conn,
       user: user,
       site: site
@@ -48,11 +56,85 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
                ~s|input[name="form[destination]"][value="team"][disabled]|
              )
 
+      assert element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][disabled]|
+             )
+
       assert html =~ "The site will immediately move to the selected team"
       refute html =~ "joe@example.com"
 
       refute text_of_element(html, "#site-transfer-form") =~
                "You aren't a member of any other teams"
+    end
+
+    test "renders personal team destination enabled when the user transfers from another team", %{
+      conn: conn,
+      user: user
+    } do
+      _team2 = join_2nd_team(user)
+
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      {:ok, _lv, html} = get_liveview(conn, site)
+
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="team"]|)
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="account"]|)
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="my_team"]|)
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="team"][disabled]|
+             )
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][disabled]|
+             )
+
+      assert html =~ "The site will immediately move to the selected team"
+      refute html =~ "example@email.com"
+
+      refute text_of_element(html, "#site-transfer-form") =~
+               "You aren't a member of any other teams"
+
+      refute text_of_element(html, "#site-transfer-form") =~
+               "The site is already in your personal sites"
+    end
+
+    test "renders personal team destination disabled if user does not have one", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      _team2 = join_2nd_team(user)
+
+      Repo.delete!(site.team)
+
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      {:ok, _lv, html} = get_liveview(conn, site)
+
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="team"]|)
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="account"]|)
+      assert element_exists?(html, ~s|input[name="form[destination]"][value="my_team"]|)
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="team"][disabled]|
+             )
+
+      assert element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][disabled]|
+             )
+
+      assert text_of_element(html, "#site-transfer-form") =~
+               "You don't have an active subscription"
     end
 
     test "Team destination is preselected when available", %{
@@ -72,6 +154,38 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
       refute element_exists?(
                html,
                ~s|input[name="form[destination]"][value="account"][checked]|
+             )
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][checked]|
+             )
+    end
+
+    test "Personal team destination is preselected if available and team destination is unavailable",
+         %{
+           conn: conn,
+           user: user
+         } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      {:ok, _lv, html} = get_liveview(conn, site)
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="team"][checked]|
+             )
+
+      refute element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="account"][checked]|
+             )
+
+      assert element_exists?(
+               html,
+               ~s|input[name="form[destination]"][value="my_team"][checked]|
              )
     end
   end
@@ -121,6 +235,32 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert html =~ "Select a team"
       refute html =~ "Email address"
+      assert text_of_element(html, ~s|button[type=submit]|) =~ "Move site"
+    end
+
+    test "changing to My personal sites hides everything else", %{
+      conn: conn,
+      user: user
+    } do
+      _team2 = join_2nd_team(user)
+
+      site = new_site()
+      add_member(site.team, user: user, role: :admin)
+
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      lv
+      |> element("#site-transfer-form")
+      |> render_change(%{"form" => %{"destination" => "account"}})
+
+      html =
+        lv
+        |> element("#site-transfer-form")
+        |> render_change(%{"form" => %{"destination" => "my_team"}})
+
+      refute html =~ "Select a team"
+      refute html =~ "Email address"
+
       assert text_of_element(html, ~s|button[type=submit]|) =~ "Move site"
     end
   end
@@ -300,6 +440,76 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
         })
 
       assert html =~ "Please select a team"
+    end
+  end
+
+  describe "submitting (my_team destination)" do
+    test "successfully changes the site's team and redirects to sites listing", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      team2 = join_2nd_team(user, subscribe?: true)
+
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      lv
+      |> element("#site-transfer-form")
+      |> render_submit(%{
+        "form" => %{"destination" => "team", "team_identifier" => team2.identifier}
+      })
+
+      assert_redirect(lv, "/sites?__team=#{team2.identifier}")
+
+      assert Plausible.Repo.reload!(site).team_id == team2.id
+    end
+
+    @tag :ee_only
+    test "renders an inline error when personal team has no subscription", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      html =
+        lv
+        |> element("#site-transfer-form")
+        |> render_submit(%{
+          "form" => %{"destination" => "my_team", "my_team_available" => "true"}
+        })
+
+      assert text_of_element(html, "#site-transfer-form") =~ "You don't have a subscription"
+    end
+
+    @tag :ee_only
+    test "renders an inline error when usage exceeds destination personal team's limits", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      subscribe_to_growth_plan(user)
+
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -5))
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -35))
+
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      html =
+        lv
+        |> element("#site-transfer-form")
+        |> render_submit(%{
+          "form" => %{"destination" => "my_team", "my_team_available" => "true"}
+        })
+
+      assert text_of_element(html, "#site-transfer-form") =~
+               "This site's usage exceeds your subscription limits"
     end
   end
 
