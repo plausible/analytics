@@ -358,7 +358,7 @@ defmodule Plausible.Auth.TOTP do
     end
   rescue
     _ ->
-      Sentry.capture_message("Failed to decode #{label} totp secret", user_id: user.id)
+      Sentry.capture_message("Failed to decode #{label} totp secret", extra: %{user_id: user.id})
       {:error, :invalid_code}
   end
 
