@@ -22,11 +22,12 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
       field :destination, Ecto.Enum, values: [:team, :my_team, :account]
       field :team_identifier, :string
       field :email, :string
+      field :my_team_available, :boolean, default: false
     end
 
     def changeset(params) do
       %__MODULE__{}
-      |> cast(params, [:destination, :team_identifier, :email])
+      |> cast(params, [:destination, :team_identifier, :my_team_available, :email])
       |> validate_required(:destination)
       |> validate_destination_fields()
     end
@@ -64,6 +65,18 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     show_my_team? =
       not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id != site.team_id
 
+    my_team_notice =
+      cond do
+        not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id == site.team_id ->
+          "The site is already in My Personal Sites."
+
+        is_nil(socket.assigns[:my_team]) ->
+          "My Personal Sites does not have an active subscription."
+
+        true ->
+          nil
+      end
+
     initial_destination =
       cond do
         show_teams? -> :team
@@ -78,7 +91,8 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
         teams: teams,
         team_options: team_options,
         show_teams?: show_teams?,
-        show_my_team?: show_my_team?
+        show_my_team?: show_my_team?,
+        my_team_notice: my_team_notice
       )
       |> assign_form(%{"destination" => initial_destination})
 
@@ -135,26 +149,34 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                 :if={not @show_teams?}
                 class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
               >
-                You aren't a member of any other teams.
+                You aren't a member of any other teams or you lack privileges for transfer.
               </p>
             </div>
 
-            <div :if={@show_my_team?} class="flex flex-col">
-              <div>
+            <div class="flex flex-col">
+              <div class={not @show_my_team? && "opacity-40 cursor-not-allowed"}>
                 <.input
                   type="radio"
                   id="destination-my_team"
                   name={f[:destination].name}
                   value={:my_team}
                   checked={f[:destination].value == :my_team}
+                  disabled={not @show_my_team?}
                   label="My Personal Sites"
                 />
                 <.input
+                  :if={@show_my_team?}
                   type="hidden"
-                  field={f[:team_identifier]}
-                  options={@my_team.identifier}
+                  field={f[:my_team_available]}
+                  value={true}
                 />
               </div>
+              <p
+                :if={@my_team_notice}
+                class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
+              >
+                {@my_team_notice}
+              </p>
             </div>
 
             <div class="flex flex-col">
@@ -222,8 +244,13 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
   defp do_change_team(socket, destination_team, params) do
     if destination_team do
+      my_team? =
+        not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id == destination_team.id
+
       user = socket.assigns.current_user
       site = socket.assigns.site
+
+      error_field = if(my_team?, do: :my_team_available, else: :team_identifier)
 
       case Teams.Sites.Transfer.change_team(site, user, destination_team) do
         :ok ->
@@ -236,7 +263,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           {:noreply,
            assign_form(socket, params,
              action: :insert,
-             field_errors: [{:team_identifier, change_team_error_message(reason)}]
+             field_errors: [{error_field, change_team_error_message(reason, my_team?)}]
            )}
       end
     else
@@ -295,15 +322,27 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   defp submit_label(:my_team), do: "Move site"
   defp submit_label(_), do: "Send transfer request"
 
-  defp change_team_error_message(:no_plan) do
+  defp change_team_error_message(:no_plan, false = _my_team?) do
     "This team doesn't have a subscription. Please start a subscription for the team first and then try moving the site again."
   end
 
-  defp change_team_error_message({:over_plan_limits, _}) do
+  defp change_team_error_message(:no_plan, true = _my_team?) do
+    "You don't have a subscription. Please start a subscription first and then try moving the site again."
+  end
+
+  defp change_team_error_message({:over_plan_limits, _}, false = _my_team?) do
     "This site's usage exceeds the destination team's subscription limits. Upgrade the team's subscription to continue."
   end
 
-  defp change_team_error_message(_) do
-    "Sorry, this team cannot be used"
+  defp change_team_error_message({:over_plan_limits, _}, true = _my_team?) do
+    "This site's usage exceeds your subscription limits. Upgrade your subscription to continue."
+  end
+
+  defp change_team_error_message(_, false = _my_team?) do
+    "Sorry, this team cannot be used."
+  end
+
+  defp change_team_error_message(_, true = _my_team?) do
+    "Sorry, My Personal Sites cannot be used."
   end
 end
