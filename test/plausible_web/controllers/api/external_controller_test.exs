@@ -6,6 +6,47 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"
   @user_agent_tablet "Mozilla/5.0 (Linux; U; Android 4.2.2; it-it; Surfing TAB B 9.7 3G Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
 
+  defp submit_event(site, params_overrides) do
+    params =
+      Map.merge(
+        %{name: "pageview", url: "http://example.com", domain: site.domain},
+        params_overrides
+      )
+
+    conn =
+      build_conn()
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", params)
+
+    assert response(conn, 202) == "ok"
+
+    [session] = get_sessions(site)
+    session
+  end
+
+  defp event_with_referrer(site, referrer) do
+    submit_event(site, %{referrer: referrer})
+  end
+
+  defp event_with_utm_source(site, utm_source) do
+    submit_event(site, %{url: "http://example.com?utm_source=#{utm_source}"})
+  end
+
+  defp assert_source(session, expected) do
+    assert session.referrer_source == expected
+    session
+  end
+
+  defp assert_utm_source(session, expected) do
+    assert session.utm_source == expected
+    session
+  end
+
+  defp assert_acquisition_channel(session, expected) do
+    assert session.acquisition_channel == expected
+    session
+  end
+
   describe "POST /api/event" do
     setup do
       site = new_site()
@@ -2299,234 +2340,84 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
-    test "threads is Threads", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=threads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Threads"
-      assert session.utm_source == "threads"
-      assert session.acquisition_channel == "Organic Social"
+    test "threads is Threads", %{site: site} do
+      site
+      |> event_with_utm_source("threads")
+      |> assert_source("Threads")
+      |> assert_utm_source("threads")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "ig is Instagram", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=ig",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Instagram"
-      assert session.utm_source == "ig"
-      assert session.acquisition_channel == "Organic Social"
+    test "ig is Instagram", %{site: site} do
+      site
+      |> event_with_utm_source("ig")
+      |> assert_source("Instagram")
+      |> assert_utm_source("ig")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "yt is Youtube", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=yt",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Youtube"
-      assert session.utm_source == "yt"
-      assert session.acquisition_channel == "Organic Video"
+    test "yt is Youtube", %{site: site} do
+      site
+      |> event_with_utm_source("yt")
+      |> assert_source("Youtube")
+      |> assert_utm_source("yt")
+      |> assert_acquisition_channel("Organic Video")
     end
 
-    test "yt-ads is Youtube paid", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=yt-ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Youtube"
-      assert session.utm_source == "yt-ads"
-      assert session.acquisition_channel == "Paid Video"
+    test "yt-ads is Youtube paid", %{site: site} do
+      site
+      |> event_with_utm_source("yt-ads")
+      |> assert_source("Youtube")
+      |> assert_utm_source("yt-ads")
+      |> assert_acquisition_channel("Paid Video")
     end
 
-    test "fb is Facebook", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=fb",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Facebook"
-      assert session.utm_source == "fb"
-      assert session.acquisition_channel == "Organic Social"
+    test "fb is Facebook", %{site: site} do
+      site
+      |> event_with_utm_source("fb")
+      |> assert_source("Facebook")
+      |> assert_utm_source("fb")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "fb-ads is Facebook", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=fb-ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Facebook"
-      assert session.utm_source == "fb-ads"
-      assert session.acquisition_channel == "Paid Social"
+    test "fb-ads is Facebook", %{site: site} do
+      site
+      |> event_with_utm_source("fb-ads")
+      |> assert_source("Facebook")
+      |> assert_utm_source("fb-ads")
+      |> assert_acquisition_channel("Paid Social")
     end
 
-    test "fbad is Facebook", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=fbad",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Facebook"
-      assert session.utm_source == "fbad"
-      assert session.acquisition_channel == "Paid Social"
+    test "fbad is Facebook", %{site: site} do
+      site
+      |> event_with_utm_source("fbad")
+      |> assert_source("Facebook")
+      |> assert_utm_source("fbad")
+      |> assert_acquisition_channel("Paid Social")
     end
 
-    test "facebook-ads is Facebook", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=facebook-ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Facebook"
-      assert session.utm_source == "facebook-ads"
-      assert session.acquisition_channel == "Paid Social"
+    test "facebook-ads is Facebook", %{site: site} do
+      site
+      |> event_with_utm_source("facebook-ads")
+      |> assert_source("Facebook")
+      |> assert_utm_source("facebook-ads")
+      |> assert_acquisition_channel("Paid Social")
     end
 
-    test "Reddit-ads is Reddit", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=Reddit-ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Reddit"
-      assert session.utm_source == "Reddit-ads"
-      assert session.acquisition_channel == "Paid Social"
+    test "Reddit-ads is Reddit", %{site: site} do
+      site
+      |> event_with_utm_source("Reddit-ads")
+      |> assert_source("Reddit")
+      |> assert_utm_source("Reddit-ads")
+      |> assert_acquisition_channel("Paid Social")
     end
 
-    test "google_ads is Google", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=google_ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Google"
-      assert session.utm_source == "google_ads"
-      assert session.acquisition_channel == "Paid Search"
+    test "google_ads is Google", %{site: site} do
+      site
+      |> event_with_utm_source("google_ads")
+      |> assert_source("Google")
+      |> assert_utm_source("google_ads")
+      |> assert_acquisition_channel("Paid Search")
     end
 
     test "Google-ads is Google", %{
@@ -2552,645 +2443,209 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Paid Search"
     end
 
-    test "utm_source=Adwords is Google paid search", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=Adwords",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Google"
-      assert session.utm_source == "Adwords"
-      assert session.acquisition_channel == "Paid Search"
+    test "utm_source=Adwords is Google paid search", %{site: site} do
+      site
+      |> event_with_utm_source("Adwords")
+      |> assert_source("Google")
+      |> assert_utm_source("Adwords")
+      |> assert_acquisition_channel("Paid Search")
     end
 
-    test "twitter-ads is X (Twitter)", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=twitter-ads",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "X (Twitter)"
-      assert session.utm_source == "twitter-ads"
-      assert session.acquisition_channel == "Paid Social"
+    test "twitter-ads is X (Twitter)", %{site: site} do
+      site
+      |> event_with_utm_source("twitter-ads")
+      |> assert_source("X (Twitter)")
+      |> assert_utm_source("twitter-ads")
+      |> assert_acquisition_channel("Paid Social")
     end
 
-    test "android-app://com.reddit.frontpage is Reddit", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "android-app://com.reddit.frontpage",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Reddit"
-      assert session.acquisition_channel == "Organic Social"
+    test "android-app://com.reddit.frontpage is Reddit", %{site: site} do
+      site
+      |> event_with_referrer("android-app://com.reddit.frontpage")
+      |> assert_source("Reddit")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "perplexity.ai is Perplexity", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://perplexity.ai",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Perplexity"
-      assert session.acquisition_channel == "AI Assistants"
+    test "perplexity.ai is Perplexity", %{site: site} do
+      site
+      |> event_with_referrer("https://perplexity.ai")
+      |> assert_source("Perplexity")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "pplx.ai is Perplexity", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://pplx.ai",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Perplexity"
-      assert session.acquisition_channel == "AI Assistants"
+    test "pplx.ai is Perplexity", %{site: site} do
+      site
+      |> event_with_referrer("https://pplx.ai")
+      |> assert_source("Perplexity")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "utm_source=perplexity is Perplexity", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=perplexity",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Perplexity"
-      assert session.acquisition_channel == "AI Assistants"
+    test "utm_source=perplexity is Perplexity", %{site: site} do
+      site
+      |> event_with_utm_source("perplexity")
+      |> assert_source("Perplexity")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "statics.teams.cdn.office.net is Microsoft Teams", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://statics.teams.cdn.office.net",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Microsoft Teams"
-      assert session.acquisition_channel == "Organic Social"
+    test "statics.teams.cdn.office.net is Microsoft Teams", %{site: site} do
+      site
+      |> event_with_referrer("https://statics.teams.cdn.office.net")
+      |> assert_source("Microsoft Teams")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "wikipedia domain is resolved as Wikipedia", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://en.wikipedia.org",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Wikipedia"
-      assert session.acquisition_channel == "Referral"
+    test "wikipedia domain is resolved as Wikipedia", %{site: site} do
+      site
+      |> event_with_referrer("https://en.wikipedia.org")
+      |> assert_source("Wikipedia")
+      |> assert_acquisition_channel("Referral")
     end
 
-    test "ntp.msn.com is Bing", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://ntp.msn.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Bing"
-      assert session.acquisition_channel == "Organic Search"
+    test "ntp.msn.com is Bing", %{site: site} do
+      site
+      |> event_with_referrer("https://ntp.msn.com")
+      |> assert_source("Bing")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "search.brave.com is Brave", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://search.brave.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Brave"
-      assert session.acquisition_channel == "Organic Search"
+    test "search.brave.com is Brave", %{site: site} do
+      site
+      |> event_with_referrer("https://search.brave.com")
+      |> assert_source("Brave")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.com.tr is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.com.tr",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.com.tr is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.com.tr")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.kz is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.kz",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.kz is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.kz")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "ya.ru is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://ya.ru",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "ya.ru is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://ya.ru")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.uz is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.uz",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.uz is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.uz")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.fr is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.fr",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.fr is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.fr")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.eu is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.eu",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.eu is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.eu")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "yandex.tm is Yandex", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://yandex.tm",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yandex"
-      assert session.acquisition_channel == "Organic Search"
+    test "yandex.tm is Yandex", %{site: site} do
+      site
+      |> event_with_referrer("https://yandex.tm")
+      |> assert_source("Yandex")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "discord.com is Discord", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://discord.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Discord"
-      assert session.acquisition_channel == "Organic Social"
+    test "discord.com is Discord", %{site: site} do
+      site
+      |> event_with_referrer("https://discord.com")
+      |> assert_source("Discord")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "discordapp.com is Discord", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://discordapp.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Discord"
-      assert session.acquisition_channel == "Organic Social"
+    test "discordapp.com is Discord", %{site: site} do
+      site
+      |> event_with_referrer("https://discordapp.com")
+      |> assert_source("Discord")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "canary.discord.com is Discord", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://canary.discord.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Discord"
-      assert session.acquisition_channel == "Organic Social"
+    test "canary.discord.com is Discord", %{site: site} do
+      site
+      |> event_with_referrer("https://canary.discord.com")
+      |> assert_source("Discord")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "ptb.discord.com is Discord", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://ptb.discord.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Discord"
-      assert session.acquisition_channel == "Organic Social"
+    test "ptb.discord.com is Discord", %{site: site} do
+      site
+      |> event_with_referrer("https://ptb.discord.com")
+      |> assert_source("Discord")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "www.baidu.com is Baidu", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://baidu.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Baidu"
-      assert session.acquisition_channel == "Organic Search"
+    test "www.baidu.com is Baidu", %{site: site} do
+      site
+      |> event_with_referrer("https://baidu.com")
+      |> assert_source("Baidu")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "t.me is Telegram", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://t.me",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Telegram"
-      assert session.acquisition_channel == "Organic Social"
+    test "t.me is Telegram", %{site: site} do
+      site
+      |> event_with_referrer("https://t.me")
+      |> assert_source("Telegram")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "webk.telegram.org is Telegram", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://webk.telegram.org",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Telegram"
-      assert session.acquisition_channel == "Organic Social"
+    test "webk.telegram.org is Telegram", %{site: site} do
+      site
+      |> event_with_referrer("https://webk.telegram.org")
+      |> assert_source("Telegram")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "sogou.com is Sogou", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://sogou.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Sogou"
-      assert session.acquisition_channel == "Organic Search"
+    test "sogou.com is Sogou", %{site: site} do
+      site
+      |> event_with_referrer("https://sogou.com")
+      |> assert_source("Sogou")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "m.sogou.com is Sogou", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://m.sogou.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Sogou"
-      assert session.acquisition_channel == "Organic Search"
+    test "m.sogou.com is Sogou", %{site: site} do
+      site
+      |> event_with_referrer("https://m.sogou.com")
+      |> assert_source("Sogou")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "wap.sogou.com is Sogou", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://wap.sogou.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Sogou"
-      assert session.acquisition_channel == "Organic Search"
+    test "wap.sogou.com is Sogou", %{site: site} do
+      site
+      |> event_with_referrer("https://wap.sogou.com")
+      |> assert_source("Sogou")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "linktr.ee is Linktree", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://linktr.ee",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Linktree"
-      assert session.acquisition_channel == "Referral"
+    test "linktr.ee is Linktree", %{site: site} do
+      site
+      |> event_with_referrer("https://linktr.ee")
+      |> assert_source("Linktree")
+      |> assert_acquisition_channel("Referral")
     end
 
-    test "linktree is Linktree", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=linktree",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Linktree"
-      assert session.acquisition_channel == "Referral"
+    test "linktree is Linktree", %{site: site} do
+      site
+      |> event_with_utm_source("linktree")
+      |> assert_source("Linktree")
+      |> assert_acquisition_channel("Referral")
     end
   end
 
@@ -3200,163 +2655,53 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
-    test "hacker news is social channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://news.ycombinator.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Hacker News"
-      assert session.acquisition_channel == "Organic Social"
+    test "hacker news is social channel", %{site: site} do
+      site
+      |> event_with_referrer("https://news.ycombinator.com")
+      |> assert_source("Hacker News")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "yahoo is organic search", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://search.yahoo.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Yahoo!"
-      assert session.acquisition_channel == "Organic Search"
+    test "yahoo is organic search", %{site: site} do
+      site
+      |> event_with_referrer("https://search.yahoo.com")
+      |> assert_source("Yahoo!")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "gmail is email channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://mail.google.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Gmail"
-      assert session.acquisition_channel == "Email"
+    test "gmail is email channel", %{site: site} do
+      site
+      |> event_with_referrer("https://mail.google.com")
+      |> assert_source("Gmail")
+      |> assert_acquisition_channel("Email")
     end
 
-    test "utm_source=newsletter is email channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=Newsletter-UK",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Newsletter-UK"
-      assert session.acquisition_channel == "Email"
+    test "utm_source=newsletter is email channel", %{site: site} do
+      site
+      |> event_with_utm_source("Newsletter-UK")
+      |> assert_source("Newsletter-UK")
+      |> assert_acquisition_channel("Email")
     end
 
-    test "temu.com is shopping channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://temu.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "temu.com"
-      assert session.acquisition_channel == "Organic Shopping"
+    test "temu.com is shopping channel", %{site: site} do
+      site
+      |> event_with_referrer("https://temu.com")
+      |> assert_source("temu.com")
+      |> assert_acquisition_channel("Organic Shopping")
     end
 
-    test "utm_source=Telegram is social channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com?utm_source=Telegram",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Telegram"
-      assert session.acquisition_channel == "Organic Social"
+    test "utm_source=Telegram is social channel", %{site: site} do
+      site
+      |> event_with_utm_source("Telegram")
+      |> assert_source("Telegram")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "Slack is social channel", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://app.slack.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Slack"
-      assert session.acquisition_channel == "Organic Social"
+    test "Slack is social channel", %{site: site} do
+      site
+      |> event_with_referrer("https://app.slack.com")
+      |> assert_source("Slack")
+      |> assert_acquisition_channel("Organic Social")
     end
 
     test "producthunt is social", %{
@@ -3381,399 +2726,137 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Organic Social"
     end
 
-    test "github is social", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://github.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "GitHub"
-      assert session.acquisition_channel == "Organic Social"
+    test "github is social", %{site: site} do
+      site
+      |> event_with_referrer("https://github.com")
+      |> assert_source("GitHub")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "steamcommunity.com is social", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://steamcommunity.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "steamcommunity.com"
-      assert session.acquisition_channel == "Organic Social"
+    test "steamcommunity.com is social", %{site: site} do
+      site
+      |> event_with_referrer("https://steamcommunity.com")
+      |> assert_source("steamcommunity.com")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "Vkontakte is social", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://vkontakte.ru",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Vkontakte"
-      assert session.acquisition_channel == "Organic Social"
+    test "Vkontakte is social", %{site: site} do
+      site
+      |> event_with_referrer("https://vkontakte.ru")
+      |> assert_source("Vkontakte")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "Threads is social", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://threads.net",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Threads"
-      assert session.acquisition_channel == "Organic Social"
+    test "Threads is social", %{site: site} do
+      site
+      |> event_with_referrer("https://threads.net")
+      |> assert_source("Threads")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "Ecosia is search", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://ecosia.org",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Ecosia"
-      assert session.acquisition_channel == "Organic Search"
+    test "Ecosia is search", %{site: site} do
+      site
+      |> event_with_referrer("https://ecosia.org")
+      |> assert_source("Ecosia")
+      |> assert_acquisition_channel("Organic Search")
     end
 
-    test "bsky.app is Bluesky and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://bsky.app",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Bluesky"
-      assert session.acquisition_channel == "Organic Social"
+    test "bsky.app is Bluesky and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://bsky.app")
+      |> assert_source("Bluesky")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "go.bsky.app is Bluesky and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://go.bsky.app",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Bluesky"
-      assert session.acquisition_channel == "Organic Social"
+    test "go.bsky.app is Bluesky and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://go.bsky.app")
+      |> assert_source("Bluesky")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "mastodon.social is Mastodon and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://mastodon.social",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Mastodon"
-      assert session.acquisition_channel == "Organic Social"
+    test "mastodon.social is Mastodon and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://mastodon.social")
+      |> assert_source("Mastodon")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "fosstodon.org is Mastodon and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://fosstodon.org",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Mastodon"
-      assert session.acquisition_channel == "Organic Social"
+    test "fosstodon.org is Mastodon and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://fosstodon.org")
+      |> assert_source("Mastodon")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "gemini.google.com is Google Gemini and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://gemini.google.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Google Gemini"
-      assert session.acquisition_channel == "AI Assistants"
+    test "gemini.google.com is Google Gemini and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://gemini.google.com")
+      |> assert_source("Google Gemini")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "chatgpt.com is ChatGPT and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://chatgpt.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "ChatGPT"
-      assert session.acquisition_channel == "AI Assistants"
+    test "chatgpt.com is ChatGPT and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://chatgpt.com")
+      |> assert_source("ChatGPT")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "chat.openai.com is ChatGPT and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://chat.openai.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "ChatGPT"
-      assert session.acquisition_channel == "AI Assistants"
+    test "chat.openai.com is ChatGPT and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://chat.openai.com")
+      |> assert_source("ChatGPT")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "claude.ai is Claude and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://claude.ai",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Claude"
-      assert session.acquisition_channel == "AI Assistants"
+    test "claude.ai is Claude and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://claude.ai")
+      |> assert_source("Claude")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "phind.com is Phind and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://phind.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Phind"
-      assert session.acquisition_channel == "AI Assistants"
+    test "phind.com is Phind and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://phind.com")
+      |> assert_source("Phind")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "copilot.microsoft.com is Microsoft Copilot and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://copilot.microsoft.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Microsoft Copilot"
-      assert session.acquisition_channel == "AI Assistants"
+    test "copilot.microsoft.com is Microsoft Copilot and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://copilot.microsoft.com")
+      |> assert_source("Microsoft Copilot")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "copilot.com is Microsoft Copilot and AI Assistants", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://copilot.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Microsoft Copilot"
-      assert session.acquisition_channel == "AI Assistants"
+    test "copilot.com is Microsoft Copilot and AI Assistants", %{site: site} do
+      site
+      |> event_with_referrer("https://copilot.com")
+      |> assert_source("Microsoft Copilot")
+      |> assert_acquisition_channel("AI Assistants")
     end
 
-    test "x.com is X (Twitter) and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://x.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "X (Twitter)"
-      assert session.acquisition_channel == "Organic Social"
+    test "x.com is X (Twitter) and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://x.com")
+      |> assert_source("X (Twitter)")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "l.threads.com is Threads and Organic Social", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://l.threads.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Threads"
-      assert session.acquisition_channel == "Organic Social"
+    test "l.threads.com is Threads and Organic Social", %{site: site} do
+      site
+      |> event_with_referrer("https://l.threads.com")
+      |> assert_source("Threads")
+      |> assert_acquisition_channel("Organic Social")
     end
 
-    test "kagi.com is Kagi and Organic Search", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://example.com",
-        referrer: "https://kagi.com",
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      [session] = get_sessions(site)
-
-      assert response(conn, 202) == "ok"
-      assert session.referrer_source == "Kagi"
-      assert session.acquisition_channel == "Organic Search"
+    test "kagi.com is Kagi and Organic Search", %{site: site} do
+      site
+      |> event_with_referrer("https://kagi.com")
+      |> assert_source("Kagi")
+      |> assert_acquisition_channel("Organic Search")
     end
   end
 
