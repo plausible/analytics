@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           "The site is already in your personal sites."
 
         is_nil(socket.assigns[:my_team]) ->
-          "My personal sites does not have an active subscription."
+          "You don't have an active subscription."
 
         true ->
           nil
