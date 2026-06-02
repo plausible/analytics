@@ -109,21 +109,27 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    scope alias: PlausibleWeb.Live,
-          assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
-      pipe_through [:browser, :csrf, :app_layout, :flags]
+    live_session :customer_support,
+      on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
+      scope alias: PlausibleWeb.Live,
+            assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
+        pipe_through [:browser, :csrf, :app_layout, :flags]
 
-      live "/cs", CustomerSupport, :index, as: :customer_support
-      live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
-      live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
-      live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
+        live "/cs", CustomerSupport, :index, as: :customer_support
+        live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
+        live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
+        live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
+      end
     end
   end
 
   on_ee do
-    scope path: "/flags" do
-      pipe_through :flags
-      forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    live_session :flags,
+      on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
+      scope path: "/flags" do
+        pipe_through :flags
+        forward "/", FunWithFlags.UI.Router, namespace: "flags"
+      end
     end
   end
 
