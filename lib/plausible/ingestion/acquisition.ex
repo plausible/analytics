@@ -31,6 +31,7 @@ defmodule Plausible.Ingestion.Acquisition do
     {"vkontakte", "SOURCE_CATEGORY_SOCIAL"},
     {"threads", "SOURCE_CATEGORY_SOCIAL"},
     {"ecosia", "SOURCE_CATEGORY_SEARCH"},
+    {"kagi", "SOURCE_CATEGORY_SEARCH"},
     {"brave", "SOURCE_CATEGORY_SEARCH"},
     {"temu.com", "SOURCE_CATEGORY_SHOPPING"},
     {"discord", "SOURCE_CATEGORY_SOCIAL"},

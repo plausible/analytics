@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Favicon do
   @external_resource @placeholder_icon_location
   @custom_icons %{
     "Brave" => "search.brave.com",
+    "Kagi" => "kagi.com",
     "Sogou" => "sogou.com",
     "Wikipedia" => "en.wikipedia.org",
     "Discord" => "discord.com",
