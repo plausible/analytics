@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react'
+import { revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
+import { useSiteContext } from '../../site-context'
 import {
   hasConversionGoalFilter,
   isRealTimeDashboard
@@ -29,7 +31,12 @@ export function LocationsDetails({
   reportKey: LocationsReportKey
 }) {
   const { dashboardState } = useDashboardStateContext()
+  const site = useSiteContext()
   const reportConfig = BREAKDOWN_REPORTS[reportKey]
+
+  /*global BUILD_EXTRA*/
+  const isRevenueAvailable =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
   const metrics = chooseBreakdownMetricsByContext(
     reportConfig.metricsByContext,
@@ -37,7 +44,7 @@ export function LocationsDetails({
       hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
       isRealtime: isRealTimeDashboard(dashboardState),
       isDetailed: true,
-      isRevenueAvailable: false
+      isRevenueAvailable: isRevenueAvailable
     }
   )
 
