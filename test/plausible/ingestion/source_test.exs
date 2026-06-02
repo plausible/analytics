@@ -74,6 +74,16 @@ defmodule Plausible.Ingestion.SourceTest do
     assert Source.resolve(%{@base_request | referrer: "https://phind.com"}) == "Phind"
   end
 
+  test "copilot.microsoft.com referrer is Microsoft Copilot" do
+    assert Source.resolve(%{@base_request | referrer: "https://copilot.microsoft.com"}) ==
+             "Microsoft Copilot"
+  end
+
+  test "copilot.com referrer is Microsoft Copilot" do
+    assert Source.resolve(%{@base_request | referrer: "https://copilot.com"}) ==
+             "Microsoft Copilot"
+  end
+
   test "x.com referrer is X (Twitter)" do
     assert Source.resolve(%{@base_request | referrer: "https://x.com"}) == "X (Twitter)"
   end

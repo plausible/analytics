@@ -3653,6 +3653,46 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "AI Assistants"
     end
 
+    test "copilot.microsoft.com is Microsoft Copilot and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://copilot.microsoft.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Microsoft Copilot"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
+    test "copilot.com is Microsoft Copilot and AI Assistants", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://copilot.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      [session] = get_sessions(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Microsoft Copilot"
+      assert session.acquisition_channel == "AI Assistants"
+    end
+
     test "x.com is X (Twitter) and Organic Social", %{conn: conn, site: site} do
       params = %{
         name: "pageview",

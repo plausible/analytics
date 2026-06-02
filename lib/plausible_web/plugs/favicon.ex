@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Favicon do
     "Claude" => "claude.ai",
     "Phind" => "phind.com",
     "DeepSeek" => "deepseek.com",
-    "Copilot" => "copilot.microsoft.com",
+    "Microsoft Copilot" => "copilot.microsoft.com",
     "Grok" => "grok.com",
     "X (Twitter)" => "x.com"
   }
