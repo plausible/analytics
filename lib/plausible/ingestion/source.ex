@@ -36,11 +36,12 @@ defmodule Plausible.Ingestion.Source do
       |> Map.put(String.downcase(val), val)
     end)
 
+  @spec from_custom_sources(String.t()) :: String.t() | nil
   for {k, v} <- Enum.sort(lookup) do
-    def src(unquote(k)), do: unquote(v)
+    def from_custom_sources(unquote(k)), do: unquote(v)
   end
 
-  def src(_), do: nil
+  def from_custom_sources(_), do: nil
 
   def paid_sources() do
     @paid_sources |> MapSet.to_list()
@@ -85,7 +86,7 @@ defmodule Plausible.Ingestion.Source do
 
     # Prefer custom source overrides over RefInspector so subdomain matches win
     # (e.g. gemini.google.com resolves to Google Gemini, not Google).
-    case src(String.downcase(host)) do
+    case from_custom_sources(String.downcase(host)) do
       name when is_binary(name) ->
         name
 
@@ -104,10 +105,8 @@ defmodule Plausible.Ingestion.Source do
       request.query_params["ref"]
   end
 
-  # Maps a source name/alias to its canonical form, or returns it unchanged.
-  # Idempotent: every canonical value's lowercased form maps back to itself.
   defp canonical(source) do
-    src(String.downcase(source)) || source
+    from_custom_sources(String.downcase(source)) || source
   end
 
   def format_referrer(request) do
