@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.RequireAccountPlug do
+  @moduledoc false
+
   alias PlausibleWeb.Router.Helpers, as: Routes
   import Plug.Conn
 
