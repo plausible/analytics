@@ -224,7 +224,7 @@ const NameCell = <TListItem extends { name: string }>({
       path={rootRoute.path}
       filterInfo={getFilterInfo(item)}
       onClick={undefined}
-      extraClass={undefined}
+      className={undefined}
     >
       {item.name}
     </DrilldownLink>

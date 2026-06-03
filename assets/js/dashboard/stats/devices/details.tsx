@@ -64,6 +64,7 @@ export function DevicesDetails({
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         searchEnabled={searchEnabled}
         DimensionElement={DimensionElement}

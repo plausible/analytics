@@ -30,7 +30,6 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  getStatsQueryWithImplicitNotEmptyFilter,
   GetFilterInfo
 } from '../breakdowns'
 import {
@@ -87,6 +86,7 @@ export function DetailsBreakdown({
   dimensionLabel,
   dimensions,
   metrics,
+  alwaysOnFilters,
   defaultOrderBy = [] as MetricOrderBy,
   DimensionElement,
   searchEnabled = true,
@@ -124,15 +124,14 @@ export function DetailsBreakdown({
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
           ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-        ]
+        ],
+        alwaysOnFilters
       },
       search
     }
   ]
 
-  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey, {
-    getStatsQuery: getStatsQueryWithImplicitNotEmptyFilter
-  })
+  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey)
 
   useEffect(() => {
     const pages = apiState.data?.pages
@@ -491,8 +490,8 @@ export const DimensionCell = ({
     <DrilldownLink
       path={rootRoute.path}
       filterInfo={getFilterInfo(filterDimension, row)}
+      icon={icon}
     >
-      {icon}
       {text}
     </DrilldownLink>
     {externalLink}

@@ -55,6 +55,7 @@ export type ReportParams = {
   include?: Partial<QueryInclude>
   order_by?: OrderBy
   pagination?: Pagination
+  alwaysOnFilters?: ApiFilter[]
 }
 
 export type StatsQuery = {
@@ -84,7 +85,10 @@ export function createStatsQuery(
     relative_date: dashboardState.date ? formatISO(dashboardState.date) : null,
     dimensions: reportParams.dimensions || [],
     metrics: reportParams.metrics,
-    filters: remapToApiFilters(dashboardState.filters),
+    filters: [
+      ...remapToApiFilters(dashboardState.filters),
+      ...(reportParams.alwaysOnFilters ?? [])
+    ],
     order_by: reportParams.order_by || null,
     pagination: reportParams.pagination || null,
     include: {

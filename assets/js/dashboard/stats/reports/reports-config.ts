@@ -1,4 +1,4 @@
-import { NonTimeDimension } from '../../stats-query'
+import { ApiFilter, NonTimeDimension } from '../../stats-query'
 import { Metric } from '../metrics'
 
 export type MetricsByContext = {
@@ -10,11 +10,12 @@ export type MetricsByContext = {
 }
 
 export type BreakdownReportConfig = {
-  dimensions: [NonTimeDimension] | [NonTimeDimension, NonTimeDimension]
+  dimensions: [NonTimeDimension, ...NonTimeDimension[]]
   metricsByContext: MetricsByContext
   detailsTitle: string
   detailsPath: string
   dimensionLabel: string
+  alwaysOnFilters?: ApiFilter[]
 }
 
 const COMMON_METRICS_BY_CONTEXT: MetricsByContext = {
@@ -50,7 +51,10 @@ export enum BreakdownReportKey {
   'utmSources' = 'utmSources',
   'utmCampaigns' = 'utmCampaigns',
   'utmContents' = 'utmContents',
-  'utmTerms' = 'utmTerms'
+  'utmTerms' = 'utmTerms',
+  'countries' = 'countries',
+  'regions' = 'regions',
+  'cities' = 'cities'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -88,7 +92,8 @@ export const BREAKDOWN_REPORTS: Record<
     },
     detailsTitle: 'Entry pages',
     detailsPath: 'entry-pages',
-    dimensionLabel: 'Entry page'
+    dimensionLabel: 'Entry page',
+    alwaysOnFilters: [['is_not', 'visit:entry_page', ['']]]
   },
   [BreakdownReportKey.exitPages]: {
     dimensions: ['visit:exit_page'],
@@ -98,7 +103,8 @@ export const BREAKDOWN_REPORTS: Record<
     },
     detailsTitle: 'Exit pages',
     detailsPath: 'exit-pages',
-    dimensionLabel: 'Exit page'
+    dimensionLabel: 'Exit page',
+    alwaysOnFilters: [['is_not', 'visit:exit_page', ['']]]
   },
   [BreakdownReportKey.browsers]: {
     dimensions: ['visit:browser'],
@@ -161,34 +167,74 @@ export const BREAKDOWN_REPORTS: Record<
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'UTM mediums',
     detailsPath: 'utm_mediums',
-    dimensionLabel: 'UTM medium'
+    dimensionLabel: 'UTM medium',
+    alwaysOnFilters: [['is_not', 'visit:utm_medium', ['']]]
   },
   [BreakdownReportKey.utmSources]: {
     dimensions: ['visit:utm_source'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'UTM sources',
     detailsPath: 'utm_sources',
-    dimensionLabel: 'UTM source'
+    dimensionLabel: 'UTM source',
+    alwaysOnFilters: [['is_not', 'visit:utm_source', ['']]]
   },
   [BreakdownReportKey.utmCampaigns]: {
     dimensions: ['visit:utm_campaign'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'UTM campaigns',
     detailsPath: 'utm_campaigns',
-    dimensionLabel: 'UTM campaign'
+    dimensionLabel: 'UTM campaign',
+    alwaysOnFilters: [['is_not', 'visit:utm_campaign', ['']]]
   },
   [BreakdownReportKey.utmContents]: {
     dimensions: ['visit:utm_content'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'UTM contents',
     detailsPath: 'utm_contents',
-    dimensionLabel: 'UTM content'
+    dimensionLabel: 'UTM content',
+    alwaysOnFilters: [['is_not', 'visit:utm_content', ['']]]
   },
   [BreakdownReportKey.utmTerms]: {
     dimensions: ['visit:utm_term'],
     metricsByContext: COMMON_METRICS_BY_CONTEXT,
     detailsTitle: 'UTM terms',
     detailsPath: 'utm_terms',
-    dimensionLabel: 'UTM term'
+    dimensionLabel: 'UTM term',
+    alwaysOnFilters: [['is_not', 'visit:utm_term', ['']]]
+  },
+  [BreakdownReportKey.countries]: {
+    dimensions: ['visit:country_name', 'visit:country'],
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
+    detailsTitle: 'Top countries',
+    detailsPath: 'countries',
+    dimensionLabel: 'Country',
+    alwaysOnFilters: [['is_not', 'visit:country', ['\0\0', 'ZZ']]]
+  },
+  [BreakdownReportKey.regions]: {
+    // the 3rd dimension "visit:country" is needed to render the country flag
+    dimensions: ['visit:region_name', 'visit:region', 'visit:country'],
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
+    detailsTitle: 'Top regions',
+    detailsPath: 'regions',
+    dimensionLabel: 'Region',
+    alwaysOnFilters: [['is_not', 'visit:region', ['']]]
+  },
+  [BreakdownReportKey.cities]: {
+    // the 3rd dimension "visit:country" is needed to render the country flag
+    dimensions: ['visit:city_name', 'visit:city', 'visit:country'],
+    metricsByContext: {
+      ...COMMON_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: ['visitors', 'percentage']
+    },
+    detailsTitle: 'Top cities',
+    detailsPath: 'cities',
+    dimensionLabel: 'City',
+    alwaysOnFilters: [['is_not', 'visit:city', [0]]]
   }
 }

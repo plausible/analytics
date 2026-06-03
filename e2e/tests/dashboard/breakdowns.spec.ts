@@ -925,6 +925,10 @@ test('locations breakdown', async ({ page, request }) => {
         country_code: 'PL',
         subdivision1_code: 'PL-14',
         city_geoname_id: 756_135
+      },
+      {
+        name: 'pageview',
+        country_code: ''
       }
     ]
   })
@@ -968,6 +972,14 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectMetricValues(modal(page), 'Estonia', ['2'])
 
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Esto')
+    await expectRows(modal(page), [/Estonia/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Estonia/, /Poland/])
+
     await closeModalButton(page).click()
   })
 
@@ -990,7 +1002,7 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(report, ['Region', 'Visitors'])
 
-    await expectRows(report, [/Harjumaa/, /Tartumaa/, /Mazovia/])
+    await expectRows(report, [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await expectMetricValues(report, 'Harjumaa', ['1', '33.3%'])
     await expectMetricValues(report, 'Tartumaa', ['1', '33.3%'])
@@ -1006,9 +1018,17 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(modal(page), ['Region', /Visitors/])
 
-    await expectRows(modal(page), [/Harjumaa/, /Tartumaa/, /Mazovia/])
+    await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await expectMetricValues(modal(page), 'Harjumaa', ['1'])
+
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Harju')
+    await expectRows(modal(page), [/Harjumaa/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
     await closeModalButton(page).click()
   })
@@ -1032,7 +1052,7 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(report, ['City', 'Visitors'])
 
-    await expectRows(report, [/Tartu/, /Tallinn/, /Warsaw/])
+    await expectRows(report, [/Tallinn/, /Tartu/, /Warsaw/])
 
     await expectMetricValues(report, 'Tartu', ['1', '33.3%'])
     await expectMetricValues(report, 'Tallinn', ['1', '33.3%'])
@@ -1048,9 +1068,204 @@ test('locations breakdown', async ({ page, request }) => {
 
     await expectHeaders(modal(page), ['City', /Visitors/])
 
-    await expectRows(modal(page), [/Tartu/, /Tallinn/, /Warsaw/])
+    await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
 
     await expectMetricValues(modal(page), 'Tartu', ['1'])
+
+    await expect(searchInput(modal(page))).toBeVisible()
+
+    await searchInput(modal(page)).fill('Tallinn')
+    await expectRows(modal(page), [/Tallinn/])
+
+    await searchInput(modal(page)).fill('')
+    await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
+
+    await closeModalButton(page).click()
+  })
+})
+
+test('locations breakdown with a revenue goal filter applied', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 1,
+        name: 'pageview',
+        country_code: 'A1'
+      },
+      {
+        user_id: 2,
+        name: 'pageview',
+        country_code: 'A1'
+      },
+      {
+        user_id: 2,
+        name: 'purchase',
+        revenue_reporting_amount: '23',
+        revenue_reporting_currency: 'EUR',
+        country_code: 'A1'
+      },
+      {
+        user_id: 3,
+        name: 'pageview',
+        country_code: 'PL',
+        subdivision1_code: 'PL-14',
+        city_geoname_id: 756_135
+      },
+      {
+        user_id: 4,
+        name: 'pageview',
+        country_code: 'EE',
+        subdivision1_code: 'EE-37',
+        city_geoname_id: 588_409
+      },
+      {
+        user_id: 4,
+        name: 'purchase',
+        revenue_reporting_amount: '12345.67',
+        revenue_reporting_currency: 'EUR',
+        country_code: 'EE',
+        subdivision1_code: 'EE-37',
+        city_geoname_id: 588_409
+      }
+    ]
+  })
+
+  await addCustomGoal({ page, domain, name: 'purchase', currency: 'EUR' })
+
+  await page.goto('/' + domain + '?f=is,goal,purchase', {
+    waitUntil: 'commit'
+  })
+
+  const report = page.getByTestId('report-locations')
+
+  await test.step('countries report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Countries').click()
+
+    await expectHeaders(report, ['Country', 'Conversions', 'CR'])
+
+    await expectRows(report, [/Anonymous VPN Service/, /Estonia/])
+
+    await expectMetricValues(report, 'Anonymous VPN Service', ['1', '50%'])
+    await expectMetricValues(report, 'Estonia', ['1', '100%'])
+  })
+
+  await test.step('countries details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top countries' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Country',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), [/Anonymous VPN Service/, /Estonia/])
+
+    await expectMetricValues(modal(page), 'Anonymous VPN Service', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+    await expectMetricValues(modal(page), 'Estonia', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('regions report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Regions').click()
+
+    await expectHeaders(report, ['Region', 'Conversions', 'CR'])
+
+    await expectRows(report, [/Harjumaa/])
+
+    await expectMetricValues(report, 'Harjumaa', ['1', '100%'])
+  })
+
+  await test.step('regions details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top regions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Region',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), [/Harjumaa/])
+
+    await expectMetricValues(modal(page), 'Harjumaa', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('cities report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Cities').click()
+
+    await expectHeaders(report, ['City', 'Conversions', 'CR'])
+
+    await expectRows(report, [/Tallinn/])
+
+    await expectMetricValues(report, 'Tallinn', ['1', '100%'])
+  })
+
+  await test.step('cities details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Top cities' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'City',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), [/Tallinn/])
+
+    await expectMetricValues(modal(page), 'Tallinn', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
 
     await closeModalButton(page).click()
   })
