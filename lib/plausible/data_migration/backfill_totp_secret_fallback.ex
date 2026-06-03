@@ -1,7 +1,7 @@
 defmodule Plausible.DataMigration.BackfillTotpSecretFallback do
   @moduledoc """
   Backfill `user.totp_secret_fallback` with the contents of `user.totp_secret`
-  with vaulated values decoded.
+  with vaulted values decoded and encoded again.
   """
 
   import Ecto.Query

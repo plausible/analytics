@@ -1,7 +1,7 @@
 defmodule Plausible.DataMigration.OverwriteTotpSecret do
   @moduledoc """
   Overwrite `user.totp_secret` with the contents of `user.totp_secret_fallback`
-  with vaulated values decoded.
+  with vaulted values decoded and encoded again.
   """
 
   import Ecto.Query
