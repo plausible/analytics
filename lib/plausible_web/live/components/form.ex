@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         name={@name}
         checked={assigns[:checked]}
-        class="block dark:bg-gray-900 size-4.5 mt-px cursor-pointer text-indigo-600 border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white"
+        class="block dark:bg-gray-900 size-4.5 mt-px cursor-pointer text-indigo-600 border-gray-400 dark:border-gray-600 checked:border-indigo-600 dark:checked:border-white disabled:cursor-not-allowed"
         {@rest}
       />
       <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
@@ -416,7 +416,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def error(assigns) do
     ~H"""
-    <p class="flex gap-3 text-sm leading-6 text-red-500">
+    <p class="mt-1 flex gap-3 text-sm text-red-500 leading-4.5 text-pretty">
       {render_slot(@inner_block)}
     </p>
     """

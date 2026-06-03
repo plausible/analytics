@@ -597,12 +597,6 @@ defmodule PlausibleWeb.Router do
 
     delete "/sites/:domain/invitations/:invitation_id", InvitationController, :remove_invitation
 
-    get "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership_form
-    post "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership
-
-    get "/sites/:domain/change-team", Site.MembershipController, :change_team_form
-    post "/sites/:domain/change-team", Site.MembershipController, :change_team
-
     put "/sites/:domain/memberships/u/:id/role/:new_role",
         Site.MembershipController,
         :update_role_by_user
