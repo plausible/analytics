@@ -5,6 +5,7 @@ defmodule Plausible.IngestRepo.Migrations.RemapSourcesV3 do
     "twitter" => "X (Twitter)",
     "x.com" => "X (Twitter)",
     "twitter-ads" => "X (Twitter)",
+    "mobile.twitter.com" => "X (Twitter)",
     "bsky.app" => "Bluesky",
     "go.bsky.app" => "Bluesky",
     "chatgpt.com" => "ChatGPT",
