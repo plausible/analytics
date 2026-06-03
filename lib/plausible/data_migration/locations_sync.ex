@@ -70,7 +70,8 @@ defmodule Plausible.DataMigration.LocationsSync do
       table: "imported_locations",
       column_name: "region_name",
       type: "subdivision",
-      input_column: "region"
+      input_column: "region",
+      fallback_column: "region"
     },
     %{
       table: "imported_locations",
@@ -79,6 +80,15 @@ defmodule Plausible.DataMigration.LocationsSync do
       input_column: "city"
     }
   ]
+
+  defp alias_expr(%{type: type, input_column: input_column} = column) do
+    dict_get = "dictGet('location_data_dict', 'name', tuple('#{type}', #{input_column}))"
+
+    case column do
+      %{fallback_column: fallback} -> "if(empty(#{dict_get}), #{fallback}, #{dict_get})"
+      _ -> dict_get
+    end
+  end
 
   def out_of_date?() do
     case run_sql("get-location-data-table-comment") do
@@ -131,8 +141,7 @@ defmodule Plausible.DataMigration.LocationsSync do
           cluster?: cluster?,
           table: column.table,
           column_name: column.column_name,
-          type: column.type,
-          input_column: column.input_column
+          alias_expr: alias_expr(column)
         )
     end
 
