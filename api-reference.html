@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-8DDDDF5F.js"></script>
+    <script src="dist/sidebar_items-F28AB7A8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -5081,6 +5081,19 @@ plans, just with the monthly/yearly product_id's of the sandbox plans.</p></div>
 
     <div class="summary-synopsis"><p>This task downloads the Country Lite database from DB-IP for self-hosted or development purposes.
 Plausible Cloud runs a paid version of DB-IP with more detailed geolocation data.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.GenerateCountriesMeta.html" translate="no">mix generate_countries_meta</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Regenerates <code class="inline">countries_meta.json</code>, an <code class="inline">alpha_2 -&gt; [alpha_3, flag]</code> dictionary.
+The dashboard uses it for two things.
+First, to render country flags the same way as the BE does.
+Secondly, to map visitors by country to the country shapes in the world map. This is needed
+because country shapes are identified in the geography dataset only with their alpha3 code.</p></div>
 
 </div>
 <div class="summary-row">
