@@ -28,6 +28,7 @@
   "scholar.social":"Mastodon",
   "sigmoid.social":"Mastodon",
   "social.tchncs.de":"Mastodon",
+  "android-app://org.joinmastodon.android": "Mastodon",
   "discord.com":"Discord",
   "discordapp.com":"Discord",
   "linktr.ee":"Linktree",
