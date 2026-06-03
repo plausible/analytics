@@ -40,7 +40,6 @@ defmodule Plausible.Ingestion.Acquisition do
     {"bluesky", "SOURCE_CATEGORY_SOCIAL"},
     {"mastodon", "SOURCE_CATEGORY_SOCIAL"},
     {"chatgpt", "SOURCE_CATEGORY_AI_ASSISTANTS"},
-    {"chatgpt.com", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"claude", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"phind", "SOURCE_CATEGORY_AI_ASSISTANTS"},
     {"deepseek", "SOURCE_CATEGORY_AI_ASSISTANTS"},
