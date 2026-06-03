@@ -23,7 +23,7 @@ jobs:
         with:
           token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 23.2.0
           registry-url: 'https://registry.npmjs.org'
@@ -55,7 +55,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.TRACKER_RELEASE_NPM_TOKEN }}
 
       - name: Commit and Push changes
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
+        uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321
         with:
           message: "Released tracker script version ${{ steps.package.outputs.version }}"
           github_token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
