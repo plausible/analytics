@@ -25,5 +25,13 @@ type CountryTwoLetterCode = string
 
 export type CountriesLookup = Record<CountryTwoLetterCode, CountryEntry>
 
-export const COUNTRIES_BY_TWO_LETTER_CODE =
-  countriesMeta as unknown as CountriesLookup
+const remapCountriesMeta = () => {
+  const result: CountriesLookup = {}
+  for (const [alpha_2, [alpha_3, flag]] of Object.entries(countriesMeta)) {
+    // flag is definitely defined in the source file
+    const entry: CountryEntry = { alpha_3, flag: flag! }
+    Object.assign(result, { [alpha_2]: entry })
+  }
+  return result
+}
+export const COUNTRIES_BY_TWO_LETTER_CODE = remapCountriesMeta()
