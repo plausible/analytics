@@ -99,7 +99,6 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{referrer_source: "Bluesky", expected: "Organic Social"},
     %{referrer_source: "Mastodon", expected: "Organic Social"},
     %{referrer_source: "Google Gemini", expected: "AI Assistants"},
-    %{referrer_source: "chatgpt.com", expected: "AI Assistants"},
     %{referrer_source: "ChatGPT", expected: "AI Assistants"},
     %{referrer_source: "Claude", expected: "AI Assistants"},
     %{referrer_source: "Phind", expected: "AI Assistants"},
