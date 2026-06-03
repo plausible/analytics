@@ -444,24 +444,29 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
   end
 
   describe "submitting (my_team destination)" do
-    test "successfully changes the site's team and redirects to sites listing", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      team2 = join_2nd_team(user, subscribe?: true)
+    test "successfully changes the site's team to personal team and redirects to sites listing",
+         %{
+           conn: conn,
+           user: user
+         } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :admin)
+
+      subscribe_to_growth_plan(user)
+      my_team = team_of(user)
 
       {:ok, lv, _html} = get_liveview(conn, site)
 
       lv
       |> element("#site-transfer-form")
       |> render_submit(%{
-        "form" => %{"destination" => "team", "team_identifier" => team2.identifier}
+        "form" => %{"destination" => "my_team", "my_team_available" => "true"}
       })
 
-      assert_redirect(lv, "/sites?__team=#{team2.identifier}")
+      assert_redirect(lv, "/sites?__team=#{my_team.identifier}")
 
-      assert Plausible.Repo.reload!(site).team_id == team2.id
+      assert Plausible.Repo.reload!(site).team_id == my_team.id
     end
 
     @tag :ee_only
