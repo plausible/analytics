@@ -477,6 +477,31 @@ export async function addAllCustomProps({
   )
 }
 
+export async function enableDashboardCsvExportV2({
+  request,
+  domain
+}: {
+  request: APIRequestContext
+  domain: string
+}) {
+  const response = await request.post(
+    '/e2e-tests/enable-dashboard-csv-export-v2',
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      data: { domain }
+    }
+  )
+  if (!response.ok()) {
+    const body = await response.text()
+    throw new Error(
+      `enableDashboardCsvExportV2 failed (${response.status()}): ${body}`
+    )
+  }
+}
+
 export async function addFunnel({
   request,
   domain,

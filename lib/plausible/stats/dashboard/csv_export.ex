@@ -68,8 +68,8 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     report_params = params["reports"][filename]
 
     filters =
-      case report_params["extra_filter"] do
-        filter when is_list(filter) -> params["filters"] ++ [filter]
+      case report_params["always_on_filters"] do
+        always_on when is_list(always_on) -> params["filters"] ++ always_on
         _ -> params["filters"]
       end
 

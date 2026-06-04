@@ -4,9 +4,15 @@ import { popover } from '../../components/popover'
 import classNames from 'classnames'
 import { Spinner } from '../../components/icons'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { useDashboardStateContext } from '../../dashboard-state-context'
+import { useGraphIntervalContext } from '../graph/graph-interval-context'
+import { createCsvExportRequestBody } from './csv-export-body'
+import * as api from '../../api'
 
 export function CsvExportV2() {
   const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
+  const { selectedInterval } = useGraphIntervalContext()
 
   const [exporting, setExporting] = useState(false)
 
@@ -14,16 +20,8 @@ export function CsvExportV2() {
     setExporting(true)
 
     try {
-      const exportParams = {}
-      const response = await fetch(
-        `/api/stats/${encodeURIComponent(site.domain)}/export`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(exportParams)
-        }
-      )
-      const blob = await response.blob()
+      const body = createCsvExportRequestBody(dashboardState, selectedInterval)
+      const blob = await api.csvExport(site, body)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

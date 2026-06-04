@@ -96,6 +96,11 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
     end
 
+    def enable_dashboard_csv_export_v2(conn, %{"domain" => domain}) do
+      FunWithFlags.enable(:dashboard_csv_export_v2, for_actor: "site:#{domain}")
+      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
     defp get_goal(site, name) do
       Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
     end

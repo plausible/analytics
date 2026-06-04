@@ -4,6 +4,7 @@ import { Metric } from '../metrics'
 export type MetricContext = {
   hasConversionGoalFilter: boolean
   isRealtime?: boolean
+  isCsv?: boolean
   isDetailed?: boolean
   isRevenueAvailable?: boolean
   hasEventFilters?: boolean
@@ -13,8 +14,10 @@ export type MetricsByContext = {
   realtimeMetrics: Metric[]
   defaultIndexMetrics: Metric[]
   defaultDetailedMetrics: Metric[]
+  defaultCsvMetrics: Metric[]
   goalFilterIndexMetrics: Metric[]
   goalFilterDetailedMetrics: Metric[]
+  goalFilterCsvMetrics: Metric[]
 }
 
 export type BreakdownReportConfig = {
@@ -26,7 +29,7 @@ export type BreakdownReportConfig = {
   alwaysOnFilters?: ApiFilter[]
 }
 
-const COMMON_BREAKDOWN_METRICS_BY_CONTEXT: MetricsByContext = {
+export const COMMON_BREAKDOWN_METRICS_BY_CONTEXT: MetricsByContext = {
   realtimeMetrics: ['visitors', 'percentage'],
   defaultIndexMetrics: ['visitors', 'percentage'],
   defaultDetailedMetrics: [
@@ -35,21 +38,30 @@ const COMMON_BREAKDOWN_METRICS_BY_CONTEXT: MetricsByContext = {
     'bounce_rate',
     'visit_duration'
   ],
+  defaultCsvMetrics: ['visitors', 'bounce_rate', 'visit_duration'],
   goalFilterIndexMetrics: ['visitors', 'group_conversion_rate'],
   goalFilterDetailedMetrics: [
     'total_visitors',
     'visitors',
     'group_conversion_rate'
-  ]
+  ],
+  goalFilterCsvMetrics: ['visitors', 'group_conversion_rate']
 }
 
 function chooseMetrics(mbc: MetricsByContext, ctx: MetricContext): Metric[] {
   const {
     isRealtime,
+    isCsv,
     isDetailed,
     hasConversionGoalFilter,
     isRevenueAvailable
   } = ctx
+  if (isCsv && hasConversionGoalFilter) {
+    return mbc.goalFilterCsvMetrics
+  }
+  if (isCsv) {
+    return mbc.defaultCsvMetrics
+  }
   if (hasConversionGoalFilter && isDetailed && isRevenueAvailable) {
     return [
       ...mbc.goalFilterDetailedMetrics,
@@ -115,6 +127,13 @@ export const BREAKDOWN_REPORTS: Record<
         'bounce_rate',
         'time_on_page',
         'scroll_depth'
+      ],
+      defaultCsvMetrics: [
+        'visitors',
+        'pageviews',
+        'bounce_rate',
+        'time_on_page',
+        'scroll_depth'
       ]
     }),
     detailsTitle: 'Top pages',
@@ -131,7 +150,8 @@ export const BREAKDOWN_REPORTS: Record<
         'visits',
         'bounce_rate',
         'visit_duration'
-      ]
+      ],
+      defaultCsvMetrics: ['visitors', 'visits', 'bounce_rate', 'visit_duration']
     }),
     detailsTitle: 'Entry pages',
     detailsPath: 'entry-pages',
@@ -149,7 +169,8 @@ export const BREAKDOWN_REPORTS: Record<
             'percentage',
             'visits',
             'exit_rate'
-          ]
+          ],
+          defaultCsvMetrics: ['visitors', 'visits', 'exit_rate']
         },
         ctx
       )
@@ -163,35 +184,50 @@ export const BREAKDOWN_REPORTS: Record<
   },
   [BreakdownReportKey.browsers]: {
     dimensions: ['visit:browser'],
-    getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultCsvMetrics: ['visitors']
+    }),
     detailsTitle: 'Browsers',
     detailsPath: 'browsers',
     dimensionLabel: 'Browser'
   },
   [BreakdownReportKey.browserVersions]: {
     dimensions: ['visit:browser_version', 'visit:browser'],
-    getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultCsvMetrics: ['visitors']
+    }),
     detailsTitle: 'Browser versions',
     detailsPath: 'browser-versions',
     dimensionLabel: 'Browser version'
   },
   [BreakdownReportKey.operatingSystems]: {
     dimensions: ['visit:os'],
-    getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultCsvMetrics: ['visitors']
+    }),
     detailsTitle: 'Operating systems',
     detailsPath: 'operating-systems',
     dimensionLabel: 'Operating system'
   },
   [BreakdownReportKey.operatingSystemVersions]: {
     dimensions: ['visit:os_version', 'visit:os'],
-    getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultCsvMetrics: ['visitors']
+    }),
     detailsTitle: 'Operating system versions',
     detailsPath: 'operating-system-versions',
     dimensionLabel: 'Operating system version'
   },
   [BreakdownReportKey.screenSizes]: {
     dimensions: ['visit:device'],
-    getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultCsvMetrics: ['visitors']
+    }),
     detailsTitle: 'Devices',
     detailsPath: 'screen-sizes',
     dimensionLabel: 'Device'
@@ -261,7 +297,8 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:country_name', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage']
+      defaultDetailedMetrics: ['visitors', 'percentage'],
+      defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top countries',
     detailsPath: 'countries',
@@ -273,7 +310,8 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:region_name', 'visit:region', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage']
+      defaultDetailedMetrics: ['visitors', 'percentage'],
+      defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top regions',
     detailsPath: 'regions',
@@ -285,7 +323,8 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:city_name', 'visit:city', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage']
+      defaultDetailedMetrics: ['visitors', 'percentage'],
+      defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top cities',
     detailsPath: 'cities',

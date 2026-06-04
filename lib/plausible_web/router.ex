@@ -175,6 +175,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        post "/enable-dashboard-csv-export-v2", E2EController, :enable_dashboard_csv_export_v2
       end
     end
   end
