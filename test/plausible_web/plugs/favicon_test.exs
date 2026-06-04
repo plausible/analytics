@@ -99,7 +99,8 @@ defmodule PlausibleWeb.FaviconTest do
         "Bluesky" => "bsky.app",
         "Mastodon" => "mastodon.social",
         "X (Twitter)" => "x.com",
-        "Kagi" => "kagi.com"
+        "Kagi" => "kagi.com",
+        "Microsoft 365" => "office.com"
       } do
     test "maps custom source #{source} to #{domain} for favicon", %{plug_opts: plug_opts} do
       expect(

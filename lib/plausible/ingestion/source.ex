@@ -15,6 +15,11 @@ defmodule Plausible.Ingestion.Source do
                 |> then(&["adwords" | &1])
                 |> MapSet.new()
 
+  @custom_source_suffixes %{
+    "officeapps.live.com" => "Microsoft 365",
+    "wikipedia.org" => "Wikipedia"
+  }
+
   @external_resource "priv/ref_inspector/referers.yml"
   @referers_yaml Application.app_dir(:plausible, "priv/ref_inspector/referers.yml")
 
@@ -84,19 +89,31 @@ defmodule Plausible.Ingestion.Source do
       |> URI.parse()
       |> format_referrer_host()
 
+    downcased_host = String.downcase(host)
+
     # Prefer custom source overrides over RefInspector so subdomain matches win
-    # (e.g. gemini.google.com resolves to Google Gemini, not Google).
-    case from_custom_sources(String.downcase(host)) do
-      name when is_binary(name) ->
+    # (e.g. gemini.google.com resolves to Google Gemini, not Google). Exact host
+    # matches take priority, then suffix families, then RefInspector.
+    cond do
+      name = from_custom_sources(downcased_host) ->
         name
 
-      _ ->
+      name = from_custom_source_suffix(downcased_host) ->
+        name
+
+      true ->
         case RefInspector.parse(referrer).source do
           :unknown -> host
           # Normalize RefInspector names through our aliases (e.g. Twitter to X (Twitter)).
           name -> canonical(name)
         end
     end
+  end
+
+  defp from_custom_source_suffix(host) do
+    Enum.find_value(@custom_source_suffixes, fn {suffix, name} ->
+      if host == suffix or String.ends_with?(host, "." <> suffix), do: name
+    end)
   end
 
   defp tagged_param(request) do

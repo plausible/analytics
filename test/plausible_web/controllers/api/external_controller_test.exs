@@ -2359,6 +2359,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> assert_source("Kagi")
       |> assert_acquisition_channel("Organic Search")
     end
+
+    test "officeapps.live.com subdomains are Microsoft 365 and Referral", %{site: site} do
+      site
+      |> event_with_referrer("https://cac-excel.officeapps.live.com")
+      |> assert_source("Microsoft 365")
+      |> assert_acquisition_channel("Referral")
+    end
   end
 
   describe "user_id generation" do

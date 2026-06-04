@@ -113,6 +113,7 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{referrer_source: "Threads", expected: "Organic Social"},
     %{referrer_source: "Ecosia", expected: "Organic Search"},
     %{referrer_source: "Kagi", expected: "Organic Search"},
+    %{referrer_source: "Microsoft 365", expected: "Referral"},
     %{
       referrer_source: "Google",
       utm_medium: "display",
