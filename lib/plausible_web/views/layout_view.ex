@@ -191,29 +191,35 @@ defmodule PlausibleWeb.LayoutView do
         end
 
       selected_id = current_team && current_team.id
+      {pinned_team, other_teams} = Enum.split_with(teams, &(&1.id == selected_id))
 
       assigns =
         assigns
-        |> assign(:teams, teams)
-        |> assign(:selected_id, selected_id)
+        |> assign(:pinned_team, List.first(pinned_team))
+        |> assign(:other_teams, other_teams)
 
       ~H"""
       <.dropdown_item>
         <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
       </.dropdown_item>
+      <.dropdown_item
+        :if={@pinned_team}
+        href={Routes.site_path(@conn, :index, __team: @pinned_team.identifier)}
+      >
+        <div class="flex items-center justify-between gap-2" role="none">
+          <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
+            {Teams.name(@pinned_team)}
+          </p>
+          <Heroicons.check class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
+        </div>
+      </.dropdown_item>
       <div class="max-h-[200px] overflow-y-auto">
         <.dropdown_item
-          :for={team <- @teams}
+          :for={team <- @other_teams}
           href={Routes.site_path(@conn, :index, __team: team.identifier)}
         >
           <p
-            class={[
-              if(team.id == @selected_id,
-                do: "border-r-4 border-indigo-400 font-bold",
-                else: "font-medium"
-              ),
-              "truncate text-gray-900 dark:text-gray-100 pr-4"
-            ]}
+            class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"
             role="none"
           >
             {Teams.name(team)}
