@@ -39,23 +39,34 @@ defmodule Plausible.IngestRepo.Migrations.RemapSourcesV3 do
     "mstdn.jp" => "Mastodon"
   }
 
+  @suffix_mappings %{
+    "officeapps.live.com" => "Microsoft 365",
+    "wikipedia.org" => "Wikipedia"
+  }
+
   def up do
     {keys, values} = Enum.unzip(@mappings)
 
-    events_sql = """
-      ALTER TABLE events_v2
-      UPDATE referrer_source = transform(lower(referrer_source), {$0:Array(String)}, {$1:Array(String)})
-      WHERE lower(referrer_source) IN {$0:Array(String)}
-    """
+    for table <- ["events_v2", "sessions_v2"] do
+      transform_sql = """
+        ALTER TABLE #{table}
+        UPDATE referrer_source = transform(lower(referrer_source), {$0:Array(String)}, {$1:Array(String)})
+        WHERE lower(referrer_source) IN {$0:Array(String)}
+      """
 
-    sessions_sql = """
-      ALTER TABLE sessions_v2
-      UPDATE referrer_source = transform(lower(referrer_source), {$0:Array(String)}, {$1:Array(String)})
-      WHERE lower(referrer_source) IN {$0:Array(String)}
-    """
+      execute(fn -> repo().query!(transform_sql, [keys, values]) end)
 
-    execute(fn -> repo().query!(events_sql, [keys, values]) end)
-    execute(fn -> repo().query!(sessions_sql, [keys, values]) end)
+      for {suffix, name} <- @suffix_mappings do
+        suffix_sql = """
+          ALTER TABLE #{table}
+          UPDATE referrer_source = {$0:String}
+          WHERE referrer_source != {$0:String}
+            AND (lower(referrer_source) = {$1:String} OR endsWith(lower(referrer_source), {$2:String}))
+        """
+
+        execute(fn -> repo().query!(suffix_sql, [name, suffix, "." <> suffix]) end)
+      end
+    end
   end
 
   def down do

@@ -100,6 +100,39 @@ defmodule Plausible.Ingestion.SourceTest do
     assert Source.resolve(%{@base_request | referrer: "https://pplx.ai"}) == "Perplexity"
   end
 
+  test "officeapps.live.com and its subdomains are Microsoft 365" do
+    for referrer <- [
+          "https://officeapps.live.com",
+          "https://cac-excel.officeapps.live.com",
+          "https://euc-excel.officeapps.live.com",
+          "https://ukc-word-edit.officeapps.live.com"
+        ] do
+      assert Source.resolve(%{@base_request | referrer: referrer}) == "Microsoft 365"
+    end
+  end
+
+  test "a host that only looks like the officeapps suffix is not Microsoft 365" do
+    assert Source.resolve(%{@base_request | referrer: "https://notofficeapps.live.com"}) ==
+             "notofficeapps.live.com"
+  end
+
+  test "any wikipedia.org subdomain is Wikipedia (including unlisted language editions)" do
+    for referrer <- [
+          "https://wikipedia.org",
+          "https://www.wikipedia.org",
+          "https://en.wikipedia.org",
+          "https://en.m.wikipedia.org",
+          "https://zu.wikipedia.org"
+        ] do
+      assert Source.resolve(%{@base_request | referrer: referrer}) == "Wikipedia"
+    end
+  end
+
+  test "a host that only looks like the wikipedia suffix is not Wikipedia" do
+    assert Source.resolve(%{@base_request | referrer: "https://notwikipedia.org"}) ==
+             "notwikipedia.org"
+  end
+
   test "RefInspector-resolved aliases are normalized (t.co referrer is 'X (Twitter)')" do
     # t.co is a Twitter domain known to RefInspector but not in custom_sources.json,
     # so it exercises the RefInspector branch and canonical mapping ('Twitter' to 'X (Twitter)').

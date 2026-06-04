@@ -51,7 +51,8 @@ defmodule PlausibleWeb.Favicon do
     "DeepSeek" => "deepseek.com",
     "Microsoft Copilot" => "copilot.microsoft.com",
     "Grok" => "grok.com",
-    "X (Twitter)" => "x.com"
+    "X (Twitter)" => "x.com",
+    "Microsoft 365" => "office.com"
   }
 
   def init(_) do
