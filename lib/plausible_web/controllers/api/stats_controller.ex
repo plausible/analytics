@@ -17,6 +17,7 @@ defmodule PlausibleWeb.Api.StatsController do
     QueryError
   }
 
+  alias Plausible.Stats.Dashboard.CsvExport
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -24,7 +25,7 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
-  plug(:date_validation_plug when action not in [:query])
+  plug(:date_validation_plug when action not in [:query, :csv_export_v2])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
 
   def query(conn, params) do
@@ -47,17 +48,23 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def csv_export_v2(conn, params) do
-    dummy_csvs = [
-      {~c"visitors.csv", "date,visitors,\n2026-05-01,100\n"},
-      {~c"sources.csv", "name,visitors,\nGoogle,100\n"}
-    ]
+    site = conn.assigns.site
 
-    {:ok, {_, zip_content}} = :zip.create(~c"export.zip", dummy_csvs, [:memory])
+    case CsvExport.get_csvs(site, params, debug_metadata(conn)) do
+      {:ok, csvs} ->
+        {:ok, {_, zip_content}} = :zip.create(~c"export.zip", csvs, [:memory])
 
-    conn
-    |> put_resp_content_type("application/zip")
-    |> put_resp_header("content-disposition", Plausible.Exports.content_disposition("export.zip"))
-    |> send_resp(200, zip_content)
+        conn
+        |> put_resp_content_type("application/zip")
+        |> put_resp_header(
+          "content-disposition",
+          Plausible.Exports.content_disposition("export.zip")
+        )
+        |> send_resp(200, zip_content)
+
+      {:error, %QueryError{message: message}} ->
+        H.bad_request(conn, message)
+    end
   end
 
   def sources(conn, params) do

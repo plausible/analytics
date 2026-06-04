@@ -1090,11 +1090,26 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   defp assert_csv_by_fixture({file, downloaded}, folder) do
-    file = Path.expand(file, folder)
+    file =
+      file
+      |> maybe_get_legacy_variant(folder)
+      |> Path.expand(folder)
 
     {:ok, content} = File.read(file)
     msg = "CSV file comparison failed (#{file})"
     assert downloaded == content, message: msg, left: downloaded, right: content
+  end
+
+  # Remember to clean up the legacy fixture files too once the
+  # legacy CSV export disappears.
+  defp maybe_get_legacy_variant(filename, folder) do
+    path_filter? = String.contains?(folder, "filter-path")
+
+    case {filename, path_filter?} do
+      {~c"exit_pages.csv", true} -> ~c"exit_pages_legacy.csv"
+      {~c"visitors.csv", true} -> ~c"visitors_legacy.csv"
+      {filename, _} -> filename
+    end
   end
 
   defp populate_exported_stats(site) do

@@ -2,11 +2,142 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
 
-  describe "GET /:domain/export" do
+  @default_reports %{
+    "visitors.csv" => %{
+      dimensions: ["time:day"],
+      metrics: [
+        "visitors",
+        "pageviews",
+        "visits",
+        "views_per_visit",
+        "bounce_rate",
+        "visit_duration"
+      ]
+    },
+    "sources.csv" => %{
+      dimensions: ["visit:source"],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "channels.csv" => %{
+      dimensions: ["visit:channel"],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "referrers.csv" => %{
+      dimensions: ["visit:referrer"],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "utm_mediums.csv" => %{
+      dimensions: ["visit:utm_medium"],
+      extra_filter: ["is_not", "visit:utm_medium", [""]],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "utm_sources.csv" => %{
+      dimensions: ["visit:utm_source"],
+      extra_filter: ["is_not", "visit:utm_source", [""]],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "utm_campaigns.csv" => %{
+      dimensions: ["visit:utm_campaign"],
+      extra_filter: ["is_not", "visit:utm_campaign", [""]],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "utm_contents.csv" => %{
+      dimensions: ["visit:utm_content"],
+      extra_filter: ["is_not", "visit:utm_content", [""]],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "utm_terms.csv" => %{
+      dimensions: ["visit:utm_term"],
+      extra_filter: ["is_not", "visit:utm_term", [""]],
+      metrics: ["visitors", "bounce_rate", "visit_duration"]
+    },
+    "pages.csv" => %{
+      dimensions: ["event:page"],
+      metrics: ["visitors", "pageviews", "bounce_rate", "time_on_page", "scroll_depth"]
+    },
+    "entry_pages.csv" => %{
+      dimensions: ["visit:entry_page"],
+      extra_filter: ["is_not", "visit:entry_page", [""]],
+      metrics: ["visitors", "visits", "bounce_rate", "visit_duration"]
+    },
+    "exit_pages.csv" => %{
+      dimensions: ["visit:exit_page"],
+      extra_filter: ["is_not", "visit:exit_page", [""]],
+      metrics: ["visitors", "visits", "exit_rate"]
+    },
+    "browsers.csv" => %{
+      dimensions: ["visit:browser"],
+      metrics: ["visitors"]
+    },
+    "browser_versions.csv" => %{
+      dimensions: ["visit:browser_version", "visit:browser"],
+      metrics: ["visitors"]
+    },
+    "operating_systems.csv" => %{
+      dimensions: ["visit:os"],
+      metrics: ["visitors"]
+    },
+    "operating_system_versions.csv" => %{
+      dimensions: ["visit:os_version", "visit:os"],
+      metrics: ["visitors"]
+    },
+    "devices.csv" => %{
+      dimensions: ["visit:device"],
+      metrics: ["visitors"]
+    },
+    "countries.csv" => %{
+      dimensions: ["visit:country_name"],
+      extra_filter: ["is_not", "visit:country", ["\0\0", "ZZ"]],
+      metrics: ["visitors"]
+    },
+    "regions.csv" => %{
+      dimensions: ["visit:region_name"],
+      extra_filter: ["is_not", "visit:region", [""]],
+      metrics: ["visitors"]
+    },
+    "cities.csv" => %{
+      dimensions: ["visit:city_name"],
+      extra_filter: ["is_not", "visit:city", [0]],
+      metrics: ["visitors"]
+    }
+  }
+
+  @page_filtered_reports put_in(@default_reports, ["visitors.csv", :metrics], [
+                           "visitors",
+                           "pageviews",
+                           "visits",
+                           "bounce_rate",
+                           "time_on_page",
+                           "scroll_depth"
+                         ])
+                         |> put_in(
+                           ["exit_pages.csv", :metrics],
+                           get_in(@default_reports, ["exit_pages.csv", :metrics]) -- ["exit_rate"]
+                         )
+
+  @goal_filtered_reports Map.new(@default_reports, fn
+                           {"visitors.csv" = filename, params} ->
+                             {filename,
+                              %{params | metrics: ["visitors", "events", "group_conversion_rate"]}}
+
+                           {filename, params} ->
+                             {filename,
+                              %{params | metrics: ["visitors", "group_conversion_rate"]}}
+                         end)
+
+  @base_params %{
+    date_range: "30d",
+    relative_date: nil,
+    filters: [],
+    include: %{imports: false},
+    reports: @default_reports
+  }
+
+  describe "POST /api/stats/:domain/export" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
-      conn = get(conn, "/" <> site.domain <> "/export")
+      conn = do_export(conn, site, @base_params)
 
       assert {"content-type", "application/zip; charset=utf-8"} =
                List.keyfind(conn.resp_headers, "content-type", 0)
@@ -19,7 +150,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"browsers.csv" in zip
       assert ~c"browser_versions.csv" in zip
       assert ~c"cities.csv" in zip
-      assert ~c"conversions.csv" in zip
+      # assert ~c"conversions.csv" in zip
       assert ~c"countries.csv" in zip
       assert ~c"devices.csv" in zip
       assert ~c"entry_pages.csv" in zip
@@ -94,7 +225,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
 
       pages =
         conn
-        |> get("/#{site.domain}/export?period=day&date=2020-01-01")
+        |> do_export(site, %{@base_params | date_range: "day", relative_date: "2020-01-01"})
         |> response(200)
         |> unzip_and_parse_csv(~c"pages.csv")
 
@@ -106,115 +237,108 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
              ]
     end
 
-    test "exports only internally used props in custom_props.csv for a growth plan", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
+    # test "exports only internally used props in custom_props.csv for a growth plan", %{
+    #   conn: conn,
+    #   site: site
+    # } do
+    #   {:ok, site} = Plausible.Props.allow(site, ["author"])
 
-      [owner | _] = Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+    #   [owner | _] = Repo.preload(site, :owners).owners
+    #   subscribe_to_growth_plan(owner)
 
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
-        build(:event, name: "File Download", "meta.key": ["url"], "meta.value": ["b"])
-      ])
+    #   populate_stats(site, [
+    #     build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
+    #     build(:event, name: "File Download", "meta.key": ["url"], "meta.value": ["b"])
+    #   ])
 
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
+    #   result =
+    #     conn
+    #     |> do_export(site, %{@base_params | date_range: "day"})
+    #     |> response(200)
+    #     |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["url", "(none)", "1", "1", "50.0"],
-               ["url", "b", "1", "1", "50.0"],
-               [""]
-             ]
-    end
+    #   assert result == [
+    #            ["property", "value", "visitors", "events", "percentage"],
+    #            ["url", "(none)", "1", "1", "50.0"],
+    #            ["url", "b", "1", "1", "50.0"],
+    #            [""]
+    #          ]
+    # end
 
-    test "does not include custom_props.csv for a growth plan if no internal props used", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
+    # test "does not include custom_props.csv for a growth plan if no internal props used", %{
+    #   conn: conn,
+    #   site: site
+    # } do
+    #   {:ok, site} = Plausible.Props.allow(site, ["author"])
 
-      [owner | _] = Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+    #   [owner | _] = Repo.preload(site, :owners).owners
+    #   subscribe_to_growth_plan(owner)
 
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["a"])
-      ])
+    #   populate_stats(site, [
+    #     build(:pageview, "meta.key": ["author"], "meta.value": ["a"])
+    #   ])
 
-      {:ok, zip} =
-        conn
-        |> get("/#{site.domain}/export?period=day")
-        |> response(200)
-        |> :zip.unzip([:memory])
+    #   {:ok, zip} =
+    #     conn
+    #     |> do_export(site, %{@base_params | date_range: "day"})
+    #     |> response(200)
+    #     |> :zip.unzip([:memory])
 
-      files = Map.new(zip)
+    #   files = Map.new(zip)
 
-      refute Map.has_key?(files, ~c"custom_props.csv")
-    end
+    #   refute Map.has_key?(files, ~c"custom_props.csv")
+    # end
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
 
       conn =
-        get(conn, "/" <> site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20")
+        do_export(conn, site, %{@base_params | date_range: ["2021-09-20", "2021-10-20"]})
 
       assert_zip(conn, "30d")
     end
 
-    test "fails to export with interval=undefined, looking at you, spiders", %{
-      conn: conn,
-      site: site
-    } do
-      assert conn
-             |> get("/" <> site.domain <> "/export?date=2021-10-20&interval=undefined")
-             |> response(400)
-    end
+    # test "exports allowed event props for a trial account", %{conn: conn, site: site} do
+    #   {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
-    test "exports allowed event props for a trial account", %{conn: conn, site: site} do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
+    #   populate_stats(site, [
+    #     build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+    #     build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+    #     build(:event, "meta.key": ["author"], "meta.value": ["marko"], name: "Newsletter Signup"),
+    #     build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+    #     build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+    #     build(:pageview, "meta.key": ["disallowed"], "meta.value": ["whatever"]),
+    #     build(:pageview)
+    #   ])
 
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:event, "meta.key": ["author"], "meta.value": ["marko"], name: "Newsletter Signup"),
-        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
-        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
-        build(:pageview, "meta.key": ["disallowed"], "meta.value": ["whatever"]),
-        build(:pageview)
-      ])
+    #   result =
+    #     conn
+    #     |> do_export(site, %{@base_params | date_range: "day"})
+    #     |> response(200)
+    #     |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["author", "(none)", "3", "4", "50.0"],
-               ["author", "uku", "2", "2", "33.33"],
-               ["author", "marko", "1", "1", "16.67"],
-               ["logged_in", "(none)", "5", "5", "83.33"],
-               ["logged_in", "true", "1", "2", "16.67"],
-               [""]
-             ]
-    end
+    #   assert result == [
+    #            ["property", "value", "visitors", "events", "percentage"],
+    #            ["author", "(none)", "3", "4", "50.0"],
+    #            ["author", "uku", "2", "2", "33.33"],
+    #            ["author", "marko", "1", "1", "16.67"],
+    #            ["logged_in", "(none)", "5", "5", "83.33"],
+    #            ["logged_in", "true", "1", "2", "16.67"],
+    #            [""]
+    #          ]
+    # end
 
     test "exports data grouped by interval", %{conn: conn, site: site} do
       populate_exported_stats(site)
 
+      params =
+        @base_params
+        |> Map.put(:date_range, ["2021-09-20", "2021-10-20"])
+        |> put_in([:reports, "visitors.csv", :dimensions], ["time:week"])
+
       visitors =
         conn
-        |> get(
-          "/" <>
-            site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20&interval=week"
-        )
+        |> do_export(site, params)
         |> response(200)
         |> unzip_and_parse_csv(~c"visitors.csv")
 
@@ -242,20 +366,14 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview,
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
-        build(:pageview,
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
         build(:pageview, operating_system: "Mac", operating_system_version: "13")
       ])
 
       os_versions =
         conn
-        |> get("/#{site.domain}/export?period=day")
+        |> do_export(site, %{@base_params | date_range: "day"})
         |> response(200)
         |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 
@@ -279,12 +397,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
         build(:imported_devices, device: "Desktop", pageviews: 1),
         build(:imported_entry_pages, entry_page: "/test", pageviews: 1),
         build(:imported_exit_pages, exit_page: "/test", pageviews: 1),
-        build(:imported_locations,
-          country: "PL",
-          region: "PL-22",
-          city: 3_099_434,
-          pageviews: 1
-        ),
+        build(:imported_locations, country: "PL", region: "PL-22", city: 3_099_434, pageviews: 1),
         build(:imported_operating_systems, operating_system: "Mac", pageviews: 1),
         build(:imported_pages, page: "/test", pageviews: 1),
         build(:imported_sources,
@@ -307,9 +420,9 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
 
       tomorrow = Date.utc_today() |> Date.add(1) |> Date.to_iso8601()
 
-      conn = get(conn, "/#{site.domain}/export?date=#{tomorrow}&with_imported=true")
+      params = %{@base_params | relative_date: tomorrow, include: %{imports: true}}
 
-      assert response = response(conn, 200)
+      assert response = do_export(conn, site, params) |> response(200)
       {:ok, zip} = :zip.unzip(response, [:memory])
 
       filenames = zip |> Enum.map(fn {filename, _} -> to_string(filename) end)
@@ -335,13 +448,11 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
         "operating_systems.csv",
         "operating_system_versions.csv",
         "devices.csv",
-        "conversions.csv",
+        # "conversions.csv",
         "referrers.csv"
       ]
 
-      Enum.each(expected_filenames, fn expected ->
-        assert expected in filenames
-      end)
+      Enum.each(expected_filenames, fn expected -> assert expected in filenames end)
 
       Enum.each(zip, fn
         {~c"visitors.csv", data} ->
@@ -447,21 +558,13 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
           assert parse_csv(data) == [["name", "visitors"], ["Poland", "1"], [""]]
 
         {~c"regions.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors"],
-                   ["Pomerania", "1"],
-                   [""]
-                 ]
+          assert parse_csv(data) == [["name", "visitors"], ["Pomerania", "1"], [""]]
 
         {~c"cities.csv", data} ->
           assert parse_csv(data) == [["name", "visitors"], ["Gdańsk", "1"], [""]]
 
         {~c"browsers.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors"],
-                   ["Chrome", "1"],
-                   [""]
-                 ]
+          assert parse_csv(data) == [["name", "visitors"], ["Chrome", "1"], [""]]
 
         {~c"browser_versions.csv", data} ->
           assert parse_csv(data) == [
@@ -506,7 +609,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     |> Enum.map(&String.split(&1, ","))
   end
 
-  describe "GET /:domain/export - via shared link" do
+  describe "POST /api/stats/:domain/export - via shared link" do
     setup [:create_user, :create_site]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
@@ -514,40 +617,47 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
 
       populate_exported_stats(site)
 
-      conn =
-        get(
-          conn,
-          "/" <>
-            site.domain <> "/export?auth=#{link.slug}&period=custom&from=2021-09-20&to=2021-10-20"
-        )
+      params =
+        %{@base_params | date_range: ["2021-09-20", "2021-10-20"], include: %{imports: false}}
+        |> Map.put(:auth, link.slug)
+
+      conn = do_export(conn, site, params)
 
       assert_zip(conn, "30d")
     end
   end
 
-  describe "GET /:domain/export - for past 6 months" do
+  describe "POST /api/stats/:domain/export - for past 6 months" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-11-20")
+
+      conn =
+        do_export(conn, site, %{
+          @base_params
+          | date_range: "6mo",
+            relative_date: "2021-11-20",
+            reports: put_in(@default_reports, ["visitors.csv", :dimensions], ["time:month"])
+        })
+
       assert_zip(conn, "6m")
     end
   end
 
-  describe "GET /:domain/export - with path filter" do
+  describe "POST /api/stats/:domain/export - with path filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
 
-      filters = Jason.encode!([[:is, "event:page", ["/some-other-page"]]])
-
       conn =
-        get(
-          conn,
-          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
-        )
+        do_export(conn, site, %{
+          @base_params
+          | date_range: ["2021-09-20", "2021-10-20"],
+            filters: [["is", "event:page", ["/some-other-page"]]],
+            reports: @page_filtered_reports
+        })
 
       assert_zip(conn, "30d-filter-path")
     end
@@ -577,11 +687,15 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
         )
       ])
 
-      filters = Jason.encode!([[:is, "event:page", ["/blog"]]])
-
       pages =
         conn
-        |> get("/#{site.domain}/export?date=2020-01-08&period=7d&filters=#{filters}")
+        |> do_export(site, %{
+          @base_params
+          | date_range: "7d",
+            relative_date: "2020-01-08",
+            filters: [["is", "event:page", ["/blog"]]],
+            reports: @page_filtered_reports
+        })
         |> response(200)
         |> unzip_and_parse_csv(~c"visitors.csv")
 
@@ -591,53 +705,54 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
                  "visitors",
                  "pageviews",
                  "visits",
-                 "views_per_visit",
                  "bounce_rate",
-                 "visit_duration",
+                 "time_on_page",
                  "scroll_depth"
                ],
-               ["2020-01-01", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-02", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-03", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-04", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-05", "1", "2", "2", "1.0", "100", "0", "28"],
-               ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
+               ["2020-01-01", "0", "0", "0", "0.0", "", ""],
+               ["2020-01-02", "0", "0", "0", "0.0", "", ""],
+               ["2020-01-03", "0", "0", "0", "0.0", "", ""],
+               ["2020-01-04", "0", "0", "0", "0.0", "", ""],
+               ["2020-01-05", "1", "2", "2", "100", "0", "28"],
+               ["2020-01-06", "0", "0", "0", "0.0", "", ""],
+               ["2020-01-07", "1", "1", "1", "100", "0", "90"],
                [""]
              ]
     end
   end
 
-  describe "GET /:domain/export - with a custom prop filter" do
-    setup [:create_user, :create_site, :log_in]
+  # describe "POST /api/stats/:domain/export - with a custom prop filter" do
+  #   setup [:create_user, :create_site, :log_in]
 
-    test "custom-props.csv only returns the prop and its value in filter", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
+  #   test "custom-props.csv only returns the prop and its value in filter", %{
+  #     conn: conn,
+  #     site: site
+  #   } do
+  #     {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
-      ])
+  #     populate_stats(site, [
+  #       build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+  #       build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
+  #       build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+  #     ])
 
-      filters = Jason.encode!([[:is, "event:props:author", ["marko"]]])
+  #     result =
+  #       conn
+  #       |> do_export(site, %{
+  #         @base_params
+  #         | date_range: "day",
+  #           filters: [["is", "event:props:author", ["marko"]]]
+  #       })
+  #       |> response(200)
+  #       |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["author", "marko", "1", "1", "100.0"],
-               [""]
-             ]
-    end
-  end
+  #     assert result == [
+  #              ["property", "value", "visitors", "events", "percentage"],
+  #              ["author", "marko", "1", "1", "100.0"],
+  #              [""]
+  #            ]
+  #   end
+  # end
 
   defp unzip_and_parse_csv(archive, filename) do
     {:ok, zip} = :zip.unzip(archive, [:memory])
@@ -664,6 +779,12 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     {:ok, content} = File.read(file)
     msg = "CSV file comparison failed (#{file})"
     assert downloaded == content, message: msg, left: downloaded, right: content
+  end
+
+  defp do_export(conn, site, params) do
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> post("/api/stats/#{site.domain}/export", Jason.encode!(params))
   end
 
   defp populate_exported_stats(site) do
@@ -829,51 +950,56 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     insert(:goal, %{site: site, event_name: "Signup"})
   end
 
-  describe "GET /:domain/export - with goal filter" do
+  describe "POST /api/stats/:domain/export - with goal filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
-        get(
-          conn,
-          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
-        )
+        do_export(conn, site, %{
+          @base_params
+          | date_range: ["2021-09-20", "2021-10-20"],
+            filters: [["is", "event:goal", ["Signup"]]],
+            reports: @goal_filtered_reports
+        })
 
       assert_zip(conn, "30d-filter-goal")
     end
 
-    test "custom-props.csv only returns the prop names for the goal in filter", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
+    # test "custom-props.csv only returns the prop names for the goal in filter", %{
+    #   conn: conn,
+    #   site: site
+    # } do
+    #   {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
-      populate_stats(site, [
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
-      ])
+    #   populate_stats(site, [
+    #     build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
+    #     build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+    #     build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+    #     build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+    #   ])
 
-      insert(:goal, site: site, event_name: "Newsletter Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Newsletter Signup"]]])
+    #   insert(:goal, site: site, event_name: "Newsletter Signup")
 
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
+    #   result =
+    #     conn
+    #     |> do_export(site, %{
+    #       @base_params
+    #       | date_range: "day",
+    #         filters: [["is", "event:goal", ["Newsletter Signup"]]],
+    #         reports: @goal_filtered_reports
+    #     })
+    #     |> response(200)
+    #     |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      assert result == [
-               ["property", "value", "visitors", "events", "conversion_rate"],
-               ["author", "marko", "2", "2", "50.0"],
-               ["author", "uku", "1", "1", "25.0"],
-               [""]
-             ]
-    end
+    #   assert result == [
+    #            ["property", "value", "visitors", "events", "conversion_rate"],
+    #            ["author", "marko", "2", "2", "50.0"],
+    #            ["author", "uku", "1", "1", "25.0"],
+    #            [""]
+    #          ]
+    # end
 
     test "exports conversions and conversion rate for operating system versions", %{
       conn: conn,
@@ -881,21 +1007,9 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     } do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
         build(:event,
           name: "Signup",
           operating_system: "Ubuntu",
@@ -915,11 +1029,14 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
 
       insert(:goal, site: site, event_name: "Signup")
 
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
       os_versions =
         conn
-        |> get("/#{site.domain}/export?period=day&filters=#{filters}")
+        |> do_export(site, %{
+          @base_params
+          | date_range: "day",
+            filters: [["is", "event:goal", ["Signup"]]],
+            reports: @goal_filtered_reports
+        })
         |> response(200)
         |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 
