@@ -168,6 +168,37 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"utm_terms.csv" in zip
     end
 
+    test "limits pages.csv and exit_pages.csv to 100 rows", %{conn: conn, site: site} do
+      events = for i <- 1..101, do: build(:pageview, pathname: "/page-#{i}")
+      populate_stats(site, events)
+
+      zip_content =
+        conn
+        |> do_export(site, %{@base_params | date_range: "day"})
+        |> response(200)
+
+      pages = unzip_and_parse_csv(zip_content, ~c"pages.csv")
+      # header + 100 data rows + trailing empty row
+      assert length(pages) == 102
+
+      exit_pages = unzip_and_parse_csv(zip_content, ~c"exit_pages.csv")
+      assert length(exit_pages) == 102
+    end
+
+    test "limits other breakdown reports to 300 rows", %{conn: conn, site: site} do
+      events = for i <- 1..301, do: build(:pageview, referrer_source: "Source #{i}")
+      populate_stats(site, events)
+
+      sources =
+        conn
+        |> do_export(site, %{@base_params | date_range: "day"})
+        |> response(200)
+        |> unzip_and_parse_csv(~c"sources.csv")
+
+      # header + 300 data rows + trailing empty row
+      assert length(sources) == 302
+    end
+
     test "exports scroll depth metric in pages.csv", %{conn: conn, site: site} do
       t0 = ~N[2020-01-01 00:00:00]
       [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)

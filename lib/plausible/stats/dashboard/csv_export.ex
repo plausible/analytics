@@ -93,9 +93,19 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     QueryRunner.run(site, query) |> timeseries_query_result_to_csv()
   end
 
-  defp run_query_into_csv(site, _filename, query) do
+  defp run_query_into_csv(site, filename, query) do
+    # The export is limited to 300 entries for other reports and 100 entries for
+    # pages because bigger result sets start causing failures. Since we request
+    # data like time on page or bounce_rate for pages in a separate query using
+    # the IN filter, it causes the requests to balloon in payload size.
+    limit = if filename in ["pages.csv", "exit_pages.csv"], do: 100, else: 300
     order_by = [{:visitors, :desc} | Enum.map(query.dimensions, &{&1, :asc})]
-    query = Query.set(query, order_by: order_by)
+
+    query =
+      query
+      |> Query.set(order_by: order_by)
+      |> Query.set(pagination: %{limit: limit, offset: 0})
+
     QueryRunner.run(site, query) |> query_result_to_csv()
   end
 
