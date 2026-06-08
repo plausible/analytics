@@ -1,7 +1,6 @@
 defmodule Plausible.Release do
   use Plausible
   use Plausible.Repo
-  require Logger
 
   @app :plausible
   @start_apps [

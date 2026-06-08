@@ -7,8 +7,6 @@ defmodule Plausible.Workers.SendTrialNotifications do
 
   alias Plausible.Teams
 
-  require Logger
-
   @impl Oban.Worker
   def perform(_job) do
     teams =

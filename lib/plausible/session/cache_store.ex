@@ -1,5 +1,4 @@
 defmodule Plausible.Session.CacheStore do
-  require Logger
   alias Plausible.Session.WriteBuffer
 
   @lock_timeout 1000

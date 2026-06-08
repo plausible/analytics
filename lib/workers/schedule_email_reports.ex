@@ -2,7 +2,6 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   use Plausible.Repo
   use Oban.Worker, queue: :schedule_email_reports
   alias Plausible.Workers.SendEmailReport
-  require Logger
 
   @impl Oban.Worker
   @doc """
