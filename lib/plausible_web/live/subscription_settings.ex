@@ -121,8 +121,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                 <div class="flex gap-2">
                   <.button_link
                     :if={
-                      @subscription &&
-                        Plausible.Billing.Subscriptions.resumable?(@subscription) &&
+                      Plausible.Billing.Subscriptions.resumable?(@subscription) &&
                         @subscription.update_url
                     }
                     theme="secondary"
