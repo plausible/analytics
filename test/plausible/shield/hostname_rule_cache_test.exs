@@ -93,8 +93,10 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
 
       assert :ok = HostnameRuleCache.refresh_updated_recently(cache_opts)
 
-      assert %{hostname_pattern: ~r/^test2\.example\.com$/} =
+      assert %{hostname_pattern: hostname_pattern} =
                HostnameRuleCache.get(domain, cache_opts)
+
+      assert hostname_pattern == ~r/^test2\.example\.com$/
 
       assert :ok = HostnameRuleCache.refresh_all(cache_opts)
 
