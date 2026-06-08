@@ -543,7 +543,6 @@ defmodule PlausibleWeb.Router do
       get "/sso/notice", SSOController, :provision_notice
       get "/sso/issue", SSOController, :provision_issue
       get "/logout", AuthController, :logout
-      get "/team/select", AuthController, :select_team
     end
 
     scope "/", PlausibleWeb do
@@ -560,7 +559,6 @@ defmodule PlausibleWeb.Router do
 
     on_ce do
       get "/logout", AuthController, :logout
-      get "/team/select", AuthController, :select_team
     end
 
     delete "/me", AuthController, :delete_me

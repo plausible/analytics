@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+- Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
+
 ### Changed
 
 - Keybind hints are hidden on smaller screens

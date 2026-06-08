@@ -87,16 +87,9 @@ defmodule PlausibleWeb.Live.AuthContext do
 
         %{current_user: user} ->
           user.team_memberships
+          |> Enum.filter(& &1.team.setup_complete)
           |> Enum.sort_by(fn tm -> [tm.role != :owner, tm.team_id] end)
           |> Enum.map(&Map.fetch!(&1, :team))
-          |> Enum.take(3)
-      end)
-      |> assign_new(:teams_count, fn
-        %{current_user: nil} -> 0
-        %{current_user: user} -> length(user.team_memberships)
-      end)
-      |> assign_new(:more_teams?, fn context ->
-        context.teams_count > 3
       end)
 
     {:cont, socket}

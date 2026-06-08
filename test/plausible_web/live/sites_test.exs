@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       conn: conn,
       user: user
     } do
-      team2 = new_site().team
+      team2 = new_site().team |> Plausible.Teams.complete_setup()
 
       add_member(team2, user: user, role: :admin)
 
@@ -33,6 +33,11 @@ defmodule PlausibleWeb.Live.SitesTest do
       refute text =~ "You don't have any sites yet"
       assert text =~ "Add your first personal site"
       assert text =~ "Go to team sites"
+
+      assert element_exists?(
+               html,
+               ~s|a[href="/sites?__team=#{team2.identifier}"]|
+             )
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do

@@ -54,14 +54,11 @@ defmodule PlausibleWeb.AuthPlug do
           |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
           |> Map.get(:team)
 
-        teams_count = length(user.team_memberships)
-
         teams =
           user.team_memberships
           |> Enum.filter(& &1.team.setup_complete)
           |> Enum.sort_by(fn tm -> [tm.role != :owner, tm.team_id] end)
           |> Enum.map(&Map.fetch!(&1, :team))
-          |> Enum.take(3)
 
         Plausible.OpenTelemetry.add_user_attributes(user)
 
@@ -80,9 +77,7 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
         |> assign(:current_team_role, current_team_role || (my_team && :owner))
-        |> assign(:teams_count, teams_count)
         |> assign(:teams, teams)
-        |> assign(:more_teams?, teams_count > 3)
 
       {:error, :session_expired, user_session} ->
         assign(conn, :expired_session, user_session)
