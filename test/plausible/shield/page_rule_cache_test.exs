@@ -92,7 +92,8 @@ defmodule Plausible.Shield.PageRuleCacheTest do
 
       assert :ok = PageRuleCache.refresh_updated_recently(cache_opts)
 
-      assert %{page_path_pattern: ~r[^/test/2$]} = PageRuleCache.get(domain, cache_opts)
+      assert %{page_path_pattern: path_pattern} = PageRuleCache.get(domain, cache_opts)
+      assert path_pattern == ~r/^\/test\/2$/
 
       assert :ok = PageRuleCache.refresh_all(cache_opts)
 
