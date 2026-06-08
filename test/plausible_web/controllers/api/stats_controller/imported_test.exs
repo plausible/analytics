@@ -305,7 +305,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                  %{"name" => "Direct / None", "visitors" => 1, "percentage" => 11.11},
                  %{"name" => "DuckDuckGo", "visitors" => 2, "percentage" => 22.22},
                  %{"name" => "Google", "visitors" => 4, "percentage" => 44.44},
-                 %{"name" => "Twitter", "visitors" => 1, "percentage" => 11.11}
+                 %{"name" => "X (Twitter)", "visitors" => 1, "percentage" => 11.11}
                ]
       end
 

@@ -9,7 +9,8 @@ defmodule Plausible.Ingestion.Acquisition do
 
   Notable differences from GA4 that have been implemented just for Plausible:
   1. The @custom_source_categories module attribute contains a list of custom source categories that we have manually
-  added based on our own judgement and user feedback. For example we treat AI tools (ChatGPT, Perplexity) as search engines.
+  added based on our own judgement and user feedback. For example we group AI assistants (ChatGPT, Claude, Gemini, etc.)
+  into their own "AI Assistants" channel.
   2. Google is in a privileged position to analyze paid traffic from within their own network. The biggest use-case is auto-tagged adwords campaigns.
   We do our best by categorizing as paid search when source is Google and the url has `gclid` parameter. Same for source Bing and `msclkid` url parameter.
   3. The @paid_sources module attribute in Plausible.Ingestion.Source contains a list of utm_sources that we will automatically categorize as paid traffic
@@ -30,13 +31,23 @@ defmodule Plausible.Ingestion.Acquisition do
     {"vkontakte", "SOURCE_CATEGORY_SOCIAL"},
     {"threads", "SOURCE_CATEGORY_SOCIAL"},
     {"ecosia", "SOURCE_CATEGORY_SEARCH"},
-    {"perplexity", "SOURCE_CATEGORY_SEARCH"},
+    {"kagi", "SOURCE_CATEGORY_SEARCH"},
     {"brave", "SOURCE_CATEGORY_SEARCH"},
-    {"chatgpt.com", "SOURCE_CATEGORY_SEARCH"},
     {"temu.com", "SOURCE_CATEGORY_SHOPPING"},
     {"discord", "SOURCE_CATEGORY_SOCIAL"},
     {"sogou", "SOURCE_CATEGORY_SEARCH"},
-    {"microsoft teams", "SOURCE_CATEGORY_SOCIAL"}
+    {"microsoft teams", "SOURCE_CATEGORY_SOCIAL"},
+    {"bluesky", "SOURCE_CATEGORY_SOCIAL"},
+    {"mastodon", "SOURCE_CATEGORY_SOCIAL"},
+    {"chatgpt", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"claude", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"phind", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"deepseek", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"microsoft copilot", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"grok", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"google gemini", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"perplexity", "SOURCE_CATEGORY_AI_ASSISTANTS"},
+    {"x (twitter)", "SOURCE_CATEGORY_SOCIAL"}
   ]
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()
@@ -69,6 +80,7 @@ defmodule Plausible.Ingestion.Acquisition do
       organic_shopping?(source, utm_campaign) -> "Organic Shopping"
       organic_social?(source, utm_medium) -> "Organic Social"
       organic_video?(source, utm_medium) -> "Organic Video"
+      ai_assistants?(source) -> "AI Assistants"
       search_source?(source) -> "Organic Search"
       email?(source, utm_source, utm_medium) -> "Email"
       affiliates?(utm_medium) -> "Affiliates"
@@ -186,6 +198,10 @@ defmodule Plausible.Ingestion.Acquisition do
 
   defp email_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_EMAIL"
+  end
+
+  defp ai_assistants?(source) do
+    @source_categories[source] == "SOURCE_CATEGORY_AI_ASSISTANTS"
   end
 
   defp shopping_campaign?(utm_campaign) do

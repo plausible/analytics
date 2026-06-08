@@ -94,6 +94,33 @@ defmodule PlausibleWeb.FaviconTest do
     assert conn.resp_body == "favicon response body"
   end
 
+  for {source, domain} <- %{
+        "Linktree" => "linktr.ee",
+        "Bluesky" => "bsky.app",
+        "Mastodon" => "mastodon.social",
+        "X (Twitter)" => "x.com",
+        "Kagi" => "kagi.com",
+        "Microsoft 365" => "office.com"
+      } do
+    test "maps custom source #{source} to #{domain} for favicon", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/#{unquote(domain)}.ico" ->
+          {:ok, %Finch.Response{status: 200, body: "favicon response body"}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/#{URI.encode_www_form(unquote(source))}")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == "favicon response body"
+    end
+  end
+
   test "copies content-type header from the proxied response", %{plug_opts: plug_opts} do
     expect(
       Plausible.HTTPClient.Mock,
