@@ -38,7 +38,6 @@ defmodule PlausibleWeb.AuthController do
            :verify_2fa_setup,
            :disable_2fa,
            :generate_2fa_recovery_codes,
-           :select_team,
            :switch_team
          ]
   )
@@ -59,51 +58,6 @@ defmodule PlausibleWeb.AuthController do
   # Plug purging 2FA user session cookie outsite 2FA flow
   defp clear_2fa_user(conn, _opts) do
     TwoFactor.Session.clear_2fa_user(conn)
-  end
-
-  def select_team(conn, _params) do
-    current_user = conn.assigns.current_user
-    current_team = conn.assigns[:current_team]
-
-    owner_name_fn = fn owner ->
-      if owner.id == current_user.id do
-        "You"
-      else
-        owner.name
-      end
-    end
-
-    teams =
-      current_user
-      |> Teams.Users.teams()
-      |> Enum.filter(& &1.setup_complete)
-      |> Enum.map(fn team ->
-        current_team? = current_team && team.id == current_team.id
-
-        owners =
-          Enum.map_join(team.owners, ", ", &owner_name_fn.(&1))
-
-        many_owners? = length(team.owners) > 1
-
-        %{
-          identifier: team.identifier,
-          name: team.name,
-          current?: current_team?,
-          many_owners?: many_owners?,
-          owners: owners
-        }
-      end)
-
-    case teams do
-      [] ->
-        redirect(conn, to: Routes.site_path(conn, :index))
-
-      [%{identifier: sole_team_identifier}] ->
-        redirect(conn, to: Routes.site_path(conn, :index, __team: sole_team_identifier))
-
-      [_ | _] ->
-        render(conn, "select_team.html", teams_selection: teams)
-    end
   end
 
   def activate_form(conn, params) do

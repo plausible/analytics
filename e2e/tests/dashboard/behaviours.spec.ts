@@ -19,7 +19,8 @@ import {
   detailsLink,
   modal,
   closeModalButton,
-  searchInput
+  searchInput,
+  tabButtonWithDropdown
 } from '../test-utils'
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
@@ -631,7 +632,7 @@ test('props breakdown', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  const propsTabButton = tabButton(report, 'Properties')
+  const propsTabButton = tabButtonWithDropdown(report, 'Properties')
 
   await test.step('listing props', async () => {
     await propsTabButton.scrollIntoViewIfNeeded()
@@ -640,7 +641,10 @@ test('props breakdown', async ({ page, request }) => {
       .getByRole('button', { name: 'browser_language' })
       .click()
 
-    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(propsTabButton, 'Properties')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expectHeaders(report, ['browser_language', 'Visitors', 'Events', '%'])
 
@@ -694,7 +698,10 @@ test('props breakdown', async ({ page, request }) => {
 
     await rowLink(report, 'Visit /page').click()
 
-    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(propsTabButton, 'Properties')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expectHeaders(report, [
       'browser_language',
@@ -772,7 +779,7 @@ test('funnels', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  const funnelsTabButton = tabButton(report, 'Funnels')
+  const funnelsTabButton = tabButtonWithDropdown(report, 'Funnels')
 
   await test.step('rendering funnels', async () => {
     await funnelsTabButton.scrollIntoViewIfNeeded()
@@ -781,7 +788,10 @@ test('funnels', async ({ page, request }) => {
       .getByRole('button', { name: 'Shopping 11 Funnel' })
       .click()
 
-    await expect(funnelsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(funnelsTabButton, 'Funnels')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expect(report.getByRole('heading')).toHaveText('Shopping 11 Funnel')
 

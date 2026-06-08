@@ -28,6 +28,11 @@ export function randomID() {
 export const tabButton = (page: Page | Locator, label: HasTextArg) =>
   page.getByTestId('tab-button').filter({ hasText: label })
 
+export const tabButtonWithDropdown = (
+  page: Page | Locator,
+  label: HasTextArg
+) => page.getByTestId('tab-button-with-dropdown').filter({ hasText: label })
+
 export const header = (report: Locator, label: HasTextArg) =>
   report
     .getByTestId('report-header')
