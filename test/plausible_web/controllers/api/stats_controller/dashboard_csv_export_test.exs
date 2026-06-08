@@ -28,27 +28,27 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     },
     "utm_mediums.csv" => %{
       dimensions: ["visit:utm_medium"],
-      extra_filter: ["is_not", "visit:utm_medium", [""]],
+      always_on_filters: [["is_not", "visit:utm_medium", [""]]],
       metrics: ["visitors", "bounce_rate", "visit_duration"]
     },
     "utm_sources.csv" => %{
       dimensions: ["visit:utm_source"],
-      extra_filter: ["is_not", "visit:utm_source", [""]],
+      always_on_filters: [["is_not", "visit:utm_source", [""]]],
       metrics: ["visitors", "bounce_rate", "visit_duration"]
     },
     "utm_campaigns.csv" => %{
       dimensions: ["visit:utm_campaign"],
-      extra_filter: ["is_not", "visit:utm_campaign", [""]],
+      always_on_filters: [["is_not", "visit:utm_campaign", [""]]],
       metrics: ["visitors", "bounce_rate", "visit_duration"]
     },
     "utm_contents.csv" => %{
       dimensions: ["visit:utm_content"],
-      extra_filter: ["is_not", "visit:utm_content", [""]],
+      always_on_filters: [["is_not", "visit:utm_content", [""]]],
       metrics: ["visitors", "bounce_rate", "visit_duration"]
     },
     "utm_terms.csv" => %{
       dimensions: ["visit:utm_term"],
-      extra_filter: ["is_not", "visit:utm_term", [""]],
+      always_on_filters: [["is_not", "visit:utm_term", [""]]],
       metrics: ["visitors", "bounce_rate", "visit_duration"]
     },
     "pages.csv" => %{
@@ -57,12 +57,12 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     },
     "entry_pages.csv" => %{
       dimensions: ["visit:entry_page"],
-      extra_filter: ["is_not", "visit:entry_page", [""]],
+      always_on_filters: [["is_not", "visit:entry_page", [""]]],
       metrics: ["visitors", "visits", "bounce_rate", "visit_duration"]
     },
     "exit_pages.csv" => %{
       dimensions: ["visit:exit_page"],
-      extra_filter: ["is_not", "visit:exit_page", [""]],
+      always_on_filters: [["is_not", "visit:exit_page", [""]]],
       metrics: ["visitors", "visits", "exit_rate"]
     },
     "browsers.csv" => %{
@@ -87,17 +87,17 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     },
     "countries.csv" => %{
       dimensions: ["visit:country_name"],
-      extra_filter: ["is_not", "visit:country", ["\0\0", "ZZ"]],
+      always_on_filters: [["is_not", "visit:country", ["\0\0", "ZZ"]]],
       metrics: ["visitors"]
     },
     "regions.csv" => %{
       dimensions: ["visit:region_name"],
-      extra_filter: ["is_not", "visit:region", [""]],
+      always_on_filters: [["is_not", "visit:region", [""]]],
       metrics: ["visitors"]
     },
     "cities.csv" => %{
       dimensions: ["visit:city_name"],
-      extra_filter: ["is_not", "visit:city", [0]],
+      always_on_filters: [["is_not", "visit:city", [0]]],
       metrics: ["visitors"]
     }
   }

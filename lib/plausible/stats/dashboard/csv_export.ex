@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Dashboard.CsvExport do
+  @moduledoc false
+
   alias Plausible.Stats.Dashboard.QueryParser
   alias Plausible.Stats.{Time, ParsedQueryParams, Query, QueryBuilder, QueryRunner, QueryResult}
 
@@ -45,7 +47,6 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
   end
 
   defp create_queries_by_filename(site, params, debug_metadata) do
-    # TODO: Iterate over all @csv_filenames once all FE reports have been migrated.
     requested = Map.keys(params["reports"] || %{}) |> Enum.filter(&(&1 in @csv_filenames))
 
     Enum.reduce_while(requested, {:ok, []}, fn filename, acc ->
