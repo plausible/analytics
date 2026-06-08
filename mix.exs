@@ -179,7 +179,8 @@ defmodule Plausible.MixProject do
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:phoenix_html_helpers, "~> 1.0"},
       {:libcluster, "~> 3.5"},
-      {:decimal, "~> 3.0", override: true}
+      {:decimal, "~> 3.0", override: true},
+      {:logger_backends, "~> 1.0.0"}
     ]
   end
 
