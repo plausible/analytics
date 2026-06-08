@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { ChronoUnit, DateTimeFormatter } from '@js-joda/core'
-import { Locale } from '@js-joda/locale'
+import { Locale } from '@js-joda/locale_en-us'
 import { currentTime, timeToISO } from '../test-utils'
 import { setupSite, populateStats, StatsEntry } from '../fixtures'
 
