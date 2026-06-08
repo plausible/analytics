@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useSiteContext } from '../../site-context'
 import { popover } from '../../components/popover'
 import classNames from 'classnames'
@@ -10,14 +10,19 @@ import { createCsvExportRequestBody } from './csv-export-body'
 import * as api from '../../api'
 import { DateRange } from '../../stats-query'
 
-export function CsvExportV2() {
+export function CsvExportV2({
+  exporting,
+  setExporting
+}: {
+  exporting: boolean
+  setExporting: (v: boolean) => void
+}) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const { selectedInterval } = useGraphIntervalContext()
 
-  const [exporting, setExporting] = useState(false)
-
   const startExport = async () => {
+    if (exporting) return
     setExporting(true)
 
     try {

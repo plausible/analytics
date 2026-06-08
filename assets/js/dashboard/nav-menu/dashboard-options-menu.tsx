@@ -97,6 +97,7 @@ function DashboardOptionsMenuItems() {
     useGraphIntervalContext()
   const imports = useImportsIncludedContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const [exporting, setExporting] = useState(false)
 
   const showIntervalSection = availableIntervals.length > 1
 
@@ -149,7 +150,7 @@ function DashboardOptionsMenuItems() {
             />
           )}
           {site.flags.dashboard_csv_export_v2 ? (
-            <CsvExportV2 />
+            <CsvExportV2 exporting={exporting} setExporting={setExporting} />
           ) : (
             <ExportItem selectedInterval={selectedInterval} />
           )}
