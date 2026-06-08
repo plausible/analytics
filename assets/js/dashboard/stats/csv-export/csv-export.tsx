@@ -8,6 +8,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useGraphIntervalContext } from '../graph/graph-interval-context'
 import { createCsvExportRequestBody } from './csv-export-body'
 import * as api from '../../api'
+import { DateRange } from '../../stats-query'
 
 export function CsvExportV2() {
   const site = useSiteContext()
@@ -25,7 +26,7 @@ export function CsvExportV2() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'plausible-export.zip'
+      a.download = constructFilename(site.domain, body.date_range)
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -51,4 +52,11 @@ export function CsvExportV2() {
       )}
     </button>
   )
+}
+
+function constructFilename(domain: string, dateRange: DateRange) {
+  const dateRangeText = Array.isArray(dateRange)
+    ? `${dateRange[0]} to ${dateRange[1]}`
+    : dateRange
+  return `Plausible export ${domain} ${dateRangeText} .zip`
 }
