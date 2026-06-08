@@ -1495,3 +1495,301 @@ test('devices breakdown', async ({ page, request }) => {
     await closeModalButton(page).click()
   })
 })
+
+test('devices breakdown with a revenue goal filter applied', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 1,
+        name: 'pageview',
+        screen_size: 'Desktop',
+        browser: 'Chrome',
+        browser_version: '14.0.7',
+        operating_system: 'Windows',
+        operating_system_version: '11'
+      },
+      {
+        user_id: 1,
+        name: 'purchase',
+        revenue_reporting_amount: '23',
+        revenue_reporting_currency: 'EUR'
+      },
+      {
+        user_id: 2,
+        name: 'pageview',
+        screen_size: 'Desktop',
+        browser: 'Chrome',
+        browser_version: '14.0.7',
+        operating_system: 'Windows',
+        operating_system_version: '11'
+      },
+      {
+        user_id: 3,
+        name: 'pageview',
+        screen_size: 'Mobile',
+        browser: 'Firefox',
+        browser_version: '98',
+        operating_system: 'MacOS',
+        operating_system_version: '10.15'
+      },
+      {
+        user_id: 3,
+        name: 'purchase',
+        revenue_reporting_amount: '12345.67',
+        revenue_reporting_currency: 'EUR'
+      }
+    ]
+  })
+
+  await addCustomGoal({ page, domain, name: 'purchase', currency: 'EUR' })
+
+  await page.goto('/' + domain + '?f=is,goal,purchase', {
+    waitUntil: 'commit'
+  })
+
+  const report = page.getByTestId('report-devices')
+
+  await test.step('browsers report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Browsers').click()
+
+    await expectHeaders(report, ['Browser', 'Conversions', 'CR'])
+
+    await expectRows(report, ['Chrome', 'Firefox'])
+
+    await expectMetricValues(report, 'Chrome', ['1', '50%'])
+    await expectMetricValues(report, 'Firefox', ['1', '100%'])
+  })
+
+  await test.step('browsers details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Browsers' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Browser',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['Chrome', 'Firefox'])
+
+    await expectMetricValues(modal(page), 'Chrome', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+    await expectMetricValues(modal(page), 'Firefox', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('browser versions report shows conversions for revenue goal', async () => {
+    await rowLink(report, 'Chrome').click()
+
+    await expect(page).toHaveURL(/f=is,browser,Chrome/)
+
+    await expectHeaders(report, ['Browser version', 'Conversions', 'CR'])
+
+    await expectRows(report, ['Chrome 14.0.7'])
+
+    await expectMetricValues(report, 'Chrome 14.0.7', ['1', '50%'])
+  })
+
+  await test.step('browser versions details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Browser versions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Browser version',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['14.0.7'])
+
+    await expectMetricValues(modal(page), '14.0.7', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+
+    await closeModalButton(page).click()
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Browser is Chrome' })
+      .click()
+  })
+
+  await test.step('operating systems report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Operating systems').click()
+
+    await expectHeaders(report, ['Operating system', 'Conversions', 'CR'])
+
+    await expectRows(report, ['MacOS', 'Windows'])
+
+    await expectMetricValues(report, 'MacOS', ['1', '100%'])
+    await expectMetricValues(report, 'Windows', ['1', '50%'])
+  })
+
+  await test.step('operating systems details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Operating systems' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Operating system',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['MacOS', 'Windows'])
+
+    await expectMetricValues(modal(page), 'MacOS', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
+    await expectMetricValues(modal(page), 'Windows', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('operating system versions report shows conversions for revenue goal', async () => {
+    await rowLink(report, 'Windows').click()
+
+    await expect(page).toHaveURL(/f=is,os,Windows/)
+
+    await expectHeaders(report, [
+      'Operating system version',
+      'Conversions',
+      'CR'
+    ])
+
+    await expectRows(report, ['Windows 11'])
+
+    await expectMetricValues(report, 'Windows 11', ['1', '50%'])
+  })
+
+  await test.step('operating system versions details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Operating system versions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Operating system version',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['11'])
+
+    await expectMetricValues(modal(page), '11', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+
+    await closeModalButton(page).click()
+
+    await page
+      .getByRole('button', {
+        name: 'Remove filter: Operating system is Windows'
+      })
+      .click()
+  })
+
+  await test.step('devices report shows conversions for revenue goal', async () => {
+    await tabButton(report, 'Devices').click()
+
+    await expectHeaders(report, ['Device', 'Conversions', 'CR'])
+
+    await expectRows(report, ['Desktop', 'Mobile'])
+
+    await expectMetricValues(report, 'Desktop', ['1', '50%'])
+    await expectMetricValues(report, 'Mobile', ['1', '100%'])
+  })
+
+  await test.step('devices details modal includes revenue columns', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Devices' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'Device',
+      /Total visitors/,
+      /Conversions/,
+      /CR/,
+      /Revenue/,
+      /Average/
+    ])
+
+    await expectRows(modal(page), ['Desktop', 'Mobile'])
+
+    await expectMetricValues(modal(page), 'Desktop', [
+      '2',
+      '1',
+      '50%',
+      '€23.0',
+      '€23.0'
+    ])
+    await expectMetricValues(modal(page), 'Mobile', [
+      '1',
+      '1',
+      '100%',
+      '€12.3K',
+      '€12.3K'
+    ])
+
+    await closeModalButton(page).click()
+  })
+})
