@@ -27,8 +27,6 @@ defmodule Plausible.Site.GateKeeper do
   alias Plausible.{Site, RateLimit}
   alias Plausible.Site.Cache
 
-  require Logger
-
   @spec check(String.t(), Keyword.t()) :: t()
   def check(domain, opts \\ []) when is_binary(domain) do
     case policy(domain, opts) do
