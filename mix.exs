@@ -152,7 +152,7 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.12"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:ex_money, "~> 5.12"},
+      {:ex_money, "~> 5.24.2"},
       {:mjml_eex, "~> 0.12.0"},
       {:mjml, "~> 4.0.0"},
       {:heroicons, "~> 0.5.0"},
