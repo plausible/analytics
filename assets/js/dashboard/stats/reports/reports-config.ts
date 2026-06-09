@@ -54,7 +54,8 @@ export enum BreakdownReportKey {
   'utmTerms' = 'utmTerms',
   'countries' = 'countries',
   'regions' = 'regions',
-  'cities' = 'cities'
+  'cities' = 'cities',
+  'goals' = 'goals'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -236,5 +237,36 @@ export const BREAKDOWN_REPORTS: Record<
     detailsPath: 'cities',
     dimensionLabel: 'City',
     alwaysOnFilters: [['is_not', 'visit:city', [0]]]
+  },
+  [BreakdownReportKey.goals]: {
+    dimensions: ['event:goal'],
+    metricsByContext: {
+      realtimeMetrics: ['visitors', 'events'],
+      defaultIndexMetrics: ['visitors', 'events', 'conversion_rate'],
+      defaultDetailedMetrics: ['visitors', 'events', 'conversion_rate'],
+      goalFilterIndexMetrics: ['visitors', 'events', 'conversion_rate'],
+      goalFilterDetailedMetrics: ['visitors', 'events', 'conversion_rate']
+    },
+    detailsTitle: 'Goal conversions',
+    detailsPath: 'conversions',
+    dimensionLabel: 'Goal'
+  }
+}
+
+export function customPropsReportConfig(
+  propKey: string
+): BreakdownReportConfig {
+  return {
+    dimensions: [`event:props:${propKey}` as NonTimeDimension],
+    metricsByContext: {
+      realtimeMetrics: ['visitors', 'events'],
+      defaultIndexMetrics: ['visitors', 'events', 'percentage'],
+      defaultDetailedMetrics: ['visitors', 'events', 'percentage'],
+      goalFilterIndexMetrics: ['visitors', 'events', 'conversion_rate'],
+      goalFilterDetailedMetrics: ['visitors', 'events', 'conversion_rate']
+    },
+    detailsTitle: 'Custom property breakdown',
+    detailsPath: `custom-prop-values/${propKey}`,
+    dimensionLabel: propKey
   }
 }
