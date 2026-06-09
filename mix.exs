@@ -75,7 +75,6 @@ defmodule Plausible.MixProject do
     [
       {:bamboo, "~> 2.3", override: true},
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
-      {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
