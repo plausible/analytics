@@ -742,20 +742,6 @@ case mailer_adapter do
       hackney_opts: [recv_timeout: :timer.seconds(10)],
       api_key: get_var_from_path_or_env(config_dir, "SENDGRID_API_KEY")
 
-  "Bamboo.SMTPAdapter" ->
-    config :plausible, Plausible.Mailer,
-      adapter: Bamboo.SMTPAdapter,
-      server: get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR", "mail"),
-      hostname: base_url.host,
-      port: get_var_from_path_or_env(config_dir, "SMTP_HOST_PORT", "25"),
-      username: get_var_from_path_or_env(config_dir, "SMTP_USER_NAME"),
-      password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
-      tls: :if_available,
-      allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: get_bool_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED", false),
-      retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
-      no_mx_lookups: get_bool_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED", true)
-
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
