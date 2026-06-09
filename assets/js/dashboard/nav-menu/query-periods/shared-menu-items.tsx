@@ -10,7 +10,8 @@ export const linkClassName = classNames(
   popover.items.classNames.hoverLink
 )
 
-export const hiddenCalendarButtonClassName = 'flex h-8 w-0 outline-none'
+export const hiddenCalendarButtonClassName =
+  'flex h-8 w-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
 
 export const DateMenuCalendarIcon = () => <CalendarIcon className="size-4" />
 
