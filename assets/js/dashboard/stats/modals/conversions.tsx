@@ -50,6 +50,7 @@ function ConversionsModal() {
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         DimensionElement={GoalsDimensionCell}
+        hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
       />
     </Modal>
   )
