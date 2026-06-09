@@ -127,5 +127,6 @@ defimpl Plausible.Audit.Encoder, for: Any do
     end
   end
 
-  def encode(_, _ \\ []), do: raise("Implement me")
+  def encode(_), do: raise("Implement me")
+  def encode(_, _), do: raise("Implement me")
 end
