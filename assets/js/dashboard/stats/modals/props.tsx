@@ -52,12 +52,15 @@ function PropsModal() {
   const isRevenueAvailable =
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  const metrics = chooseBreakdownMetricsByContext(reportConfig.metricsByContext, {
-    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-    isRealtime: isRealTimeDashboard(dashboardState),
-    isDetailed: true,
-    isRevenueAvailable
-  })
+  const metrics = chooseBreakdownMetricsByContext(
+    reportConfig.metricsByContext,
+    {
+      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+      isRealtime: isRealTimeDashboard(dashboardState),
+      isDetailed: true,
+      isRevenueAvailable
+    }
+  )
 
   const title = specialGoal ? specialGoal.title : 'Custom property breakdown'
 
@@ -71,6 +74,7 @@ function PropsModal() {
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         DimensionElement={DimensionElementForProp}
+        bundlePercentageWithVisitors={false}
       />
     </Modal>
   )

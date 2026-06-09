@@ -72,6 +72,7 @@ export default function Conversions({
       alwaysOnFilters={reportConfig.alwaysOnFilters}
       DimensionElement={DimensionElement}
       onDataReady={afterFetchData}
+      hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
     />
   )
 }

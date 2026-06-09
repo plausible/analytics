@@ -496,13 +496,11 @@ function Behaviours({
     }
   }
 
-  function getMoreLinkProps():
-    | {
-        path: string
-        params?: Record<string, string>
-        search: (search: string) => string
-      }
-    | null {
+  function getMoreLinkProps(): {
+    path: string
+    params?: Record<string, string>
+    search: (search: string) => string
+  } | null {
     switch (mode) {
       case Mode.CONVERSIONS:
         return specialGoal

@@ -86,6 +86,7 @@ export default function Properties({
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         DimensionElement={DimensionElement}
         onDataReady={afterFetchData}
+        bundlePercentageWithVisitors={false}
       />
     </div>
   )

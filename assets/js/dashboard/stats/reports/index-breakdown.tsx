@@ -53,6 +53,18 @@ type IndexBreakdownProps = SharedBreakdownReportProps & {
   metricColumnWidth?: string
   DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
   onDataReady?: (data: QueryApiResponse) => void
+  /**
+   * When true (default), `percentage` is shown inline inside the Visitors
+   * cell rather than as its own column. Set to false for reports that want
+   * percentage as a separate breakdown column (e.g. custom properties).
+   */
+  bundlePercentageWithVisitors?: boolean
+  /**
+   * Metrics that should be dropped from the rendered columns when every row's
+   * value for that metric is null. Used by the goals report to hide revenue
+   * columns when the current rows have no revenue data.
+   */
+  hideMetricsIfAllNull?: Metric[]
 }
 
 export function IndexBreakdown({
@@ -62,7 +74,9 @@ export function IndexBreakdown({
   dimensionLabel,
   alwaysOnFilters,
   onDataReady,
-  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
+  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH,
+  bundlePercentageWithVisitors = true,
+  hideMetricsIfAllNull
 }: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -123,19 +137,36 @@ export function IndexBreakdown({
     [dashboardState, dimensions]
   )
 
+  const columnsHiddenForAllNull = useMemo((): Set<Metric> => {
+    const hidden = new Set<Metric>()
+    if (!hideMetricsIfAllNull || !apiState.data || !query) return hidden
+    for (const metric of hideMetricsIfAllNull) {
+      const idx = query.metrics.indexOf(metric)
+      if (idx === -1) continue
+      const allNull = apiState.data.results.every(
+        (row) => row.metrics[idx] == null
+      )
+      if (allNull) hidden.add(metric)
+    }
+    return hidden
+  }, [apiState.data, query, hideMetricsIfAllNull])
+
   const columns = useMemo((): ColumnConfiguration<QueryResultRow>[] | null => {
     if (!query || barMetricIndex === null || barMaxValue === null) return null
 
-    // Only render columns for metrics the API actually returned. Also,
-    // percentage is not its own column —- it's shown inline in the
-    // visitors cell instead.
-    const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+    // Only render columns for metrics the API actually returned. When
+    // bundlePercentageWithVisitors is on (default), `percentage` is shown
+    // inline in the Visitors cell rather than as its own column.
+    const filteredMetrics = query.metrics.filter((m) => {
+      if (columnsHiddenForAllNull.has(m)) return false
+      return !(bundlePercentageWithVisitors && m === 'percentage')
+    })
 
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
-      hasPercentage && m === 'visitors'
+      bundlePercentageWithVisitors && hasPercentage && m === 'visitors'
 
     return [
       {
@@ -191,7 +222,9 @@ export function IndexBreakdown({
     metricLabelFor,
     barMaxValue,
     query,
-    metricColumnWidth
+    metricColumnWidth,
+    bundlePercentageWithVisitors,
+    columnsHiddenForAllNull
   ])
 
   return (
