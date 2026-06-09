@@ -97,8 +97,7 @@ defmodule Plausible.Shield.PageRuleCacheTest do
 
       assert :ok = PageRuleCache.refresh_all(cache_opts)
 
-      # FIXME: probably broken :refresh_all in :bag cash
-      # assert [_, _] = PageRuleCache.get(domain, cache_opts)
+      assert [_, _] = PageRuleCache.get(domain, cache_opts)
     end
   end
 
