@@ -56,7 +56,7 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
       {:ok, _} = Shields.add_hostname_rule(site, %{"hostname" => "*example.com"})
       :ok = HostnameRuleCache.refresh_all(cache_name: test)
       assert regex = HostnameRuleCache.get(site.domain, cache_opts).hostname_pattern
-      assert regex == ~r/^.*example\.com$/
+      assert Regex.source(regex) == "^.*example\\.com$"
     end
 
     test "cache allows lookups for hostname paths on sites with changed domain", %{test: test} do
@@ -96,7 +96,7 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
       assert %{hostname_pattern: hostname_pattern} =
                HostnameRuleCache.get(domain, cache_opts)
 
-      assert hostname_pattern == ~r/^test2\.example\.com$/
+      assert Regex.source(hostname_pattern) == "^test2\\.example\\.com$"
 
       assert :ok = HostnameRuleCache.refresh_all(cache_opts)
 
