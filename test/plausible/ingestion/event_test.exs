@@ -71,7 +71,7 @@ defmodule Plausible.Ingestion.EventTest do
     conn =
       :post
       |> build_conn("/api/events", payload)
-      |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 8))
+      |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 16))
 
     assert {:ok, request, _conn} = Request.build(conn)
 
