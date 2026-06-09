@@ -74,6 +74,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.AuthorizeSiteAccess
     plug PlausibleWeb.Plugs.NoRobots
+    plug PlausibleWeb.Plugs.InternalStatsApiVersion
   end
 
   pipeline :docs_stats_api do

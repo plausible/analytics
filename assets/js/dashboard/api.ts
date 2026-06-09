@@ -7,6 +7,9 @@ import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
 import { MainGraphResponse } from './stats/graph/fetch-main-graph'
 import { CsvExportRequestBody } from './stats/csv-export/csv-export-body'
+import { maybeReloadForApiVersion } from './util/url-search-params'
+
+const EXPECTED_API_VERSION = '0'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
@@ -149,6 +152,12 @@ async function throwApiErrorIfNotOk(response: Response) {
 }
 
 async function handleApiResponse(response: Response) {
+  const apiVersion = response.headers.get('x-api-version')
+
+  if (apiVersion && apiVersion !== EXPECTED_API_VERSION) {
+    maybeReloadForApiVersion(window.location, EXPECTED_API_VERSION)
+  }
+
   await throwApiErrorIfNotOk(response)
   return response.json()
 }

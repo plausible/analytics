@@ -19,6 +19,49 @@ const LABEL_URL_PARAM_NAME = 'l'
 
 const REDIRECTED_SEARCH_PARAM_NAME = 'r'
 
+const API_VERSION_RELOAD_PARAM_NAME = 'api_version_reloaded'
+
+/**
+ * Navigates to the current URL with `api_version_reloaded=<expectedVersion>`
+ * appended, using `location.replace` so the pre-reload entry is not kept in
+ * browser history. Returns early without navigating when the param is already
+ * present, which prevents an infinite reload loop when the versions are
+ * permanently out of sync.
+ */
+export function maybeReloadForApiVersion(
+  windowLocation: Location,
+  expectedVersion: string
+) {
+  const params = new URLSearchParams(windowLocation.search)
+
+  if (params.get(API_VERSION_RELOAD_PARAM_NAME) === expectedVersion) {
+    return
+  }
+
+  const newSearch = addOrReplaceSearch(
+    windowLocation.search,
+    API_VERSION_RELOAD_PARAM_NAME,
+    expectedVersion
+  )
+
+  console.log('API version mismatch detected, reloading...')
+  windowLocation.replace(
+    `${windowLocation.pathname}${newSearch}${windowLocation.hash}`
+  )
+}
+
+function addOrReplaceSearch(
+  search: string,
+  key: string,
+  value: string
+): string {
+  const param = `${key}=${value}`
+  if (new URLSearchParams(search).has(key)) {
+    return search.replace(new RegExp(`([?&])${key}=[^&]*`), `$1${param}`)
+  }
+  return search ? `${search}&${param}` : `?${param}`
+}
+
 /**
  * This function is able to serialize for URL simple params @see serializeSimpleSearchEntry as well
  * two complex params, labels and filters.
