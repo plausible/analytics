@@ -100,8 +100,7 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
 
       assert :ok = HostnameRuleCache.refresh_all(cache_opts)
 
-      # FIXME: probably broken :refresh_all in :bag cash
-      # assert [_, _] = HostnameRuleCache.get(domain, cache_opts)
+      assert [_, _] = HostnameRuleCache.get(domain, cache_opts)
     end
   end
 
