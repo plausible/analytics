@@ -123,7 +123,9 @@ export function DetailsBreakdown({
         dimensions,
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
-          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ...dimensions
+            .filter((dim) => dim !== 'event:goal')
+            .map((dim): OrderByEntry => [dim, 'asc'])
         ],
         alwaysOnFilters
       },

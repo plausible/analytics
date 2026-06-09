@@ -76,6 +76,10 @@ export const getBreakdownMetricLabel = (
     dimensions: string[]
   }
 ): string => {
+  if (dimensions[0]?.startsWith('event:props:')) {
+    return getCustomPropsBreakdownMetricLabel(metric)
+  }
+
   switch (dimensions[0]) {
     case 'visit:entry_page':
       return getEntryPagesBreakdownMetricLabel(metric, {
@@ -93,6 +97,20 @@ export const getBreakdownMetricLabel = (
       return getDefaultBreakdownMetricLabel(metric, {
         hasConversionGoalFilter,
         isRealtime
+      })
+  }
+}
+
+const getCustomPropsBreakdownMetricLabel = (metric: Metric): string => {
+  switch (metric) {
+    case 'visitors':
+      return 'Visitors'
+    case 'events':
+      return 'Events'
+    default:
+      return getDefaultBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: false,
+        isRealtime: false
       })
   }
 }
