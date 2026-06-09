@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, {
+  ComponentType,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useState,
+  useEffect,
+  useCallback
+} from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import Properties from './props'
@@ -13,7 +21,7 @@ import {
   getGoalFilter,
   FILTER_OPERATIONS
 } from '../../util/filters'
-import { useSiteContext } from '../../site-context'
+import { PlausibleSite, useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useUserContext } from '../../user-context'
 import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
@@ -34,10 +42,14 @@ import {
 import { SpecialGoalPropBreakdown } from './special-goal-prop-breakdown'
 import Conversions from './conversions'
 import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
+import { DashboardState, Filter } from '../../dashboard-state'
+import { QueryApiResponse } from '../../api'
 
 /*global BUILD_EXTRA*/
 /*global require*/
-function maybeRequireFunnels() {
+function maybeRequireFunnels(): {
+  default: ComponentType<{ funnelName: string }> | null
+} {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/funnel')
@@ -46,7 +58,7 @@ function maybeRequireFunnels() {
   }
 }
 
-function maybeRequireExploration() {
+function maybeRequireExploration(): { default: ComponentType | null } {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/exploration')
@@ -58,10 +70,10 @@ function maybeRequireExploration() {
 const Funnel = maybeRequireFunnels().default
 const FunnelExploration = maybeRequireExploration().default
 
-function singleGoalFilterApplied(dashboardState) {
+function singleGoalFilterApplied(dashboardState: DashboardState): boolean {
   const goalFilter = getGoalFilter(dashboardState)
   if (goalFilter) {
-    const [operation, _filterKey, clauses] = goalFilter
+    const [operation, _filterKey, clauses] = goalFilter as Filter
     return operation === FILTER_OPERATIONS.is && clauses.length === 1
   } else {
     return false
@@ -69,25 +81,37 @@ function singleGoalFilterApplied(dashboardState) {
 }
 
 const STORAGE_KEYS = {
-  getForTab: ({ site }) =>
+  getForTab: ({ site }: { site: PlausibleSite }): string =>
     storage.getDomainScopedStorageKey('behavioursTab', site.domain),
-  getForFunnel: ({ site }) =>
+  getForFunnel: ({ site }: { site: PlausibleSite }): string =>
     storage.getDomainScopedStorageKey('behavioursTabFunnel', site.domain),
-  getForPropKey: ({ site }) =>
+  getForPropKey: ({ site }: { site: PlausibleSite }): string =>
     storage.getDomainScopedStorageKey('prop_key', site.domain),
-  getForPropKeyForGoal: ({ goalName, site }) => {
-    return storage.getDomainScopedStorageKey(
-      `${goalName}__prop_key)`,
-      site.domain
-    )
-  }
+  getForPropKeyForGoal: ({
+    goalName,
+    site
+  }: {
+    goalName: string
+    site: PlausibleSite
+  }): string =>
+    storage.getDomainScopedStorageKey(`${goalName}__prop_key)`, site.domain)
 }
 
-function getPropKeyFromStorage({ site, dashboardState }) {
+function getPropKeyFromStorage({
+  site,
+  dashboardState
+}: {
+  site: PlausibleSite
+  dashboardState: DashboardState
+}): string | null {
   if (singleGoalFilterApplied(dashboardState)) {
-    const [_operation, _dimension, [goalName]] = getGoalFilter(dashboardState)
+    const goalFilter = getGoalFilter(dashboardState) as Filter
+    const [_operation, _dimension, [goalName]] = goalFilter
     const storedForGoal = storage.getItem(
-      STORAGE_KEYS.getForPropKeyForGoal({ goalName, site })
+      STORAGE_KEYS.getForPropKeyForGoal({
+        goalName: String(goalName),
+        site
+      })
     )
     if (storedForGoal) {
       return storedForGoal
@@ -97,11 +121,20 @@ function getPropKeyFromStorage({ site, dashboardState }) {
   return storage.getItem(STORAGE_KEYS.getForPropKey({ site }))
 }
 
-function storePropKey({ site, propKey, dashboardState }) {
+function storePropKey({
+  site,
+  propKey,
+  dashboardState
+}: {
+  site: PlausibleSite
+  propKey: string
+  dashboardState: DashboardState
+}): void {
   if (singleGoalFilterApplied(dashboardState)) {
-    const [_operation, _dimension, [goalName]] = getGoalFilter(dashboardState)
+    const goalFilter = getGoalFilter(dashboardState) as Filter
+    const [_operation, _dimension, [goalName]] = goalFilter
     storage.setItem(
-      STORAGE_KEYS.getForPropKeyForGoal({ goalName, site }),
+      STORAGE_KEYS.getForPropKeyForGoal({ goalName: String(goalName), site }),
       propKey
     )
   } else {
@@ -109,20 +142,35 @@ function storePropKey({ site, propKey, dashboardState }) {
   }
 }
 
-function getDefaultSelectedFunnel({ site }) {
+function getDefaultSelectedFunnel({
+  site
+}: {
+  site: PlausibleSite
+}): string | undefined {
   const stored = storage.getItem(STORAGE_KEYS.getForFunnel({ site }))
   const storedExists = stored && site.funnels.some((f) => f.name === stored)
 
   if (storedExists) {
-    return stored
+    return stored as string
   } else if (site.funnels.length > 0) {
     const firstAvailable = site.funnels[0].name
     storage.setItem(STORAGE_KEYS.getForFunnel({ site }), firstAvailable)
     return firstAvailable
   }
+  return undefined
 }
 
-function Behaviours({ importedDataInView, setMode, mode }) {
+type BehavioursProps = {
+  importedDataInView?: boolean
+  setMode: Dispatch<SetStateAction<Mode | null>>
+  mode: Mode
+}
+
+function Behaviours({
+  importedDataInView,
+  setMode,
+  mode
+}: BehavioursProps): ReactNode {
   const { dashboardState } = useDashboardStateContext()
   const goalFilter = getGoalFilter(dashboardState)
   const specialGoal = goalFilter ? getSpecialGoal(goalFilter) : null
@@ -134,30 +182,37 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   )
   const [loading, setLoading] = useState(true)
 
-  const [selectedFunnel, setSelectedFunnel] = useState(
+  const [selectedFunnel, setSelectedFunnel] = useState<string | undefined>(
     getDefaultSelectedFunnel({ site })
   )
   const initialSelectedPropKey =
     getPropKeyFromStorage({ site, dashboardState }) || null
-  const [selectedPropKey, setSelectedPropKey] = useState(initialSelectedPropKey)
-  const [propertyKeys, setPropertyKeys] = useState(
+  const [selectedPropKey, setSelectedPropKey] = useState<string | null>(
+    initialSelectedPropKey
+  )
+  const [propertyKeys, setPropertyKeys] = useState<string[]>(
     selectedPropKey !== null ? [selectedPropKey] : []
   )
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] =
     useState(false)
 
-  const [skipImportedReason, setSkipImportedReason] = useState(null)
-  const [moreLinkState, setMoreLinkState] = useState(MoreLinkState.LOADING)
+  const [skipImportedReason, setSkipImportedReason] = useState<string | null>(
+    null
+  )
+  const [moreLinkState, setMoreLinkState] = useState<string>(
+    MoreLinkState.LOADING
+  )
 
   const onGoalFilterClick = useCallback(
-    (e) => {
-      const goalName = e.target.innerHTML
-      const isSpecial = isSpecialGoal(goalName)
-      const isPageview = isPageViewGoal(goalName)
+    (goalName: string) => {
+      const isSpecialGoalClick = isSpecialGoal(goalName)
+      // isPageViewGoal currently has no return statement and resolves to
+      // `undefined` at runtime; cast preserves the historical truthiness check.
+      const isPageview = isPageViewGoal(goalName) as unknown as boolean
 
       if (
-        !isSpecial &&
+        !isSpecialGoalClick &&
         !isPageview &&
         enabledModes.includes(Mode.PROPS) &&
         site.hasProps
@@ -191,7 +246,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }, [dashboardState, mode, selectedPropKey])
 
-  function setFunnelFactory(selectedFunnelName) {
+  function setFunnelFactory(selectedFunnelName: string): () => void {
     return () => {
       storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.FUNNELS)
       storage.setItem(STORAGE_KEYS.getForFunnel({ site }), selectedFunnelName)
@@ -200,7 +255,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
-  function setPropKeyFactory(selectedPropKeyName) {
+  function setPropKeyFactory(selectedPropKeyName: string): () => void {
     return () => {
       storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.PROPS)
       storePropKey({ site, propKey: selectedPropKeyName, dashboardState })
@@ -221,7 +276,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         .get(url.apiPath(site, '/suggestions/prop_key'), dashboardState, {
           q: ''
         })
-        .then((propKeys) => {
+        .then((propKeys: Array<{ value: string }>) => {
           const propKeyValues = propKeys.map((entry) => entry.value)
           setPropertyKeys(propKeyValues)
           if (propKeyValues.length > 0) {
@@ -239,7 +294,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
             setSelectedPropKey(null)
           }
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           console.error('Failed to fetch property keys:', error)
           setPropertyKeys([])
           setSelectedPropKey(null)
@@ -251,24 +306,24 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }, [site, dashboardState, enabledModes])
 
-  function setTabFactory(tab) {
+  function setTabFactory(tab: Mode): () => void {
     return () => {
       storage.setItem(STORAGE_KEYS.getForTab({ site }), tab)
       setMode(tab)
     }
   }
 
-  function afterFetchData(apiResponse) {
+  function afterFetchData(apiResponse: QueryApiResponse): void {
     setLoading(false)
-    setSkipImportedReason(apiResponse.skip_imported_reason)
-    if (apiResponse.results && apiResponse.results.length > 0) {
+    setSkipImportedReason(apiResponse?.meta?.imports_skip_reason ?? null)
+    if (apiResponse?.results && apiResponse.results.length > 0) {
       setMoreLinkState(MoreLinkState.READY)
     } else {
       setMoreLinkState(MoreLinkState.HIDDEN)
     }
   }
 
-  function renderConversions() {
+  function renderConversions(): ReactNode {
     if (site.hasGoals) {
       if (specialGoal) {
         return (
@@ -305,7 +360,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
-  function renderExploration() {
+  function renderExploration(): ReactNode {
     if (FunnelExploration === null) {
       return featureUnavailable()
     }
@@ -334,7 +389,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     )
   }
 
-  function renderFunnels() {
+  function renderFunnels(): ReactNode {
     if (Funnel === null) {
       return featureUnavailable()
     } else if (Funnel && selectedFunnel && site.funnelsAvailable) {
@@ -370,7 +425,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
-  function renderProps() {
+  function renderProps(): ReactNode {
     if (site.hasProps && site.propsAvailable) {
       return (
         <Properties propKey={selectedPropKey} afterFetchData={afterFetchData} />
@@ -406,7 +461,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
-  function noDataYet() {
+  function noDataYet(): ReactNode {
     return (
       <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         No data yet
@@ -414,7 +469,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     )
   }
 
-  function featureUnavailable() {
+  function featureUnavailable(): ReactNode {
     return (
       <div className="flex-1 flex flex-col items-center justify-center font-medium text-gray-500 dark:text-gray-400">
         <span>This report is available in Plausible Cloud</span>
@@ -428,7 +483,7 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     )
   }
 
-  function renderContent() {
+  function renderContent(): ReactNode {
     switch (mode) {
       case Mode.CONVERSIONS:
         return renderConversions()
@@ -441,18 +496,24 @@ function Behaviours({ importedDataInView, setMode, mode }) {
     }
   }
 
-  function getMoreLinkProps() {
+  function getMoreLinkProps():
+    | {
+        path: string
+        params?: Record<string, string>
+        search: (search: string) => string
+      }
+    | null {
     switch (mode) {
       case Mode.CONVERSIONS:
         return specialGoal
           ? {
               path: customPropsRoute.path,
               params: { propKey: url.maybeEncodeRouteParam(specialGoal.prop) },
-              search: (search) => search
+              search: (search: string) => search
             }
           : {
               path: conversionsRoute.path,
-              search: (search) => search
+              search: (search: string) => search
             }
       case Mode.PROPS:
         if (!selectedPropKey) {
@@ -461,27 +522,29 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         return {
           path: customPropsRoute.path,
           params: { propKey: url.maybeEncodeRouteParam(selectedPropKey) },
-          search: (search) => search
+          search: (search: string) => search
         }
       default:
         return null
     }
   }
 
-  function isEnabled(mode) {
-    return enabledModes.includes(mode)
+  function isEnabled(checkMode: Mode): boolean {
+    return enabledModes.includes(checkMode)
   }
 
-  function isRealtime() {
+  function isRealtime(): boolean {
     return dashboardState.period === 'realtime'
   }
 
-  function renderImportedQueryUnsupportedWarning() {
+  function renderImportedQueryUnsupportedWarning(): ReactNode {
     if (mode === Mode.CONVERSIONS) {
       return (
         <ImportedQueryUnsupportedWarning
           loading={loading}
           skipImportedReason={skipImportedReason}
+          altCondition={undefined}
+          message={undefined}
         />
       )
     } else if (mode === Mode.PROPS) {
@@ -489,12 +552,15 @@ function Behaviours({ importedDataInView, setMode, mode }) {
         <ImportedQueryUnsupportedWarning
           loading={loading}
           skipImportedReason={skipImportedReason}
+          altCondition={undefined}
           message="Imported data is unavailable in this view"
         />
       )
     } else {
       return (
         <ImportedQueryUnsupportedWarning
+          loading={undefined}
+          skipImportedReason={undefined}
           altCondition={importedDataInView}
           message="Imported data is unavailable in this view"
         />
@@ -597,17 +663,21 @@ function Behaviours({ importedDataInView, setMode, mode }) {
   )
 }
 
-function BehavioursOuter({ importedDataInView }) {
+function BehavioursOuter({
+  importedDataInView
+}: {
+  importedDataInView?: boolean
+}): ReactNode {
   const site = useSiteContext()
   const { enabledModes } = useModesContext()
-  const [mode, setMode] = useState(null)
+  const [mode, setMode] = useState<Mode | null>(null)
 
   useEffect(() => {
     const storedMode = storage.getItem(STORAGE_KEYS.getForTab({ site }))
     // updates current mode when available modes change (if needed), loads user's stored mode
     setMode((currentMode) =>
       getFirstPreferenceFromEnabledModes(
-        [currentMode, storedMode],
+        [currentMode, storedMode] as Mode[],
         enabledModes
       )
     )
@@ -622,7 +692,11 @@ function BehavioursOuter({ importedDataInView }) {
   ) : null
 }
 
-export default function BehavioursWrapped({ importedDataInView }) {
+export default function BehavioursWrapped({
+  importedDataInView
+}: {
+  importedDataInView?: boolean
+}): ReactNode {
   return (
     <ModesContextProvider>
       <BehavioursOuter importedDataInView={importedDataInView} />

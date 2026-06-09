@@ -11,6 +11,7 @@ import {
   Pagination,
   SimpleFilterDimensions,
   CustomPropertyFilterDimensions,
+  GoalDimension,
   TimeDimensions,
   SortDirection
 } from '../types/query-api'
@@ -25,6 +26,7 @@ export type ApiFilter =
 export type NonTimeDimension =
   | SimpleFilterDimensions
   | CustomPropertyFilterDimensions
+  | GoalDimension
 
 export type Dimension = NonTimeDimension | TimeDimensions | 'time:minute'
 

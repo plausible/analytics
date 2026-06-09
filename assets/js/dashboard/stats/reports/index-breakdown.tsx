@@ -77,7 +77,9 @@ export function IndexBreakdown({
         dimensions,
         order_by: [
           ['visitors', 'desc'],
-          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ...dimensions
+            .filter((dim) => dim !== 'event:goal')
+            .map((dim): OrderByEntry => [dim, 'asc'])
         ],
         alwaysOnFilters,
         pagination: { limit: MAX_ITEMS, offset: 0 }
