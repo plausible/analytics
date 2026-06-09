@@ -352,6 +352,6 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   defp parse_source("duckduckgo"), do: "DuckDuckGo"
 
   defp parse_source(ref) do
-    Plausible.Ingestion.Source.parse("https://" <> ref)
+    Plausible.Ingestion.Source.from_referrer("https://" <> ref)
   end
 end
