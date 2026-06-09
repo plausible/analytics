@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.RequireAccountPlug do
+  @moduledoc false
+
   alias PlausibleWeb.Router.Helpers, as: Routes
   import Plug.Conn
 
@@ -12,8 +14,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
   @force_2fa_exceptions [
     ["2fa", "setup", "force-initiate"],
     ["2fa", "setup", "initiate"],
-    ["2fa", "setup", "verify"],
-    ["team", "select"]
+    ["2fa", "setup", "verify"]
   ]
 
   def init(options) do
