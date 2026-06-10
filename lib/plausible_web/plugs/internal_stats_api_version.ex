@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Plugs.InternalStatsApiVersion do
   @impl true
   def init(opts), do: opts
 
-  @api_version "1"
+  @api_version "0"
 
   def api_version, do: @api_version
 
