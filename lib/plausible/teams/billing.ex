@@ -251,7 +251,7 @@ defmodule Plausible.Teams.Billing do
   else
     def team_member_limit(_team), do: :unlimited
 
-    def solo?(_team), do: false
+    def solo?(_team), do: always(false)
   end
 
   @doc """
