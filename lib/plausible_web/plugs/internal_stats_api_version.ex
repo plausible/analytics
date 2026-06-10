@@ -15,6 +15,8 @@ defmodule PlausibleWeb.Plugs.InternalStatsApiVersion do
 
   @api_version "0"
 
+  def api_version, do: @api_version
+
   @impl true
   def call(conn, _opts \\ nil) do
     put_resp_header(conn, "x-api-version", @api_version)

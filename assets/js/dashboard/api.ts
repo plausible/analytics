@@ -9,7 +9,10 @@ import { MainGraphResponse } from './stats/graph/fetch-main-graph'
 import { CsvExportRequestBody } from './stats/csv-export/csv-export-body'
 import { maybeReloadForApiVersion } from './util/url-search-params'
 
-const EXPECTED_API_VERSION = '0'
+const EXPECTED_API_VERSION =
+  document
+    .querySelector('meta[name="x-api-version"]')
+    ?.getAttribute('content') ?? '0'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
