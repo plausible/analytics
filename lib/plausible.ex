@@ -31,11 +31,7 @@ defmodule Plausible do
           unquote(term)
 
         1 ->
-          case unquote(term) do
-            value when is_boolean(value) -> not value
-            nil -> :something
-            _other -> nil
-          end
+          not unquote(term)
       end
     end
   end
