@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.CreateFreeSubscription do
+  @moduledoc false
+
   use Mix.Task
   use Plausible.Repo
 
