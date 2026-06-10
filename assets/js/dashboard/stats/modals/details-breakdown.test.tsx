@@ -17,8 +17,12 @@ const queryPath = `/api/stats/${domain}/query/`
 const MOCK_RESPONSE_DELAY_MS = 50
 const SMALL_LOADING_SPINNER_TEST_ID = 'small-loading-spinner'
 
-const PAGES_DETAILED_METRICS =
-  BREAKDOWN_REPORTS.pages.metricsByContext.defaultDetailedMetrics
+const PAGES_DETAILED_METRICS = BREAKDOWN_REPORTS.pages.getMetrics({
+  isDetailed: true,
+  isRealtime: false,
+  hasConversionGoalFilter: false,
+  isRevenueAvailable: false
+})
 
 function buildResponse(
   results: { dimensions: string[]; metrics: number[] }[] = []

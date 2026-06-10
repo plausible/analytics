@@ -28,10 +28,7 @@ import {
   DimensionCellWithBarProps,
   IndexBreakdown
 } from '../reports/index-breakdown'
-import {
-  chooseBreakdownMetricsByContext,
-  defaultGetFilterInfo
-} from '../breakdowns'
+import { defaultGetFilterInfo } from '../breakdowns'
 import ImportedWarningBubble from '../imported-warning-bubble'
 import { IndexExternalLink } from '../pages/external-link'
 import { SearchTerms } from './search-terms'
@@ -193,15 +190,10 @@ export default function Sources() {
 
     const reportConfig = BREAKDOWN_REPORTS[currentReportKey]
 
-    const metrics = chooseBreakdownMetricsByContext(
-      reportConfig.metricsByContext,
-      {
-        isRealtime: isRealTimeDashboard(dashboardState),
-        isDetailed: false,
-        hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-        isRevenueAvailable: false
-      }
-    )
+    const metrics = reportConfig.getMetrics({
+      isRealtime: isRealTimeDashboard(dashboardState),
+      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+    })
 
     const DimensionElement = {
       [BreakdownReportKey.channels]: ChannelsDimensionCell,

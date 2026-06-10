@@ -7,13 +7,7 @@ import {
 } from './dashboard-state'
 import { ComparisonMode, DashboardPeriod } from './dashboard-time-periods'
 import { formatISO } from './util/date'
-import {
-  Pagination,
-  SimpleFilterDimensions,
-  CustomPropertyFilterDimensions,
-  TimeDimensions,
-  SortDirection
-} from '../types/query-api'
+import * as apiTypes from '../types/query-api'
 import { remapToApiFilters } from './util/filters'
 
 export type FilterModifiers = { case_sensitive?: boolean }
@@ -23,22 +17,26 @@ export type ApiFilter =
   | [FilterOperator, FilterKey, FilterClause[], FilterModifiers]
 
 export type NonTimeDimension =
-  | SimpleFilterDimensions
-  | CustomPropertyFilterDimensions
+  | apiTypes.SimpleFilterDimensions
+  | apiTypes.CustomPropertyFilterDimensions
 
-export type Dimension = NonTimeDimension | TimeDimensions | 'time:minute'
+export type TimeDimension = apiTypes.TimeDimensions | 'time:minute'
 
-export type OrderByEntry = [Metric | NonTimeDimension, SortDirection]
+export type Dimension = NonTimeDimension | TimeDimension
+
+export type OrderByEntry = [Metric | NonTimeDimension, apiTypes.SortDirection]
 export type OrderBy = OrderByEntry[]
 
-type DateRange = DashboardPeriod | [string, string]
+export type DateRange = DashboardPeriod | [string, string]
+export type RelativeDate = string | null
+
 type IncludeCompare =
   | ComparisonMode.previous_period
   | ComparisonMode.year_over_year
   | string[]
   | null
 
-type QueryInclude = {
+export type QueryInclude = {
   imports: boolean
   imports_meta: boolean
   time_labels: boolean
@@ -54,19 +52,19 @@ export type ReportParams = {
   dimensions: Dimension[]
   include?: Partial<QueryInclude>
   order_by?: OrderBy
-  pagination?: Pagination
+  pagination?: apiTypes.Pagination
   alwaysOnFilters?: ApiFilter[]
 }
 
 export type StatsQuery = {
   date_range: DateRange
-  relative_date: string | null
+  relative_date: RelativeDate
   filters: ApiFilter[]
   dimensions: Dimension[]
   metrics: Metric[]
   include: QueryInclude
   order_by?: OrderBy | null
-  pagination?: Pagination | null
+  pagination?: apiTypes.Pagination | null
 }
 
 export function addFilter(
@@ -104,7 +102,7 @@ export function createStatsQuery(
   }
 }
 
-function createDateRange(dashboardState: DashboardState): DateRange {
+export function createDateRange(dashboardState: DashboardState): DateRange {
   if (dashboardState.period === DashboardPeriod.custom) {
     return [formatISO(dashboardState.from), formatISO(dashboardState.to)]
   } else {
