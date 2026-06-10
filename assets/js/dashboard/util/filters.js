@@ -1,4 +1,3 @@
-import * as api from '../api'
 import { formatSegmentIdAsLabelKey } from '../filtering/segments'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
@@ -95,7 +94,7 @@ const hasDimensionPrefix =
   ([_operation, dimension, _clauses]) =>
     dimension.startsWith(prefix)
 
-function omitFiltersByKeyPrefix(dashboardState, prefix) {
+export function omitFiltersByKeyPrefix(dashboardState, prefix) {
   return dashboardState.filters.filter(
     ([_operation, filterKey, _clauses]) => !filterKey.startsWith(prefix)
   )
@@ -277,35 +276,6 @@ function remapToApiFilter([operation, filterKey, clauses, ...modifiers]) {
   } else {
     return [operation, apiFilterKey, clauses, ...modifiers]
   }
-}
-
-export function fetchSuggestions(
-  apiPath,
-  dashboardState,
-  input,
-  additionalFilter
-) {
-  const updatedQuery = queryForSuggestions(dashboardState, additionalFilter)
-  return api.get(apiPath, updatedQuery, { q: input.trim() })
-}
-
-function queryForSuggestions(dashboardState, additionalFilter) {
-  let filters = dashboardState.filters
-  if (additionalFilter) {
-    const [_operation, filterKey, clauses] = additionalFilter
-
-    // For suggestions, we remove already-applied filter with same key from dashboardState and add new filter (if feasible)
-    if (clauses.length > 0) {
-      filters = replaceFilterByPrefix(
-        dashboardState,
-        filterKey,
-        additionalFilter
-      )
-    } else {
-      filters = omitFiltersByKeyPrefix(dashboardState, filterKey)
-    }
-  }
-  return { ...dashboardState, filters }
 }
 
 export function getFilterGroup([_operation, filterKey, _clauses]) {
