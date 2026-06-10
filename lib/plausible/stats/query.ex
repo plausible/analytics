@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.Query do
+  @moduledoc """
+  Struct storing stats query parameters and configuration.
+  """
+
   use Plausible
 
   defstruct utc_time_range: nil,

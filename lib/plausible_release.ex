@@ -1,4 +1,9 @@
 defmodule Plausible.Release do
+  @moduledoc """
+  Utility functions used by release scripts for routine tasks, 
+  like migrations. 
+  """
+
   use Plausible
   use Plausible.Repo
 

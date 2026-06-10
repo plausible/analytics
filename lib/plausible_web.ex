@@ -1,4 +1,6 @@
 defmodule PlausibleWeb do
+  @moduledoc false
+
   use Plausible
 
   def live_view(opts \\ []) do

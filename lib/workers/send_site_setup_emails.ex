@@ -1,4 +1,8 @@
 defmodule Plausible.Workers.SendSiteSetupEmails do
+  @moduledoc """
+  Job sending site setup emails.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :site_setup_emails
 
