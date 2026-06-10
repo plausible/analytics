@@ -22,26 +22,28 @@ const REDIRECTED_SEARCH_PARAM_NAME = 'r'
 const API_VERSION_RELOAD_PARAM_NAME = 'api_version_reloaded'
 
 /**
- * Navigates to the current URL with `api_version_reloaded=<expectedVersion>`
+ * Navigates to the current URL with `api_version_reloaded=<currentApiVersion>`
  * appended, using `location.replace` so the pre-reload entry is not kept in
  * browser history. Returns early without navigating when the param is already
  * present, which prevents an infinite reload loop when the versions are
  * permanently out of sync.
+ *
+ * BE: lib/plausible_web/plugs/internal_stats_api_version.ex
  */
 export function maybeReloadForApiVersion(
   windowLocation: Location,
-  expectedVersion: string
+  currentApiVersion: string
 ) {
   const params = new URLSearchParams(windowLocation.search)
 
-  if (params.get(API_VERSION_RELOAD_PARAM_NAME) === expectedVersion) {
+  if (params.get(API_VERSION_RELOAD_PARAM_NAME) === currentApiVersion) {
     return
   }
 
   const newSearch = addOrReplaceSearch(
     windowLocation.search,
     API_VERSION_RELOAD_PARAM_NAME,
-    expectedVersion
+    currentApiVersion
   )
 
   console.log('API version mismatch detected, reloading...')

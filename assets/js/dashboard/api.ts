@@ -155,10 +155,10 @@ async function throwApiErrorIfNotOk(response: Response) {
 }
 
 async function handleApiResponse(response: Response) {
-  const apiVersion = response.headers.get('x-api-version')
+  const currentApiVersion = response.headers.get('x-api-version')
 
-  if (apiVersion && apiVersion !== EXPECTED_API_VERSION) {
-    maybeReloadForApiVersion(window.location, EXPECTED_API_VERSION)
+  if (currentApiVersion && currentApiVersion !== EXPECTED_API_VERSION) {
+    maybeReloadForApiVersion(window.location, currentApiVersion)
   }
 
   await throwApiErrorIfNotOk(response)
