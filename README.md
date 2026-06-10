@@ -11,6 +11,9 @@
     <a href="https://plausible.io/docs">Docs</a> |
     <a href="https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md">Contributing</a>
     <br /><br />
+    <a href="https://code-rho-dun.vercel.app/google-analytics/">
+      <img src="https://code-rho-dun.vercel.app/badge/google-analytics.svg" alt="Featured on osalt.dev" />
+    </a>
 </p>
 
 [Plausible Analytics](https://plausible.io/) is an open source, privacy-first web analytics tool. Lightweight, cookie-free [alternative to Google Analytics](https://plausible.io/blog/remove-google-analytics). Available in managed cloud or self-hosted community edition.

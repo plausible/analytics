@@ -200,8 +200,12 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     filter_field(db_field_name(key), filter)
   end
 
+  defp add_filter(:sessions, query, [op, "event:page" | rest] = _filter) do
+    add_filter(:sessions, query, [op, "visit:entry_page" | rest])
+  end
+
   defp add_filter(:sessions, _query, [_, "event:" <> _ | _rest]) do
-    # Cannot apply sessions filters directly on session query where clause.
+    # Cannot apply other event filters directly on session query where clause.
     true
   end
 

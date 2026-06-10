@@ -159,6 +159,9 @@ defmodule Plausible.Stats.QueryOptimizer do
     Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
+
+
+
   defp build_split_query(:events, metrics, query) do
     {
       :events,
@@ -178,13 +181,9 @@ defmodule Plausible.Stats.QueryOptimizer do
       end)
 
     filters =
-      if "event:page" in query.dimensions do
-        Filters.rename_dimensions_used_in_filter(query.filters, %{
-          "event:page" => "visit:entry_page"
-        })
-      else
-        query.filters
-      end
+      Filters.rename_dimensions_used_in_filter(query.filters, %{
+        "event:page" => "visit:entry_page"
+      })
 
     {
       :sessions,
