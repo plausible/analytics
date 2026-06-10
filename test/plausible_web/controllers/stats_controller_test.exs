@@ -77,6 +77,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ])
     end
 
+    @tag :ee_only
     test "plausible.io live demo - shows site stats, header and footer", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
