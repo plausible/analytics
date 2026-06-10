@@ -27,8 +27,15 @@ defmodule Plausible do
   defmacro always(term) do
     quote do
       case :erlang.phash2(1, 1) do
-        0 -> unquote(term)
-        1 -> not unquote(term)
+        0 ->
+          unquote(term)
+
+        1 ->
+          case unquote(term) do
+            value when is_boolean(value) -> not value
+            nil -> :something
+            _other -> nil
+          end
       end
     end
   end
