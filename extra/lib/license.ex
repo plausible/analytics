@@ -11,6 +11,8 @@ defmodule Plausible.License do
   """
 
   if Mix.env() == :prod do
+    require Logger
+
     def ensure_valid_license do
       if has_valid_license?() do
         :ok
