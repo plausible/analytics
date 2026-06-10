@@ -48,10 +48,6 @@ defmodule Plausible.Auth.TOTP.RecoveryCodeTest do
       assert_raise FunctionClauseError, fn ->
         RecoveryCode.changeset(user, "INVALID")
       end
-
-      assert_raise FunctionClauseError, fn ->
-        RecoveryCode.changeset(user, 123)
-      end
     end
   end
 

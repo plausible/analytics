@@ -6,8 +6,6 @@ defmodule PlausibleWeb.Live.Installation do
   use Plausible
   use PlausibleWeb, :live_view
 
-  require Logger
-
   alias PlausibleWeb.Flows
   alias Phoenix.LiveView.AsyncResult
   alias PlausibleWeb.Live.Installation.Icons

@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use PlausibleWeb, :live_view
 
-  require Plausible.Billing.Subscription.Status
-
   alias PlausibleWeb.Components.Billing.{PlanBox, Notice, PageviewSlider}
   alias Plausible.Billing.{Plans, Quota, PlanBenefits}
   alias PlausibleWeb.Router.Helpers, as: Routes

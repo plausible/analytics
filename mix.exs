@@ -75,7 +75,6 @@ defmodule Plausible.MixProject do
     [
       {:bamboo, "~> 2.3", override: true},
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
-      {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
@@ -152,7 +151,7 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.12"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:ex_money, "~> 5.12"},
+      {:ex_money, "~> 5.24.2"},
       {:mjml_eex, "~> 0.12.0"},
       {:mjml, "~> 4.0.0"},
       {:heroicons, "~> 0.5.0"},
@@ -179,7 +178,8 @@ defmodule Plausible.MixProject do
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:phoenix_html_helpers, "~> 1.0"},
       {:libcluster, "~> 3.5"},
-      {:decimal, "~> 3.0", override: true}
+      {:decimal, "~> 3.0", override: true},
+      {:logger_backends, "~> 1.0.0"}
     ]
   end
 

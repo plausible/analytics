@@ -1,5 +1,8 @@
 defmodule Plausible.Session.CacheStore do
-  require Logger
+  @moduledoc """
+  Session management on the basis of incoming events.
+  """
+
   alias Plausible.Session.WriteBuffer
 
   @lock_timeout 1000

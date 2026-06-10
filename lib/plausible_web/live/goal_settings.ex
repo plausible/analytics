@@ -78,12 +78,14 @@ defmodule PlausibleWeb.Live.GoalSettings do
           <p>
             Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
           </p>
-          <p :if={ee?() and Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
-            You can also
-            <.styled_link href={Routes.site_path(@socket, :settings_funnels, @domain)}>
-              compose goals into funnels.
-            </.styled_link>
-          </p>
+          <%= on_ee do %>
+            <p :if={Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
+              You can also
+              <.styled_link href={Routes.site_path(@socket, :settings_funnels, @domain)}>
+                compose goals into funnels.
+              </.styled_link>
+            </p>
+          <% end %>
         </:subtitle>
         <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
           <.live_component
