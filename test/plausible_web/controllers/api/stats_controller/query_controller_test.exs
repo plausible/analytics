@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
         })
 
       assert get_resp_header(conn, "x-api-version") == [
-               PlausibleWeb.Plugs.InternalStatsApiVersion.api_version()
+               to_string(Plausible.InternalStatsApiVersion.effective_version())
              ]
     end
 

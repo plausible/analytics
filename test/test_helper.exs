@@ -3,6 +3,7 @@ if not Enum.empty?(Path.wildcard("lib/**/*_test.exs")) do
 end
 
 {:ok, _} = Application.ensure_all_started(:ex_machina)
+Plausible.InternalStatsApiVersion.start_link()
 
 if Mix.env() != :e2e_test do
   Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)

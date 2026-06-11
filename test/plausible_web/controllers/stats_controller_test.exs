@@ -37,7 +37,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                |> find("meta[name=robots]")
                |> text_of_attr("content")
 
-      assert PlausibleWeb.Plugs.InternalStatsApiVersion.api_version() ==
+      assert to_string(Plausible.InternalStatsApiVersion.api_version()) ==
                resp
                |> find("meta[name=x-api-version]")
                |> text_of_attr("content")

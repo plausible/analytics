@@ -31,6 +31,7 @@ defmodule Plausible.Application do
     children =
       [
         cluster,
+        Plausible.InternalStatsApiVersion,
         {PartitionSupervisor,
          child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
