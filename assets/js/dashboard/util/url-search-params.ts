@@ -21,43 +21,58 @@ const REDIRECTED_SEARCH_PARAM_NAME = 'r'
 
 const API_VERSION_RELOAD_PARAM_NAME = 'api_version_reloaded'
 
+const EXPECTED_API_VERSION =
+  document
+    .querySelector('meta[name="x-api-version"]')
+    ?.getAttribute('content') ?? '0'
+
 /**
  * Navigates to the current URL with `api_version_reloaded=<currentApiVersion>`
  * appended, using `location.replace` so the pre-reload entry is not kept in
- * browser history. Returns early without navigating when the param is already
- * present, which prevents an infinite reload loop when the versions are
+ * browser history.
+ * 
+ * Returns early without navigating if:
+ * 
+ * - the x-plausible-version response header is not present
+ * - the expected version matches the actual version
+ * - the version is already present in search params
+ * 
+ * The latter prevents an infinite reload loop when the versions are
  * permanently out of sync.
  *
  * BE: lib/plausible_web/plugs/internal_stats_api_version.ex
  */
 export function maybeReloadForApiVersion(
   windowLocation: Location,
-  currentApiVersion: string
+  responseHeaders: Headers
 ) {
+  const currentApiVersion = getCurrentApiVersion(responseHeaders)
   const params = new URLSearchParams(windowLocation.search)
+  
+  if (!currentApiVersion || currentApiVersion === EXPECTED_API_VERSION) {
+    return
+  }
 
   if (params.get(API_VERSION_RELOAD_PARAM_NAME) === currentApiVersion) {
     return
   }
 
-  const newSearch = addOrReplaceSearch(
-    windowLocation.search,
-    API_VERSION_RELOAD_PARAM_NAME,
-    currentApiVersion
-  )
-
   console.warn('API version mismatch detected, reloading...')
+
+  const newSearch = searchWithApiVersionReload(windowLocation.search, currentApiVersion)
   windowLocation.replace(
     `${windowLocation.pathname}${newSearch}${windowLocation.hash}`
   )
 }
 
-function addOrReplaceSearch(
-  search: string,
-  key: string,
-  value: string
-): string {
+function getCurrentApiVersion(responseHeaders: Headers) {
+  return responseHeaders?.get('x-api-version')
+}
+
+function searchWithApiVersionReload(search: string, value: string): string {
+  const key = API_VERSION_RELOAD_PARAM_NAME
   const param = `${key}=${value}`
+  
   if (new URLSearchParams(search).has(key)) {
     return search.replace(new RegExp(`([?&])${key}=[^&]*`), `$1${param}`)
   }
