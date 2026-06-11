@@ -20,6 +20,7 @@ import {
   BreakdownReportKey
 } from '../reports/reports-config'
 import {
+  bundleVisitorsWithPercentage,
   DimensionCellWithBar,
   DimensionCellWithBarProps,
   IndexBreakdown
@@ -100,7 +101,7 @@ export function Devices() {
         />
       </ReportHeader>
       <IndexBreakdown
-        metrics={metrics}
+        metrics={bundleVisitorsWithPercentage(metrics)}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
         alwaysOnFilters={reportConfig.alwaysOnFilters}

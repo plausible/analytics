@@ -4,7 +4,7 @@ import { TestContextProviders } from '../../../../test-utils/app-context-provide
 import { PagesDetails } from '../pages/details'
 import { MockAPI } from '../../../../test-utils/mock-api'
 import { PAGINATION_LIMIT } from '../../hooks/api-client'
-import { QueryApiResponse } from '../../api'
+import { QueryApiResponseRaw } from '../../api'
 import { StatsQuery } from '../../stats-query'
 import { DEBOUNCE_DELAY } from '../../custom-hooks'
 import {
@@ -17,16 +17,18 @@ const queryPath = `/api/stats/${domain}/query/`
 const MOCK_RESPONSE_DELAY_MS = 50
 const SMALL_LOADING_SPINNER_TEST_ID = 'small-loading-spinner'
 
-const PAGES_DETAILED_METRICS = BREAKDOWN_REPORTS.pages.getMetrics({
-  isDetailed: true,
-  isRealtime: false,
-  hasConversionGoalFilter: false,
-  isRevenueAvailable: false
-})
+const PAGES_DETAILED_METRICS = BREAKDOWN_REPORTS.pages
+  .getMetrics({
+    isDetailed: true,
+    isRealtime: false,
+    hasConversionGoalFilter: false,
+    isRevenueAvailable: false
+  })
+  .map((m) => m.key)
 
 function buildResponse(
   results: { dimensions: string[]; metrics: number[] }[] = []
-): QueryApiResponse {
+): QueryApiResponseRaw {
   return {
     results,
     meta: {},
@@ -34,8 +36,7 @@ function buildResponse(
       metrics: PAGES_DETAILED_METRICS,
       dimensions: ['event:page'],
       date_range: ['2024-01-01', '2024-01-28']
-    },
-    extraContext: { isRealtime: false, hasConversionGoalFilter: false }
+    }
   }
 }
 

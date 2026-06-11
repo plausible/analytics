@@ -19,6 +19,7 @@ import {
   BreakdownReportKey
 } from '../reports/reports-config'
 import {
+  bundleVisitorsWithPercentage,
   DimensionCellWithBar,
   IndexBreakdown,
   DimensionCellWithBarProps
@@ -61,7 +62,7 @@ export default function Pages() {
   function renderContent() {
     return (
       <IndexBreakdown
-        metrics={metrics}
+        metrics={bundleVisitorsWithPercentage(metrics)}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
         alwaysOnFilters={reportConfig.alwaysOnFilters}

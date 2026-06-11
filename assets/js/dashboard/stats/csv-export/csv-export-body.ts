@@ -120,11 +120,13 @@ export function createCsvExportRequestBody(
         acc[filename as keyof typeof BREAKDOWN_CSV_REPORTS] = {
           dimensions: csvDimensions(reportKey),
           always_on_filters: config.alwaysOnFilters,
-          metrics: config.getMetrics({
-            isCsv: true,
-            hasConversionGoalFilter: isGoalFilter,
-            hasEventFilters: isEventFilter
-          })
+          metrics: config
+            .getMetrics({
+              isCsv: true,
+              hasConversionGoalFilter: isGoalFilter,
+              hasEventFilters: isEventFilter
+            })
+            .map((m) => m.key)
         }
         return acc
       },

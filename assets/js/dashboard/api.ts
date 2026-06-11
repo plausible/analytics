@@ -1,4 +1,4 @@
-import { Metric } from './stats/metrics'
+import { Metric, MetricSpec } from './stats/metrics'
 import { DashboardState } from './dashboard-state'
 import { PlausibleSite } from './site-context'
 import { StatsQuery } from './stats-query'
@@ -47,12 +47,16 @@ export type QueryResultRow = {
 export type ExtraContext = {
   isRealtime: boolean
   hasConversionGoalFilter: boolean
+  metrics: MetricSpec[]
 }
 
-export type QueryApiResponse = {
+export type QueryApiResponseRaw = {
   query: QueryResultQuery
   meta: QueryResultMeta
   results: QueryResultRow[]
+}
+
+export type QueryApiResponse = QueryApiResponseRaw & {
   extraContext: ExtraContext
 }
 

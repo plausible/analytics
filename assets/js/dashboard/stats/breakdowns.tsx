@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useRef } from 'react'
 import { SortDirection } from '../../types/query-api'
-import type { QueryResultRow, QueryResultQuery } from '../api'
-import { Metric } from './metrics'
+import type { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../api'
+import { Metric, MetricSpec } from './metrics'
 import { FilterInfo } from '../components/drilldown-link'
 import { ChangeArrow } from './reports/change-arrow'
 import { MetricFormatterLong, ValueType } from './reports/metric-formatter'
@@ -15,13 +15,6 @@ import {
 import { Filter } from '../dashboard-state'
 import classNames from 'classnames'
 import { DIRECT_NONE } from './sources'
-
-export type SharedBreakdownReportProps = {
-  dimensionLabel: string
-  dimensions: NonTimeDimension[]
-  metrics: Metric[]
-  alwaysOnFilters?: ApiFilter[]
-}
 
 export type ColumnConfiguration<T> = {
   /** Unique column ID, used for sorting purposes and as a React key */
@@ -37,6 +30,22 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+}
+
+export type MetricElementProps = {
+  row: QueryResultRow
+  query: QueryResultQuery
+  isActive?: boolean
+  metric: Metric
+  metricLabel: string
+}
+
+export type MetricElement = (props: MetricElementProps) => ReactNode
+
+export type BreakdownMetric = MetricSpec & {
+  canShowColumn?: (data: QueryApiResponse) => boolean
+  Cell?: MetricElement
+  width?: string
 }
 
 export type GetFilterInfo = (

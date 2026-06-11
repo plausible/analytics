@@ -37,7 +37,7 @@ import {
   getFirstAndLastTimeLabels,
   MainGraphSeriesName
 } from './main-graph-data'
-import { Metric, getMetricLabel } from '../metrics'
+import { MetricSpec } from '../metrics'
 
 import { extractIntervalFromDimensions, Interval } from './intervals'
 
@@ -84,7 +84,8 @@ export const MainGraph = ({
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltipState)
   const { selectedIndex } = tooltip
   const panGestureStartTimeRef = useRef<number | null>(null)
-  const metric = data.query.metrics[0] as Metric
+  const metricSpec = data.extraContext.metrics[0]
+  const metric = metricSpec.key
   const interval = extractIntervalFromDimensions(data.query.dimensions)
   const isRealtime = data.extraContext.isRealtime
 
@@ -394,9 +395,8 @@ export const MainGraph = ({
           shouldShowYear={!yearIsUnambiguous}
           shouldShowDate={!dateIsUnambiguous}
           isRealtime={isRealtime}
-          hasConversionGoalFilter={data.extraContext.hasConversionGoalFilter}
           interval={interval}
-          metric={metric}
+          metricSpec={metricSpec}
           x={tooltip.x}
           // aligned to top of graph
           y={0}
@@ -416,11 +416,10 @@ export const MainGraph = ({
 }
 
 const MainGraphTooltip = ({
-  metric,
+  metricSpec,
   getFormattedValue,
   interval,
   isRealtime,
-  hasConversionGoalFilter,
   shouldShowDate,
   shouldShowYear,
   maxX,
@@ -433,11 +432,10 @@ const MainGraphTooltip = ({
   persistent,
   onClick
 }: {
-  metric: Metric
+  metricSpec: MetricSpec
   getFormattedValue: (value: MetricValue) => string
   interval: Interval
   isRealtime: boolean
-  hasConversionGoalFilter: boolean
   shouldShowYear: boolean
   shouldShowDate: boolean
   x: number
@@ -450,7 +448,6 @@ const MainGraphTooltip = ({
   persistent: boolean
   onClick?: () => void
 }) => {
-  const metricLabel = getMetricLabel(metric, { hasConversionGoalFilter })
   const { main, comparison, change } = datum
   return (
     <GraphTooltipWrapper
@@ -472,12 +469,12 @@ const MainGraphTooltip = ({
             data-testid="metric-label"
             className="font-semibold mr-4 text-xs uppercase whitespace-nowrap"
           >
-            {metricLabel}
+            {metricSpec.label}
           </div>
           {comparison.isDefined && typeof change === 'number' && (
             <ChangeArrow
               className="text-xs/6 font-medium text-white whitespace-nowrap"
-              metric={metric}
+              metric={metricSpec.key}
               change={change}
             />
           )}

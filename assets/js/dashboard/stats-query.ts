@@ -1,4 +1,4 @@
-import { Metric } from './stats/metrics'
+import { Metric, MetricSpec } from './stats/metrics'
 import {
   DashboardState,
   FilterOperator,
@@ -48,7 +48,7 @@ export type QueryInclude = {
 }
 
 export type ReportParams = {
-  metrics: Metric[]
+  metrics: MetricSpec[]
   dimensions: Dimension[]
   include?: Partial<QueryInclude>
   order_by?: OrderBy
@@ -82,7 +82,7 @@ export function createStatsQuery(
     date_range: createDateRange(dashboardState),
     relative_date: dashboardState.date ? formatISO(dashboardState.date) : null,
     dimensions: reportParams.dimensions || [],
-    metrics: reportParams.metrics,
+    metrics: reportParams.metrics.map((m) => m.key),
     filters: [
       ...remapToApiFilters(dashboardState.filters),
       ...(reportParams.alwaysOnFilters ?? [])

@@ -1,4 +1,19 @@
-import { Metric } from '../metrics'
+import {
+  AVERAGE_REVENUE_AS_AVERAGE_REVENUE,
+  BOUNCE_RATE,
+  CONVERSION_RATE_AS_CONVERSION_RATE,
+  EVENTS_AS_TOTAL_CONVERSIONS,
+  MetricSpec,
+  PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+  SCROLL_DEPTH,
+  TIME_ON_PAGE,
+  TOTAL_REVENUE_AS_TOTAL_REVENUE,
+  VIEWS_PER_VISIT,
+  VISIT_DURATION,
+  VISITORS_AS_UNIQUE_CONVERSIONS,
+  VISITORS_AS_UNIQUE_VISITORS,
+  VISITS
+} from '../metrics'
 import {
   DashboardState,
   dashboardStateDefaultValue,
@@ -10,7 +25,7 @@ import { StatsQuery } from '../../stats-query'
 import { remapToApiFilters } from '../../util/filters'
 import { StatsReportQueryKey } from '../../hooks/use-query-api'
 import {
-  chooseMetrics,
+  getTopStatsMetrics,
   getTopStatsQuery,
   getPartialDayTimeRange,
   formatTopStatsData
@@ -47,7 +62,7 @@ type TestCase = [
   Pick<DashboardState, 'filters' | 'period'> &
     Partial<{ site?: Pick<PlausibleSite, 'revenueGoals'> }>,
   /** expected metrics */
-  Metric[],
+  MetricSpec[],
   /** expected top stats query */
   StatsQuery
 ]
@@ -56,7 +71,7 @@ const cases: TestCase[] = [
   [
     'realtime and goal filter',
     { period: DashboardPeriod.realtime, filters: [aGoalFilter] },
-    ['visitors', 'events'],
+    [VISITORS_AS_UNIQUE_CONVERSIONS, EVENTS_AS_TOTAL_CONVERSIONS],
     {
       ...expectedBaseQuery,
       date_range: DashboardPeriod.realtime_30m,
@@ -69,7 +84,7 @@ const cases: TestCase[] = [
   [
     'realtime',
     { period: DashboardPeriod.realtime, filters: [] },
-    ['visitors', 'pageviews'],
+    [VISITORS_AS_UNIQUE_VISITORS, PAGEVIEWS_AS_TOTAL_PAGEVIEWS],
     {
       ...expectedBaseQuery,
       date_range: DashboardPeriod.realtime_30m,
@@ -91,11 +106,11 @@ const cases: TestCase[] = [
       }
     },
     [
-      'visitors',
-      'events',
-      'total_revenue',
-      'average_revenue',
-      'conversion_rate'
+      VISITORS_AS_UNIQUE_CONVERSIONS,
+      EVENTS_AS_TOTAL_CONVERSIONS,
+      TOTAL_REVENUE_AS_TOTAL_REVENUE,
+      AVERAGE_REVENUE_AS_AVERAGE_REVENUE,
+      CONVERSION_RATE_AS_CONVERSION_RATE
     ],
     {
       ...expectedBaseQuery,
@@ -114,7 +129,11 @@ const cases: TestCase[] = [
   [
     'goal filter',
     { period: aPeriodNotRealtime, filters: [aGoalFilter] },
-    ['visitors', 'events', 'conversion_rate'],
+    [
+      VISITORS_AS_UNIQUE_CONVERSIONS,
+      EVENTS_AS_TOTAL_CONVERSIONS,
+      CONVERSION_RATE_AS_CONVERSION_RATE
+    ],
     {
       ...expectedBaseQuery,
       date_range: aPeriodNotRealtime,
@@ -130,12 +149,12 @@ const cases: TestCase[] = [
       filters: [aPageFilter]
     },
     [
-      'visitors',
-      'visits',
-      'pageviews',
-      'bounce_rate',
-      'scroll_depth',
-      'time_on_page'
+      VISITORS_AS_UNIQUE_VISITORS,
+      VISITS,
+      PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+      BOUNCE_RATE,
+      SCROLL_DEPTH,
+      TIME_ON_PAGE
     ],
     {
       ...expectedBaseQuery,
@@ -156,12 +175,12 @@ const cases: TestCase[] = [
     'default',
     { period: aPeriodNotRealtime, filters: [] },
     [
-      'visitors',
-      'visits',
-      'pageviews',
-      'views_per_visit',
-      'bounce_rate',
-      'visit_duration'
+      VISITORS_AS_UNIQUE_VISITORS,
+      VISITS,
+      PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+      VIEWS_PER_VISIT,
+      BOUNCE_RATE,
+      VISIT_DURATION
     ],
     {
       ...expectedBaseQuery,
@@ -178,7 +197,7 @@ const cases: TestCase[] = [
   ]
 ]
 
-describe(`${chooseMetrics.name}`, () => {
+describe(`${getTopStatsMetrics.name}`, () => {
   test.each(
     cases.map(([name, inputDashboardState, expectedMetrics]) => [
       name,
@@ -194,7 +213,10 @@ describe(`${chooseMetrics.name}`, () => {
         ...inputDashboardState
       }
       expect(
-        chooseMetrics({ ...siteContextDefaultValue, ...site }, dashboardState)
+        getTopStatsMetrics(
+          { ...siteContextDefaultValue, ...site },
+          dashboardState
+        )
       ).toEqual(expectedMetrics)
     }
   )
@@ -252,7 +274,11 @@ function makeTopStatsResponse(
         comparison: { metrics: [80], change: [25] }
       }
     ],
-    extraContext: { isRealtime: false, hasConversionGoalFilter: false }
+    extraContext: {
+      isRealtime: false,
+      hasConversionGoalFilter: false,
+      metrics: [VISITORS_AS_UNIQUE_VISITORS]
+    }
   }
 }
 

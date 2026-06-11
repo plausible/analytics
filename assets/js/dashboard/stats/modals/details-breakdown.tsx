@@ -1,10 +1,4 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState
-} from 'react'
+import React, { ReactNode, useEffect, useMemo, useState } from 'react'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import {
   StatsReportId,
@@ -18,19 +12,21 @@ import {
   useRememberOrderBy
 } from '../../hooks/use-metric-order-by'
 import { SortDirection } from '../../../types/query-api'
-import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
+import { Metric } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { ApiFilter, NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink } from '../../components/drilldown-link'
 import {
   ColumnConfiguration,
   MetricValueTooltipContent,
-  SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  GetFilterInfo
+  GetFilterInfo,
+  BreakdownMetric,
+  MetricElement,
+  MetricElementProps
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -45,22 +41,26 @@ import {
   MetricFormatterShort,
   MetricFormatterLong
 } from '../reports/metric-formatter'
-import {
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
 import { SortButton } from '../../components/sort-button'
 import { rootRoute } from '../../router'
+import { isSortable } from '../metric-utils'
 
 type PaginatedData = { pages: QueryApiResponse[] }
 
-type DetailsBreakdownProps = SharedBreakdownReportProps & {
+type DetailsBreakdownProps = {
   title: ReactNode
+  dimensions: NonTimeDimension[]
+  dimensionLabel: string
+  metrics: BreakdownMetric[]
+  alwaysOnFilters?: ApiFilter[]
   defaultOrderBy?: MetricOrderBy
   searchEnabled?: boolean
   onDataReady?: (data: PaginatedData) => void
   DimensionElement: (props: DimensionCellProps) => ReactNode
+  DefaultMetricElement?: MetricElement
 }
+
+const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-36'
 
 const getMetricCellWidthClass = (
   metric: Metric,
@@ -81,6 +81,37 @@ const getMetricCellWidthClass = (
   return 'w-32 min-w-32'
 }
 
+/**
+ * Convenience: takes a list of `BreakdownMetric`s and applies the
+ * standard "bundle visitors+percentage" overlay for the details modal —
+ * the visitors spec is given the modal's `VisitorsWithPercentageCell` plus
+ * the wider column width; the percentage spec is requested but hidden
+ * from the column list. Specs that aren't visitors or percentage are
+ * passed through unchanged. If either of the two is absent, the input is
+ * returned as-is.
+ */
+export function bundleVisitorsWithPercentage(
+  specs: BreakdownMetric[]
+): BreakdownMetric[] {
+  const hasBoth =
+    specs.some((s) => s.key === 'visitors') &&
+    specs.some((s) => s.key === 'percentage')
+  if (!hasBoth) return specs
+  return specs.map((spec) => {
+    if (spec.key === 'visitors') {
+      return {
+        ...spec,
+        Cell: VisitorsWithPercentageCell,
+        width: VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH
+      }
+    }
+    if (spec.key === 'percentage') {
+      return { ...spec, canShowColumn: () => false }
+    }
+    return spec
+  })
+}
+
 export function DetailsBreakdown({
   title,
   dimensionLabel,
@@ -89,6 +120,7 @@ export function DetailsBreakdown({
   alwaysOnFilters,
   defaultOrderBy = [] as MetricOrderBy,
   DimensionElement,
+  DefaultMetricElement = MetricValueCell,
   searchEnabled = true,
   onDataReady
 }: DetailsBreakdownProps) {
@@ -96,21 +128,27 @@ export function DetailsBreakdown({
   const { dashboardState } = useDashboardStateContext()
   const [search, setSearch] = useState('')
 
+  const requestedMetrics = useMemo(() => metrics.map((m) => m.key), [metrics])
+  const metricSpecs = useMemo(
+    () => metrics.map(({ key, label }) => ({ key, label })),
+    [metrics]
+  )
+
   const storedOrderBy = getStoredOrderBy({
     domain: site.domain,
     dimensionLabel,
-    metrics,
+    metrics: requestedMetrics,
     fallbackValue: defaultOrderBy
   })
 
   const { orderBy, orderByDictionary, toggleSortByMetric } = useMetricOrderBy({
-    metrics,
+    metrics: requestedMetrics,
     defaultOrderBy: storedOrderBy
   })
 
   useRememberOrderBy({
     effectiveOrderBy: orderBy,
-    metrics,
+    metrics: requestedMetrics,
     dimensionLabel
   })
 
@@ -119,7 +157,7 @@ export function DetailsBreakdown({
     {
       dashboardState,
       reportParams: {
-        metrics,
+        metrics: metricSpecs,
         dimensions,
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
@@ -146,25 +184,30 @@ export function DetailsBreakdown({
   const meta: QueryResultMeta | null =
     (apiState.data?.pages?.[0]?.meta as QueryResultMeta) ?? null
 
-  const metricLabelFor = useCallback(
-    (metric: Metric): string => {
-      return getBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-        isRealtime: isRealTimeDashboard(dashboardState),
-        dimensions: dimensions
-      })
-    },
-    [dashboardState, dimensions]
-  )
-
   const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
     if (!query) return null
 
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
-    const hasPercentage = query.metrics.includes('percentage')
-    const isVisitorsWithPercentageCell = (m: Metric) =>
-      hasPercentage && m === 'visitors'
+    // Render each spec in the declared order. Skip those whose
+    // `canShowColumn` predicate returns false against the current data —
+    // they were requested but hide themselves at render time.
+    const data = apiState.data
+    const flat: QueryApiResponse | undefined = data?.pages?.[0]
+      ? {
+          ...data.pages[0],
+          // pass merged rows to canShowColumn so revenue-style scans see
+          // every loaded page, not just the first.
+          results: ([] as QueryResultRow[]).concat(
+            ...data.pages.map((p) => p.results)
+          )
+        }
+      : undefined
+    const visibleSpecs = flat
+      ? metrics.filter((spec) =>
+          spec.canShowColumn ? spec.canShowColumn(flat) : true
+        )
+      : metrics
 
     return [
       {
@@ -180,61 +223,47 @@ export function DetailsBreakdown({
         width: 'w-48 max-w-48 md:w-56 md:max-w-56',
         align: 'left'
       },
-      ...query.metrics
-        // Percentage is not its own column — shown inline in the visitors cell
-        .filter((metric) => metric !== 'percentage')
-        .map(
-          (metric): ColumnConfiguration<QueryResultRow> => ({
-            key: metric,
-            renderLabel: () => (
-              <MetricLabel
-                label={metricLabelFor(metric)}
-                warning={getMetricWarning(metric, meta)}
-                sortable={isSortable(metric)}
-                toggleSort={() => toggleSortByMetric(metric)}
-                sortDirection={orderByDictionary[metric] ?? null}
+      ...visibleSpecs.map(
+        ({ key, label, Cell, width }): ColumnConfiguration<QueryResultRow> => ({
+          key,
+          renderLabel: () => (
+            <MetricLabel
+              label={label}
+              warning={getMetricWarning(key, meta)}
+              sortable={isSortable(key)}
+              toggleSort={() => toggleSortByMetric(key)}
+              sortDirection={orderByDictionary[key] ?? null}
+            />
+          ),
+          renderCell: (row, isActive) => {
+            const Element = Cell ?? DefaultMetricElement
+            return (
+              <Element
+                row={row}
+                query={query}
+                isActive={isActive}
+                metric={key}
+                metricLabel={label}
               />
-            ),
-            renderCell: (row, isActive) => {
-              if (isVisitorsWithPercentageCell(metric)) {
-                return (
-                  <VisitorsWithPercentageCell
-                    row={row}
-                    query={query}
-                    isActive={isActive}
-                  />
-                )
-              } else {
-                return (
-                  <MetricValueCell
-                    row={row}
-                    metric={metric}
-                    metricLabel={metricLabelFor(metric)}
-                    query={query}
-                    isActive={isActive}
-                  />
-                )
-              }
-            },
-            onSort: isSortable(metric)
-              ? () => toggleSortByMetric(metric)
-              : undefined,
-            sortDirection: orderByDictionary[metric],
-            width: isVisitorsWithPercentageCell(metric)
-              ? 'w-36'
-              : getMetricCellWidthClass(metric, metricLabelFor(metric)),
-            align: 'right'
-          })
-        )
+            )
+          },
+          onSort: isSortable(key) ? () => toggleSortByMetric(key) : undefined,
+          sortDirection: orderByDictionary[key],
+          width: width ?? getMetricCellWidthClass(key, label),
+          align: 'right'
+        })
+      )
     ]
   }, [
     DimensionElement,
+    DefaultMetricElement,
     dimensionLabel,
     query,
     meta,
     orderByDictionary,
     toggleSortByMetric,
-    metricLabelFor
+    metrics,
+    apiState.data
   ])
 
   const tableData = apiState.data
@@ -253,15 +282,11 @@ export function DetailsBreakdown({
   )
 }
 
-function VisitorsWithPercentageCell({
+export function VisitorsWithPercentageCell({
   row,
   query,
   isActive
-}: {
-  row: QueryResultRow
-  query: QueryResultQuery
-  isActive?: boolean
-}) {
+}: MetricElementProps) {
   const portalRef = useBodyPortalRef()
 
   const { value: visitorsValue, comparison: visitorsComparison } =
@@ -337,19 +362,13 @@ function VisitorsWithPercentageCell({
   )
 }
 
-function MetricValueCell({
+export function MetricValueCell({
   row,
   metric,
   metricLabel,
   query,
   isActive
-}: {
-  row: QueryResultRow
-  metric: Metric
-  metricLabel: string
-  query: QueryResultQuery
-  isActive?: boolean
-}) {
+}: MetricElementProps) {
   const portalRef = useBodyPortalRef()
 
   const { value, comparison } = extractMetricValue(row, query, metric)
@@ -410,7 +429,7 @@ function MetricValueCell({
 }
 
 function getMetricWarning(
-  metricKey: string,
+  metricKey: Metric,
   meta: QueryResultMeta | null
 ): string | null {
   const warnings = meta?.metric_warnings

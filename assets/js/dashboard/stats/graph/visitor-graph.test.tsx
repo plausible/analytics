@@ -3,13 +3,11 @@ import { render, waitForElementToBeRemoved } from '@testing-library/react'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import VisitorGraph from './visitor-graph'
 import { MockAPI } from '../../../../test-utils/mock-api'
+import { QueryApiResponseRaw } from '../../api'
+import * as M from '../metrics'
+import { mockResizeObserver } from 'jsdom-testing-mocks'
 
-// jsdom doesn't implement ResizeObserver (used by useMainGraphWidth and useGuessTopStatsHeight)
-global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
+mockResizeObserver()
 
 const LOADING_SPINNER = '[data-testid="loading-spinner"]'
 
@@ -19,18 +17,20 @@ const metricStorageKey = `metric__${domain}`
 
 // Default metrics shown in the top stats bar without any filter active
 const DEFAULT_TOP_STATS_METRICS = [
-  'visitors',
-  'visits',
-  'pageviews',
-  'views_per_visit',
-  'bounce_rate',
-  'visit_duration'
+  M.VISITORS_AS_UNIQUE_VISITORS,
+  M.VISITS,
+  M.PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+  M.VIEWS_PER_VISIT,
+  M.BOUNCE_RATE,
+  M.VISIT_DURATION
 ]
 
-function buildTopStatsResponse(metrics = DEFAULT_TOP_STATS_METRICS) {
+function buildTopStatsResponse(
+  metrics = DEFAULT_TOP_STATS_METRICS
+): QueryApiResponseRaw {
   return {
     query: {
-      metrics,
+      metrics: DEFAULT_TOP_STATS_METRICS.map((m) => m.key),
       dimensions: [],
       date_range: ['2024-01-01', '2024-01-28']
     },
@@ -143,7 +143,7 @@ describe('main graph metric selection', () => {
     expect(mainGraphCalledWithMetrics).toEqual(['pageviews'])
   })
 
-  test('invalid stored metric -> initial fetch with stored metric, corrected to default after top stats load', async () => {
+  test('invalid stored metric -> fetches with the default metric ', async () => {
     localStorage.setItem(metricStorageKey, 'scroll_depth')
     const { mainGraphCalledWithMetrics } = setupQueryHandler()
 
@@ -157,6 +157,6 @@ describe('main graph metric selection', () => {
       document.querySelector(LOADING_SPINNER)
     )
 
-    expect(mainGraphCalledWithMetrics).toEqual(['scroll_depth', 'visitors'])
+    expect(mainGraphCalledWithMetrics).toEqual(['visitors'])
   })
 })
