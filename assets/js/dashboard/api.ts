@@ -149,7 +149,10 @@ async function throwApiErrorIfNotOk(response: Response) {
   }
 }
 
-async function handleApiResponse(response: Response, opts: Record<'idempotent', boolean> = {idempotent: true}) {
+async function handleApiResponse(
+  response: Response,
+  opts: Record<'idempotent', boolean> = { idempotent: true }
+) {
   if (opts.idempotent) {
     maybeReloadForApiVersion(window.location, response.headers)
   }
@@ -267,5 +270,5 @@ export const mutation = async <
     body: fetchOptions.body,
     signal: abortController.signal
   })
-  return handleApiResponse(response, {idempotent: false})
+  return handleApiResponse(response, { idempotent: false })
 }
