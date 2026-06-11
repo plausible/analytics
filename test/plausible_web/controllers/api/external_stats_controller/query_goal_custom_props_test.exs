@@ -367,4 +367,226 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
       refute Enum.find(results, &(&1["dimensions"] == ["Button Click"]))
     end
   end
+
+  describe "goals with custom props and imported data" do
+    setup :create_site_import
+
+    test "filtering by a goal with custom props excludes imported data instead of crashing", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      {:ok, _goal} =
+        Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"variant" => "A"}
+        })
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["variant"],
+          "meta.value": ["A"],
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [["is", "event:goal", ["Purchase"]]],
+          "include" => %{"imports" => true}
+        })
+
+      resp = json_response(conn, 200)
+
+      # Imported data cannot be filtered by the goal's custom props,
+      # so it must be excluded from the query.
+      assert resp["results"] == [%{"dimensions" => [], "metrics" => [1, 1]}]
+      refute resp["meta"]["imports_included"]
+    end
+
+    test "breakdown by event:goal does not attribute imported events to a goal with custom props",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      {:ok, _goal} =
+        Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"variant" => "A"}
+        })
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["variant"],
+          "meta.value": ["A"],
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "dimensions" => ["event:goal"],
+          "include" => %{"imports" => true}
+        })
+
+      resp = json_response(conn, 200)
+
+      # Imported events are aggregated by name only and cannot be checked
+      # against the goal's custom props, so they must not be counted.
+      assert resp["results"] == [%{"dimensions" => ["Purchase"], "metrics" => [1, 1]}]
+    end
+
+    test "breakdown by event:goal filtered by a goal with custom props excludes imported data instead of crashing",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      {:ok, _goal} =
+        Goals.create(site, %{
+          "event_name" => "Purchase",
+          "custom_props" => %{"variant" => "A"}
+        })
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["variant"],
+          "meta.value": ["A"],
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "dimensions" => ["event:goal"],
+          "filters" => [["is", "event:goal", ["Purchase"]]],
+          "include" => %{"imports" => true}
+        })
+
+      resp = json_response(conn, 200)
+
+      assert resp["results"] == [%{"dimensions" => ["Purchase"], "metrics" => [1, 1]}]
+      refute resp["meta"]["imports_included"]
+    end
+
+    test "filtering by a custom property and a special goal with custom props excludes imported data instead of crashing",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      {:ok, _goal} =
+        Goals.create(site, %{
+          "event_name" => "Outbound Link: Click",
+          "custom_props" => %{"page_theme" => "dark"}
+        })
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Outbound Link: Click",
+          "meta.key": ["url", "page_theme"],
+          "meta.value": ["https://example.com", "dark"],
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://example.com",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["is", "event:goal", ["Outbound Link: Click"]],
+            ["is", "event:props:url", ["https://example.com"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      resp = json_response(conn, 200)
+
+      assert resp["results"] == [%{"dimensions" => [], "metrics" => [1, 1]}]
+      refute resp["meta"]["imports_included"]
+    end
+
+    test "breakdown by event:goal does not attribute imported pageviews to a page goal with custom props",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      {:ok, _goal} =
+        Goals.create(site, %{
+          "page_path" => "/checkout",
+          "custom_props" => %{"variant" => "A"}
+        })
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          pathname: "/checkout",
+          "meta.key": ["variant"],
+          "meta.value": ["A"],
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_pages,
+          page: "/checkout",
+          visitors: 3,
+          pageviews: 5,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"],
+          "include" => %{"imports" => true}
+        })
+
+      resp = json_response(conn, 200)
+
+      # Imported pageviews are aggregated by page only and cannot be checked
+      # against the goal's custom props, so they must not be counted.
+      assert resp["results"] == [%{"dimensions" => ["Visit /checkout"], "metrics" => [1]}]
+    end
+  end
 end
