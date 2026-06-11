@@ -32,6 +32,7 @@ defmodule PlausibleWeb.Favicon do
   @placeholder_icon_location "priv/link_favicon.svg"
   @placeholder_icon File.read!(@placeholder_icon_location)
   @external_resource @placeholder_icon_location
+  @external_resource @referer_domains_file
   @custom_icons %{
     "Brave" => "search.brave.com",
     "Kagi" => "kagi.com",
@@ -47,7 +48,7 @@ defmodule PlausibleWeb.Favicon do
     "Google Gemini" => "gemini.google.com",
     "ChatGPT" => "chatgpt.com",
     "Claude" => "claude.ai",
-    "Phind" => "phind.com",
+    "Phind" => "phindai.org",
     "DeepSeek" => "deepseek.com",
     "Microsoft Copilot" => "copilot.com",
     "Grok" => "grok.com",
