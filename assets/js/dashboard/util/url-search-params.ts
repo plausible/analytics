@@ -46,7 +46,7 @@ export function maybeReloadForApiVersion(
     currentApiVersion
   )
 
-  console.log('API version mismatch detected, reloading...')
+  console.warn('API version mismatch detected, reloading...')
   windowLocation.replace(
     `${windowLocation.pathname}${newSearch}${windowLocation.hash}`
   )
