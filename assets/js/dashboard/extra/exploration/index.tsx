@@ -24,6 +24,23 @@ function columnHeader(index: number, direction: ExplorationDirection): string {
   return `${index} step${index === 1 ? '' : 's'} ${word}`
 }
 
+type PlausibleTracker = (
+  event: string,
+  options?: { props?: Record<string, string> }
+) => void
+
+// Fires a custom event when the user picks an entry in the first column of the
+// Explore view, i.e. anchors a new journey from either a starting or end point.
+function trackExploreEntrySelected(direction: ExplorationDirection): void {
+  const plausible = (window as unknown as { plausible?: PlausibleTracker })
+    .plausible
+  if (typeof plausible === 'function') {
+    plausible('Explore entry selected', {
+      props: { journey_direction: direction }
+    })
+  }
+}
+
 // Scrolls the active column into view whenever the journey length changes.
 function useScrollActiveColumnIntoView(
   containerRef: RefObject<HTMLElement>,
@@ -223,7 +240,12 @@ export function FunnelExploration() {
                   maxVisitors={funnel[0]?.visitors ?? null}
                   filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
-                  onSelect={(step) => selectStep(i, step)}
+                  onSelect={(step) => {
+                    if (i === 0 && step !== null) {
+                      trackExploreEntrySelected(direction)
+                    }
+                    selectStep(i, step)
+                  }}
                   rateLimited={isActive && rateLimited}
                   onRetry={retry}
                 />
