@@ -16,6 +16,7 @@ import {
   rowLink,
   expectMetricValues,
   dropdown,
+  expectDropdownClosed,
   detailsLink,
   modal,
   closeModalButton,
@@ -792,6 +793,7 @@ test('props breakdown', async ({ page, request }) => {
   })
 
   await test.step('loading more', async () => {
+    await expectDropdownClosed(report)
     await propsTabButton.click()
     const showMoreButton = dropdown(report).getByRole('button', {
       name: 'Show 1 more'
@@ -938,8 +940,14 @@ test('funnels', async ({ page, request }) => {
   })
 
   await test.step('loading more', async () => {
+    await expectDropdownClosed(report)
     await funnelsTabButton.click()
-    await dropdown(report).getByRole('button', { name: 'Show 1 more' }).click()
+    const showMoreButton = dropdown(report).getByRole('button', {
+      name: 'Show 1 more'
+    })
+    await showMoreButton.click()
+    await expect(showMoreButton).toBeHidden()
+    await expect(dropdown(report).getByRole('button')).toHaveCount(11)
     await dropdown(report)
       .getByRole('button', { name: 'Shopping 1 Funnel' })
       .click()
@@ -948,6 +956,7 @@ test('funnels', async ({ page, request }) => {
   })
 
   await test.step('searching', async () => {
+    await expectDropdownClosed(report)
     await funnelsTabButton.click()
     await searchInput(report).fill('Shopping 1')
 
