@@ -76,13 +76,10 @@ function getCurrentApiVersion(responseHeaders: Headers): number | null {
 }
 
 function searchWithApiVersionReload(search: string, value: string): string {
-  const key = API_VERSION_RELOAD_PARAM_NAME
-  const param = `${key}=${value}`
-
-  if (new URLSearchParams(search).has(key)) {
-    return search.replace(new RegExp(`([?&])${key}=[^&]*`), `$1${param}`)
-  }
-  return search ? `${search}&${param}` : `?${param}`
+  return stringifySearch({
+    ...parseSearch(search),
+    [API_VERSION_RELOAD_PARAM_NAME]: value
+  })
 }
 
 /**
