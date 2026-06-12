@@ -117,6 +117,19 @@ defmodule PlausibleWeb.Api.InternalController.QueryTest do
              }
     end
 
+    test "adds x-api-version response header", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/stats/#{URI.encode(site.domain)}/query", %{
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "filters" => []
+        })
+
+      assert get_resp_header(conn, "x-api-version") == [
+               to_string(Plausible.InternalStatsApiVersion.effective_version())
+             ]
+    end
+
     test "returns aggregated metrics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 5, timestamp: ~N[2021-01-01 00:00:00]),
