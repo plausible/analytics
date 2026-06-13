@@ -1,25 +1,21 @@
-import React, {
-  useCallback,
-  useMemo,
-  useState,
-  useEffect,
-  ReactNode
-} from 'react'
+import React, { useMemo, useState, useEffect, ReactNode } from 'react'
 import FlipMove from 'react-flip-move'
 import LazyLoader from '../../components/lazy-loader'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
-import { Metric, getBreakdownMetricLabel } from '../metrics'
+import { ApiFilter, NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { Metric } from '../metrics'
 import {
   ColumnConfiguration,
   MetricValueTooltipContent,
-  SharedBreakdownReportProps,
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
   MetricValueWrapper,
-  GetFilterInfo
+  GetFilterInfo,
+  BreakdownMetric,
+  MetricElement,
+  MetricElementProps
 } from '../breakdowns'
 import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -27,10 +23,6 @@ import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
 import { MetricFormatterShort, MetricFormatterLong } from './metric-formatter'
-import {
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
 import {
   StatsReportId,
   StatsReportQueryKey,
@@ -45,13 +37,17 @@ const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 
 export const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
-const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
+export const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
 const BAR_METRIC = 'visitors'
 
-type IndexBreakdownProps = SharedBreakdownReportProps & {
-  metricColumnWidth?: string
+type IndexBreakdownProps = {
+  dimensions: NonTimeDimension[]
+  dimensionLabel: string
+  metrics: BreakdownMetric[]
+  alwaysOnFilters?: ApiFilter[]
   DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
+  DefaultMetricElement?: MetricElement
   onDataReady?: (data: QueryApiResponse) => void
 }
 
@@ -59,21 +55,26 @@ export function IndexBreakdown({
   metrics,
   dimensions,
   DimensionElement,
+  DefaultMetricElement = MetricValueCell,
   dimensionLabel,
   alwaysOnFilters,
-  onDataReady,
-  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
+  onDataReady
 }: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
+
+  const metricSpecs = useMemo(
+    () => metrics.map(({ key, label }) => ({ key, label })),
+    [metrics]
+  )
 
   const statsReportQueryKey: StatsReportQueryKey = [
     dimensions.join(',') as StatsReportId,
     {
       dashboardState,
       reportParams: {
-        metrics,
+        metrics: metricSpecs,
         dimensions,
         order_by: [
           ['visitors', 'desc'],
@@ -110,30 +111,19 @@ export function IndexBreakdown({
       : Math.max(...rows.map((r) => r.metrics[barMetricIndex] as number))
   }, [apiState.data, barMetricIndex])
 
-  const metricLabelFor = useCallback(
-    (metric: Metric): string => {
-      return getBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-        isRealtime: isRealTimeDashboard(dashboardState),
-        dimensions: dimensions
-      })
-    },
-    [dashboardState, dimensions]
-  )
-
   const columns = useMemo((): ColumnConfiguration<QueryResultRow>[] | null => {
     if (!query || barMetricIndex === null || barMaxValue === null) return null
 
-    // Only render columns for metrics the API actually returned. Also,
-    // percentage is not its own column —- it's shown inline in the
-    // visitors cell instead.
-    const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
-
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
-    const hasPercentage = query.metrics.includes('percentage')
-    const isVisitorsWithPercentageCell = (m: Metric) =>
-      hasPercentage && m === 'visitors'
+    // Render each spec in the declared order. Skip those whose
+    // `canShowColumn` predicate returns false against the current data —
+    // they were requested but hide themselves at render time.
+    const visibleSpecs = apiState.data
+      ? metrics.filter((spec) =>
+          spec.canShowColumn ? spec.canShowColumn(apiState.data) : true
+        )
+      : metrics
 
     return [
       {
@@ -151,33 +141,23 @@ export function IndexBreakdown({
         ),
         align: 'left'
       },
-      ...filteredMetrics.map(
-        (metric): ColumnConfiguration<QueryResultRow> => ({
-          key: metric,
-          renderLabel: () => metricLabelFor(metric),
+      ...visibleSpecs.map(
+        ({ key, label, Cell, width }): ColumnConfiguration<QueryResultRow> => ({
+          key,
+          renderLabel: () => label,
           renderCell: (row, isActive) => {
-            if (isVisitorsWithPercentageCell(metric)) {
-              return (
-                <VisitorsWithPercentageCell
-                  row={row}
-                  query={query}
-                  isActive={isActive}
-                />
-              )
-            } else {
-              return (
-                <MetricValueCell
-                  row={row}
-                  metric={metric}
-                  metricLabel={metricLabelFor(metric)}
-                  query={query}
-                />
-              )
-            }
+            const Element = Cell ?? DefaultMetricElement
+            return (
+              <Element
+                row={row}
+                query={query}
+                isActive={isActive}
+                metric={key}
+                metricLabel={label}
+              />
+            )
           },
-          width: isVisitorsWithPercentageCell(metric)
-            ? VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH
-            : metricColumnWidth,
+          width,
           align: 'right'
         })
       )
@@ -185,11 +165,12 @@ export function IndexBreakdown({
   }, [
     dimensionLabel,
     DimensionElement,
+    DefaultMetricElement,
     barMetricIndex,
-    metricLabelFor,
     barMaxValue,
     query,
-    metricColumnWidth
+    metrics,
+    apiState.data
   ])
 
   return (
@@ -203,6 +184,37 @@ export function IndexBreakdown({
       />
     </LazyLoader>
   )
+}
+
+/**
+ * Convenience: takes a list of `BreakdownMetric`s and applies the
+ * standard "bundle visitors+percentage" overlay — the visitors spec is
+ * given `VisitorsWithPercentageCell` + the wider column width, and the
+ * percentage spec is requested but hidden from the column list (the value
+ * shows up inside the visitors cell). Specs that aren't `visitors` or
+ * `percentage` are passed through unchanged. If either of the two is
+ * absent, the input is returned as-is.
+ */
+export function bundleVisitorsWithPercentage(
+  specs: BreakdownMetric[]
+): BreakdownMetric[] {
+  const hasBoth =
+    specs.some((s) => s.key === 'visitors') &&
+    specs.some((s) => s.key === 'percentage')
+  if (!hasBoth) return specs
+  return specs.map((spec) => {
+    if (spec.key === 'visitors') {
+      return {
+        ...spec,
+        Cell: VisitorsWithPercentageCell,
+        width: VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH
+      }
+    }
+    if (spec.key === 'percentage') {
+      return { ...spec, canShowColumn: () => false }
+    }
+    return spec
+  })
 }
 
 export type DimensionCellWithBarProps = {
@@ -246,15 +258,11 @@ export const DimensionCellWithBar = ({
   </Bar>
 )
 
-function VisitorsWithPercentageCell({
+export function VisitorsWithPercentageCell({
   row,
   query,
   isActive
-}: {
-  row: QueryResultRow
-  query: QueryResultQuery
-  isActive?: boolean
-}) {
+}: MetricElementProps) {
   const portalRef = useBodyPortalRef()
 
   const { value: visitorsValue, comparison: visitorsComparison } =
@@ -373,17 +381,12 @@ function VisitorsWithPercentageCell({
   )
 }
 
-function MetricValueCell({
+export function MetricValueCell({
   row,
   metric,
   metricLabel,
   query
-}: {
-  row: QueryResultRow
-  metric: Metric
-  metricLabel: string
-  query: QueryResultQuery
-}) {
+}: MetricElementProps) {
   const portalRef = useBodyPortalRef()
 
   const { value, comparison } = extractMetricValue(row, query, metric)

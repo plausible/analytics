@@ -1,4 +1,8 @@
-import { Metric } from '../metrics'
+import {
+  CONVERSION_RATE,
+  GROUP_CONVERSION_RATE_AS_CONVERSION_RATE,
+  MetricSpec
+} from '../metrics'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { useSiteContext } from '../../site-context'
 import { createStatsQuery, StatsQuery } from '../../stats-query'
@@ -11,7 +15,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { UseQueryResult } from '@tanstack/react-query'
 
 export function useMainGraphQuery(
-  metric: Metric,
+  metricSpec: MetricSpec,
   interval: Interval
 ): {
   apiState: UseQueryResult<MainGraphResponse>
@@ -20,8 +24,10 @@ export function useMainGraphQuery(
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 
-  const metricToQuery =
-    metric === 'conversion_rate' ? 'group_conversion_rate' : metric
+  const metricToQuery: MetricSpec =
+    metricSpec.key === CONVERSION_RATE.key
+      ? GROUP_CONVERSION_RATE_AS_CONVERSION_RATE
+      : metricSpec
 
   const mainGraphQueryKey: StatsReportQueryKey = [
     'main-graph',

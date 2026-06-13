@@ -18,6 +18,7 @@ import { GeolocationNotice } from './geolocation-notice'
 import { DashboardState } from '../../dashboard-state'
 import { useQueryApi } from '../../hooks/use-query-api'
 import { QueryApiResponse } from '../../api'
+import { VISITORS } from '../metrics'
 import {
   COUNTRIES_BY_TWO_LETTER_CODE,
   parseWorldTopoJsonToGeoJsonFeatures,
@@ -76,7 +77,7 @@ const WorldMap = ({
     {
       dashboardState,
       reportParams: {
-        metrics: ['visitors'],
+        metrics: [VISITORS],
         dimensions: BREAKDOWN_REPORTS[BreakdownReportKey.countries].dimensions,
         alwaysOnFilters:
           BREAKDOWN_REPORTS[BreakdownReportKey.countries].alwaysOnFilters,

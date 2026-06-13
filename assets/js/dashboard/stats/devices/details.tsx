@@ -12,6 +12,7 @@ import {
   BreakdownReportKey
 } from '../reports/reports-config'
 import {
+  bundleVisitorsWithPercentage,
   DetailsBreakdown,
   DimensionCell,
   DimensionCellProps
@@ -63,7 +64,7 @@ export function DevicesDetails({
         title={reportConfig.detailsTitle}
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
-        metrics={metrics}
+        metrics={bundleVisitorsWithPercentage(metrics)}
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         searchEnabled={searchEnabled}

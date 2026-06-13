@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { isSortable, Metric } from '../stats/metrics'
+import { Metric } from '../stats/metrics'
 import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
 import { useSiteContext } from '../site-context'
 import { SortDirection } from '../../types/query-api'
+import { isSortable } from '../stats/metric-utils'
 
 export type MetricOrderByEntry = [Metric, SortDirection]
 

@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import * as storage from '../../util/storage'
 import TopStats from './top-stats'
-import { useTopStatsQuery } from './fetch-top-stats'
+import { getTopStatsMetrics, useTopStatsQuery } from './fetch-top-stats'
 import { useMainGraphQuery } from './fetch-main-graph'
 import { PlausibleSite, useSiteContext } from '../../site-context'
-import { Metric } from '../metrics'
+import { Metric, MetricSpec } from '../metrics'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { useGraphIntervalContext } from './graph-interval-context'
 import { useSetImportsIncluded } from './imports-included-context'
+import { useDashboardStateContext } from '../../dashboard-state-context'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
-const DEFAULT_GRAPH_METRIC = 'visitors'
 
 export default function VisitorGraph({
   updateImportedDataInView
@@ -22,48 +22,47 @@ export default function VisitorGraph({
   const mainGraphContainer = useRef<HTMLDivElement>(null)
   const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
 
   const { selectedInterval } = useGraphIntervalContext()
 
-  const [selectedMetric, setSelectedMetric] = useState<Metric>(
-    getStoredMetric(site) || DEFAULT_GRAPH_METRIC
+  const topStatsMetrics = useMemo(
+    () => getTopStatsMetrics(site, dashboardState),
+    [site, dashboardState]
+  )
+  const {
+    apiState: topStatsApiState,
+    isRealtimeSilentUpdate: isTopStatsRealtimeSilentUpdate
+  } = useTopStatsQuery(topStatsMetrics)
+
+  const [selectedMetricSpec, setSelectedMetricSpec] = useState<MetricSpec>(
+    getStoredOrDefaultMetricSpec(site, topStatsMetrics)
   )
   const onMetricClick = useCallback(
-    (metric: Metric) => {
-      setStoredMetric(site, metric)
-      setSelectedMetric(metric)
+    (metricSpec: MetricSpec) => {
+      setStoredMetric(site, metricSpec.key)
+      setSelectedMetricSpec(metricSpec)
     },
     [site]
   )
 
   const {
-    apiState: topStatsApiState,
-    isRealtimeSilentUpdate: isTopStatsRealtimeSilentUpdate
-  } = useTopStatsQuery()
-
-  const {
     apiState: mainGraphApiState,
     isRealtimeSilentUpdate: isMainGraphRealtimeSilentUpdate
-  } = useMainGraphQuery(selectedMetric, selectedInterval)
+  } = useMainGraphQuery(selectedMetricSpec, selectedInterval)
 
-  // Fall back to default graph metric if the stored metric
+  // Fall back to the default graph metric if the stored/selected one
   // does not exist in the returned Top Stats
   useEffect(() => {
     if (topStatsApiState.data) {
       const availableMetrics = topStatsApiState.data.query.metrics
 
-      setSelectedMetric((currentlySelectedMetric) => {
-        if (
-          currentlySelectedMetric &&
-          availableMetrics.includes(currentlySelectedMetric)
-        ) {
-          return currentlySelectedMetric
-        } else {
-          return DEFAULT_GRAPH_METRIC
-        }
+      setSelectedMetricSpec((current) => {
+        if (availableMetrics.includes(current.key)) return current
+        return getDefaultMetricSpec(topStatsMetrics)
       })
     }
-  }, [topStatsApiState.data])
+  }, [topStatsApiState.data, topStatsMetrics, site])
 
   // sync import related info
   useEffect(() => {
@@ -121,9 +120,9 @@ export default function VisitorGraph({
           {topStatsApiState.data ? (
             <TopStats
               data={topStatsApiState.data}
-              selectedMetric={selectedMetric}
+              selectedMetric={selectedMetricSpec}
               onMetricClick={onMetricClick}
-              tooltipBoundary={topStatsBoundary.current}
+              tooltipBoundaryRef={topStatsBoundary}
             />
           ) : (
             // prevent the top stats area from jumping on initial load
@@ -176,6 +175,21 @@ function getStoredMetric(site: Pick<PlausibleSite, 'domain'>) {
 
 function setStoredMetric(site: Pick<PlausibleSite, 'domain'>, metric: Metric) {
   storage.setItem(getStoredMetricKey(site), metric)
+}
+
+function getStoredOrDefaultMetricSpec(
+  site: Pick<PlausibleSite, 'domain'>,
+  topStatsMetrics: MetricSpec[]
+): MetricSpec {
+  const storedKey = getStoredMetric(site)
+  return (
+    topStatsMetrics.find((s) => s.key === storedKey) ??
+    getDefaultMetricSpec(topStatsMetrics)
+  )
+}
+
+function getDefaultMetricSpec(topStatsMetrics: MetricSpec[]) {
+  return topStatsMetrics[0]
 }
 
 function getStoredTopStatsHeightKey(site: Pick<PlausibleSite, 'domain'>) {

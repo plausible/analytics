@@ -18,8 +18,9 @@ import { cleanToPageOne, getStaleTime, PAGINATION_LIMIT } from './api-client'
 import { ExtraContext, QueryApiResponse, stats } from '../api'
 import { addDimensionSearchFilter } from '../stats/breakdowns'
 import { DashboardPeriod } from '../dashboard-time-periods'
-import { hasConversionGoalFilter, isRealTimeDashboard } from '../util/filters'
+import { isRealTimeDashboard } from '../util/filters'
 import { MainGraphResponse } from '../stats/graph/fetch-main-graph'
+import { MetricSpec } from '../stats/metrics'
 
 export type StatsReportId =
   | 'top-stats'
@@ -43,11 +44,12 @@ type ReportOpts = {
 
 function withExtraContext<T extends QueryApiResponse | MainGraphResponse>(
   response: T,
-  dashboardState: DashboardState
+  dashboardState: DashboardState,
+  metrics: MetricSpec[]
 ): T {
   const extraContext: ExtraContext = {
     isRealtime: isRealTimeDashboard(dashboardState),
-    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+    metrics
   }
   return { ...response, extraContext } as T
 }
@@ -91,7 +93,11 @@ export function useQueryApi<
     queryFn: async ({ queryKey }) => {
       const [_, keyOpts] = queryKey
       const response = await stats<TResponse>(site, getStatsQuery(queryKey))
-      return withExtraContext(response, keyOpts.dashboardState)
+      return withExtraContext(
+        response,
+        keyOpts.dashboardState,
+        keyOpts.reportParams.metrics
+      )
     },
     placeholderData: (previousData) => previousData,
     staleTime: ({ queryKey }) => {
@@ -182,7 +188,7 @@ export function useSearchAndPaginateQueryAPI(
         ...statsQuery,
         pagination: { limit: PAGINATION_LIMIT, offset: pageParam as number }
       })
-      return withExtraContext(response, dashboardState)
+      return withExtraContext(response, dashboardState, reportParams.metrics)
     },
     getNextPageParam: (lastPage, _, lastPageParam) => {
       return lastPage.results.length === PAGINATION_LIMIT

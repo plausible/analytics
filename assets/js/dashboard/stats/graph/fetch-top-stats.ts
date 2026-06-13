@@ -1,6 +1,21 @@
 import * as api from '../../api'
 import { DashboardState } from '../../dashboard-state'
-import { getMetricLabel, Metric } from '../metrics'
+import {
+  AVERAGE_REVENUE_AS_AVERAGE_REVENUE,
+  BOUNCE_RATE,
+  CONVERSION_RATE_AS_CONVERSION_RATE,
+  EVENTS_AS_TOTAL_CONVERSIONS,
+  MetricSpec,
+  PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+  SCROLL_DEPTH,
+  TIME_ON_PAGE,
+  TOTAL_REVENUE_AS_TOTAL_REVENUE,
+  VIEWS_PER_VISIT,
+  VISIT_DURATION,
+  VISITORS_AS_UNIQUE_CONVERSIONS,
+  VISITORS_AS_UNIQUE_VISITORS,
+  VISITS
+} from '../metrics'
 import {
   ComparisonMode,
   DashboardPeriod,
@@ -17,7 +32,7 @@ import {
 import { StatsReportQueryKey, useQueryApi } from '../../hooks/use-query-api'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 
-export function useTopStatsQuery() {
+export function useTopStatsQuery(metrics: MetricSpec[]) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
 
@@ -26,7 +41,7 @@ export function useTopStatsQuery() {
     {
       dashboardState,
       reportParams: {
-        metrics: chooseMetrics(site, dashboardState),
+        metrics,
         dimensions: [],
         include: { imports_meta: true }
       }
@@ -65,56 +80,52 @@ export function getTopStatsQuery(queryKey: StatsReportQueryKey): StatsQuery {
   return statsQuery
 }
 
-export function chooseMetrics(
+export function getTopStatsMetrics(
   site: Pick<PlausibleSite, 'revenueGoals'>,
   dashboardState: DashboardState
-): Metric[] {
-  const revenueMetrics: Metric[] =
-    site.revenueGoals.length > 0 ? ['total_revenue', 'average_revenue'] : []
+): MetricSpec[] {
+  const revenueMetrics: MetricSpec[] =
+    site.revenueGoals.length > 0
+      ? [TOTAL_REVENUE_AS_TOTAL_REVENUE, AVERAGE_REVENUE_AS_AVERAGE_REVENUE]
+      : []
 
   if (
     isRealTimeDashboard(dashboardState) &&
     hasConversionGoalFilter(dashboardState)
-  ) {
-    return ['visitors', 'events']
-  } else if (isRealTimeDashboard(dashboardState)) {
-    return ['visitors', 'pageviews']
-  } else if (hasConversionGoalFilter(dashboardState)) {
-    return ['visitors', 'events', ...revenueMetrics, 'conversion_rate']
-  } else if (hasPageFilter(dashboardState)) {
+  )
+    return [VISITORS_AS_UNIQUE_CONVERSIONS, EVENTS_AS_TOTAL_CONVERSIONS]
+  if (isRealTimeDashboard(dashboardState))
+    return [VISITORS_AS_UNIQUE_VISITORS, PAGEVIEWS_AS_TOTAL_PAGEVIEWS]
+  if (hasConversionGoalFilter(dashboardState))
     return [
-      'visitors',
-      'visits',
-      'pageviews',
-      'bounce_rate',
-      'scroll_depth',
-      'time_on_page'
+      VISITORS_AS_UNIQUE_CONVERSIONS,
+      EVENTS_AS_TOTAL_CONVERSIONS,
+      ...revenueMetrics,
+      CONVERSION_RATE_AS_CONVERSION_RATE
     ]
-  } else {
+  if (hasPageFilter(dashboardState))
     return [
-      'visitors',
-      'visits',
-      'pageviews',
-      'views_per_visit',
-      'bounce_rate',
-      'visit_duration'
+      VISITORS_AS_UNIQUE_VISITORS,
+      VISITS,
+      PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+      BOUNCE_RATE,
+      SCROLL_DEPTH,
+      TIME_ON_PAGE
     ]
-  }
+  return [
+    VISITORS_AS_UNIQUE_VISITORS,
+    VISITS,
+    PAGEVIEWS_AS_TOTAL_PAGEVIEWS,
+    VIEWS_PER_VISIT,
+    BOUNCE_RATE,
+    VISIT_DURATION
+  ]
 }
 
-function getTopStatMetricLabel(
-  metricKey: Metric,
-  { isRealtime, hasConversionGoalFilter }: api.ExtraContext
-) {
-  const metricLabelSuffix = isRealtime ? ' (last 30 min)' : ''
-
-  return `${getMetricLabel(metricKey, { hasConversionGoalFilter })}${metricLabelSuffix}`
-}
-
-type TopStatItem = {
-  metric: Metric
+export type TopStatItem = {
+  metricSpec: MetricSpec
+  labelSuffix?: string
   value: api.MetricValue
-  name: string
   graphable: boolean
   change?: number
   comparisonValue?: number
@@ -127,10 +138,14 @@ export function formatTopStatsData(topStatsResponse: api.QueryApiResponse) {
 
   for (let i = 0; i < query.metrics.length; i++) {
     const metricKey = query.metrics[i]
+    // queried metrics always includes all the returned metrics
+    const metricSpec = extraContext.metrics.find(
+      ({ key }) => key === metricKey
+    )!
     topStats.push({
-      metric: metricKey,
+      metricSpec,
       value: results[0].metrics[i],
-      name: getTopStatMetricLabel(metricKey, extraContext),
+      labelSuffix: extraContext.isRealtime ? ' (last 30 min)' : undefined,
       graphable: true,
       change: results[0].comparison?.change[i],
       comparisonValue: results[0].comparison?.metrics[i]
