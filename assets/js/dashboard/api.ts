@@ -46,7 +46,6 @@ export type QueryResultRow = {
 // while rendering previous (placeholder) data, it'd be out of sync.
 export type ExtraContext = {
   isRealtime: boolean
-  hasConversionGoalFilter: boolean
   metrics: MetricSpec[]
 }
 

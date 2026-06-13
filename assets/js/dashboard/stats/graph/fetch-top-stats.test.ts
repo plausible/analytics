@@ -276,7 +276,6 @@ function makeTopStatsResponse(
     ],
     extraContext: {
       isRealtime: false,
-      hasConversionGoalFilter: false,
       metrics: [VISITORS_AS_UNIQUE_VISITORS]
     }
   }

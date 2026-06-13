@@ -18,7 +18,7 @@ import { cleanToPageOne, getStaleTime, PAGINATION_LIMIT } from './api-client'
 import { ExtraContext, QueryApiResponse, stats } from '../api'
 import { addDimensionSearchFilter } from '../stats/breakdowns'
 import { DashboardPeriod } from '../dashboard-time-periods'
-import { hasConversionGoalFilter, isRealTimeDashboard } from '../util/filters'
+import { isRealTimeDashboard } from '../util/filters'
 import { MainGraphResponse } from '../stats/graph/fetch-main-graph'
 import { MetricSpec } from '../stats/metrics'
 
@@ -49,7 +49,6 @@ function withExtraContext<T extends QueryApiResponse | MainGraphResponse>(
 ): T {
   const extraContext: ExtraContext = {
     isRealtime: isRealTimeDashboard(dashboardState),
-    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
     metrics
   }
   return { ...response, extraContext } as T
