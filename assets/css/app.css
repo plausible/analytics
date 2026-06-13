@@ -205,7 +205,13 @@
 }
 
 html {
-  @apply text-gray-800;
+  @apply text-gray-800 bg-gray-50;
+  color-scheme: light;
+}
+
+html.dark {
+  @apply bg-gray-950;
+  color-scheme: dark;
 }
 
 body {
