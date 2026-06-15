@@ -22,12 +22,12 @@ const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
 
 type PropertiesProps = {
   propKey: string | null
-  afterFetchData?: (data: QueryApiResponse) => void
+  onDataReady?: (data: QueryApiResponse) => void
 }
 
 export default function Properties({
   propKey,
-  afterFetchData
+  onDataReady
 }: PropertiesProps): ReactNode {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
@@ -85,7 +85,7 @@ export default function Properties({
         dimensionLabel={reportConfig.dimensionLabel}
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         DimensionElement={DimensionElement}
-        onDataReady={afterFetchData}
+        onDataReady={onDataReady}
         bundlePercentageWithVisitors={false}
       />
     </div>

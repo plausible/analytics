@@ -313,7 +313,7 @@ function Behaviours({
     }
   }
 
-  function afterFetchData(apiResponse: QueryApiResponse): void {
+  function onDataReady(apiResponse: QueryApiResponse): void {
     setLoading(false)
     setSkipImportedReason(apiResponse?.meta?.imports_skip_reason ?? null)
     if (apiResponse?.results && apiResponse.results.length > 0) {
@@ -329,14 +329,14 @@ function Behaviours({
         return (
           <SpecialGoalPropBreakdown
             prop={specialGoal.prop}
-            afterFetchData={afterFetchData}
+            onDataReady={onDataReady}
           />
         )
       } else {
         return (
           <Conversions
             onGoalFilterClick={onGoalFilterClick}
-            afterFetchData={afterFetchData}
+            onDataReady={onDataReady}
           />
         )
       }
@@ -427,9 +427,7 @@ function Behaviours({
 
   function renderProps(): ReactNode {
     if (site.hasProps && site.propsAvailable) {
-      return (
-        <Properties propKey={selectedPropKey} afterFetchData={afterFetchData} />
-      )
+      return <Properties propKey={selectedPropKey} onDataReady={onDataReady} />
     } else if (adminAccess) {
       let callToAction
 

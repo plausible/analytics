@@ -22,12 +22,12 @@ const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
 
 type SpecialGoalPropBreakdownProps = {
   prop: string
-  afterFetchData?: (data: QueryApiResponse) => void
+  onDataReady?: (data: QueryApiResponse) => void
 }
 
 export function SpecialGoalPropBreakdown({
   prop,
-  afterFetchData
+  onDataReady
 }: SpecialGoalPropBreakdownProps): ReactNode {
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
@@ -75,7 +75,7 @@ export function SpecialGoalPropBreakdown({
       dimensionLabel={reportConfig.dimensionLabel}
       alwaysOnFilters={reportConfig.alwaysOnFilters}
       DimensionElement={DimensionElement}
-      onDataReady={afterFetchData}
+      onDataReady={onDataReady}
     />
   )
 }

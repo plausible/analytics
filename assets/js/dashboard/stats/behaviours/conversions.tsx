@@ -22,12 +22,12 @@ import { FilterInfo } from '../../components/drilldown-link'
 const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
 
 type ConversionsProps = {
-  afterFetchData?: (data: QueryApiResponse) => void
+  onDataReady?: (data: QueryApiResponse) => void
   onGoalFilterClick?: (goalName: string) => void
 }
 
 export default function Conversions({
-  afterFetchData,
+  onDataReady,
   onGoalFilterClick
 }: ConversionsProps): ReactNode {
   const { dashboardState } = useDashboardStateContext()
@@ -71,7 +71,7 @@ export default function Conversions({
       dimensionLabel={reportConfig.dimensionLabel}
       alwaysOnFilters={reportConfig.alwaysOnFilters}
       DimensionElement={DimensionElement}
-      onDataReady={afterFetchData}
+      onDataReady={onDataReady}
       hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
     />
   )
