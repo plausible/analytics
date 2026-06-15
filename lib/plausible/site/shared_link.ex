@@ -1,4 +1,7 @@
 defmodule Plausible.Site.SharedLink do
+  @moduledoc """
+  Schema for shared links.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
