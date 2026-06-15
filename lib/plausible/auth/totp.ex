@@ -119,6 +119,7 @@ defmodule Plausible.Auth.TOTP do
       |> change(
         totp_enabled: false,
         totp_secret: secret,
+        totp_secret_fallback: secret,
         totp_token: nil
       )
       |> Repo.update!()
@@ -290,6 +291,7 @@ defmodule Plausible.Auth.TOTP do
         totp_enabled: false,
         totp_token: nil,
         totp_secret: nil,
+        totp_secret_fallback: nil,
         totp_last_used_at: nil
       )
       |> Repo.update!()
@@ -322,12 +324,42 @@ defmodule Plausible.Auth.TOTP do
 
     time = System.os_time(:second)
 
-    if NimbleTOTP.valid?(user.totp_secret, code, since: last_used, time: time) or
-         NimbleTOTP.valid?(user.totp_secret, code, since: last_used, time: time - 30) do
-      {:ok, bump_last_used!(user)}
+    case validate_with_secret(:main, user, user.totp_secret, code, last_used, time) do
+      :ok ->
+        {:ok, bump_last_used!(user)}
+
+      {:error, :invalid_code} ->
+        case validate_with_secret(
+               :fallback,
+               user,
+               user.totp_secret_fallback,
+               code,
+               last_used,
+               time
+             ) do
+          :ok ->
+            {:ok, bump_last_used!(user)}
+
+          {:error, :invalid_code} ->
+            {:error, :invalid_code}
+        end
+    end
+  end
+
+  defp validate_with_secret(label, user, secret, code, last_used, time) do
+    valid? =
+      NimbleTOTP.valid?(secret, code, since: last_used, time: time) or
+        NimbleTOTP.valid?(secret, code, since: last_used, time: time - 30)
+
+    if valid? do
+      :ok
     else
       {:error, :invalid_code}
     end
+  rescue
+    _ ->
+      Sentry.capture_message("Failed to decode #{label} totp secret", extra: %{user_id: user.id})
+      {:error, :invalid_code}
   end
 
   defp fetch_last_used(user) do

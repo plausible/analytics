@@ -23,7 +23,7 @@ import {
   IndexBreakdown,
   DimensionCellWithBarProps
 } from '../reports/index-breakdown'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import { defaultGetFilterInfo } from '../breakdowns'
 import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
 
@@ -41,15 +41,10 @@ export default function Pages() {
   const reportKey = getReportKey(tab)
   const reportConfig = BREAKDOWN_REPORTS[reportKey]
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    isRealtime: isRealTimeDashboard(dashboardState),
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  })
 
   function switchTab(tab: TabKey) {
     storage.setItem(storageKey, tab)
@@ -69,6 +64,7 @@ export default function Pages() {
         metrics={metrics}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         DimensionElement={PagesDimensionCell}
         onDataReady={setCurrentData}
       />
@@ -122,6 +118,7 @@ function PagesDimensionCell(props: DimensionCellWithBarProps) {
   const displayValue = trimURL(props.row.dimensions[0], MAX_DIMENSION_LENGTH)
   return (
     <DimensionCellWithBar
+      getFilterInfo={defaultGetFilterInfo}
       text={displayValue}
       barClassName={BAR_COLOR}
       externalLink={

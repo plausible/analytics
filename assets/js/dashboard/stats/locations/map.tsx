@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
-import * as api from '../../api'
 import {
   replaceFilterByPrefix,
   cleanLabels,
@@ -10,17 +9,24 @@ import {
 } from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { numberShortFormatter } from '../../util/number-formatter'
-import * as topojson from 'topojson-client'
-import { useQuery } from '@tanstack/react-query'
 import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import worldJson from 'visionscarto-world-atlas/world/110m.json'
 import { UIMode, useTheme } from '../../theme-context'
-import { apiPath } from '../../util/url'
 import { MIN_HEIGHT } from '../reports/list-legacy'
 import { MapTooltip } from './map-tooltip'
 import { GeolocationNotice } from './geolocation-notice'
 import { DashboardState } from '../../dashboard-state'
+import { useQueryApi } from '../../hooks/use-query-api'
+import { QueryApiResponse } from '../../api'
+import {
+  COUNTRIES_BY_TWO_LETTER_CODE,
+  parseWorldTopoJsonToGeoJsonFeatures,
+  WorldJsonCountryData
+} from './countries'
+import {
+  BREAKDOWN_REPORTS,
+  BreakdownReportKey
+} from '../reports/reports-config'
 
 const width = 475
 const height = 335
@@ -31,7 +37,6 @@ type CountryData = {
   visitors: number
   code: string
 }
-type WorldJsonCountryData = { properties: { name: string; a3: string } }
 
 function getMetricLabel(dashboardState: DashboardState) {
   if (hasConversionGoalFilter(dashboardState)) {
@@ -45,10 +50,10 @@ function getMetricLabel(dashboardState: DashboardState) {
 
 const WorldMap = ({
   onCountrySelect,
-  afterFetchData
+  onDataReady
 }: {
   onCountrySelect: () => void
-  afterFetchData: (response: unknown) => void
+  onDataReady: (response: QueryApiResponse) => void
 }) => {
   const navigate = useAppNavigate()
   const { mode } = useTheme()
@@ -66,49 +71,52 @@ const WorldMap = ({
     [dashboardState]
   )
 
-  const { data, refetch, isFetching, isError } = useQuery({
-    queryKey: ['countries', 'map', dashboardState],
-    placeholderData: (previousData) => previousData,
-    queryFn: async (): Promise<{
-      results: CountryData[]
-    }> => {
-      return await api.get(apiPath(site, '/countries'), dashboardState, {
-        limit: 300
-      })
-    }
-  })
-
-  useEffect(() => {
-    const onTickRefetchData = () => {
-      if (dashboardState.period === 'realtime') {
-        refetch()
+  const { apiState } = useQueryApi(site, [
+    'visit:country',
+    {
+      dashboardState,
+      reportParams: {
+        metrics: ['visitors'],
+        dimensions: BREAKDOWN_REPORTS[BreakdownReportKey.countries].dimensions,
+        alwaysOnFilters:
+          BREAKDOWN_REPORTS[BreakdownReportKey.countries].alwaysOnFilters,
+        order_by: [['visitors', 'desc']],
+        pagination: { limit: 300, offset: 0 }
       }
     }
-    document.addEventListener('tick', onTickRefetchData)
-    return () => document.removeEventListener('tick', onTickRefetchData)
-  }, [dashboardState.period, refetch])
+  ])
+  const { data, isFetching, isError } = apiState
 
   useEffect(() => {
     if (data) {
-      afterFetchData(data)
+      onDataReady(data)
     }
-  }, [afterFetchData, data, isFetching])
+  }, [onDataReady, data])
 
-  const { maxValue, dataByCountryCode } = useMemo(() => {
-    const dataByCountryCode: Map<string, CountryData> = new Map()
+  const { maxValue, dataByAlpha3Code } = useMemo(() => {
+    const dataByAlpha3Code: Map<string, CountryData> = new Map()
     let maxValue = 0
-    for (const { alpha_3, visitors, name, code } of data?.results || []) {
+    for (const row of data?.results ?? []) {
+      const [countryName, countryCode] = row.dimensions
+      const [visitors] = row.metrics as [number]
+      const entry = COUNTRIES_BY_TWO_LETTER_CODE[countryCode]
+      if (!entry || !entry.alpha_3) continue
       if (visitors > maxValue) {
         maxValue = visitors
       }
-      dataByCountryCode.set(alpha_3, { alpha_3, visitors, name, code })
+      dataByAlpha3Code.set(entry.alpha_3, {
+        alpha_3: entry.alpha_3,
+        visitors,
+        name: countryName,
+        code: countryCode
+      })
     }
-    return { maxValue, dataByCountryCode }
+    return { maxValue, dataByAlpha3Code }
   }, [data])
 
   const onCountryClick = useCallback(
     (d: WorldJsonCountryData) => {
-      const country = dataByCountryCode.get(d.properties.a3)
+      const country = dataByAlpha3Code.get(d.properties.a3)
       const clickable = country && country.visitors
       if (clickable) {
         const filters = replaceFilterByPrefix(dashboardState, 'country', [
@@ -125,7 +133,7 @@ const WorldMap = ({
         })
       }
     },
-    [navigate, dashboardState, dataByCountryCode, onCountrySelect]
+    [navigate, dashboardState, dataByAlpha3Code, onCountrySelect]
   )
 
   useEffect(() => {
@@ -173,15 +181,15 @@ const WorldMap = ({
       colorInCountriesWithValues(
         svgRef.current,
         getColorForValue,
-        dataByCountryCode
+        dataByAlpha3Code
       ).on('click', (_event, countryPath) => {
         onCountryClick(countryPath as unknown as WorldJsonCountryData)
       })
     }
-  }, [mode, maxValue, dataByCountryCode, onCountryClick])
+  }, [mode, maxValue, dataByAlpha3Code, onCountryClick])
 
   const hoveredCountryData = tooltip.hoveredCountryAlpha3Code
-    ? dataByCountryCode.get(tooltip.hoveredCountryAlpha3Code)
+    ? dataByAlpha3Code.get(tooltip.hoveredCountryAlpha3Code)
     : undefined
 
   return (
@@ -274,25 +282,19 @@ function colorInCountriesWithValues(
   getColorForValue: d3.ScaleLinear<string, string, never>,
   dataByCountryCode: Map<string, CountryData>
 ) {
-  function getCountryByCountryPath(countryPath: unknown) {
-    return dataByCountryCode.get(
-      (countryPath as unknown as WorldJsonCountryData).properties.a3
-    )
-  }
-
   const svg = d3.select(element)
 
   return svg
-    .selectAll(countrySelector)
+    .selectAll<SVGPathElement, WorldJsonCountryData>(countrySelector)
     .style('fill', (countryPath) => {
-      const country = getCountryByCountryPath(countryPath)
+      const country = dataByCountryCode.get(countryPath.properties.a3)
       if (!country?.visitors) {
         return null
       }
       return getColorForValue(country.visitors)
     })
     .style('cursor', (countryPath) => {
-      const country = getCountryByCountryPath(countryPath)
+      const country = dataByCountryCode.get(countryPath.properties.a3)
       if (!country?.visitors) {
         return null
       }
@@ -304,7 +306,6 @@ function drawHighlightedCountryOutline(element: SVGSVGElement) {
   return d3.select(element).append('path').attr('class', initialOutlineClass)
 }
 
-/** @returns the d3 selected svg element */
 function drawInteractiveCountries(element: SVGSVGElement) {
   const path = setupProjetionPath()
   const data = parseWorldTopoJsonToGeoJsonFeatures()
@@ -329,16 +330,6 @@ function setupProjetionPath() {
 
   const path = d3.geoPath().projection(projection)
   return path
-}
-
-function parseWorldTopoJsonToGeoJsonFeatures(): Array<WorldJsonCountryData> {
-  const collection = topojson.feature(
-    // @ts-expect-error strings in worldJson not recongizable as the enum values declared in library
-    worldJson,
-    worldJson.objects.countries
-  )
-  // @ts-expect-error topojson.feature return type incorrectly inferred as not a collection
-  return collection.features
 }
 
 export default WorldMap

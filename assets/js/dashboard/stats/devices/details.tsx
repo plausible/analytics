@@ -1,10 +1,12 @@
 import React from 'react'
+import { revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
+import { useSiteContext } from '../../site-context'
 import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import { defaultGetFilterInfo, getScreenFilterInfo } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -16,7 +18,6 @@ import {
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
 import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
-import { getScreenFilterInfo } from '.'
 
 type DevicesReportKey =
   | BreakdownReportKey.browsers
@@ -33,17 +34,19 @@ export function DevicesDetails({
   searchEnabled?: boolean
 }) {
   const { dashboardState } = useDashboardStateContext()
+  const site = useSiteContext()
   const reportConfig = BREAKDOWN_REPORTS[reportKey]
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable: false
-    }
-  )
+  /*global BUILD_EXTRA*/
+  const isRevenueAvailable =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
+
+  const metrics = reportConfig.getMetrics({
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRealtime: isRealTimeDashboard(dashboardState),
+    isDetailed: true,
+    isRevenueAvailable: isRevenueAvailable
+  })
 
   const DimensionElement = {
     [BreakdownReportKey.browsers]: BrowsersDimensionCell,
@@ -61,14 +64,10 @@ export function DevicesDetails({
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         searchEnabled={searchEnabled}
         DimensionElement={DimensionElement}
-        getFilterInfo={
-          reportKey === BreakdownReportKey.screenSizes
-            ? getScreenFilterInfo
-            : undefined
-        }
       />
     </Modal>
   )
@@ -77,6 +76,7 @@ export function DevicesDetails({
 const BrowsersDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -85,6 +85,7 @@ const BrowsersDimensionCell = (props: DimensionCellProps) => (
 const BrowserVersionsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<BrowserIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -93,6 +94,7 @@ const BrowserVersionsDimensionCell = (props: DimensionCellProps) => (
 const OperatingSystemsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<OsIcon dimensionValue={props.row.dimensions[0]} />}
   />
@@ -101,6 +103,7 @@ const OperatingSystemsDimensionCell = (props: DimensionCellProps) => (
 const OperatingSystemVersionsDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
     {...props}
+    getFilterInfo={defaultGetFilterInfo}
     text={props.row.dimensions[0]}
     icon={<OsIcon dimensionValue={props.row.dimensions[1]} />}
   />
@@ -108,6 +111,7 @@ const OperatingSystemVersionsDimensionCell = (props: DimensionCellProps) => (
 
 const ScreenSizesDimensionCell = (props: DimensionCellProps) => (
   <DimensionCell
+    getFilterInfo={getScreenFilterInfo}
     {...props}
     text={props.row.dimensions[0]}
     icon={<ScreenSizeIcon dimensionValue={props.row.dimensions[0]} />}

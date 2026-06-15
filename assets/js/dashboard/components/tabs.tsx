@@ -97,6 +97,7 @@ export const DropdownTabButton = ({
             })}
           >
             <Popover.Button
+              data-testid="tab-button-with-dropdown"
               className="group/tab relative inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
               ref={dropdownButtonRef}
             >

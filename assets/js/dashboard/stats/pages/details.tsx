@@ -7,7 +7,7 @@ import {
   hasEventFilters,
   isRealTimeDashboard
 } from '../../util/filters'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
+import { defaultGetFilterInfo } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -35,16 +35,13 @@ export function PagesDetails({
   const isRevenueAvailable =
     BUILD_EXTRA && revenueAvailable(dashboardState, site)
 
-  let metrics = chooseBreakdownMetricsByContext(reportConfig.metricsByContext, {
+  const metrics = reportConfig.getMetrics({
     hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
     isRealtime: isRealTimeDashboard(dashboardState),
     isDetailed: true,
-    isRevenueAvailable: isRevenueAvailable
+    isRevenueAvailable: isRevenueAvailable,
+    hasEventFilters: hasEventFilters(dashboardState)
   })
-
-  if (metrics.includes('exit_rate') && hasEventFilters(dashboardState)) {
-    metrics = metrics.filter((m) => m !== 'exit_rate')
-  }
 
   return (
     <Modal>
@@ -53,6 +50,7 @@ export function PagesDetails({
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
+        alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
         DimensionElement={PagesDimensionElement}
       />
@@ -71,6 +69,7 @@ const PagesDimensionElement = (props: DimensionCellProps) => {
           isActive={props.isActive}
         />
       }
+      getFilterInfo={defaultGetFilterInfo}
       {...props}
     />
   )

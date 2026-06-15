@@ -477,6 +477,31 @@ export async function addAllCustomProps({
   )
 }
 
+export async function enableDashboardCsvExportV2({
+  request,
+  domain
+}: {
+  request: APIRequestContext
+  domain: string
+}) {
+  const response = await request.post(
+    '/e2e-tests/enable-dashboard-csv-export-v2',
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      data: { domain }
+    }
+  )
+  if (!response.ok()) {
+    const body = await response.text()
+    throw new Error(
+      `enableDashboardCsvExportV2 failed (${response.status()}): ${body}`
+    )
+  }
+}
+
 export async function addFunnel({
   request,
   domain,
@@ -502,13 +527,15 @@ export async function addFunnel({
 export async function setupSite({
   user,
   page,
-  request
+  request,
+  ...opts
 }: {
   user?: User
   page: Page
   request: APIRequestContext
+  domain?: string
 }): Promise<{ domain: string; user: User }> {
-  const domain = `${randomID()}.example.com`
+  const domain = opts.domain ?? `${randomID()}.example.com`
 
   if (!user) {
     const userID = randomID()

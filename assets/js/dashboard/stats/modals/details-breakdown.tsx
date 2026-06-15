@@ -22,7 +22,7 @@ import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
 import { NonTimeDimension, OrderByEntry } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
-import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { DrilldownLink } from '../../components/drilldown-link'
 import {
   ColumnConfiguration,
   MetricValueTooltipContent,
@@ -30,7 +30,7 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  defaultGetFilterInfo
+  GetFilterInfo
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -86,8 +86,8 @@ export function DetailsBreakdown({
   dimensionLabel,
   dimensions,
   metrics,
+  alwaysOnFilters,
   defaultOrderBy = [] as MetricOrderBy,
-  getFilterInfo = defaultGetFilterInfo,
   DimensionElement,
   searchEnabled = true,
   onDataReady
@@ -124,13 +124,14 @@ export function DetailsBreakdown({
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
           ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-        ]
+        ],
+        alwaysOnFilters
       },
       search
     }
   ]
 
-  const apiState = useSearchAndPaginateQueryAPI({ site, statsReportQueryKey })
+  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey)
 
   useEffect(() => {
     const pages = apiState.data?.pages
@@ -172,9 +173,7 @@ export function DetailsBreakdown({
         renderCell: (row, isActive) => (
           <DimensionElement
             row={row}
-            getFilterInfo={(row: QueryResultRow) =>
-              getFilterInfo(filterDimension, row)
-            }
+            filterDimension={filterDimension}
             isActive={isActive}
           />
         ),
@@ -233,7 +232,6 @@ export function DetailsBreakdown({
     dimensionLabel,
     query,
     meta,
-    getFilterInfo,
     orderByDictionary,
     toggleSortByMetric,
     metricLabelFor
@@ -470,8 +468,8 @@ function MetricLabel({
 }
 
 export type DimensionCellProps = {
+  filterDimension: NonTimeDimension
   row: QueryResultRow
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
   isActive?: boolean
 }
 
@@ -479,16 +477,21 @@ export const DimensionCell = ({
   text,
   icon,
   externalLink,
+  filterDimension,
   getFilterInfo,
   row
 }: {
   text: string
   icon?: ReactNode
   externalLink?: ReactNode
+  getFilterInfo: GetFilterInfo
 } & DimensionCellProps) => (
   <div className="break-all flex items-center gap-x-1">
-    <DrilldownLink path={rootRoute.path} filterInfo={getFilterInfo(row)}>
-      {icon}
+    <DrilldownLink
+      path={rootRoute.path}
+      filterInfo={getFilterInfo(filterDimension, row)}
+      icon={icon}
+    >
       {text}
     </DrilldownLink>
     {externalLink}

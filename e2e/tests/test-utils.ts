@@ -28,6 +28,11 @@ export function randomID() {
 export const tabButton = (page: Page | Locator, label: HasTextArg) =>
   page.getByTestId('tab-button').filter({ hasText: label })
 
+export const tabButtonWithDropdown = (
+  page: Page | Locator,
+  label: HasTextArg
+) => page.getByTestId('tab-button-with-dropdown').filter({ hasText: label })
+
 export const header = (report: Locator, label: HasTextArg) =>
   report
     .getByTestId('report-header')
@@ -57,6 +62,12 @@ export const expectMetricValues = async (
 
 export const dropdown = (report: Locator) =>
   report.getByTestId('dropdown-items')
+
+// Needed before opening dropdown again right after it closes (usually, when picking an item).
+// There's a leave transition for the dropdown and interacting with the dropdown opener
+// during the transition may mean that the dropdown doesn't actually open.
+export const expectDropdownClosed = async (report: Locator) =>
+  expect(dropdown(report)).toHaveCount(0)
 
 export const searchInput = (report: Locator) =>
   report.getByTestId('search-input')

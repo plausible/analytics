@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import {
   AppNavigationLink,
   AppNavigationLinkProps
@@ -20,15 +20,16 @@ export function DrilldownLink({
   filterInfo,
   onClick,
   children,
-  extraClass
+  icon,
+  className,
+  textClassName
 }: Pick<AppNavigationLinkProps, 'path' | 'onClick' | 'children'> & {
-  extraClass?: string
+  className?: string
+  textClassName?: string
+  icon?: ReactNode
   filterInfo: FilterInfo | null
 }) {
   const { dashboardState } = useDashboardStateContext()
-  const className = classNames(`${extraClass}`, {
-    'hover:underline': !!filterInfo
-  })
 
   if (filterInfo) {
     const { prefix, filter, labels } = filterInfo
@@ -43,7 +44,7 @@ export function DrilldownLink({
     return (
       <AppNavigationLink
         title={`Add filter: ${plainFilterText({ ...dashboardState, labels: newLabels }, filter)}`}
-        className={className}
+        className={classNames(className, 'group')}
         path={path}
         onClick={onClick}
         search={(search) => ({
@@ -52,10 +53,18 @@ export function DrilldownLink({
           labels: newLabels
         })}
       >
-        {children}
+        {icon}
+        <span className={classNames(textClassName, 'group-hover:underline')}>
+          {children}
+        </span>
       </AppNavigationLink>
     )
   } else {
-    return <span className={className}>{children}</span>
+    return (
+      <span className={className}>
+        {icon}
+        <span className={textClassName}>{children}</span>
+      </span>
+    )
   }
 }

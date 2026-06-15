@@ -192,6 +192,7 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> render("settings_danger_zone.html",
       site: site,
+      connect_live_socket: true,
       dogfood_page_path: "/:dashboard/settings/danger-zone",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )

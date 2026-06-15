@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import {
   EllipsisVerticalIcon,
@@ -20,6 +20,7 @@ import { Notice } from '../components/notice'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
+import { CsvExportV2, ExportStatus } from '../stats/csv-export/csv-export'
 
 function ExportItem({ selectedInterval }: { selectedInterval: string }) {
   const site = useSiteContext()
@@ -91,10 +92,21 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
 }
 
 function DashboardOptionsMenuItems() {
+  const site = useSiteContext()
+  const { dashboardState } = useDashboardStateContext()
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useGraphIntervalContext()
   const imports = useImportsIncludedContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const [exportStatus, setExportStatus] = useState<ExportStatus>(
+    ExportStatus.idle
+  )
+
+  useEffect(() => {
+    setExportStatus((prev) =>
+      prev === ExportStatus.error ? ExportStatus.idle : prev
+    )
+  }, [dashboardState])
 
   const showIntervalSection = availableIntervals.length > 1
 
@@ -146,7 +158,14 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
-          <ExportItem selectedInterval={selectedInterval} />
+          {site.flags.dashboard_csv_export_v2 ? (
+            <CsvExportV2
+              exportStatus={exportStatus}
+              setExportStatus={setExportStatus}
+            />
+          ) : (
+            <ExportItem selectedInterval={selectedInterval} />
+          )}
           {imports.status === 'visible' && (
             <>
               <ImportedSwitchItem disabled={imports.disabled} />

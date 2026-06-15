@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+- Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
+
 ### Changed
 
 - Keybind hints are hidden on smaller screens
@@ -28,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - Standardised and improved segment and filter modals styling
 - Changed graph tooltip positioning logic: it now aligns to the top of the chart, to the right of the hovered data point
 - Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
+- Update custom range datepicker styles
+- Improved site transfer UI
 
 ### Fixed
 

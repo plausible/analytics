@@ -16,15 +16,21 @@ import {
   rowLink,
   expectMetricValues,
   dropdown,
+  expectDropdownClosed,
   detailsLink,
   modal,
   closeModalButton,
-  searchInput
+  searchInput,
+  tabButtonWithDropdown
 } from '../test-utils'
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
 
-test('special goals', async ({ page, request }) => {
+test('special goals', async ({ page, request }, testInfo) => {
+  test.slow(
+    testInfo.project.use.headless === false,
+    'This test has many interactions which exceed default timeout when running --headed'
+  )
   const report = getReport(page)
   const { domain } = await setupSite({ page, request })
 
@@ -145,22 +151,10 @@ test('special goals', async ({ page, request }) => {
     ]
   })
 
-  await addGoal({ request, domain, params: { event_name: 'Form: Submission' } })
-  await addGoal({ request, domain, params: { event_name: '404' } })
-  await addGoal({
-    request,
-    domain,
-    params: { event_name: 'Outbound Link: Click' }
-  })
   await addGoal({
     request,
     domain,
     params: { event_name: 'Cloaked Link: Click' }
-  })
-  await addGoal({
-    request,
-    domain,
-    params: { event_name: 'File Download' }
   })
   await addGoal({
     request,
@@ -208,6 +202,29 @@ test('special goals', async ({ page, request }) => {
     ])
   })
 
+  await test.step('Form: Submission special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Form Actions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['path', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), [
+      '/form-action/another-path',
+      '/form-action/path'
+    ])
+
+    await expectMetricValues(modal(page), '/form-action/path', [
+      '1',
+      '1',
+      '50%'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
   await page
     .getByRole('button', {
       name: 'Remove filter: Goal is Form: Submission'
@@ -228,6 +245,22 @@ test('special goals', async ({ page, request }) => {
 
     await expectMetricValues(report, '/wrong-path', ['1', '1', '50%'])
     await expectMetricValues(report, '/another-wrong-path', ['1', '1', '50%'])
+  })
+
+  await test.step('404 special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: '404 Pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['path', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), ['/another-wrong-path', '/wrong-path'])
+
+    await expectMetricValues(modal(page), '/wrong-path', ['1', '1', '50%'])
+
+    await closeModalButton(page).click()
   })
 
   await page
@@ -260,6 +293,29 @@ test('special goals', async ({ page, request }) => {
     ])
   })
 
+  await test.step('Outbound Link: Click special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Outbound Links' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['url', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), [
+      'https://example.com/another-link',
+      'https://example.com/link'
+    ])
+
+    await expectMetricValues(modal(page), 'https://example.com/link', [
+      '1',
+      '1',
+      '50%'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
   await page
     .getByRole('button', {
       name: 'Remove filter: Goal is Outbound Link: Click'
@@ -288,6 +344,29 @@ test('special goals', async ({ page, request }) => {
       'https://example.com/another-cloaked-link',
       ['1', '1', '50%']
     )
+  })
+
+  await test.step('Cloaked Link: Click special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Cloaked Links' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['url', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), [
+      'https://example.com/another-cloaked-link',
+      'https://example.com/cloaked-link'
+    ])
+
+    await expectMetricValues(modal(page), 'https://example.com/cloaked-link', [
+      '1',
+      '1',
+      '50%'
+    ])
+
+    await closeModalButton(page).click()
   })
 
   await page
@@ -320,6 +399,29 @@ test('special goals', async ({ page, request }) => {
     ])
   })
 
+  await test.step('File Download special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'File Downloads' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['url', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), [
+      'https://example.com/another-file.zip',
+      'https://example.com/file.zip'
+    ])
+
+    await expectMetricValues(modal(page), 'https://example.com/file.zip', [
+      '1',
+      '1',
+      '50%'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
   await page
     .getByRole('button', {
       name: 'Remove filter: Goal is File Download'
@@ -342,6 +444,27 @@ test('special goals', async ({ page, request }) => {
     await expectMetricValues(report, 'another query', ['1', '1', '50%'])
   })
 
+  await test.step('WP Search Queries special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'WordPress Search Queries' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'search_query',
+      /Visitors/,
+      /Events/,
+      /CR/
+    ])
+
+    await expectRows(modal(page), ['another query', 'some query'])
+
+    await expectMetricValues(modal(page), 'some query', ['1', '1', '50%'])
+
+    await closeModalButton(page).click()
+  })
+
   await page
     .getByRole('button', {
       name: 'Remove filter: Goal is WP Search Queries'
@@ -361,6 +484,22 @@ test('special goals', async ({ page, request }) => {
 
     await expectMetricValues(report, '/some/path', ['1', '1', '50%'])
     await expectMetricValues(report, '/another/path', ['1', '1', '50%'])
+  })
+
+  await test.step('WP Form Completions special-goal modal', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'WordPress Form Completions' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), ['path', /Visitors/, /Events/, /CR/])
+
+    await expectRows(modal(page), ['/another/path', '/some/path'])
+
+    await expectMetricValues(modal(page), '/some/path', ['1', '1', '50%'])
+
+    await closeModalButton(page).click()
   })
 })
 
@@ -631,7 +770,7 @@ test('props breakdown', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  const propsTabButton = tabButton(report, 'Properties')
+  const propsTabButton = tabButtonWithDropdown(report, 'Properties')
 
   await test.step('listing props', async () => {
     await propsTabButton.scrollIntoViewIfNeeded()
@@ -640,7 +779,10 @@ test('props breakdown', async ({ page, request }) => {
       .getByRole('button', { name: 'browser_language' })
       .click()
 
-    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(propsTabButton, 'Properties')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expectHeaders(report, ['browser_language', 'Visitors', 'Events', '%'])
 
@@ -651,6 +793,7 @@ test('props breakdown', async ({ page, request }) => {
   })
 
   await test.step('loading more', async () => {
+    await expectDropdownClosed(report)
     await propsTabButton.click()
     const showMoreButton = dropdown(report).getByRole('button', {
       name: 'Show 1 more'
@@ -694,7 +837,10 @@ test('props breakdown', async ({ page, request }) => {
 
     await rowLink(report, 'Visit /page').click()
 
-    await expect(propsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(propsTabButton, 'Properties')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expectHeaders(report, [
       'browser_language',
@@ -772,7 +918,7 @@ test('funnels', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  const funnelsTabButton = tabButton(report, 'Funnels')
+  const funnelsTabButton = tabButtonWithDropdown(report, 'Funnels')
 
   await test.step('rendering funnels', async () => {
     await funnelsTabButton.scrollIntoViewIfNeeded()
@@ -781,7 +927,10 @@ test('funnels', async ({ page, request }) => {
       .getByRole('button', { name: 'Shopping 11 Funnel' })
       .click()
 
-    await expect(funnelsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(funnelsTabButton, 'Funnels')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expect(report.getByRole('heading')).toHaveText('Shopping 11 Funnel')
 
@@ -791,8 +940,14 @@ test('funnels', async ({ page, request }) => {
   })
 
   await test.step('loading more', async () => {
+    await expectDropdownClosed(report)
     await funnelsTabButton.click()
-    await dropdown(report).getByRole('button', { name: 'Show 1 more' }).click()
+    const showMoreButton = dropdown(report).getByRole('button', {
+      name: 'Show 1 more'
+    })
+    await showMoreButton.click()
+    await expect(showMoreButton).toBeHidden()
+    await expect(dropdown(report).getByRole('button')).toHaveCount(11)
     await dropdown(report)
       .getByRole('button', { name: 'Shopping 1 Funnel' })
       .click()
@@ -801,6 +956,7 @@ test('funnels', async ({ page, request }) => {
   })
 
   await test.step('searching', async () => {
+    await expectDropdownClosed(report)
     await funnelsTabButton.click()
     await searchInput(report).fill('Shopping 1')
 

@@ -109,14 +109,17 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    scope alias: PlausibleWeb.Live,
-          assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
-      pipe_through [:browser, :csrf, :app_layout, :flags]
+    live_session :customer_support,
+      on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
+      scope alias: PlausibleWeb.Live,
+            assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
+        pipe_through [:browser, :csrf, :app_layout, :flags]
 
-      live "/cs", CustomerSupport, :index, as: :customer_support
-      live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
-      live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
-      live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
+        live "/cs", CustomerSupport, :index, as: :customer_support
+        live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
+        live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
+        live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
+      end
     end
   end
 
@@ -172,6 +175,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        post "/enable-dashboard-csv-export-v2", E2EController, :enable_dashboard_csv_export_v2
       end
     end
   end
@@ -281,6 +285,8 @@ defmodule PlausibleWeb.Router do
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query
+        post "/:domain/export", StatsController, :csv_export_v2
+        get "/:domain/google-search-terms", StatsController, :google_search_terms
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/sources", StatsController, :sources
         get "/:domain/channels", StatsController, :channels
@@ -539,7 +545,6 @@ defmodule PlausibleWeb.Router do
       get "/sso/notice", SSOController, :provision_notice
       get "/sso/issue", SSOController, :provision_issue
       get "/logout", AuthController, :logout
-      get "/team/select", AuthController, :select_team
     end
 
     scope "/", PlausibleWeb do
@@ -556,7 +561,6 @@ defmodule PlausibleWeb.Router do
 
     on_ce do
       get "/logout", AuthController, :logout
-      get "/team/select", AuthController, :select_team
     end
 
     delete "/me", AuthController, :delete_me
@@ -592,12 +596,6 @@ defmodule PlausibleWeb.Router do
     post "/sites/invitations/:invitation_id/reject", InvitationController, :reject_invitation
 
     delete "/sites/:domain/invitations/:invitation_id", InvitationController, :remove_invitation
-
-    get "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership_form
-    post "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership
-
-    get "/sites/:domain/change-team", Site.MembershipController, :change_team_form
-    post "/sites/:domain/change-team", Site.MembershipController, :change_team
 
     put "/sites/:domain/memberships/u/:id/role/:new_role",
         Site.MembershipController,

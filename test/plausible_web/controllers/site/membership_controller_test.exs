@@ -90,7 +90,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       new_owner = new_user()
 
-      post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: new_owner.email})
+      {:ok, _invitation} =
+        Plausible.Teams.Invitations.InviteToSite.invite(site, user, new_owner.email, :owner)
+
       assert_site_transfer(site, new_owner.email)
 
       conn =
@@ -198,91 +200,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert Phoenix.Flash.get(req2.assigns.flash, :success) =~
                "has been invited to"
-    end
-  end
-
-  describe "GET /sites/:domain/transfer-ownership" do
-    test "shows ownership transfer form", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      conn = get(conn, "/sites/#{site.domain}/transfer-ownership")
-
-      assert html_response(conn, 200) =~ "Transfer ownership of"
-    end
-  end
-
-  describe "POST /sites/:domain/transfer-ownership" do
-    test "creates invitation with :owner role", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      conn =
-        post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: "john.doe@example.com"})
-
-      assert_site_transfer(site, "john.doe@example.com")
-
-      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
-    end
-
-    test "sends ownership transfer email for new user", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: "john.doe@example.com"})
-
-      assert_email_delivered_with(
-        to: [nil: "john.doe@example.com"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
-      )
-    end
-
-    test "sends invitation email for existing user", %{conn: conn, user: user} do
-      existing_user = insert(:user)
-      site = new_site(owner: user)
-
-      post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: existing_user.email})
-
-      assert_email_delivered_with(
-        to: [nil: existing_user.email],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
-      )
-    end
-
-    test "fails to transfer ownership to a foreign domain", %{conn: conn, user: user} do
-      new_site(owner: user)
-      foreign_site = new_site()
-
-      conn =
-        post(conn, "/sites/#{foreign_site.domain}/transfer-ownership", %{
-          email: "john.doe@example.com"
-        })
-
-      assert conn.status == 404
-    end
-
-    test "fails to transfer ownership to invited user with proper error message", ctx do
-      %{conn: conn, user: user} = ctx
-      site = new_site(owner: user)
-      invited = "john.doe@example.com"
-
-      # invite a user but don't join
-
-      conn =
-        post(conn, "/sites/#{site.domain}/memberships/invite", %{
-          email: invited,
-          role: "editor"
-        })
-
-      conn = get(recycle(conn), redirected_to(conn, 302))
-
-      assert html_response(conn, 200) =~
-               "#{invited} has been invited to #{site.domain} as an editor"
-
-      # transferring ownership to that domain now fails
-
-      conn = post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: invited})
-      conn = get(recycle(conn), redirected_to(conn, 302))
-      html = html_response(conn, 200)
-      assert html =~ "Transfer error"
-      assert html =~ "Invitation has already been sent"
     end
   end
 

@@ -312,13 +312,11 @@ export default function ListReport<
             <DrilldownLink
               filterInfo={getFilterInfo(listItem)}
               onClick={onClick}
-              extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+              className="max-w-max w-full flex items-center md:overflow-hidden"
+              icon={maybeRenderIconFor(listItem)}
+              textClassName="w-full md:truncate"
             >
-              {maybeRenderIconFor(listItem)}
-
-              <span className="w-full md:truncate">
-                {trimURL(listItem.name, colMinWidth)}
-              </span>
+              {trimURL(listItem.name, colMinWidth)}
             </DrilldownLink>
             <ExternalLink
               item={listItem}

@@ -18,9 +18,10 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  defaultGetFilterInfo
+  MetricValueWrapper,
+  GetFilterInfo
 } from '../breakdowns'
-import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -43,7 +44,7 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 
-const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
+export const DEFAULT_METRIC_COLUMN_WIDTH = 'w-16 min-w-16'
 const VISITORS_WITH_PERCENTAGE_COLUMN_WIDTH = 'w-32 min-w-32'
 
 const BAR_METRIC = 'visitors'
@@ -58,8 +59,8 @@ export function IndexBreakdown({
   metrics,
   dimensions,
   DimensionElement,
-  getFilterInfo = defaultGetFilterInfo,
   dimensionLabel,
+  alwaysOnFilters,
   onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
 }: IndexBreakdownProps) {
@@ -78,6 +79,7 @@ export function IndexBreakdown({
           ['visitors', 'desc'],
           ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
         ],
+        alwaysOnFilters,
         pagination: { limit: MAX_ITEMS, offset: 0 }
       }
     }
@@ -126,6 +128,7 @@ export function IndexBreakdown({
     // percentage is not its own column —- it's shown inline in the
     // visitors cell instead.
     const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
@@ -138,12 +141,10 @@ export function IndexBreakdown({
         renderLabel: () => dimensionLabel,
         renderCell: (row, isActive) => (
           <DimensionElement
+            filterDimension={filterDimension}
             row={row}
             barWidthPercent={
               ((row.metrics[barMetricIndex] as number) / barMaxValue) * 100
-            }
-            getFilterInfo={(row: QueryResultRow) =>
-              getFilterInfo(filterDimension, row)
             }
             isActive={isActive}
           />
@@ -188,14 +189,15 @@ export function IndexBreakdown({
     metricLabelFor,
     barMaxValue,
     query,
-    getFilterInfo,
     metricColumnWidth
   ])
 
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
-      <IndexBreakdownRenderer
+      <IndexBreakdownRenderer<QueryResultRow>
         {...apiState}
+        rows={apiState.data?.results?.slice(0, MAX_ITEMS) ?? []}
+        getDimensionValue={(row) => row.dimensions[0]}
         isRealtimeSilentUpdate={isRealtimeSilentUpdate}
         columns={columns}
       />
@@ -204,39 +206,44 @@ export function IndexBreakdown({
 }
 
 export type DimensionCellWithBarProps = {
+  filterDimension: NonTimeDimension
   row: QueryResultRow
   barWidthPercent: number
   isActive?: boolean
-  getFilterInfo: (row: QueryResultRow) => FilterInfo | null
 }
 
 export const DimensionCellWithBar = ({
   text,
   icon,
+  onClick,
   externalLink,
   getFilterInfo,
+  filterDimension,
   barWidthPercent,
   barClassName,
   row
 }: {
   text: string
   icon?: ReactNode
+  onClick?: () => void
   externalLink?: ReactNode
+  getFilterInfo: GetFilterInfo
   barClassName: string
 } & DimensionCellWithBarProps) => (
-  <div className="w-full h-full relative">
-    <Bar barWidthPercent={barWidthPercent} className={barClassName}></Bar>
-    <div className="flex justify-start items-center gap-x-1.5 px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all w-full">
+  <Bar barWidthPercent={barWidthPercent} className={barClassName}>
+    <div className="flex justify-start items-center gap-x-1.5 w-full">
       <DrilldownLink
-        filterInfo={getFilterInfo(row)}
-        extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+        onClick={onClick}
+        filterInfo={getFilterInfo(filterDimension, row)}
+        className="max-w-max w-full flex items-center md:overflow-hidden"
+        icon={icon}
+        textClassName="w-full md:truncate"
       >
-        {icon}
-        <span className="w-full md:truncate">{text}</span>
+        {text}
       </DrilldownLink>
       {externalLink}
     </div>
-  </div>
+  </Bar>
 )
 
 function VisitorsWithPercentageCell({
@@ -389,13 +396,7 @@ function MetricValueCell({
   const showTooltip = !!comparison || isAbbreviated
 
   const valueContent = (
-    <span
-      className={classNames(
-        'font-medium text-sm block text-gray-800 dark:text-gray-200',
-        showTooltip && 'cursor-default'
-      )}
-      data-testid="metric-value"
-    >
+    <MetricValueWrapper className={showTooltip ? 'cursor-default' : undefined}>
       {shortFormatter(value)}
       {comparison && (
         <ChangeArrow
@@ -405,7 +406,7 @@ function MetricValueCell({
           hideNumber
         />
       )}
-    </span>
+    </MetricValueWrapper>
   )
 
   if (!showTooltip) return valueContent
@@ -434,21 +435,22 @@ function MetricValueCell({
   )
 }
 
-export function IndexBreakdownRenderer({
-  data,
+export function IndexBreakdownRenderer<TRow>({
+  rows,
+  getDimensionValue,
   isPending,
   isPlaceholderData,
   isRealtimeSilentUpdate,
   columns
 }: {
-  data?: QueryApiResponse
+  rows: TRow[]
+  getDimensionValue: (row: TRow) => string
   isPending: boolean
   isPlaceholderData: boolean
   isRealtimeSilentUpdate: boolean
-  columns: ColumnConfiguration<QueryResultRow>[] | null
+  columns: ColumnConfiguration<TRow>[] | null
 }) {
   const [tappedRow, setTappedRow] = useState<string | null>(null)
-  const rows = data?.results?.slice(0, MAX_ITEMS) ?? []
 
   if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
@@ -501,20 +503,20 @@ export function IndexBreakdownRenderer({
       >
         <FlipMove disableAllAnimations={!isRealtimeSilentUpdate}>
           {rows.map((row) => {
-            const dimension = row.dimensions[0]
-            const isActive = tappedRow === dimension
+            const dimensionValue = getDimensionValue(row)
+            const isActive = tappedRow === dimensionValue
 
             const handleClick = (e: React.MouseEvent) => {
               if (
                 window.innerWidth < 768 &&
                 !(e.target as HTMLElement).closest('a')
               ) {
-                setTappedRow(isActive ? null : dimension)
+                setTappedRow(isActive ? null : dimensionValue)
               }
             }
 
             return (
-              <div key={dimension} style={{ minHeight: ROW_HEIGHT }}>
+              <div key={dimensionValue} style={{ minHeight: ROW_HEIGHT }}>
                 <div
                   data-testid="report-row"
                   className="group/row flex w-full items-center hover:bg-gray-100/60 dark:hover:bg-gray-850 rounded-sm md:cursor-default cursor-pointer"
@@ -542,18 +544,25 @@ export function IndexBreakdownRenderer({
   )
 }
 
-const Bar = ({
+export const Bar = ({
   barWidthPercent,
-  className
+  className,
+  children
 }: {
   barWidthPercent: number
   className: string
+  children: ReactNode
 }) => (
-  <div
-    className={classNames(
-      `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
-      className
-    )}
-    style={{ width: `${barWidthPercent}%` }}
-  />
+  <div className="w-full h-full relative">
+    <div
+      className={classNames(
+        `absolute top-0 left-0 h-full rounded-sm dark:bg-gray-500/15 dark:group-hover/row:bg-gray-500/30`,
+        className
+      )}
+      style={{ width: `${barWidthPercent}%` }}
+    ></div>
+    <div className="px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all">
+      {children}
+    </div>
+  </div>
 )

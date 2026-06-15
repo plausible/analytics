@@ -77,6 +77,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ])
     end
 
+    @tag :ee_only
     test "plausible.io live demo - shows site stats, header and footer", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
@@ -92,7 +93,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
       assert resp =~ "Login"
-      assert resp =~ "Want these stats for your website?"
+      assert resp =~ "You just saw how Plausible tracks plausible.io"
+      assert resp =~ "Start free trial"
+      assert resp =~ "See pricing"
       assert resp =~ "Getting started"
     end
 
@@ -431,7 +434,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
-  describe "GET /:domain/export" do
+  describe "[LEGACY] GET /:domain/export" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
@@ -935,7 +938,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     |> Enum.map(&String.split(&1, ","))
   end
 
-  describe "GET /:domain/export - via shared link" do
+  describe "[LEGACY] GET /:domain/export - via shared link" do
     setup [:create_user, :create_site]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
@@ -954,7 +957,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - for past 6 months" do
+  describe "[LEGACY] GET /:domain/export - for past 6 months" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
@@ -964,7 +967,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - with path filter" do
+  describe "[LEGACY] GET /:domain/export - with path filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
@@ -1037,7 +1040,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:domain/export - with a custom prop filter" do
+  describe "[LEGACY] GET /:domain/export - with a custom prop filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "custom-props.csv only returns the prop and its value in filter", %{
@@ -1088,11 +1091,26 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   defp assert_csv_by_fixture({file, downloaded}, folder) do
-    file = Path.expand(file, folder)
+    file =
+      file
+      |> maybe_get_legacy_variant(folder)
+      |> Path.expand(folder)
 
     {:ok, content} = File.read(file)
     msg = "CSV file comparison failed (#{file})"
     assert downloaded == content, message: msg, left: downloaded, right: content
+  end
+
+  # Remember to clean up the legacy fixture files too once the
+  # legacy CSV export disappears.
+  defp maybe_get_legacy_variant(filename, folder) do
+    path_filter? = String.contains?(folder, "filter-path")
+
+    case {filename, path_filter?} do
+      {~c"exit_pages.csv", true} -> ~c"exit_pages_legacy.csv"
+      {~c"visitors.csv", true} -> ~c"visitors_legacy.csv"
+      {filename, _} -> filename
+    end
   end
 
   defp populate_exported_stats(site) do
@@ -1258,7 +1276,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     insert(:goal, %{site: site, event_name: "Signup"})
   end
 
-  describe "GET /:domain/export - with goal filter" do
+  describe "[LEGACY] GET /:domain/export - with goal filter" do
     setup [:create_user, :create_site, :log_in]
 
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do

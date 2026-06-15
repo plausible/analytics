@@ -1,7 +1,28 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
   use PlausibleWeb.ConnCase
 
-  describe "GET /api/stats/:domain/regions" do
+  defp query_regions(conn, site, opts) do
+    always_on_filters = ["is_not", "visit:region", [""]]
+
+    params = %{
+      "dimensions" => Keyword.get(opts, :dimensions, ["visit:region", "visit:region_name"]),
+      "date_range" => Keyword.get(opts, :date_range, "all"),
+      "filters" => [
+        always_on_filters
+        | Keyword.get(opts, :filters, [])
+      ],
+      "metrics" => Keyword.get(opts, :metrics, ["visitors", "percentage"]),
+      "include" => Keyword.get(opts, :include, nil),
+      "pagination" => Keyword.get(opts, :pagination, nil),
+      "order_by" => Keyword.get(opts, :order_by, nil)
+    }
+
+    conn
+    |> post("/api/stats/#{site.domain}/query", params)
+    |> json_response(200)
+  end
+
+  describe "querying for regions with POST /query" do
     defp seed(%{site: site}) do
       populate_stats(site, [
         build(:pageview,
@@ -34,82 +55,25 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
 
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import, :seed]
 
-    test "returns top cities by new visitors", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/regions?period=day")
+    test "returns top regions by visitors", %{conn: conn, site: site} do
+      response = query_regions(conn, site, date_range: "day")
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "code" => "EE-37",
-                 "country_flag" => "🇪🇪",
-                 "name" => "Harjumaa",
-                 "visitors" => 3,
-                 "percentage" => 60.0
-               },
-               %{
-                 "code" => "EE-39",
-                 "country_flag" => "🇪🇪",
-                 "name" => "Hiiumaa",
-                 "visitors" => 2,
-                 "percentage" => 40.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["EE-37", "Harjumaa"], "metrics" => [3, 60.0]},
+               %{"dimensions" => ["EE-39", "Hiiumaa"], "metrics" => [2, 40.0]}
              ]
     end
 
-    test "when list is filtered returns one city only", %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/regions?period=day&filters=#{filters}")
+    test "when list is filtered returns one region only", %{conn: conn, site: site} do
+      response =
+        query_regions(conn, site,
+          date_range: "day",
+          filters: [["is", "visit:region", ["EE-39"]]]
+        )
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "code" => "EE-39",
-                 "country_flag" => "🇪🇪",
-                 "name" => "Hiiumaa",
-                 "visitors" => 2,
-                 "percentage" => 100.0
-               }
+      assert response["results"] == [
+               %{"dimensions" => ["EE-39", "Hiiumaa"], "metrics" => [2, 100.0]}
              ]
-    end
-
-    test "malicious input - date", %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
-      garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/regions?period=custom&filters=#{filters}&date=#{garbage}"
-        )
-
-      assert resp = response(conn, 400)
-      assert resp =~ "Failed to parse 'date' argument."
-    end
-
-    test "malicious input - from", %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
-      garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/regions?period=custom&filters=#{filters}&from=#{garbage}"
-        )
-
-      assert resp = response(conn, 400)
-      assert resp =~ "Failed to parse 'from' argument."
-    end
-
-    test "malicious input - to", %{conn: conn, site: site} do
-      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
-      garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/regions?period=custom&filters=#{filters}&from=2020-04-01&to=#{garbage}"
-        )
-
-      assert resp = response(conn, 400)
-      assert resp =~ "Failed to parse 'to' argument."
     end
 
     @tag :ee_only
@@ -180,53 +144,60 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :USD})
 
-      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
-      order_by = Jason.encode!([["visitors", "desc"]])
+      response =
+        query_regions(conn, site,
+          date_range: "day",
+          filters: [["is", "event:goal", ["Payment"]]],
+          metrics: [
+            "visitors",
+            "total_visitors",
+            "group_conversion_rate",
+            "average_revenue",
+            "total_revenue"
+          ],
+          order_by: [["visitors", "desc"], ["visit:region", "asc"]]
+        )
 
-      q = "?filters=#{filters}&order_by=#{order_by}&detailed=true&period=day&page=1&limit=100"
-
-      conn = get(conn, "/api/stats/#{site.domain}/regions#{q}")
-
-      assert json_response(conn, 200)["results"] == [
+      assert response["results"] == [
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$1,500.00",
-                   "short" => "$1.5K",
-                   "value" => 1500.0
-                 },
-                 "conversion_rate" => 33.33,
-                 "name" => "Harjumaa",
-                 "code" => "EE-37",
-                 "country_flag" => "🇪🇪",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$3,000.00",
-                   "short" => "$3.0K",
-                   "value" => 3000.0
-                 },
-                 "total_visitors" => 6,
-                 "visitors" => 2
+                 "dimensions" => ["EE-37", "Harjumaa"],
+                 "metrics" => [
+                   2,
+                   6,
+                   33.33,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$1,500.00",
+                     "short" => "$1.5K",
+                     "value" => 1500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$3,000.00",
+                     "short" => "$3.0K",
+                     "value" => 3000.0
+                   }
+                 ]
                },
                %{
-                 "average_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "conversion_rate" => 25.0,
-                 "name" => "Hiiumaa",
-                 "code" => "EE-39",
-                 "country_flag" => "🇪🇪",
-                 "total_revenue" => %{
-                   "currency" => "USD",
-                   "long" => "$500.00",
-                   "short" => "$500.0",
-                   "value" => 500.0
-                 },
-                 "total_visitors" => 4,
-                 "visitors" => 1
+                 "dimensions" => ["EE-39", "Hiiumaa"],
+                 "metrics" => [
+                   1,
+                   4,
+                   25.0,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$500.00",
+                     "short" => "$500.0",
+                     "value" => 500.0
+                   }
+                 ]
                }
              ]
     end

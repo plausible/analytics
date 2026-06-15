@@ -15,6 +15,11 @@ defmodule Plausible.Ingestion.Source do
                 |> then(&["adwords" | &1])
                 |> MapSet.new()
 
+  @custom_source_suffixes %{
+    "officeapps.live.com" => "Microsoft 365",
+    "wikipedia.org" => "Wikipedia"
+  }
+
   @external_resource "priv/ref_inspector/referers.yml"
   @referers_yaml Application.app_dir(:plausible, "priv/ref_inspector/referers.yml")
 
@@ -36,11 +41,12 @@ defmodule Plausible.Ingestion.Source do
       |> Map.put(String.downcase(val), val)
     end)
 
+  @spec from_custom_sources(String.t()) :: String.t() | nil
   for {k, v} <- Enum.sort(lookup) do
-    def src(unquote(k)), do: unquote(v)
+    def from_custom_sources(unquote(k)), do: unquote(v)
   end
 
-  def src(_), do: nil
+  def from_custom_sources(_), do: nil
 
   def paid_sources() do
     @paid_sources |> MapSet.to_list()
@@ -64,39 +70,60 @@ defmodule Plausible.Ingestion.Source do
   perfectly, but at least we're making an effort for the most commonly used ones. For example, `ig -> Instagram` and `adwords -> Google`.
   """
   def resolve(request) do
-    tagged_source =
-      request.query_params["utm_source"] ||
-        request.query_params["source"] ||
-        request.query_params["ref"]
-
-    source =
-      cond do
-        tagged_source -> tagged_source
-        has_valid_referral?(request) -> parse(request.referrer)
-        true -> nil
-      end
-
-    find_mapping(source)
-  end
-
-  def parse(ref) do
-    case RefInspector.parse(ref).source do
-      :unknown ->
-        uri = URI.parse(String.trim(ref))
-        format_referrer_host(uri)
-
-      source ->
-        source
+    cond do
+      tagged = tagged_param(request) -> canonical(tagged)
+      has_valid_referral?(request) -> from_referrer(request.referrer)
+      true -> nil
     end
   end
 
-  def find_mapping(nil), do: nil
+  @doc """
+  Resolves a source from a bare referrer URL. This is also the entry point used
+  when importing referrers from Google Analytics, so that imported data 
+  is normalized identically to live ingestion.
+  """
+  def from_referrer(referrer) do
+    host =
+      referrer
+      |> String.trim()
+      |> URI.parse()
+      |> format_referrer_host()
 
-  def find_mapping(source) do
-    case src(String.downcase(source)) do
-      name when is_binary(name) -> name
-      _ -> source
+    downcased_host = String.downcase(host)
+
+    # Prefer custom source overrides over RefInspector so subdomain matches win
+    # (e.g. gemini.google.com resolves to Google Gemini, not Google). Exact host
+    # matches take priority, then suffix families, then RefInspector.
+    cond do
+      name = from_custom_sources(downcased_host) ->
+        name
+
+      name = from_custom_source_suffix(downcased_host) ->
+        name
+
+      true ->
+        case RefInspector.parse(referrer).source do
+          :unknown -> host
+          # Normalize RefInspector names through our aliases (e.g. Twitter to X (Twitter)).
+          name -> canonical(name)
+        end
     end
+  end
+
+  defp from_custom_source_suffix(host) do
+    Enum.find_value(@custom_source_suffixes, fn {suffix, name} ->
+      if host == suffix or String.ends_with?(host, "." <> suffix), do: name
+    end)
+  end
+
+  defp tagged_param(request) do
+    request.query_params["utm_source"] ||
+      request.query_params["source"] ||
+      request.query_params["ref"]
+  end
+
+  defp canonical(source) do
+    from_custom_sources(String.downcase(source)) || source
   end
 
   def format_referrer(request) do

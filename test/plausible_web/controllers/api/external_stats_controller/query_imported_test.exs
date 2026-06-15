@@ -1152,6 +1152,58 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       end
     end
 
+    test "imported non-empty region IDs that don't have a corresponding name in our locations dictionary have region_name set to the ID itself, empty region IDs are excluded",
+         %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        # GA4 import: `region` is the name of the `region`
+        build(:imported_locations, country: "US", region: "California", visitors: 10),
+        # Plausible import: `region` is the region ID
+        build(:imported_locations, country: "EE", region: "EE-37", visitors: 5),
+        # Plausible import: `region` is the region ID, but the ID is stale
+        build(:imported_locations, country: "NO", region: "NO-99", visitors: 50),
+        # Plausible / GA4 import when the region is unknown
+        build(:imported_locations, country: "US", region: "", visitors: 99)
+      ])
+
+      for {dimensions, expected_dimension_values} <- [
+            {["visit:region_name", "visit:region"],
+             [
+               NO: ["NO-99", "NO-99"],
+               US: ["California", "California"],
+               EE: ["Harjumaa", "EE-37"]
+             ]},
+            {["visit:region"],
+             [
+               NO: ["NO-99"],
+               US: ["California"],
+               EE: ["EE-37"]
+             ]},
+            {["visit:region_name"],
+             [
+               NO: ["NO-99"],
+               US: ["California"],
+               EE: ["Harjumaa"]
+             ]}
+          ] do
+        conn =
+          post(conn, "/api/v2/query", %{
+            "site_id" => site.domain,
+            "metrics" => ["visitors"],
+            "date_range" => "all",
+            "dimensions" => dimensions,
+            "include" => %{"imports" => true}
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{"dimensions" => expected_dimension_values[:NO], "metrics" => [50]},
+                 %{"dimensions" => expected_dimension_values[:US], "metrics" => [10]},
+                 %{"dimensions" => expected_dimension_values[:EE], "metrics" => [5]}
+               ]
+      end
+    end
+
     test "imported country and city names", %{
       site: site,
       conn: conn

@@ -227,6 +227,69 @@ defmodule Plausible.BillingTest do
       assert subscription.currency_code == "EUR"
     end
 
+    test "identical notification sent twice is ignored at 2nd try" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      Plausible.Test.Support.Sentry.setup(self())
+
+      Billing.subscription_created(%{
+        @subscription_created_params
+        | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+      })
+
+      Billing.subscription_created(%{
+        @subscription_created_params
+        | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+      })
+
+      subscription =
+        user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+
+      assert subscription.paddle_subscription_id == @subscription_id
+      assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.last_bill_date == ~D[2019-05-01]
+      assert subscription.next_bill_amount == "6.00"
+      assert subscription.currency_code == "EUR"
+
+      assert [] = Sentry.Test.pop_sentry_reports()
+    end
+
+    test "secondary notification sent logs diff" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      Plausible.Test.Support.Sentry.setup(self())
+
+      Billing.subscription_created(%{
+        @subscription_created_params
+        | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+      })
+
+      Billing.subscription_created(%{
+        @subscription_created_params
+        | "subscription_plan_id" => "9999",
+          "currency" => "USD",
+          "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+      })
+
+      assert [report] = Sentry.Test.pop_sentry_reports()
+
+      assert report.message.formatted =~
+               "Duplicate subscription_created webhook for paddle_subscription_id=subscription-123"
+
+      assert report.extra.paddle_subscription_id == @subscription_id
+      assert report.extra.team_id == team.id
+      assert report.extra.diff.paddle_plan_id == %{existing: "654177", incoming: "9999"}
+      assert report.extra.diff.currency_code == %{existing: "EUR", incoming: "USD"}
+
+      subscription =
+        user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+
+      assert subscription.paddle_subscription_id == @subscription_id
+      assert subscription.currency_code == "EUR"
+    end
+
     test "supports user without a team case" do
       user = new_user()
 

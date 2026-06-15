@@ -17,6 +17,7 @@ defmodule PlausibleWeb.Api.StatsController do
     QueryError
   }
 
+  alias Plausible.Stats.Dashboard.CsvExport
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -24,7 +25,7 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
   @not_set "(not set)"
 
-  plug(:date_validation_plug when action not in [:query])
+  plug(:date_validation_plug when action not in [:query, :csv_export_v2])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
 
   def query(conn, params) do
@@ -43,6 +44,26 @@ defmodule PlausibleWeb.Api.StatsController do
       json(conn, Plausible.Stats.query(site, query))
     else
       {:error, %QueryError{message: message}} -> H.bad_request(conn, message)
+    end
+  end
+
+  def csv_export_v2(conn, params) do
+    site = conn.assigns.site
+
+    case CsvExport.get_csvs(site, params, debug_metadata(conn)) do
+      {:ok, csvs} ->
+        {:ok, {_, zip_content}} = :zip.create(~c"export.zip", csvs, [:memory])
+
+        conn
+        |> put_resp_content_type("application/zip")
+        |> put_resp_header(
+          "content-disposition",
+          Plausible.Exports.content_disposition("export.zip")
+        )
+        |> send_resp(200, zip_content)
+
+      {:error, %QueryError{message: message}} ->
+        H.bad_request(conn, message)
     end
   end
 
@@ -524,7 +545,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
+  def google_search_terms(conn, params) do
     site = conn.assigns[:site]
 
     query = Query.from(site, params, debug_metadata: debug_metadata(conn))

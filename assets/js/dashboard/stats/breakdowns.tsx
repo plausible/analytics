@@ -13,16 +13,14 @@ import {
   StatsQuery
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
-import { MetricsByContext } from './reports/reports-config'
+import classNames from 'classnames'
+import { DIRECT_NONE } from './sources'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
-  getFilterInfo?: (
-    dimension: NonTimeDimension,
-    row: QueryResultRow
-  ) => FilterInfo | null
+  alwaysOnFilters?: ApiFilter[]
 }
 
 export type ColumnConfiguration<T> = {
@@ -41,16 +39,62 @@ export type ColumnConfiguration<T> = {
   align?: 'left' | 'right'
 }
 
+export type GetFilterInfo = (
+  dimension: NonTimeDimension,
+  row: QueryResultRow
+) => FilterInfo | null
+
 export function defaultGetFilterInfo(
   dimension: NonTimeDimension,
   row: QueryResultRow
-) {
+): FilterInfo {
   const dimensionWithoutPrefix = dimension.replace(/^(event|visit):/, '')
 
   return {
     prefix: dimensionWithoutPrefix,
     filter: ['is', dimensionWithoutPrefix, [row.dimensions[0]]] as Filter
   }
+}
+
+export function getReferrerUrlFilterInfo(
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo | null {
+  if (row.dimensions[0] === DIRECT_NONE) {
+    return null
+  }
+  return {
+    prefix: 'referrer',
+    filter: ['is', 'referrer', [row.dimensions[0]]]
+  }
+}
+
+export const getScreenFilterInfo = (
+  _dimension: NonTimeDimension,
+  row: QueryResultRow
+): FilterInfo => ({
+  filter: ['is', 'screen', [row.dimensions[0]]],
+  prefix: 'screen'
+})
+
+export function MetricValueWrapper({
+  className,
+  children
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <span
+      className={classNames(
+        'font-medium text-sm block text-gray-800 dark:text-gray-200',
+        className
+      )}
+      data-testid="metric-value"
+    >
+      {children}
+    </span>
+  )
 }
 
 export function MetricValueTooltipContent({
@@ -167,46 +211,6 @@ export function extractMetricValue(
         }
       : null
   return { metricIndex, value, comparison }
-}
-
-type MetricContext = {
-  isRealtime: boolean
-  isDetailed: boolean
-  hasConversionGoalFilter: boolean
-  isRevenueAvailable: boolean
-}
-
-export const chooseBreakdownMetricsByContext = (
-  metricsByContext: MetricsByContext,
-  context: MetricContext
-): Metric[] => {
-  const {
-    isRealtime,
-    isDetailed,
-    hasConversionGoalFilter,
-    isRevenueAvailable
-  } = context
-
-  if (hasConversionGoalFilter && isDetailed && isRevenueAvailable) {
-    return [
-      ...metricsByContext.goalFilterDetailedMetrics,
-      'total_revenue',
-      'average_revenue'
-    ]
-  }
-  if (hasConversionGoalFilter && isDetailed) {
-    return metricsByContext.goalFilterDetailedMetrics
-  }
-  if (hasConversionGoalFilter) {
-    return metricsByContext.goalFilterIndexMetrics
-  }
-  if (isRealtime) {
-    return metricsByContext.realtimeMetrics
-  }
-  if (isDetailed) {
-    return metricsByContext.defaultDetailedMetrics
-  }
-  return metricsByContext.defaultIndexMetrics
 }
 
 export function addDimensionSearchFilter(

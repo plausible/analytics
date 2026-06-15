@@ -3,30 +3,12 @@
 </.notice>
 
 <.settings_tiles>
-  <.tile>
-    <:title>Transfer site ownership</:title>
-    <:subtitle>Transfer ownership of the site to a different account.</:subtitle>
-    <.button_link
-      href={Routes.membership_path(@conn, :transfer_ownership_form, @site.domain)}
-      theme="danger"
-      mt?={false}
-    >
-      Transfer {@site.domain} ownership
-    </.button_link>
-  </.tile>
+  {live_render(@conn, PlausibleWeb.Live.SiteTransferSettings,
+    id: "site-transfer-settings",
+    session: %{"domain" => @site.domain}
+  )}
 
-  <.tile :if={Enum.count(Plausible.Teams.Users.teams(@current_user, roles: [:owner, :admin])) > 1}>
-    <:title>Change Teams</:title>
-    <:subtitle>Move the site to another team that you are a member of</:subtitle>
-    <.button_link
-      href={Routes.membership_path(@conn, :change_team_form, @site.domain)}
-      theme="danger"
-    >
-      Change {@site.domain} team
-    </.button_link>
-  </.tile>
-
-  <.tile>
+  <.tile docs="reset-site-data">
     <:title>Reset stats</:title>
     <:subtitle>Reset all stats but keep the site configuration intact.</:subtitle>
     <.button_link
@@ -40,7 +22,7 @@
     </.button_link>
   </.tile>
 
-  <.tile>
+  <.tile docs="delete-site-data">
     <:title>Delete site</:title>
     <:subtitle>Permanently delete all stats and site settings.</:subtitle>
     <.button_link
