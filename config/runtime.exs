@@ -1021,7 +1021,7 @@ config :plausible, Plausible.PromEx,
 
 config :plausible, Plausible.InstallationSupport.BrowserlessConfig,
   token: get_var_from_path_or_env(config_dir, "BROWSERLESS_TOKEN", "dummy_token"),
-  endpoint: get_var_from_path_or_env(config_dir, "BROWSERLESS_ENDPOINT", "http://0.0.0.0:3000")
+  endpoint: get_var_from_path_or_env(config_dir, "BROWSERLESS_ENDPOINT", "http://127.0.0.1:3000")
 
 if not is_selfhost do
   site_default_ingest_threshold =

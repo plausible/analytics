@@ -21,23 +21,22 @@ install: ## Run the initial setup
 server: ## Start the web server
 	mix phx.server
 
-CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
+CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1 --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d:ro
 
 clickhouse: ## Start a container with a recent version of clickhouse
-	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
+	docker run $(CH_FLAGS) --volume=clickhouse_db_vol/var/lib/clickhouse clickhouse/clickhouse-server:latest-alpine
 
 clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:25.11.5.8-alpine
+	docker run $(CH_FLAGS) --volume=clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:25.11.5.8-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
 
 clickhouse-postgres-remote: ## Create postgres_remote database in ClickHouse for querying PostgreSQL
-	$(eval POSTGRES_IP := $(shell docker inspect plausible_db --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
-	@docker exec plausible_clickhouse clickhouse-client --query "DROP DATABASE IF EXISTS postgres_remote; CREATE DATABASE postgres_remote ENGINE = PostgreSQL('$(POSTGRES_IP):5432', 'plausible_dev', 'postgres', 'postgres');"
+	docker exec plausible_clickhouse clickhouse-client --query "DROP DATABASE IF EXISTS postgres_remote; CREATE DATABASE postgres_remote ENGINE = PostgreSQL('postgres:5432', 'plausible_dev', 'postgres', 'postgres');"
 
 PG_FLAGS ?= --detach -e POSTGRES_PASSWORD="postgres" -p 5432:5432 --name plausible_db
 
@@ -54,7 +53,7 @@ postgres-stop: ## Stop and remove the postgres container
 	docker stop plausible_db && docker rm plausible_db
 
 browserless:
-	docker run -e "TOKEN=dummy_token" -p 3000:3000 --network host ghcr.io/browserless/chromium
+	docker run --name plausible_browserless -e "TOKEN=dummy_token" -p 3000:3000 ghcr.io/browserless/chromium
 
 minio: ## Start a transient container with a recent version of minio (s3)
 	docker run -d --rm -p 10000:10000 -p 10001:10001 --name plausible_minio minio/minio server /data --address ":10000" --console-address ":10001"
@@ -67,14 +66,15 @@ minio: ## Start a transient container with a recent version of minio (s3)
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
 
+sso: server_url ?= http://localhost:8000
 sso:
 	$(call require, integration_id)
-	@echo "Setting up local IdP service..."
+	@echo "Setting up local IdP service for Plausible running at $(server_url)..."
 	@docker run --name=idp \
   -p 8080:8080 \
-  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
-  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
-  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+  -e SIMPLESAMLPHP_SP_ENTITY_ID=$(server_url)/sso/$(integration_id) \
+  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=$(server_url)/sso/saml/consume/$(integration_id) \
+  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php:ro -d kenchan0130/simplesamlphp
 
 	@sleep 2
 
@@ -94,8 +94,7 @@ sso:
 	@echo "- user2@plausible.test / plausible"
 	
 sso-stop:
-	docker stop idp
-	docker remove idp
+	docker stop idp && docker rm idp
 
 generate-corefile:
 	$(call require, domain_id)
