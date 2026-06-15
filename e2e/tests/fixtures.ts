@@ -527,13 +527,15 @@ export async function addFunnel({
 export async function setupSite({
   user,
   page,
-  request
+  request,
+  ...opts
 }: {
   user?: User
   page: Page
   request: APIRequestContext
+  domain?: string
 }): Promise<{ domain: string; user: User }> {
-  const domain = `${randomID()}.example.com`
+  const domain = opts.domain ?? `${randomID()}.example.com`
 
   if (!user) {
     const userID = randomID()
