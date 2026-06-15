@@ -401,6 +401,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
         )
 
       assert shared_link
+
       assert is_nil(shared_link.segment_id),
              "Personal segment must not be attached to a shared link"
     end
