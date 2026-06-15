@@ -26,7 +26,6 @@ import {
   DimensionCellWithBarProps,
   IndexBreakdown
 } from '../reports/index-breakdown'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { FilterInfo } from '../../components/drilldown-link'
 import { NonTimeDimension } from '../../stats-query'
 import { FlagEmoji } from './flag-emoji'
@@ -124,15 +123,10 @@ export function Locations() {
     tab === 'map' ? BreakdownReportKey.countries : tab
   const reportConfig = BREAKDOWN_REPORTS[selectedListKey]
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    isRealtime: isRealTimeDashboard(dashboardState),
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  })
 
   const moreLinkState = currentData
     ? currentData.results.length > 0

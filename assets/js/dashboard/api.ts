@@ -6,6 +6,7 @@ import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
 import { MainGraphResponse } from './stats/graph/fetch-main-graph'
+import { CsvExportRequestBody } from './stats/csv-export/csv-export-body'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
@@ -140,13 +141,16 @@ function getHeaders(): Record<string, string> {
   return SHARED_LINK_AUTH ? { 'X-Shared-Link-Auth': SHARED_LINK_AUTH } : {}
 }
 
-async function handleApiResponse(response: Response) {
-  const payload = await response.json()
+async function throwApiErrorIfNotOk(response: Response) {
   if (!response.ok) {
+    const payload = await response.json()
     throw new ApiError(payload.error, payload, response.status)
   }
+}
 
-  return payload
+async function handleApiResponse(response: Response) {
+  await throwApiErrorIfNotOk(response)
+  return response.json()
 }
 
 function getSharedLinkSearchParams(): Record<string, string> {
@@ -173,6 +177,24 @@ export async function stats<
   })
 
   return (await handleApiResponse(response)) as TResponse
+}
+
+export async function csvExport(
+  site: PlausibleSite,
+  body: CsvExportRequestBody
+): Promise<Blob> {
+  const sharedLinkParams = getSharedLinkSearchParams()
+  const queryString = sharedLinkParams.auth
+    ? new URLSearchParams(sharedLinkParams).toString()
+    : ''
+  const path = url.apiPath(site, '/export')
+  const response = await fetch(queryString ? `${path}?${queryString}` : path, {
+    method: 'POST',
+    headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  await throwApiErrorIfNotOk(response)
+  return response.blob()
 }
 
 export async function get(

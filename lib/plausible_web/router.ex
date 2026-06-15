@@ -175,6 +175,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        post "/enable-dashboard-csv-export-v2", E2EController, :enable_dashboard_csv_export_v2
       end
     end
   end
@@ -284,6 +285,7 @@ defmodule PlausibleWeb.Router do
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query
+        post "/:domain/export", StatsController, :csv_export_v2
         get "/:domain/google-search-terms", StatsController, :google_search_terms
         get "/:domain/current-visitors", StatsController, :current_visitors
         get "/:domain/sources", StatsController, :sources

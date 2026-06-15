@@ -24,11 +24,7 @@ import {
   DimensionCellWithBarProps,
   IndexBreakdown
 } from '../reports/index-breakdown'
-import {
-  chooseBreakdownMetricsByContext,
-  defaultGetFilterInfo,
-  getScreenFilterInfo
-} from '../breakdowns'
+import { defaultGetFilterInfo, getScreenFilterInfo } from '../breakdowns'
 import { DashboardState } from '../../dashboard-state'
 import { BrowserIcon, OsIcon, ScreenSizeIcon } from './icons'
 
@@ -53,15 +49,10 @@ export function Devices() {
     [BreakdownReportKey.screenSizes]: ScreenSizesDimensionCell
   }[reportKey]
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    isRealtime: isRealTimeDashboard(dashboardState),
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  })
 
   function switchTab(tab: TabKey) {
     storage.setItem(storageKey, tab)

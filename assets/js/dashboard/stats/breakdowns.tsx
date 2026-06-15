@@ -13,7 +13,6 @@ import {
   StatsQuery
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
-import { MetricsByContext } from './reports/reports-config'
 import classNames from 'classnames'
 import { DIRECT_NONE } from './sources'
 
@@ -212,46 +211,6 @@ export function extractMetricValue(
         }
       : null
   return { metricIndex, value, comparison }
-}
-
-type MetricContext = {
-  isRealtime: boolean
-  isDetailed: boolean
-  hasConversionGoalFilter: boolean
-  isRevenueAvailable: boolean
-}
-
-export const chooseBreakdownMetricsByContext = (
-  metricsByContext: MetricsByContext,
-  context: MetricContext
-): Metric[] => {
-  const {
-    isRealtime,
-    isDetailed,
-    hasConversionGoalFilter,
-    isRevenueAvailable
-  } = context
-
-  if (hasConversionGoalFilter && isDetailed && isRevenueAvailable) {
-    return [
-      ...metricsByContext.goalFilterDetailedMetrics,
-      'total_revenue',
-      'average_revenue'
-    ]
-  }
-  if (hasConversionGoalFilter && isDetailed) {
-    return metricsByContext.goalFilterDetailedMetrics
-  }
-  if (hasConversionGoalFilter) {
-    return metricsByContext.goalFilterIndexMetrics
-  }
-  if (isRealtime) {
-    return metricsByContext.realtimeMetrics
-  }
-  if (isDetailed) {
-    return metricsByContext.defaultDetailedMetrics
-  }
-  return metricsByContext.defaultIndexMetrics
 }
 
 export function addDimensionSearchFilter(

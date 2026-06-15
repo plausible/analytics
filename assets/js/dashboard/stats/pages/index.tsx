@@ -23,10 +23,7 @@ import {
   IndexBreakdown,
   DimensionCellWithBarProps
 } from '../reports/index-breakdown'
-import {
-  chooseBreakdownMetricsByContext,
-  defaultGetFilterInfo
-} from '../breakdowns'
+import { defaultGetFilterInfo } from '../breakdowns'
 import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
 
@@ -44,15 +41,10 @@ export default function Pages() {
   const reportKey = getReportKey(tab)
   const reportConfig = BREAKDOWN_REPORTS[reportKey]
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    isRealtime: isRealTimeDashboard(dashboardState),
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState)
+  })
 
   function switchTab(tab: TabKey) {
     storage.setItem(storageKey, tab)
