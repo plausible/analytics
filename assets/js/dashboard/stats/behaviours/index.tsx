@@ -8,7 +8,9 @@ import React, {
   useCallback
 } from 'react'
 import * as storage from '../../util/storage'
-import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
+import ImportedWarningBubble, {
+  FunnelsApiImportedWarningBubble
+} from '../imported-warning-bubble'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/feature-setup-notice'
 import {
@@ -180,7 +182,6 @@ function Behaviours({
   const adminAccess = ['owner', 'admin', 'editor', 'super_admin'].includes(
     user.role
   )
-  const [loading, setLoading] = useState(true)
 
   const [selectedFunnel, setSelectedFunnel] = useState<string | undefined>(
     getDefaultSelectedFunnel({ site })
@@ -197,12 +198,14 @@ function Behaviours({
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] =
     useState(false)
 
-  const [skipImportedReason, setSkipImportedReason] = useState<string | null>(
-    null
-  )
-  const [moreLinkState, setMoreLinkState] = useState<string>(
-    MoreLinkState.LOADING
-  )
+  const [currentQueryApiResponse, setCurrentQueryApiResponse] =
+    useState<QueryApiResponse | null>(null)
+
+  const moreLinkState = currentQueryApiResponse
+    ? currentQueryApiResponse.results.length > 0
+      ? MoreLinkState.READY
+      : MoreLinkState.HIDDEN
+    : MoreLinkState.LOADING
 
   const onGoalFilterClick = useCallback(
     (goalName: string) => {
@@ -233,14 +236,11 @@ function Behaviours({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasConversionGoalFilter(dashboardState)])
 
-  useEffect(() => setLoading(true), [dashboardState, mode])
   useEffect(() => {
-    if (mode === Mode.PROPS && !selectedPropKey) {
-      setMoreLinkState(MoreLinkState.HIDDEN)
-    } else {
-      setMoreLinkState(MoreLinkState.LOADING)
+    if ([Mode.FUNNELS, Mode.EXPLORATION].includes(mode)) {
+      setCurrentQueryApiResponse(null)
     }
-  }, [dashboardState, mode, selectedPropKey])
+  }, [dashboardState, mode])
 
   function setFunnelFactory(selectedFunnelName: string): () => void {
     return () => {
@@ -309,30 +309,20 @@ function Behaviours({
     }
   }
 
-  function onDataReady(apiResponse: QueryApiResponse): void {
-    setLoading(false)
-    setSkipImportedReason(apiResponse?.meta?.imports_skip_reason ?? null)
-    if (apiResponse?.results && apiResponse.results.length > 0) {
-      setMoreLinkState(MoreLinkState.READY)
-    } else {
-      setMoreLinkState(MoreLinkState.HIDDEN)
-    }
-  }
-
   function renderConversions(): ReactNode {
     if (site.hasGoals) {
       if (specialGoal) {
         return (
           <SpecialGoalPropBreakdown
             prop={specialGoal.prop}
-            onDataReady={onDataReady}
+            onDataReady={setCurrentQueryApiResponse}
           />
         )
       } else {
         return (
           <Conversions
             onGoalFilterClick={onGoalFilterClick}
-            onDataReady={onDataReady}
+            onDataReady={setCurrentQueryApiResponse}
           />
         )
       }
@@ -423,7 +413,12 @@ function Behaviours({
 
   function renderProps(): ReactNode {
     if (site.hasProps && site.propsAvailable) {
-      return <Properties propKey={selectedPropKey} onDataReady={onDataReady} />
+      return (
+        <Properties
+          propKey={selectedPropKey}
+          onDataReady={setCurrentQueryApiResponse}
+        />
+      )
     } else if (adminAccess) {
       let callToAction
 
@@ -529,40 +524,11 @@ function Behaviours({
     return dashboardState.period === 'realtime'
   }
 
-  function renderImportedQueryUnsupportedWarning(): ReactNode {
-    if (mode === Mode.CONVERSIONS) {
-      return (
-        <ImportedQueryUnsupportedWarning
-          loading={loading}
-          skipImportedReason={skipImportedReason}
-          altCondition={undefined}
-          message={undefined}
-        />
-      )
-    } else if (mode === Mode.PROPS) {
-      return (
-        <ImportedQueryUnsupportedWarning
-          loading={loading}
-          skipImportedReason={skipImportedReason}
-          altCondition={undefined}
-          message="Imported data is unavailable in this view"
-        />
-      )
-    } else {
-      return (
-        <ImportedQueryUnsupportedWarning
-          loading={undefined}
-          skipImportedReason={undefined}
-          altCondition={importedDataInView}
-          message="Imported data is unavailable in this view"
-        />
-      )
-    }
-  }
-
   if (!mode) {
     return null
   }
+
+  const moreLinkProps = getMoreLinkProps()
 
   return (
     <ReportLayout testId="report-behaviours" className="col-span-full">
@@ -644,10 +610,23 @@ function Behaviours({
             )}
           </TabWrapper>
           {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
-          {renderImportedQueryUnsupportedWarning()}
+          {[Mode.CONVERSIONS, Mode.PROPS].includes(mode) ? (
+            <ImportedWarningBubble
+              queryApiResponse={currentQueryApiResponse}
+              message={
+                mode === Mode.PROPS
+                  ? 'Imported data is unavailable in this view'
+                  : undefined
+              }
+            />
+          ) : (
+            <FunnelsApiImportedWarningBubble
+              importedDataInView={importedDataInView}
+            />
+          )}
         </div>
-        {![Mode.FUNNELS, Mode.EXPLORATION].includes(mode) && (
-          <MoreLink state={moreLinkState} linkProps={getMoreLinkProps()} />
+        {moreLinkProps !== null && (
+          <MoreLink state={moreLinkState} linkProps={moreLinkProps} />
         )}
       </ReportHeader>
       {renderContent()}
