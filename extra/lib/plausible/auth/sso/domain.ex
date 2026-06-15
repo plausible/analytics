@@ -89,10 +89,25 @@ defmodule Plausible.Auth.SSO.Domain do
     case URI.new("https://" <> domain) do
       {:ok, %{host: host, port: port, path: nil, query: nil, fragment: nil, userinfo: nil}}
       when is_binary(host) and port in [80, 443] ->
-        true
+        public_hostname?(host)
 
       _ ->
         false
+    end
+  end
+
+  # SSO ownership is proven against a domain name, never a bare IP or an
+  # internal single-label host. Rejecting literal IPs (e.g. `127.0.0.1`,
+  # `169.254.169.254`, `10.0.0.5`) and dot-less hostnames (`localhost`,
+  # `consul`, `redis`) keeps obviously-internal targets out of the
+  # verification request path. Public hostnames pointing at private IPs are
+  # caught later, at request time, by `Verification`.
+  defp public_hostname?(host) do
+    case :inet.parse_address(to_charlist(host)) do
+      {:ok, _ip} -> false
+      # A trailing root dot doesn't make a single-label host multi-label, so
+      # strip it before requiring a label separator (rejects `localhost.`).
+      {:error, _} -> host |> String.trim_trailing(".") |> String.contains?(".")
     end
   end
 

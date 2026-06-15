@@ -4,12 +4,17 @@ defmodule Plausible.Test.Support.DNS do
     quote do
       import Mox
 
-      def stub_lookup_a_records(domain, a_records \\ [{192, 168, 1, 1}]) do
+      def stub_lookup_a_records(
+            domain,
+            a_records \\ [{93, 184, 216, 34}],
+            aaaa_records \\ []
+          ) do
         lookup_domain = to_charlist(domain)
 
         Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn ^lookup_domain, _type, _record, _opts, _timeout ->
-          a_records
+        |> stub(:lookup, fn
+          ^lookup_domain, _class, :aaaa, _opts, _timeout -> aaaa_records
+          ^lookup_domain, _class, _type, _opts, _timeout -> a_records
         end)
       end
     end

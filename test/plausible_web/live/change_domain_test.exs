@@ -16,8 +16,9 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       setup do
         # mock all domains resolve
         Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn _domain, _type, _record, _opts, _timeout ->
-          [{192, 168, 1, 2}]
+        |> stub(:lookup, fn
+          _domain, _class, :aaaa, _opts, _timeout -> []
+          _domain, _class, _type, _opts, _timeout -> [{93, 184, 216, 34}]
         end)
 
         # Stub detection by default to prevent async task race conditions

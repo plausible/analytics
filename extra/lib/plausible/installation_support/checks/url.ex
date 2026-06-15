@@ -63,24 +63,31 @@ defmodule Plausible.InstallationSupport.Checks.Url do
 
   @spec dns_lookup(String.t()) :: :ok | {:error, :no_a_record}
   defp dns_lookup(domain) do
-    lookup_timeout = 1_000
-    resolve_timeout = 1_000
+    charlist = to_charlist(domain)
 
-    case Plausible.DnsLookup.impl().lookup(
-           to_charlist(domain),
-           :in,
-           :a,
-           [timeout: resolve_timeout],
-           lookup_timeout
-         ) do
-      [{a, b, c, d} | _]
+    case lookup(charlist, :a) do
+      [{a, b, c, d} | _] = a_records
       when is_integer(a) and is_integer(b) and is_integer(c) and is_integer(d) ->
-        :ok
+        # Reject hosts resolving to private/internal addresses to prevent SSRF.
+        # AAAA is resolved as well: a host with a public A record but an
+        # internal AAAA record would otherwise be reachable over IPv6. Reported
+        # as `:no_a_record` so the host is treated as not publicly reachable
+        # without disclosing that an internal IP was detected.
+        if Plausible.SSRFProtection.any_internal?(a_records) or
+             Enum.any?(lookup(charlist, :aaaa), &Plausible.SSRFProtection.internal_ip?/1) do
+          {:error, :no_a_record}
+        else
+          :ok
+        end
 
       # this may mean timeout or no DNS record
-      [] ->
+      _ ->
         {:error, :no_a_record}
     end
+  end
+
+  defp lookup(charlist, type) do
+    Plausible.DnsLookup.impl().lookup(charlist, :in, type, [timeout: 1_000], 1_000)
   end
 
   defp check_domain(domain) do
