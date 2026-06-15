@@ -41,7 +41,7 @@ import {
 } from './modes-context'
 import { SpecialGoalPropBreakdown } from './special-goal-prop-breakdown'
 import Conversions from './conversions'
-import { getSpecialGoal, isPageViewGoal, isSpecialGoal } from '../../util/goals'
+import { getSpecialGoal, isSpecialGoal } from '../../util/goals'
 import { DashboardState, Filter } from '../../dashboard-state'
 import { QueryApiResponse } from '../../api'
 
@@ -207,13 +207,9 @@ function Behaviours({
   const onGoalFilterClick = useCallback(
     (goalName: string) => {
       const isSpecialGoalClick = isSpecialGoal(goalName)
-      // isPageViewGoal currently has no return statement and resolves to
-      // `undefined` at runtime; cast preserves the historical truthiness check.
-      const isPageview = isPageViewGoal(goalName) as unknown as boolean
 
       if (
         !isSpecialGoalClick &&
-        !isPageview &&
         enabledModes.includes(Mode.PROPS) &&
         site.hasProps
       ) {
