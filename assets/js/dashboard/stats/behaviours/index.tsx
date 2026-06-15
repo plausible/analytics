@@ -47,6 +47,8 @@ import { getSpecialGoal, isSpecialGoal } from '../../util/goals'
 import { DashboardState, Filter } from '../../dashboard-state'
 import { QueryApiResponse } from '../../api'
 
+export const BEHAVIOURS_BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
+
 /*global BUILD_EXTRA*/
 /*global require*/
 function maybeRequireFunnels(): {

@@ -17,8 +17,7 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
-
-const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
+import { BEHAVIOURS_BAR_COLOR } from '.'
 
 type SpecialGoalPropBreakdownProps = {
   prop: string
@@ -51,7 +50,7 @@ export function SpecialGoalPropBreakdown({
       return (
         <DimensionCellWithBar
           {...props}
-          barClassName={BAR_COLOR}
+          barClassName={BEHAVIOURS_BAR_COLOR}
           text={value}
           externalLink={
             externalUrl && (

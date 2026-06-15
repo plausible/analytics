@@ -17,8 +17,7 @@ import {
   isRealTimeDashboard
 } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
-
-const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
+import { BEHAVIOURS_BAR_COLOR } from '.'
 
 type PropertiesProps = {
   propKey: string | null
@@ -57,7 +56,7 @@ export default function Properties({
       return (
         <DimensionCellWithBar
           {...props}
-          barClassName={BAR_COLOR}
+          barClassName={BEHAVIOURS_BAR_COLOR}
           text={value}
           getFilterInfo={() => ({
             prefix: `${EVENT_PROPS_PREFIX}${propKey}`,

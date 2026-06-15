@@ -18,8 +18,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { NonTimeDimension } from '../../stats-query'
 import { FilterInfo } from '../../components/drilldown-link'
-
-const BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
+import { BEHAVIOURS_BAR_COLOR } from '.'
 
 type ConversionsProps = {
   onDataReady?: (data: QueryApiResponse) => void
@@ -54,7 +53,7 @@ export default function Conversions({
       return (
         <DimensionCellWithBar
           {...props}
-          barClassName={BAR_COLOR}
+          barClassName={BEHAVIOURS_BAR_COLOR}
           text={goalName}
           getFilterInfo={getGoalsFilterInfo}
           onClick={() => onGoalFilterClick && onGoalFilterClick(goalName)}
