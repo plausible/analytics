@@ -16,9 +16,7 @@ import {
   hasConversionGoalFilter,
   isRealTimeDashboard
 } from '../../util/filters'
-import { QueryResultRow } from '../../api'
-import { NonTimeDimension } from '../../stats-query'
-import { FilterInfo } from '../../components/drilldown-link'
+import { getGoalsFilterInfo } from '../behaviours/conversions'
 
 function ConversionsModal() {
   const { dashboardState } = useDashboardStateContext()
@@ -64,17 +62,6 @@ function GoalsDimensionCell(props: DimensionCellProps) {
       getFilterInfo={getGoalsFilterInfo}
     />
   )
-}
-
-function getGoalsFilterInfo(
-  _dimension: NonTimeDimension,
-  row: QueryResultRow
-): FilterInfo {
-  const goalName = row.dimensions[0]
-  return {
-    prefix: 'goal',
-    filter: ['is', 'goal', [goalName]]
-  }
 }
 
 export default ConversionsModal

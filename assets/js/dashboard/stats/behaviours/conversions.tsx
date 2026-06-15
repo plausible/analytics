@@ -76,7 +76,7 @@ export default function Conversions({
   )
 }
 
-function getGoalsFilterInfo(
+export function getGoalsFilterInfo(
   _dimension: NonTimeDimension,
   row: QueryResultRow
 ): FilterInfo {
