@@ -525,8 +525,11 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp validate_metric(:exit_rate = metric, query) do
-    case {query.dimensions, TableDecider.sessions_join_events?(query)} do
+    case {Enum.sort(query.dimensions), TableDecider.sessions_join_events?(query)} do
       {["visit:exit_page"], false} ->
+        :ok
+
+      {["visit:exit_page", "visit:exit_page_hostname"], false} ->
         :ok
 
       {["visit:exit_page"], true} ->
