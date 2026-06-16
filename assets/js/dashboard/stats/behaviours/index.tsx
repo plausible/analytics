@@ -47,9 +47,15 @@ import { getSpecialGoal, isSpecialGoal } from '../../util/goals'
 import { DashboardState, Filter } from '../../dashboard-state'
 import { QueryApiResponse } from '../../api'
 import { DEFAULT_METRIC_COLUMN_WIDTH } from '../reports/index-breakdown'
+import { Metric } from '../metrics'
 
 export const BEHAVIOURS_BAR_COLOR = 'bg-red-50 group-hover/row:bg-red-100'
 export const BEHAVIOURS_METRIC_COLUMN_WIDTH = `${DEFAULT_METRIC_COLUMN_WIDTH} md:w-22 md:min-w-22`
+export const BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE: Metric[] = [
+  'events',
+  'total_revenue',
+  'average_revenue'
+]
 
 /*global BUILD_EXTRA*/
 /*global require*/

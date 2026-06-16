@@ -12,7 +12,11 @@ import { externalLinkForPage } from '../../util/url'
 import { IndexExternalLink } from '../pages/external-link'
 import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
-import { BEHAVIOURS_BAR_COLOR, BEHAVIOURS_METRIC_COLUMN_WIDTH } from '.'
+import {
+  BEHAVIOURS_BAR_COLOR,
+  BEHAVIOURS_METRIC_COLUMN_WIDTH,
+  BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE
+} from '.'
 
 type SpecialGoalPropBreakdownProps = {
   prop: string
@@ -66,6 +70,7 @@ export function SpecialGoalPropBreakdown({
       DimensionElement={DimensionElement}
       onDataReady={onDataReady}
       metricColumnWidth={BEHAVIOURS_METRIC_COLUMN_WIDTH}
+      hideMetricsOnMobile={BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE}
     />
   )
 }

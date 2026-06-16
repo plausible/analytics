@@ -49,6 +49,8 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+  /** Hides the column on mobile (below md breakpoint). */
+  hideOnMobile?: boolean
 }
 
 export type GetFilterInfo = (

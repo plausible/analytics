@@ -54,6 +54,7 @@ type IndexBreakdownProps = SharedBreakdownReportProps & {
   metricColumnWidth?: string
   DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
   onDataReady?: (data: QueryApiResponse) => void
+  hideMetricsOnMobile?: Metric[]
 }
 
 export function IndexBreakdown({
@@ -65,7 +66,8 @@ export function IndexBreakdown({
   onDataReady,
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH,
   bundlePercentageWithVisitors = true,
-  hideMetricsIfAllNull
+  hideMetricsIfAllNull,
+  hideMetricsOnMobile
 }: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -169,6 +171,7 @@ export function IndexBreakdown({
         (metric): ColumnConfiguration<QueryResultRow> => ({
           key: metric,
           renderLabel: () => metricLabelFor(metric),
+          hideOnMobile: hideMetricsOnMobile?.includes(metric),
           renderCell: (row, isActive) => {
             if (isVisitorsWithPercentageCell(metric)) {
               return (
@@ -205,7 +208,8 @@ export function IndexBreakdown({
     query,
     metricColumnWidth,
     bundlePercentageWithVisitors,
-    columnsHiddenForAllNull
+    columnsHiddenForAllNull,
+    hideMetricsOnMobile
   ])
 
   return (
@@ -506,7 +510,8 @@ export function IndexBreakdownRenderer<TRow>({
             data-testid="report-header"
             className={classNames(
               col.width ?? 'grow w-full',
-              col.align === 'right' ? 'text-right' : 'truncate'
+              col.align === 'right' ? 'text-right' : 'truncate',
+              col.hideOnMobile && 'hidden md:block'
             )}
           >
             {col.renderLabel()}
@@ -544,7 +549,8 @@ export function IndexBreakdownRenderer<TRow>({
                       key={col.key}
                       className={classNames(
                         col.width ?? 'grow w-full',
-                        col.align === 'right' ? 'text-right' : 'md:truncate'
+                        col.align === 'right' ? 'text-right' : 'md:truncate',
+                        col.hideOnMobile && 'hidden md:block'
                       )}
                     >
                       {col.renderCell(row, isActive)}
