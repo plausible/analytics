@@ -643,8 +643,8 @@ test('goals breakdown', async ({ page, request }) => {
       /Uniques/,
       /Total/,
       /CR/,
-      /Average/,
-      /Revenue/
+      /Revenue/,
+      /Average/
     ])
 
     await expectRows(modal(page), [

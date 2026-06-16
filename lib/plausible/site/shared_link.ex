@@ -1,4 +1,7 @@
 defmodule Plausible.Site.SharedLink do
+  @moduledoc """
+  Schema for shared links.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -17,7 +20,7 @@ defmodule Plausible.Site.SharedLink do
 
   def changeset(link, attrs \\ %{}, opts \\ []) do
     link
-    |> cast(attrs, [:slug, :password, :name, :segment_id])
+    |> cast(attrs, [:password, :name])
     |> validate_required([:slug, :name])
     |> validate_special_name(opts)
     |> unique_constraint(:slug)
