@@ -23,7 +23,8 @@ defmodule Plausible.InternalStatsApiVersion do
 
   @spec effective_version() :: non_neg_integer()
   def effective_version() do
-    GenServer.call(__MODULE__, :get)
+    [{:version, v}] = :ets.lookup(__MODULE__, :version)
+    v
   end
 
   def start_link(opts \\ []) do
@@ -32,24 +33,34 @@ defmodule Plausible.InternalStatsApiVersion do
 
   @impl GenServer
   def init(_opts) do
-    {:ok, @api_version, {:continue, :fetch}}
+    __MODULE__ =
+      :ets.new(__MODULE__, [
+        :named_table,
+        :set,
+        :protected,
+        {:read_concurrency, true}
+      ])
+
+    # Use 0 as a placeholder version until the first multicall completes.
+    # The FE only reloads when the received version exceeds its compiled-in
+    # expectation, so 0 is always safe regardless of current @api_version.
+    :ets.insert(__MODULE__, {:version, 0})
+
+    {:ok, nil, {:continue, :fetch}}
   end
 
   @impl GenServer
-  def handle_call(:get, _from, version) do
-    {:reply, version, version}
-  end
-
-  @impl GenServer
-  def handle_continue(:fetch, _version) do
+  def handle_continue(:fetch, state) do
     Process.send_after(self(), :refresh, @refresh_interval)
-    {:noreply, fetch_cluster_min()}
+    :ets.insert(__MODULE__, {:version, fetch_cluster_min()})
+    {:noreply, state}
   end
 
   @impl GenServer
-  def handle_info(:refresh, _version) do
+  def handle_info(:refresh, state) do
     Process.send_after(self(), :refresh, @refresh_interval)
-    {:noreply, fetch_cluster_min()}
+    :ets.insert(__MODULE__, {:version, fetch_cluster_min()})
+    {:noreply, state}
   end
 
   defp fetch_cluster_min() do
