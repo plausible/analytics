@@ -13,6 +13,10 @@
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
     <meta name="robots" content={@conn.private.robots} />
+    <meta
+      name="x-api-version"
+      content={Plausible.InternalStatsApiVersion.api_version()}
+    />
 
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
 
