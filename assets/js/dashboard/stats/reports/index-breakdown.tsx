@@ -9,7 +9,7 @@ import FlipMove from 'react-flip-move'
 import LazyLoader from '../../components/lazy-loader'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { NonTimeDimension } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
@@ -19,7 +19,9 @@ import {
   useBodyPortalRef,
   extractMetricValue,
   MetricValueWrapper,
-  GetFilterInfo
+  GetFilterInfo,
+  useColumnsHiddenForAllNull,
+  dimensionOrderBy
 } from '../breakdowns'
 import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -53,6 +55,7 @@ type IndexBreakdownProps = SharedBreakdownReportProps & {
   metricColumnWidth?: string
   DimensionElement: (props: DimensionCellWithBarProps) => ReactNode
   onDataReady?: (data: QueryApiResponse) => void
+  hideMetricsOnMobile?: Metric[]
 }
 
 export function IndexBreakdown({
@@ -62,7 +65,10 @@ export function IndexBreakdown({
   dimensionLabel,
   alwaysOnFilters,
   onDataReady,
-  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH
+  metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH,
+  bundlePercentageWithVisitors = true,
+  hideMetricsIfAllNull,
+  hideMetricsOnMobile
 }: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -75,10 +81,7 @@ export function IndexBreakdown({
       reportParams: {
         metrics,
         dimensions,
-        order_by: [
-          ['visitors', 'desc'],
-          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
-        ],
+        order_by: [['visitors', 'desc'], ...dimensionOrderBy(dimensions)],
         alwaysOnFilters,
         pagination: { limit: MAX_ITEMS, offset: 0 }
       }
@@ -121,19 +124,28 @@ export function IndexBreakdown({
     [dashboardState, dimensions]
   )
 
+  const columnsHiddenForAllNull = useColumnsHiddenForAllNull(
+    apiState.data?.results,
+    query,
+    hideMetricsIfAllNull
+  )
+
   const columns = useMemo((): ColumnConfiguration<QueryResultRow>[] | null => {
     if (!query || barMetricIndex === null || barMaxValue === null) return null
 
-    // Only render columns for metrics the API actually returned. Also,
-    // percentage is not its own column —- it's shown inline in the
-    // visitors cell instead.
-    const filteredMetrics = query.metrics.filter((m) => m !== 'percentage')
+    // Only render columns for metrics the API actually returned. When
+    // bundlePercentageWithVisitors is on (default), `percentage` is shown
+    // inline in the Visitors cell rather than as its own column.
+    const filteredMetrics = query.metrics.filter((m) => {
+      if (columnsHiddenForAllNull.has(m)) return false
+      return !(bundlePercentageWithVisitors && m === 'percentage')
+    })
 
     const filterDimension = query.dimensions[0] as NonTimeDimension
 
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
-      hasPercentage && m === 'visitors'
+      bundlePercentageWithVisitors && hasPercentage && m === 'visitors'
 
     return [
       {
@@ -155,6 +167,7 @@ export function IndexBreakdown({
         (metric): ColumnConfiguration<QueryResultRow> => ({
           key: metric,
           renderLabel: () => metricLabelFor(metric),
+          hideOnMobile: hideMetricsOnMobile?.includes(metric),
           renderCell: (row, isActive) => {
             if (isVisitorsWithPercentageCell(metric)) {
               return (
@@ -189,7 +202,10 @@ export function IndexBreakdown({
     metricLabelFor,
     barMaxValue,
     query,
-    metricColumnWidth
+    metricColumnWidth,
+    bundlePercentageWithVisitors,
+    columnsHiddenForAllNull,
+    hideMetricsOnMobile
   ])
 
   return (
@@ -490,7 +506,8 @@ export function IndexBreakdownRenderer<TRow>({
             data-testid="report-header"
             className={classNames(
               col.width ?? 'grow w-full',
-              col.align === 'right' ? 'text-right' : 'truncate'
+              col.align === 'right' ? 'text-right' : 'truncate',
+              col.hideOnMobile && 'hidden md:block'
             )}
           >
             {col.renderLabel()}
@@ -528,7 +545,8 @@ export function IndexBreakdownRenderer<TRow>({
                       key={col.key}
                       className={classNames(
                         col.width ?? 'grow w-full',
-                        col.align === 'right' ? 'text-right' : 'md:truncate'
+                        col.align === 'right' ? 'text-right' : 'md:truncate',
+                        col.hideOnMobile && 'hidden md:block'
                       )}
                     >
                       {col.renderCell(row, isActive)}

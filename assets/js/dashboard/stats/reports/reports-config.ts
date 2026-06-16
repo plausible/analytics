@@ -2,7 +2,7 @@ import { ApiFilter, NonTimeDimension } from '../../stats-query'
 import { Metric } from '../metrics'
 
 export type MetricContext = {
-  hasConversionGoalFilter: boolean
+  hasConversionGoalFilter?: boolean
   isRealtime?: boolean
   isCsv?: boolean
   isDetailed?: boolean
@@ -109,7 +109,8 @@ export enum BreakdownReportKey {
   'utmTerms' = 'utmTerms',
   'countries' = 'countries',
   'regions' = 'regions',
-  'cities' = 'cities'
+  'cities' = 'cities',
+  'goals' = 'goals'
 }
 
 export const BREAKDOWN_REPORTS: Record<
@@ -330,5 +331,49 @@ export const BREAKDOWN_REPORTS: Record<
     detailsPath: 'cities',
     dimensionLabel: 'City',
     alwaysOnFilters: [['is_not', 'visit:city', [0]]]
+  },
+  [BreakdownReportKey.goals]: {
+    dimensions: ['event:goal'],
+    getMetrics: (ctx: MetricContext) => {
+      if (ctx.isRevenueAvailable) {
+        return [
+          'visitors',
+          'events',
+          'conversion_rate',
+          'total_revenue',
+          'average_revenue'
+        ]
+      }
+      return ['visitors', 'events', 'conversion_rate']
+    },
+    detailsTitle: 'Goal conversions',
+    detailsPath: 'conversions',
+    dimensionLabel: 'Goal'
+  }
+}
+
+export function customPropsReportConfig(
+  propKey: string
+): BreakdownReportConfig {
+  return {
+    dimensions: [`event:props:${propKey}` as NonTimeDimension],
+    getMetrics: (ctx: MetricContext) => {
+      if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
+        return [
+          'visitors',
+          'events',
+          'conversion_rate',
+          'total_revenue',
+          'average_revenue'
+        ]
+      }
+      if (ctx.hasConversionGoalFilter) {
+        return ['visitors', 'events', 'conversion_rate']
+      }
+      return ['visitors', 'events', 'percentage']
+    },
+    detailsTitle: 'Custom property breakdown',
+    detailsPath: `custom-prop-values/${propKey}`,
+    dimensionLabel: propKey
   }
 }

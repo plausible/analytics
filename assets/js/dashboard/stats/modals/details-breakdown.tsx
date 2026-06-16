@@ -20,7 +20,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { NonTimeDimension } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink } from '../../components/drilldown-link'
 import {
@@ -30,7 +30,9 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  GetFilterInfo
+  GetFilterInfo,
+  useColumnsHiddenForAllNull,
+  dimensionOrderBy
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -90,7 +92,9 @@ export function DetailsBreakdown({
   defaultOrderBy = [] as MetricOrderBy,
   DimensionElement,
   searchEnabled = true,
-  onDataReady
+  onDataReady,
+  bundlePercentageWithVisitors = true,
+  hideMetricsIfAllNull
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -123,7 +127,7 @@ export function DetailsBreakdown({
         dimensions,
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
-          ...dimensions.map((dim): OrderByEntry => [dim, 'asc'])
+          ...dimensionOrderBy(dimensions)
         ],
         alwaysOnFilters
       },
@@ -157,6 +161,18 @@ export function DetailsBreakdown({
     [dashboardState, dimensions]
   )
 
+  const flattenedRows = useMemo(() => {
+    return apiState.data?.pages.reduce<QueryResultRow[]>(
+      (acc, p) => acc.concat(p.results),
+      []
+    )
+  }, [apiState.data])
+  const columnsHiddenForAllNull = useColumnsHiddenForAllNull(
+    flattenedRows,
+    query,
+    hideMetricsIfAllNull
+  )
+
   const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
     if (!query) return null
 
@@ -164,7 +180,7 @@ export function DetailsBreakdown({
 
     const hasPercentage = query.metrics.includes('percentage')
     const isVisitorsWithPercentageCell = (m: Metric) =>
-      hasPercentage && m === 'visitors'
+      bundlePercentageWithVisitors && hasPercentage && m === 'visitors'
 
     return [
       {
@@ -181,8 +197,10 @@ export function DetailsBreakdown({
         align: 'left'
       },
       ...query.metrics
-        // Percentage is not its own column — shown inline in the visitors cell
-        .filter((metric) => metric !== 'percentage')
+        .filter((metric) => {
+          if (columnsHiddenForAllNull.has(metric)) return false
+          return !(bundlePercentageWithVisitors && metric === 'percentage')
+        })
         .map(
           (metric): ColumnConfiguration<QueryResultRow> => ({
             key: metric,
@@ -234,7 +252,9 @@ export function DetailsBreakdown({
     meta,
     orderByDictionary,
     toggleSortByMetric,
-    metricLabelFor
+    metricLabelFor,
+    bundlePercentageWithVisitors,
+    columnsHiddenForAllNull
   ])
 
   const tableData = apiState.data

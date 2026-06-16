@@ -89,10 +89,30 @@ export const getBreakdownMetricLabel = (
       })
     case 'event:goal':
       return getConversionsBreakdownMetricLabel(metric)
-    default:
+    default: {
+      if (dimensions[0]?.startsWith('event:props:')) {
+        return getCustomPropsBreakdownMetricLabel(metric)
+      }
       return getDefaultBreakdownMetricLabel(metric, {
         hasConversionGoalFilter,
         isRealtime
+      })
+    }
+  }
+}
+
+const getCustomPropsBreakdownMetricLabel = (metric: Metric): string => {
+  switch (metric) {
+    case 'visitors':
+      return 'Visitors'
+    case 'events':
+      return 'Events'
+    case 'percentage':
+      return '%'
+    default:
+      return getDefaultBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: false,
+        isRealtime: false
       })
   }
 }
