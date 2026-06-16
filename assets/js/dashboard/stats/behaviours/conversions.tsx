@@ -12,7 +12,7 @@ import {
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { NonTimeDimension } from '../../stats-query'
 import { FilterInfo } from '../../components/drilldown-link'
-import { BEHAVIOURS_BAR_COLOR } from '.'
+import { BEHAVIOURS_BAR_COLOR, BEHAVIOURS_METRIC_COLUMN_WIDTH } from '.'
 import { useSiteContext } from '../../site-context'
 
 type ConversionsProps = {
@@ -57,6 +57,7 @@ export default function Conversions({
       DimensionElement={DimensionElement}
       onDataReady={onDataReady}
       hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
+      metricColumnWidth={BEHAVIOURS_METRIC_COLUMN_WIDTH}
     />
   )
 }

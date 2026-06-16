@@ -12,7 +12,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { hasConversionGoalFilter } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
-import { BEHAVIOURS_BAR_COLOR } from '.'
+import { BEHAVIOURS_BAR_COLOR, BEHAVIOURS_METRIC_COLUMN_WIDTH } from '.'
 import { makeGetCustomPropFilterInfo } from '../modals/props'
 
 type PropertiesProps = {
@@ -76,6 +76,7 @@ export default function Properties({
         DimensionElement={DimensionElement}
         onDataReady={onDataReady}
         bundlePercentageWithVisitors={false}
+        metricColumnWidth={BEHAVIOURS_METRIC_COLUMN_WIDTH}
       />
     </div>
   )
