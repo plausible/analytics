@@ -1,5 +1,5 @@
 import React from 'react'
-import { revenueAvailable } from '../../dashboard-state'
+import { revenueAvailable, Filter } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
@@ -7,7 +7,7 @@ import {
   hasEventFilters,
   isRealTimeDashboard
 } from '../../util/filters'
-import { defaultGetFilterInfo } from '../breakdowns'
+import { defaultGetFilterInfo, GetFilterInfo } from '../breakdowns'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
@@ -19,7 +19,50 @@ import {
 } from '../modals/details-breakdown'
 import Modal from '../modals/modal'
 import { DetailsExternalLink } from './external-link'
-import { externalLinkForPage } from '../../util/url'
+import { externalLinkForPage, trimURL } from '../../util/url'
+
+const MAX_DIMENSION_LENGTH = 70
+
+function makeHostnameDimensionElement(pageFilterKey: string) {
+  const getFilterInfo: GetFilterInfo = (_dim, row) => ({
+    prefix: pageFilterKey,
+    filter: ['is', pageFilterKey, [row.dimensions[1]]] as Filter
+  })
+  return function HostnameDimensionElement(props: DimensionCellProps) {
+    const site = useSiteContext()
+    const hostname = props.row.dimensions[0]
+    const path = props.row.dimensions[1]
+
+    const displayValue = trimURL(
+      `https://${hostname}${path}`,
+      MAX_DIMENSION_LENGTH + 8
+    ).replace(/^https:\/\//, '')
+
+    return (
+      <DimensionCell
+        text={displayValue}
+        externalLink={
+          <DetailsExternalLink
+            href={externalLinkForPage(site, path, hostname)}
+            isActive={props.isActive}
+          />
+        }
+        getFilterInfo={getFilterInfo}
+        {...props}
+      />
+    )
+  }
+}
+
+const HOSTNAME_DIMENSION_ELEMENTS: Partial<
+  Record<BreakdownReportKey, (props: DimensionCellProps) => React.ReactNode>
+> = {
+  [BreakdownReportKey.pagesWithHostname]: makeHostnameDimensionElement('page'),
+  [BreakdownReportKey.entryPagesWithHostname]:
+    makeHostnameDimensionElement('entry_page'),
+  [BreakdownReportKey.exitPagesWithHostname]:
+    makeHostnameDimensionElement('exit_page')
+}
 
 export function PagesDetails({
   breakdownReportKey
@@ -43,6 +86,9 @@ export function PagesDetails({
     hasEventFilters: hasEventFilters(dashboardState)
   })
 
+  const DimensionElement =
+    HOSTNAME_DIMENSION_ELEMENTS[breakdownReportKey] ?? PathDimensionElement
+
   return (
     <Modal>
       <DetailsBreakdown
@@ -52,20 +98,23 @@ export function PagesDetails({
         metrics={metrics}
         alwaysOnFilters={reportConfig.alwaysOnFilters}
         defaultOrderBy={[['visitors', 'desc']]}
-        DimensionElement={PagesDimensionElement}
+        searchDimension={reportConfig.searchDimension}
+        DimensionElement={DimensionElement}
       />
     </Modal>
   )
 }
 
-const PagesDimensionElement = (props: DimensionCellProps) => {
+const PathDimensionElement = (props: DimensionCellProps) => {
   const site = useSiteContext()
+  const path = props.row.dimensions[0]
+
   return (
     <DimensionCell
-      text={props.row.dimensions[0]}
+      text={path}
       externalLink={
         <DetailsExternalLink
-          href={externalLinkForPage(site, props.row.dimensions[0])}
+          href={externalLinkForPage(site, path)}
           isActive={props.isActive}
         />
       }
