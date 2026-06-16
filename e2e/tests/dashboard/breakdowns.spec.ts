@@ -901,6 +901,89 @@ test('pages breakdown with a pageview goal filter applied', async ({
   })
 })
 
+test('pages breakdown - URL mode', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      { user_id: 1, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
+      { user_id: 1, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
+      { user_id: 2, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
+      { user_id: 3, name: 'pageview', hostname: 'docs.example.com', pathname: '/api' }
+    ]
+  })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+  const report = page.getByTestId('report-pages')
+
+  await test.step('switch to URL mode', async () => {
+    await report.getByRole('button', { name: 'Breakdown options' }).click()
+    await page.getByRole('button', { name: 'URL' }).click()
+  })
+
+  await test.step('top pages in URL mode', async () => {
+    await expect(tabButton(report, 'Top pages')).toHaveAttribute('data-active', 'true')
+
+    await expectHeaders(report, ['URL', 'Visitors'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+    await expectMetricValues(report, 'blog.example.com/post', ['2', '66.7%'])
+    await expectMetricValues(report, 'docs.example.com/api', ['1', '33.3%'])
+  })
+
+  await test.step('entry pages in URL mode', async () => {
+    await tabButton(report, 'Entry pages').click()
+
+    await expectHeaders(report, ['URL', 'Unique entrances'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+    await expectMetricValues(report, 'blog.example.com/post', ['2', '66.7%'])
+    await expectMetricValues(report, 'docs.example.com/api', ['1', '33.3%'])
+  })
+
+  await test.step('entry pages modal in URL mode', async () => {
+    await detailsLink(report).click()
+
+    await expect(modal(page).getByRole('heading', { name: 'Entry pages' })).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'URL',
+      /Unique entrances/,
+      /Total entrances/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), ['blog.example.com/post', 'docs.example.com/api'])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('exit pages in URL mode', async () => {
+    await tabButton(report, 'Exit pages').click()
+
+    await expectHeaders(report, ['URL', 'Unique exits'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+  })
+
+  await test.step('exit pages modal in URL mode', async () => {
+    await detailsLink(report).click()
+
+    await expect(modal(page).getByRole('heading', { name: 'Exit pages' })).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'URL',
+      /Unique exits/,
+      /Total exits/,
+      /Exit rate/
+    ])
+
+    await expectRows(modal(page), ['blog.example.com/post', 'docs.example.com/api'])
+
+    await closeModalButton(page).click()
+  })
+})
+
 test('locations breakdown', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
