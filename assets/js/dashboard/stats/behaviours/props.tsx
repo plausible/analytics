@@ -7,15 +7,10 @@ import {
   MIN_HEIGHT
 } from '../reports/index-breakdown'
 import { customPropsReportConfig } from '../reports/reports-config'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import {
-  EVENT_PROPS_PREFIX,
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
+import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
 import { BEHAVIOURS_BAR_COLOR } from '.'
 
@@ -31,20 +26,18 @@ export default function Properties({
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
 
-  /*global BUILD_EXTRA*/
-  const isRevenueAvailable =
-    BUILD_EXTRA && revenueAvailable(dashboardState, site)
-
   const reportConfig = useMemo(
     () => (propKey ? customPropsReportConfig(propKey) : null),
     [propKey]
   )
 
+  /*global BUILD_EXTRA*/
+  const isRevenueAvailable =
+    BUILD_EXTRA && revenueAvailable(dashboardState, site)
+
   const metrics = useMemo(() => {
     if (!reportConfig) return []
-    return chooseBreakdownMetricsByContext(reportConfig.metricsByContext, {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
+    return reportConfig.getMetrics({
       hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
       isRevenueAvailable
     })

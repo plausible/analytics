@@ -9,16 +9,11 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from '../reports/reports-config'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
-import {
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
-import { useDashboardStateContext } from '../../dashboard-state-context'
 import { QueryApiResponse, QueryResultRow } from '../../api'
 import { NonTimeDimension } from '../../stats-query'
 import { FilterInfo } from '../../components/drilldown-link'
 import { BEHAVIOURS_BAR_COLOR } from '.'
+import { useSiteContext } from '../../site-context'
 
 type ConversionsProps = {
   onDataReady?: (data: QueryApiResponse) => void
@@ -29,23 +24,13 @@ export default function Conversions({
   onDataReady,
   onGoalFilterClick
 }: ConversionsProps): ReactNode {
-  const { dashboardState } = useDashboardStateContext()
+  const site = useSiteContext()
   const reportConfig = BREAKDOWN_REPORTS[BreakdownReportKey.goals]
 
-  const baseMetrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
-
   /*global BUILD_EXTRA*/
-  const metrics = BUILD_EXTRA
-    ? [...baseMetrics, 'total_revenue' as const, 'average_revenue' as const]
-    : baseMetrics
+  const metrics = reportConfig.getMetrics({
+    isRevenueAvailable: BUILD_EXTRA && site.revenueGoals.length > 0
+  })
 
   const DimensionElement = useCallback(
     (props: DimensionCellWithBarProps) => {

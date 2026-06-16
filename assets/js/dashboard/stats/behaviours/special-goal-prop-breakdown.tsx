@@ -6,16 +6,11 @@ import {
   IndexBreakdown
 } from '../reports/index-breakdown'
 import { customPropsReportConfig } from '../reports/reports-config'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 import { externalLinkForPage } from '../../util/url'
 import { IndexExternalLink } from '../pages/external-link'
-import {
-  EVENT_PROPS_PREFIX,
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
+import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
 import { BEHAVIOURS_BAR_COLOR } from '.'
 
@@ -33,15 +28,10 @@ export function SpecialGoalPropBreakdown({
 
   const reportConfig = customPropsReportConfig(prop)
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: false,
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRevenueAvailable: false
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRevenueAvailable: false
+  })
 
   const DimensionElement = useCallback(
     (props: DimensionCellWithBarProps) => {

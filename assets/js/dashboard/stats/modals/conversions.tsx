@@ -10,33 +10,18 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from '../reports/reports-config'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
-import { useDashboardStateContext } from '../../dashboard-state-context'
-import {
-  hasConversionGoalFilter,
-  isRealTimeDashboard
-} from '../../util/filters'
 import { getGoalsFilterInfo } from '../behaviours/conversions'
+import { useSiteContext } from '../../site-context'
 
 function ConversionsModal() {
-  const { dashboardState } = useDashboardStateContext()
+  const site = useSiteContext()
 
   const reportConfig = BREAKDOWN_REPORTS[BreakdownReportKey.goals]
 
-  const baseMetrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable: false
-    }
-  )
-
   /*global BUILD_EXTRA*/
-  const metrics = BUILD_EXTRA
-    ? [...baseMetrics, 'average_revenue' as const, 'total_revenue' as const]
-    : baseMetrics
+  const metrics = reportConfig.getMetrics({
+    isRevenueAvailable: BUILD_EXTRA && site.revenueGoals.length > 0
+  })
 
   return (
     <Modal>

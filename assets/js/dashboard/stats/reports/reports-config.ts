@@ -2,7 +2,7 @@ import { ApiFilter, NonTimeDimension } from '../../stats-query'
 import { Metric } from '../metrics'
 
 export type MetricContext = {
-  hasConversionGoalFilter: boolean
+  hasConversionGoalFilter?: boolean
   isRealtime?: boolean
   isCsv?: boolean
   isDetailed?: boolean
@@ -334,12 +334,17 @@ export const BREAKDOWN_REPORTS: Record<
   },
   [BreakdownReportKey.goals]: {
     dimensions: ['event:goal'],
-    metricsByContext: {
-      realtimeMetrics: ['visitors', 'events'],
-      defaultIndexMetrics: ['visitors', 'events', 'conversion_rate'],
-      defaultDetailedMetrics: ['visitors', 'events', 'conversion_rate'],
-      goalFilterIndexMetrics: ['visitors', 'events', 'conversion_rate'],
-      goalFilterDetailedMetrics: ['visitors', 'events', 'conversion_rate']
+    getMetrics: (ctx: MetricContext) => {
+      if (ctx.isRevenueAvailable) {
+        return [
+          'visitors',
+          'events',
+          'conversion_rate',
+          'total_revenue',
+          'average_revenue'
+        ]
+      }
+      return ['visitors', 'events', 'conversion_rate']
     },
     detailsTitle: 'Goal conversions',
     detailsPath: 'conversions',
@@ -352,12 +357,20 @@ export function customPropsReportConfig(
 ): BreakdownReportConfig {
   return {
     dimensions: [`event:props:${propKey}` as NonTimeDimension],
-    metricsByContext: {
-      realtimeMetrics: ['visitors', 'events'],
-      defaultIndexMetrics: ['visitors', 'events', 'percentage'],
-      defaultDetailedMetrics: ['visitors', 'events', 'percentage'],
-      goalFilterIndexMetrics: ['visitors', 'events', 'conversion_rate'],
-      goalFilterDetailedMetrics: ['visitors', 'events', 'conversion_rate']
+    getMetrics: (ctx: MetricContext) => {
+      if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
+        return [
+          'visitors',
+          'events',
+          'conversion_rate',
+          'total_revenue',
+          'average_revenue'
+        ]
+      }
+      if (ctx.hasConversionGoalFilter) {
+        return ['visitors', 'events', 'conversion_rate']
+      }
+      return ['visitors', 'events', 'percentage']
     },
     detailsTitle: 'Custom property breakdown',
     detailsPath: `custom-prop-values/${propKey}`,

@@ -8,14 +8,12 @@ import {
   DimensionCellProps
 } from './details-breakdown'
 import { customPropsReportConfig } from '../reports/reports-config'
-import { chooseBreakdownMetricsByContext } from '../breakdowns'
 import { revenueAvailable } from '../../dashboard-state'
 import { getSpecialGoal } from '../../util/goals'
 import {
   EVENT_PROPS_PREFIX,
   getGoalFilter,
-  hasConversionGoalFilter,
-  isRealTimeDashboard
+  hasConversionGoalFilter
 } from '../../util/filters'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
@@ -50,17 +48,12 @@ function PropsModal() {
 
   /*global BUILD_EXTRA*/
   const isRevenueAvailable =
-    BUILD_EXTRA && revenueAvailable(dashboardState, site)
+    BUILD_EXTRA && revenueAvailable(dashboardState, site) && !specialGoal
 
-  const metrics = chooseBreakdownMetricsByContext(
-    reportConfig.metricsByContext,
-    {
-      hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
-      isRealtime: isRealTimeDashboard(dashboardState),
-      isDetailed: true,
-      isRevenueAvailable
-    }
-  )
+  const metrics = reportConfig.getMetrics({
+    hasConversionGoalFilter: hasConversionGoalFilter(dashboardState),
+    isRevenueAvailable
+  })
 
   const title = specialGoal ? specialGoal.title : 'Custom property breakdown'
 
