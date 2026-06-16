@@ -33,6 +33,7 @@ export type StatsReportQueryKey = [
     dashboardState: DashboardState
     reportParams: ReportParams
     search?: string
+    searchDimension?: NonTimeDimension
   }
 ]
 
@@ -169,12 +170,13 @@ export function useSearchAndPaginateQueryAPI(
   return useInfiniteQuery({
     queryKey: statsReportQueryKey,
     queryFn: async ({ pageParam, queryKey }): Promise<QueryApiResponse> => {
-      const { dashboardState, reportParams, search } = queryKey[1]
+      const { dashboardState, reportParams, search, searchDimension } = queryKey[1]
 
       let statsQuery = getStatsQuery(queryKey)
 
       if (search && search !== '') {
-        const searchBy = reportParams.dimensions[0]
+        const searchBy =
+          searchDimension ?? (reportParams.dimensions[0] as NonTimeDimension)
         statsQuery = addDimensionSearchFilter(statsQuery, searchBy, search)
       }
 
