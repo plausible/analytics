@@ -177,6 +177,7 @@ Plausible.InstallationSupport.Verification.Checks.html
 Plausible.InstallationSupport.Verification.Diagnostics.Error.html
 Plausible.InstallationSupport.Verification.Diagnostics.html
 Plausible.InstallationSupport.html
+Plausible.InternalStatsApiVersion.html
 Plausible.License.html
 Plausible.Mailer.html
 Plausible.MigrationUtils.html
@@ -527,6 +528,7 @@ PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.AuthorizePublicAPI.html
 PlausibleWeb.Plugs.AuthorizeSiteAccess.html
 PlausibleWeb.Plugs.ErrorHandler.html
+PlausibleWeb.Plugs.InternalStatsApiVersion.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.Plugs.SecureEmbedHeaders.html
@@ -576,8 +578,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-99B5229B.js
-dist/sidebar_items-31B03202.js
+dist/search_data-57CAA2AA.js
+dist/sidebar_items-91075FF8.js
 index.html
 readme.html
 search.html
