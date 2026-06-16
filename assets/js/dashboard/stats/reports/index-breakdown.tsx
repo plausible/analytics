@@ -197,7 +197,7 @@ export function IndexBreakdown({
       <IndexBreakdownRenderer<QueryResultRow>
         {...apiState}
         rows={apiState.data?.results?.slice(0, MAX_ITEMS) ?? []}
-        getDimensionValue={(row) => row.dimensions[0]}
+        getDimensionValue={(row) => row.dimensions.join(',')}
         isRealtimeSilentUpdate={isRealtimeSilentUpdate}
         columns={columns}
       />
