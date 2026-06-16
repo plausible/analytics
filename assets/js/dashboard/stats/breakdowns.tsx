@@ -21,6 +21,18 @@ export type SharedBreakdownReportProps = {
   dimensions: NonTimeDimension[]
   metrics: Metric[]
   alwaysOnFilters?: ApiFilter[]
+  /**
+   * When true, `percentage` is shown inline inside the Visitors
+   * cell rather than as its own column. Set to false for reports that want
+   * percentage as a separate breakdown column (e.g. custom properties).
+   */
+  bundlePercentageWithVisitors?: boolean
+  /**
+   * Metrics that should be dropped from the rendered columns when every row
+   * (across all loaded pages) has null for that metric. Used by goal breakdowns
+   * to hide revenue columns when the current rows have no revenue data.
+   */
+  hideMetricsIfAllNull?: Metric[]
 }
 
 export type ColumnConfiguration<T> = {
