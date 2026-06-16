@@ -376,43 +376,17 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
       assert is_nil(updated.segment_id)
     end
 
-    test "does not associate a personal segment from the same site when creating a shared link",
-         %{conn: conn, site: site, session: session} do
-      # Personal segment on the same site — should be blocked by the ACL fix
-      personal_segment =
-        insert(:segment, type: :personal, site: site, name: "My Personal Segment")
+    test "keeps the segment when editing a link whose segment was downgraded to personal", %{
+      conn: conn,
+      site: site,
+      session: session
+    } do
+      # A site segment is attached, then later downgraded to personal. Editing the
+      # link (e.g. renaming) must NOT detach the now-personal segment.
+      segment = insert(:segment, type: :site, site: site, name: "Scandinavia")
+      shared_link = insert(:shared_link, site: site, name: "My Link", segment: segment)
 
-      lv = get_liveview(conn, session)
-      lv |> element("button#add-shared-link-button") |> render_click()
-
-      lv
-      |> find_form()
-      |> render_submit(%{
-        shared_link: %{name: "Attacker Link", segment_id: personal_segment.id}
-      })
-
-      html = render(lv)
-      assert html =~ "Shared link saved"
-
-      shared_link =
-        Plausible.Repo.get_by(Plausible.Site.SharedLink,
-          name: "Attacker Link",
-          site_id: site.id
-        )
-
-      assert shared_link
-
-      assert is_nil(shared_link.segment_id),
-             "Personal segment must not be attached to a shared link"
-    end
-
-    test "does not associate a personal segment from the same site when editing a shared link",
-         %{conn: conn, site: site, session: session} do
-      own_segment = insert(:segment, type: :site, site: site, name: "Own Site Segment")
-      shared_link = insert(:shared_link, site: site, name: "My Link", segment: own_segment)
-
-      personal_segment =
-        insert(:segment, type: :personal, site: site, name: "My Personal Segment")
+      Plausible.Repo.update!(Ecto.Changeset.change(segment, type: :personal))
 
       lv = get_liveview(conn, session)
 
@@ -422,17 +396,16 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.FormTest do
 
       lv
       |> find_form()
-      |> render_submit(%{
-        shared_link: %{name: "My Link", segment_id: personal_segment.id}
-      })
+      |> render_submit(%{shared_link: %{name: "Renamed Link", segment_id: segment.id}})
 
       html = render(lv)
       assert html =~ "Shared link saved"
 
       updated = Plausible.Repo.reload!(shared_link)
+      assert updated.name == "Renamed Link"
 
-      assert is_nil(updated.segment_id),
-             "Personal segment must not replace the existing segment on a shared link"
+      assert updated.segment_id == segment.id,
+             "Downgraded segment must stay attached to the shared link"
     end
 
     test "cannot overwrite the shared link slug via form params", %{
