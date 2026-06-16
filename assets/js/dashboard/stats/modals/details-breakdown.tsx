@@ -20,7 +20,7 @@ import {
 import { SortDirection } from '../../../types/query-api'
 import { Metric, getBreakdownMetricLabel, isSortable } from '../metrics'
 import { BreakdownTable } from './breakdown-table'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { NonTimeDimension } from '../../stats-query'
 import { useSiteContext } from '../../site-context'
 import { DrilldownLink } from '../../components/drilldown-link'
 import {
@@ -31,7 +31,8 @@ import {
   useBodyPortalRef,
   extractMetricValue,
   GetFilterInfo,
-  useColumnsHiddenForAllNull
+  useColumnsHiddenForAllNull,
+  dimensionOrderBy
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -126,9 +127,7 @@ export function DetailsBreakdown({
         dimensions,
         order_by: [
           ...(orderBy.length ? orderBy : storedOrderBy),
-          ...dimensions
-            .filter((dim) => dim !== 'event:goal')
-            .map((dim): OrderByEntry => [dim, 'asc'])
+          ...dimensionOrderBy(dimensions)
         ],
         alwaysOnFilters
       },

@@ -10,6 +10,7 @@ import {
   addFilter,
   ApiFilter,
   NonTimeDimension,
+  OrderByEntry,
   StatsQuery
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
@@ -225,6 +226,14 @@ export function extractMetricValue(
         }
       : null
   return { metricIndex, value, comparison }
+}
+
+const CANNOT_ORDER_BY_DIMENSIONS = ['event:goal']
+
+export function dimensionOrderBy(dimensions: NonTimeDimension[]) {
+  return dimensions
+    .filter((dim) => !CANNOT_ORDER_BY_DIMENSIONS.includes(dim))
+    .map((dim): OrderByEntry => [dim, 'asc'])
 }
 
 export function addDimensionSearchFilter(

@@ -9,7 +9,7 @@ import FlipMove from 'react-flip-move'
 import LazyLoader from '../../components/lazy-loader'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { NonTimeDimension, OrderByEntry } from '../../stats-query'
+import { NonTimeDimension } from '../../stats-query'
 import { Metric, getBreakdownMetricLabel } from '../metrics'
 import {
   ColumnConfiguration,
@@ -20,7 +20,8 @@ import {
   extractMetricValue,
   MetricValueWrapper,
   GetFilterInfo,
-  useColumnsHiddenForAllNull
+  useColumnsHiddenForAllNull,
+  dimensionOrderBy
 } from '../breakdowns'
 import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -80,12 +81,7 @@ export function IndexBreakdown({
       reportParams: {
         metrics,
         dimensions,
-        order_by: [
-          ['visitors', 'desc'],
-          ...dimensions
-            .filter((dim) => dim !== 'event:goal')
-            .map((dim): OrderByEntry => [dim, 'asc'])
-        ],
+        order_by: [['visitors', 'desc'], ...dimensionOrderBy(dimensions)],
         alwaysOnFilters,
         pagination: { limit: MAX_ITEMS, offset: 0 }
       }
