@@ -170,7 +170,8 @@ export function useSearchAndPaginateQueryAPI(
   return useInfiniteQuery({
     queryKey: statsReportQueryKey,
     queryFn: async ({ pageParam, queryKey }): Promise<QueryApiResponse> => {
-      const { dashboardState, reportParams, search, searchDimension } = queryKey[1]
+      const { dashboardState, reportParams, search, searchDimension } =
+        queryKey[1]
 
       let statsQuery = getStatsQuery(queryKey)
 

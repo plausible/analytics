@@ -41,11 +41,10 @@ type TabKey =
   | BreakdownReportKey.entryPages
   | BreakdownReportKey.exitPages
 
-const BREAKDOWN_MODE_OPTIONS: Array<{ value: BreakdownMode; label: string }> =
-  [
-    { value: 'path', label: 'Path' },
-    { value: 'hostname', label: 'URL' } // URL is more suitable for user-facing label
-  ]
+const BREAKDOWN_MODE_OPTIONS: Array<{ value: BreakdownMode; label: string }> = [
+  { value: 'path', label: 'Path' },
+  { value: 'hostname', label: 'URL' } // URL is more suitable for user-facing label
+]
 
 function getReportKey(tab: TabKey, mode: BreakdownMode): BreakdownReportKey {
   if (mode === 'hostname') {
@@ -67,9 +66,11 @@ export default function Pages() {
 
   const tabStorageKey = `pageTab__${site.domain}`
   const modeStorageKey = `pageBreakdownMode__${site.domain}`
-  const [tab, setTab] = useState<TabKey>(initTab(storage.getItem(tabStorageKey)))
-  const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>(
-    () => (storage.getItem(modeStorageKey) === 'hostname' ? 'hostname' : 'path')
+  const [tab, setTab] = useState<TabKey>(
+    initTab(storage.getItem(tabStorageKey))
+  )
+  const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>(() =>
+    storage.getItem(modeStorageKey) === 'hostname' ? 'hostname' : 'path'
   )
   const [currentData, setCurrentData] = useState<QueryApiResponse | null>(null)
 
@@ -98,7 +99,9 @@ export default function Pages() {
     : MoreLinkState.LOADING
 
   const DimensionElement =
-    breakdownMode === 'hostname' ? HOSTNAME_DIMENSION_CELLS[tab] : PathDimensionCell
+    breakdownMode === 'hostname'
+      ? HOSTNAME_DIMENSION_CELLS[tab]
+      : PathDimensionCell
 
   return (
     <ReportLayout testId="report-pages" className="overflow-x-hidden">
@@ -272,7 +275,10 @@ function makeHostnameDimensionCell(pageFilterKey: string) {
   }
 }
 
-const HOSTNAME_DIMENSION_CELLS: Record<TabKey, (props: DimensionCellWithBarProps) => React.ReactNode> = {
+const HOSTNAME_DIMENSION_CELLS: Record<
+  TabKey,
+  (props: DimensionCellWithBarProps) => React.ReactNode
+> = {
   [BreakdownReportKey.pages]: makeHostnameDimensionCell('page'),
   [BreakdownReportKey.entryPages]: makeHostnameDimensionCell('entry_page'),
   [BreakdownReportKey.exitPages]: makeHostnameDimensionCell('exit_page')
