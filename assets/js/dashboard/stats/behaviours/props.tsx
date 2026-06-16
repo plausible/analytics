@@ -10,9 +10,10 @@ import { customPropsReportConfig } from '../reports/reports-config'
 import { revenueAvailable } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from '../../util/filters'
+import { hasConversionGoalFilter } from '../../util/filters'
 import { QueryApiResponse } from '../../api'
 import { BEHAVIOURS_BAR_COLOR } from '.'
+import { makeGetCustomPropFilterInfo } from '../modals/props'
 
 type PropertiesProps = {
   propKey: string | null
@@ -45,16 +46,12 @@ export default function Properties({
 
   const DimensionElement = useCallback(
     (props: DimensionCellWithBarProps) => {
-      const value = props.row.dimensions[0]
       return (
         <DimensionCellWithBar
           {...props}
           barClassName={BEHAVIOURS_BAR_COLOR}
-          text={value}
-          getFilterInfo={() => ({
-            prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
-            filter: ['is', `${EVENT_PROPS_PREFIX}${propKey}`, [value]]
-          })}
+          text={props.row.dimensions[0]}
+          getFilterInfo={makeGetCustomPropFilterInfo(propKey!)}
         />
       )
     },

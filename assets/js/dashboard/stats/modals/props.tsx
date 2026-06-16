@@ -31,7 +31,7 @@ function PropsModal() {
       <DimensionCell
         {...props}
         text={props.row.dimensions[0]}
-        getFilterInfo={makeGetFilterInfo(propKey ?? '')}
+        getFilterInfo={makeGetCustomPropFilterInfo(propKey!)}
       />
     ),
     [propKey]
@@ -73,7 +73,7 @@ function PropsModal() {
   )
 }
 
-function makeGetFilterInfo(propKey: string) {
+export function makeGetCustomPropFilterInfo(propKey: string) {
   const filterKey = `${EVENT_PROPS_PREFIX}${propKey}`
   return (_dimension: NonTimeDimension, row: QueryResultRow): FilterInfo => ({
     prefix: filterKey,
