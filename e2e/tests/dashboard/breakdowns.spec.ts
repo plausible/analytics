@@ -908,10 +908,30 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
     request,
     domain,
     events: [
-      { user_id: 1, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
-      { user_id: 1, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
-      { user_id: 2, name: 'pageview', hostname: 'blog.example.com', pathname: '/post' },
-      { user_id: 3, name: 'pageview', hostname: 'docs.example.com', pathname: '/api' }
+      {
+        user_id: 1,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 1,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 2,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 3,
+        name: 'pageview',
+        hostname: 'docs.example.com',
+        pathname: '/api'
+      }
     ]
   })
 
@@ -924,7 +944,10 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
   })
 
   await test.step('top pages in URL mode', async () => {
-    await expect(tabButton(report, 'Top pages')).toHaveAttribute('data-active', 'true')
+    await expect(tabButton(report, 'Top pages')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
 
     await expectHeaders(report, ['URL', 'Visitors'])
     await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
@@ -944,7 +967,9 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
   await test.step('entry pages modal in URL mode', async () => {
     await detailsLink(report).click()
 
-    await expect(modal(page).getByRole('heading', { name: 'Entry pages' })).toBeVisible()
+    await expect(
+      modal(page).getByRole('heading', { name: 'Entry pages' })
+    ).toBeVisible()
 
     await expectHeaders(modal(page), [
       'URL',
@@ -954,7 +979,10 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
       /Visit duration/
     ])
 
-    await expectRows(modal(page), ['blog.example.com/post', 'docs.example.com/api'])
+    await expectRows(modal(page), [
+      'blog.example.com/post',
+      'docs.example.com/api'
+    ])
 
     await closeModalButton(page).click()
   })
@@ -969,7 +997,9 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
   await test.step('exit pages modal in URL mode', async () => {
     await detailsLink(report).click()
 
-    await expect(modal(page).getByRole('heading', { name: 'Exit pages' })).toBeVisible()
+    await expect(
+      modal(page).getByRole('heading', { name: 'Exit pages' })
+    ).toBeVisible()
 
     await expectHeaders(modal(page), [
       'URL',
@@ -978,7 +1008,10 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
       /Exit rate/
     ])
 
-    await expectRows(modal(page), ['blog.example.com/post', 'docs.example.com/api'])
+    await expectRows(modal(page), [
+      'blog.example.com/post',
+      'docs.example.com/api'
+    ])
 
     await closeModalButton(page).click()
   })
