@@ -19,7 +19,8 @@ import {
   useBodyPortalRef,
   extractMetricValue,
   MetricValueWrapper,
-  GetFilterInfo
+  GetFilterInfo,
+  useColumnsHiddenForAllNull
 } from '../breakdowns'
 import { DrilldownLink } from '../../components/drilldown-link'
 import { QueryResultRow, QueryResultQuery, QueryApiResponse } from '../../api'
@@ -125,19 +126,11 @@ export function IndexBreakdown({
     [dashboardState, dimensions]
   )
 
-  const columnsHiddenForAllNull = useMemo((): Set<Metric> => {
-    const hidden = new Set<Metric>()
-    if (!hideMetricsIfAllNull || !apiState.data || !query) return hidden
-    for (const metric of hideMetricsIfAllNull) {
-      const idx = query.metrics.indexOf(metric)
-      if (idx === -1) continue
-      const allNull = apiState.data.results.every(
-        (row) => row.metrics[idx] == null
-      )
-      if (allNull) hidden.add(metric)
-    }
-    return hidden
-  }, [apiState.data, query, hideMetricsIfAllNull])
+  const columnsHiddenForAllNull = useColumnsHiddenForAllNull(
+    apiState.data?.results,
+    query,
+    hideMetricsIfAllNull
+  )
 
   const columns = useMemo((): ColumnConfiguration<QueryResultRow>[] | null => {
     if (!query || barMetricIndex === null || barMaxValue === null) return null

@@ -30,7 +30,8 @@ import {
   formatDateRangeLabel,
   useBodyPortalRef,
   extractMetricValue,
-  GetFilterInfo
+  GetFilterInfo,
+  useColumnsHiddenForAllNull
 } from '../breakdowns'
 import {
   QueryResultRow,
@@ -161,21 +162,17 @@ export function DetailsBreakdown({
     [dashboardState, dimensions]
   )
 
-  const columnsHiddenForAllNull = useMemo((): Set<Metric> => {
-    const hidden = new Set<Metric>()
-    if (!hideMetricsIfAllNull || !apiState.data?.pages?.length || !query) {
-      return hidden
-    }
-    for (const metric of hideMetricsIfAllNull) {
-      const idx = query.metrics.indexOf(metric)
-      if (idx === -1) continue
-      const allNull = apiState.data.pages.every((page) =>
-        page.results.every((row) => row.metrics[idx] == null)
-      )
-      if (allNull) hidden.add(metric)
-    }
-    return hidden
-  }, [apiState.data, query, hideMetricsIfAllNull])
+  const flattenedRows = useMemo(() => {
+    return apiState.data?.pages.reduce<QueryResultRow[]>(
+      (acc, p) => acc.concat(p.results),
+      []
+    )
+  }, [apiState.data])
+  const columnsHiddenForAllNull = useColumnsHiddenForAllNull(
+    flattenedRows,
+    query,
+    hideMetricsIfAllNull
+  )
 
   const columns: ColumnConfiguration<QueryResultRow>[] | null = useMemo(() => {
     if (!query) return null

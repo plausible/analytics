@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef } from 'react'
 import { SortDirection } from '../../types/query-api'
 import type { QueryResultRow, QueryResultQuery } from '../api'
 import { Metric } from './metrics'
@@ -236,4 +236,21 @@ export function addDimensionSearchFilter(
     [search],
     { case_sensitive: false }
   ] as ApiFilter)
+}
+
+export function useColumnsHiddenForAllNull(
+  rows: QueryResultRow[] | null | undefined,
+  query: QueryResultQuery | null | undefined,
+  hideMetricsIfAllNull: Metric[] | undefined
+): Set<Metric> {
+  return useMemo(() => {
+    const hidden = new Set<Metric>()
+    if (!hideMetricsIfAllNull || !rows?.length || !query) return hidden
+    for (const metric of hideMetricsIfAllNull) {
+      const idx = query.metrics.indexOf(metric)
+      if (idx === -1) continue
+      if (rows.every((row) => row.metrics[idx] == null)) hidden.add(metric)
+    }
+    return hidden
+  }, [rows, query, hideMetricsIfAllNull])
 }
