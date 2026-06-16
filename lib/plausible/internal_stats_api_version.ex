@@ -23,8 +23,13 @@ defmodule Plausible.InternalStatsApiVersion do
 
   @spec effective_version() :: non_neg_integer()
   def effective_version() do
-    [{:version, v}] = :ets.lookup(__MODULE__, :version)
-    v
+    # Use 0 as a placeholder version until the first multicall completes.
+    # The FE only reloads when the received version exceeds its compiled-in
+    # expectation, so 0 is always safe regardless of current @api_version.
+    case :ets.lookup(__MODULE__, :version) do
+      [{:version, v}] -> v
+      _ -> 0
+    end
   end
 
   def start_link(opts \\ []) do
@@ -40,11 +45,6 @@ defmodule Plausible.InternalStatsApiVersion do
         :protected,
         {:read_concurrency, true}
       ])
-
-    # Use 0 as a placeholder version until the first multicall completes.
-    # The FE only reloads when the received version exceeds its compiled-in
-    # expectation, so 0 is always safe regardless of current @api_version.
-    :ets.insert(__MODULE__, {:version, 0})
 
     {:ok, nil, {:continue, :fetch}}
   end
