@@ -75,6 +75,9 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :transferred_from, :string
 
     field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
+
+    # Virtual field used during event replay
+    field :replay_session_id, :string, default: nil, virtual: true, writable: :never
   end
 
   def random_uint64() do
