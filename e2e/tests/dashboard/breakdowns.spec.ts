@@ -959,14 +959,18 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
     await rowLink(report, 'blog.example.com/post').click()
 
     await expect(
-      page.getByRole('button', { name: 'Remove filter: Hostname is blog.example.com' })
+      page.getByRole('button', {
+        name: 'Remove filter: Hostname is blog.example.com'
+      })
     ).toBeVisible()
     await expect(
       page.getByRole('button', { name: 'Remove filter: Page is /post' })
     ).toBeVisible()
 
     await page
-      .getByRole('button', { name: 'Remove filter: Hostname is blog.example.com' })
+      .getByRole('button', {
+        name: 'Remove filter: Hostname is blog.example.com'
+      })
       .click()
     await page
       .getByRole('button', { name: 'Remove filter: Page is /post' })
