@@ -381,8 +381,21 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_salts(%__MODULE__{} = event, _context) do
-    %{event | salts: Plausible.Session.Salts.fetch()}
+  on_ee do
+    defp put_salts(%__MODULE__{} = event, _context) do
+      if session_id = event.request.replay_session_id do
+        computed_salt = :crypto.hash(:sha, [secret_key_base(), session_id]) |> binary_part(0, 16)
+
+        salts = %{previous: nil, current: computed_salt}
+        %{event | salts: salts}
+      else
+        %{event | salts: Plausible.Session.Salts.fetch()}
+      end
+    end
+  else
+    defp put_salts(%__MODULE__{} = event, _context) do
+      %{event | salts: Plausible.Session.Salts.fetch()}
+    end
   end
 
   defp put_user_id(%__MODULE__{} = event, _context) do
@@ -586,4 +599,11 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
+
+  on_ee do
+    defp secret_key_base() do
+      Application.get_env(:plausible, PlausibleWeb.Endpoint)
+      |> Keyword.fetch!(:secret_key_base)
+    end
+  end
 end
