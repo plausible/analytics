@@ -171,7 +171,7 @@ test('special goals', async ({ page, request }, testInfo) => {
 
   const goalsTabButton = tabButton(report, 'Goals')
 
-  await goalsTabButton.scrollIntoViewIfNeeded()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
   await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
   await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
@@ -589,7 +589,7 @@ test('goals breakdown', async ({ page, request }) => {
   const goalsTabButton = tabButton(report, 'Goals')
 
   await test.step('listing all goals', async () => {
-    await goalsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, [
@@ -670,7 +670,7 @@ test('goals breakdown', async ({ page, request }) => {
       waitUntil: 'commit'
     })
 
-    await goalsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
@@ -773,8 +773,8 @@ test('props breakdown', async ({ page, request }) => {
   const propsTabButton = tabButtonWithDropdown(report, 'Properties')
 
   await test.step('listing props', async () => {
-    await propsTabButton.scrollIntoViewIfNeeded()
     await propsTabButton.click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await dropdown(report)
       .getByRole('button', { name: 'browser_language' })
       .click()
@@ -921,8 +921,8 @@ test('funnels', async ({ page, request }) => {
   const funnelsTabButton = tabButtonWithDropdown(report, 'Funnels')
 
   await test.step('rendering funnels', async () => {
-    await funnelsTabButton.scrollIntoViewIfNeeded()
     await funnelsTabButton.click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await dropdown(report)
       .getByRole('button', { name: 'Shopping 11 Funnel' })
       .click()

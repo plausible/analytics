@@ -55,7 +55,7 @@ test('sources breakdown', async ({ page, request }) => {
 
   await test.step('sources tab', async () => {
     const sourcesTabButton = tabButton(report, 'Sources')
-    await sourcesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(sourcesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Source', 'Visitors'])
@@ -462,7 +462,7 @@ test('sources breakdown - search terms failure modes', async ({
       waitUntil: 'commit'
     })
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(report.getByText('No data yet')).toBeVisible()
@@ -476,7 +476,7 @@ test('sources breakdown - search terms failure modes', async ({
       }
     )
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(
@@ -496,7 +496,7 @@ test('sources breakdown - search terms failure modes', async ({
       }
     )
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(
@@ -528,7 +528,7 @@ test('pages breakdown', async ({ page, request }) => {
 
   await test.step('top pages tab', async () => {
     const pagesTabButton = tabButton(report, 'Top pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Visitors'])
@@ -664,7 +664,7 @@ test('pages breakdown modal', async ({ page, request }) => {
   const report = page.getByTestId('report-pages')
 
   const pagesTabButton = tabButton(report, 'Top pages')
-  await pagesTabButton.scrollIntoViewIfNeeded()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
   await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
   await detailsLink(report).click()
@@ -824,7 +824,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Conversions', 'CR'])
@@ -861,7 +861,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Conversions', 'CR'])
@@ -939,7 +939,7 @@ test('locations breakdown', async ({ page, request }) => {
 
   await test.step('map tab', async () => {
     const mapTabButton = tabButton(report, 'Map')
-    await mapTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(mapTabButton).toHaveAttribute('data-active', 'true')
 
     // NOTE: We only check that the map is there
@@ -1147,6 +1147,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
 
   await test.step('countries report shows conversions for revenue goal', async () => {
     await tabButton(report, 'Countries').click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
     await expectHeaders(report, ['Country', 'Conversions', 'CR'])
 
@@ -1312,7 +1313,7 @@ test('devices breakdown', async ({ page, request }) => {
   const browsersTabButton = tabButton(report, 'Browsers')
 
   await test.step('browsers tab', async () => {
-    await browsersTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(browsersTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Browser', 'Visitors'])
@@ -1558,6 +1559,7 @@ test('devices breakdown with a revenue goal filter applied', async ({
 
   await test.step('browsers report shows conversions for revenue goal', async () => {
     await tabButton(report, 'Browsers').click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
     await expectHeaders(report, ['Browser', 'Conversions', 'CR'])
 
