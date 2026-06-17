@@ -59,6 +59,10 @@ defmodule Plausible.Ingestion.Request do
 
     on_ee do
       field :revenue_source, :map
+
+      # fields meant for replayed events only
+      field :replay_id, :string
+      field :replay_session_id, :string
     end
 
     field :query_params, :map
@@ -91,6 +95,7 @@ defmodule Plausible.Ingestion.Request do
           |> put_uri(request_body)
           |> put_hostname()
           |> put_user_agent(conn)
+          |> put_replay_data(conn)
           |> put_request_params(request_body)
           |> put_referrer(request_body)
           |> put_pathname()
@@ -129,6 +134,41 @@ defmodule Plausible.Ingestion.Request do
     end
   else
     defp put_revenue_source(changeset, _request_body), do: changeset
+  end
+
+  on_ee do
+    @replay_id_header "x-replay-event-id"
+    @replay_session_id_header "x-replay-session-id"
+    @replay_time_header "x-replay-time"
+
+    defp put_replay_data(changeset, conn) do
+      id =
+        conn
+        |> Plug.Conn.get_req_header(@replay_id_header)
+        |> List.first()
+
+      if id do
+        session_id =
+          conn
+          |> Plug.Conn.get_req_header(@replay_session_id_header)
+          |> List.first()
+
+        time =
+          conn
+          |> Plug.Conn.get_req_header(@replay_time_header)
+          |> List.first()
+          |> NaiveDateTime.from_iso8601!()
+
+        changeset
+        |> Changeset.put_change(:replay_id, id)
+        |> Changeset.put_change(:replay_session_id, session_id)
+        |> Changeset.put_change(:timestamp, time)
+      else
+        changeset
+      end
+    end
+  else
+    defp put_replay_data(changeset, _conn), do: changeset
   end
 
   defp put_remote_ip(changeset, conn) do
