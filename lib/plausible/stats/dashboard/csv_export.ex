@@ -24,37 +24,52 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     "utm_terms.csv",
     "countries.csv",
     "regions.csv",
-    "cities.csv"
+    "cities.csv",
+    "custom_props.csv"
   ]
 
   def get_csvs(site, params, debug_metadata) do
-    with {:ok, queries_by_filename} <- create_queries_by_filename(site, params, debug_metadata) do
+    with {:ok, tasks_by_filename} <- create_tasks_by_filename(site, params, debug_metadata) do
       csv_values =
-        queries_by_filename
-        |> Enum.map(fn {filename, query} ->
-          fn -> run_query_into_csv(site, filename, query) end
-        end)
+        tasks_by_filename
+        |> Enum.map(fn {_filename, task} -> task end)
         |> Plausible.ClickhouseRepo.parallel_tasks()
 
       csvs =
-        queries_by_filename
-        |> Enum.map(fn {filename, _query} -> filename end)
+        tasks_by_filename
+        |> Enum.map(fn {filename, _task} -> filename end)
         |> Enum.zip(csv_values)
+        |> Enum.reject(fn {_filename, csv_values} -> is_nil(csv_values) end)
         |> Enum.map(fn {k, v} -> {String.to_charlist(k), IO.iodata_to_binary(v)} end)
 
       {:ok, csvs}
     end
   end
 
-  defp create_queries_by_filename(site, params, debug_metadata) do
+  defp create_tasks_by_filename(site, params, debug_metadata) do
     requested = Map.keys(params["reports"] || %{}) |> Enum.filter(&(&1 in @csv_filenames))
 
     Enum.reduce_while(requested, {:ok, []}, fn filename, acc ->
-      case parse_csv_query(site, filename, params, debug_metadata) do
-        {:ok, query} -> {:cont, {:ok, elem(acc, 1) ++ [{filename, query}]}}
+      case create_task(site, filename, params, debug_metadata) do
+        {:ok, task} -> {:cont, {:ok, elem(acc, 1) ++ [{filename, task}]}}
         error_tuple -> {:halt, error_tuple}
       end
     end)
+  end
+
+  defp create_task(site, "custom_props.csv", params, debug_metadata) do
+    with {:ok, prop_keys_query} <- get_custom_prop_key_query(site, params, debug_metadata),
+         prop_keys = get_custom_prop_keys(site, prop_keys_query),
+         {:ok, prop_value_queries_by_prop_key} <-
+           get_custom_prop_queries(site, params, debug_metadata, prop_keys) do
+      {:ok, fn -> get_custom_props_csv(site, prop_value_queries_by_prop_key) end}
+    end
+  end
+
+  defp create_task(site, filename, params, debug_metadata) do
+    with {:ok, query} <- parse_csv_query(site, filename, params, debug_metadata) do
+      {:ok, fn -> run_query_into_csv(site, filename, query) end}
+    end
   end
 
   defp parse_csv_query(site, filename, params, debug_metadata) do
@@ -210,5 +225,81 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
 
   defp csv_dimension_values([_dimension], row) do
     row[:dimensions]
+  end
+
+  defp get_custom_prop_key_query(site, params, debug_metadata) do
+    raw_params =
+      construct_raw_query_params("custom_props.csv", params)
+      |> Map.merge(%{
+        "dimensions" => ["event:prop_key"],
+        "metrics" => ["visitors"]
+      })
+
+    with {:ok, parsed} <- QueryParser.parse(raw_params),
+         {:ok, query} <- QueryBuilder.build(site, parsed, debug_metadata) do
+      {:ok, Query.set(query, order_by: [{:visitors, :desc}, {"event:prop_key", :asc}])}
+    end
+  end
+
+  defp get_custom_prop_keys(site, query) do
+    case Plausible.Stats.Filters.get_toplevel_filter(query, "event:props:") do
+      [_op, "event:props:" <> key | _rest] ->
+        [key]
+
+      _ ->
+        %QueryResult{results: results} = QueryRunner.run(site, query)
+
+        Enum.map(results, fn r -> hd(r.dimensions) end)
+        |> maybe_allowed_props_only(site)
+    end
+  end
+
+  defp get_custom_prop_queries(site, params, debug_metadata, prop_keys) do
+    Enum.reduce_while(prop_keys, {:ok, []}, fn prop_key, acc ->
+      dimension = "event:props:#{prop_key}"
+
+      raw_params =
+        construct_raw_query_params("custom_props.csv", params)
+        |> Map.put("dimensions", [dimension])
+
+      with {:ok, parsed} <- QueryParser.parse(raw_params),
+           {:ok, query} <- QueryBuilder.build(site, parsed, debug_metadata) do
+        query =
+          query
+          |> Query.set(order_by: [{:visitors, :desc}, {dimension, :asc}])
+          |> Query.set(pagination: %{limit: 300, offset: 0})
+
+        {:cont, {:ok, elem(acc, 1) ++ [{prop_key, query}]}}
+      else
+        error_tuple -> {:halt, error_tuple}
+      end
+    end)
+  end
+
+  defp get_custom_props_csv(_site, []), do: nil
+
+  defp get_custom_props_csv(site, prop_value_queries_by_prop_key) do
+    [{_prop_key, %Query{metrics: metrics}} | _] = prop_value_queries_by_prop_key
+    header_row = [:property, :value] ++ metrics
+
+    data_rows =
+      prop_value_queries_by_prop_key
+      |> Enum.map(fn {prop_key, query} ->
+        fn ->
+          %QueryResult{results: results} = QueryRunner.run(site, query)
+          Enum.map(results, fn row -> [prop_key | row.dimensions] ++ row.metrics end)
+        end
+      end)
+      |> Plausible.ClickhouseRepo.parallel_tasks()
+      |> Enum.concat()
+
+    NimbleCSV.RFC4180.dump_to_iodata([header_row] ++ data_rows)
+  end
+
+  defp maybe_allowed_props_only(prop_keys, site) do
+    case Plausible.Props.allowed_for(site) do
+      :all -> prop_keys
+      allowed -> Enum.filter(prop_keys, &(&1 in allowed))
+    end
   end
 end

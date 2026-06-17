@@ -357,23 +357,25 @@ export function customPropsReportConfig(
 ): BreakdownReportConfig {
   return {
     dimensions: [`event:props:${propKey}` as NonTimeDimension],
-    getMetrics: (ctx: MetricContext) => {
-      if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
-        return [
-          'visitors',
-          'events',
-          'conversion_rate',
-          'total_revenue',
-          'average_revenue'
-        ]
-      }
-      if (ctx.hasConversionGoalFilter) {
-        return ['visitors', 'events', 'conversion_rate']
-      }
-      return ['visitors', 'events', 'percentage']
-    },
+    getMetrics: getCustomPropsMetrics,
     detailsTitle: 'Custom property breakdown',
     detailsPath: `custom-prop-values/${propKey}`,
     dimensionLabel: propKey
   }
+}
+
+export function getCustomPropsMetrics(ctx: MetricContext): Metric[] {
+  if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
+    return [
+      'visitors',
+      'events',
+      'conversion_rate',
+      'total_revenue',
+      'average_revenue'
+    ]
+  }
+  if (ctx.hasConversionGoalFilter) {
+    return ['visitors', 'events', 'conversion_rate']
+  }
+  return ['visitors', 'events', 'percentage']
 }
