@@ -50,6 +50,9 @@ defmodule Plausible.ClickhouseEventV2 do
 
     # Virtual field used during event processing
     field :interactive?, :boolean, default: true, virtual: true, writable: :never
+
+    # Virtual field used during event replay
+    field :replay_session_id, :string, default: nil, virtual: true, writable: :never
   end
 
   def new(attrs) do
@@ -71,7 +74,8 @@ defmodule Plausible.ClickhouseEventV2 do
         :revenue_source_currency,
         :revenue_reporting_amount,
         :revenue_reporting_currency,
-        :interactive?
+        :interactive?,
+        :replay_session_id
       ]
     )
     |> validate_required([:name, :site_id, :hostname, :pathname, :user_id, :timestamp])
