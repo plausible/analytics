@@ -25,8 +25,14 @@ const MAX_DIMENSION_LENGTH = 70
 
 function makeHostnameDimensionElement(pageFilterKey: string) {
   const getFilterInfo: GetFilterInfo = (_dim, row) => ({
-    prefix: pageFilterKey,
-    filter: ['is', pageFilterKey, [row.dimensions[1]]] as Filter
+    prefix: 'hostname',
+    filter: ['is', 'hostname', [row.dimensions[0]]] as Filter,
+    extraFilters: [
+      {
+        prefix: pageFilterKey,
+        filter: ['is', pageFilterKey, [row.dimensions[1]]] as Filter
+      }
+    ]
   })
   return function HostnameDimensionElement(props: DimensionCellProps) {
     const site = useSiteContext()

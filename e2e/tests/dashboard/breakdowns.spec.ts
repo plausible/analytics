@@ -955,6 +955,24 @@ test('pages breakdown - URL mode', async ({ page, request }) => {
     await expectMetricValues(report, 'docs.example.com/api', ['1', '33.3%'])
   })
 
+  await test.step('clicking a URL mode row applies hostname and page filters', async () => {
+    await rowLink(report, 'blog.example.com/post').click()
+
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Hostname is blog.example.com' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Page is /post' })
+    ).toBeVisible()
+
+    await page
+      .getByRole('button', { name: 'Remove filter: Hostname is blog.example.com' })
+      .click()
+    await page
+      .getByRole('button', { name: 'Remove filter: Page is /post' })
+      .click()
+  })
+
   await test.step('entry pages in URL mode', async () => {
     await tabButton(report, 'Entry pages').click()
 

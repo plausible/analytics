@@ -245,8 +245,14 @@ function PathDimensionCell(props: DimensionCellWithBarProps) {
 
 function makeHostnameDimensionCell(pageFilterKey: string) {
   const getFilterInfo: GetFilterInfo = (_dim, row) => ({
-    prefix: pageFilterKey,
-    filter: ['is', pageFilterKey, [row.dimensions[1]]] as Filter
+    prefix: 'hostname',
+    filter: ['is', 'hostname', [row.dimensions[0]]] as Filter,
+    extraFilters: [
+      {
+        prefix: pageFilterKey,
+        filter: ['is', pageFilterKey, [row.dimensions[1]]] as Filter
+      }
+    ]
   })
   return function HostnameDimensionCell(props: DimensionCellWithBarProps) {
     const site = useSiteContext()
