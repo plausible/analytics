@@ -285,7 +285,8 @@ defmodule Plausible.Ingestion.Event do
       pathname: event.request.pathname,
       scroll_depth: event.request.scroll_depth,
       engagement_time: event.request.engagement_time,
-      interactive?: event.request.interactive?
+      interactive?: event.request.interactive?,
+      replay_session_id: event.request.replay_session_id
     })
   end
 
