@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
-import { CsvExportV2, ExportStatus } from './csv-export'
+import { CsvExport, ExportStatus } from './csv-export'
 
 const exportButton = () => screen.getByRole('button', { name: /export stats/i })
 
@@ -14,10 +14,7 @@ function renderCsvExport({
   setExportStatus: () => void
 }) {
   render(
-    <CsvExportV2
-      exportStatus={exportStatus}
-      setExportStatus={setExportStatus}
-    />,
+    <CsvExport exportStatus={exportStatus} setExportStatus={setExportStatus} />,
     {
       wrapper: (props) => <TestContextProviders {...props} />
     }

@@ -14,7 +14,7 @@ import { Notice } from '../components/notice'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
-import { CsvExportV2, ExportStatus } from '../stats/csv-export/csv-export'
+import { CsvExport, ExportStatus } from '../stats/csv-export/csv-export'
 
 function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   const { dashboardState } = useDashboardStateContext()
@@ -107,7 +107,7 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
-          <CsvExportV2
+          <CsvExport
             exportStatus={exportStatus}
             setExportStatus={setExportStatus}
           />

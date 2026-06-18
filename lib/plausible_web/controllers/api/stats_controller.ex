@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def csv_export_v2(conn, params) do
+  def csv_export(conn, params) do
     site = conn.assigns.site
 
     case CsvExport.get_csvs(site, params, debug_metadata(conn)) do
