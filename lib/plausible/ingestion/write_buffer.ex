@@ -66,6 +66,13 @@ defmodule Plausible.Ingestion.WriteBuffer do
     {:noreply, %{state | buffer: [], buffer_size: 0, timer: timer}}
   end
 
+  def handle_info({:EXIT, _from, _reason}, state) do
+    # We trap exits so terminate/2 can flush on shutdown. Linked ports and
+    # processes (e.g. the ClickHouse connection socket) deliver :EXIT messages
+    # here on disconnect, which we ignore to keep the buffer alive.
+    {:noreply, state}
+  end
+
   @impl true
   def handle_call(:flush, _from, state) do
     %{timer: timer, flush_interval_ms: flush_interval_ms} = state
