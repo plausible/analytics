@@ -42,7 +42,8 @@ const BREAKDOWN_CSV_REPORTS = {
   'utm_terms.csv': BreakdownReportKey.utmTerms,
   'countries.csv': BreakdownReportKey.countries,
   'regions.csv': BreakdownReportKey.regions,
-  'cities.csv': BreakdownReportKey.cities
+  'cities.csv': BreakdownReportKey.cities,
+  'conversions.csv': BreakdownReportKey.goals
 }
 type CsvFilename =
   | 'visitors.csv'

@@ -103,6 +103,10 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
     "custom_props.csv" => %{
       dimensions: ["event:props:*"],
       metrics: ["visitors", "events", "percentage"]
+    },
+    "conversions.csv" => %{
+      dimensions: ["event:goal"],
+      metrics: ["visitors", "events"]
     }
   }
 
@@ -132,6 +136,9 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
                            {"custom_props.csv" = filename, params} ->
                              {filename,
                               %{params | metrics: ["visitors", "events", "conversion_rate"]}}
+
+                           {"conversions.csv" = filename, params} ->
+                             {filename, params}
 
                            {filename, params} ->
                              {filename,
@@ -163,7 +170,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"browsers.csv" in zip
       assert ~c"browser_versions.csv" in zip
       assert ~c"cities.csv" in zip
-      # assert ~c"conversions.csv" in zip
+      assert ~c"conversions.csv" in zip
       assert ~c"countries.csv" in zip
       assert ~c"devices.csv" in zip
       assert ~c"entry_pages.csv" in zip
@@ -492,7 +499,7 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
         "operating_systems.csv",
         "operating_system_versions.csv",
         "devices.csv",
-        # "conversions.csv",
+        "conversions.csv",
         "referrers.csv"
       ]
 

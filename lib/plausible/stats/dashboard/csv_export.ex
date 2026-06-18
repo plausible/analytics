@@ -25,7 +25,8 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     "countries.csv",
     "regions.csv",
     "cities.csv",
-    "custom_props.csv"
+    "custom_props.csv",
+    "conversions.csv"
   ]
 
   def get_csvs(site, params, debug_metadata) do
@@ -115,11 +116,10 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     # data like time on page or bounce_rate for pages in a separate query using
     # the IN filter, it causes the requests to balloon in payload size.
     limit = if filename in ["pages.csv", "exit_pages.csv"], do: 100, else: 300
-    order_by = [{:visitors, :desc} | Enum.map(query.dimensions, &{&1, :asc})]
 
     query =
       query
-      |> Query.set(order_by: order_by)
+      |> Query.set(order_by: get_order_by(query.dimensions))
       |> Query.set(pagination: %{limit: limit, offset: 0})
 
     QueryRunner.run(site, query) |> query_result_to_csv()
@@ -151,6 +151,12 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     |> Map.get(timelabel)
   end
 
+  defp get_order_by(["event:goal"]), do: [{:visitors, :desc}]
+
+  defp get_order_by(dimensions) do
+    [{:visitors, :desc} | Enum.map(dimensions, &{&1, :asc})]
+  end
+
   defp csv_first_row(query) do
     csv_dimension_labels(query[:dimensions]) ++ csv_metric_labels(query)
   end
@@ -180,6 +186,12 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
           group_conversion_rate: :conversion_rate
         }
 
+      ["event:goal"] ->
+        %{
+          visitors: :unique_conversions,
+          events: :total_conversions
+        }
+
       _ ->
         %{
           visitors: :conversions,
@@ -196,6 +208,10 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     ["visit:exit_page"] => %{
       visitors: :unique_exits,
       visits: :total_exits
+    },
+    ["event:goal"] => %{
+      visitors: :unique_conversions,
+      events: :total_conversions
     }
   }
 

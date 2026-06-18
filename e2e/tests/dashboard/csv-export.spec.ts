@@ -70,7 +70,8 @@ const EXPECTED_HEADERS = {
     'visitors',
     'events',
     'conversion_rate'
-  ]
+  ],
+  conversionsBreakdown: ['name', 'unique_conversions', 'total_conversions']
 }
 
 const UTM_AND_SOURCE_REPORTS = [
@@ -176,6 +177,9 @@ test('csv export column headers match expected metrics for each report', async (
     expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
       EXPECTED_HEADERS.customPropsDefault
     )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 
   await test.step('with a page filter', async () => {
@@ -216,6 +220,9 @@ test('csv export column headers match expected metrics for each report', async (
     expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
       EXPECTED_HEADERS.customPropsDefault
     )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 
   await test.step('with a goal filter', async () => {
@@ -249,6 +256,9 @@ test('csv export column headers match expected metrics for each report', async (
     }
     expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
       EXPECTED_HEADERS.customPropsGoalFiltered
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
     )
   })
 
@@ -289,6 +299,9 @@ test('csv export column headers match expected metrics for each report', async (
     }
     expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
       EXPECTED_HEADERS.customPropsDefault
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
     )
   })
 })

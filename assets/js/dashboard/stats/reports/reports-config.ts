@@ -335,6 +335,9 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.goals]: {
     dimensions: ['event:goal'],
     getMetrics: (ctx: MetricContext) => {
+      if (ctx.isCsv) {
+        return ['visitors', 'events']
+      }
       if (ctx.isRevenueAvailable) {
         return [
           'visitors',
