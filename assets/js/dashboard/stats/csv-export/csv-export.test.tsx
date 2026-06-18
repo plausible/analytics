@@ -19,12 +19,7 @@ function renderCsvExport({
       setExportStatus={setExportStatus}
     />,
     {
-      wrapper: (props) => (
-        <TestContextProviders
-          {...props}
-          siteOptions={{ flags: { dashboard_csv_export_v2: true } }}
-        />
-      )
+      wrapper: (props) => <TestContextProviders {...props} />
     }
   )
 }

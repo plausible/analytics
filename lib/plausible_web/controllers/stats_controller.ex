@@ -550,7 +550,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:dashboard_csv_export_v2]
+      []
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)
