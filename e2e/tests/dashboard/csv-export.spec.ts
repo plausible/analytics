@@ -187,6 +187,10 @@ test('csv export column headers match expected metrics for each report', async (
       waitUntil: 'commit'
     })
 
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Page is /' })
+    ).toBeVisible()
+
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
     expect(getCsv(csvs, 'visitors.csv')[0]).toEqual(
@@ -232,6 +236,10 @@ test('csv export column headers match expected metrics for each report', async (
       waitUntil: 'commit'
     })
 
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Goal is Signup' })
+    ).toBeVisible()
+
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
     expect(getCsv(csvs, 'visitors.csv')[0]).toEqual(
@@ -266,6 +274,12 @@ test('csv export column headers match expected metrics for each report', async (
     await page.goto(`/${domain}?period=all&f=is,props:author,john`, {
       waitUntil: 'commit'
     })
+
+    await expect(
+      page.getByRole('button', {
+        name: 'Remove filter: Property author is john'
+      })
+    ).toBeVisible()
 
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
