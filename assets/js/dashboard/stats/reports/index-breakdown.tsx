@@ -68,7 +68,8 @@ export function IndexBreakdown({
   metricColumnWidth = DEFAULT_METRIC_COLUMN_WIDTH,
   bundlePercentageWithVisitors = true,
   hideMetricsIfAllNull,
-  hideMetricsOnMobile
+  hideMetricsOnMobile,
+  getStatsQuery
 }: IndexBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -91,7 +92,7 @@ export function IndexBreakdown({
   const { apiState, isRealtimeSilentUpdate } = useQueryApi(
     site,
     statsReportQueryKey,
-    { enabled: visible }
+    { enabled: visible, getStatsQuery }
   )
 
   useEffect(() => {

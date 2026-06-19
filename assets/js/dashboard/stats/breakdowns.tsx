@@ -16,12 +16,14 @@ import {
 import { Filter } from '../dashboard-state'
 import classNames from 'classnames'
 import { DIRECT_NONE } from './sources'
+import { StatsReportQueryKey } from '../hooks/use-query-api'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
   alwaysOnFilters?: ApiFilter[]
+  getStatsQuery?: (queryKey: StatsReportQueryKey) => StatsQuery
   /**
    * When true, `percentage` is shown inline inside the Visitors
    * cell rather than as its own column. Set to false for reports that want

@@ -619,7 +619,9 @@ function Behaviours({
               </TabButton>
             )}
           </TabWrapper>
-          {isRealtime() && <Pill className="-mt-1">last 30min</Pill>}
+          {isRealtime() && mode === Mode.CONVERSIONS && (
+            <Pill className="-mt-1">last 30min</Pill>
+          )}
           {[Mode.CONVERSIONS, Mode.PROPS].includes(mode) ? (
             <ImportedWarningBubble
               queryApiResponse={currentQueryApiResponse}
