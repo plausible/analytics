@@ -10,7 +10,10 @@ import {
   BREAKDOWN_REPORTS,
   BreakdownReportKey
 } from '../reports/reports-config'
-import { getGoalsFilterInfo } from '../behaviours/conversions'
+import {
+  getConversionsStatsQuery,
+  getGoalsFilterInfo
+} from '../behaviours/conversions'
 import { useSiteContext } from '../../site-context'
 
 function ConversionsModal() {
@@ -34,6 +37,7 @@ function ConversionsModal() {
         defaultOrderBy={[['visitors', 'desc']]}
         DimensionElement={GoalsDimensionCell}
         hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
+        getStatsQuery={getConversionsStatsQuery}
       />
     </Modal>
   )
