@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
 
-  alias Plausible.Stats.{Query, Filters, Dashboard, ParsedQueryParams, QueryBuilder, QueryError}
+  alias Plausible.Stats.{Query, Dashboard, ParsedQueryParams, QueryBuilder, QueryError}
 
   alias Plausible.Stats.Dashboard.CsvExport
   alias PlausibleWeb.Api.Helpers, as: H
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Api.StatsController do
         toplevel_goal_filter?(query) ->
           {:error, {:invalid_funnel_query, "goals"}}
 
-        Filters.filtering_on_dimension?(query, "event:page") ->
+        Plausible.Stats.Filters.filtering_on_dimension?(query, "event:page") ->
           {:error, {:invalid_funnel_query, "pages"}}
 
         query.input_date_range == :realtime ->
@@ -420,10 +420,12 @@ defmodule PlausibleWeb.Api.StatsController do
     end)
   end
 
-  defp toplevel_goal_filter?(query) do
-    Filters.filtering_on_dimension?(query, "event:goal",
-      max_depth: 0,
-      behavioral_filters: :ignore
-    )
+  on_ee do
+    defp toplevel_goal_filter?(query) do
+      Plausible.Stats.Filters.filtering_on_dimension?(query, "event:goal",
+        max_depth: 0,
+        behavioral_filters: :ignore
+      )
+    end
   end
 end

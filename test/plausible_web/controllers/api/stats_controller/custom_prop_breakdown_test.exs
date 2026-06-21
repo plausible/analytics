@@ -715,6 +715,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    @tag :ee_only
     test "does not return revenue metrics when filtering by many revenue goals with different currencies",
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
