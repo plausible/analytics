@@ -169,19 +169,19 @@ defmodule Plausible.Stats.QueryOptimizer do
     }
   end
 
+  @event_page_dim_renames %{
+    "event:page" => "visit:entry_page",
+    "event:hostname" => "visit:entry_page_hostname"
+  }
+
   defp build_split_query(:sessions, metrics, query) do
-    dimensions =
-      query.dimensions
-      |> Enum.map(fn
-        "event:page" -> "visit:entry_page"
-        dimension -> dimension
-      end)
+    active_renames = Map.take(@event_page_dim_renames, query.dimensions)
+
+    dimensions = Enum.map(query.dimensions, &Map.get(active_renames, &1, &1))
 
     filters =
-      if "event:page" in query.dimensions do
-        Filters.rename_dimensions_used_in_filter(query.filters, %{
-          "event:page" => "visit:entry_page"
-        })
+      if map_size(active_renames) > 0 do
+        Filters.rename_dimensions_used_in_filter(query.filters, active_renames)
       else
         query.filters
       end
