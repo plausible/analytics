@@ -30,7 +30,11 @@ import { defaultGetFilterInfo, GetFilterInfo } from '../breakdowns'
 import { Filter } from '../../dashboard-state'
 import { externalLinkForPage, trimURL } from '../../util/url'
 import { IndexExternalLink } from './external-link'
-import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
+import {
+  popover,
+  BlurMenuButtonOnEscape,
+  SelectedCheckmark
+} from '../../components/popover'
 
 const BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
 const MAX_DIMENSION_LENGTH = 70
@@ -131,7 +135,7 @@ export default function Pages() {
           </TabWrapper>
           <ImportedWarningBubble queryApiResponse={currentData} />
         </div>
-        <div className="flex items-start gap-x-1">
+        <div className="flex items-start gap-x-3">
           <MoreLink
             state={moreLinkState}
             linkProps={{
@@ -175,27 +179,30 @@ function PagesBreakdownMenu({
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'relative flex mt-px text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
+              'relative flex rounded !text-gray-500 dark:!text-gray-400 hover:!text-gray-600 dark:hover:!text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
               popover.toggleButton.classNames.linkLike,
               'justify-center'
             )}
             title="Breakdown options"
             aria-label="Breakdown options"
           >
-            <EllipsisVerticalIcon className="size-4" />
+            <EllipsisVerticalIcon className="size-4.5" />
           </Popover.Button>
           <Transition
             as="div"
             {...popover.transition.props}
-            className={classNames(popover.transition.classNames.right, 'mt-2')}
+            className={classNames(
+              popover.transition.classNames.right,
+              'mt-2 min-w-48'
+            )}
           >
             <Popover.Panel className={popover.panel.classNames.roundedSheet}>
-              <p className="uppercase text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-2 whitespace-nowrap">
+              <p className="uppercase text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-2.5 whitespace-nowrap">
                 Break down by
               </p>
               <div
                 data-testid="dropdown-items"
-                className="flex flex-col gap-y-0.5 p-1"
+                className="flex flex-col gap-y-0.5"
               >
                 {BREAKDOWN_MODE_OPTIONS.map(({ value, label }) => (
                   <button
@@ -212,6 +219,7 @@ function PagesBreakdownMenu({
                     )}
                   >
                     {label}
+                    <SelectedCheckmark selected={value === breakdownMode} />
                   </button>
                 ))}
               </div>

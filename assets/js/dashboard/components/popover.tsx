@@ -1,5 +1,6 @@
 import React, { RefObject } from 'react'
 import classNames from 'classnames'
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { TransitionClasses } from '@headlessui/react'
 
@@ -77,6 +78,15 @@ export const popover = {
   panel,
   transition,
   items
+}
+
+export function SelectedCheckmark({ selected }: { selected: boolean }) {
+  if (!selected) {
+    return null
+  }
+  return (
+    <CheckIcon className="size-3.5 shrink-0 ml-2 stroke-2" aria-hidden="true" />
+  )
 }
 
 /**
