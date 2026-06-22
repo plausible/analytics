@@ -7,11 +7,11 @@ import Combobox from '../../components/combobox'
 
 import {
   FILTER_OPERATIONS,
-  fetchSuggestions,
   isFreeChoiceFilterOperation,
   getLabel,
   formattedFilters
 } from '../../util/filters'
+import { fetchSuggestions } from '../../util/fetch-suggestions'
 import { apiPath } from '../../util/url'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'

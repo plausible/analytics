@@ -7,6 +7,7 @@ import { serializeApiFilters } from './util/filters'
 import * as url from './util/url'
 import { MainGraphResponse } from './stats/graph/fetch-main-graph'
 import { CsvExportRequestBody } from './stats/csv-export/csv-export-body'
+import { maybeReloadForApiVersion } from './util/url-search-params'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH: null | string = null
@@ -148,7 +149,14 @@ async function throwApiErrorIfNotOk(response: Response) {
   }
 }
 
-async function handleApiResponse(response: Response) {
+async function handleApiResponse(
+  response: Response,
+  opts: Record<'idempotent', boolean> = { idempotent: true }
+) {
+  if (opts.idempotent) {
+    maybeReloadForApiVersion(window.location, response.headers)
+  }
+
   await throwApiErrorIfNotOk(response)
   return response.json()
 }
@@ -262,5 +270,5 @@ export const mutation = async <
     body: fetchOptions.body,
     signal: abortController.signal
   })
-  return handleApiResponse(response)
+  return handleApiResponse(response, { idempotent: false })
 }

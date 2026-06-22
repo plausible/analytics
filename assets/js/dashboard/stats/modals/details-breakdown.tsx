@@ -96,7 +96,8 @@ export function DetailsBreakdown({
   searchDimension,
   onDataReady,
   bundlePercentageWithVisitors = true,
-  hideMetricsIfAllNull
+  hideMetricsIfAllNull,
+  getStatsQuery
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -138,7 +139,9 @@ export function DetailsBreakdown({
     }
   ]
 
-  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey)
+  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey, {
+    getStatsQuery
+  })
 
   useEffect(() => {
     const pages = apiState.data?.pages
