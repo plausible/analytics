@@ -37,11 +37,11 @@ defmodule PlausibleWeb.Dogfood do
           # If you wish to track the app itself, uncomment the following code
           # and replace the site_id if necessary (1 stands for dummy.site).
 
-          Plausible.Repo.get(Plausible.Site, 1)
-          |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
-          |> Map.get(:id)
+          # Plausible.Repo.get(Plausible.Site, 1)
+          # |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
+          # |> Map.get(:id)
 
-        # "pa-invalid-script-id"
+          "pa-invalid-script-id"
 
         env in ["test", "ce_test", "e2e_test"] ->
           ""
