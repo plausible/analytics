@@ -72,11 +72,23 @@ defmodule PlausibleWeb.Dogfood do
     %{
       logged_in: true,
       theme: user.theme,
-      current_plan: assigns[:current_plan]
+      current_plan: current_plan(assigns[:current_team])
     }
   end
 
   defp custom_properties(_) do
     %{logged_in: false}
   end
+
+  defp current_plan(%Plausible.Teams.Team{subscription: subscription})
+       when not is_nil(subscription) do
+    case Plausible.Billing.Plans.get_subscription_plan(subscription) do
+      %Plausible.Billing.Plan{kind: kind} -> Atom.to_string(kind)
+      %Plausible.Billing.EnterprisePlan{} -> "enterprise"
+      :free_10k -> "free_10k"
+      nil -> "no_subscription"
+    end
+  end
+
+  defp current_plan(_), do: "no_subscription"
 end
