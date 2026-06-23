@@ -68,11 +68,29 @@ defmodule PlausibleWeb.Dogfood do
 
   defp location_override(_), do: nil
 
-  defp custom_properties(%{current_user: user}) when is_map(user) do
-    %{logged_in: true, theme: user.theme}
+  defp custom_properties(%{current_user: user} = assigns) when is_map(user) do
+    %{
+      logged_in: true,
+      theme: user.theme,
+      current_plan: current_plan(assigns[:current_team])
+    }
   end
 
   defp custom_properties(_) do
     %{logged_in: false}
+  end
+
+  defp current_plan(%Plausible.Teams.Team{
+         subscription: %Plausible.Billing.Subscription{} = subscription
+       }) do
+    case Plausible.Billing.Plans.get_subscription_plan(subscription) do
+      %Plausible.Billing.Plan{kind: kind} -> kind
+      %Plausible.Billing.EnterprisePlan{} -> :enterprise
+      other when is_atom(other) -> other
+    end
+  end
+
+  defp current_plan(team) do
+    if Plausible.Teams.on_trial?(team), do: :trial
   end
 end
