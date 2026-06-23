@@ -90,9 +90,7 @@ defmodule PlausibleWeb.Dogfood do
     end
   end
 
-  defp current_plan(%Plausible.Teams.Team{} = team) do
+  defp current_plan(team) do
     if Plausible.Teams.on_trial?(team), do: :trial
   end
-
-  defp current_plan(_), do: nil
 end
