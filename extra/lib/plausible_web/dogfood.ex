@@ -37,11 +37,11 @@ defmodule PlausibleWeb.Dogfood do
           # If you wish to track the app itself, uncomment the following code
           # and replace the site_id if necessary (1 stands for dummy.site).
 
-          # Plausible.Repo.get(Plausible.Site, 1)
-          # |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
-          # |> Map.get(:id)
+          Plausible.Repo.get(Plausible.Site, 1)
+          |> PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!()
+          |> Map.get(:id)
 
-          "pa-invalid-script-id"
+        # "pa-invalid-script-id"
 
         env in ["test", "ce_test", "e2e_test"] ->
           ""
@@ -80,15 +80,19 @@ defmodule PlausibleWeb.Dogfood do
     %{logged_in: false}
   end
 
-  defp current_plan(%Plausible.Teams.Team{subscription: subscription})
-       when not is_nil(subscription) do
+  defp current_plan(%Plausible.Teams.Team{
+         subscription: %Plausible.Billing.Subscription{} = subscription
+       }) do
     case Plausible.Billing.Plans.get_subscription_plan(subscription) do
-      %Plausible.Billing.Plan{kind: kind} -> Atom.to_string(kind)
-      %Plausible.Billing.EnterprisePlan{} -> "enterprise"
-      :free_10k -> "free_10k"
-      nil -> "no_subscription"
+      %Plausible.Billing.Plan{kind: kind} -> kind
+      %Plausible.Billing.EnterprisePlan{} -> :enterprise
+      other when is_atom(other) -> other
     end
   end
 
-  defp current_plan(_), do: "no_subscription"
+  defp current_plan(%Plausible.Teams.Team{} = team) do
+    if Plausible.Teams.on_trial?(team), do: :trial
+  end
+
+  defp current_plan(_), do: nil
 end
