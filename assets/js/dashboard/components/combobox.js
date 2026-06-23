@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef
 } from 'react'
+import { createPortal } from 'react-dom'
 import { Spinner } from './icons'
 import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -68,6 +69,8 @@ export default function PlausibleCombobox({
   const searchRef = useRef(null)
   const containerRef = useRef(null)
   const listRef = useRef(null)
+  const boxRef = useRef(null)
+  const [dropdownStyle, setDropdownStyle] = useState({})
 
   const loading = isLoading || !!forceLoading
 
@@ -198,8 +201,22 @@ export default function PlausibleCombobox({
     setOpen(false)
   }
 
+  useEffect(() => {
+    if (isOpen && boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect()
+      setDropdownStyle({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width
+      })
+    }
+  }, [isOpen])
+
   const handleClick = useCallback((e) => {
     if (containerRef.current && containerRef.current.contains(e.target)) {
+      return
+    }
+    if (listRef.current && listRef.current.contains(e.target)) {
       return
     }
 
@@ -348,7 +365,7 @@ export default function PlausibleCombobox({
 
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
-      <div onClick={toggleOpen} className={finalBoxClass}>
+      <div ref={boxRef} onClick={toggleOpen} className={finalBoxClass}>
         {singleOption && renderSingleOptionContent()}
         {!singleOption && renderMultiOptionContent()}
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
@@ -358,22 +375,25 @@ export default function PlausibleCombobox({
           )}
         </div>
       </div>
-      {isOpen && (
-        <Transition
-          as={Fragment}
-          leave="transition ease-in duration-100"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-          show={isOpen}
-        >
-          <ul
-            ref={listRef}
-            className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden sm:text-sm dark:bg-gray-800"
+      {isOpen &&
+        createPortal(
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+            show={isOpen}
           >
-            {renderDropDownContent()}
-          </ul>
-        </Transition>
-      )}
+            <ul
+              ref={listRef}
+              style={dropdownStyle}
+              className="z-[9999] fixed max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1/5 ring-black focus:outline-hidden sm:text-sm dark:bg-gray-800"
+            >
+              {renderDropDownContent()}
+            </ul>
+          </Transition>,
+          document.body
+        )}
     </div>
   )
 }
