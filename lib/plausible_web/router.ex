@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
     on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
     on_ee(do: plug(Plausible.Plugs.SSOTeamAccess))
+    on_ee(do: plug(PlausibleWeb.Plugs.Dogfood))
     plug PlausibleWeb.Plugs.UserSessionTouch
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
