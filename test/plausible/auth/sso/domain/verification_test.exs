@@ -4,6 +4,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
   @moduletag :ee_only
 
   on_ee do
+    use Plausible.Test.Support.DNS
+
     alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plug.Conn
@@ -85,6 +87,60 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
         refute Verification.meta_tag("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
+               )
+      end
+
+      test "url refuses to request a domain resolving to an internal IP (SSRF)" do
+        stub_lookup_a_records("internal.attacker.example", [{169, 254, 169, 254}])
+
+        refute Verification.url("internal.attacker.example", "ex4mpl3")
+      end
+
+      test "meta_tag refuses to request a domain resolving to an internal IP (SSRF)" do
+        stub_lookup_a_records("internal.attacker.example", [{10, 0, 0, 1}])
+
+        refute Verification.meta_tag("internal.attacker.example", "ex4mpl3")
+      end
+
+      test "url refuses a domain whose AAAA record is internal (SSRF)" do
+        stub_lookup_a_records(
+          "dualstack.attacker.example",
+          [{93, 184, 216, 34}],
+          [{0, 0, 0, 0, 0, 0, 0, 1}]
+        )
+
+        refute Verification.url("dualstack.attacker.example", "ex4mpl3")
+      end
+
+      test "url refuses to follow a redirect to an internal host (SSRF)", %{bypass: bypass} do
+        Bypass.expect(bypass, "GET", "/test", fn conn ->
+          conn
+          |> Conn.put_resp_header("location", "http://10.0.0.1/")
+          |> Conn.resp(302, "")
+        end)
+
+        refute Verification.url("example.com", "ex4mpl3",
+                 url_override: "http://localhost:#{bypass.port}/test"
+               )
+      end
+
+      test "url still follows a redirect to a public host", %{bypass: bypass} do
+        # The SSRF guard resolves redirect targets; stub the host (still hit by
+        # Finch's own resolution to reach Bypass) to a public address.
+        stub_lookup_a_records("localhost", [{93, 184, 216, 34}])
+
+        Bypass.expect(bypass, "GET", "/redirect", fn conn ->
+          conn
+          |> Conn.put_resp_header("location", "/verified")
+          |> Conn.resp(302, "")
+        end)
+
+        Bypass.expect(bypass, "GET", "/verified", fn conn ->
+          Conn.resp(conn, 200, "ex4mpl3")
+        end)
+
+        assert Verification.url("example.com", "ex4mpl3",
+                 url_override: "http://localhost:#{bypass.port}/redirect"
                )
       end
 

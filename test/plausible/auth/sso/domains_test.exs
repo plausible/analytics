@@ -80,6 +80,31 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert {:error, _changeset} = SSO.Domains.add(integration, "invalid domain.com")
       end
 
+      test "rejects literal IPs and internal single-label hosts (SSRF)", %{
+        integration: integration
+      } do
+        for input <- [
+              "127.0.0.1",
+              "169.254.169.254",
+              "10.0.0.5",
+              "192.168.1.1",
+              "::1",
+              "localhost",
+              "localhost.",
+              "consul",
+              "consul.",
+              "redis"
+            ] do
+          assert {:error, changeset} = SSO.Domains.add(integration, input),
+                 "expected #{input} to be rejected"
+
+          assert %{domain: [:domain]} =
+                   Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+                     opts[:validation]
+                   end)
+        end
+      end
+
       test "rejects already added domain", %{integration: integration} do
         domain = generate_domain()
         {:ok, _} = SSO.Domains.add(integration, domain)
