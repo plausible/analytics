@@ -246,6 +246,50 @@ defmodule Plausible.Session.CacheStoreTest do
     # assert Map.get(session, :"entry.meta.value") == ["true", "false"]
   end
 
+  @tag :ee_only
+  test "creates a session from a replayed event", %{buffer: buffer} do
+    event =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        "meta.key": ["logged_in", "darkmode"],
+        "meta.value": ["true", "false"]
+      )
+
+    CacheStore.on_event(event, @session_params, nil, buffer_insert: buffer)
+
+    assert_receive({:buffer, :insert, [sessions]})
+    assert [session] = sessions
+    assert session.hostname == event.hostname
+
+    assert session.site_id == event.site_id
+
+    assert session.replay_session_id == 456
+
+    assert session.user_id == event.user_id
+    assert session.entry_page == event.pathname
+    assert session.exit_page == event.pathname
+    assert session.is_bounce == true
+    assert session.duration == 0
+    assert session.pageviews == 1
+    assert session.events == 1
+    assert session.referrer == Map.get(@session_params, :referrer)
+    assert session.referrer_source == Map.get(@session_params, :referrer_source)
+    assert session.utm_medium == Map.get(@session_params, :utm_medium)
+    assert session.utm_source == Map.get(@session_params, :utm_source)
+    assert session.utm_campaign == Map.get(@session_params, :utm_campaign)
+    assert session.utm_content == Map.get(@session_params, :utm_content)
+    assert session.utm_term == Map.get(@session_params, :utm_term)
+    assert session.country_code == Map.get(@session_params, :country_code)
+    assert session.screen_size == Map.get(@session_params, :screen_size)
+    assert session.operating_system == Map.get(@session_params, :operating_system)
+    assert session.operating_system_version == Map.get(@session_params, :operating_system_version)
+    assert session.browser == Map.get(@session_params, :browser)
+    assert session.browser_version == Map.get(@session_params, :browser_version)
+    assert session.timestamp == event.timestamp
+    assert session.start === event.timestamp
+  end
+
   test "updates session counters", %{buffer: buffer} do
     timestamp = DateTime.utc_now()
 
