@@ -179,7 +179,16 @@ defmodule PlausibleWeb.Live.Installation do
             <% end %>
             <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 
-            <.button type="submit" class="w-full mt-8">
+            <.button
+              type="submit"
+              class={
+                "w-full mt-8 " <>
+                  install_method_event_classes(
+                    @installation_type.result,
+                    recommended_installation_type
+                  )
+              }
+            >
               {verify_cta(@installation_type.result)}
             </.button>
           </.form>
@@ -203,6 +212,23 @@ defmodule PlausibleWeb.Live.Installation do
   defp verify_cta("wordpress"), do: "Verify WordPress installation"
   defp verify_cta("gtm"), do: "Verify Tag Manager installation"
   defp verify_cta("npm"), do: "Verify NPM installation"
+
+  defp install_method_event_classes(installation_type, recommended) do
+    method = installation_method_label(installation_type)
+    match = if installation_type == recommended, do: "true", else: "false"
+
+    Enum.join(
+      [
+        "plausible-event-name=Site+installation+method",
+        "plausible-event-method=#{method}",
+        "plausible-event-recommended_match=#{match}"
+      ],
+      " "
+    )
+  end
+
+  defp installation_method_label("manual"), do: "script"
+  defp installation_method_label(other), do: other
 
   on_ee do
     defp detect_recommended_installation_type(flow, site) do
