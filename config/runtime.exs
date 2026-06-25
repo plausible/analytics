@@ -1104,6 +1104,4 @@ unless s3_disabled? do
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
 
-config :plausible, Plausible.Cache.Adapter,
-  sessions: [partitions: 100],
-  replay_sessions: [partitions: 20]
+config :plausible, Plausible.Cache.Adapter, sessions: [partitions: 100]
