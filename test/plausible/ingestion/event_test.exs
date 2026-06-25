@@ -475,6 +475,47 @@ defmodule Plausible.Ingestion.EventTest do
     assert Decimal.eq?(event.clickhouse_event.revenue_source_amount, Decimal.new("10.2"))
   end
 
+  @tag :ee_only
+  test "saves replay session id when passed in headers" do
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("x-replay-event-id", "123")
+      |> Plug.Conn.put_req_header("x-replay-session-id", "456")
+      |> Plug.Conn.put_req_header("x-replay-time", "2026-06-02 12:43:00")
+
+    assert {:ok, request, _conn} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
+    assert event.clickhouse_event.replay_session_id == 456
+    assert event.clickhouse_event.timestamp == ~N[2026-06-02 12:43:00]
+  end
+
+  @tag :ee_only
+  test "leaves replay session id empty when not passed in headers" do
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request, _conn} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
+    assert is_nil(event.clickhouse_event.replay_session_id)
+    assert %NaiveDateTime{} = event.clickhouse_event.timestamp
+  end
+
   test "does not save revenue amount when there is no revenue goal" do
     site = new_site()
 
