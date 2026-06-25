@@ -516,6 +516,67 @@ defmodule Plausible.Ingestion.EventTest do
     assert %NaiveDateTime{} = event.clickhouse_event.timestamp
   end
 
+  @tag :ee_only
+  test "replayed events have a distinct user id due to reply session-dependent salt" do
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn1 =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", "Mozilla")
+      |> Plug.Conn.put_req_header("x-plausible-ip", "1.2.3.4")
+
+    assert {:ok, request1, _conn} = Request.build(conn1)
+    assert {:ok, %{buffered: [event1], dropped: []}} = Event.build_and_buffer(request1)
+
+    conn2 =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", "Mozilla")
+      |> Plug.Conn.put_req_header("x-plausible-ip", "1.2.3.4")
+      |> Plug.Conn.put_req_header("x-replay-event-id", "123")
+      |> Plug.Conn.put_req_header("x-replay-session-id", "456")
+      |> Plug.Conn.put_req_header("x-replay-time", "2026-06-02 12:43:00")
+
+    assert {:ok, request2, _conn} = Request.build(conn2)
+    assert {:ok, %{buffered: [event2], dropped: []}} = Event.build_and_buffer(request2)
+
+    conn3 =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", "Mozilla")
+      |> Plug.Conn.put_req_header("x-plausible-ip", "1.2.3.4")
+      |> Plug.Conn.put_req_header("x-replay-event-id", "124")
+      |> Plug.Conn.put_req_header("x-replay-session-id", "456")
+      |> Plug.Conn.put_req_header("x-replay-time", "2026-06-02 12:44:01")
+
+    assert {:ok, request3, _conn} = Request.build(conn3)
+    assert {:ok, %{buffered: [event3], dropped: []}} = Event.build_and_buffer(request3)
+
+    conn4 =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", "Mozilla")
+      |> Plug.Conn.put_req_header("x-plausible-ip", "1.2.3.4")
+      |> Plug.Conn.put_req_header("x-replay-event-id", "125")
+      |> Plug.Conn.put_req_header("x-replay-session-id", "789")
+      |> Plug.Conn.put_req_header("x-replay-time", "2026-06-02 12:44:01")
+
+    assert {:ok, request4, _conn} = Request.build(conn4)
+    assert {:ok, %{buffered: [event4], dropped: []}} = Event.build_and_buffer(request4)
+
+    # non-replayed event user id different from replayed event user despite
+    # identical fingerprint
+    assert event1.clickhouse_event.user_id != event2.clickhouse_event.user_id
+    # replayed events with the same session for the same fingerprint have the
+    # same useer id
+    assert event2.clickhouse_event.user_id == event3.clickhouse_event.user_id
+    # replayed event from different sessions for the same fingerprint
+    # have different users
+    assert event3.clickhouse_event.user_id != event4.clickhouse_event.user_id
+  end
+
   test "does not save revenue amount when there is no revenue goal" do
     site = new_site()
 
