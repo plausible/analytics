@@ -67,14 +67,7 @@ defmodule Plausible.Session.CacheStore do
   defp find_session(_domain, nil), do: nil
 
   defp find_session(event, user_id) do
-    {cache_name, key} =
-      if event.replay_session_id do
-        {:replay_sessions, {event.site_id, user_id, event.replay_session_id}}
-      else
-        {:sessions, {event.site_id, user_id}}
-      end
-
-    from_cache = Plausible.Cache.Adapter.get(cache_name, key)
+    from_cache = Plausible.Cache.Adapter.get(:sessions, {event.site_id, user_id})
 
     case from_cache do
       nil ->
@@ -88,14 +81,8 @@ defmodule Plausible.Session.CacheStore do
   end
 
   defp update_session_cache(session) do
-    {cache_name, key} =
-      if session.replay_session_id do
-        {:replay_sessions, {session.site_id, session.user_id, session.replay_session_id}}
-      else
-        {:sessions, {session.site_id, session.user_id}}
-      end
-
-    Plausible.Cache.Adapter.put(cache_name, key, session, dirty?: true)
+    key = {session.site_id, session.user_id}
+    Plausible.Cache.Adapter.put(:sessions, key, session, dirty?: true)
     session
   end
 
@@ -168,7 +155,6 @@ defmodule Plausible.Session.CacheStore do
       browser_version: Map.get(session_attributes, :browser_version),
       timestamp: event.timestamp,
       start: event.timestamp,
-      replay_session_id: event.replay_session_id,
       "entry_meta.key": Map.get(event, :"meta.key"),
       "entry_meta.value": Map.get(event, :"meta.value")
     }
