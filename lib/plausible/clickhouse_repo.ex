@@ -59,11 +59,41 @@ defmodule Plausible.ClickhouseRepo do
     log_comment = Jason.encode!(log_comment_data)
 
     opts =
-      Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
-        [{:log_comment, log_comment} | settings]
+      opts
+      |> Keyword.update(:settings, [log_comment: log_comment], fn current_settings ->
+        extra_settings =
+          on_ee do
+            get_extra_connection_settings(plausible_query)
+          else
+            []
+          end
+
+        [{:log_comment, log_comment}]
+        |> Enum.concat(extra_settings)
+        |> Enum.concat(current_settings)
       end)
 
     {query, opts}
+  end
+
+  on_ee do
+    @external_controllers [
+      PlausibleWeb.Api.ExternalStatsController |> to_string(),
+      PlausibleWeb.Api.ExternalQueryApiController |> to_string()
+    ]
+    defp get_extra_connection_settings(
+           %{debug_metadata: %{phoenix_controller: controller}} = _plausible_query
+         ) do
+      if controller in @external_controllers do
+        [{:workload, "external_api"}]
+      else
+        []
+      end
+    end
+
+    defp get_extra_connection_settings(_plausible_query) do
+      []
+    end
   end
 
   def get_config_without_ch_query_execution_timeout() do
