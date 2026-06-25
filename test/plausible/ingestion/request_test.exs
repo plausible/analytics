@@ -174,6 +174,42 @@ defmodule Plausible.Ingestion.RequestTest do
   end
 
   @tag :ee_only
+  test "parses replay headers if present" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> put_req_header("x-replay-event-id", "123")
+      |> put_req_header("x-replay-session-id", "456")
+      |> put_req_header("x-replay-time", "2026-06-02 12:43:00")
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert request.replay_id == 123
+    assert request.replay_session_id == 456
+    assert NaiveDateTime.compare(request.timestamp, ~N[2026-06-02 12:43:00]) == :eq
+  end
+
+  @tag :ee_only
+  test "leaves replay fields empty and timestamp intact if headers not present" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert is_nil(request.replay_id)
+    assert is_nil(request.replay_session_id)
+    assert %NaiveDateTime{} = request.timestamp
+  end
+
+  @tag :ee_only
   test "parses revenue source field from a json string" do
     payload = %{
       name: "pageview",
