@@ -61,8 +61,8 @@ defmodule Plausible.Ingestion.Request do
       field :revenue_source, :map
 
       # fields meant for replayed events only
-      field :replay_id, :string
-      field :replay_session_id, :string
+      field :replay_id, :integer
+      field :replay_session_id, :integer
     end
 
     field :query_params, :map
@@ -146,12 +146,14 @@ defmodule Plausible.Ingestion.Request do
         conn
         |> Plug.Conn.get_req_header(@replay_id_header)
         |> List.first()
+        |> to_integer()
 
       if id do
         session_id =
           conn
           |> Plug.Conn.get_req_header(@replay_session_id_header)
           |> List.first()
+          |> to_integer()
 
         time =
           conn
@@ -167,6 +169,18 @@ defmodule Plausible.Ingestion.Request do
         changeset
       end
     end
+
+    defp to_integer(s) when is_binary(s) do
+      case Integer.parse(s) do
+        {n, ""} when n > 0 ->
+          n
+
+        _ ->
+          nil
+      end
+    end
+
+    defp to_integer(_), do: nil
   else
     defp put_replay_data(changeset, _conn), do: changeset
   end
