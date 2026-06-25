@@ -116,6 +116,142 @@ defmodule PlausibleWeb.TrackerTest do
     end
   end
 
+  describe "sync_goals: goal deletion when measurement is disabled" do
+    test "deletes outbound_links goal when flipped from true to false" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{outbound_links: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, outbound_links: false},
+        :plugins_api
+      )
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+    end
+
+    test "deletes file_downloads goal when flipped from true to false" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{file_downloads: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, file_downloads: false},
+        :plugins_api
+      )
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+    end
+
+    test "deletes form_submissions goal when flipped from true to false" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{form_submissions: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Form: Submission")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, form_submissions: false},
+        :plugins_api
+      )
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Form: Submission")
+    end
+
+    test "deletes 404 goal when flipped from true to false" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{track_404_pages: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "404")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, track_404_pages: false},
+        :installation
+      )
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "404")
+    end
+  end
+
+  describe "sync_goals idempotency on update" do
+    test "re-creates outbound_links goal when already true in config but goal was deleted" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{outbound_links: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+
+      Plausible.Goals.delete_outbound_links(site)
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, outbound_links: true},
+        :plugins_api
+      )
+
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Outbound Link: Click")
+    end
+
+    test "re-creates file_downloads goal when already true in config but goal was deleted" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{file_downloads: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+
+      Plausible.Goals.delete_file_downloads(site)
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, file_downloads: true},
+        :plugins_api
+      )
+
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "File Download")
+    end
+
+    test "re-creates form_submissions goal when already true in config but goal was deleted" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{form_submissions: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Form: Submission")
+
+      Plausible.Goals.delete_form_submissions(site)
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Form: Submission")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, form_submissions: true},
+        :plugins_api
+      )
+
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "Form: Submission")
+    end
+
+    test "re-creates 404 goal when already true in config but goal was deleted" do
+      site = new_site()
+
+      Tracker.get_or_create_tracker_script_configuration!(site, %{track_404_pages: true})
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "404")
+
+      Plausible.Goals.delete_404(site)
+      refute Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "404")
+
+      Tracker.update_script_configuration!(
+        site,
+        %{installation_type: :wordpress, track_404_pages: true},
+        :installation
+      )
+
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, display_name: "404")
+    end
+  end
+
   describe "build_script/1" do
     test "can turn config into a script tag" do
       site = new_site()
