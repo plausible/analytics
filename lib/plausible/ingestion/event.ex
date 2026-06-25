@@ -384,7 +384,9 @@ defmodule Plausible.Ingestion.Event do
   on_ee do
     defp put_salts(%__MODULE__{} = event, _context) do
       if session_id = event.request.replay_session_id do
-        computed_salt = :crypto.hash(:sha, [secret_key_base(), session_id]) |> binary_part(0, 16)
+        computed_salt =
+          :crypto.hash(:sha, [secret_key_base(), :binary.encode_unsigned(session_id)])
+          |> binary_part(0, 16)
 
         salts = %{previous: nil, current: computed_salt}
         %{event | salts: salts}
