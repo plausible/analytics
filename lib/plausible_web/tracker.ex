@@ -217,13 +217,13 @@ defmodule PlausibleWeb.Tracker do
       {key, Map.get(original_config, key, false), Map.get(updated_config, key, false)}
     end)
     |> Enum.each(fn
-      {:track_404_pages, false, true} -> Plausible.Goals.create_404(site)
+      {:track_404_pages, _, true} -> Plausible.Goals.create_404(site)
       {:track_404_pages, true, false} -> Plausible.Goals.delete_404(site)
-      {:outbound_links, false, true} -> Plausible.Goals.create_outbound_links(site)
+      {:outbound_links, _, true} -> Plausible.Goals.create_outbound_links(site)
       {:outbound_links, true, false} -> Plausible.Goals.delete_outbound_links(site)
-      {:file_downloads, false, true} -> Plausible.Goals.create_file_downloads(site)
+      {:file_downloads, _, true} -> Plausible.Goals.create_file_downloads(site)
       {:file_downloads, true, false} -> Plausible.Goals.delete_file_downloads(site)
-      {:form_submissions, false, true} -> Plausible.Goals.create_form_submissions(site)
+      {:form_submissions, _, true} -> Plausible.Goals.create_form_submissions(site)
       {:form_submissions, true, false} -> Plausible.Goals.delete_form_submissions(site)
       _ -> nil
     end)
