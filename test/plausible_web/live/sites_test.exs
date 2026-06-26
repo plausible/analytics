@@ -705,6 +705,41 @@ defmodule PlausibleWeb.Live.SitesTest do
                button_selector
              )
     end
+
+    test "billing role member can pin a site via the ellipsis menu", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: billing_user, conn: conn})
+
+      {:ok, lv, _html} = live(conn, "/sites?__team=#{team.identifier}")
+
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
+
+      html = lv |> element(button_selector) |> render_click()
+
+      assert html =~ "Site pinned"
+    end
+
+    test "billing role member does not see Settings in the ellipsis menu", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: billing_user, conn: conn})
+
+      {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+      settings_selector =
+        ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+
+      refute element_exists?(html, settings_selector)
+    end
   end
 
   describe "sort widget" do
