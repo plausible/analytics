@@ -573,7 +573,7 @@ defmodule PlausibleWeb.Live.Sites do
       </.unstyled_link>
 
       <div class="absolute right-1 top-3.5">
-        <.ellipsis_menu site={@site} can_manage?={List.first(@site.memberships).role != :viewer} />
+        <.ellipsis_menu site={@site} can_manage?={List.first(@site.memberships).role in [:owner, :admin, :editor]} />
       </div>
     </li>
     """
