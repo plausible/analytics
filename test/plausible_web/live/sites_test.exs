@@ -742,6 +742,43 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
   end
 
+  describe "ellipsis menu settings visibility" do
+    @allowed_to_see_settings [:owner, :editor, :admin]
+    for role <- @allowed_to_see_settings do
+      test "#{role} can see settings", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        team = site.team |> Plausible.Teams.complete_setup()
+        member = add_member(team, role: unquote(role))
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        assert element_exists?(
+                 html,
+                 ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+               )
+      end
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- @allowed_to_see_settings do
+      test "#{role} can't see settings", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        team = site.team |> Plausible.Teams.complete_setup()
+        member = add_member(team, role: :viewer)
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        refute element_exists?(
+                 html,
+                 ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+               )
+      end
+    end
+  end
+
   describe "sort widget" do
     test "renders sort widget with default 'Most visitors' label", %{conn: conn, user: user} do
       new_site(owner: user)
