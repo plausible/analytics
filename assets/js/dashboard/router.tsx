@@ -102,14 +102,39 @@ export const topPagesRoute = {
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.pages} />
 }
 
+export const topPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.pagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails breakdownReportKey={BreakdownReportKey.pagesWithHostname} />
+  )
+}
+
 export const entryPagesRoute = {
   path: BREAKDOWN_REPORTS.entryPages.detailsPath,
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.entryPages} />
 }
 
+export const entryPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.entryPagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails
+      breakdownReportKey={BreakdownReportKey.entryPagesWithHostname}
+    />
+  )
+}
+
 export const exitPagesRoute = {
   path: BREAKDOWN_REPORTS.exitPages.detailsPath,
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.exitPages} />
+}
+
+export const exitPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.exitPagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails
+      breakdownReportKey={BreakdownReportKey.exitPagesWithHostname}
+    />
+  )
 }
 
 export const countriesRoute = {
@@ -218,8 +243,11 @@ export function createAppRouter(site: PlausibleSite) {
           referrersGoogleRoute,
           referrersDrilldownRoute,
           topPagesRoute,
+          topPagesWithHostnameRoute,
           entryPagesRoute,
+          entryPagesWithHostnameRoute,
           exitPagesRoute,
+          exitPagesWithHostnameRoute,
           countriesRoute,
           regionsRoute,
           citiesRoute,

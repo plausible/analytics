@@ -76,17 +76,19 @@ export const getBreakdownMetricLabel = (
     dimensions: string[]
   }
 ): string => {
+  if (dimensions.includes('visit:entry_page')) {
+    return getEntryPagesBreakdownMetricLabel(metric, {
+      hasConversionGoalFilter,
+      isRealtime
+    })
+  }
+  if (dimensions.includes('visit:exit_page')) {
+    return getExitPagesBreakdownMetricLabel(metric, {
+      hasConversionGoalFilter,
+      isRealtime
+    })
+  }
   switch (dimensions[0]) {
-    case 'visit:entry_page':
-      return getEntryPagesBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter,
-        isRealtime
-      })
-    case 'visit:exit_page':
-      return getExitPagesBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter,
-        isRealtime
-      })
     case 'event:goal':
       return getConversionsBreakdownMetricLabel(metric)
     default: {

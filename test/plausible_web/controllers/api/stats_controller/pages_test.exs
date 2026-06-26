@@ -96,6 +96,70 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top pages broken down by hostname and page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/docs", hostname: "main.example.com"),
+        build(:pageview, pathname: "/docs", hostname: "main.example.com"),
+        build(:pageview, pathname: "/docs", hostname: "secondary.example.com")
+      ])
+
+      response =
+        query_pages(conn, site,
+          date_range: "day",
+          dimensions: ["event:hostname", "event:page"],
+          metrics: ["visitors", "bounce_rate"]
+        )
+
+      assert response["results"] == [
+               %{"dimensions" => ["main.example.com", "/docs"], "metrics" => [2, 100]},
+               %{"dimensions" => ["secondary.example.com", "/docs"], "metrics" => [1, 100]}
+             ]
+    end
+
+    test "correctly computes bounce_rate when broken down by hostname and page",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        # 1: 2 pageviews on primary (no bounce)
+        build(:pageview,
+          pathname: "/docs",
+          hostname: "main.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/docs",
+          hostname: "main.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        # 2: single pageview on primary (bounce)
+        build(:pageview,
+          pathname: "/docs",
+          hostname: "main.example.com",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        # 3: single pageview on secondary (bounce)
+        build(:pageview,
+          pathname: "/docs",
+          hostname: "secondary.example.com",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      response =
+        query_pages(conn, site,
+          dimensions: ["event:hostname", "event:page"],
+          metrics: ["visitors", "bounce_rate"]
+        )
+
+      assert response["results"] == [
+               %{"dimensions" => ["main.example.com", "/docs"], "metrics" => [2, 50]},
+               %{"dimensions" => ["secondary.example.com", "/docs"], "metrics" => [1, 100]}
+             ]
+    end
+
     test "returns top pages with :is filter on custom pageview props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -2335,6 +2399,56 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"dimensions" => ["/aaa"], "metrics" => [1, 1, 100.0, 0, 11.11]}
              ]
     end
+
+    test "returns entry pages broken down by entry page hostname and page",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/landing",
+          hostname: "blog.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "blog.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          pathname: "/landing",
+          hostname: "blog.example.com",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/landing",
+          hostname: "www.example.com",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      response =
+        query_pages(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          dimensions: ["visit:entry_page_hostname", "visit:entry_page"],
+          metrics: ["visitors", "visits", "bounce_rate", "percentage"],
+          filters: [["is_not", "visit:entry_page", [""]]],
+          order_by: [["visitors", "desc"], ["visit:entry_page_hostname", "asc"]]
+        )
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["blog.example.com", "/landing"],
+                 "metrics" => [2, 2, 50, 66.67]
+               },
+               %{
+                 "dimensions" => ["www.example.com", "/landing"],
+                 "metrics" => [1, 1, 100, 33.33]
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
@@ -2675,6 +2789,93 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert response["results"] == []
+    end
+
+    test "returns exit pages broken down by exit page hostname and page with exit_rate",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/about",
+          hostname: "blog.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "blog.example.com",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "www.example.com",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/docs",
+          hostname: "www.example.com",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:05:00]
+        )
+      ])
+
+      response =
+        query_pages(conn, site,
+          date_range: ["2021-01-01", "2021-01-01"],
+          dimensions: ["visit:exit_page_hostname", "visit:exit_page"],
+          metrics: ["visitors", "visits", "exit_rate", "percentage"],
+          filters: [["is_not", "visit:exit_page", [""]]],
+          order_by: [["visitors", "desc"], ["visit:exit_page_hostname", "asc"]]
+        )
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["blog.example.com", "/about"],
+                 "metrics" => [2, 2, 66.7, 66.67]
+               },
+               %{
+                 "dimensions" => ["www.example.com", "/docs"],
+                 "metrics" => [1, 1, 100.0, 33.33]
+               }
+             ]
+    end
+
+    test "exit_rate works with exit page hostname and page dimensions in either order",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/about",
+          hostname: "blog.example.com",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "blog.example.com",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      for dimensions <- [
+            ["visit:exit_page_hostname", "visit:exit_page"],
+            ["visit:exit_page", "visit:exit_page_hostname"]
+          ] do
+        response =
+          query_pages(conn, site,
+            date_range: ["2021-01-01", "2021-01-01"],
+            dimensions: dimensions,
+            metrics: ["visitors", "exit_rate"],
+            filters: [["is_not", "visit:exit_page", [""]]]
+          )
+
+        assert response["results"] != [],
+               "expected results for dimensions #{inspect(dimensions)}"
+
+        assert Enum.all?(response["results"], fn r -> not is_nil(r["metrics"]) end),
+               "expected no errors for dimensions #{inspect(dimensions)}"
+      end
     end
 
     test "filter by :is_not exit_page with imported data", %{conn: conn, site: site} do
