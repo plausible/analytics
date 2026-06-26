@@ -121,7 +121,15 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    get_for_user!(user, site.domain)
+    get_for_user!(user, site.domain,
+      roles: [
+        :owner,
+        :admin,
+        :editor,
+        :viewer,
+        :billing
+      ]
+    )
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
