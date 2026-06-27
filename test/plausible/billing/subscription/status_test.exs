@@ -18,15 +18,15 @@ defmodule Plausible.Billing.Subscription.StatusTest do
   end
 
   test "in?/2 returns true when subscription status is in list" do
-    assert in?(%Plausible.Billing.Subscription{status: past_due()}, [active(), past_due()])
+    assert in?(subscription(past_due()), [active(), past_due()])
   end
 
   test "in?/2 returns false when subscription status is not in list" do
-    refute in?(%Plausible.Billing.Subscription{status: paused()}, [active(), past_due()])
+    refute in?(subscription(paused()), [active(), past_due()])
   end
 
   test "in?/2 returns false when subscription is nil" do
-    refute in?(nil, [active(), past_due()])
+    refute in?(subscription(nil), [active(), past_due()])
   end
 
   test "in?/2 raises ArgumentError when list includes invalid statuses" do
@@ -41,6 +41,24 @@ defmodule Plausible.Billing.Subscription.StatusTest do
         end,
         __ENV__
       )
+    end
+  end
+
+  # Workaround for type checker in Elixir 1.20+ being
+  # too smart about literals passed to macros.
+  defp subscription(nil) do
+    if :erlang.phash2(1, 1) == 0 do
+      nil
+    else
+      %Plausible.Billing.Subscription{}
+    end
+  end
+
+  defp subscription(status) do
+    if :erlang.phash2(1, 1) == 0 do
+      %Plausible.Billing.Subscription{status: status}
+    else
+      nil
     end
   end
 end

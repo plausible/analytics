@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Live.Sites do
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
   import PlausibleWeb.StatsView, only: [large_number_format: 1]
-  require Logger
 
   alias Plausible.Sites
   alias Plausible.Sites.Index

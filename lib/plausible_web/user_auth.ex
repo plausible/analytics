@@ -10,8 +10,6 @@ defmodule PlausibleWeb.UserAuth do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
-  require Logger
-
   on_ee do
     @type login_subject() :: Auth.User.t() | Auth.SSO.Identity.t()
   else

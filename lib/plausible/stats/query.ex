@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.Query do
+  @moduledoc """
+  Struct storing stats query parameters and configuration.
+  """
+
   use Plausible
 
   defstruct utc_time_range: nil,
@@ -32,7 +36,7 @@ defmodule Plausible.Stats.Query do
             sql_join_type: :left,
             smear_session_metrics: false
 
-  require OpenTelemetry.Tracer, as: Tracer
+  alias OpenTelemetry.Tracer
 
   alias Plausible.Stats.{
     DateTimeRange,
