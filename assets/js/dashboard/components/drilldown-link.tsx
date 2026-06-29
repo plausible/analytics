@@ -13,6 +13,7 @@ export type FilterInfo = {
   prefix: string
   filter: Filter
   labels?: FilterClauseLabels
+  extraFilters?: Array<{ prefix: string; filter: Filter }>
 }
 
 export function DrilldownLink({
@@ -32,18 +33,32 @@ export function DrilldownLink({
   const { dashboardState } = useDashboardStateContext()
 
   if (filterInfo) {
-    const { prefix, filter, labels } = filterInfo
-    const newFilters = replaceFilterByPrefix(dashboardState, prefix, filter)
-    const newLabels = cleanLabels(
+    const { prefix, filter, labels, extraFilters = [] } = filterInfo
+    let newFilters = replaceFilterByPrefix(dashboardState, prefix, filter)
+    let newLabels = cleanLabels(
       newFilters,
       dashboardState.labels,
       filter[1],
       labels
     )
 
+    for (const ef of extraFilters) {
+      newFilters = replaceFilterByPrefix(
+        { ...dashboardState, filters: newFilters },
+        ef.prefix,
+        ef.filter
+      )
+      newLabels = cleanLabels(newFilters, newLabels, ef.filter[1], undefined)
+    }
+
+    const allFilters = [filter, ...extraFilters.map((ef) => ef.filter)]
+    const title = allFilters
+      .map((f) => plainFilterText({ ...dashboardState, labels: newLabels }, f))
+      .join(' and ')
+
     return (
       <AppNavigationLink
-        title={`Add filter: ${plainFilterText({ ...dashboardState, labels: newLabels }, filter)}`}
+        title={`Add filter: ${title}`}
         className={classNames(className, 'group')}
         path={path}
         onClick={onClick}

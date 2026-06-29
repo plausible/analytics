@@ -60,6 +60,7 @@ type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
   defaultOrderBy?: MetricOrderBy
   searchEnabled?: boolean
+  searchDimension?: NonTimeDimension
   onDataReady?: (data: PaginatedData) => void
   DimensionElement: (props: DimensionCellProps) => ReactNode
 }
@@ -92,9 +93,11 @@ export function DetailsBreakdown({
   defaultOrderBy = [] as MetricOrderBy,
   DimensionElement,
   searchEnabled = true,
+  searchDimension,
   onDataReady,
   bundlePercentageWithVisitors = true,
-  hideMetricsIfAllNull
+  hideMetricsIfAllNull,
+  getStatsQuery
 }: DetailsBreakdownProps) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
@@ -131,11 +134,14 @@ export function DetailsBreakdown({
         ],
         alwaysOnFilters
       },
-      search
+      search,
+      searchDimension
     }
   ]
 
-  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey)
+  const apiState = useSearchAndPaginateQueryAPI(site, statsReportQueryKey, {
+    getStatsQuery
+  })
 
   useEffect(() => {
     const pages = apiState.data?.pages
@@ -268,7 +274,7 @@ export function DetailsBreakdown({
       data={tableData}
       columns={columns}
       onSearch={searchEnabled ? setSearch : undefined}
-      getRowKey={(row) => row.dimensions[0]}
+      getRowKey={(row) => row.dimensions.join(',')}
     />
   )
 }

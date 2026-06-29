@@ -138,7 +138,7 @@ function DashboardOptionsMenuItems() {
           'justify-center'
         )}
       >
-        <EllipsisVerticalIcon className="size-4" />
+        <EllipsisVerticalIcon className="-mx-px size-4.5" />
       </Popover.Button>
       <Transition
         as="div"
@@ -209,7 +209,7 @@ export function DashboardOptionsMenu() {
           'justify-center'
         )}
       >
-        <EllipsisVerticalIcon className="size-4" />
+        <EllipsisVerticalIcon className="-mx-px size-4.5" />
       </button>
     )
   }

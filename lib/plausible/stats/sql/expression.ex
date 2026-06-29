@@ -184,8 +184,14 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:entry_page", _table, _query),
     do: select_merge_as(q, [t], %{key => t.entry_page})
 
+  def select_dimension(q, key, "visit:entry_page_hostname", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.hostname})
+
   def select_dimension(q, key, "visit:exit_page", _table, _query),
     do: select_merge_as(q, [t], %{key => t.exit_page})
+
+  def select_dimension(q, key, "visit:exit_page_hostname", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.exit_page_hostname})
 
   def select_dimension(q, key, "visit:utm_medium", _table, _query),
     do: field_or_blank_value(q, key, t.utm_medium, @not_set)
