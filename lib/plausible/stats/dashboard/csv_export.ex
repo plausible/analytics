@@ -248,7 +248,8 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
       construct_raw_query_params("custom_props.csv", params)
       |> Map.merge(%{
         "dimensions" => ["event:prop_key"],
-        "metrics" => ["visitors"]
+        "metrics" => ["visitors"],
+        "pagination" => %{"limit" => 25}
       })
 
     with {:ok, parsed} <- QueryParser.parse(raw_params),

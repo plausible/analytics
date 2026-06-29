@@ -205,6 +205,33 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert length(exit_pages) == 102
     end
 
+    test "limits custom_props.csv to 25 prop keys", %{conn: conn, site: site} do
+      keys = for i <- 1..26, do: "key_#{i}"
+      {:ok, site} = Plausible.Props.allow(site, keys)
+
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": keys,
+          "meta.value": List.duplicate("v", 26)
+        )
+      ])
+
+      custom_props =
+        conn
+        |> do_export(site, %{@base_params | date_range: "day"})
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
+
+      prop_keys =
+        custom_props
+        |> Enum.drop(1)
+        |> Enum.reject(&(&1 == [""]))
+        |> Enum.map(&hd/1)
+        |> Enum.uniq()
+
+      assert length(prop_keys) == 25
+    end
+
     test "limits other breakdown reports to 300 rows", %{conn: conn, site: site} do
       events = for i <- 1..301, do: build(:pageview, referrer_source: "Source #{i}")
       populate_stats(site, events)
