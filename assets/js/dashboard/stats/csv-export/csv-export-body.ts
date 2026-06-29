@@ -121,7 +121,10 @@ export function createCsvExportRequestBody(
     },
     'custom_props.csv': {
       dimensions: ['event:props:*'],
-      metrics: getCustomPropsMetrics({ hasConversionGoalFilter: isGoalFilter })
+      metrics: getCustomPropsMetrics({
+        hasConversionGoalFilter: isGoalFilter,
+        isRevenueAvailable: false
+      })
     },
     ...Object.entries(BREAKDOWN_CSV_REPORTS).reduce(
       (acc, [filename, reportKey]) => {
