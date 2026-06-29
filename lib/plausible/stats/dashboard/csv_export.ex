@@ -297,21 +297,28 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
 
   defp get_custom_props_csv(site, prop_value_queries_by_prop_key) do
     [{_prop_key, %Query{metrics: metrics}} | _] = prop_value_queries_by_prop_key
-    header_row = [:property, :value] ++ metrics
-
-    data_rows =
-      prop_value_queries_by_prop_key
-      |> Enum.map(fn {prop_key, query} ->
-        fn ->
-          %QueryResult{results: results} = QueryRunner.run(site, query)
-          Enum.map(results, fn row -> [prop_key | row.dimensions] ++ row.metrics end)
-        end
-      end)
-      |> Plausible.ClickhouseRepo.parallel_tasks()
-      |> Enum.concat()
+    header_row = format_custom_props_header_row(metrics)
+    data_rows = custom_prop_queries_into_data_rows(site, prop_value_queries_by_prop_key)
 
     NimbleCSV.RFC4180.dump_to_iodata([header_row] ++ data_rows)
   end
+
+  defp custom_prop_queries_into_data_rows(site, prop_value_queries_by_prop_key) do
+    prop_value_queries_by_prop_key
+    |> Enum.map(fn {prop_key, query} ->
+      fn ->
+        %QueryResult{results: results} = QueryRunner.run(site, query)
+        Enum.map(results, &format_custom_props_data_row(prop_key, &1))
+      end
+    end)
+    |> Plausible.ClickhouseRepo.parallel_tasks()
+    |> Enum.concat()
+  end
+
+  defp format_custom_props_header_row(metrics), do: [:property, :value] ++ metrics
+
+  defp format_custom_props_data_row(prop_key, row),
+    do: [prop_key | row.dimensions] ++ row.metrics
 
   defp maybe_allowed_props_only(prop_keys, site) do
     case Plausible.Props.allowed_for(site) do
