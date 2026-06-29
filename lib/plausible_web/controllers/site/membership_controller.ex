@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
       redirect_target =
         if user_id == conn.assigns[:current_user].id do
-          Routes.stats_path(conn, :index, site.domain, [])
+          Routes.stats_path(conn, :stats, site.domain, [])
         else
           Routes.site_path(conn, :settings_people, site.domain)
         end
