@@ -520,6 +520,79 @@ defmodule Plausible.GoalsTest do
            }
   end
 
+  test "update/2 prevents renaming event_name of a special goal" do
+    site = new_site()
+
+    for event_name <- Plausible.Goal.special_goals() do
+      {:ok, goal} = Goals.create(site, %{"event_name" => event_name})
+
+      assert {:error, changeset} =
+               Goals.update(goal, %{"event_name" => "Renamed #{event_name}"})
+
+      assert {"cannot be changed for an automated goal", _} = changeset.errors[:event_name]
+    end
+  end
+
+  test "update/2 prevents renaming display_name of a special goal to a non-canonical value" do
+    site = new_site()
+
+    for event_name <- Plausible.Goal.special_goals() do
+      {:ok, goal} = Goals.create(site, %{"event_name" => event_name})
+
+      assert {:error, changeset} =
+               Goals.update(goal, %{"display_name" => "Renamed #{event_name}"})
+
+      assert {"cannot be changed for an automated goal", _} = changeset.errors[:display_name]
+    end
+  end
+
+  test "update/2 allows restoring display_name of a special goal to its canonical value" do
+    site = new_site()
+    {:ok, goal} = Goals.create(site, %{"event_name" => "File Download"})
+
+    # Simulate a previously broken goal by directly updating the DB
+    Plausible.Repo.update_all(
+      Ecto.Query.where(Plausible.Goal, id: ^goal.id),
+      set: [display_name: "My File Downloads"]
+    )
+
+    broken_goal = Plausible.Repo.reload!(goal)
+    assert broken_goal.display_name == "My File Downloads"
+
+    assert {:ok, fixed} = Goals.update(broken_goal, %{"display_name" => "File Download"})
+    assert fixed.display_name == "File Download"
+  end
+
+  test "update/2 allows updating non-name fields of a special goal" do
+    site = new_site()
+    {:ok, goal} = Goals.create(site, %{"event_name" => "File Download"})
+
+    assert {:ok, updated} =
+             Goals.update(goal, %{
+               "event_name" => "File Download",
+               "display_name" => "File Download",
+               "custom_props" => %{"0" => "path"}
+             })
+
+    assert updated.custom_props == %{"0" => "path"}
+  end
+
+  test "update/2 allows renaming event_name of a regular goal" do
+    site = new_site()
+    {:ok, goal} = Goals.create(site, %{"event_name" => "Signup"})
+
+    assert {:ok, updated} = Goals.update(goal, %{"event_name" => "Register"})
+    assert updated.event_name == "Register"
+  end
+
+  test "update/2 allows renaming display_name of a regular goal" do
+    site = new_site()
+    {:ok, goal} = Goals.create(site, %{"event_name" => "Signup"})
+
+    assert {:ok, updated} = Goals.update(goal, %{"display_name" => "User Registration"})
+    assert updated.display_name == "User Registration"
+  end
+
   on_ee do
     test "update/2 prevents changing currency of existing revenue goal" do
       site = new_site()
