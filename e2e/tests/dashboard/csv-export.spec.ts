@@ -57,7 +57,21 @@ const EXPECTED_HEADERS = {
   commonGoalFilteredBreakdown: ['name', 'conversions', 'conversion_rate'],
   nameAndVisitors: ['name', 'visitors'],
   nameVersionAndVisitors: ['name', 'version', 'visitors'],
-  nameVersionGoalFiltered: ['name', 'version', 'conversions', 'conversion_rate']
+  nameVersionGoalFiltered: [
+    'name',
+    'version',
+    'conversions',
+    'conversion_rate'
+  ],
+  customPropsDefault: ['property', 'value', 'visitors', 'events', 'percentage'],
+  customPropsGoalFiltered: [
+    'property',
+    'value',
+    'visitors',
+    'events',
+    'conversion_rate'
+  ],
+  conversionsBreakdown: ['name', 'unique_conversions', 'total_conversions']
 }
 
 const UTM_AND_SOURCE_REPORTS = [
@@ -119,11 +133,14 @@ test('csv export column headers match expected metrics for each report', async (
   await populateStats({
     request,
     domain,
-    events: [{ name: 'pageview', timestamp: '2021-01-01 12:00:00' }]
+    events: [
+      { name: 'pageview', 'meta.key': ['author'], 'meta.value': ['john'] },
+      { name: 'Signup', 'meta.key': ['author'], 'meta.value': ['john'] }
+    ]
   })
 
   await test.step('without any filters', async () => {
-    await page.goto(`/${domain}`, {
+    await page.goto(`/${domain}?period=all`, {
       waitUntil: 'commit'
     })
 
@@ -157,12 +174,22 @@ test('csv export column headers match expected metrics for each report', async (
         EXPECTED_HEADERS.nameVersionAndVisitors
       )
     }
+    expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
+      EXPECTED_HEADERS.customPropsDefault
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 
   await test.step('with a page filter', async () => {
-    await page.goto(`/${domain}?f=is,page,/blog`, {
+    await page.goto(`/${domain}?period=all&f=is,page,/`, {
       waitUntil: 'commit'
     })
+
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Page is /' })
+    ).toBeVisible()
 
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
@@ -194,14 +221,24 @@ test('csv export column headers match expected metrics for each report', async (
         EXPECTED_HEADERS.nameVersionAndVisitors
       )
     }
+    expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
+      EXPECTED_HEADERS.customPropsDefault
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 
   await test.step('with a goal filter', async () => {
     await addGoal({ request, domain, params: { event_name: 'Signup' } })
 
-    await page.goto(`/${domain}?f=is,goal,Signup`, {
+    await page.goto(`/${domain}?period=all&f=is,goal,Signup`, {
       waitUntil: 'commit'
     })
+
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Goal is Signup' })
+    ).toBeVisible()
 
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
@@ -225,12 +262,24 @@ test('csv export column headers match expected metrics for each report', async (
         EXPECTED_HEADERS.nameVersionGoalFiltered
       )
     }
+    expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
+      EXPECTED_HEADERS.customPropsGoalFiltered
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 
   await test.step('with a custom prop filter', async () => {
-    await page.goto(`/${domain}?f=is,props:author,john`, {
+    await page.goto(`/${domain}?period=all&f=is,props:author,john`, {
       waitUntil: 'commit'
     })
+
+    await expect(
+      page.getByRole('button', {
+        name: 'Remove filter: Property author is john'
+      })
+    ).toBeVisible()
 
     const csvs = parseAllCsvs(await triggerExportAndAwaitDownload(page))
 
@@ -262,6 +311,12 @@ test('csv export column headers match expected metrics for each report', async (
         EXPECTED_HEADERS.nameVersionAndVisitors
       )
     }
+    expect(getCsv(csvs, 'custom_props.csv')[0]).toEqual(
+      EXPECTED_HEADERS.customPropsDefault
+    )
+    expect(getCsv(csvs, 'conversions.csv')[0]).toEqual(
+      EXPECTED_HEADERS.conversionsBreakdown
+    )
   })
 })
 
@@ -309,7 +364,7 @@ test('filters out empty visit:* dimension values', async ({
     ]
   })
 
-  await page.goto(`/${domain}?period=day&date=2021-01-01`, {
+  await page.goto(`/${domain}?period=all`, {
     waitUntil: 'commit'
   })
 

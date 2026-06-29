@@ -19,7 +19,8 @@ import { Metric } from '../metrics'
 import {
   BREAKDOWN_REPORTS,
   BreakdownReportConfig,
-  BreakdownReportKey
+  BreakdownReportKey,
+  getCustomPropsMetrics
 } from '../reports/reports-config'
 
 const BREAKDOWN_CSV_REPORTS = {
@@ -41,9 +42,13 @@ const BREAKDOWN_CSV_REPORTS = {
   'utm_terms.csv': BreakdownReportKey.utmTerms,
   'countries.csv': BreakdownReportKey.countries,
   'regions.csv': BreakdownReportKey.regions,
-  'cities.csv': BreakdownReportKey.cities
+  'cities.csv': BreakdownReportKey.cities,
+  'conversions.csv': BreakdownReportKey.goals
 }
-type CsvFilename = 'visitors.csv' | keyof typeof BREAKDOWN_CSV_REPORTS
+type CsvFilename =
+  | 'visitors.csv'
+  | 'custom_props.csv'
+  | keyof typeof BREAKDOWN_CSV_REPORTS
 
 type CsvReportParams = {
   dimensions: [TimeDimension] | BreakdownReportConfig['dimensions']
@@ -114,6 +119,13 @@ export function createCsvExportRequestBody(
           ? PAGE_FILTERED_VISITORS_CSV_METRICS
           : DEFAULT_VISITORS_CSV_METRICS
     },
+    'custom_props.csv': {
+      dimensions: ['event:props:*'],
+      metrics: getCustomPropsMetrics({
+        hasConversionGoalFilter: isGoalFilter,
+        isRevenueAvailable: false
+      })
+    },
     ...Object.entries(BREAKDOWN_CSV_REPORTS).reduce(
       (acc, [filename, reportKey]) => {
         const config = BREAKDOWN_REPORTS[reportKey]
@@ -128,7 +140,7 @@ export function createCsvExportRequestBody(
         }
         return acc
       },
-      {} as Omit<CsvReportsConfig, 'visitors.csv'>
+      {} as Omit<CsvReportsConfig, 'visitors.csv' | 'custom_props.csv'>
     )
   }
 
