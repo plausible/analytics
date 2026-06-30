@@ -268,4 +268,29 @@ defmodule Plausible.SitesTest do
       assert Sites.get_for_user!(user, domain, include_consolidated?: true)
     end
   end
+
+  describe "toggle_pin/2" do
+    test "billing role team member can pin a site" do
+      owner = new_user()
+      site = new_site(owner: owner)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      assert {:ok, preference} = Sites.toggle_pin(billing_user, site)
+      assert preference.pinned_at
+    end
+
+    test "billing role team member can unpin a site" do
+      owner = new_user()
+      site = new_site(owner: owner)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      {:ok, pref} = Sites.toggle_pin(billing_user, site)
+      pinned_site = %{site | pinned_at: pref.pinned_at}
+
+      assert {:ok, preference} = Sites.toggle_pin(billing_user, pinned_site)
+      refute preference.pinned_at
+    end
+  end
 end

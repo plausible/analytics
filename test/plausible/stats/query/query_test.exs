@@ -601,4 +601,73 @@ defmodule Plausible.Stats.QueryTest do
       assert is_nil(meta[:empty_metrics])
     end
   end
+
+  describe "event:prop_key dimension" do
+    test "returns distinct prop keys with visitor counts", %{site: site} do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview)
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          dimensions: ["event:prop_key"]
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert [
+               %{dimensions: ["author"], metrics: [2]},
+               %{dimensions: ["logged_in"], metrics: [1]}
+             ] = Enum.sort_by(results, &hd(&1.dimensions))
+    end
+
+    test "supports order_by", %{site: site} do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["b"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["b"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          dimensions: ["event:prop_key"],
+          order_by: [{"event:prop_key", :desc}]
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [
+               %{dimensions: ["logged_in"], metrics: [1]},
+               %{dimensions: ["author"], metrics: [3]}
+             ]
+    end
+
+    test "works combined with a filter", %{site: site} do
+      populate_stats(site, [
+        build(:event, name: "purchase", "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+      ])
+
+      {:ok, query} =
+        QueryBuilder.build(site, %ParsedQueryParams{
+          metrics: [:visitors],
+          input_date_range: :all,
+          dimensions: ["event:prop_key"],
+          filters: [[:is, "event:name", ["purchase"]]]
+        })
+
+      %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+      assert results == [%{dimensions: ["author"], metrics: [1]}]
+    end
+  end
 end

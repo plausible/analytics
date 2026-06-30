@@ -170,6 +170,16 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> group_by([], selected_as(^key))
   end
 
+  defp dimension_group_by(q, :events, query, "event:prop_key" = dimension) do
+    from(e in q,
+      join: meta in fragment("meta"),
+      hints: "ARRAY",
+      on: true,
+      group_by: meta.key
+    )
+    |> select_merge_as([_e, meta], %{shortname(query, dimension) => meta.key})
+  end
+
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
     goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
 
