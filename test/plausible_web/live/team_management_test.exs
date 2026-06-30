@@ -387,6 +387,16 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :owner)
     end
 
+    test "removes self, redirecting away from team", %{conn: conn, team: team} do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      remove_member(lv, 1)
+
+      assert_redirect(lv, "/sites?__team=none")
+    end
+
     test "billing role is supported",
          %{
            conn: conn,

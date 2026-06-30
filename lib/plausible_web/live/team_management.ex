@@ -299,7 +299,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
 
       {{:ok, _}, :team_management} ->
-        reset(socket)
+        case Teams.Memberships.team_role(current_team, current_user) do
+          {:ok, _} ->
+            reset(socket)
+
+          {:error, :not_a_member} ->
+            redirect(socket, to: Routes.site_path(socket, :index, __team: "none"))
+        end
 
       {{:error, :permission_denied}, _} ->
         socket
