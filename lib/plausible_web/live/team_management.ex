@@ -300,6 +300,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
       {{:ok, _}, :team_management} ->
         case Teams.Memberships.team_role(current_team, current_user) do
+          {:ok, :viewer} ->
+            redirect(socket,
+              to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
+            )
+
           {:ok, _} ->
             reset(socket)
 

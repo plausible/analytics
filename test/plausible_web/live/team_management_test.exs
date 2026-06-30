@@ -397,6 +397,19 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_redirect(lv, "/sites?__team=none")
     end
 
+    test "demotes self to viewer, redirecting to team general", %{
+      conn: conn,
+      team: team
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "viewer")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
+    end
+
     test "billing role is supported",
          %{
            conn: conn,
