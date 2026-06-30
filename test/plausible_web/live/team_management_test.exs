@@ -397,6 +397,19 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_redirect(lv, "/sites?__team=none")
     end
 
+    test "demotes self to billing, redirecting to team general", %{
+      conn: conn,
+      team: team
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "billing")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
+    end
+
     test "demotes self to viewer, redirecting to team general", %{
       conn: conn,
       team: team
@@ -423,25 +436,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :billing)
     end
 
-    test "degrading owner to non-admin makes everything read-only", %{conn: conn, team: team} do
-      _owner2 = add_member(team, role: :owner)
-
-      lv = get_liveview(conn)
-
-      change_role(lv, 1, "billing")
-
-      html = render(lv)
-
-      options =
-        lv
-        |> render()
-        |> find("#{member_el()} a")
-
-      assert Enum.empty?(options)
-
-      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
-      assert attr_defined?(html, ~s|#invite-member|, "disabled")
-    end
   end
 
   defp change_role(lv, index, role, main_selector \\ member_el()) do
