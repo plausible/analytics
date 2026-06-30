@@ -7,21 +7,14 @@ defmodule Plausible.Stats.Legacy.Timeseries do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, QueryRunner, Metrics, Time, QueryOptimizer}
 
-  @time_dimension %{
-    "month" => "time:month",
-    "week" => "time:week",
-    "day" => "time:day",
-    "hour" => "time:hour",
-    "minute" => "time:minute"
-  }
-
   def timeseries(site, query, metrics) do
+    [time_dimension] = query.dimensions
+
     query =
       query
       |> Query.set(
         metrics: transform_metrics(metrics, %{conversion_rate: :group_conversion_rate}),
-        dimensions: [time_dimension(query)],
-        order_by: [{time_dimension(query), :asc}]
+        order_by: [{time_dimension, :asc}]
       )
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
       |> QueryOptimizer.optimize()
@@ -33,8 +26,6 @@ defmodule Plausible.Stats.Legacy.Timeseries do
       query_result.meta
     }
   end
-
-  defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
 
   # Given a query result, build a legacy timeseries result
   # Format is %{ date => %{ date: date_string, [metric] => value } } with a bunch of special cases for the UI
