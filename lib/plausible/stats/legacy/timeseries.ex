@@ -1,8 +1,6 @@
-defmodule Plausible.Stats.Timeseries do
+defmodule Plausible.Stats.Legacy.Timeseries do
   @moduledoc """
-  Builds timeseries results for v1 of our stats API and dashboards.
-
-  Avoid adding new logic here - update QueryBuilder etc instead.
+  Builds timeseries results for the Stats API v1. Avoid adding new logic here.
   """
 
   use Plausible

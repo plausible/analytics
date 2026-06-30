@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, Metrics, Filters}
+  alias Plausible.Stats.{Query, Metrics, Filters, Legacy}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      %{results: results, meta: meta} = Plausible.Stats.aggregate(site, query, metrics)
+      %{results: results, meta: meta} = Legacy.Aggregate.aggregate(site, query, metrics)
 
       payload = maybe_add_warning(%{results: results}, meta)
 
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       page = String.to_integer(Map.get(params, "page", "1"))
 
       %{results: results, meta: meta} =
-        Plausible.Stats.breakdown(site, query, metrics, {limit, page})
+        Legacy.Breakdown.breakdown(site, query, metrics, {limit, page})
 
       payload = maybe_add_warning(%{results: results}, meta)
 
@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      {results, meta} = Plausible.Stats.timeseries(site, query, metrics)
+      {results, meta} = Legacy.Timeseries.timeseries(site, query, metrics)
 
       payload =
         case meta[:imports_warning] do
