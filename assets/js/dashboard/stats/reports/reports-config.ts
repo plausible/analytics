@@ -371,7 +371,6 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:country_name', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top countries',
@@ -384,7 +383,6 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:region_name', 'visit:region', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top regions',
@@ -397,7 +395,6 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:city_name', 'visit:city', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
     detailsTitle: 'Top cities',
