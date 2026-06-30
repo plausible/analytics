@@ -1,5 +1,5 @@
 import React from 'react'
-import { revenueAvailable, Filter } from '../../dashboard-state'
+import { revenueAvailable, Filter, DashboardState } from '../../dashboard-state'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
@@ -98,7 +98,7 @@ export function PagesDetails({
   return (
     <Modal>
       <DetailsBreakdown
-        title={reportConfig.detailsTitle}
+        title={pagesDetailsTitle(breakdownReportKey, dashboardState)}
         dimensionLabel={reportConfig.dimensionLabel}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
@@ -128,4 +128,17 @@ const PathDimensionElement = (props: DimensionCellProps) => {
       {...props}
     />
   )
+}
+
+export function pagesDetailsTitle(
+  reportKey: BreakdownReportKey,
+  dashboardState: DashboardState
+) {
+  if (
+    reportKey === BreakdownReportKey.pages &&
+    hasConversionGoalFilter(dashboardState)
+  ) {
+    return 'Conversion pages'
+  }
+  return BREAKDOWN_REPORTS[reportKey].detailsTitle
 }
