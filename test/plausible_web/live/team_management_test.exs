@@ -387,6 +387,20 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :owner)
     end
 
+    test "remove member items carry data-confirm for both self and others", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      assert attr_defined?(html, "##{:erlang.phash2(user.email)}-remove", "data-confirm")
+      assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
+    end
+
     test "self-demotion role items carry data-confirm, others do not", %{
       conn: conn,
       team: team,

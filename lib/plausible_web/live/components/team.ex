@@ -125,6 +125,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 phx-click="remove-member"
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
+                data-confirm="Are you sure you want to remove this member from the team?"
               >
                 <div class={
                   not @remove_disabled &&
