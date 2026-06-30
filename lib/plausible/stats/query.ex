@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Query do
+  @moduledoc false
   use Plausible
 
   defstruct utc_time_range: nil,
