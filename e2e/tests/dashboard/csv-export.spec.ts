@@ -5,7 +5,6 @@ import * as fs from 'fs'
 import {
   setupSite,
   populateStats,
-  enableDashboardCsvExportV2,
   addGoal,
   addCustomProp,
   StatsEntry
@@ -127,7 +126,6 @@ test('csv export column headers match expected metrics for each report', async (
   request
 }) => {
   const { domain } = await setupSite({ page, request })
-  await enableDashboardCsvExportV2({ request, domain })
   await addCustomProp({ page, domain, name: 'author' })
 
   await populateStats({
@@ -325,7 +323,6 @@ test('filters out empty visit:* dimension values', async ({
   request
 }) => {
   const { domain } = await setupSite({ page, request })
-  await enableDashboardCsvExportV2({ request, domain })
 
   const base: StatsEntry = {
     name: 'pageview',

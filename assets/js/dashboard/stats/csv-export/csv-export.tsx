@@ -21,7 +21,7 @@ export enum ExportStatus {
   error = 'error'
 }
 
-export function CsvExportV2({
+export function CsvExport({
   exportStatus,
   setExportStatus
 }: {
