@@ -571,10 +571,10 @@ defmodule Plausible.GoalsTest do
              Goals.update(goal, %{
                "event_name" => "File Download",
                "display_name" => "File Download",
-               "custom_props" => %{"0" => "path"}
+               "custom_props" => %{"path" => "/file.jpg"}
              })
 
-    assert updated.custom_props == %{"0" => "path"}
+    assert updated.custom_props == %{"path" => "/file.jpg"}
   end
 
   test "update/2 allows renaming event_name of a regular goal" do
