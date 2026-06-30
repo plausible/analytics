@@ -122,6 +122,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
+          me?={entry.id == @current_user.id}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
           disabled={

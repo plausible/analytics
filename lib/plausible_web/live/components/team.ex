@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:label, :string, default: nil)
   attr(:role, :atom, default: nil)
   attr(:my_role, :atom, required: true)
+  attr(:me?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:remove_disabled, :boolean, default: false)
 
@@ -87,6 +88,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 role={:editor}
                 disabled={@disabled or @role == :editor}
                 dispatch_animation?={@role == :guest}
+                data-confirm={if @me?, do: lower_role_warning()}
               >
                 Create and view new sites
               </.role_item>
@@ -98,6 +100,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 role={:billing}
                 disabled={@disabled or @role == :billing}
                 dispatch_animation?={@role == :guest}
+                data-confirm={if @me?, do: lower_role_warning()}
               >
                 Manage subscription
               </.role_item>
@@ -109,6 +112,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 role={:viewer}
                 disabled={@disabled or @role == :viewer}
                 dispatch_animation?={@role == :guest}
+                data-confirm={if @me?, do: lower_role_warning()}
               >
                 View all sites under your team
               </.role_item>
@@ -184,5 +188,9 @@ defmodule PlausibleWeb.Live.Components.Team do
       </div>
     </.dropdown_item>
     """
+  end
+
+  defp lower_role_warning() do
+    "You're about to lower your own role. Some team management features will no longer be accessible to you, and you'll need to ask a team owner to restore your access. Do you want to continue?"
   end
 end

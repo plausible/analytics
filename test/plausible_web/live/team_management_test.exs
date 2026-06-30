@@ -387,6 +387,34 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :owner)
     end
 
+    test "self-demotion role items carry data-confirm, others do not", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      # Second owner is required so the current user's own dropdown is not disabled
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      my_hash = :erlang.phash2(user.email)
+      other_hash = :erlang.phash2(member2.email)
+
+      for role <- ~w(editor billing viewer) do
+        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected data-confirm on self #{role} item"
+
+        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on other member #{role} item"
+      end
+
+      for role <- ~w(owner admin) do
+        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on self #{role} item"
+      end
+    end
+
     test "removes self, redirecting away from team", %{conn: conn, team: team} do
       _owner2 = add_member(team, role: :owner)
 
