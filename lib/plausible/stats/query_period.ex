@@ -22,9 +22,8 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Dispatches an `input_date_range` shape to the appropriate `build_*_range`
-  function. Each clause forwards only the arguments the underlying builder
-  needs.
+  For some query periods, `now` or `relative_date` or both are irrelevant
+  for resolving the date range. This dispatcher ensures that
   """
   def build_datetime_range(:realtime, timezone, _relative_date, now),
     do: build_realtime_range(timezone, now, 5)
@@ -70,8 +69,7 @@ defmodule Plausible.Stats.QueryPeriod do
     do: input_date_range
 
   @doc """
-  Builds a realtime window of `duration_minutes` ending slightly after `now`,
-  anchored to `timezone`.
+  Builds a realtime window of `duration_minutes` ending slightly after `now`.
 
   ## Examples
 
@@ -114,7 +112,7 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds the 24-hour window ending at `now`, anchored to `timezone`.
+  Builds the 24-hour window ending at `now`.
 
   ## Examples
 
@@ -129,8 +127,7 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds the range spanning the calendar month containing `date`, anchored to
-  `timezone`.
+  Builds the range spanning the calendar month containing `date`.
 
   ## Examples
 
@@ -147,8 +144,7 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds the range spanning the calendar year containing `date`, anchored to
-  `timezone`.
+  Builds the range spanning the calendar year containing `date`.
 
   ## Examples
 
@@ -166,7 +162,7 @@ defmodule Plausible.Stats.QueryPeriod do
 
   @doc """
   Builds a range spanning `n` full calendar days ending the day before
-  `end_date`, anchored to `timezone`.
+  `end_date`.
 
   ## Examples
 
@@ -183,8 +179,8 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds a range spanning `n` full calendar months ending with the month
-  before `end_date`'s month, anchored to `timezone`.
+  Builds a range spanning `n` full calendar months ending the month
+  before `end_date`'s month.
 
   ## Examples
 
@@ -201,7 +197,8 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds a range from explicit start/end calendar dates, anchored to `timezone`.
+  Builds a range from explicit start/end calendar dates,
+  from start of first day to end of last day in `timezone`.
 
   ## Examples
 
@@ -216,8 +213,8 @@ defmodule Plausible.Stats.QueryPeriod do
   end
 
   @doc """
-  Builds a range from explicit start/end datetimes, then shifts the result to
-  `timezone`.
+  Builds a range from explicit start/end datetimes, which may have any time zone,
+  then shifts them to be in `timezone`.
 
   ## Examples
 
