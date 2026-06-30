@@ -135,7 +135,9 @@ export function pagesDetailsTitle(
   dashboardState: DashboardState
 ) {
   if (
-    reportKey === BreakdownReportKey.pages &&
+    [BreakdownReportKey.pages, BreakdownReportKey.pagesWithHostname].includes(
+      reportKey
+    ) &&
     hasConversionGoalFilter(dashboardState)
   ) {
     return 'Conversion pages'
