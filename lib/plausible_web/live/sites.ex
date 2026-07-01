@@ -651,15 +651,6 @@ defmodule PlausibleWeb.Live.Sites do
             />
             {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
           </PrimaDropdown.dropdown_item>
-
-          <PrimaDropdown.dropdown_item
-            :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
-            id={"#{@dropdown_id}-item-3"}
-            phx-click="delete-site"
-            phx-value-domain={@site.domain}
-          >
-            <Heroicons.trash class="size-4 text-red-600" /> [DEV ONLY] Quick delete
-          </PrimaDropdown.dropdown_item>
         </PrimaDropdown.dropdown_menu>
       </PrimaDropdown.dropdown>
     </div>
