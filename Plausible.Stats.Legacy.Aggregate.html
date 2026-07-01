@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Stats.Breakdown — Plausible v0.0.1</title>
+    <title>Plausible.Stats.Legacy.Aggregate — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-86BCC972.js"></script>
+    <script src="dist/sidebar_items-74ED2E60.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,19 +126,19 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/breakdown.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/aggregate.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.Stats.Breakdown</span> 
+    <span translate="no">Plausible.Stats.Legacy.Aggregate</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Builds breakdown results for v1 of our stats API and dashboards.</p><p>Avoid adding new logic here - update QueryBuilder etc instead.</p>
+<p>Builds aggregate results for the Stats API v1. Avoid adding new logic here.</p>
     </section>
 
 </div>
@@ -157,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#breakdown/5" data-no-tooltip translate="no">breakdown(site, query, metrics, arg, opts \\ [])</a>
+        <a href="#aggregate/3" data-no-tooltip translate="no">aggregate(site, query, metrics)</a>
 
       </div>
 
@@ -165,7 +165,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#formatted_date_ranges/1" data-no-tooltip translate="no">formatted_date_ranges(query)</a>
+        <a href="#get_value/3" data-no-tooltip translate="no">get_value(metric_list, index, metric)</a>
 
       </div>
 
@@ -173,7 +173,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#transform_dimensions/1" data-no-tooltip translate="no">transform_dimensions(dimension)</a>
+        <a href="#metric_map/3" data-no-tooltip translate="no">metric_map(map, index, metric)</a>
 
       </div>
 
@@ -192,17 +192,15 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="breakdown/5">
-
-    <span id="breakdown/4"></span>
+<section class="detail" id="aggregate/3">
 
   <div class="detail-header">
-    <a href="#breakdown/5" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#aggregate/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">breakdown(site, query, metrics, arg, opts \\ [])</h1>
+    <h1 class="signature" translate="no">aggregate(site, query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/breakdown.ex#L13" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/aggregate.ex#L9" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -214,15 +212,15 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="formatted_date_ranges/1">
+<section class="detail" id="get_value/3">
 
   <div class="detail-header">
-    <a href="#formatted_date_ranges/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_value/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">formatted_date_ranges(query)</h1>
+    <h1 class="signature" translate="no">get_value(metric_list, index, metric)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/breakdown.ex#L47" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/aggregate.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -234,15 +232,15 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="transform_dimensions/1">
+<section class="detail" id="metric_map/3">
 
   <div class="detail-header">
-    <a href="#transform_dimensions/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#metric_map/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">transform_dimensions(dimension)</h1>
+    <h1 class="signature" translate="no">metric_map(map, index, metric)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/breakdown.ex#L135" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/aggregate.ex#L32" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

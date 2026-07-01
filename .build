@@ -245,9 +245,7 @@ Plausible.Sites.Index.State.html
 Plausible.Sites.Index.UserPreference.html
 Plausible.Sites.Index.html
 Plausible.Sites.html
-Plausible.Stats.Aggregate.html
 Plausible.Stats.Base.html
-Plausible.Stats.Breakdown.html
 Plausible.Stats.Clickhouse.html
 Plausible.Stats.Compare.html
 Plausible.Stats.Comparisons.html
@@ -269,11 +267,13 @@ Plausible.Stats.Imported.html
 Plausible.Stats.Interval.html
 Plausible.Stats.JSONSchema.Utils.html
 Plausible.Stats.JSONSchema.html
+Plausible.Stats.Legacy.Aggregate.html
+Plausible.Stats.Legacy.Breakdown.html
 Plausible.Stats.Legacy.Dimensions.html
 Plausible.Stats.Legacy.QueryBuilder.html
 Plausible.Stats.Legacy.TimeOnPage.html
+Plausible.Stats.Legacy.Timeseries.html
 Plausible.Stats.Metrics.html
-Plausible.Stats.Query.html
 Plausible.Stats.QueryBuilder.html
 Plausible.Stats.QueryOptimizer.html
 Plausible.Stats.QueryResult.html
@@ -288,9 +288,7 @@ Plausible.Stats.Sparkline.html
 Plausible.Stats.TableDecider.html
 Plausible.Stats.Time.html
 Plausible.Stats.TimeOnPage.html
-Plausible.Stats.Timeseries.html
 Plausible.Stats.Util.html
-Plausible.Stats.html
 Plausible.Teams.GracePeriod.html
 Plausible.Teams.GuestInvitation.html
 Plausible.Teams.GuestMembership.html
@@ -578,8 +576,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-17EDADE9.js
-dist/sidebar_items-86BCC972.js
+dist/search_data-E1B77477.js
+dist/sidebar_items-74ED2E60.js
 index.html
 readme.html
 search.html
