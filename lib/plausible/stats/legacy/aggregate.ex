@@ -1,8 +1,6 @@
-defmodule Plausible.Stats.Aggregate do
+defmodule Plausible.Stats.Legacy.Aggregate do
   @moduledoc """
-  Builds aggregate results for v1 of our stats API and dashboards.
-
-  Avoid adding new logic here - update QueryBuilder etc instead.
+  Builds aggregate results for the Stats API v1. Avoid adding new logic here.
   """
 
   use Plausible.ClickhouseRepo
