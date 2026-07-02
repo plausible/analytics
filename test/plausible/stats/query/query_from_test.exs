@@ -40,7 +40,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2019-01-02 04:59:59Z]
-    assert q.interval == "hour"
   end
 
   test "day format defaults to today", %{site: site} do
@@ -48,7 +47,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == @now
-    assert q.interval == "hour"
   end
 
   test "parses realtime format", %{site: site} do
@@ -64,7 +62,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2019-02-01 04:59:59Z]
-    assert q.interval == "day"
   end
 
   test "parses 6 month format", %{site: site} do
@@ -72,7 +69,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2023-11-01 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
-    assert q.interval == "month"
   end
 
   test "parses 12 month format", %{site: site} do
@@ -80,7 +76,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2023-05-01 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-01 03:59:59Z]
-    assert q.interval == "month"
   end
 
   test "parses year to date format", %{site: site} do
@@ -88,7 +83,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2024-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2025-01-01 04:59:59Z]
-    assert q.interval == "month"
   end
 
   test "parses all time", %{site: site} do
@@ -97,7 +91,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2020-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "month"
   end
 
   test "parses all time in GMT+12 timezone", %{site: site} do
@@ -115,7 +108,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "hour"
   end
 
   test "all time shows hourly if site is completely new", %{site: site} do
@@ -125,7 +117,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "hour"
   end
 
   test "all time shows daily if site is more than a day old", %{site: site} do
@@ -137,7 +128,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2024-05-02 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "day"
   end
 
   test "all time shows monthly if site is more than a month old", %{site: site} do
@@ -149,7 +139,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "month"
   end
 
   test "all time uses passed interval different from the default interval", %{site: site} do
@@ -161,7 +150,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
     assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
     assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.input_date_range == :all
-    assert q.interval == "week"
   end
 
   test "defaults to 30 days format", %{site: site} do
@@ -181,7 +169,6 @@ defmodule Plausible.Stats.Query.QueryFromTest do
 
     assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
     assert q.utc_time_range.last == ~U[2019-01-16 04:59:59Z]
-    assert q.interval == "day"
   end
 
   @tag :ee_only

@@ -41,12 +41,10 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query}
   alias Plausible.Teams
-  alias PlausibleWeb.Api
   alias Plausible.Billing.Feature.SharedLinks
 
-  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
+  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owners)
@@ -131,120 +129,6 @@ defmodule PlausibleWeb.StatsController do
   else
     defp list_funnels(_site), do: []
     defp list_revenue_goals(_site), do: []
-  end
-
-  @doc """
-  The export is limited to 300 entries for other reports and 100 entries for pages because bigger result sets
-  start causing failures. Since we request data like time on page or bounce_rate for pages in a separate query
-  using the IN filter, it causes the requests to balloon in payload size.
-  """
-  def csv_export(conn, params) do
-    if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
-      site = Plausible.Repo.preload(conn.assigns.site, :owners)
-      query = Query.from(site, params, debug_metadata: debug_metadata(conn))
-
-      date_range = Query.date_range(query)
-
-      filename =
-        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(date_range.first)}  to #{Date.to_iso8601(date_range.last)} .zip"
-
-      params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
-      limited_params = Map.merge(params, %{"limit" => "100"})
-
-      csvs = %{
-        ~c"visitors.csv" => fn -> main_graph_csv(site, query) end,
-        ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
-        ~c"channels.csv" => fn -> Api.StatsController.channels(conn, params) end,
-        ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
-        ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
-        ~c"utm_campaigns.csv" => fn -> Api.StatsController.utm_campaigns(conn, params) end,
-        ~c"utm_contents.csv" => fn -> Api.StatsController.utm_contents(conn, params) end,
-        ~c"utm_terms.csv" => fn -> Api.StatsController.utm_terms(conn, params) end,
-        ~c"pages.csv" => fn -> Api.StatsController.pages(conn, limited_params) end,
-        ~c"entry_pages.csv" => fn -> Api.StatsController.entry_pages(conn, params) end,
-        ~c"exit_pages.csv" => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
-        ~c"countries.csv" => fn -> Api.StatsController.countries(conn, params) end,
-        ~c"regions.csv" => fn -> Api.StatsController.regions(conn, params) end,
-        ~c"cities.csv" => fn -> Api.StatsController.cities(conn, params) end,
-        ~c"browsers.csv" => fn -> Api.StatsController.browsers(conn, params) end,
-        ~c"browser_versions.csv" => fn -> Api.StatsController.browser_versions(conn, params) end,
-        ~c"operating_systems.csv" => fn -> Api.StatsController.operating_systems(conn, params) end,
-        ~c"operating_system_versions.csv" => fn ->
-          Api.StatsController.operating_system_versions(conn, params)
-        end,
-        ~c"devices.csv" => fn -> Api.StatsController.screen_sizes(conn, params) end,
-        ~c"conversions.csv" => fn -> Api.StatsController.conversions(conn, params) end,
-        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
-        ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
-      }
-
-      csv_values =
-        Map.values(csvs)
-        |> Plausible.ClickhouseRepo.parallel_tasks()
-
-      csvs =
-        Map.keys(csvs)
-        |> Enum.zip(csv_values)
-        |> Enum.reject(fn {_k, v} -> is_nil(v) end)
-        |> Enum.map(fn {k, v} -> {k, IO.iodata_to_binary(v)} end)
-
-      {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
-
-      conn
-      |> put_resp_content_type("application/zip")
-      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> delete_resp_cookie("exporting")
-      |> send_resp(200, zip_content)
-    else
-      conn
-      |> send_resp(400, "")
-      |> halt()
-    end
-  end
-
-  defp main_graph_csv(site, query) do
-    {metrics, column_headers} = csv_graph_metrics(query)
-
-    map_bucket_to_row = fn bucket -> Enum.map([:date | metrics], &bucket[&1]) end
-    prepend_column_headers = fn data -> [column_headers | data] end
-
-    Plausible.Stats.timeseries(site, query, metrics)
-    |> elem(0)
-    |> Enum.map(map_bucket_to_row)
-    |> prepend_column_headers.()
-    |> NimbleCSV.RFC4180.dump_to_iodata()
-  end
-
-  defp csv_graph_metrics(query) do
-    include_scroll_depth? =
-      !query.include_imported &&
-        Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
-
-    {metrics, column_headers} =
-      if Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0) do
-        {
-          [:visitors, :events, :conversion_rate],
-          [:date, :unique_conversions, :total_conversions, :conversion_rate]
-        }
-      else
-        metrics = [
-          :visitors,
-          :pageviews,
-          :visits,
-          :views_per_visit,
-          :bounce_rate,
-          :visit_duration
-        ]
-
-        metrics = if include_scroll_depth?, do: metrics ++ [:scroll_depth], else: metrics
-
-        {
-          metrics,
-          [:date | metrics]
-        }
-      end
-
-    {metrics, column_headers}
   end
 
   @doc """
@@ -550,7 +434,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:dashboard_csv_export_v2]
+      []
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)

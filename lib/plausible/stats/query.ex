@@ -1,13 +1,13 @@
 defmodule Plausible.Stats.Query do
+  @moduledoc false
   use Plausible
 
   defstruct utc_time_range: nil,
             comparison_utc_time_range: nil,
-            interval: nil,
             input_date_range: nil,
             dimensions: [],
             filters: [],
-            sample_threshold: 20_000_000,
+            sample_threshold: nil,
             imports_exist: false,
             imports_in_range: [],
             include_imported: false,
@@ -221,7 +221,6 @@ defmodule Plausible.Stats.Query do
     metrics = metrics |> Enum.sort() |> Enum.join(";")
 
     Tracer.set_attributes([
-      {"plausible.query.interval", query.interval},
       {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_dimensions},

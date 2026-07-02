@@ -1,8 +1,6 @@
-defmodule Plausible.Stats.Breakdown do
+defmodule Plausible.Stats.Legacy.Breakdown do
   @moduledoc """
-  Builds breakdown results for v1 of our stats API and dashboards.
-
-  Avoid adding new logic here - update QueryBuilder etc instead.
+  Builds breakdown results for the Stats API v1. Avoid adding new logic here.
   """
 
   use Plausible.ClickhouseRepo
