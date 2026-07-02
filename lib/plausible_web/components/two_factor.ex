@@ -25,51 +25,28 @@ defmodule PlausibleWeb.Components.TwoFactor do
   attr :field, :any, required: true
   attr :class, :string, default: ""
   attr :show_button?, :boolean, default: true
+  attr :autofocus?, :boolean, default: false
 
   def verify_2fa_input(assigns) do
-    input_class =
-      "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md"
-
-    input_class =
-      if assigns.show_button? do
-        input_class
-      else
-        [input_class, "rounded-r-md"]
-      end
-
-    assigns = assign(assigns, :input_class, input_class)
     assigns = assign(assigns, :field, assigns[:form][assigns[:field]])
 
     ~H"""
-    <div class={[@class, "flex items-center"]}>
-      <input
-        type="text"
-        name={@field.name}
-        value={@field.value}
-        autocomplete="off"
-        class={@input_class}
-        oninput={
-          if @show_button? do
-            "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('#{@id}').focus()"
-          else
-            "this.value=this.value.replace(/[^0-9]/g, '');"
-          end
-        }
-        onclick="this.select();"
+    <div class={[@class, "flex flex-col gap-y-6 items-center"]}>
+      <.otp_input
+        field={@field}
+        length={6}
         oninvalid={@show_button? && "document.getElementById('#{@id}').disabled = false"}
-        maxlength="6"
-        placeholder="••••••"
-        required="required"
+        autofocus={@autofocus? && "autofocus"}
       />
       <.button
         :if={@show_button?}
         type="submit"
         id={@id}
         mt?={false}
-        class="rounded-l-none [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+        class="w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">
-          Verify &rarr;
+          Verify
         </span>
 
         <span class="label-disabled">

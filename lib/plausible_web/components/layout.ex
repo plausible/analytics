@@ -3,6 +3,28 @@ defmodule PlausibleWeb.Components.Layout do
 
   use Phoenix.Component
 
+  attr :class, :string, default: "w-24 sm:w-30"
+
+  def logo(assigns) do
+    ~H"""
+    <img
+      src={logo_url("logo_dark.svg")}
+      class={[@class, "hidden dark:inline"]}
+      alt="Plausible logo"
+      loading="lazy"
+    />
+    <img
+      src={logo_url("logo_light.svg")}
+      class={[@class, "inline dark:hidden"]}
+      alt="Plausible logo"
+      loading="lazy"
+    />
+    """
+  end
+
+  defp logo_url(filename),
+    do: PlausibleWeb.Router.Helpers.static_path(PlausibleWeb.Endpoint, logo_path(filename))
+
   def favicon(assigns) do
     ~H"""
     <link
