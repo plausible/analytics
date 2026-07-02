@@ -26,6 +26,7 @@ import { RoutelessModalsContextProvider } from './navigation/routeless-modals-co
 import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
 import { SourcesDetails } from './stats/sources/details'
+import { RoutelessAnnotationModals } from './annotations/routeless-annotations-modals'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ function DashboardElement() {
           </LastLoadContextProvider>
           <Outlet />
           <RoutelessSegmentModals />
+          <RoutelessAnnotationModals />
         </DashboardStateContextProvider>
       </RoutelessModalsContextProvider>
     </QueryClientProvider>

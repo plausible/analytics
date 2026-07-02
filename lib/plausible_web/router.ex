@@ -306,10 +306,6 @@ defmodule PlausibleWeb.Router do
 
     scope "/:domain/annotations", PlausibleWeb.Api.Internal,
       private: %{allow_consolidated_views: true} do
-      pipeline :annotations_endpoints,
-        do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:annotations])
-
-      pipe_through :annotations_endpoints
       get "/", AnnotationsController, :index
       post "/", AnnotationsController, :create
       patch "/:annotation_id", AnnotationsController, :update

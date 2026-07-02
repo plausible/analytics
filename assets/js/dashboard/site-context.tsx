@@ -15,6 +15,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
       10
     ),
     siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
+    siteAnnotationsAvailable: dataset.siteAnnotationsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
@@ -46,6 +47,7 @@ export const siteContextDefaultValue = {
   explorationMaxJourneySteps: 0,
   propsAvailable: false,
   siteSegmentsAvailable: false,
+  siteAnnotationsAvailable: false,
   conversionsOptedOut: false,
   funnelsOptedOut: false,
   propsOptedOut: false,
