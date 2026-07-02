@@ -23,7 +23,7 @@ defmodule Plausible.Annotations.AnnotationTest do
       assert {"is invalid for granularity", []} = changeset.errors[:datetime]
     end
 
-    test "an unparseable date string is rejected" do
+    test "an unparsable date string is rejected" do
       changeset =
         Annotation.changeset(%Annotation{}, %{
           "granularity" => "date",
@@ -85,7 +85,7 @@ defmodule Plausible.Annotations.AnnotationTest do
       assert {"is invalid for granularity", []} = changeset.errors[:datetime]
     end
 
-    test "an unparseable datetime is rejected" do
+    test "an unparsable datetime is rejected" do
       changeset =
         Annotation.changeset(%Annotation{}, %{
           "granularity" => "minute",
