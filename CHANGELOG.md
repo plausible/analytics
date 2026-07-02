@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
