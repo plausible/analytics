@@ -8,6 +8,7 @@ import {
   parseWorldTopoJsonToGeoJsonFeatures,
   WorldJsonCountryData
 } from './countries'
+import { FADE_IN_CLASSNAME } from '../reports/index-breakdown'
 
 export const MAP_CONTAINER_WIDTH = 475
 export const MAP_CONTAINER_HEIGHT = 335
@@ -109,7 +110,7 @@ export function WorldMapSvg({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${MAP_CONTAINER_WIDTH} ${MAP_CONTAINER_HEIGHT}`}
-        className="w-full opacity-100 transition-opacity duration-300 starting:opacity-0"
+        className={classNames('w-full', FADE_IN_CLASSNAME)}
       />
       {!!hoveredCountryData && (
         <MapTooltip
