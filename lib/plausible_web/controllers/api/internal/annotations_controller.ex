@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias PlausibleWeb.Api.Helpers, as: H
   alias Plausible.Annotations
   alias Plausible.ChangesetHelpers
-  alias Plausible.Stats.{ApiQueryParser, QueryBuilder, QueryPeriod}
+  alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
 
   def index(
         %Plug.Conn{
