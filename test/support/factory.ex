@@ -1,4 +1,7 @@
 defmodule Plausible.Factory do
+  @moduledoc """
+  See https://ecto.hexdocs.pm/test-factories.html
+  """
   use ExMachina.Ecto, repo: Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
@@ -389,6 +392,15 @@ defmodule Plausible.Factory do
   def segment_factory do
     %Plausible.Segments.Segment{
       segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
+    }
+  end
+
+  def annotation_factory do
+    %Plausible.Annotations.Annotation{
+      note: "a test annotation",
+      type: :personal,
+      datetime: ~U[2026-01-04 00:00:00Z],
+      granularity: :date
     }
   end
 
