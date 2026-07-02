@@ -41,6 +41,8 @@ import {
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 356
+export const FADE_IN_CLASSNAME =
+  'opacity-100 transition-opacity duration-300 starting:opacity-0'
 const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT =
@@ -472,6 +474,7 @@ export function IndexBreakdownRenderer<TRow>({
   if (!columns || isPending || (isPlaceholderData && !isRealtimeSilentUpdate)) {
     return (
       <div
+        key="loading"
         className="w-full flex flex-col justify-center"
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
@@ -485,6 +488,7 @@ export function IndexBreakdownRenderer<TRow>({
   if (rows.length === 0) {
     return (
       <div
+        key="empty"
         className="w-full h-full flex flex-col justify-center"
         style={{ minHeight: `${MIN_HEIGHT}px` }}
       >
@@ -496,7 +500,10 @@ export function IndexBreakdownRenderer<TRow>({
   }
 
   return (
-    <div className="h-full flex flex-col opacity-100 transition-opacity duration-300 starting:opacity-0">
+    <div
+      key="data"
+      className={classNames('h-full flex flex-col', FADE_IN_CLASSNAME)}
+    >
       <div
         style={{ height: ROW_HEIGHT }}
         className="pt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center"
