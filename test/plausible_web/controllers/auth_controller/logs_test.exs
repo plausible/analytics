@@ -26,7 +26,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
           post(conn, "/login", email: user.email, password: "wrong")
         end)
 
-      assert logs =~ "[warning] [login] wrong password for #{user.email}"
+      assert logs =~ "[warning] [login] Incorrect password for #{user.email}"
     end
 
     test "logs on too many login attempts" do

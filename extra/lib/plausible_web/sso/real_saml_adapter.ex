@@ -50,7 +50,10 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
 
       {:error, :not_found} ->
         conn
-        |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
+        |> Phoenix.Controller.put_flash(
+          :login_error,
+          "We couldn't find a Single Sign-On account for that email."
+        )
         |> Phoenix.Controller.redirect(
           to: Routes.sso_path(conn, :login_form, return_to: return_to)
         )
@@ -108,7 +111,11 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       PlausibleWeb.UserAuth.log_in_user(conn, identity, cookie.return_to)
     else
       {:error, :not_found} ->
-        login_error(conn, cookie, "Wrong email")
+        login_error(
+          conn,
+          cookie,
+          "We couldn't find a Single Sign-On account for that email."
+        )
 
       {:error, reason} ->
         with {:ok, integration} <- SSO.get_integration(integration_id) do

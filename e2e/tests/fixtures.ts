@@ -124,11 +124,11 @@ export async function register({
 export async function login({ page, user }: { page: Page; user: User }) {
   await page.goto('/login', { waitUntil: 'commit' })
 
-  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
 
   await page.getByLabel('Email').fill(user.email)
   await page.getByLabel('Password').fill(user.password)
-  await page.getByRole('button', { name: 'Log in' }).click()
+  await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('button', { name: user.name })).toBeVisible()
 }

@@ -419,23 +419,32 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
-    scope alias: Live, assigns: %{connect_live_socket: true} do
+    scope alias: Live,
+          assigns: %{
+            connect_live_socket: true,
+            hide_header?: true,
+            hide_footer?: true,
+            disable_global_notices?: true
+          } do
       pipe_through [PlausibleWeb.RequireLoggedOutPlug, :app_layout]
 
-      scope assigns: %{disable_registration_for: [:invite_only, true]} do
-        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
+      live_session :auth, on_mount: PlausibleWeb.Live.AuthLayoutContext do
+        scope assigns: %{disable_registration_for: [:invite_only, true]} do
+          pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
 
-        live "/register", RegisterForm, :register_form, as: :auth
-      end
+          live "/register", RegisterForm, :register_form, as: :auth
+        end
 
-      scope assigns: %{
-              disable_registration_for: true,
-              dogfood_page_path: "/register/invitation/:invitation_id"
-            } do
-        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
+        scope assigns: %{
+                disable_registration_for: true,
+                dogfood_page_path: "/register/invitation/:invitation_id"
+              } do
+          pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
 
-        live "/register/invitation/:invitation_id", RegisterForm, :register_from_invitation_form,
-          as: :auth
+          live "/register/invitation/:invitation_id",
+               RegisterForm,
+               :register_from_invitation_form, as: :auth
+        end
       end
     end
 
