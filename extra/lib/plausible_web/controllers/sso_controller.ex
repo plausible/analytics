@@ -24,7 +24,10 @@ defmodule PlausibleWeb.SSOController do
         redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
-        render(conn, "login_form.html", autosubmit: params["autosubmit"] != nil)
+        render_auth_page(conn, "login_form.html",
+          autosubmit: params["autosubmit"] != nil,
+          heading: "Sign in with SSO"
+        )
     end
   end
 
@@ -44,7 +47,10 @@ defmodule PlausibleWeb.SSOController do
     else
       {:error, :not_found} ->
         conn
-        |> put_flash(:login_error, "Wrong email.")
+        |> put_flash(
+          :login_error,
+          "We couldn't find a Single Sign-On account for that email."
+        )
         |> redirect(to: Routes.sso_path(conn, :login_form))
 
       {:error, {:rate_limit, _}} ->
@@ -59,7 +65,7 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def provision_notice(conn, _params) do
-    render(conn, "provision_notice.html")
+    render_auth_page(conn, "provision_notice.html", heading: "Single Sign-On required")
   end
 
   def provision_issue(conn, params) do
@@ -73,7 +79,10 @@ defmodule PlausibleWeb.SSOController do
         _ -> :unknown
       end
 
-    render(conn, "provision_issue.html", issue: issue)
+    render_auth_page(conn, "provision_issue.html",
+      heading: "Single Sign-On required",
+      issue: issue
+    )
   end
 
   def saml_signin(conn, params) do

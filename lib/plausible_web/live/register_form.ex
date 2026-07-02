@@ -25,7 +25,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
     if socket.assigns.live_action == :register_from_invitation_form and
          socket.assigns.invitation == nil do
-      {:ok, assign(socket, invitation_expired: true)}
+      {:ok,
+       assign(socket,
+         invitation_expired: true,
+         heading: "Invitation no longer valid",
+         subtitle:
+           "This invitation has expired or was revoked. Ask your team admin to send you a new invitation."
+       )}
     else
       changeset =
         if invitation = socket.assigns.invitation do
@@ -34,71 +40,55 @@ defmodule PlausibleWeb.Live.RegisterForm do
           Auth.User.settings_changeset(%Auth.User{})
         end
 
+      {heading, subtitle} = heading_and_subtitle(socket.assigns.live_action)
+
       {:ok,
        assign(socket,
          form: to_form(changeset),
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
          disable_submit: false,
-         trigger_submit: false
+         trigger_submit: false,
+         heading: heading,
+         subtitle: subtitle
        )}
+    end
+  end
+
+  defp heading_and_subtitle(:register_from_invitation_form) do
+    {"Create your account", "Accept your invitation to join your team."}
+  end
+
+  defp heading_and_subtitle(:register_form) do
+    if ce?() do
+      {"Create your #{Plausible.product_name()} account",
+       "Start tracking privacy-friendly analytics in minutes."}
+    else
+      {"Start your 30-day free trial", "No credit card required. Cancel anytime."}
     end
   end
 
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
-    <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">{Plausible.product_name()}</h1>
-      <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
-    </div>
-
-    <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 py-6 mb-4 mt-8">
-      <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
-
-      <p class="mt-4">
-        Your invitation has expired or been revoked. Please request fresh one or you can
-        <.styled_link href={Routes.auth_path(@socket, :register_form)}>sign up</.styled_link>
-        for a 30-day unlimited free trial without an invitation.
-      </p>
+    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 flex gap-3 justify-center">
+      <.button_link href="/register" mt?={false}>
+        Start free trial
+      </.button_link>
+      <.button_link href="/login" theme="secondary" mt?={false}>
+        Sign in
+      </.button_link>
     </div>
     """
   end
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">
-        <%= if ce?() or @live_action == :register_from_invitation_form do %>
-          Register your {Plausible.product_name()} account
-        <% else %>
-          Register your 30-day free trial
-        <% end %>
-      </h1>
-      <div class="text-xl font-medium mt-2">
-        Set up privacy-friendly analytics with just a few clicks
-      </div>
-    </div>
-
-    <PlausibleWeb.Components.FlowProgress.render
-      :if={@live_action == :register_form}
-      flow={PlausibleWeb.Flows.register()}
-      current_step="Register"
-    />
-    <PlausibleWeb.Components.FlowProgress.render
-      :if={@live_action == :register_from_invitation_form}
-      flow={PlausibleWeb.Flows.invitation()}
-      current_step="Register"
-    />
-
-    <.focus_box>
-      <:title>
-        Enter your details
-      </:title>
-
+    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4">
       <.form
         :let={f}
         for={@form}
         id="register-form"
+        class="flex flex-col gap-y-6"
         action={Routes.auth_path(@socket, :login)}
         phx-hook="Metrics"
         phx-change="validate"
@@ -121,43 +111,26 @@ defmodule PlausibleWeb.Live.RegisterForm do
           <.email_input field={f[:email]} for_invitation={false} />
         <% end %>
 
-        <div class="my-4">
-          <div class="flex justify-between">
-            <label for={f[:password].id} class="block font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
-            <.password_length_hint minimum={12} field={f[:password]} />
-          </div>
-          <div class="mt-1">
+        <div class="flex flex-col gap-y-2">
+          <label
+            for={f[:password].id}
+            class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+          >
+            Password
+          </label>
+          <div>
             <.password_input_with_strength
               field={f[:password]}
               strength={@password_strength}
               phx-debounce={200}
-              class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+              mt?={false}
             />
           </div>
-        </div>
-
-        <div class="my-4">
-          <label
-            for={f[:password_confirmation].id}
-            class="block font-medium text-gray-700 dark:text-gray-300"
-          >
-            Confirm password
-          </label>
-          <div class="mt-1">
-            <.input
-              type="password"
-              autocomplete="new-password"
-              field={f[:password_confirmation]}
-              phx-debounce={200}
-              class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
-            />
-          </div>
+          <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
         </div>
 
         <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <div class="mt-4">
+          <div>
             <div
               phx-update="ignore"
               id="hcaptcha-placeholder"
@@ -165,11 +138,14 @@ defmodule PlausibleWeb.Live.RegisterForm do
               data-sitekey={PlausibleWeb.Captcha.sitekey()}
             >
             </div>
-            <%= if @captcha_error do %>
-              <div class="text-red-500 text-xs italic mt-3" x-data x-init="hcaptcha.reset()">
-                {@captcha_error}
-              </div>
-            <% end %>
+            <p
+              :if={@captcha_error}
+              class="text-xs text-red-500 mt-2"
+              x-data
+              x-init="hcaptcha.reset()"
+            >
+              {@captcha_error}
+            </p>
             <script
               phx-update="ignore"
               id="hcaptcha-script"
@@ -181,39 +157,42 @@ defmodule PlausibleWeb.Live.RegisterForm do
           </div>
         <% end %>
 
-        <% submit_text =
-          if ce?() or @invitation do
-            "Create my account"
-          else
-            "Start my free trial"
-          end %>
-        <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
-          {submit_text}
-        </.button>
+        <div class="flex flex-col gap-y-4">
+          <% submit_text =
+            if ce?() or @invitation do
+              "Create my account"
+            else
+              "Start my free trial"
+            end %>
+          <.button id="register" disabled={@disable_submit} type="submit" class="w-full" mt?={false}>
+            {submit_text}
+          </.button>
 
-        <p class="text-center text-gray-600 dark:text-gray-500 mt-4">
-          Already have an account?
-          <.styled_link href="/login">
-            Log in
-          </.styled_link>
-        </p>
+          <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+            Already have an account?
+            <.styled_link href="/login">
+              Sign in
+            </.styled_link>
+          </p>
+        </div>
       </.form>
-    </.focus_box>
+    </div>
     """
   end
 
   defp name_input(assigns) do
     ~H"""
-    <div class="my-4">
-      <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
+    <div class="flex flex-col gap-y-2">
+      <label for={@field.id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
         Full name
       </label>
-      <div class="mt-1">
+      <div>
         <.input
           field={@field}
           placeholder="Jane Doe"
           phx-debounce={200}
-          class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+          mt?={false}
+          autofocus="autofocus"
         />
       </div>
     </div>
@@ -221,46 +200,27 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   defp email_input(assigns) do
-    email_classes = ~w(
-      dark:bg-gray-900
-      shadow-sm
-      focus:ring-indigo-500
-      focus:border-indigo-500
-      block
-      w-full
-      border-gray-300
-      dark:border-gray-500
-      rounded-md
-      dark:text-gray-300
-    )
-
-    {email_readonly, email_extra_classes} =
+    email_readonly =
       if assigns[:for_invitation] do
-        {[readonly: "readonly"], ["bg-gray-100"]}
+        [readonly: "readonly"]
       else
-        {[], []}
+        []
       end
 
-    assigns =
-      assigns
-      |> assign(:email_readonly, email_readonly)
-      |> assign(:email_classes, email_classes ++ email_extra_classes)
+    assigns = assign(assigns, :email_readonly, email_readonly)
 
     ~H"""
-    <div class="my-4">
-      <div class="flex justify-between">
-        <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
-          Email
-        </label>
-        <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>
-      </div>
-      <div class="mt-1">
+    <div class="flex flex-col gap-y-2">
+      <label for={@field.id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        Email
+      </label>
+      <div>
         <.input
           type="email"
           field={@field}
           placeholder="example@email.com"
           phx-debounce={200}
-          class={@email_classes}
+          mt?={false}
           {@email_readonly}
         />
       </div>

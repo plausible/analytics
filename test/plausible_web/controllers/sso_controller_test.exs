@@ -59,7 +59,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-On email"
+        assert html =~ "Sign in with SSO"
         assert element_exists?(html, "input[name=email]")
         assert text_of_attr(html, ~s|input[name="return_to"]|, "value") == nil
       end
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-On email"
+        assert html =~ "Sign in with SSO"
         assert text_of_attr(html, "input[name=email]", "value") == "user@example.com"
         assert html =~ ~s|document.getElementById("sso-login-form").submit()|
       end
@@ -96,13 +96,13 @@ defmodule PlausibleWeb.SSOControllerTest do
           |> init_session()
           |> fetch_session()
           |> fetch_flash()
-          |> put_flash(:login_error, "Wrong email.")
+          |> put_flash(:login_error, "We couldn't find a Single Sign-On account for that email.")
 
         conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites"))
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Wrong email."
+        assert html =~ htmlize_quotes("We couldn't find a Single Sign-On account for that email.")
         assert element_exists?(html, "input[name=email]")
         assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
       end
@@ -151,7 +151,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form)
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
 
       test "limits login attempts to 5 per minute", %{conn: conn} do
@@ -264,7 +265,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
     end
 
@@ -304,10 +306,11 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must first"
-        assert html =~ "log out"
-        assert html =~ "and log in as SSO user"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "has turned off email and password logins"
+        assert html =~ "To access this team,"
+        assert html =~ "sign out"
+        assert html =~ "and sign in with SSO"
       end
     end
 
@@ -317,8 +320,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must join as a team member first"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, you must be added as a team member first"
       end
 
       test "renders issue for multiple_memberships", %{conn: conn} do
@@ -326,8 +329,8 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must first leave all other teams"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, you must leave all other teams first"
       end
 
       test "renders issue for multiple_memberships_noforce", %{conn: conn} do
@@ -339,11 +342,11 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To log in as an SSO user, you must first leave all other teams"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To sign in with SSO, you must leave all other teams first"
 
-        assert html =~ "Log in"
-        assert html =~ "with your email and password"
+        assert html =~ "Sign in with email and password"
+        assert html =~ "to resolve the issue"
       end
 
       test "renders issue for active_personal_team", %{conn: conn} do
@@ -351,8 +354,10 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must either remove or transfer all sites"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, remove or transfer all sites under"
+        assert html =~ "My Personal Sites"
+        assert html =~ "cancel its subscription if active"
       end
 
       test "renders issue for active_personal_team_noforce", %{conn: conn} do
@@ -364,13 +369,13 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To sign in with SSO, remove or transfer all sites under"
+        assert html =~ "My Personal Sites"
+        assert html =~ "cancel its subscription if active"
 
-        assert html =~
-                 "To log in as an SSO user, you must either remove or transfer all sites"
-
-        assert html =~ "Log in"
-        assert html =~ "with your email and password"
+        assert html =~ "Sign in with email and password"
+        assert html =~ "to resolve the issue"
       end
     end
 

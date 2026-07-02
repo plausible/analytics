@@ -19,7 +19,13 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows the register form", %{conn: conn} do
       conn = get(conn, "/register")
 
-      assert html_response(conn, 200) =~ "Enter your details"
+      html = html_response(conn, 200)
+
+      if ee?() do
+        assert html =~ "Start your 30-day free trial"
+      else
+        assert html =~ "Create your #{Plausible.product_name()} account"
+      end
     end
   end
 
@@ -103,7 +109,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = get(conn, "/register/invitation/#{invitation.invitation_id}")
 
-      assert html_response(conn, 200) =~ "Enter your details"
+      assert html_response(conn, 200) =~ "Accept your invitation to join your team."
     end
   end
 
@@ -287,7 +293,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "if user does not have a code: prompts user to request activation code", %{conn: conn} do
       conn = get(conn, "/activate")
 
-      assert html_response(conn, 200) =~ "Request activation code"
+      assert html_response(conn, 200) =~ "Send activation code"
     end
 
     test "if user does have a code: prompts user to enter the activation code from their email",
@@ -296,7 +302,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         post(conn, "/activate/request-code")
         |> get("/activate")
 
-      assert html_response(conn, 200) =~ "Please enter the 4-digit code we sent to"
+      assert html_response(conn, 200) =~ "We've sent an email with your code to:"
     end
 
     test "passes team identifier in form data", %{conn: conn, user: user} do
@@ -372,7 +378,8 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "with wrong pin - reloads the form with error", %{conn: conn} do
       conn = post(conn, "/activate", %{code: "1234"})
 
-      assert html_response(conn, 200) =~ "Incorrect activation code"
+      assert html_response(conn, 200) =~
+               htmlize_quotes("That code didn't work. Please try again.")
     end
 
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
@@ -385,7 +392,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/activate", %{code: verification.code})
 
-      assert html_response(conn, 200) =~ "Code is expired, please request another one"
+      assert html_response(conn, 200) =~ "The code has expired. Please request another one."
     end
 
     test "marks the user account as active", %{conn: conn, user: user} do
@@ -492,7 +499,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do
       conn = get(conn, "/login")
-      assert html_response(conn, 200) =~ "Enter your account credentials"
+      assert html_response(conn, 200) =~ "Sign in to your account"
     end
 
     test "renders `return_to` query param as hidden input", %{conn: conn} do
@@ -517,7 +524,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "keeps standard login form if preference manually overridden", %{conn: conn} do
       conn = PlausibleWeb.LoginPreference.set_sso(conn)
       conn = get(conn, "/login?prefer=manual")
-      assert html_response(conn, 200) =~ "Enter your account credentials"
+      assert html_response(conn, 200) =~ "Sign in to your account"
     end
   end
 
@@ -659,7 +666,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         conn = post(conn, "/login", email: member.email, password: "password")
 
         assert get_session(conn, :user_token) == nil
-        assert html_response(conn, 200) =~ "Enter your account credentials"
+        assert html_response(conn, 200) =~ "Sign in to your account"
       end
 
       test "SSO user other than owner with personal team - renders login form again", %{
@@ -683,7 +690,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         conn = post(conn, "/login", email: member.email, password: "password")
 
         assert get_session(conn, :user_token) == nil
-        assert html_response(conn, 200) =~ "Enter your account credentials"
+        assert html_response(conn, 200) =~ "Sign in to your account"
       end
     end
 
@@ -691,7 +698,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
       assert get_session(conn, :user_token) == nil
-      assert html_response(conn, 200) =~ "Enter your account credentials"
+      assert html_response(conn, 200) =~ "Sign in to your account"
     end
 
     test "bad password - renders login form again", %{conn: conn} do
@@ -699,7 +706,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :user_token) == nil
-      assert html_response(conn, 200) =~ "Enter your account credentials"
+      assert html_response(conn, 200) =~ "Sign in to your account"
     end
 
     test "limits login attempts to 5 per minute" do
@@ -758,7 +765,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /password/request-reset" do
     test "renders the form", %{conn: conn} do
       conn = get(conn, "/password/request-reset")
-      assert html_response(conn, 200) =~ "Enter your email so we can send a password reset link"
+      assert html_response(conn, 200) =~ "Enter your email to receive a password reset link."
     end
   end
 
@@ -766,7 +773,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "email is empty - renders form with error", %{conn: conn} do
       conn = post(conn, "/password/request-reset", %{email: ""})
 
-      assert html_response(conn, 200) =~ "Enter your email so we can send a password reset link"
+      assert html_response(conn, 200) =~ "Enter your email to receive a password reset link."
     end
 
     test "email is present and exists - sends password reset email", %{conn: conn} do
@@ -774,7 +781,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = insert(:user)
       conn = post(conn, "/password/request-reset", %{email: user.email})
 
-      assert html_response(conn, 200) =~ "Success!"
+      assert html_response(conn, 200) =~ "Check your email"
       assert_email_delivered_with(subject: "Plausible password reset")
     end
 
@@ -836,13 +843,13 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "with invalid token - shows error page", %{conn: conn} do
       conn = get(conn, "/password/reset", %{token: "blabla"})
 
-      assert html_response(conn, 401) =~ "Your token is invalid"
+      assert html_response(conn, 401) =~ "Password reset link invalid"
     end
 
     test "without token - shows error page", %{conn: conn} do
       conn = get(conn, "/password/reset", %{})
 
-      assert html_response(conn, 401) =~ "Your token is invalid"
+      assert html_response(conn, 401) =~ "Password reset link invalid"
     end
   end
 
