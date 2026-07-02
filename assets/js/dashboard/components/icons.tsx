@@ -79,6 +79,23 @@ export const RefreshIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+export const PencilIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 18 18"
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="m10.547 4.422 3.031 3.031M2.75 15.25s3.599-.568 4.546-1.515l7.327-7.327a2.142 2.142 0 1 0-3.03-3.03l-7.327 7.327c-.947.947-1.515 4.546-1.515 4.546h0Z"
+    />
+  </svg>
+)
+
 export const CursorIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
