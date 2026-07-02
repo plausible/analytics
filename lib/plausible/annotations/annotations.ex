@@ -4,6 +4,7 @@ defmodule Plausible.Annotations do
   """
   alias Plausible.Annotations.Annotation
   alias Plausible.Repo
+  alias Plausible.Stats.DateTimeRange
   import Ecto.Query
 
   @roles_with_personal_annotations [:billing, :viewer, :editor, :admin, :owner, :super_admin]
@@ -17,18 +18,18 @@ defmodule Plausible.Annotations do
 
   @max_annotations 500
 
-  @spec get_all_for_site(Plausible.Site.t(), atom(), pos_integer() | nil, QueryPeriod.t()) ::
+  @spec get_all_for_site(Plausible.Site.t(), atom(), pos_integer() | nil, DateTimeRange.t()) ::
           {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
   def get_all_for_site(
         %Plausible.Site{} = site,
         site_role,
         user_id,
-        %Plausible.Stats.DateTimeRange{} = range_in_site_tz
+        %DateTimeRange{} = range_in_site_tz
       ) do
     # Minute granularity annotations are stored for the particular UTC moment they're for,
     # so they must be in the range of the UTC query period.
     minute_granularity_range =
-      range_in_site_tz |> Plausible.Stats.DateTimeRange.to_timezone("Etc/UTC")
+      range_in_site_tz |> DateTimeRange.to_timezone("Etc/UTC")
 
     # Date granularity annotations are stored for the UTC midnight of the date they're for,
     # so the range for querying these must reflect that.
