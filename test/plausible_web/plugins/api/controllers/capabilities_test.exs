@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => false,
                    "SitesAPI" => false,
                    "SiteSegments" => false,
+                   "SiteAnnotations" => false,
                    "SharedLinks" => false,
                    "SSO" => false,
                    "ConsolidatedView" => false
@@ -60,6 +61,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => false,
                    "SitesAPI" => false,
                    "SiteSegments" => false,
+                   "SiteAnnotations" => false,
                    "SharedLinks" => false,
                    "SSO" => false,
                    "ConsolidatedView" => false
@@ -91,6 +93,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => true,
                    "SitesAPI" => false,
                    "SiteSegments" => true,
+                   "SiteAnnotations" => true,
                    "SharedLinks" => true,
                    "SSO" => false,
                    "ConsolidatedView" => true
@@ -124,6 +127,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => false,
                    "SitesAPI" => false,
                    "SiteSegments" => false,
+                   "SiteAnnotations" => false,
                    "SharedLinks" => true,
                    "SSO" => false,
                    "ConsolidatedView" => false
@@ -160,6 +164,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => true,
                    "SitesAPI" => true,
                    "SiteSegments" => false,
+                   "SiteAnnotations" => false,
                    "SharedLinks" => false,
                    "SSO" => false,
                    "ConsolidatedView" => false

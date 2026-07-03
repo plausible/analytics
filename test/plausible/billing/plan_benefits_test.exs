@@ -28,7 +28,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Team Management",
                "Shared Links",
                "Embedded Dashboards",
-               "Shared Segments"
+               "Shared Segments",
+               "Shared Annotations"
              ]
     end
 
@@ -101,6 +102,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
                "Shared Segments",
+               "Shared Annotations",
                "Consolidated View"
              ]
     end
@@ -123,6 +125,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Ecommerce revenue attribution",
                  "Funnels and user journeys",
                  "Shared Segments",
+                 "Shared Annotations",
                  "Consolidated View"
                ]
       end

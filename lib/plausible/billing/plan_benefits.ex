@@ -16,7 +16,7 @@ defmodule Plausible.Billing.PlanBenefits do
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(starter_plan))
-    |> Kernel.++(["Saved Segments"])
+    |> Kernel.++(["Saved Segments", "Annotations"])
   end
 
   @doc """
