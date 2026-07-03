@@ -12,7 +12,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Email/Slack reports",
                "Google Analytics import",
                "Goals and custom events",
-               "Saved Segments"
+               "Saved Segments",
+               "Annotations"
              ]
     end
   end
@@ -55,6 +56,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Unlimited team members",
                  "Team Management",
                  "Saved Segments",
+                 "Annotations",
                  "Goals and custom events",
                  "Custom Properties",
                  "Stats API (600 requests per hour)",
