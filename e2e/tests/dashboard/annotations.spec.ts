@@ -114,7 +114,7 @@ test('user can create annotations across granularities, edit, and delete them', 
     await expect(createModalHeading).toBeVisible()
 
     await noteField.fill(siteNoteText)
-    await page.getByRole('radio', { name: /Site-wide note/ }).check()
+    await page.getByRole('radio', { name: /Site note/ }).check()
     await saveButton.click()
 
     await expect(createModalHeading).toBeHidden()

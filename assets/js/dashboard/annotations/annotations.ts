@@ -47,7 +47,7 @@ export type AnnotationPayload = Pick<
 
 export const ANNOTATION_TYPE_LABELS = {
   [AnnotationType.personal]: 'Personal note',
-  [AnnotationType.site]: 'Site-wide note'
+  [AnnotationType.site]: 'Site note'
 }
 
 export const getAnnotationAttribution = (

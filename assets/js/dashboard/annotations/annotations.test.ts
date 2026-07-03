@@ -26,7 +26,7 @@ const publicUser: UserContextValue = {
 }
 
 describe(`${getAnnotationAttribution.name}`, () => {
-  it('returns the owner name for a site-wide annotation with an owner', () => {
+  it('returns the owner name for a site annotation with an owner', () => {
     expect(
       getAnnotationAttribution({
         type: AnnotationType.site,
@@ -35,13 +35,13 @@ describe(`${getAnnotationAttribution.name}`, () => {
     ).toBe('Alice')
   })
 
-  it('returns "Site-wide note" for a site annotation with a dangling owner', () => {
+  it('returns "Site note" for a site annotation with a dangling owner', () => {
     expect(
       getAnnotationAttribution({
         type: AnnotationType.site,
         owner_name: null
       })
-    ).toBe('Site-wide note')
+    ).toBe('Site note')
   })
 
   it('returns "Personal note" for a personal annotation regardless of owner (we assume personal notes are served only to the author)', () => {
