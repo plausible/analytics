@@ -129,7 +129,15 @@ export default function Pages() {
               </TabButton>
             ))}
           </TabWrapper>
-          <ImportedWarningBubble queryApiResponse={currentData} />
+          <ImportedWarningBubble
+            queryApiResponse={currentData}
+            message={
+              breakdownMode === 'hostname' &&
+              tab !== BreakdownReportKey.pages
+                ? 'Imported data is unavailable in this view'
+                : undefined
+            }
+          />
         </div>
         <div className="flex items-start gap-x-3">
           <MoreLink
