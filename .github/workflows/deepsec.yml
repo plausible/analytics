@@ -108,6 +108,23 @@ jobs:
           path: comment.md
           retention-days: 1
 
+      # The PR comment truncates each finding (600-char description /
+      # 400-char recommendation). Export the full, untruncated findings
+      # as per-finding markdown and attach them to the run so reviewers
+      # can read the complete analysis without a local re-run.
+      - name: Export full findings (untruncated)
+        if: steps.deepsec.outputs.has_comment == 'true'
+        working-directory: .deepsec
+        run: pnpm deepsec export --format md-dir --out ../findings --project-id analytics
+
+      - name: Upload full findings artifact
+        if: steps.deepsec.outputs.has_comment == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: deepsec-findings
+          path: findings/
+          retention-days: 14
+
   comment:
     needs: analyze
     if: needs.analyze.outputs.has_comment == 'true'
@@ -125,7 +142,8 @@ jobs:
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('comment.md', 'utf8');
-            const header = `🔎 **deepsec** reviewed \`${context.payload.pull_request.head.sha}\`\n\n`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const header = `🔎 **deepsec** reviewed \`${context.payload.pull_request.head.sha}\` · findings below are truncated — [full findings artifact](${runUrl}#artifacts)\n\n`;
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
