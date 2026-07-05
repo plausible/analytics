@@ -64,6 +64,9 @@ jobs:
           # provider traffic and exfiltrate the credential.
           ANTHROPIC_BASE_URL: https://api.anthropic.com
           CLAUDE_CODE_EXECUTABLE: claude
+          # Env indirection so the ref is never spliced into the shell text
+          # (ref names may contain `$(...)` — Actions script-injection sink).
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           # Drop any PR-supplied env file before it can override the pinned base URL.
           rm -f .env.local .env*.local
@@ -76,7 +79,7 @@ jobs:
           set +e
           pnpm deepsec process \
             --agent claude \
-            --diff "origin/${{ github.event.pull_request.base.ref }}" \
+            --diff "origin/${PR_BASE_REF}" \
             --project-id analytics \
             --root .. \
             --concurrency 5 \
