@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       end
       |> Enum.take(suggestions_limit(socket.assigns))
 
-    {:noreply, assign(socket, %{suggestions: suggestions})}
+    {:noreply, assign(socket, %{suggestions: suggestions, searching?: input_len > 0})}
   end
 
   defp do_select(socket, submit_value, display_value) do
@@ -365,12 +365,19 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   end
 
   defp assign_suggestions(socket, nil = _suggestions_from_update) do
-    suggestions =
-      socket.assigns
-      |> Map.get(:options, [])
-      |> Enum.take(suggestions_limit(socket.assigns))
+    if socket.assigns[:searching?] do
+      # A search is already in progress (or was completed) for a non-empty
+      # query - an unrelated update (e.g. the initial async options prefetch)
+      # must not race with the plain options list update.
+      socket
+    else
+      suggestions =
+        socket.assigns
+        |> Map.get(:options, [])
+        |> Enum.take(suggestions_limit(socket.assigns))
 
-    assign(socket, suggestions: suggestions)
+      assign(socket, suggestions: suggestions)
+    end
   end
 
   defp assign_suggestions(socket, _suggestions_from_update) do
