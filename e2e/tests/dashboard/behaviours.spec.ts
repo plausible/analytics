@@ -25,6 +25,7 @@ import {
 } from '../test-utils'
 
 const getReport = (page: Page) => page.getByTestId('report-behaviours')
+const LAST_30MIN_PILL = 'last 30min'
 
 test('special goals', async ({ page, request }, testInfo) => {
   test.slow(
@@ -171,7 +172,7 @@ test('special goals', async ({ page, request }, testInfo) => {
 
   const goalsTabButton = tabButton(report, 'Goals')
 
-  await goalsTabButton.scrollIntoViewIfNeeded()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
   await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
   await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
@@ -564,8 +565,8 @@ test('goals breakdown', async ({ page, request }) => {
         revenue_reporting_currency: 'EUR',
         timestamp: { minutesAgo: 59 }
       },
-      { user_id: 124, name: 'add_site', timestamp: { minutesAgo: 50 } },
-      { user_id: 125, name: 'add_site', timestamp: { minutesAgo: 50 } }
+      { user_id: 124, name: 'add_site', timestamp: { minutesAgo: 15 } },
+      { user_id: 125, name: 'add_site', timestamp: { minutesAgo: 2 } }
     ]
   })
 
@@ -589,7 +590,7 @@ test('goals breakdown', async ({ page, request }) => {
   const goalsTabButton = tabButton(report, 'Goals')
 
   await test.step('listing all goals', async () => {
-    await goalsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, [
@@ -670,7 +671,7 @@ test('goals breakdown', async ({ page, request }) => {
       waitUntil: 'commit'
     })
 
-    await goalsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
@@ -709,6 +710,32 @@ test('goals breakdown', async ({ page, request }) => {
 
     await closeModalButton(page).click()
   })
+
+  await test.step('realtime goal index breakdown displays stats from last 30min', async () => {
+    await page.goto('/' + domain + '?period=realtime', { waitUntil: 'commit' })
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
+
+    await expect(goalsTabButton).toHaveAttribute('data-active', 'true')
+    await expect(report.getByText(LAST_30MIN_PILL)).toBeVisible()
+
+    await expectHeaders(report, ['Goal', 'Uniques', 'Total', 'CR'])
+
+    await expectRows(report, ['Add a site'])
+    await expectMetricValues(report, 'Add a site', ['2', '2', '100%'])
+  })
+
+  await test.step('realtime goals modal displays stats from last 30min', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Goal conversions' })
+    ).toBeVisible()
+
+    await expectRows(modal(page), ['Add a site'])
+    await expectMetricValues(modal(page), 'Add a site', ['2', '2', '100%'])
+
+    await closeModalButton(page).click()
+  })
 })
 
 test('props breakdown', async ({ page, request }) => {
@@ -722,6 +749,7 @@ test('props breakdown', async ({ page, request }) => {
       {
         name: 'pageview',
         pathname: '/page',
+        timestamp: { minutesAgo: 15 },
         'meta.key': [
           'logged_in',
           'browser_language',
@@ -752,12 +780,14 @@ test('props breakdown', async ({ page, request }) => {
       {
         name: 'pageview',
         pathname: '/page',
+        timestamp: { minutesAgo: 1 },
         'meta.key': ['logged_in', 'browser_language'],
         'meta.value': ['false', 'en_US']
       },
       {
         name: 'pageview',
         pathname: '/page',
+        timestamp: { minutesAgo: 2 },
         'meta.key': ['logged_in', 'browser_language'],
         'meta.value': ['true', 'es']
       }
@@ -768,13 +798,13 @@ test('props breakdown', async ({ page, request }) => {
 
   await addAllCustomProps({ page, domain })
 
-  await page.goto('/' + domain, { waitUntil: 'commit' })
+  await page.goto(`/${domain}?period=all`, { waitUntil: 'commit' })
 
   const propsTabButton = tabButtonWithDropdown(report, 'Properties')
 
   await test.step('listing props', async () => {
-    await propsTabButton.scrollIntoViewIfNeeded()
     await propsTabButton.click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await dropdown(report)
       .getByRole('button', { name: 'browser_language' })
       .click()
@@ -854,6 +884,36 @@ test('props breakdown', async ({ page, request }) => {
     await expectMetricValues(report, 'en_US', ['2', '2', '66.7%'])
     await expectMetricValues(report, 'es', ['1', '1', '33.3%'])
   })
+
+  await page.goto('/' + domain + '?period=realtime', { waitUntil: 'commit' })
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
+
+  await test.step('realtime props index breakdown displays stats from last 5min', async () => {
+    await propsTabButton.click()
+    await dropdown(report)
+      .getByRole('button', { name: 'browser_language' })
+      .click()
+
+    await expect(report.getByText(LAST_30MIN_PILL)).toBeHidden()
+
+    await expectHeaders(report, ['browser_language', 'Visitors', 'Events', '%'])
+
+    await expectRows(report, ['en_US', 'es'])
+    await expectMetricValues(report, 'en_US', ['1', '1', '50%'])
+  })
+
+  await test.step('realtime props details modal displays stats from last 5min', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Custom property breakdown' })
+    ).toBeVisible()
+
+    await expectRows(modal(page), ['en_US', 'es'])
+    await expectMetricValues(modal(page), 'en_US', ['1', '1', '50%'])
+
+    await closeModalButton(page).click()
+  })
 })
 
 test('funnels', async ({ page, request }) => {
@@ -921,8 +981,8 @@ test('funnels', async ({ page, request }) => {
   const funnelsTabButton = tabButtonWithDropdown(report, 'Funnels')
 
   await test.step('rendering funnels', async () => {
-    await funnelsTabButton.scrollIntoViewIfNeeded()
     await funnelsTabButton.click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await dropdown(report)
       .getByRole('button', { name: 'Shopping 11 Funnel' })
       .click()

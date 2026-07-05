@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
+  alias Plausible.Stats.{Filters, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
   alias Plausible.Times
 
   def from(site, params, debug_metadata, now \\ nil) do
@@ -25,7 +25,6 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_input_date_range(site, params)
       |> put_timezone(site)
       |> put_dimensions(params)
-      |> put_interval(params)
       |> put_parsed_filters(params)
       |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
@@ -315,11 +314,6 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
-  end
-
-  defp put_interval(query, params) do
-    interval = Map.get(params, "interval", Interval.default_for_query(query))
-    struct!(query, interval: interval)
   end
 
   defp put_parsed_filters(query, params) do

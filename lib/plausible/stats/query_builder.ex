@@ -15,10 +15,9 @@ defmodule Plausible.Stats.QueryBuilder do
     TableDecider,
     DateTimeRange,
     QueryError,
-    QueryInclude
+    QueryInclude,
+    QueryPeriod
   }
-
-  alias Plausible.Times
 
   @doc """
   Runs various validations and builds a `%Query{}` from already parsed params.
@@ -85,70 +84,6 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  defp build_datetime_range(input_date_range, _site, _relative_date, now)
-       when input_date_range in [:realtime, :realtime_30m] do
-    duration_minutes =
-      case input_date_range do
-        :realtime -> 5
-        :realtime_30m -> 30
-      end
-
-    first_datetime = DateTime.shift(now, minute: -duration_minutes)
-    last_datetime = DateTime.shift(now, second: 5)
-
-    DateTimeRange.new!(first_datetime, last_datetime)
-  end
-
-  defp build_datetime_range(:day, site, relative_date, now) do
-    if Date.compare(Times.to_date(now, site.timezone), relative_date) == :eq do
-      DateTimeRange.new!(relative_date, now, site.timezone)
-    else
-      DateTimeRange.new!(relative_date, relative_date, site.timezone)
-    end
-  end
-
-  defp build_datetime_range(:"24h", _site, _relative_date, now) do
-    from = DateTime.shift(now, hour: -24)
-    DateTimeRange.new!(from, now)
-  end
-
-  defp build_datetime_range(:month, site, relative_date, _now) do
-    first = relative_date |> Date.beginning_of_month()
-    last = relative_date |> Date.end_of_month()
-    DateTimeRange.new!(first, last, site.timezone)
-  end
-
-  defp build_datetime_range(:year, site, relative_date, _now) do
-    first = relative_date |> Plausible.Times.beginning_of_year()
-    last = relative_date |> Plausible.Times.end_of_year()
-    DateTimeRange.new!(first, last, site.timezone)
-  end
-
-  defp build_datetime_range(:all, site, relative_date, _now) do
-    start_date = Plausible.Sites.stats_start_date(site) || relative_date
-    DateTimeRange.new!(start_date, relative_date, site.timezone)
-  end
-
-  defp build_datetime_range({:last_n_days, n}, site, relative_date, _now) do
-    last = relative_date |> Date.add(-1)
-    first = relative_date |> Date.add(-n)
-    DateTimeRange.new!(first, last, site.timezone)
-  end
-
-  defp build_datetime_range({:last_n_months, n}, site, relative_date, _now) do
-    last = relative_date |> Date.shift(month: -1) |> Date.end_of_month()
-    first = relative_date |> Date.shift(month: -n) |> Date.beginning_of_month()
-    DateTimeRange.new!(first, last, site.timezone)
-  end
-
-  defp build_datetime_range({:date_range, from, to}, site, _relative_date, _now) do
-    DateTimeRange.new!(from, to, site.timezone)
-  end
-
-  defp build_datetime_range({:datetime_range, from, to}, _site, _relative_date, _now) do
-    DateTimeRange.new!(from, to)
-  end
-
   defp do_build(parsed_query_params, site, debug_metadata) do
     parsed_query_params
     |> ParsedQueryParams.to_query!()
@@ -169,11 +104,9 @@ defmodule Plausible.Stats.QueryBuilder do
   defp set_now(query), do: query
 
   defp set_utc_time_range(query, site, relative_date) do
-    relative_date = relative_date || Times.to_date(query.now, site.timezone)
-
     utc_time_range =
       query.input_date_range
-      |> build_datetime_range(site, relative_date, query.now)
+      |> QueryPeriod.build_range_for_site(site, relative_date, query.now)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
     Query.set(query, utc_time_range: utc_time_range)
@@ -525,8 +458,11 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   defp validate_metric(:exit_rate = metric, query) do
-    case {query.dimensions, TableDecider.sessions_join_events?(query)} do
+    case {Enum.sort(query.dimensions), TableDecider.sessions_join_events?(query)} do
       {["visit:exit_page"], false} ->
+        :ok
+
+      {["visit:exit_page", "visit:exit_page_hostname"], false} ->
         :ok
 
       {["visit:exit_page"], true} ->

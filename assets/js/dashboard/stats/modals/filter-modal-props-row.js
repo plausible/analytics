@@ -8,10 +8,10 @@ import { apiPath } from '../../util/url'
 import {
   EVENT_PROPS_PREFIX,
   FILTER_OPERATIONS,
-  fetchSuggestions,
   getPropertyKeyFromFilterKey,
   isFreeChoiceFilterOperation
 } from '../../util/filters'
+import { fetchSuggestions } from '../../util/fetch-suggestions'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 

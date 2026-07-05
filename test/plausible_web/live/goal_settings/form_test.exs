@@ -332,6 +332,38 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert updated.id == g.id
     end
 
+    test "renders error when trying to rename event_name of an automated goal", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "File Download"})
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "My File Download"}})
+
+      assert render(lv) =~ "cannot be changed for an automated goal"
+    end
+
+    test "renders error when trying to rename display_name of an automated goal", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "File Download"})
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{goal.id}/) |> render_click()
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "File Download", display_name: "My Downloads"}})
+
+      assert render(lv) =~ "cannot be changed for an automated goal"
+    end
+
     test "renders error when goal is invalid", %{conn: conn, site: site} do
       {:ok, [g, g2, _]} = setup_goals(site)
       lv = get_liveview(conn, site)

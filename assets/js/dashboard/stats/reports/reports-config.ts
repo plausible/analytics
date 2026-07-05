@@ -27,6 +27,7 @@ export type BreakdownReportConfig = {
   detailsPath: string
   dimensionLabel: string
   alwaysOnFilters?: ApiFilter[]
+  searchDimension?: NonTimeDimension
 }
 
 export const COMMON_BREAKDOWN_METRICS_BY_CONTEXT: MetricsByContext = {
@@ -92,8 +93,11 @@ function createGetMetricsFn(
 
 export enum BreakdownReportKey {
   'pages' = 'pages',
+  'pagesWithHostname' = 'pagesWithHostname',
   'entryPages' = 'entryPages',
+  'entryPagesWithHostname' = 'entryPagesWithHostname',
   'exitPages' = 'exitPages',
+  'exitPagesWithHostname' = 'exitPagesWithHostname',
   'browsers' = 'browsers',
   'browserVersions' = 'browserVersions',
   'operatingSystems' = 'operatingSystems',
@@ -141,6 +145,31 @@ export const BREAKDOWN_REPORTS: Record<
     detailsPath: 'pages',
     dimensionLabel: 'Page'
   },
+  [BreakdownReportKey.pagesWithHostname]: {
+    dimensions: ['event:hostname', 'event:page'],
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: [
+        'visitors',
+        'percentage',
+        'pageviews',
+        'bounce_rate',
+        'time_on_page',
+        'scroll_depth'
+      ],
+      defaultCsvMetrics: [
+        'visitors',
+        'pageviews',
+        'bounce_rate',
+        'time_on_page',
+        'scroll_depth'
+      ]
+    }),
+    detailsTitle: 'Top pages',
+    detailsPath: 'pages-with-hostname',
+    dimensionLabel: 'URL',
+    searchDimension: 'event:page'
+  },
   [BreakdownReportKey.entryPages]: {
     dimensions: ['visit:entry_page'],
     getMetrics: createGetMetricsFn({
@@ -158,6 +187,25 @@ export const BREAKDOWN_REPORTS: Record<
     detailsPath: 'entry-pages',
     dimensionLabel: 'Entry page',
     alwaysOnFilters: [['is_not', 'visit:entry_page', ['']]]
+  },
+  [BreakdownReportKey.entryPagesWithHostname]: {
+    dimensions: ['visit:entry_page_hostname', 'visit:entry_page'],
+    getMetrics: createGetMetricsFn({
+      ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+      defaultDetailedMetrics: [
+        'visitors',
+        'percentage',
+        'visits',
+        'bounce_rate',
+        'visit_duration'
+      ],
+      defaultCsvMetrics: ['visitors', 'visits', 'bounce_rate', 'visit_duration']
+    }),
+    detailsTitle: 'Entry pages',
+    detailsPath: 'entry-pages-with-hostname',
+    dimensionLabel: 'URL',
+    alwaysOnFilters: [['is_not', 'visit:entry_page', ['']]],
+    searchDimension: 'visit:entry_page'
   },
   [BreakdownReportKey.exitPages]: {
     dimensions: ['visit:exit_page'],
@@ -182,6 +230,31 @@ export const BREAKDOWN_REPORTS: Record<
     detailsPath: 'exit-pages',
     dimensionLabel: 'Exit page',
     alwaysOnFilters: [['is_not', 'visit:exit_page', ['']]]
+  },
+  [BreakdownReportKey.exitPagesWithHostname]: {
+    dimensions: ['visit:exit_page_hostname', 'visit:exit_page'],
+    getMetrics: (ctx) => {
+      const base = chooseMetrics(
+        {
+          ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
+          defaultDetailedMetrics: [
+            'visitors',
+            'percentage',
+            'visits',
+            'exit_rate'
+          ],
+          defaultCsvMetrics: ['visitors', 'visits', 'exit_rate']
+        },
+        ctx
+      )
+
+      return ctx.hasEventFilters ? base.filter((m) => m !== 'exit_rate') : base
+    },
+    detailsTitle: 'Exit pages',
+    detailsPath: 'exit-pages-with-hostname',
+    dimensionLabel: 'URL',
+    alwaysOnFilters: [['is_not', 'visit:exit_page', ['']]],
+    searchDimension: 'visit:exit_page'
   },
   [BreakdownReportKey.browsers]: {
     dimensions: ['visit:browser'],
@@ -236,14 +309,14 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.channels]: {
     dimensions: ['visit:channel'],
     getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
-    detailsTitle: 'Top acquisition channels',
+    detailsTitle: 'Acquisition channels',
     detailsPath: 'channels',
     dimensionLabel: 'Channel'
   },
   [BreakdownReportKey.sources]: {
     dimensions: ['visit:source'],
     getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
-    detailsTitle: 'Top sources',
+    detailsTitle: 'Sources',
     detailsPath: 'sources',
     dimensionLabel: 'Source'
   },
@@ -298,10 +371,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:country_name', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top countries',
+    detailsTitle: 'Countries',
     detailsPath: 'countries',
     dimensionLabel: 'Country',
     alwaysOnFilters: [['is_not', 'visit:country', ['\0\0', 'ZZ']]]
@@ -311,10 +383,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:region_name', 'visit:region', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top regions',
+    detailsTitle: 'Regions',
     detailsPath: 'regions',
     dimensionLabel: 'Region',
     alwaysOnFilters: [['is_not', 'visit:region', ['']]]
@@ -324,10 +395,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:city_name', 'visit:city', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top cities',
+    detailsTitle: 'Cities',
     detailsPath: 'cities',
     dimensionLabel: 'City',
     alwaysOnFilters: [['is_not', 'visit:city', [0]]]
@@ -335,6 +405,9 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.goals]: {
     dimensions: ['event:goal'],
     getMetrics: (ctx: MetricContext) => {
+      if (ctx.isCsv) {
+        return ['visitors', 'events']
+      }
       if (ctx.isRevenueAvailable) {
         return [
           'visitors',
@@ -357,23 +430,25 @@ export function customPropsReportConfig(
 ): BreakdownReportConfig {
   return {
     dimensions: [`event:props:${propKey}` as NonTimeDimension],
-    getMetrics: (ctx: MetricContext) => {
-      if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
-        return [
-          'visitors',
-          'events',
-          'conversion_rate',
-          'total_revenue',
-          'average_revenue'
-        ]
-      }
-      if (ctx.hasConversionGoalFilter) {
-        return ['visitors', 'events', 'conversion_rate']
-      }
-      return ['visitors', 'events', 'percentage']
-    },
+    getMetrics: getCustomPropsMetrics,
     detailsTitle: 'Custom property breakdown',
     detailsPath: `custom-prop-values/${propKey}`,
     dimensionLabel: propKey
   }
+}
+
+export function getCustomPropsMetrics(ctx: MetricContext): Metric[] {
+  if (ctx.hasConversionGoalFilter && ctx.isRevenueAvailable) {
+    return [
+      'visitors',
+      'events',
+      'conversion_rate',
+      'total_revenue',
+      'average_revenue'
+    ]
+  }
+  if (ctx.hasConversionGoalFilter) {
+    return ['visitors', 'events', 'conversion_rate']
+  }
+  return ['visitors', 'events', 'percentage']
 }

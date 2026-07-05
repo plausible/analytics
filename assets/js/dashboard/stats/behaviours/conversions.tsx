@@ -10,7 +10,7 @@ import {
   BreakdownReportKey
 } from '../reports/reports-config'
 import { QueryApiResponse, QueryResultRow } from '../../api'
-import { NonTimeDimension } from '../../stats-query'
+import { NonTimeDimension, StatsQuery } from '../../stats-query'
 import { FilterInfo } from '../../components/drilldown-link'
 import {
   BEHAVIOURS_BAR_COLOR,
@@ -18,6 +18,21 @@ import {
   BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE
 } from '.'
 import { useSiteContext } from '../../site-context'
+import {
+  defaultGetStatsQuery,
+  StatsReportQueryKey
+} from '../../hooks/use-query-api'
+import { DashboardPeriod } from '../../dashboard-time-periods'
+
+export function getConversionsStatsQuery(
+  queryKey: StatsReportQueryKey
+): StatsQuery {
+  const statsQuery = defaultGetStatsQuery(queryKey)
+  if (statsQuery.date_range === DashboardPeriod.realtime) {
+    return { ...statsQuery, date_range: DashboardPeriod.realtime_30m }
+  }
+  return statsQuery
+}
 
 type ConversionsProps = {
   onDataReady?: (data: QueryApiResponse) => void
@@ -63,6 +78,7 @@ export default function Conversions({
       hideMetricsIfAllNull={['total_revenue', 'average_revenue']}
       hideMetricsOnMobile={BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE}
       metricColumnWidth={BEHAVIOURS_METRIC_COLUMN_WIDTH}
+      getStatsQuery={getConversionsStatsQuery}
     />
   )
 }
