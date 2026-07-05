@@ -366,16 +366,11 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   defp assign_suggestions(socket, %{suggestions: _}), do: socket
 
-  defp assign_suggestions(socket, %{async_result?: true}) do
-    if socket.assigns[:searching?] do
-      # A background suggest_fun task delivered a result for a different key
-      # (namely, the initial options prefetch) - since the user has already
-      # searched, this stale result must not clobber the up-to-date suggestions.
-      socket
-    else
-      fill_suggestions_from_options(socket)
-    end
-  end
+  # A background suggest_fun task delivered a result for a different key
+  # (namely, the initial options prefetch) - since the user has already
+  # searched, this stale result must not clobber the up-to-date suggestions.
+  defp assign_suggestions(%{assigns: %{searching?: true}} = socket, %{async_result?: true}),
+    do: socket
 
   defp assign_suggestions(socket, _assigns), do: fill_suggestions_from_options(socket)
 
