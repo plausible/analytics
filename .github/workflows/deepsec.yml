@@ -36,6 +36,8 @@ jobs:
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
+          cache: pnpm
+          cache-dependency-path: .deepsec/pnpm-lock.yaml
 
       - name: Install deepsec
         working-directory: .deepsec
@@ -48,12 +50,14 @@ jobs:
         id: deepsec
         working-directory: .deepsec
         env:
-          # `AI_GATEWAY_API_KEY` expands into the Claude/Codex SDK creds.
-          # Swap to ANTHROPIC_AUTH_TOKEN if you wire up Anthropic directly.
-          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          # Direct Anthropic API. deepsec's claude agent forwards
+          # ANTHROPIC_API_KEY to the Claude Code SDK (the direct-Anthropic
+          # path; ANTHROPIC_AUTH_TOKEN + gateway base URL is the Vercel
+          # AI Gateway pair we deliberately don't use).
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # Pin the provider endpoint so PR-added env files can't redirect
           # provider traffic and exfiltrate the credential.
-          ANTHROPIC_BASE_URL: https://ai-gateway.vercel.sh
+          ANTHROPIC_BASE_URL: https://api.anthropic.com
           CLAUDE_CODE_EXECUTABLE: claude
         run: |
           # Drop any PR-supplied env file before it can override the pinned base URL.
@@ -68,7 +72,7 @@ jobs:
           pnpm deepsec process \
             --agent claude \
             --diff "origin/${{ github.event.pull_request.base.ref }}" \
-            --project-id analytics-5 \
+            --project-id analytics \
             --root .. \
             --concurrency 5 \
             --max-turns 30 \
