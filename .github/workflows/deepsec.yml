@@ -33,6 +33,10 @@ jobs:
           persist-credentials: false # PR code must not inherit the repo token
 
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          # pnpm version comes from `packageManager`, which lives in the
+          # deepsec workspace's package.json, not the repo root one.
+          package_json_file: .deepsec/package.json
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
@@ -44,7 +48,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Claude Code CLI (pinned)
-        run: npm install -g @anthropic-ai/claude-code@2.1.178
+        run: npm install -g @anthropic-ai/claude-code@2.1.201
 
       - name: Run deepsec on the PR diff
         id: deepsec
