@@ -54,11 +54,10 @@ jobs:
         id: deepsec
         working-directory: .deepsec
         env:
-          # Direct Anthropic API. deepsec's claude agent forwards
-          # ANTHROPIC_API_KEY to the Claude Code SDK (the direct-Anthropic
-          # path; ANTHROPIC_AUTH_TOKEN + gateway base URL is the Vercel
-          # AI Gateway pair we deliberately don't use).
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Direct Anthropic API: ANTHROPIC_AUTH_TOKEN + api.anthropic.com
+          # base URL is upstream's documented direct pair (vercel-setup.md);
+          # deepsec forwards both to the Claude Code SDK.
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
           # Pin the provider endpoint so PR-added env files can't redirect
           # provider traffic and exfiltrate the credential.
           ANTHROPIC_BASE_URL: https://api.anthropic.com
