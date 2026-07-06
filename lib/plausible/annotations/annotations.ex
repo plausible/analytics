@@ -11,16 +11,15 @@ defmodule Plausible.Annotations do
   @roles_with_personal_annotations [:billing, :viewer, :editor, :admin, :owner, :super_admin]
   @roles_with_maybe_site_annotations [:editor, :admin, :owner, :super_admin]
 
-  @type error_not_enough_permissions() :: {:error, :not_enough_permissions}
-  @type error_annotation_not_found() :: {:error, :annotation_not_found}
-  @type error_annotation_limit_reached() :: {:error, :annotations_limit_reached}
-  @type error_invalid_annotation() :: {:error, {:invalid_annotation, Keyword.t()}}
-  @type unknown_error() :: {:error, any()}
+  @type error_not_enough_permissions() :: :not_enough_permissions
+  @type error_annotation_not_found() :: :annotation_not_found
+  @type error_annotation_limit_reached() :: :annotations_limit_reached
+  @type error_invalid_annotation() :: {:invalid_annotation, Keyword.t()}
 
   @max_annotations 500
 
   @spec get_all_for_site(Plausible.Site.t(), atom(), User.t() | nil, DateTimeRange.t()) ::
-          {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
+          {:error, error_not_enough_permissions()} | {:ok, list(Annotation.t())}
   def get_all_for_site(site, site_role, user, range_in_site_tz) do
     fields = [:id, :note, :type, :datetime, :granularity, :site_id, :inserted_at, :updated_at]
 
@@ -97,8 +96,7 @@ defmodule Plausible.Annotations do
 
   @spec get_one(User.t(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
           {:ok, Annotation.t()}
-          | error_not_enough_permissions()
-          | error_annotation_not_found()
+          | {:error, error_not_enough_permissions() | error_annotation_not_found()}
   def get_one(user, site, site_role, annotation_id) do
     if site_role in roles_with_personal_annotations() do
       case do_get_one(user, site, annotation_id) do
@@ -112,10 +110,10 @@ defmodule Plausible.Annotations do
 
   @spec insert_one(User.t(), Plausible.Site.t(), atom(), map()) ::
           {:ok, Annotation.t()}
-          | error_not_enough_permissions()
-          | error_invalid_annotation()
-          | error_annotation_limit_reached()
-          | unknown_error()
+          | {:error,
+             error_not_enough_permissions()
+             | error_invalid_annotation()
+             | error_annotation_limit_reached()}
   def insert_one(user, site, site_role, params) do
     changeset = Annotation.create_changeset(params, site, user)
     annotation_type = Ecto.Changeset.get_field(changeset, :type)
@@ -134,9 +132,10 @@ defmodule Plausible.Annotations do
 
   @spec update_one(User.t(), Plausible.Site.t(), atom(), pos_integer(), map()) ::
           {:ok, Annotation.t()}
-          | error_not_enough_permissions()
-          | error_invalid_annotation()
-          | unknown_error()
+          | {:error,
+             error_not_enough_permissions()
+             | error_invalid_annotation()
+             | error_annotation_not_found()}
   def update_one(user, site, site_role, annotation_id, params) do
     with {:ok, annotation} <- get_one(user, site, site_role, annotation_id),
          changeset = Annotation.update_changeset(annotation, params, user),
