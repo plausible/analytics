@@ -1,15 +1,17 @@
-<div class="w-full max-w-md mx-auto mt-6 pb-16 px-4 flex flex-col items-center gap-y-4 text-center text-base text-gray-500 dark:text-gray-400 text-pretty">
-  <p>
-    The owner of
-    <span :if={is_nil(@conn.assigns[:current_team])}>the team</span><span
-      :if={@conn.assigns[:current_team]}
-      class="font-semibold"
-    >"{@conn.assigns[:current_team].name}"</span>
-    has turned off email and password logins, so you can only sign in with your organization's Single Sign-On.
-  </p>
-  <p>
-    To access this team,
-    <.styled_link href={Routes.auth_path(@conn, :logout)}>sign out</.styled_link>
-    and sign in with SSO.
-  </p>
-</div>
+<.auth_container>
+  <div class="flex flex-col items-center gap-y-4 text-center text-base text-gray-500 dark:text-gray-400 text-pretty">
+    <p>
+      The owner of
+      <span :if={is_nil(@conn.assigns[:current_team])}>the team</span><span
+        :if={@conn.assigns[:current_team]}
+        class="font-semibold"
+      >"{@conn.assigns[:current_team].name}"</span>
+      has turned off email and password logins, so you can only sign in with your organization's Single Sign-On.
+    </p>
+    <p>
+      To access this team,
+      <.styled_link href={Routes.auth_path(@conn, :logout)}>sign out</.styled_link>
+      and sign in with SSO.
+    </p>
+  </div>
+</.auth_container>

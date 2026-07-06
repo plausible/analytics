@@ -1,36 +1,38 @@
-<div class="w-full max-w-md mx-auto mt-6 pb-16 px-4 flex flex-col items-center gap-y-4 text-center text-base text-gray-500 dark:text-gray-400 text-pretty">
-  <p>
-    The owner of
-    <span :if={is_nil(@conn.assigns[:current_team])}>the team</span><span
-      :if={@conn.assigns[:current_team]}
-      class="font-semibold"
-    >"{@conn.assigns[:current_team].name}"</span>
-    has turned off email and password logins, so you can only sign in with your organization's Single Sign-On.
-    <span :if={@issue == :not_a_member}>
-      To access this team, you must be added as a team member first.
-    </span>
-    <span :if={@issue == :multiple_memberships}>
-      To access this team, you must leave all other teams first.
-    </span>
-    <span :if={@issue == :multiple_memberships_noforce}>
-      To sign in with SSO, you must leave all other teams first.
-    </span>
-    <span :if={@issue == :active_personal_team}>
-      To access this team, remove or transfer all sites under
-      <span class="font-semibold">"My Personal Sites"</span>
-      and cancel its subscription if active.
-    </span>
-    <span :if={@issue == :active_personal_team_noforce}>
-      To sign in with SSO, remove or transfer all sites under
-      <span class="font-semibold">"My Personal Sites"</span>
-      and cancel its subscription if active.
-    </span>
-  </p>
+<.auth_container>
+  <div class="flex flex-col items-center gap-y-4 text-center text-base text-gray-500 dark:text-gray-400 text-pretty">
+    <p>
+      The owner of
+      <span :if={is_nil(@conn.assigns[:current_team])}>the team</span><span
+        :if={@conn.assigns[:current_team]}
+        class="font-semibold"
+      >"{@conn.assigns[:current_team].name}"</span>
+      has turned off email and password logins, so you can only sign in with your organization's Single Sign-On.
+      <span :if={@issue == :not_a_member}>
+        To access this team, you must be added as a team member first.
+      </span>
+      <span :if={@issue == :multiple_memberships}>
+        To access this team, you must leave all other teams first.
+      </span>
+      <span :if={@issue == :multiple_memberships_noforce}>
+        To sign in with SSO, you must leave all other teams first.
+      </span>
+      <span :if={@issue == :active_personal_team}>
+        To access this team, remove or transfer all sites under
+        <span class="font-semibold">"My Personal Sites"</span>
+        and cancel its subscription if active.
+      </span>
+      <span :if={@issue == :active_personal_team_noforce}>
+        To sign in with SSO, remove or transfer all sites under
+        <span class="font-semibold">"My Personal Sites"</span>
+        and cancel its subscription if active.
+      </span>
+    </p>
 
-  <p :if={!@conn.assigns[:current_user]}>
-    <.styled_link href={Routes.auth_path(@conn, :login_form, prefer: "manual")}>
-      Sign in with email and password
-    </.styled_link>
-    to resolve the issue.
-  </p>
-</div>
+    <p :if={!@conn.assigns[:current_user]}>
+      <.styled_link href={Routes.auth_path(@conn, :login_form, prefer: "manual")}>
+        Sign in with email and password
+      </.styled_link>
+      to resolve the issue.
+    </p>
+  </div>
+</.auth_container>

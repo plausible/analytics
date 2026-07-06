@@ -1,4 +1,4 @@
-<div class="w-full max-w-md mx-auto mt-10 pb-16 px-4">
+<.auth_container>
   <.form
     :let={f}
     action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
@@ -41,4 +41,4 @@
       </.styled_link>
     </p>
   </div>
-</div>
+</.auth_container>

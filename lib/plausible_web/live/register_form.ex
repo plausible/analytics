@@ -70,20 +70,20 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
-    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 flex gap-3 justify-center">
+    <.auth_container class="flex gap-3 justify-center">
       <.button_link href="/register" mt?={false}>
         Start free trial
       </.button_link>
       <.button_link href="/login" theme="secondary" mt?={false}>
         Sign in
       </.button_link>
-    </div>
+    </.auth_container>
     """
   end
 
   def render(assigns) do
     ~H"""
-    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4">
+    <.auth_container>
       <.form
         :let={f}
         for={@form}
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           </p>
         </div>
       </.form>
-    </div>
+    </.auth_container>
     """
   end
 
