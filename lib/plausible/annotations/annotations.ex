@@ -21,12 +21,7 @@ defmodule Plausible.Annotations do
 
   @spec get_all_for_site(Plausible.Site.t(), atom(), User.t() | nil, DateTimeRange.t()) ::
           {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
-  def get_all_for_site(
-        %Plausible.Site{} = site,
-        site_role,
-        user,
-        %DateTimeRange{} = range_in_site_tz
-      ) do
+  def get_all_for_site(site, site_role, user, range_in_site_tz) do
     # Minute granularity annotations are stored for the particular UTC moment they're for,
     # so they must be in the range of the UTC query period.
     minute_granularity_range =
@@ -116,21 +111,17 @@ defmodule Plausible.Annotations do
           | error_invalid_annotation()
           | error_annotation_limit_reached()
           | unknown_error()
-
-  def insert_one(
-        user,
-        %Plausible.Site{} = site,
-        site_role,
-        %{} = params
-      ) do
+  def insert_one(user, site, site_role, params) do
     params = maybe_coerce_naive_datetime(params, site.timezone)
 
-    with :ok <- can_insert_one?(site, site_role, params),
-         %{valid?: true} = changeset <- Annotation.create_changeset(params, site, user) do
-      {:ok,
-       changeset |> Repo.insert!() |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+    changeset = Annotation.create_changeset(params, site, user)
+    annotation_type = Ecto.Changeset.get_field(changeset, :type)
+
+    with :ok <- can_insert_one?(site, site_role, annotation_type),
+         {:ok, annotation} <- Repo.insert(changeset) do
+      {:ok, annotation |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
     else
-      %{valid?: false, errors: errors} ->
+      {:error, %Ecto.Changeset{errors: errors}} ->
         {:error, {:invalid_annotation, errors}}
 
       {:error, _type} = error ->
@@ -143,25 +134,17 @@ defmodule Plausible.Annotations do
           | error_not_enough_permissions()
           | error_invalid_annotation()
           | unknown_error()
-
-  def update_one(
-        user,
-        %Plausible.Site{} = site,
-        site_role,
-        annotation_id,
-        %{} = params
-      ) do
+  def update_one(user, site, site_role, annotation_id, params) do
     params = maybe_coerce_naive_datetime(params, site.timezone)
 
     with {:ok, annotation} <- get_one(user, site, site_role, annotation_id),
-         :ok <- can_update_one?(site, site_role, params, annotation.type),
-         %{valid?: true} = changeset <- Annotation.update_changeset(annotation, params, user) do
-      Repo.update!(changeset)
-
-      {:ok,
-       Repo.reload!(annotation) |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+         changeset = Annotation.update_changeset(annotation, params, user),
+         new_annotation_type = Ecto.Changeset.get_field(changeset, :type),
+         :ok <- can_update_one?(site, site_role, new_annotation_type, annotation.type),
+         {:ok, annotation} <- Repo.update(changeset) do
+      {:ok, annotation |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
     else
-      %{valid?: false, errors: errors} ->
+      {:error, %Ecto.Changeset{errors: errors}} ->
         {:error, {:invalid_annotation, errors}}
 
       {:error, _type} = error ->
@@ -271,8 +254,8 @@ defmodule Plausible.Annotations do
     annotation
   end
 
-  defp can_update_one?(%Plausible.Site{} = site, site_role, params, existing_annotation_type) do
-    updating_to_site_annotation? = params["type"] == "site"
+  defp can_update_one?(site, site_role, new_annotation_type, existing_annotation_type) do
+    updating_to_site_annotation? = new_annotation_type == :site
 
     cond do
       (existing_annotation_type == :site or
@@ -289,16 +272,16 @@ defmodule Plausible.Annotations do
     end
   end
 
-  defp can_insert_one?(%Plausible.Site{} = site, site_role, params) do
+  defp can_insert_one?(site, site_role, annotation_type) do
     cond do
       count_annotations(site.id) >= @max_annotations ->
         {:error, :annotations_limit_reached}
 
-      params["type"] == "site" and site_role in roles_with_maybe_site_annotations() and
+      annotation_type == :site and site_role in roles_with_maybe_site_annotations() and
           site_annotations_available?(site) ->
         :ok
 
-      params["type"] == "personal" and
+      annotation_type == :personal and
           site_role in roles_with_personal_annotations() ->
         :ok
 
