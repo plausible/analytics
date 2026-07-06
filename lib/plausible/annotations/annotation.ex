@@ -138,12 +138,34 @@ defmodule Plausible.Annotations.Annotation do
   def serialize_date_granularity_datetime(%Date{} = date),
     do: DateTime.new!(date, ~T[00:00:00], "Etc/UTC")
 
-  def parse_date_granularity_datetime(%DateTime{} = datetime),
+  defp parse_date_granularity_datetime(%DateTime{} = datetime),
     do: DateTime.to_date(datetime)
+
+  # Used only by encoder
+  @doc false
+  def localize(annotation, timezone)
+
+  # For date granularity, the UTC date component IS the annotation date — callers
+  # store UTC midnight of their intended local date, so no timezone shift is needed.
+  # Return just the Date so the JSON response matches the bare-date input format.
+  def localize(%{granularity: :date} = annotation, _timezone) do
+    %{annotation | datetime: parse_date_granularity_datetime(annotation.datetime)}
+  end
+
+  # For minute granularity, shift the stored UTC moment to the site's local timezone
+  # and strip the offset so the response is a naive local time string.
+  def localize(%{granularity: :minute} = annotation, timezone) do
+    naive_local =
+      annotation.datetime
+      |> DateTime.shift_zone!(timezone)
+      |> DateTime.to_naive()
+
+    %{annotation | datetime: naive_local}
+  end
 end
 
 defimpl Jason.Encoder, for: Plausible.Annotations.Annotation do
-  def encode(%Plausible.Annotations.Annotation{} = annotation, opts) do
+  def encode(annotation, opts) do
     %{
       id: annotation.id,
       note: annotation.note,
@@ -151,10 +173,11 @@ defimpl Jason.Encoder, for: Plausible.Annotations.Annotation do
       datetime: annotation.datetime,
       granularity: annotation.granularity,
       owner_id: annotation.owner_id,
-      owner_name: if(is_nil(annotation.owner_id), do: nil, else: annotation.owner.name),
+      owner_name: if(annotation.owner_id, do: annotation.owner.name),
       inserted_at: annotation.inserted_at,
       updated_at: annotation.updated_at
     }
+    |> Plausible.Annotations.Annotation.localize(annotation.site.timezone)
     |> Jason.Encode.map(opts)
   end
 end
