@@ -486,13 +486,15 @@ defmodule PlausibleWeb.AuthControllerTest do
             end)
 
             conn = post(conn, "/activate", %{code: "1111"})
+            body = html_response(conn, 200)
 
-            {conn.status == 429, conn}
+            {body =~ "Too many attempts", conn}
           end,
           500
         )
 
-      assert html_response(response, 429) =~ "Too many activation attempts"
+      assert html_response(response, 200) =~
+               "Too many attempts. Please wait a few minutes before trying again."
     end
   end
 

@@ -318,18 +318,13 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:field, Phoenix.HTML.FormField, required: true)
   attr(:length, :integer, default: 6)
 
-  attr(:autosubmit?, :boolean, default: false)
-
   attr(:rest, :global, include: ~w(autofocus oninvalid))
 
   def otp_input(assigns) do
     oninput_js =
       "this.value=this.value.replace(/[^0-9]/g, '');" <>
-        if assigns.autosubmit? do
-          " if (this.value.length >= #{assigns.length}) this.form.requestSubmit();"
-        else
-          ""
-        end
+        " if (this.value.length >= #{assigns.length})" <>
+        " this.form.querySelector('button[type=submit]').focus()"
 
     input_class = [
       @default_input_class,

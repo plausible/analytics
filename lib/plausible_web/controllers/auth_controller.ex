@@ -88,10 +88,17 @@ defmodule PlausibleWeb.AuthController do
       do_activate(conn, user, code)
     else
       {:error, {:rate_limit, _}} ->
-        render_error(
-          conn,
-          429,
-          "Too many activation attempts. Wait a few minutes before trying again."
+        has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
+        flow = conn.params["flow"]
+        team_identifier = conn.params["team_identifier"]
+
+        render_auth_page(conn, "activate.html",
+          error: "Too many attempts. Please wait a few minutes before trying again.",
+          has_email_code?: true,
+          has_any_memberships?: has_any_memberships?,
+          heading: activate_heading(true),
+          form_submit_url: "/activate?flow=#{flow}",
+          team_identifier: team_identifier
         )
     end
   end

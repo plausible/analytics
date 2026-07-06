@@ -19,7 +19,7 @@
       <input type="hidden" name="team_identifier" value={@team_identifier} />
 
       <div class="flex flex-col gap-y-2">
-        <.otp_input field={f[:code]} length={4} autosubmit? autofocus="autofocus" />
+        <.otp_input field={f[:code]} length={4} autofocus="autofocus" />
         <p :if={@error} class="text-xs text-red-500 text-center">
           {@error}
         </p>
