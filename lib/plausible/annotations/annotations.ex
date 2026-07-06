@@ -35,7 +35,7 @@ defmodule Plausible.Annotations do
         utc_datetime |> DateTime.to_date() |> Annotation.serialize_date_granularity_datetime()
       end)
 
-    fields = [:id, :note, :type, :datetime, :granularity, :inserted_at, :updated_at]
+    fields = [:id, :note, :type, :datetime, :granularity, :site_id, :inserted_at, :updated_at]
 
     in_range_clause =
       dynamic(
@@ -55,15 +55,17 @@ defmodule Plausible.Annotations do
         annotations =
           Repo.all(
             from(annotation in Annotation,
+              inner_join: site in assoc(annotation, :site),
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where: annotation.type == :site,
               where: ^in_range_clause,
-              order_by: [desc: annotation.updated_at, desc: annotation.id]
+              order_by: [desc: annotation.updated_at, desc: annotation.id],
+              preload: [site: site]
             )
           )
 
-        {:ok, Enum.map(annotations, &localize_annotation(&1, site.timezone))}
+        {:ok, annotations}
 
       site_role in roles_with_personal_annotations() or
           site_role in roles_with_maybe_site_annotations() ->
@@ -72,6 +74,8 @@ defmodule Plausible.Annotations do
         annotations =
           Repo.all(
             from(annotation in Annotation,
+              inner_join: site in assoc(annotation, :site),
+              inner_join: owner in assoc(annotation, :owner),
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where:
@@ -79,11 +83,11 @@ defmodule Plausible.Annotations do
                   (annotation.type == :personal and annotation.owner_id == ^user.id),
               where: ^in_range_clause,
               order_by: [desc: annotation.updated_at, desc: annotation.id],
-              preload: [:owner]
+              preload: [site: site, owner: owner]
             )
           )
 
-        {:ok, Enum.map(annotations, &localize_annotation(&1, site.timezone))}
+        {:ok, annotations}
 
       true ->
         {:error, :not_enough_permissions}
@@ -119,7 +123,7 @@ defmodule Plausible.Annotations do
 
     with :ok <- can_insert_one?(site, site_role, annotation_type),
          {:ok, annotation} <- Repo.insert(changeset) do
-      {:ok, annotation |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+      {:ok, Repo.preload(annotation, [:site, :owner])}
     else
       {:error, %Ecto.Changeset{errors: errors}} ->
         {:error, {:invalid_annotation, errors}}
@@ -142,7 +146,7 @@ defmodule Plausible.Annotations do
          new_annotation_type = Ecto.Changeset.get_field(changeset, :type),
          :ok <- can_update_one?(site, site_role, new_annotation_type, annotation.type),
          {:ok, annotation} <- Repo.update(changeset) do
-      {:ok, annotation |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
+      {:ok, Repo.preload(annotation, [:site, :owner])}
     else
       {:error, %Ecto.Changeset{errors: errors}} ->
         {:error, {:invalid_annotation, errors}}
@@ -217,10 +221,10 @@ defmodule Plausible.Annotations do
     with {:ok, annotation} <- get_one(user, site, site_role, annotation_id) do
       cond do
         annotation.type == :site and site_role in roles_with_maybe_site_annotations() ->
-          {:ok, do_delete_one(annotation) |> localize_annotation(site.timezone)}
+          {:ok, do_delete_one(annotation)}
 
         annotation.type == :personal and site_role in roles_with_personal_annotations() ->
-          {:ok, do_delete_one(annotation) |> localize_annotation(site.timezone)}
+          {:ok, do_delete_one(annotation)}
 
         true ->
           {:error, :not_enough_permissions}
@@ -243,15 +247,16 @@ defmodule Plausible.Annotations do
         where:
           annotation.type == :site or
             (annotation.type == :personal and annotation.owner_id == ^user.id),
-        preload: [:owner]
+        preload: [:site, :owner]
       )
 
     Repo.one(query)
   end
 
   defp do_delete_one(annotation) do
-    Repo.delete!(annotation)
     annotation
+    |> Repo.preload([:site, :owner])
+    |> Repo.delete!()
   end
 
   defp can_update_one?(site, site_role, new_annotation_type, existing_annotation_type) do
@@ -303,24 +308,6 @@ defmodule Plausible.Annotations do
   def site_annotations_available?(%Plausible.Site{} = site),
     # this feature is bundled with SiteSegments
     do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
-
-  # For date granularity, the UTC date component IS the annotation date — callers
-  # store UTC midnight of their intended local date, so no timezone shift is needed.
-  # Return just the Date so the JSON response matches the bare-date input format.
-  defp localize_annotation(%Annotation{granularity: :date} = annotation, _timezone) do
-    %{annotation | datetime: Annotation.parse_date_granularity_datetime(annotation.datetime)}
-  end
-
-  # For minute granularity, shift the stored UTC moment to the site's local timezone
-  # and strip the offset so the response is a naive local time string.
-  defp localize_annotation(%Annotation{granularity: :minute} = annotation, timezone) do
-    naive_local =
-      annotation.datetime
-      |> DateTime.shift_zone!(timezone)
-      |> DateTime.to_naive()
-
-    %{annotation | datetime: naive_local}
-  end
 
   # If `datetime` is a naive ISO 8601 string (no UTC offset or Z suffix), interpret
   # it as a local time in the site's timezone and convert to UTC before the changeset
