@@ -279,7 +279,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => "feature released",
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => "2026-01-04"
+          "date" => "2026-01-04"
         })
         |> json_response(200)
 
@@ -306,7 +306,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-01-04T00:00:00Z"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
     end
 
     test "accepts full datetime string when granularity is minute",
@@ -334,7 +336,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-01-04"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
     end
 
     test "rejects invalid calendar date when granularity is date",
@@ -344,10 +346,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => "feature released",
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => "2026-13-45"
+          "date" => "2026-13-45"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "date is invalid"}
     end
 
     test "rejects non-date string when granularity is date",
@@ -357,10 +359,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => "feature released",
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => "not-a-date"
+          "date" => "not-a-date"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "date is invalid"}
     end
 
     test "rejects non-datetime string when granularity is minute",
@@ -373,7 +375,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "not-a-datetime"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
     end
 
     test "rejects empty datetime string when granularity is date",
@@ -383,10 +385,12 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => "feature released",
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => ""
+          "date" => ""
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
     end
 
     test "rejects empty datetime string when granularity is minute",
@@ -399,7 +403,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => ""
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{
+               "error" => "datetime must be supplied for chosen granularity"
+             }
     end
 
     test "rejects date shorter than 10 characters when granularity is date",
@@ -409,10 +415,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => "feature released",
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => "2026-1-4"
+          "date" => "2026-1-4"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "date is invalid"}
     end
 
     test "rejects invalid calendar datetime when granularity is minute",
@@ -425,7 +431,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-13-45T14:30:00Z"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
     end
   end
 
@@ -462,7 +468,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-01-04T00:00:00"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
     end
 
     test "UTC datetime string is stored as UTC and returned as site local time",
@@ -528,7 +536,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       response =
         patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
           "granularity" => "date",
-          "datetime" => "2026-06-15"
+          "date" => "2026-06-15"
         })
         |> json_response(200)
 
@@ -552,7 +560,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-06-15"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
     end
 
     test "rejects full datetime string when granularity switched to date",
@@ -572,7 +580,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "datetime" => "2026-06-15T10:00:00Z"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid for granularity"}
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
     end
 
     test "rejects granularity change from date to minute without a new datetime",
@@ -592,7 +602,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" => "datetime must be supplied when granularity changes"
+               "error" => "datetime must be supplied for chosen granularity"
              }
 
       reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, annotation.id)
@@ -617,7 +627,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" => "datetime must be supplied when granularity changes"
+               "error" => "date must be supplied for chosen granularity"
              }
 
       reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, annotation.id)
@@ -665,7 +675,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       response =
         patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
           "granularity" => "date",
-          "datetime" => "2026-06-20"
+          "date" => "2026-06-20"
         })
         |> json_response(200)
 
@@ -722,7 +732,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "note" => String.duplicate("a", 255),
           "type" => "personal",
           "granularity" => "date",
-          "datetime" => "2026-01-04"
+          "date" => "2026-01-04"
         })
         |> json_response(200)
 
@@ -737,7 +747,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
           "granularity" => "date"
         })
 
-      assert json_response(conn, 400) == %{"error" => "datetime can't be blank"}
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
     end
 
     test "rejects unknown granularity", %{conn: conn, site: site} do

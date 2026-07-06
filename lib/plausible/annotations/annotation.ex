@@ -33,6 +33,7 @@ defmodule Plausible.Annotations.Annotation do
   schema "annotations" do
     field :note, :string
     field :type, Ecto.Enum, values: @annotation_types
+    field :date, :date, virtual: true
     field :datetime, :utc_datetime
     field :granularity, Ecto.Enum, values: @annotation_granularities
 
@@ -58,88 +59,56 @@ defmodule Plausible.Annotations.Annotation do
   end
 
   def changeset(annotation, attrs) do
-    attrs = stringify_keys(attrs)
-    {attrs, invalid_datetime_for_granularity?} = coerce_datetime(attrs)
-
     annotation
-    |> cast(attrs, [:note, :type, :datetime, :granularity])
-    |> validate_required([:note, :type, :datetime, :granularity])
+    |> cast(attrs, [:note, :type])
+    |> cast(attrs, [:date, :datetime, :granularity], force_changes: true)
+    |> validate_required([:note, :type, :granularity])
     |> validate_length(:note, count: :bytes, min: 1, max: 255)
-    |> validate_datetime_supplied_on_granularity_change()
-    |> maybe_add_datetime_error(invalid_datetime_for_granularity?)
+    |> coerce_datetime()
   end
 
-  defp stringify_keys(%{} = params) do
-    Map.new(params, fn
-      {k, v} when is_atom(k) -> {Atom.to_string(k), v}
-      {k, v} when is_binary(k) -> {k, v}
-    end)
-  end
+  defp coerce_datetime(%{valid?: true} = changeset) do
+    granularity = get_change(changeset, :granularity)
+    datetime = get_change(changeset, :datetime)
+    date = get_change(changeset, :date)
 
-  defp coerce_datetime(attrs) do
-    granularity = normalize_granularity(attrs["granularity"])
+    case coerce_for_granularity(granularity, date, datetime) do
+      {:ok, %DateTime{} = utc_dt} ->
+        put_change(changeset, :datetime, utc_dt)
 
-    case coerce_for_granularity(granularity, attrs["datetime"]) do
-      {:ok, %DateTime{} = utc_dt} -> {Map.put(attrs, "datetime", utc_dt), false}
-      :skip -> {attrs, false}
-      :invalid -> {Map.delete(attrs, "datetime"), true}
+      {:error, :not_supplied, field} ->
+        add_error(changeset, field, "must be supplied for chosen granularity")
+
+      {:error, :both_set} ->
+        add_error(changeset, :granularity, "expects either date or datetime to be set")
+
+      :skip ->
+        changeset
     end
   end
 
-  defp normalize_granularity(:date), do: :date
-  defp normalize_granularity("date"), do: :date
-  defp normalize_granularity(:minute), do: :minute
-  defp normalize_granularity("minute"), do: :minute
-  defp normalize_granularity(other), do: other
+  defp coerce_datetime(changeset), do: changeset
 
-  # nil datetime will be caught by validate_required step
-  defp coerce_for_granularity(_granularity, nil), do: :skip
-
-  defp coerce_for_granularity(:date, %Date{} = date),
+  defp coerce_for_granularity(:date, %Date{} = date, nil),
     do: {:ok, serialize_date_granularity_datetime(date)}
 
-  defp coerce_for_granularity(:date, <<_::binary-size(10)>> = str) do
-    case Date.from_iso8601(str) do
-      {:ok, date} -> {:ok, serialize_date_granularity_datetime(date)}
-      _ -> :invalid
-    end
-  end
+  defp coerce_for_granularity(:minute, nil, %DateTime{} = dt),
+    do: {:ok, dt}
 
-  defp coerce_for_granularity(:minute, %DateTime{} = dt),
-    do: {:ok, DateTime.shift_zone!(dt, "Etc/UTC")}
+  defp coerce_for_granularity(:date, nil, _),
+    do: {:error, :not_supplied, :date}
 
-  defp coerce_for_granularity(:minute, str) when is_binary(str) do
-    case DateTime.from_iso8601(str) do
-      {:ok, dt, _offset} -> {:ok, DateTime.shift_zone!(dt, "Etc/UTC")}
-      _ -> :invalid
-    end
-  end
+  defp coerce_for_granularity(:minute, _, nil),
+    do: {:error, :not_supplied, :datetime}
 
-  defp coerce_for_granularity(granularity, _datetime) when granularity in [:date, :minute],
-    do: :invalid
+  defp coerce_for_granularity(granularity, _date, _datetime)
+       when granularity in [:date, :minute],
+       do: {:error, :both_set}
 
-  defp coerce_for_granularity(_granularity, _datetime), do: :skip
-
-  defp maybe_add_datetime_error(changeset, false), do: changeset
-
-  defp maybe_add_datetime_error(changeset, true),
-    do: add_error(changeset, :datetime, "is invalid for granularity")
-
-  defp validate_datetime_supplied_on_granularity_change(changeset) do
-    with {:ok, _new_granularity} <- fetch_change(changeset, :granularity),
-         false <- is_nil(changeset.data.granularity),
-         :error <- fetch_change(changeset, :datetime) do
-      add_error(changeset, :datetime, "must be supplied when granularity changes")
-    else
-      _ -> changeset
-    end
-  end
+  defp coerce_for_granularity(_granularity, _date, _datetime), do: :skip
 
   def serialize_date_granularity_datetime(%Date{} = date),
     do: DateTime.new!(date, ~T[00:00:00], "Etc/UTC")
-
-  defp parse_date_granularity_datetime(%DateTime{} = datetime),
-    do: DateTime.to_date(datetime)
 
   # Used only by encoder
   @doc false
@@ -162,6 +131,9 @@ defmodule Plausible.Annotations.Annotation do
 
     %{annotation | datetime: naive_local}
   end
+
+  defp parse_date_granularity_datetime(%DateTime{} = datetime),
+    do: DateTime.to_date(datetime)
 end
 
 defimpl Jason.Encoder, for: Plausible.Annotations.Annotation do
