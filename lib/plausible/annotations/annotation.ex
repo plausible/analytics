@@ -44,16 +44,27 @@ defmodule Plausible.Annotations.Annotation do
     timestamps()
   end
 
+  def create_changeset(attrs, site, owner) do
+    %__MODULE__{}
+    |> changeset(attrs)
+    |> put_assoc(:site, site)
+    |> put_assoc(:owner, owner)
+  end
+
+  def update_changeset(annotation, attrs, owner) do
+    annotation
+    |> changeset(attrs)
+    |> put_assoc(:owner, owner)
+  end
+
   def changeset(annotation, attrs) do
     attrs = stringify_keys(attrs)
     {attrs, invalid_datetime_for_granularity?} = coerce_datetime(attrs)
 
     annotation
-    |> cast(attrs, [:note, :site_id, :type, :owner_id, :datetime, :granularity])
-    |> validate_required([:note, :site_id, :type, :owner_id, :datetime, :granularity])
+    |> cast(attrs, [:note, :type, :datetime, :granularity])
+    |> validate_required([:note, :type, :datetime, :granularity])
     |> validate_length(:note, count: :bytes, min: 1, max: 255)
-    |> foreign_key_constraint(:site_id)
-    |> foreign_key_constraint(:owner_id)
     |> validate_datetime_supplied_on_granularity_change()
     |> maybe_add_datetime_error(invalid_datetime_for_granularity?)
   end
