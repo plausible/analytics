@@ -10,21 +10,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias Plausible.ChangesetHelpers
   alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
 
-  def index(
-        %Plug.Conn{
-          assigns:
-            %{
-              site: site,
-              site_role: site_role
-            } = assigns
-        } = conn,
-        %{} = params
-      ) do
-    user_id =
-      case assigns[:current_user] do
-        %{id: id} -> id
-        nil -> nil
-      end
+  def index(conn, params) do
+    user = conn.assigns.current_user
+    site = conn.assigns.site
+    site_role = conn.assigns.site_role
 
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params) do
@@ -33,7 +22,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
       range_in_site_tz =
         QueryPeriod.build_range_for_site(input_date_range, site, relative_date, now)
 
-      case Annotations.get_all_for_site(site, site_role, user_id, range_in_site_tz) do
+      case Annotations.get_all_for_site(site, site_role, user, range_in_site_tz) do
         {:ok, result} ->
           json(conn, result)
 
@@ -77,17 +66,12 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
 
   defp parse_relative_date(_), do: {:ok, nil}
 
-  def create(
-        %Plug.Conn{
-          assigns: %{
-            site: site,
-            current_user: %{id: user_id},
-            site_role: site_role
-          }
-        } = conn,
-        %{} = params
-      ) do
-    case Annotations.insert_one(user_id, site, site_role, params) do
+  def create(conn, params) do
+    user = conn.assigns.current_user
+    site = conn.assigns.site
+    site_role = conn.assigns.site_role
+
+    case Annotations.insert_one(user, site, site_role, params) do
       {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to create annotation")
 
@@ -106,22 +90,13 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     end
   end
 
-  def create(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
-
-  def update(
-        %Plug.Conn{
-          assigns: %{
-            site: site,
-            current_user: %{id: user_id},
-            site_role: site_role
-          }
-        } =
-          conn,
-        %{} = params
-      ) do
+  def update(conn, params) do
+    user = conn.assigns.current_user
+    site = conn.assigns.site
+    site_role = conn.assigns.site_role
     annotation_id = normalize_annotation_id_param(params["annotation_id"])
 
-    case Annotations.update_one(user_id, site, site_role, annotation_id, params) do
+    case Annotations.update_one(user, site, site_role, annotation_id, params) do
       {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to edit annotation")
 
@@ -140,22 +115,13 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     end
   end
 
-  def update(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
-
-  def delete(
-        %Plug.Conn{
-          assigns: %{
-            site: site,
-            current_user: %{id: user_id},
-            site_role: site_role
-          }
-        } =
-          conn,
-        %{} = params
-      ) do
+  def delete(conn, params) do
+    user = conn.assigns.current_user
+    site = conn.assigns.site
+    site_role = conn.assigns.site_role
     annotation_id = normalize_annotation_id_param(params["annotation_id"])
 
-    case Annotations.delete_one(user_id, site, site_role, annotation_id) do
+    case Annotations.delete_one(user, site, site_role, annotation_id) do
       {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to delete annotation")
 
@@ -167,8 +133,6 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     end
   end
 
-  def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
-
   @spec normalize_annotation_id_param(any()) :: nil | pos_integer()
   defp normalize_annotation_id_param(input) do
     case Integer.parse(input) do
@@ -179,9 +143,5 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
 
   defp annotation_not_found(%Plug.Conn{} = conn, annotation_id_param) do
     H.not_found(conn, "Annotation not found with ID #{inspect(annotation_id_param)}")
-  end
-
-  defp invalid_request(%Plug.Conn{} = conn) do
-    H.bad_request(conn, "Invalid request")
   end
 end

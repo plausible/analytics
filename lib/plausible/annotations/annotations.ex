@@ -3,6 +3,7 @@ defmodule Plausible.Annotations do
   Module for accessing Annotations.
   """
   alias Plausible.Annotations.Annotation
+  alias Plausible.Auth.User
   alias Plausible.Repo
   alias Plausible.Stats.DateTimeRange
   import Ecto.Query
@@ -18,12 +19,12 @@ defmodule Plausible.Annotations do
 
   @max_annotations 500
 
-  @spec get_all_for_site(Plausible.Site.t(), atom(), pos_integer() | nil, DateTimeRange.t()) ::
+  @spec get_all_for_site(Plausible.Site.t(), atom(), User.t() | nil, DateTimeRange.t()) ::
           {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
   def get_all_for_site(
         %Plausible.Site{} = site,
         site_role,
-        user_id,
+        user,
         %DateTimeRange{} = range_in_site_tz
       ) do
     # Minute granularity annotations are stored for the particular UTC moment they're for,
@@ -80,7 +81,7 @@ defmodule Plausible.Annotations do
               where: annotation.site_id == ^site.id,
               where:
                 annotation.type == :site or
-                  (annotation.type == :personal and annotation.owner_id == ^user_id),
+                  (annotation.type == :personal and annotation.owner_id == ^user.id),
               where: ^in_range_clause,
               order_by: [desc: annotation.updated_at, desc: annotation.id],
               preload: [:owner]
@@ -94,13 +95,13 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec get_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
+  @spec get_one(User.t(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
           {:ok, Annotation.t()}
           | error_not_enough_permissions()
           | error_annotation_not_found()
-  def get_one(user_id, site, site_role, annotation_id) do
+  def get_one(user, site, site_role, annotation_id) do
     if site_role in roles_with_personal_annotations() do
-      case do_get_one(user_id, site.id, annotation_id) do
+      case do_get_one(user, site, annotation_id) do
         %Annotation{} = annotation -> {:ok, annotation}
         nil -> {:error, :annotation_not_found}
       end
@@ -109,7 +110,7 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec insert_one(pos_integer(), Plausible.Site.t(), atom(), map()) ::
+  @spec insert_one(User.t(), Plausible.Site.t(), atom(), map()) ::
           {:ok, Annotation.t()}
           | error_not_enough_permissions()
           | error_invalid_annotation()
@@ -117,7 +118,7 @@ defmodule Plausible.Annotations do
           | unknown_error()
 
   def insert_one(
-        user_id,
+        user,
         %Plausible.Site{} = site,
         site_role,
         %{} = params
@@ -125,11 +126,7 @@ defmodule Plausible.Annotations do
     params = maybe_coerce_naive_datetime(params, site.timezone)
 
     with :ok <- can_insert_one?(site, site_role, params),
-         %{valid?: true} = changeset <-
-           Annotation.changeset(
-             %Annotation{},
-             Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
-           ) do
+         %{valid?: true} = changeset <- Annotation.create_changeset(params, site, user) do
       {:ok,
        changeset |> Repo.insert!() |> Repo.preload(:owner) |> localize_annotation(site.timezone)}
     else
@@ -141,14 +138,14 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec update_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer(), map()) ::
+  @spec update_one(User.t(), Plausible.Site.t(), atom(), pos_integer(), map()) ::
           {:ok, Annotation.t()}
           | error_not_enough_permissions()
           | error_invalid_annotation()
           | unknown_error()
 
   def update_one(
-        user_id,
+        user,
         %Plausible.Site{} = site,
         site_role,
         annotation_id,
@@ -156,13 +153,9 @@ defmodule Plausible.Annotations do
       ) do
     params = maybe_coerce_naive_datetime(params, site.timezone)
 
-    with {:ok, annotation} <- get_one(user_id, site, site_role, annotation_id),
+    with {:ok, annotation} <- get_one(user, site, site_role, annotation_id),
          :ok <- can_update_one?(site, site_role, params, annotation.type),
-         %{valid?: true} = changeset <-
-           Annotation.changeset(
-             annotation,
-             Map.merge(params, %{"owner_id" => user_id})
-           ) do
+         %{valid?: true} = changeset <- Annotation.update_changeset(annotation, params, user) do
       Repo.update!(changeset)
 
       {:ok,
@@ -237,8 +230,8 @@ defmodule Plausible.Annotations do
     #  Site annotations are set to owner=null via ON DELETE SET NULL
   end
 
-  def delete_one(user_id, %Plausible.Site{} = site, site_role, annotation_id) do
-    with {:ok, annotation} <- get_one(user_id, site, site_role, annotation_id) do
+  def delete_one(user, %Plausible.Site{} = site, site_role, annotation_id) do
+    with {:ok, annotation} <- get_one(user, site, site_role, annotation_id) do
       cond do
         annotation.type == :site and site_role in roles_with_maybe_site_annotations() ->
           {:ok, do_delete_one(annotation) |> localize_annotation(site.timezone)}
@@ -252,22 +245,21 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec do_get_one(pos_integer(), pos_integer(), pos_integer() | nil) ::
-          Annotation.t() | nil
-  defp do_get_one(user_id, site_id, annotation_id)
+  @spec do_get_one(User.t(), Plausible.Site.t(), pos_integer() | nil) :: Annotation.t() | nil
+  defp do_get_one(user, site, annotation_id)
 
-  defp do_get_one(_user_id, _site_id, nil) do
+  defp do_get_one(_user, _site, nil) do
     nil
   end
 
-  defp do_get_one(user_id, site_id, annotation_id) do
+  defp do_get_one(user, site, annotation_id) do
     query =
       from(annotation in Annotation,
-        where: annotation.site_id == ^site_id,
+        where: annotation.site_id == ^site.id,
         where: annotation.id == ^annotation_id,
         where:
           annotation.type == :site or
-            (annotation.type == :personal and annotation.owner_id == ^user_id),
+            (annotation.type == :personal and annotation.owner_id == ^user.id),
         preload: [:owner]
       )
 
