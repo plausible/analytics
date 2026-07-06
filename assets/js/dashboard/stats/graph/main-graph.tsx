@@ -421,8 +421,15 @@ export const MainGraph = ({
   )
 
   const onChartClick = useCallback<PointerHandler<MainGraphYValues>>(
-    ({ inHoverableArea, closestPoint }) => {
-      if (isTouchDevice) {
+    ({ inHoverableArea, closestPoint, event }) => {
+      // the first tap / click can happen when
+      // isTouchDevice isn't determined yet
+      // (no preceding pointerenter, gotpointercapture, pointermove)
+      const shouldHandleAsTouch = isTouchDevice ?? isTouchEvent(event)
+      if (isTouchDevice === null) {
+        setIsTouchDevice(shouldHandleAsTouch)
+      }
+      if (shouldHandleAsTouch) {
         if (inHoverableArea && closestPoint) {
           return setTooltip({
             selectedIndex: closestPoint.index,
