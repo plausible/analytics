@@ -22,33 +22,7 @@ defmodule Plausible.Annotations do
   @spec get_all_for_site(Plausible.Site.t(), atom(), User.t() | nil, DateTimeRange.t()) ::
           {:error, :not_enough_permissions} | {:ok, list(Annotation.t())}
   def get_all_for_site(site, site_role, user, range_in_site_tz) do
-    # Minute granularity annotations are stored for the particular UTC moment they're for,
-    # so they must be in the range of the UTC query period.
-    minute_granularity_range =
-      range_in_site_tz |> DateTimeRange.to_timezone("Etc/UTC")
-
-    # Date granularity annotations are stored for the UTC midnight of the date they're for,
-    # so the range for querying these must reflect that.
-    [date_granularity_range_first, date_granularity_range_last] =
-      [range_in_site_tz.first, range_in_site_tz.last]
-      |> Enum.map(fn utc_datetime ->
-        utc_datetime |> DateTime.to_date() |> Annotation.serialize_date_granularity_datetime()
-      end)
-
     fields = [:id, :note, :type, :datetime, :granularity, :site_id, :inserted_at, :updated_at]
-
-    in_range_clause =
-      dynamic(
-        [annotation],
-        (annotation.granularity == :minute and
-           annotation.datetime >= ^minute_granularity_range.first and
-           annotation.datetime <= ^minute_granularity_range.last) or
-          (annotation.granularity == :date and
-             annotation.datetime >=
-               ^date_granularity_range_first and
-             annotation.datetime <=
-               ^date_granularity_range_last)
-      )
 
     cond do
       site_role in [:public] ->
@@ -59,10 +33,10 @@ defmodule Plausible.Annotations do
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where: annotation.type == :site,
-              where: ^in_range_clause,
               order_by: [desc: annotation.updated_at, desc: annotation.id],
               preload: [site: site]
             )
+            |> filter_by_range(range_in_site_tz)
           )
 
         {:ok, annotations}
@@ -81,10 +55,10 @@ defmodule Plausible.Annotations do
               where:
                 annotation.type == :site or
                   (annotation.type == :personal and annotation.owner_id == ^user.id),
-              where: ^in_range_clause,
               order_by: [desc: annotation.updated_at, desc: annotation.id],
               preload: [site: site, owner: owner]
             )
+            |> filter_by_range(range_in_site_tz)
           )
 
         {:ok, annotations}
@@ -92,6 +66,33 @@ defmodule Plausible.Annotations do
       true ->
         {:error, :not_enough_permissions}
     end
+  end
+
+  defp filter_by_range(query, range_in_site_tz) do
+    # Minute granularity annotations are stored for the particular UTC moment they're for,
+    # so they must be in the range of the UTC query period.
+    minute_granularity_range =
+      range_in_site_tz |> DateTimeRange.to_timezone("Etc/UTC")
+
+    # Date granularity annotations are stored for the UTC midnight of the date they're for,
+    # so the range for querying these must reflect that.
+    [date_granularity_range_first, date_granularity_range_last] =
+      [range_in_site_tz.first, range_in_site_tz.last]
+      |> Enum.map(fn utc_datetime ->
+        utc_datetime |> DateTime.to_date() |> Annotation.serialize_date_granularity_datetime()
+      end)
+
+    from(annotation in query,
+      where:
+        (annotation.granularity == :minute and
+           annotation.datetime >= ^minute_granularity_range.first and
+           annotation.datetime <= ^minute_granularity_range.last) or
+          (annotation.granularity == :date and
+             annotation.datetime >=
+               ^date_granularity_range_first and
+             annotation.datetime <=
+               ^date_granularity_range_last)
+    )
   end
 
   @spec get_one(User.t(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
