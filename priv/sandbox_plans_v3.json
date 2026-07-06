@@ -134,6 +134,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -152,6 +153,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -170,6 +172,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -188,6 +191,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -206,6 +210,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -224,6 +229,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -242,6 +248,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   },
@@ -260,6 +267,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ]
   }
