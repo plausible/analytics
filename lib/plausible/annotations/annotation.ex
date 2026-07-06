@@ -47,24 +47,54 @@ defmodule Plausible.Annotations.Annotation do
 
   def create_changeset(attrs, site, owner) do
     %__MODULE__{}
-    |> changeset(attrs)
+    |> changeset(attrs, site.timezone)
     |> put_assoc(:site, site)
     |> put_assoc(:owner, owner)
   end
 
   def update_changeset(annotation, attrs, owner) do
     annotation
-    |> changeset(attrs)
+    |> changeset(attrs, annotation.site.timezone)
     |> put_assoc(:owner, owner)
   end
 
-  def changeset(annotation, attrs) do
+  def changeset(annotation, attrs, site_timezone) do
     annotation
     |> cast(attrs, [:note, :type])
     |> cast(attrs, [:date, :datetime, :granularity], force_changes: true)
     |> validate_required([:note, :type, :granularity])
     |> validate_length(:note, count: :bytes, min: 1, max: 255)
+    |> maybe_coerce_naive_datetime(site_timezone)
     |> coerce_datetime()
+  end
+
+  # If `datetime` is a naive ISO 8601 string (no UTC offset or Z suffix), interpret
+  # it as a local time in the site's timezone and convert to UTC before the changeset
+  # runs. This lets callers supply times in their local context without manually
+  # computing offsets.
+  #
+  # DST edge cases:
+  #   - gap (spring-forward): the missing hour is resolved to just-after the gap
+  #   - ambiguous (fall-back): the earlier of the two possibilities is used
+  #
+  # All other `datetime` values (bare dates, full UTC strings, invalid strings) pass
+  # through unchanged and are handled downstream by the changeset.
+  defp maybe_coerce_naive_datetime(changeset, timezone) do
+    with false <- is_nil(get_change(changeset, :datetime)),
+         dt when is_binary(dt) <- changeset.params["datetime"],
+         {:error, _} <- DateTime.from_iso8601(dt),
+         {:ok, naive_dt} <- NaiveDateTime.from_iso8601(dt) do
+      utc_dt =
+        case DateTime.from_naive(naive_dt, timezone) do
+          {:ok, local_dt} -> DateTime.shift_zone!(local_dt, "Etc/UTC")
+          {:ambiguous, first, _second} -> DateTime.shift_zone!(first, "Etc/UTC")
+          {:gap, _just_before, just_after} -> DateTime.shift_zone!(just_after, "Etc/UTC")
+        end
+
+      force_change(changeset, :datetime, utc_dt)
+    else
+      _ -> changeset
+    end
   end
 
   defp coerce_datetime(%{valid?: true} = changeset) do

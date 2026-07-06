@@ -116,8 +116,6 @@ defmodule Plausible.Annotations do
           | error_annotation_limit_reached()
           | unknown_error()
   def insert_one(user, site, site_role, params) do
-    params = maybe_coerce_naive_datetime(params, site.timezone)
-
     changeset = Annotation.create_changeset(params, site, user)
     annotation_type = Ecto.Changeset.get_field(changeset, :type)
 
@@ -139,8 +137,6 @@ defmodule Plausible.Annotations do
           | error_invalid_annotation()
           | unknown_error()
   def update_one(user, site, site_role, annotation_id, params) do
-    params = maybe_coerce_naive_datetime(params, site.timezone)
-
     with {:ok, annotation} <- get_one(user, site, site_role, annotation_id),
          changeset = Annotation.update_changeset(annotation, params, user),
          new_annotation_type = Ecto.Changeset.get_field(changeset, :type),
@@ -308,34 +304,4 @@ defmodule Plausible.Annotations do
   def site_annotations_available?(%Plausible.Site{} = site),
     # this feature is bundled with SiteSegments
     do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
-
-  # If `datetime` is a naive ISO 8601 string (no UTC offset or Z suffix), interpret
-  # it as a local time in the site's timezone and convert to UTC before the changeset
-  # runs. This lets callers supply times in their local context without manually
-  # computing offsets.
-  #
-  # DST edge cases:
-  #   - gap (spring-forward): the missing hour is resolved to just-after the gap
-  #   - ambiguous (fall-back): the earlier of the two possibilities is used
-  #
-  # All other `datetime` values (bare dates, full UTC strings, invalid strings) pass
-  # through unchanged and are handled downstream by the changeset.
-  defp maybe_coerce_naive_datetime(%{"datetime" => dt} = params, timezone)
-       when is_binary(dt) do
-    with {:error, _} <- DateTime.from_iso8601(dt),
-         {:ok, naive_dt} <- NaiveDateTime.from_iso8601(dt) do
-      utc_dt =
-        case DateTime.from_naive(naive_dt, timezone) do
-          {:ok, local_dt} -> DateTime.shift_zone!(local_dt, "Etc/UTC")
-          {:ambiguous, first, _second} -> DateTime.shift_zone!(first, "Etc/UTC")
-          {:gap, _just_before, just_after} -> DateTime.shift_zone!(just_after, "Etc/UTC")
-        end
-
-      Map.put(params, "datetime", utc_dt)
-    else
-      _ -> params
-    end
-  end
-
-  defp maybe_coerce_naive_datetime(params, _timezone), do: params
 end

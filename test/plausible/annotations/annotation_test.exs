@@ -5,58 +5,78 @@ defmodule Plausible.Annotations.AnnotationTest do
   describe "date-granularity" do
     test "a full datetime string is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "test",
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-06-30T00:00:00Z"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "test",
+            "type" => "personal",
+            "granularity" => "date",
+            "datetime" => "2026-06-30T00:00:00Z"
+          },
+          "Etc/UTC"
+        )
 
       assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
     end
 
     test "a non-midnight %DateTime{} is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "test",
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => ~U[2026-06-30 14:30:00Z]
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "test",
+            "type" => "personal",
+            "granularity" => "date",
+            "datetime" => ~U[2026-06-30 14:30:00Z]
+          },
+          "Etc/UTC"
+        )
 
       assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
     end
 
     test "an unparsable date string is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "granularity" => "date",
-          "datetime" => "not-a-date"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "granularity" => "date",
+            "datetime" => "not-a-date"
+          },
+          "Etc/UTC"
+        )
 
       assert {"is invalid", _} = changeset.errors[:datetime]
     end
 
     test "an invalid calendar date is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "granularity" => "date",
-          "datetime" => "2026-13-45"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "granularity" => "date",
+            "datetime" => "2026-13-45"
+          },
+          "Etc/UTC"
+        )
 
       assert {"is invalid", _} = changeset.errors[:datetime]
     end
 
     test "a bare YYYY-MM-DD string becomes UTC midnight" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "feature released",
-          "type" => "personal",
-          "site_id" => 1,
-          "owner_id" => 1,
-          "granularity" => "date",
-          "date" => "2026-06-30"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "feature released",
+            "type" => "personal",
+            "site_id" => 1,
+            "owner_id" => 1,
+            "granularity" => "date",
+            "date" => "2026-06-30"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-30 00:00:00Z]
@@ -64,14 +84,18 @@ defmodule Plausible.Annotations.AnnotationTest do
 
     test "a %Date{} struct becomes UTC midnight" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "feature released",
-          "type" => "personal",
-          "site_id" => 1,
-          "owner_id" => 1,
-          "granularity" => "date",
-          "date" => ~D[2026-06-30]
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "feature released",
+            "type" => "personal",
+            "site_id" => 1,
+            "owner_id" => 1,
+            "granularity" => "date",
+            "date" => ~D[2026-06-30]
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-30 00:00:00Z]
@@ -81,34 +105,46 @@ defmodule Plausible.Annotations.AnnotationTest do
   describe "minute-granularity" do
     test "a bare date string is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "granularity" => "minute",
-          "datetime" => "2026-06-30"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "granularity" => "minute",
+            "datetime" => "2026-06-30"
+          },
+          "Etc/UTC"
+        )
 
       assert {"is invalid", _} = changeset.errors[:datetime]
     end
 
     test "an unparsable datetime is rejected" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "granularity" => "minute",
-          "datetime" => "garbage"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "granularity" => "minute",
+            "datetime" => "garbage"
+          },
+          "Etc/UTC"
+        )
 
       assert {"is invalid", _} = changeset.errors[:datetime]
     end
 
     test "a Z-suffixed datetime string is kept in UTC" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "feature released",
-          "type" => "personal",
-          "site_id" => 1,
-          "owner_id" => 1,
-          "granularity" => "minute",
-          "datetime" => "2026-06-30T14:30:00Z"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "feature released",
+            "type" => "personal",
+            "site_id" => 1,
+            "owner_id" => 1,
+            "granularity" => "minute",
+            "datetime" => "2026-06-30T14:30:00Z"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-30 14:30:00Z]
@@ -116,14 +152,18 @@ defmodule Plausible.Annotations.AnnotationTest do
 
     test "an offset datetime string is shifted to UTC" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "feature released",
-          "type" => "personal",
-          "site_id" => 1,
-          "owner_id" => 1,
-          "granularity" => "minute",
-          "datetime" => "2026-06-30T10:00:00-02:00"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "feature released",
+            "type" => "personal",
+            "site_id" => 1,
+            "owner_id" => 1,
+            "granularity" => "minute",
+            "datetime" => "2026-06-30T10:00:00-02:00"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-30 12:00:00Z]
@@ -131,14 +171,18 @@ defmodule Plausible.Annotations.AnnotationTest do
 
     test "a %DateTime{} is passed through in UTC" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "note" => "feature released",
-          "type" => "personal",
-          "site_id" => 1,
-          "owner_id" => 1,
-          "granularity" => "minute",
-          "datetime" => ~U[2026-06-30 14:30:00Z]
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "note" => "feature released",
+            "type" => "personal",
+            "site_id" => 1,
+            "owner_id" => 1,
+            "granularity" => "minute",
+            "datetime" => ~U[2026-06-30 14:30:00Z]
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-30 14:30:00Z]
@@ -148,10 +192,14 @@ defmodule Plausible.Annotations.AnnotationTest do
   describe "unknown granularity" do
     test "defers to Ecto's enum cast, not our coercion error" do
       changeset =
-        Annotation.changeset(%Annotation{}, %{
-          "granularity" => "hour",
-          "datetime" => "2026-06-30T10:00:00Z"
-        })
+        Annotation.changeset(
+          %Annotation{},
+          %{
+            "granularity" => "hour",
+            "datetime" => "2026-06-30T10:00:00Z"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.errors[:granularity]
       refute changeset.errors[:datetime]
@@ -167,7 +215,7 @@ defmodule Plausible.Annotations.AnnotationTest do
         type: :personal
       }
 
-      changeset = Annotation.changeset(existing, %{"granularity" => "minute"})
+      changeset = Annotation.changeset(existing, %{"granularity" => "minute"}, "Etc/UTC")
 
       assert {"must be supplied for chosen granularity", []} = changeset.errors[:datetime]
     end
@@ -180,7 +228,7 @@ defmodule Plausible.Annotations.AnnotationTest do
         type: :personal
       }
 
-      changeset = Annotation.changeset(existing, %{"granularity" => "date"})
+      changeset = Annotation.changeset(existing, %{"granularity" => "date"}, "Etc/UTC")
 
       assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
     end
@@ -196,10 +244,14 @@ defmodule Plausible.Annotations.AnnotationTest do
       }
 
       changeset =
-        Annotation.changeset(existing, %{
-          "granularity" => "minute",
-          "datetime" => "2026-06-15T14:30:00Z"
-        })
+        Annotation.changeset(
+          existing,
+          %{
+            "granularity" => "minute",
+            "datetime" => "2026-06-15T14:30:00Z"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-15 14:30:00Z]
@@ -216,10 +268,14 @@ defmodule Plausible.Annotations.AnnotationTest do
       }
 
       changeset =
-        Annotation.changeset(existing, %{
-          "granularity" => "date",
-          "date" => "2026-06-16"
-        })
+        Annotation.changeset(
+          existing,
+          %{
+            "granularity" => "date",
+            "date" => "2026-06-16"
+          },
+          "Etc/UTC"
+        )
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-16 00:00:00Z]
