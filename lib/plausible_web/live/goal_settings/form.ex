@@ -531,15 +531,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
           {if @use_custom_props, do: "Custom properties", else: "Add custom property"}
         </span>
-        <.link
+        <.upgrade_pill
           :if={not @has_access_to_props? and not @use_custom_props}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          class="inline-block"
-        >
-          <.pill color={:indigo}>
-            Business
-          </.pill>
-        </.link>
+          plan="Business"
+        />
       </div>
       <.tooltip enabled?={not @has_access_to_props?} centered?={true}>
         <:tooltip_content>
@@ -720,15 +715,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         <span class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
           Enable revenue tracking
         </span>
-        <.link
-          :if={not @has_access_to_revenue_goals?}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          class="inline-block"
-        >
-          <.pill color={:indigo}>
-            Business
-          </.pill>
-        </.link>
+        <.upgrade_pill :if={not @has_access_to_revenue_goals?} plan="Business" />
       </div>
       <.tooltip enabled?={not @has_access_to_revenue_goals?} centered?={true}>
         <:tooltip_content>

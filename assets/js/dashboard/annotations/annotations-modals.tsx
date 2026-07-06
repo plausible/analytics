@@ -17,12 +17,12 @@ import {
 import {
   LabeledTextarea,
   TypeSelector,
-  TypeDisabledMessage,
   getOptionDisabledMessage,
   isOverMaxLength,
   OptionDisabledMessageType
 } from '../components/form-elements'
 import { Button } from '../components/button'
+import { UpgradePill } from '../components/pill'
 import { Role, UserContextValue } from '../user-context'
 import {
   formatDay,
@@ -88,10 +88,13 @@ export const CreateAnnotationModal = ({
   const granularity = initialGranularity
   const datetime = initialDatetime
 
+  const siteOptionDisabledMessage = getAnnotationTypeDisabledMessage({
+    siteAnnotationsAvailable,
+    user
+  })
+
   const disabledMessage =
-    type === AnnotationType.site
-      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
-      : null
+    type === AnnotationType.site ? siteOptionDisabledMessage : null
 
   const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
 
@@ -111,7 +114,7 @@ export const CreateAnnotationModal = ({
       <AnnotationTypeSelector
         value={type}
         onChange={setType}
-        optionDisabledMessage={disabledMessage}
+        siteOptionDisabledMessage={siteOptionDisabledMessage}
       />
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
@@ -154,38 +157,44 @@ export const CreateAnnotationModal = ({
 const AnnotationTypeSelector = ({
   value,
   onChange,
-  optionDisabledMessage
+  siteOptionDisabledMessage
 }: {
   value: AnnotationType
   onChange: (value: AnnotationType) => void
-  optionDisabledMessage: OptionDisabledMessageType | null
+  siteOptionDisabledMessage: OptionDisabledMessageType | null
 }) => (
-  <>
-    <TypeSelector<AnnotationType>
-      idPrefix="annotation-type"
-      value={value}
-      onChange={onChange}
-      options={[
-        {
-          type: AnnotationType.personal,
-          name: ANNOTATION_TYPE_LABELS[AnnotationType.personal],
-          description: 'Visible only to you'
-        },
-        {
-          type: AnnotationType.site,
-          name: ANNOTATION_TYPE_LABELS[AnnotationType.site],
-          description: 'Visible to others on the site'
-        }
-      ]}
-    />
-    {optionDisabledMessage !== null && (
-      <TypeDisabledMessage
-        message={
-          <AnnotationTypeDisabledMessage messageType={optionDisabledMessage} />
-        }
-      />
-    )}
-  </>
+  <TypeSelector<AnnotationType>
+    idPrefix="annotation-type"
+    value={value}
+    onChange={onChange}
+    options={[
+      {
+        type: AnnotationType.personal,
+        name: ANNOTATION_TYPE_LABELS[AnnotationType.personal],
+        description: 'Visible only to you'
+      },
+      {
+        type: AnnotationType.site,
+        name: ANNOTATION_TYPE_LABELS[AnnotationType.site],
+        description: 'Visible to others on the site',
+        disabled: siteOptionDisabledMessage !== null,
+        pill:
+          siteOptionDisabledMessage === 'upgrade-subscription-yourself' ||
+          siteOptionDisabledMessage === 'upgrade-subscription-reach-out' ? (
+            <UpgradePill
+              plan="Growth"
+              linked={
+                siteOptionDisabledMessage === 'upgrade-subscription-yourself'
+              }
+            />
+          ) : null,
+        tooltipContent:
+          siteOptionDisabledMessage !== null ? (
+            <AnnotationTypeDisabledMessage messageType={siteOptionDisabledMessage} />
+          ) : null
+      }
+    ]}
+  />
 )
 
 const AnnotationTypeDisabledMessage = ({
@@ -197,21 +206,9 @@ const AnnotationTypeDisabledMessage = ({
     case 'no-permissions':
       return "You don't have enough permissions to change note to this type"
     case 'upgrade-subscription-yourself':
-      return (
-        <>
-          To use this note type,{' '}
-          <a href="/billing/choose-plan" className="underline">
-            please upgrade your subscription
-          </a>
-        </>
-      )
+      return 'Upgrade to Growth to make notes visible to others.'
     case 'upgrade-subscription-reach-out':
-      return (
-        <>
-          To use this note type, please reach out to a team owner to upgrade
-          their subscription.
-        </>
-      )
+      return 'Ask a team owner to upgrade to Growth to make notes visible to others.'
   }
 }
 
@@ -309,10 +306,13 @@ export const UpdateAnnotationModal = ({
   const [note, setNote] = useState(annotation.note)
   const [type, setType] = useState<AnnotationType>(annotation.type)
 
+  const siteOptionDisabledMessage = getAnnotationTypeDisabledMessage({
+    siteAnnotationsAvailable,
+    user
+  })
+
   const disabledMessage =
-    type === AnnotationType.site
-      ? getAnnotationTypeDisabledMessage({ siteAnnotationsAvailable, user })
-      : null
+    type === AnnotationType.site ? siteOptionDisabledMessage : null
 
   const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
 
@@ -332,7 +332,7 @@ export const UpdateAnnotationModal = ({
       <AnnotationTypeSelector
         value={type}
         onChange={setType}
-        optionDisabledMessage={disabledMessage}
+        siteOptionDisabledMessage={siteOptionDisabledMessage}
       />
       <ModalFooter>
         {typeof onDelete === 'function' && (

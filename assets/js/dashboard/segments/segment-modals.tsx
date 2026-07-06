@@ -34,10 +34,10 @@ import {
   getOptionDisabledMessage,
   LabeledTextInput,
   OptionDisabledMessageType,
-  TypeDisabledMessage,
   TypeSelector
 } from '../components/form-elements'
 import { Placeholder } from '../components/placeholder'
+import { UpgradePill } from '../components/pill'
 
 const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
@@ -84,13 +84,13 @@ export const CreateSegmentModal = ({
 
   const [type, setType] = useState<SegmentType>(defaultType)
 
+  const siteOptionDisabledMessage = getSiteSegmentDisabledMessage({
+    siteSegmentsAvailable,
+    user
+  })
+
   const disabledMessage =
-    type === SegmentType.site
-      ? getSiteSegmentDisabledMessage({
-          siteSegmentsAvailable,
-          user
-        })
-      : null
+    type === SegmentType.site ? siteOptionDisabledMessage : null
 
   return (
     <ModalLayout title="Create segment" onClose={onClose}>
@@ -103,7 +103,7 @@ export const CreateSegmentModal = ({
       <SegmentTypeSelector
         type={type}
         setType={setType}
-        optionDisabledMessage={disabledMessage}
+        siteOptionDisabledMessage={siteOptionDisabledMessage}
       />
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
@@ -289,38 +289,44 @@ const getSiteSegmentDisabledMessage = ({
 const SegmentTypeSelector = ({
   type,
   setType,
-  optionDisabledMessage
+  siteOptionDisabledMessage
 }: {
   type: SegmentType
   setType: (type: SegmentType) => void
-  optionDisabledMessage: OptionDisabledMessageType | null
+  siteOptionDisabledMessage: OptionDisabledMessageType | null
 }) => (
-  <>
-    <TypeSelector<SegmentType>
-      idPrefix="segment-type"
-      options={[
-        {
-          type: SegmentType.personal,
-          name: SEGMENT_TYPE_LABELS[SegmentType.personal],
-          description: 'Visible only to you'
-        },
-        {
-          type: SegmentType.site,
-          name: SEGMENT_TYPE_LABELS[SegmentType.site],
-          description: 'Visible to others on the site'
-        }
-      ]}
-      value={type}
-      onChange={setType}
-    />
-    {optionDisabledMessage !== null && (
-      <TypeDisabledMessage
-        message={
-          <SegmentTypeDisabledMessage messageType={optionDisabledMessage} />
-        }
-      />
-    )}
-  </>
+  <TypeSelector<SegmentType>
+    idPrefix="segment-type"
+    options={[
+      {
+        type: SegmentType.personal,
+        name: SEGMENT_TYPE_LABELS[SegmentType.personal],
+        description: 'Visible only to you'
+      },
+      {
+        type: SegmentType.site,
+        name: SEGMENT_TYPE_LABELS[SegmentType.site],
+        description: 'Visible to others on the site',
+        disabled: siteOptionDisabledMessage !== null,
+        pill:
+          siteOptionDisabledMessage === 'upgrade-subscription-yourself' ||
+          siteOptionDisabledMessage === 'upgrade-subscription-reach-out' ? (
+            <UpgradePill
+              plan="Growth"
+              linked={
+                siteOptionDisabledMessage === 'upgrade-subscription-yourself'
+              }
+            />
+          ) : null,
+        tooltipContent:
+          siteOptionDisabledMessage !== null ? (
+            <SegmentTypeDisabledMessage messageType={siteOptionDisabledMessage} />
+          ) : null
+      }
+    ]}
+    value={type}
+    onChange={setType}
+  />
 )
 
 const SegmentTypeDisabledMessage = ({
@@ -333,22 +339,10 @@ const SegmentTypeDisabledMessage = ({
       return "You don't have enough permissions to change segment to this type"
     }
     case 'upgrade-subscription-yourself': {
-      return (
-        <>
-          To use this segment type,{' '}
-          <a href="/billing/choose-plan" className="underline">
-            please upgrade your subscription
-          </a>
-        </>
-      )
+      return 'Upgrade to Growth to share segments with others.'
     }
     case 'upgrade-subscription-reach-out': {
-      return (
-        <>
-          To use this segment type, please reach out to a team owner to upgrade
-          their subscription
-        </>
-      )
+      return 'Ask a team owner to upgrade to Growth to share segments with others.'
     }
   }
 }
@@ -371,13 +365,13 @@ export const UpdateSegmentModal = ({
   const [name, setName] = useState(segment.name)
   const [type, setType] = useState<SegmentType>(segment.type)
 
+  const siteOptionDisabledMessage = getSiteSegmentDisabledMessage({
+    siteSegmentsAvailable,
+    user
+  })
+
   const disabledMessage =
-    type === SegmentType.site
-      ? getSiteSegmentDisabledMessage({
-          siteSegmentsAvailable,
-          user
-        })
-      : null
+    type === SegmentType.site ? siteOptionDisabledMessage : null
 
   return (
     <ModalLayout title="Update segment" onClose={onClose}>
@@ -390,7 +384,7 @@ export const UpdateSegmentModal = ({
       <SegmentTypeSelector
         type={type}
         setType={setType}
-        optionDisabledMessage={disabledMessage}
+        siteOptionDisabledMessage={siteOptionDisabledMessage}
       />
       <ModalFooter>
         <Button theme="secondary" size="sm" onClick={onClose}>
