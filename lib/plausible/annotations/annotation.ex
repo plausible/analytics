@@ -55,7 +55,7 @@ defmodule Plausible.Annotations.Annotation do
   def update_changeset(annotation, attrs, owner) do
     annotation
     |> changeset(attrs, annotation.site.timezone)
-    |> put_assoc(:owner, owner)
+    |> put_change(:owner_id, owner.id)
   end
 
   def changeset(annotation, attrs, site_timezone) do

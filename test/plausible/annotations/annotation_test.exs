@@ -1,5 +1,7 @@
 defmodule Plausible.Annotations.AnnotationTest do
-  use ExUnit.Case, async: true
+  use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
+
   alias Plausible.Annotations.Annotation
 
   describe "date-granularity" do
@@ -279,6 +281,31 @@ defmodule Plausible.Annotations.AnnotationTest do
 
       assert changeset.valid?
       assert changeset.changes.datetime == ~U[2026-06-16 00:00:00Z]
+    end
+
+    test "the latest editing user becomes the owner of an annotation owned by someone else" do
+      owner = new_user()
+      new_owner = new_user()
+      site = new_site(owner: owner)
+
+      existing =
+        %{
+          note: "feature released",
+          type: :site,
+          granularity: :date,
+          date: ~D[2026-06-15]
+        }
+        |> Annotation.create_changeset(site, owner)
+        |> Repo.insert!()
+
+      changeset = Annotation.update_changeset(existing, %{"note" => "renamed"}, new_owner)
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_change(changeset, :owner_id) == new_owner.id
+
+      assert {:ok, annotation} = Repo.update(changeset)
+      assert annotation.owner_id == new_owner.id
+      assert Repo.preload(annotation, :owner).owner.id == new_owner.id
     end
   end
 end
