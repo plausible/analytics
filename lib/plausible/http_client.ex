@@ -1,4 +1,6 @@
 defmodule Plausible.HTTPClient.Non200Error do
+  @moduledoc false
+
   defstruct reason: nil
 
   @type t :: %__MODULE__{reason: Finch.Response.t()}
@@ -11,6 +13,8 @@ defmodule Plausible.HTTPClient.Non200Error do
 end
 
 defmodule Plausible.HTTPClient.Interface do
+  @moduledoc false
+
   @type t() :: module()
 
   @type finch_request_opts() :: Keyword.t()

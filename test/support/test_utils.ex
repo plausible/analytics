@@ -1,4 +1,6 @@
 defmodule Plausible.TestUtils do
+  @moduledoc false
+
   use Plausible.Repo
   use Plausible
   alias Plausible.Factory
