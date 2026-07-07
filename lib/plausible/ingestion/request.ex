@@ -142,6 +142,8 @@ defmodule Plausible.Ingestion.Request do
     @replay_time_header "x-replay-time"
 
     defp put_replay_data(changeset, conn) do
+      now = NaiveDateTime.utc_now(:second)
+
       id =
         conn
         |> Plug.Conn.get_req_header(@replay_id_header)
@@ -161,10 +163,14 @@ defmodule Plausible.Ingestion.Request do
           |> List.first()
           |> NaiveDateTime.from_iso8601!()
 
-        changeset
-        |> Changeset.put_change(:replay_id, id)
-        |> Changeset.put_change(:replay_session_id, session_id)
-        |> Changeset.put_change(:timestamp, time)
+        if NaiveDateTime.compare(time, now) in [:lt, :eq] do
+          changeset
+          |> Changeset.put_change(:replay_id, id)
+          |> Changeset.put_change(:replay_session_id, session_id)
+          |> Changeset.put_change(:timestamp, time)
+        else
+          changeset
+        end
       else
         changeset
       end

@@ -210,6 +210,29 @@ defmodule Plausible.Ingestion.RequestTest do
   end
 
   @tag :ee_only
+  test "leaves replay fields empty and timestamp intact if replay time in the future" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    now = NaiveDateTime.utc_now(:second)
+    time = NaiveDateTime.add(now, 10, :second)
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> put_req_header("x-replay-event-id", "123")
+      |> put_req_header("x-replay-session-id", "456")
+      |> put_req_header("x-replay-time", NaiveDateTime.to_iso8601(time))
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert is_nil(request.replay_id)
+    assert is_nil(request.replay_session_id)
+    assert NaiveDateTime.compare(request.timestamp, time) == :lt
+  end
+
+  @tag :ee_only
   test "parses revenue source field from a json string" do
     payload = %{
       name: "pageview",
