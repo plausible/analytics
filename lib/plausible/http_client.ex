@@ -11,6 +11,8 @@ defmodule Plausible.HTTPClient.Non200Error do
 end
 
 defmodule Plausible.HTTPClient.Interface do
+  @type t() :: module()
+
   @type finch_request_opts() :: Keyword.t()
   @type url() :: Finch.Request.url()
   @type headers() :: Finch.Request.headers()
@@ -58,9 +60,7 @@ defmodule Plausible.HTTPClient do
     call(:get, url, headers, params)
   end
 
-  # TODO: Is it possible to tell the type checker that we're returning a module that conforms to the
-  # Plausible.HTTPClient.Interface behaviour?
-  @spec impl() :: Plausible.HTTPClient
+  @spec impl() :: Plausible.HTTPClient.Interface.t()
   def impl() do
     Application.get_env(:plausible, :http_impl, __MODULE__)
   end
