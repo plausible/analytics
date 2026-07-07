@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 import { numberShortFormatter } from '../../util/number-formatter'
-import { UIMode } from '../../theme-context'
+import { UIMode, useTheme } from '../../theme-context'
 import { MapTooltip } from './map-tooltip'
 import {
   parseWorldTopoJsonToGeoJsonFeatures,
@@ -10,8 +10,8 @@ import {
 } from './countries'
 import { FADE_IN_CLASSNAME } from '../reports/index-breakdown'
 
-export const MAP_CONTAINER_WIDTH = 475
-export const MAP_CONTAINER_HEIGHT = 335
+const MAP_CONTAINER_WIDTH = 475
+const MAP_CONTAINER_HEIGHT = 335
 
 export type CountryData = {
   alpha_3: string
@@ -26,15 +26,14 @@ export function WorldMapSvg({
   maxValue,
   dataByAlpha3Code,
   metricLabel,
-  mode,
   onCountryClick
 }: {
   maxValue: number
   dataByAlpha3Code: Map<string, CountryData>
   metricLabel: MetricLabel
-  mode: UIMode
   onCountryClick: (country: CountryData) => void
 }) {
+  const { mode } = useTheme()
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [tooltip, setTooltip] = useState<{
     x: number
@@ -106,7 +105,13 @@ export function WorldMapSvg({
     : undefined
 
   return (
-    <>
+    <div
+      className="relative flex justify-center items-center mt-4 w-full"
+      style={{
+        height: MAP_CONTAINER_HEIGHT,
+        maxWidth: MAP_CONTAINER_WIDTH
+      }}
+    >
       <svg
         ref={svgRef}
         viewBox={`0 0 ${MAP_CONTAINER_WIDTH} ${MAP_CONTAINER_HEIGHT}`}
@@ -125,7 +130,7 @@ export function WorldMapSvg({
           }
         />
       )}
-    </>
+    </div>
   )
 }
 

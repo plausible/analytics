@@ -8,7 +8,6 @@ import {
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
-import { UIMode, useTheme } from '../../theme-context'
 import { MIN_HEIGHT } from '../reports/index-breakdown'
 import { GeolocationNotice } from './geolocation-notice'
 import { DashboardState } from '../../dashboard-state'
@@ -20,13 +19,7 @@ import {
   BreakdownReportKey
 } from '../reports/reports-config'
 import LazyLoader from '../../components/lazy-loader'
-import {
-  CountryData,
-  MetricLabel,
-  WorldMapSvg,
-  MAP_CONTAINER_WIDTH,
-  MAP_CONTAINER_HEIGHT
-} from './world-map-svg'
+import { CountryData, MetricLabel, WorldMapSvg } from './world-map-svg'
 
 function getMetricLabel(dashboardState: DashboardState): MetricLabel {
   if (hasConversionGoalFilter(dashboardState)) {
@@ -46,7 +39,6 @@ const WorldMap = ({
   onDataReady: (response: QueryApiResponse) => void
 }) => {
   const navigate = useAppNavigate()
-  const { mode } = useTheme()
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
@@ -75,7 +67,10 @@ const WorldMap = ({
     ],
     { enabled: visible }
   )
-  const { data } = apiState
+  const { data, isPending, isPlaceholderData, isError } = apiState
+
+  const isLoading =
+    isPending || isError || (isPlaceholderData && !isRealtimeSilentUpdate)
 
   useEffect(() => {
     if (data) {
@@ -124,74 +119,25 @@ const WorldMap = ({
 
   return (
     <LazyLoader onVisible={() => setVisible(true)}>
-      <WorldMapRenderer
-        {...apiState}
-        isRealtimeSilentUpdate={isRealtimeSilentUpdate}
-        maxValue={maxValue}
-        dataByAlpha3Code={dataByAlpha3Code}
-        metricLabel={metricLabel}
-        mode={mode}
-        onCountryClick={onCountryClick}
-        showGeolocationNotice={site.isDbip}
-      />
-    </LazyLoader>
-  )
-}
-
-function WorldMapRenderer({
-  isPending,
-  isPlaceholderData,
-  isError,
-  isRealtimeSilentUpdate,
-  maxValue,
-  dataByAlpha3Code,
-  metricLabel,
-  mode,
-  onCountryClick,
-  showGeolocationNotice
-}: {
-  isPending: boolean
-  isPlaceholderData: boolean
-  isError: boolean
-  isRealtimeSilentUpdate: boolean
-  maxValue: number
-  dataByAlpha3Code: Map<string, CountryData>
-  metricLabel: MetricLabel
-  mode: UIMode
-  onCountryClick: (country: CountryData) => void
-  showGeolocationNotice: boolean
-}) {
-  const isLoading =
-    isPending || isError || (isPlaceholderData && !isRealtimeSilentUpdate)
-
-  return (
-    <div
-      className="flex flex-col justify-center items-center relative"
-      style={{ minHeight: MIN_HEIGHT }}
-    >
-      {isLoading ? (
-        <div className="mx-auto loading">
-          <div />
-        </div>
-      ) : (
-        <div
-          className="relative flex justify-center items-center mt-4 w-full"
-          style={{
-            height: MAP_CONTAINER_HEIGHT,
-            maxWidth: MAP_CONTAINER_WIDTH
-          }}
-        >
+      <div
+        className="flex flex-col justify-center items-center relative"
+        style={{ minHeight: MIN_HEIGHT }}
+      >
+        {isLoading ? (
+          <div className="mx-auto loading">
+            <div />
+          </div>
+        ) : (
           <WorldMapSvg
             maxValue={maxValue}
             dataByAlpha3Code={dataByAlpha3Code}
             metricLabel={metricLabel}
-            mode={mode}
             onCountryClick={onCountryClick}
           />
-        </div>
-      )}
-      {showGeolocationNotice && <GeolocationNotice />}
-    </div>
+        )}
+        {site.isDbip && <GeolocationNotice />}
+      </div>
+    </LazyLoader>
   )
 }
 
