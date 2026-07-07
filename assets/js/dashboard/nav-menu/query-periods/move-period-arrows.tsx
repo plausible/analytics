@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import {
   shiftDashboardPeriod,
   getDateForShiftedPeriod
@@ -6,11 +6,15 @@ import {
 import classNames from 'classnames'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
-import { NavigateKeybind } from '../../keybinding'
-import { AppNavigationLink } from '../../navigation/use-app-navigate'
+import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../../navigation/use-app-navigate'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
+import { isDateRangeCalendarOpen } from './date-range-calendar'
 
 const ArrowKeybind = ({
   keyboardKey
@@ -19,6 +23,7 @@ const ArrowKeybind = ({
 }) => {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const navigate = useAppNavigate()
 
   const search = useMemo(
     () =>
@@ -31,11 +36,22 @@ const ArrowKeybind = ({
     [site, dashboardState, keyboardKey]
   )
 
+  const handler = useCallback(() => {
+    navigate({ search })
+  }, [navigate, search])
+
   return (
-    <NavigateKeybind
+    <Keybind
       type="keydown"
       keyboardKey={keyboardKey}
-      navigateProps={{ search }}
+      handler={handler}
+      shouldIgnoreWhen={[
+        isModifierPressed,
+        isTyping,
+        // Don't hijack arrow keys flatpickr uses for its own day-cell navigation.
+        isDateRangeCalendarOpen
+      ]}
+      targetRef="document"
     />
   )
 }

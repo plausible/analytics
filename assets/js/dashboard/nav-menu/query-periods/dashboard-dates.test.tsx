@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import { stringifySearch } from '../../util/url-search-params'
@@ -149,6 +149,38 @@ test.each([
     expect(localStorage.getItem(periodStorageKey)).toBe(dashboardPeriod)
   }
 )
+
+test('arrow keys shift the period when the custom-range calendar is closed, but not while it is open', async () => {
+  const localDomain = 'no-arrow-hijack.test'
+  const startUrl = `${getRouterBasepath({ domain: localDomain, shared: false })}${stringifySearch({ period: 'month', date: '2024-08-15' })}`
+
+  render(<DashboardPeriodPicker />, {
+    wrapper: (props) => (
+      <TestContextProviders
+        siteOptions={{ domain: localDomain, statsBegin: '2020-01-01' }}
+        routerProps={{ initialEntries: [startUrl] }}
+        {...props}
+      />
+    )
+  })
+
+  expect(screen.getByText('August 2024')).toBeVisible()
+  expect(document.querySelector('.flatpickr-calendar')).toBeNull()
+
+  await userEvent.keyboard('{ArrowLeft}')
+  expect(screen.getByText('July 2024')).toBeVisible()
+
+  await userEvent.keyboard('c')
+  await waitFor(() =>
+    expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
+  )
+
+  await userEvent.keyboard('{ArrowLeft}')
+  await userEvent.keyboard('{ArrowLeft}')
+
+  expect(screen.getByText('July 2024')).toBeVisible()
+  expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
+})
 
 test('going back resets the stored dashboardState period to previous value', async () => {
   const BrowserBackButton = () => {
