@@ -18,6 +18,17 @@ defmodule Plausible.Annotations do
 
   @max_annotations 500
 
+  @spec roles_with_personal_annotations() :: [atom()]
+  def roles_with_personal_annotations(), do: @roles_with_personal_annotations
+
+  @spec roles_with_maybe_site_annotations() :: [atom()]
+  def roles_with_maybe_site_annotations(), do: @roles_with_maybe_site_annotations
+
+  @spec site_annotations_available?(Plausible.Site.t()) :: boolean()
+  def site_annotations_available?(site),
+    # this feature is bundled with SiteSegments
+    do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
+
   @spec get_all_for_site(Plausible.Site.t(), atom(), User.t() | nil, DateTimeRange.t()) ::
           {:error, error_not_enough_permissions()} | {:ok, list(Annotation.t())}
   def get_all_for_site(site, site_role, user, range_in_site_tz) do
@@ -67,36 +78,13 @@ defmodule Plausible.Annotations do
     end
   end
 
-  defp filter_by_range(query, range_in_site_tz) do
-    # Minute granularity annotations are stored for the particular UTC moment they're for,
-    # so they must be in the range of the UTC query period.
-    minute_granularity_range =
-      range_in_site_tz |> DateTimeRange.to_timezone("Etc/UTC")
-
-    # Date granularity annotations are stored for the UTC midnight of the date they're for,
-    # so the range for querying these must reflect that.
-    [date_granularity_range_first, date_granularity_range_last] =
-      [range_in_site_tz.first, range_in_site_tz.last]
-      |> Enum.map(fn utc_datetime ->
-        utc_datetime |> DateTime.to_date() |> Annotation.serialize_date_granularity_datetime()
-      end)
-
-    from(annotation in query,
-      where:
-        (annotation.granularity == :minute and
-           annotation.datetime >= ^minute_granularity_range.first and
-           annotation.datetime <= ^minute_granularity_range.last) or
-          (annotation.granularity == :date and
-             annotation.datetime >=
-               ^date_granularity_range_first and
-             annotation.datetime <=
-               ^date_granularity_range_last)
-    )
-  end
-
-  @spec get_one(User.t(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
+  @spec get_one(User.t() | nil, Plausible.Site.t(), atom(), pos_integer() | nil) ::
           {:ok, Annotation.t()}
           | {:error, error_not_enough_permissions() | error_annotation_not_found()}
+  def get_one(nil, _site, _site_role, _annotation_id) do
+    {:error, :not_enough_permissions}
+  end
+
   def get_one(user, site, site_role, annotation_id) do
     if site_role in roles_with_personal_annotations() do
       case do_get_one(user, site, annotation_id) do
@@ -108,12 +96,16 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec insert_one(User.t(), Plausible.Site.t(), atom(), map()) ::
+  @spec insert_one(User.t() | nil, Plausible.Site.t(), atom(), map()) ::
           {:ok, Annotation.t()}
           | {:error,
              error_not_enough_permissions()
              | error_invalid_annotation()
              | error_annotation_limit_reached()}
+  def insert_one(nil, _site, _site_role, _params) do
+    {:error, :not_enough_permissions}
+  end
+
   def insert_one(user, site, site_role, params) do
     changeset = Annotation.create_changeset(params, site, user)
     annotation_type = Ecto.Changeset.get_field(changeset, :type)
@@ -130,12 +122,16 @@ defmodule Plausible.Annotations do
     end
   end
 
-  @spec update_one(User.t(), Plausible.Site.t(), atom(), pos_integer(), map()) ::
+  @spec update_one(User.t() | nil, Plausible.Site.t(), atom(), pos_integer(), map()) ::
           {:ok, Annotation.t()}
           | {:error,
              error_not_enough_permissions()
              | error_invalid_annotation()
              | error_annotation_not_found()}
+  def update_one(nil, _site, _site_role, _annotation_id, _params) do
+    {:error, :not_enough_permissions}
+  end
+
   def update_one(user, site, site_role, annotation_id, params) do
     with {:ok, annotation} <- get_one(user, site, site_role, annotation_id),
          changeset = Annotation.update_changeset(annotation, params, user),
@@ -152,6 +148,31 @@ defmodule Plausible.Annotations do
     end
   end
 
+  @spec delete_one(User.t() | nil, Plausible.Site.t(), atom(), pos_integer()) ::
+          {:ok, Annotation.t()}
+          | {:error,
+             error_not_enough_permissions()
+             | error_annotation_not_found()}
+  def delete_one(nil, _site, _site_role, _annotation_id) do
+    {:error, :not_enough_permissions}
+  end
+
+  def delete_one(user, site, site_role, annotation_id) do
+    with {:ok, annotation} <- get_one(user, site, site_role, annotation_id) do
+      cond do
+        annotation.type == :site and site_role in roles_with_maybe_site_annotations() ->
+          {:ok, do_delete_one(annotation)}
+
+        annotation.type == :personal and site_role in roles_with_personal_annotations() ->
+          {:ok, do_delete_one(annotation)}
+
+        true ->
+          {:error, :not_enough_permissions}
+      end
+    end
+  end
+
+  @spec after_user_removed_from_site(Plausible.Site.t(), User.t()) :: :ok
   def after_user_removed_from_site(site, user) do
     Repo.delete_all(
       from(annotation in Annotation,
@@ -170,8 +191,11 @@ defmodule Plausible.Annotations do
       ),
       []
     )
+
+    :ok
   end
 
+  @spec after_user_removed_from_team(Plausible.Teams.Team.t(), User.t()) :: :ok
   def after_user_removed_from_team(team, user) do
     team_sites_q =
       from(
@@ -199,8 +223,11 @@ defmodule Plausible.Annotations do
       ),
       []
     )
+
+    :ok
   end
 
+  @spec user_removed(User.t()) :: :ok
   def user_removed(user) do
     Repo.delete_all(
       from(annotation in Annotation,
@@ -211,24 +238,37 @@ defmodule Plausible.Annotations do
     )
 
     #  Site annotations are set to owner=null via ON DELETE SET NULL
+
+    :ok
   end
 
-  def delete_one(user, %Plausible.Site{} = site, site_role, annotation_id) do
-    with {:ok, annotation} <- get_one(user, site, site_role, annotation_id) do
-      cond do
-        annotation.type == :site and site_role in roles_with_maybe_site_annotations() ->
-          {:ok, do_delete_one(annotation)}
+  defp filter_by_range(query, range_in_site_tz) do
+    # Minute granularity annotations are stored for the particular UTC moment they're for,
+    # so they must be in the range of the UTC query period.
+    minute_granularity_range =
+      range_in_site_tz |> DateTimeRange.to_timezone("Etc/UTC")
 
-        annotation.type == :personal and site_role in roles_with_personal_annotations() ->
-          {:ok, do_delete_one(annotation)}
+    # Date granularity annotations are stored for the UTC midnight of the date they're for,
+    # so the range for querying these must reflect that.
+    [date_granularity_range_first, date_granularity_range_last] =
+      [range_in_site_tz.first, range_in_site_tz.last]
+      |> Enum.map(fn utc_datetime ->
+        utc_datetime |> DateTime.to_date() |> Annotation.serialize_date_granularity_datetime()
+      end)
 
-        true ->
-          {:error, :not_enough_permissions}
-      end
-    end
+    from(annotation in query,
+      where:
+        (annotation.granularity == :minute and
+           annotation.datetime >= ^minute_granularity_range.first and
+           annotation.datetime <= ^minute_granularity_range.last) or
+          (annotation.granularity == :date and
+             annotation.datetime >=
+               ^date_granularity_range_first and
+             annotation.datetime <=
+               ^date_granularity_range_last)
+    )
   end
 
-  @spec do_get_one(User.t(), Plausible.Site.t(), pos_integer() | nil) :: Annotation.t() | nil
   defp do_get_one(user, site, annotation_id)
 
   defp do_get_one(_user, _site, nil) do
@@ -297,11 +337,4 @@ defmodule Plausible.Annotations do
     )
     |> Repo.aggregate(:count, :id)
   end
-
-  def roles_with_personal_annotations(), do: @roles_with_personal_annotations
-  def roles_with_maybe_site_annotations(), do: @roles_with_maybe_site_annotations
-
-  def site_annotations_available?(%Plausible.Site{} = site),
-    # this feature is bundled with SiteSegments
-    do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
 end
