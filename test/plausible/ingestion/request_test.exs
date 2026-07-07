@@ -662,7 +662,9 @@ defmodule Plausible.Ingestion.RequestTest do
              "scroll_depth" => nil,
              "engagement_time" => nil,
              "tracker_script_version" => 0,
-             "interactive?" => true
+             "interactive?" => true,
+             "replay_id" => nil,
+             "replay_session_id" => nil
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])
