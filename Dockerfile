@@ -3,7 +3,7 @@
 
 
 #### Builder
-FROM hexpm/elixir:1.20.1-erlang-28.5.0.1-alpine-3.22.4@sha256:ba0f4e2b4cf931850708dfa3bff3c3f4b561fa010f554df9337eece9b71ee1f6 AS buildcontainer
+FROM hexpm/elixir:1.20.2-erlang-28.5.0.3-alpine-3.22.5@sha256:8875407828c1b789485f9fcc6006e1ace39bb073b0467a95df3a3905d8d86d30 AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -54,7 +54,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.22.4@sha256:310c62b5e7ca5b08167e4384c68db0fd2905dd9c7493756d356e893909057601
+FROM alpine:3.22.5@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
