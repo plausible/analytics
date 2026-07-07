@@ -5,10 +5,12 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   use Plausible
   use PlausibleWeb, :controller
   use PlausibleWeb.Plugs.ErrorHandler
-  alias PlausibleWeb.Api.Helpers, as: H
   alias Plausible.Annotations
   alias Plausible.ChangesetHelpers
   alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
+  alias PlausibleWeb.Api.Helpers, as: H
+
+  plug :require_user when action not in [:index]
 
   def index(conn, params) do
     user = conn.assigns.current_user
@@ -143,5 +145,13 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
 
   defp annotation_not_found(%Plug.Conn{} = conn, annotation_id_param) do
     H.not_found(conn, "Annotation not found with ID #{inspect(annotation_id_param)}")
+  end
+
+  defp require_user(conn, _opts) do
+    if conn.assigns.current_user do
+      conn
+    else
+      H.bad_request(conn, "Invalid request")
+    end
   end
 end
