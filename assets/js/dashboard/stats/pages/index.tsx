@@ -35,6 +35,7 @@ import {
   BlurMenuButtonOnEscape,
   SelectedCheckmark
 } from '../../components/popover'
+import { pagesDetailsTitle } from './details'
 
 const BAR_COLOR = 'bg-orange-50 group-hover/row:bg-orange-100'
 const MAX_DIMENSION_LENGTH = 70
@@ -114,22 +115,17 @@ export default function Pages() {
           <TabWrapper>
             {(
               [
-                {
-                  label: hasConversionGoalFilter(dashboardState)
-                    ? 'Conversion pages'
-                    : 'Top pages',
-                  value: BreakdownReportKey.pages
-                },
-                { label: 'Entry pages', value: BreakdownReportKey.entryPages },
-                { label: 'Exit pages', value: BreakdownReportKey.exitPages }
+                BreakdownReportKey.pages,
+                BreakdownReportKey.entryPages,
+                BreakdownReportKey.exitPages
               ] as const
-            ).map(({ value, label }) => (
+            ).map((reportKey) => (
               <TabButton
-                key={value}
-                active={tab === value}
-                onClick={() => switchTab(value)}
+                key={reportKey}
+                active={tab === reportKey}
+                onClick={() => switchTab(reportKey)}
               >
-                {label}
+                {pagesDetailsTitle(reportKey, dashboardState)}
               </TabButton>
             ))}
           </TabWrapper>

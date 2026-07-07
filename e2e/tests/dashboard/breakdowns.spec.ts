@@ -79,7 +79,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top sources' })
+      modal(page).getByRole('heading', { name: 'Sources' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -213,7 +213,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top acquisition channels' })
+      modal(page).getByRole('heading', { name: 'Acquisition channels' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -838,7 +838,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top pages' })
+      modal(page).getByRole('heading', { name: 'Conversion pages' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -875,7 +875,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top pages' })
+      modal(page).getByRole('heading', { name: 'Conversion pages' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1101,14 +1101,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top countries' })
+      modal(page).getByRole('heading', { name: 'Countries' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['Country', /Visitors/])
+    await expectHeaders(modal(page), [
+      'Country',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Estonia/, /Poland/])
 
-    await expectMetricValues(modal(page), 'Estonia', ['2'])
+    await expectMetricValues(modal(page), 'Estonia', ['2', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1151,14 +1156,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top regions' })
+      modal(page).getByRole('heading', { name: 'Regions' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['Region', /Visitors/])
+    await expectHeaders(modal(page), [
+      'Region',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
-    await expectMetricValues(modal(page), 'Harjumaa', ['1'])
+    await expectMetricValues(modal(page), 'Harjumaa', ['1', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1201,14 +1211,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top cities' })
+      modal(page).getByRole('heading', { name: 'Cities' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['City', /Visitors/])
+    await expectHeaders(modal(page), [
+      'City',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
 
-    await expectMetricValues(modal(page), 'Tartu', ['1'])
+    await expectMetricValues(modal(page), 'Tartu', ['1', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1299,7 +1314,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top countries' })
+      modal(page).getByRole('heading', { name: 'Countries' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1345,7 +1360,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top regions' })
+      modal(page).getByRole('heading', { name: 'Regions' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1384,7 +1399,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top cities' })
+      modal(page).getByRole('heading', { name: 'Cities' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [

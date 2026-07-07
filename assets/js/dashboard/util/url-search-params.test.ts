@@ -264,6 +264,14 @@ describe(`${getSearchWithEnforcedSegment.name}`, () => {
 describe(`${maybeReloadForApiVersion.name}`, () => {
   const dashboardPathname = '/example.com'
 
+  beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   type MockWindowLocation = Location & { replace: jest.Mock }
 
   function makeLocation(search: string): MockWindowLocation {

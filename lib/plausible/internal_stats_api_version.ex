@@ -14,7 +14,7 @@ defmodule Plausible.InternalStatsApiVersion do
   """
   use GenServer
 
-  @api_version 0
+  @api_version 1
 
   @refresh_interval :timer.seconds(30)
 
