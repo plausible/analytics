@@ -277,7 +277,7 @@ defmodule Plausible.TestUtils do
 
     case Finch.request(healthcheck_req, Plausible.Finch) do
       {:ok, %Finch.Response{}} -> true
-      {:error, %Mint.TransportError{reason: :econnrefused}} -> false
+      {:error, %Finch.TransportError{reason: :econnrefused}} -> false
     end
   end
 

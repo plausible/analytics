@@ -149,7 +149,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         Plausible.HTTPClient.Mock,
         :get,
         fn _url, _opts ->
-          {:error, %Mint.TransportError{reason: :timeout}}
+          {:error, %Finch.TransportError{reason: :timeout}}
         end
       )
 
@@ -478,7 +478,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         Plausible.HTTPClient.Mock,
         :post,
         fn _url, _opts, _params ->
-          {:error, %Mint.TransportError{reason: :timeout}}
+          {:error, %Finch.TransportError{reason: :timeout}}
         end
       )
 
@@ -701,7 +701,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         Plausible.HTTPClient.Mock,
         :get,
         fn _url, _params ->
-          {:error, %Mint.TransportError{reason: :timeout}}
+          {:error, %Finch.TransportError{reason: :timeout}}
         end
       )
 

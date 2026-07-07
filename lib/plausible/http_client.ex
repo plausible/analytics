@@ -17,7 +17,7 @@ defmodule Plausible.HTTPClient.Interface do
   @type params() :: Finch.Request.body() | map()
   @type response() ::
           {:ok, Finch.Response.t()}
-          | {:error, Mint.Types.error() | Finch.Error.t() | Plausible.HTTPClient.Non200Error.t()}
+          | {:error, Finch.error() | Plausible.HTTPClient.Non200Error.t()}
 
   @callback get(url(), headers(), params()) :: response()
   @callback get(url(), headers()) :: response()
