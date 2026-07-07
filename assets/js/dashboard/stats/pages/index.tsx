@@ -132,8 +132,7 @@ export default function Pages() {
           <ImportedWarningBubble
             queryApiResponse={currentData}
             message={
-              breakdownMode === 'hostname' &&
-              tab !== BreakdownReportKey.pages
+              breakdownMode === 'hostname' && tab !== BreakdownReportKey.pages
                 ? 'Imported data is unavailable in this view'
                 : undefined
             }
