@@ -213,6 +213,7 @@ export function Locations() {
         />
       ) : (
         <IndexBreakdown
+          key={tab}
           metrics={metrics}
           dimensions={reportConfig.dimensions}
           dimensionLabel={reportConfig.dimensionLabel}

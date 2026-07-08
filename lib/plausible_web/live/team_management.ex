@@ -122,6 +122,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
+          me?={entry.id == @current_user.id}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
           disabled={
@@ -299,7 +300,18 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
 
       {{:ok, _}, :team_management} ->
-        reset(socket)
+        case Teams.Memberships.team_role(current_team, current_user) do
+          {:ok, role} when role in [:viewer, :billing, :editor] ->
+            redirect(socket,
+              to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
+            )
+
+          {:ok, _} ->
+            reset(socket)
+
+          {:error, :not_a_member} ->
+            redirect(socket, to: Routes.site_path(socket, :index, __team: "none"))
+        end
 
       {{:error, :permission_denied}, _} ->
         socket
