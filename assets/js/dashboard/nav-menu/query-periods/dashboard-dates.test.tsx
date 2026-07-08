@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import { stringifySearch } from '../../util/url-search-params'
@@ -171,9 +171,7 @@ test('arrow keys shift the period when the custom-range calendar is closed, but 
   expect(screen.getByText('July 2024')).toBeVisible()
 
   await userEvent.keyboard('c')
-  await waitFor(() =>
-    expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
-  )
+  expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
 
   await userEvent.keyboard('{ArrowLeft}')
   await userEvent.keyboard('{ArrowLeft}')

@@ -113,11 +113,13 @@ export function Keybind(opts: KeybindOptions) {
 export function NavigateKeybind({
   keyboardKey,
   type,
-  navigateProps
+  navigateProps,
+  shouldAlsoIgnoreWhen = []
 }: {
   keyboardKey: string
   type: KeyboardEventType
   navigateProps: AppNavigationTarget
+  shouldAlsoIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
 }) {
   const navigate = useAppNavigate()
   const handler = useCallback(() => {
@@ -129,7 +131,7 @@ export function NavigateKeybind({
       keyboardKey={keyboardKey}
       type={type}
       handler={handler}
-      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+      shouldIgnoreWhen={[isModifierPressed, isTyping, ...shouldAlsoIgnoreWhen]}
       targetRef="document"
     />
   )
