@@ -87,14 +87,13 @@ export async function register({
   await page.getByLabel('Full name').fill(user.name)
   await page.getByLabel('Email').fill(user.email)
   await page.getByLabel('Password', { exact: true }).fill(user.password)
-  await page.getByLabel('Confirm password', { exact: true }).fill(user.password)
   await expect(
     page.getByRole('button', { name: 'Start my free trial' })
   ).toBeEnabled()
   await page.getByRole('button', { name: 'Start my free trial' }).click()
 
   await expect(
-    page.getByRole('heading', { name: 'Activate your account' })
+    page.getByRole('heading', { name: 'Check your email' })
   ).toBeVisible()
 
   const response = await request.get('/sent-emails-api/emails.json')
