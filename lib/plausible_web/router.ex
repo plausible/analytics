@@ -306,7 +306,6 @@ defmodule PlausibleWeb.Router do
 
     scope "/:domain/annotations", PlausibleWeb.Api.Internal,
       private: %{allow_consolidated_views: true} do
-
       get "/", AnnotationsController, :index
       post "/", AnnotationsController, :create
       patch "/:annotation_id", AnnotationsController, :update

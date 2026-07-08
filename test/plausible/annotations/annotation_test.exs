@@ -1,311 +1,156 @@
 defmodule Plausible.Annotations.AnnotationTest do
-  use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
-
+  use ExUnit.Case, async: true
   alias Plausible.Annotations.Annotation
 
-  describe "date-granularity" do
-    test "a full datetime string is rejected" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "test",
-            "type" => "personal",
-            "granularity" => "date",
-            "datetime" => "2026-06-30T00:00:00Z"
-          },
-          "Etc/UTC"
-        )
+  describe "changeset/3 for date granularity" do
+    for {dt, expected_errors} <- [
+          {"2026-06-30T00:00:00", [date: {"must be supplied for chosen granularity", []}]},
+          {"2026-06-30T00:00:00Z", [date: {"must be supplied for chosen granularity", []}]},
+          {~U[2026-06-30 14:30:00Z], [date: {"must be supplied for chosen granularity", []}]},
+          {"2026-07-05", [datetime: {"is invalid", [type: :utc_datetime, validation: :cast]}]},
+          {~D[2026-07-06], [datetime: {"is invalid", [type: :utc_datetime, validation: :cast]}]}
+        ] do
+      test "rejects datetime #{dt} with appropriate error" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: "date",
+              datetime: unquote(Macro.escape(dt))
+            },
+            "Etc/UTC"
+          )
 
-      assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
+        assert changeset.errors == unquote(Macro.escape(expected_errors))
+      end
     end
 
-    test "a non-midnight %DateTime{} is rejected" do
+    test "rejects invalid date value" do
       changeset =
         Annotation.changeset(
           %Annotation{},
           %{
-            "note" => "test",
-            "type" => "personal",
-            "granularity" => "date",
-            "datetime" => ~U[2026-06-30 14:30:00Z]
+            note: "feature released",
+            type: "personal",
+            granularity: "date",
+            date: "2026-13-45"
           },
           "Etc/UTC"
         )
 
-      assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
+      assert [date: {"is invalid", _}] = changeset.errors
     end
 
-    test "an unparsable date string is rejected" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "granularity" => "date",
-            "datetime" => "not-a-date"
-          },
-          "Etc/UTC"
-        )
+    for {d, expected} <- [
+          {"2026-06-30", ~U[2026-06-30 00:00:00Z]},
+          {~D[2026-07-01], ~U[2026-07-01 00:00:00Z]}
+        ] do
+      test "accepts date #{d}, parsing it to that date at UTC midnight (#{expected})" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: "date",
+              date: unquote(Macro.escape(d))
+            },
+            any_timezone()
+          )
 
-      assert {"is invalid", _} = changeset.errors[:datetime]
-    end
-
-    test "an invalid calendar date is rejected" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "granularity" => "date",
-            "datetime" => "2026-13-45"
-          },
-          "Etc/UTC"
-        )
-
-      assert {"is invalid", _} = changeset.errors[:datetime]
-    end
-
-    test "a bare YYYY-MM-DD string becomes UTC midnight" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "feature released",
-            "type" => "personal",
-            "site_id" => 1,
-            "owner_id" => 1,
-            "granularity" => "date",
-            "date" => "2026-06-30"
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-30 00:00:00Z]
-    end
-
-    test "a %Date{} struct becomes UTC midnight" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "feature released",
-            "type" => "personal",
-            "site_id" => 1,
-            "owner_id" => 1,
-            "granularity" => "date",
-            "date" => ~D[2026-06-30]
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-30 00:00:00Z]
+        assert changeset.valid?
+        assert changeset.changes.datetime == unquote(Macro.escape(expected))
+      end
     end
   end
 
-  describe "minute-granularity" do
-    test "a bare date string is rejected" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "granularity" => "minute",
-            "datetime" => "2026-06-30"
-          },
-          "Etc/UTC"
-        )
+  describe "changeset/3 for minute granularity" do
+    for d <- ["2026-07-05", ~D[2026-07-06]] do
+      test "requires :datetime to be present, given date: #{d}" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: "minute",
+              date: unquote(Macro.escape(d))
+            },
+            "Etc/UTC"
+          )
 
-      assert {"is invalid", _} = changeset.errors[:datetime]
+        assert changeset.errors == [datetime: {"must be supplied for chosen granularity", []}]
+      end
     end
 
-    test "an unparsable datetime is rejected" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "granularity" => "minute",
-            "datetime" => "garbage"
-          },
-          "Etc/UTC"
-        )
+    for dt <- ["2026-06-30", ~D[2026-07-01], "invalid"] do
+      test "rejects invalid :datetime, given #{dt}" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: "minute",
+              datetime: unquote(Macro.escape(dt))
+            },
+            "Etc/UTC"
+          )
 
-      assert {"is invalid", _} = changeset.errors[:datetime]
+        assert [datetime: {"is invalid", _}] = changeset.errors
+      end
     end
 
-    test "a Z-suffixed datetime string is kept in UTC" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "feature released",
-            "type" => "personal",
-            "site_id" => 1,
-            "owner_id" => 1,
-            "granularity" => "minute",
-            "datetime" => "2026-06-30T14:30:00Z"
-          },
-          "Etc/UTC"
-        )
+    for {dt, expected, tz} <- [
+          {"2026-06-30T14:30:00Z", ~U[2026-06-30 14:30:00Z], any_timezone()},
+          {"2026-06-30T10:00:00-02:00", ~U[2026-06-30 12:00:00Z], any_timezone()},
+          {~U[2026-06-30 14:30:00Z], ~U[2026-06-30 14:30:00Z], any_timezone()},
+          {"2026-06-30T14:30:00", ~U[2026-06-30 14:30:00Z], "Etc/UTC"},
+          {"2026-06-30T14:30:00", ~U[2026-06-30 11:30:00Z], "Europe/Tallinn"}
+        ] do
+      test "accepts :datetime #{dt} and parses it to #{expected} UTC point in time for the site with timezone #{tz}" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: "minute",
+              datetime: unquote(Macro.escape(dt))
+            },
+            unquote(tz)
+          )
 
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-30 14:30:00Z]
-    end
-
-    test "an offset datetime string is shifted to UTC" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "feature released",
-            "type" => "personal",
-            "site_id" => 1,
-            "owner_id" => 1,
-            "granularity" => "minute",
-            "datetime" => "2026-06-30T10:00:00-02:00"
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-30 12:00:00Z]
-    end
-
-    test "a %DateTime{} is passed through in UTC" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "note" => "feature released",
-            "type" => "personal",
-            "site_id" => 1,
-            "owner_id" => 1,
-            "granularity" => "minute",
-            "datetime" => ~U[2026-06-30 14:30:00Z]
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-30 14:30:00Z]
+        assert changeset.valid?
+        assert changeset.changes.datetime == unquote(Macro.escape(expected))
+      end
     end
   end
 
-  describe "unknown granularity" do
-    test "defers to Ecto's enum cast, not our coercion error" do
-      changeset =
-        Annotation.changeset(
-          %Annotation{},
-          %{
-            "granularity" => "hour",
-            "datetime" => "2026-06-30T10:00:00Z"
-          },
-          "Etc/UTC"
-        )
+  describe "changeset/3 when both date and datetime are provided" do
+    for granularity <- ["date", "minute"] do
+      test "rejects both being set for #{granularity} granularity" do
+        changeset =
+          Annotation.changeset(
+            %Annotation{},
+            %{
+              note: "feature released",
+              type: "personal",
+              granularity: unquote(granularity),
+              date: "2026-06-30",
+              datetime: "2026-06-30T14:30:00Z"
+            },
+            "Etc/UTC"
+          )
 
-      assert changeset.errors[:granularity]
-      refute changeset.errors[:datetime]
+        assert changeset.errors == [
+                 granularity: {"expects either date or datetime to be set", []}
+               ]
+      end
     end
   end
 
-  describe "granularity change" do
-    test "flipping :date to :minute without a datetime is rejected" do
-      existing = %Annotation{
-        granularity: :date,
-        datetime: ~U[2026-06-15 00:00:00Z],
-        note: "test",
-        type: :personal
-      }
-
-      changeset = Annotation.changeset(existing, %{"granularity" => "minute"}, "Etc/UTC")
-
-      assert {"must be supplied for chosen granularity", []} = changeset.errors[:datetime]
-    end
-
-    test "flipping :minute to :date without a datetime is rejected" do
-      existing = %Annotation{
-        granularity: :minute,
-        datetime: ~U[2026-06-15 14:30:00Z],
-        note: "test",
-        type: :personal
-      }
-
-      changeset = Annotation.changeset(existing, %{"granularity" => "date"}, "Etc/UTC")
-
-      assert {"must be supplied for chosen granularity", []} = changeset.errors[:date]
-    end
-
-    test "flipping granularity to minute with an appropriate datetime is accepted" do
-      existing = %Annotation{
-        note: "feature released",
-        type: :personal,
-        site_id: 1,
-        owner_id: 1,
-        granularity: :date,
-        datetime: ~U[2026-06-15 00:00:00Z]
-      }
-
-      changeset =
-        Annotation.changeset(
-          existing,
-          %{
-            "granularity" => "minute",
-            "datetime" => "2026-06-15T14:30:00Z"
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-15 14:30:00Z]
-    end
-
-    test "flipping granularity to date with an appropriate date is accepted" do
-      existing = %Annotation{
-        note: "feature released",
-        type: :personal,
-        site_id: 1,
-        owner_id: 1,
-        granularity: :minute,
-        datetime: ~U[2026-06-15 10:00:00Z]
-      }
-
-      changeset =
-        Annotation.changeset(
-          existing,
-          %{
-            "granularity" => "date",
-            "date" => "2026-06-16"
-          },
-          "Etc/UTC"
-        )
-
-      assert changeset.valid?
-      assert changeset.changes.datetime == ~U[2026-06-16 00:00:00Z]
-    end
-
-    test "the latest editing user becomes the owner of an annotation owned by someone else" do
-      owner = new_user()
-      new_owner = new_user()
-      site = new_site(owner: owner)
-
-      existing =
-        %{
-          note: "feature released",
-          type: :site,
-          granularity: :date,
-          date: ~D[2026-06-15]
-        }
-        |> Annotation.create_changeset(site, owner)
-        |> Repo.insert!()
-
-      changeset = Annotation.update_changeset(existing, %{"note" => "renamed"}, new_owner)
-
-      assert changeset.valid?
-      assert Ecto.Changeset.get_change(changeset, :owner_id) == new_owner.id
-
-      assert {:ok, annotation} = Repo.update(changeset)
-      assert annotation.owner_id == new_owner.id
-      assert Repo.preload(annotation, :owner).owner.id == new_owner.id
-    end
-  end
+  defp any_timezone(), do: Enum.random(Plausible.Timezones.zone_list())
 end

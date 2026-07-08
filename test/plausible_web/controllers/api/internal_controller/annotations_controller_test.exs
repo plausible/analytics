@@ -2,86 +2,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
-  describe "GET /api/:domain/annotations - index" do
-    setup [:create_user, :log_in]
-
-    test "public role sees only site annotations, not personal ones", %{conn: conn} do
-      public_site = new_site(public: true)
-      site_owner = new_user()
-      insert(:annotation, site: public_site, owner: site_owner, type: :site, note: "site note")
-      insert(:annotation, site: public_site, owner: site_owner, type: :personal, note: "private")
-
-      conn =
-        get(
-          conn,
-          "/api/#{public_site.domain}/annotations?date_range=day&relative_date=2026-01-04"
-        )
-
-      assert [result] = json_response(conn, 200)
-      assert result["type"] == "site"
-      assert result["note"] == "site note"
-    end
-
-    test "public role response has null owner info", %{conn: conn} do
-      public_site = new_site(public: true)
-      site_owner = new_user()
-      insert(:annotation, site: public_site, owner: site_owner, type: :site, note: "deploy")
-
-      conn =
-        get(
-          conn,
-          "/api/#{public_site.domain}/annotations?date_range=day&relative_date=2026-01-04"
-        )
-
-      assert [result] = json_response(conn, 200)
-      assert result["owner_id"] == nil
-      assert result["owner_name"] == nil
-    end
-
-    test "authenticated viewer sees their own personal annotations and all site annotations",
-         %{conn: conn, user: user} do
-      site = new_site()
-      other_user = new_user()
-      add_guest(site, user: user, role: :viewer)
-      insert(:annotation, site: site, owner: user, type: :personal, note: "mine")
-      insert(:annotation, site: site, owner: other_user, type: :personal, note: "not mine")
-      insert(:annotation, site: site, owner: other_user, type: :site, note: "shared")
-
-      conn = get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-01-04")
-
-      assert results = json_response(conn, 200)
-      assert length(results) == 2
-      notes = Enum.map(results, & &1["note"])
-      assert "mine" in notes
-      assert "shared" in notes
-      refute "not mine" in notes
-    end
-
-    test "authenticated owner response includes owner info", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-      insert(:annotation, site: site, owner: user, type: :site, note: "deploy")
-
-      conn = get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-01-04")
-
-      assert [result] = json_response(conn, 200)
-      assert result["owner_id"] == user.id
-      assert result["owner_name"] == user.name
-    end
-
-    test "private site returns 404 for non-member", %{conn: conn} do
-      private_site = new_site()
-
-      conn =
-        get(
-          conn,
-          "/api/#{private_site.domain}/annotations?date_range=day&relative_date=2026-01-04"
-        )
-
-      assert json_response(conn, 404)
-    end
-  end
-
-  describe "GET /api/:domain/annotations - period filtering" do
+  describe "GET /api/:domain/annotations" do
     setup [:create_user, :log_in]
 
     test "returns 400 when date_range is missing", %{conn: conn, user: user} do
@@ -98,6 +19,109 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       conn = get(conn, "/api/#{site.domain}/annotations?date_range=banana")
 
       assert %{"error" => _} = json_response(conn, 400)
+    end
+
+    test "private site returns 404 for non-member", %{conn: conn} do
+      private_site = new_site()
+
+      conn =
+        get(
+          conn,
+          "/api/#{private_site.domain}/annotations?date_range=day&relative_date=2026-01-04"
+        )
+
+      assert json_response(conn, 404)
+    end
+
+    test "only site annotations are shown when viewing a public site, with owners info hidden",
+         %{conn: conn} do
+      site_owner = new_user()
+      public_site = new_site(public: true, owner: site_owner)
+      insert(:annotation, site: public_site, owner: site_owner, type: :site, note: "site note")
+      insert(:annotation, site: public_site, owner: site_owner, type: :personal, note: "private")
+
+      conn =
+        get(
+          conn,
+          "/api/#{public_site.domain}/annotations?date_range=day&relative_date=2026-01-04"
+        )
+
+      assert_matches [
+                       ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "note" => "site note",
+                         "type" => "site",
+                         "datetime" => "2026-01-04",
+                         "granularity" => "date",
+                         "owner_id" => nil,
+                         "owner_name" => nil,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       })
+                     ] = json_response(conn, 200)
+    end
+
+    test "personal annotations of the user and all site annotations are shown with annotation owner info when viewing their site, sorted by updated_at, ascending",
+         %{conn: conn, user: user} do
+      site = new_site()
+      other_user = new_user()
+      add_guest(site, user: user, role: :viewer)
+
+      insert(:annotation,
+        site: site,
+        owner: user,
+        type: :personal,
+        note: "mine",
+        inserted_at: ~U[2026-07-01 10:00:00Z],
+        updated_at: ~U[2026-07-01 10:00:00Z]
+      )
+
+      insert(:annotation,
+        site: site,
+        owner: other_user,
+        type: :personal,
+        note: "not mine",
+        inserted_at: ~U[2026-07-01 10:00:00Z],
+        updated_at: ~U[2026-07-01 11:00:00Z]
+      )
+
+      insert(:annotation,
+        site: site,
+        owner: other_user,
+        type: :site,
+        note: "shared",
+        inserted_at: ~U[2026-07-01 10:00:00Z],
+        updated_at: ~U[2026-07-01 12:00:00Z]
+      )
+
+      conn = get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-01-04")
+
+      results = json_response(conn, 200)
+
+      assert_matches [
+                       ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "note" => "shared",
+                         "type" => "site",
+                         "datetime" => "2026-01-04",
+                         "granularity" => "date",
+                         "owner_id" => ^other_user.id,
+                         "owner_name" => ^other_user.name,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }),
+                       ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "note" => "mine",
+                         "type" => "personal",
+                         "datetime" => "2026-01-04",
+                         "granularity" => "date",
+                         "owner_id" => ^user.id,
+                         "owner_name" => ^user.name,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       })
+                     ] = results
     end
 
     test "filters out annotations outside a 28d window", %{conn: conn, user: user} do
@@ -159,11 +183,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       assert Enum.map(results, & &1["note"]) == ["in range"]
     end
 
-    test "minute granularity is filtered against the UTC window of a day period",
+    test "filters minute granularity annotations to be within the UTC datetime range",
          %{conn: conn, user: user} do
-      # NY is UTC-4 in June (DST). Local 2026-06-28 -> UTC [04:00 2026-06-28, 03:59:59 2026-06-29].
-      # Using a past relative_date so :day builds the full local day window
-      # rather than [00:00, now], which would make the test time-of-day dependent.
+      # NY is UTC-4 in June (DST).
+      # Full day of 2026-06-28 -> [~U[2026-06-28 04:00:00Z], ~U[2026-06-29 03:59:59]].
       site = new_site(owner: user, timezone: "America/New_York")
 
       insert(:annotation,
@@ -193,13 +216,9 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       assert Enum.map(results, & &1["note"]) == ["in window"]
     end
 
-    test "date-granularity annotation for the dashboard's local date is included even though its UTC moment falls outside the UTC window",
+    test "filters date granularity annotations that are within the local date range",
          %{conn: conn, user: user} do
-      # Date-granularity annotations store UTC midnight of the intended local
-      # date, so the stored 2026-06-29T00:00:00Z is *outside* NY's UTC window
-      # for local 2026-06-29 ([04:00, next 03:59:59]). It must still be returned
-      # because its local date matches the dashboard's local date range.
-      site = new_site(owner: user, timezone: "America/New_York")
+      site = new_site(owner: user, timezone: "Asia/Tokyo")
 
       insert(:annotation,
         site: site,
@@ -207,47 +226,23 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         type: :personal,
         granularity: :date,
         datetime: ~U[2026-06-29 00:00:00Z],
-        note: "today date-annotation"
+        note: "in range"
       )
-
-      conn =
-        get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-06-29")
-
-      results = json_response(conn, 200)
-      assert Enum.map(results, & &1["note"]) == ["today date-annotation"]
-    end
-
-    test "returns both date and minute annotations when both fall inside the period",
-         %{conn: conn, user: user} do
-      site = new_site(owner: user)
 
       insert(:annotation,
         site: site,
         owner: user,
         type: :personal,
         granularity: :date,
-        datetime: ~U[2026-06-25 00:00:00Z],
-        note: "date"
-      )
-
-      insert(:annotation,
-        site: site,
-        owner: user,
-        type: :personal,
-        granularity: :minute,
-        datetime: ~U[2026-06-26 10:30:00Z],
-        note: "minute"
+        datetime: ~U[2026-06-30 00:00:00Z],
+        note: "out of range"
       )
 
       conn =
-        get(
-          conn,
-          "/api/#{site.domain}/annotations?date_range_start=2026-06-20&date_range_end=2026-06-29"
-        )
+        get(conn, "/api/#{site.domain}/annotations?date_range=7d&relative_date=2026-06-30")
 
       results = json_response(conn, 200)
-      notes = results |> Enum.map(& &1["note"]) |> Enum.sort()
-      assert notes == ["date", "minute"]
+      assert Enum.map(results, & &1["note"]) == ["in range"]
     end
 
     test "fetches annotations for realtime date_range", %{conn: conn, user: user} do
@@ -269,8 +264,150 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
     end
   end
 
-  describe "POST /api/:domain/annotations - datetime coercion" do
+  describe "POST /api/:domain/annotations" do
     setup [:create_user, :log_in, :create_site]
+
+    test "rejects missing note", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "type" => "personal",
+          "granularity" => "date",
+          "datetime" => "2026-01-04"
+        })
+
+      assert json_response(conn, 400) == %{"error" => "note can't be blank"}
+    end
+
+    test "rejects empty note", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => "",
+          "type" => "personal",
+          "granularity" => "date",
+          "datetime" => "2026-01-04"
+        })
+
+      assert json_response(conn, 400) == %{"error" => "note can't be blank"}
+    end
+
+    test "rejects note over 255 bytes", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => String.duplicate("a", 256),
+          "type" => "personal",
+          "granularity" => "date",
+          "datetime" => "2026-01-04"
+        })
+
+      assert json_response(conn, 400) == %{"error" => "note should be at most 255 byte(s)"}
+    end
+
+    test "rejects missing datetime", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => "feature released",
+          "type" => "personal",
+          "granularity" => "date"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "date must be supplied for chosen granularity"
+             }
+    end
+
+    test "rejects unknown granularity", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => "feature released",
+          "type" => "personal",
+          "granularity" => "hour",
+          "datetime" => "2026-01-04T00:00:00Z"
+        })
+
+      assert json_response(conn, 400) == %{"error" => "granularity is invalid"}
+    end
+
+    test "rejects missing granularity", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => "feature released",
+          "type" => "personal",
+          "datetime" => "2026-01-04T00:00:00Z"
+        })
+
+      assert json_response(conn, 400) == %{"error" => "granularity can't be blank"}
+    end
+
+    test "rejects unknown type as insufficient permissions", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/#{site.domain}/annotations", %{
+          "note" => "feature released",
+          "type" => "team",
+          "granularity" => "date",
+          "datetime" => "2026-01-04"
+        })
+
+      assert json_response(conn, 403) == %{
+               "error" => "Not enough permissions to create annotation"
+             }
+    end
+
+    for {params, error} <- [
+          {
+            %{"granularity" => "date", "datetime" => "2026-01-04T00:00:00Z"},
+            "date must be supplied for chosen granularity"
+          },
+          {
+            %{"granularity" => "date", "datetime" => "2026-01-04T00:00:00"},
+            "date must be supplied for chosen granularity"
+          },
+          {
+            %{"granularity" => "date", "date" => ""},
+            "date must be supplied for chosen granularity"
+          },
+          {
+            %{"granularity" => "date", "date" => "2026-1-4"},
+            "date is invalid"
+          },
+          {
+            %{"granularity" => "date", "date" => "2026-13-45"},
+            "date is invalid"
+          },
+          {
+            %{"granularity" => "date", "date" => "not-a-date"},
+            "date is invalid"
+          },
+          {
+            %{"granularity" => "minute", "datetime" => "2026-01-04"},
+            "datetime is invalid"
+          },
+          {
+            %{"granularity" => "minute", "datetime" => "not-a-datetime"},
+            "datetime is invalid"
+          },
+          {
+            %{"granularity" => "minute", "datetime" => ""},
+            "datetime must be supplied for chosen granularity"
+          },
+          {
+            %{"granularity" => "minute", "datetime" => "2026-13-45T14:30:00Z"},
+            "datetime is invalid"
+          }
+        ] do
+      test "rejects #{inspect(params)} with error #{error}", %{conn: conn, site: site} do
+        conn =
+          post(
+            conn,
+            "/api/#{site.domain}/annotations",
+            Map.merge(
+              %{"note" => "feature released", "type" => "personal"},
+              unquote(Macro.escape(params))
+            )
+          )
+
+        assert json_response(conn, 400) == %{"error" => unquote(error)}
+      end
+    end
 
     test "accepts bare date string when granularity is date",
          %{conn: conn, site: site} do
@@ -296,21 +433,6 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                      }) = response
     end
 
-    test "rejects full datetime string when granularity is date",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-01-04T00:00:00Z"
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "date must be supplied for chosen granularity"
-             }
-    end
-
     test "accepts full datetime string when granularity is minute",
          %{conn: conn, site: site} do
       # Site is Etc/UTC by default; UTC moment is returned as naive local time
@@ -325,118 +447,6 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
 
       assert response["datetime"] == "2026-01-04T14:32:00"
     end
-
-    test "rejects bare date string when granularity is minute",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "minute",
-          "datetime" => "2026-01-04"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
-    end
-
-    test "rejects invalid calendar date when granularity is date",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "date" => "2026-13-45"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "date is invalid"}
-    end
-
-    test "rejects non-date string when granularity is date",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "date" => "not-a-date"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "date is invalid"}
-    end
-
-    test "rejects non-datetime string when granularity is minute",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "minute",
-          "datetime" => "not-a-datetime"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
-    end
-
-    test "rejects empty datetime string when granularity is date",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "date" => ""
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "date must be supplied for chosen granularity"
-             }
-    end
-
-    test "rejects empty datetime string when granularity is minute",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "minute",
-          "datetime" => ""
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "datetime must be supplied for chosen granularity"
-             }
-    end
-
-    test "rejects date shorter than 10 characters when granularity is date",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "date" => "2026-1-4"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "date is invalid"}
-    end
-
-    test "rejects invalid calendar datetime when granularity is minute",
-         %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "minute",
-          "datetime" => "2026-13-45T14:30:00Z"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
-    end
-  end
-
-  describe "POST /api/:domain/annotations - naive local time coercion" do
-    setup [:create_user, :log_in]
 
     test "converts naive local time to UTC and returns it back as local time",
          %{conn: conn, user: user} do
@@ -454,23 +464,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         |> json_response(200)
 
       assert response["datetime"] == "2026-01-04T14:30:00"
-    end
 
-    test "rejects naive datetime when granularity is date",
-         %{conn: conn, user: user} do
-      site = new_site(owner: user, timezone: "America/New_York")
-
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-01-04T00:00:00"
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "date must be supplied for chosen granularity"
-             }
+      reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, response["id"])
+      assert reloaded.granularity == :minute
+      assert reloaded.datetime == ~U[2026-01-04 19:30:00Z]
     end
 
     test "UTC datetime string is stored as UTC and returned as site local time",
@@ -491,99 +488,8 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
     end
   end
 
-  describe "PATCH /api/:domain/annotations/:annotation_id - naive local time coercion" do
-    setup [:create_user, :log_in]
-
-    test "converts naive local time to UTC and returns it back as local time",
-         %{conn: conn, user: user} do
-      # America/New_York is UTC-4 in June (DST), so input and output are the same
-      site = new_site(owner: user, timezone: "America/New_York")
-
-      annotation =
-        insert(:annotation,
-          site: site,
-          owner: user,
-          type: :personal,
-          granularity: :minute,
-          datetime: ~U[2026-01-01 00:00:00Z]
-        )
-
-      response =
-        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
-          "granularity" => "minute",
-          "datetime" => "2026-06-15T10:00:00"
-        })
-        |> json_response(200)
-
-      assert response["datetime"] == "2026-06-15T10:00:00"
-    end
-  end
-
-  describe "PATCH /api/:domain/annotations/:annotation_id - datetime coercion" do
+  describe "PATCH /api/:domain/annotations/:annotation_id" do
     setup [:create_user, :log_in, :create_site]
-
-    test "accepts bare date string when granularity is date",
-         %{conn: conn, site: site, user: user} do
-      annotation =
-        insert(:annotation,
-          site: site,
-          owner: user,
-          type: :personal,
-          granularity: :date,
-          datetime: ~U[2026-01-01 00:00:00Z]
-        )
-
-      response =
-        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
-          "granularity" => "date",
-          "date" => "2026-06-15"
-        })
-        |> json_response(200)
-
-      assert response["datetime"] == "2026-06-15"
-    end
-
-    test "rejects bare date string when granularity is minute",
-         %{conn: conn, site: site, user: user} do
-      annotation =
-        insert(:annotation,
-          site: site,
-          owner: user,
-          type: :personal,
-          granularity: :minute,
-          datetime: ~U[2026-01-01 10:00:00Z]
-        )
-
-      conn =
-        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
-          "granularity" => "minute",
-          "datetime" => "2026-06-15"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "datetime is invalid"}
-    end
-
-    test "rejects full datetime string when granularity switched to date",
-         %{conn: conn, site: site, user: user} do
-      annotation =
-        insert(:annotation,
-          site: site,
-          owner: user,
-          type: :personal,
-          granularity: :minute,
-          datetime: ~U[2026-01-01 10:00:00Z]
-        )
-
-      conn =
-        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
-          "granularity" => "date",
-          "datetime" => "2026-06-15T10:00:00Z"
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "date must be supplied for chosen granularity"
-             }
-    end
 
     test "rejects granularity change from date to minute without a new datetime",
          %{conn: conn, site: site, user: user} do
@@ -686,107 +592,116 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       assert reloaded.granularity == :date
       assert reloaded.datetime == ~U[2026-06-20 00:00:00Z]
     end
-  end
 
-  describe "POST /api/:domain/annotations - required fields and length" do
-    setup [:create_user, :log_in, :create_site]
+    test "converts naive local time to UTC and returns it back as local time",
+         %{conn: conn, user: user} do
+      # America/New_York is UTC-4 in June (DST), so input and output are the same
+      site = new_site(owner: user, timezone: "America/New_York")
 
-    test "rejects missing note", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-01-04"
-        })
+      annotation =
+        insert(:annotation,
+          site: site,
+          owner: user,
+          type: :personal,
+          granularity: :minute,
+          datetime: ~U[2026-01-01 00:00:00Z]
+        )
 
-      assert json_response(conn, 400) == %{"error" => "note can't be blank"}
-    end
-
-    test "rejects empty note", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "",
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-01-04"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "note can't be blank"}
-    end
-
-    test "rejects note over 255 bytes", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => String.duplicate("a", 256),
-          "type" => "personal",
-          "granularity" => "date",
-          "datetime" => "2026-01-04"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "note should be at most 255 byte(s)"}
-    end
-
-    test "accepts note of exactly 255 bytes", %{conn: conn, site: site} do
       response =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => String.duplicate("a", 255),
-          "type" => "personal",
-          "granularity" => "date",
-          "date" => "2026-01-04"
+        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
+          "granularity" => "minute",
+          "datetime" => "2026-06-15T10:00:00"
         })
         |> json_response(200)
 
-      assert response["note"] == String.duplicate("a", 255)
+      assert response["datetime"] == "2026-06-15T10:00:00"
+
+      reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, annotation.id)
+      assert reloaded.granularity == :minute
+      assert reloaded.datetime == ~U[2026-06-15 14:00:00Z]
     end
 
-    test "rejects missing datetime", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "date"
-        })
+    test "accepts bare date string when granularity is date",
+         %{conn: conn, site: site, user: user} do
+      annotation =
+        insert(:annotation,
+          site: site,
+          owner: user,
+          type: :personal,
+          granularity: :date,
+          datetime: ~U[2026-01-01 00:00:00Z]
+        )
 
-      assert json_response(conn, 400) == %{
-               "error" => "date must be supplied for chosen granularity"
-             }
-    end
-
-    test "rejects unknown granularity", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "hour",
-          "datetime" => "2026-01-04T00:00:00Z"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "granularity is invalid"}
-    end
-
-    test "rejects missing granularity", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "datetime" => "2026-01-04T00:00:00Z"
-        })
-
-      assert json_response(conn, 400) == %{"error" => "granularity can't be blank"}
-    end
-
-    test "rejects unknown type as insufficient permissions", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "team",
+      response =
+        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
           "granularity" => "date",
-          "datetime" => "2026-01-04"
+          "date" => "2026-06-15"
         })
+        |> json_response(200)
 
-      assert json_response(conn, 403) == %{
-               "error" => "Not enough permissions to create annotation"
-             }
+      assert response["datetime"] == "2026-06-15"
+    end
+
+    for {casename, note_has_owner?} <- [
+          {"dangling site note", false},
+          {"site note left by other user", true}
+        ] do
+      test "users with site note permissions can edit a #{casename}, becoming its new owner",
+           %{
+             conn: conn,
+             site: site,
+             user: user
+           } do
+        note_owner =
+          if(unquote(note_has_owner?),
+            do:
+              site.team
+              |> add_member(
+                user: new_user(name: "other user"),
+                role: :editor
+              ),
+            else: nil
+          )
+
+        annotation =
+          insert(:annotation,
+            owner: note_owner,
+            site: site,
+            type: :site,
+            granularity: :date,
+            datetime: "2026-06-01T00:00:00Z"
+          )
+
+        response =
+          patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
+            "note" => "updated"
+          })
+          |> json_response(200)
+
+        assert_matches ^strict_map(%{
+                         "id" => ^annotation.id,
+                         "note" => "updated",
+                         "type" =>
+                           ^any(
+                             :string,
+                             ~r/#{annotation.type}/
+                           ),
+                         "granularity" =>
+                           ^any(
+                             :string,
+                             ~r/#{annotation.granularity}/
+                           ),
+                         "datetime" => "2026-06-01",
+                         "owner_id" => ^user.id,
+                         "owner_name" => ^user.name,
+                         "inserted_at" =>
+                           ^any(
+                             :string,
+                             ~r/#{Calendar.strftime(annotation.inserted_at, "%Y-%m-%dT%H:%M:%S")}/
+                           ),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }) = response
+      end
     end
   end
 end
