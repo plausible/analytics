@@ -121,7 +121,15 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    get_for_user!(user, site.domain)
+    get_for_user!(user, site.domain,
+      roles: [
+        :owner,
+        :admin,
+        :editor,
+        :viewer,
+        :billing
+      ]
+    )
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -415,7 +423,6 @@ defmodule Plausible.Sites do
 
   def create_shared_link(site, name, opts \\ []) do
     password = Keyword.get(opts, :password)
-    segment_id = Keyword.get(opts, :segment_id)
 
     site = Plausible.Repo.preload(site, :team)
     skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
@@ -423,12 +430,38 @@ defmodule Plausible.Sites do
     if not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok do
       {:error, :upgrade_required}
     else
+      segment_id = fetch_segment_id_for_site(Keyword.get(opts, :segment_id), site)
+
       %SharedLink{site_id: site.id, slug: Nanoid.generate()}
       |> SharedLink.changeset(
-        %{name: name, password: password, segment_id: segment_id},
+        %{name: name, password: password},
         Keyword.take(opts, [:skip_special_name_check?])
       )
+      |> Ecto.Changeset.put_change(:segment_id, segment_id)
       |> Repo.insert()
+    end
+  end
+
+  def update_shared_link(shared_link, site, params) do
+    # Set segment_id via put_change, not cast, to enforce site-scoped ownership.
+    segment_id = fetch_segment_id_for_site(params["segment_id"], site)
+    link_params = Map.drop(params, ["segment_id"])
+
+    shared_link
+    |> SharedLink.changeset(link_params)
+    |> Ecto.Changeset.put_change(:segment_id, segment_id)
+    |> Repo.update()
+  end
+
+  defp fetch_segment_id_for_site(id, _site) when id in [nil, ""], do: nil
+
+  defp fetch_segment_id_for_site(id, site) do
+    with {int, ""} when int > 0 <- Integer.parse(to_string(id)),
+         %{id: segment_id} <-
+           Repo.get_by(Plausible.Segments.Segment, id: int, site_id: site.id) do
+      segment_id
+    else
+      _ -> nil
     end
   end
 

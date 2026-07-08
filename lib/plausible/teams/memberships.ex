@@ -167,6 +167,7 @@ defmodule Plausible.Teams.Memberships do
             Repo.delete!(guest_membership)
             prune_guests(guest_membership.team_membership.team)
             Plausible.Segments.after_user_removed_from_site(site, user)
+            Plausible.Annotations.after_user_removed_from_site(site, user)
           end)
 
         send_site_member_removed_email(guest_membership)

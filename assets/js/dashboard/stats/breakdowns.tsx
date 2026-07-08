@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef } from 'react'
 import { SortDirection } from '../../types/query-api'
 import type { QueryResultRow, QueryResultQuery } from '../api'
 import { Metric } from './metrics'
@@ -10,17 +10,32 @@ import {
   addFilter,
   ApiFilter,
   NonTimeDimension,
+  OrderByEntry,
   StatsQuery
 } from '../stats-query'
 import { Filter } from '../dashboard-state'
 import classNames from 'classnames'
 import { DIRECT_NONE } from './sources'
+import { StatsReportQueryKey } from '../hooks/use-query-api'
 
 export type SharedBreakdownReportProps = {
   dimensionLabel: string
   dimensions: NonTimeDimension[]
   metrics: Metric[]
   alwaysOnFilters?: ApiFilter[]
+  getStatsQuery?: (queryKey: StatsReportQueryKey) => StatsQuery
+  /**
+   * When true, `percentage` is shown inline inside the Visitors
+   * cell rather than as its own column. Set to false for reports that want
+   * percentage as a separate breakdown column (e.g. custom properties).
+   */
+  bundlePercentageWithVisitors?: boolean
+  /**
+   * Metrics that should be dropped from the rendered columns when every row
+   * (across all loaded pages) has null for that metric. Used by goal breakdowns
+   * to hide revenue columns when the current rows have no revenue data.
+   */
+  hideMetricsIfAllNull?: Metric[]
 }
 
 export type ColumnConfiguration<T> = {
@@ -37,6 +52,8 @@ export type ColumnConfiguration<T> = {
   width?: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+  /** Hides the column on mobile (below md breakpoint). */
+  hideOnMobile?: boolean
 }
 
 export type GetFilterInfo = (
@@ -213,6 +230,14 @@ export function extractMetricValue(
   return { metricIndex, value, comparison }
 }
 
+const CANNOT_ORDER_BY_DIMENSIONS = ['event:goal']
+
+export function dimensionOrderBy(dimensions: NonTimeDimension[]) {
+  return dimensions
+    .filter((dim) => !CANNOT_ORDER_BY_DIMENSIONS.includes(dim))
+    .map((dim): OrderByEntry => [dim, 'asc'])
+}
+
 export function addDimensionSearchFilter(
   statsQuery: StatsQuery,
   dimension: string,
@@ -224,4 +249,21 @@ export function addDimensionSearchFilter(
     [search],
     { case_sensitive: false }
   ] as ApiFilter)
+}
+
+export function useColumnsHiddenForAllNull(
+  rows: QueryResultRow[] | null | undefined,
+  query: QueryResultQuery | null | undefined,
+  hideMetricsIfAllNull: Metric[] | undefined
+): Set<Metric> {
+  return useMemo(() => {
+    const hidden = new Set<Metric>()
+    if (!hideMetricsIfAllNull || !rows?.length || !query) return hidden
+    for (const metric of hideMetricsIfAllNull) {
+      const idx = query.metrics.indexOf(metric)
+      if (idx === -1) continue
+      if (rows.every((row) => row.metrics[idx] == null)) hidden.add(metric)
+    }
+    return hidden
+  }, [rows, query, hideMetricsIfAllNull])
 }

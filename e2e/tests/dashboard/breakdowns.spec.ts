@@ -55,7 +55,7 @@ test('sources breakdown', async ({ page, request }) => {
 
   await test.step('sources tab', async () => {
     const sourcesTabButton = tabButton(report, 'Sources')
-    await sourcesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(sourcesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Source', 'Visitors'])
@@ -79,7 +79,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top sources' })
+      modal(page).getByRole('heading', { name: 'Sources' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -213,7 +213,7 @@ test('sources breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top acquisition channels' })
+      modal(page).getByRole('heading', { name: 'Acquisition channels' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -462,7 +462,7 @@ test('sources breakdown - search terms failure modes', async ({
       waitUntil: 'commit'
     })
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(report.getByText('No data yet')).toBeVisible()
@@ -476,7 +476,7 @@ test('sources breakdown - search terms failure modes', async ({
       }
     )
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(
@@ -496,7 +496,7 @@ test('sources breakdown - search terms failure modes', async ({
       }
     )
 
-    await searchTermsTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(searchTermsTabButton).toHaveAttribute('data-active', 'true')
 
     await expect(
@@ -528,7 +528,7 @@ test('pages breakdown', async ({ page, request }) => {
 
   await test.step('top pages tab', async () => {
     const pagesTabButton = tabButton(report, 'Top pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Visitors'])
@@ -664,7 +664,7 @@ test('pages breakdown modal', async ({ page, request }) => {
   const report = page.getByTestId('report-pages')
 
   const pagesTabButton = tabButton(report, 'Top pages')
-  await pagesTabButton.scrollIntoViewIfNeeded()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
   await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
   await detailsLink(report).click()
@@ -824,7 +824,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Conversions', 'CR'])
@@ -838,7 +838,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top pages' })
+      modal(page).getByRole('heading', { name: 'Conversion pages' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -861,7 +861,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     })
 
     const pagesTabButton = tabButton(report, 'Conversion pages')
-    await pagesTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(pagesTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Page', 'Conversions', 'CR'])
@@ -875,7 +875,7 @@ test('pages breakdown with a pageview goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top pages' })
+      modal(page).getByRole('heading', { name: 'Conversion pages' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -895,6 +895,144 @@ test('pages breakdown with a pageview goal filter applied', async ({
       '50%',
       '€23.0',
       '€23.0'
+    ])
+
+    await closeModalButton(page).click()
+  })
+})
+
+test('pages breakdown - URL mode', async ({ page, request }) => {
+  const { domain } = await setupSite({ page, request })
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 1,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 1,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 2,
+        name: 'pageview',
+        hostname: 'blog.example.com',
+        pathname: '/post'
+      },
+      {
+        user_id: 3,
+        name: 'pageview',
+        hostname: 'docs.example.com',
+        pathname: '/api'
+      }
+    ]
+  })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+  const report = page.getByTestId('report-pages')
+
+  await test.step('switch to URL mode', async () => {
+    await report.getByRole('button', { name: 'Breakdown options' }).click()
+    await page.getByRole('button', { name: 'URL' }).click()
+  })
+
+  await test.step('top pages in URL mode', async () => {
+    await expect(tabButton(report, 'Top pages')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    await expectHeaders(report, ['URL', 'Visitors'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+    await expectMetricValues(report, 'blog.example.com/post', ['2', '66.7%'])
+    await expectMetricValues(report, 'docs.example.com/api', ['1', '33.3%'])
+  })
+
+  await test.step('clicking a URL mode row applies hostname and page filters', async () => {
+    await rowLink(report, 'blog.example.com/post').click()
+
+    await expect(
+      page.getByRole('button', {
+        name: 'Remove filter: Hostname is blog.example.com'
+      })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Remove filter: Page is /post' })
+    ).toBeVisible()
+
+    await page
+      .getByRole('button', {
+        name: 'Remove filter: Hostname is blog.example.com'
+      })
+      .click()
+    await page
+      .getByRole('button', { name: 'Remove filter: Page is /post' })
+      .click()
+  })
+
+  await test.step('entry pages in URL mode', async () => {
+    await tabButton(report, 'Entry pages').click()
+
+    await expectHeaders(report, ['URL', 'Unique entrances'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+    await expectMetricValues(report, 'blog.example.com/post', ['2', '66.7%'])
+    await expectMetricValues(report, 'docs.example.com/api', ['1', '33.3%'])
+  })
+
+  await test.step('entry pages modal in URL mode', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Entry pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'URL',
+      /Unique entrances/,
+      /Total entrances/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
+
+    await expectRows(modal(page), [
+      'blog.example.com/post',
+      'docs.example.com/api'
+    ])
+
+    await closeModalButton(page).click()
+  })
+
+  await test.step('exit pages in URL mode', async () => {
+    await tabButton(report, 'Exit pages').click()
+
+    await expectHeaders(report, ['URL', 'Unique exits'])
+    await expectRows(report, ['blog.example.com/post', 'docs.example.com/api'])
+  })
+
+  await test.step('exit pages modal in URL mode', async () => {
+    await detailsLink(report).click()
+
+    await expect(
+      modal(page).getByRole('heading', { name: 'Exit pages' })
+    ).toBeVisible()
+
+    await expectHeaders(modal(page), [
+      'URL',
+      /Unique exits/,
+      /Total exits/,
+      /Exit rate/
+    ])
+
+    await expectRows(modal(page), [
+      'blog.example.com/post',
+      'docs.example.com/api'
     ])
 
     await closeModalButton(page).click()
@@ -939,7 +1077,7 @@ test('locations breakdown', async ({ page, request }) => {
 
   await test.step('map tab', async () => {
     const mapTabButton = tabButton(report, 'Map')
-    await mapTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(mapTabButton).toHaveAttribute('data-active', 'true')
 
     // NOTE: We only check that the map is there
@@ -963,14 +1101,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top countries' })
+      modal(page).getByRole('heading', { name: 'Countries' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['Country', /Visitors/])
+    await expectHeaders(modal(page), [
+      'Country',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Estonia/, /Poland/])
 
-    await expectMetricValues(modal(page), 'Estonia', ['2'])
+    await expectMetricValues(modal(page), 'Estonia', ['2', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1013,14 +1156,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top regions' })
+      modal(page).getByRole('heading', { name: 'Regions' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['Region', /Visitors/])
+    await expectHeaders(modal(page), [
+      'Region',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Harjumaa/, /Mazovia/, /Tartumaa/])
 
-    await expectMetricValues(modal(page), 'Harjumaa', ['1'])
+    await expectMetricValues(modal(page), 'Harjumaa', ['1', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1063,14 +1211,19 @@ test('locations breakdown', async ({ page, request }) => {
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top cities' })
+      modal(page).getByRole('heading', { name: 'Cities' })
     ).toBeVisible()
 
-    await expectHeaders(modal(page), ['City', /Visitors/])
+    await expectHeaders(modal(page), [
+      'City',
+      /Visitors/,
+      /Bounce rate/,
+      /Visit duration/
+    ])
 
     await expectRows(modal(page), [/Tallinn/, /Tartu/, /Warsaw/])
 
-    await expectMetricValues(modal(page), 'Tartu', ['1'])
+    await expectMetricValues(modal(page), 'Tartu', ['1', '100%', '0s'])
 
     await expect(searchInput(modal(page))).toBeVisible()
 
@@ -1147,6 +1300,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
 
   await test.step('countries report shows conversions for revenue goal', async () => {
     await tabButton(report, 'Countries').click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
     await expectHeaders(report, ['Country', 'Conversions', 'CR'])
 
@@ -1160,7 +1314,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top countries' })
+      modal(page).getByRole('heading', { name: 'Countries' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1206,7 +1360,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top regions' })
+      modal(page).getByRole('heading', { name: 'Regions' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1245,7 +1399,7 @@ test('locations breakdown with a revenue goal filter applied', async ({
     await detailsLink(report).click()
 
     await expect(
-      modal(page).getByRole('heading', { name: 'Top cities' })
+      modal(page).getByRole('heading', { name: 'Cities' })
     ).toBeVisible()
 
     await expectHeaders(modal(page), [
@@ -1312,7 +1466,7 @@ test('devices breakdown', async ({ page, request }) => {
   const browsersTabButton = tabButton(report, 'Browsers')
 
   await test.step('browsers tab', async () => {
-    await browsersTabButton.scrollIntoViewIfNeeded()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await expect(browsersTabButton).toHaveAttribute('data-active', 'true')
 
     await expectHeaders(report, ['Browser', 'Visitors'])
@@ -1558,6 +1712,7 @@ test('devices breakdown with a revenue goal filter applied', async ({
 
   await test.step('browsers report shows conversions for revenue goal', async () => {
     await tabButton(report, 'Browsers').click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
     await expectHeaders(report, ['Browser', 'Conversions', 'CR'])
 

@@ -74,6 +74,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.AuthorizeSiteAccess
     plug PlausibleWeb.Plugs.NoRobots
+    plug PlausibleWeb.Plugs.InternalStatsApiVersion
   end
 
   pipeline :docs_stats_api do
@@ -175,7 +176,6 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
-        post "/enable-dashboard-csv-export-v2", E2EController, :enable_dashboard_csv_export_v2
       end
     end
   end
@@ -285,30 +285,9 @@ defmodule PlausibleWeb.Router do
 
       scope private: %{allow_consolidated_views: true} do
         post "/:domain/query", StatsController, :query
-        post "/:domain/export", StatsController, :csv_export_v2
+        post "/:domain/export", StatsController, :csv_export
         get "/:domain/google-search-terms", StatsController, :google_search_terms
         get "/:domain/current-visitors", StatsController, :current_visitors
-        get "/:domain/sources", StatsController, :sources
-        get "/:domain/channels", StatsController, :channels
-        get "/:domain/utm_mediums", StatsController, :utm_mediums
-        get "/:domain/utm_sources", StatsController, :utm_sources
-        get "/:domain/utm_campaigns", StatsController, :utm_campaigns
-        get "/:domain/utm_contents", StatsController, :utm_contents
-        get "/:domain/utm_terms", StatsController, :utm_terms
-        get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
-        get "/:domain/pages", StatsController, :pages
-        get "/:domain/entry-pages", StatsController, :entry_pages
-        get "/:domain/exit-pages", StatsController, :exit_pages
-        get "/:domain/countries", StatsController, :countries
-        get "/:domain/regions", StatsController, :regions
-        get "/:domain/cities", StatsController, :cities
-        get "/:domain/browsers", StatsController, :browsers
-        get "/:domain/browser-versions", StatsController, :browser_versions
-        get "/:domain/operating-systems", StatsController, :operating_systems
-        get "/:domain/operating-system-versions", StatsController, :operating_system_versions
-        get "/:domain/screen-sizes", StatsController, :screen_sizes
-        get "/:domain/conversions", StatsController, :conversions
-        get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
         get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
 
         get "/:domain/suggestions/custom-prop-values/:prop_key",
@@ -323,6 +302,14 @@ defmodule PlausibleWeb.Router do
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
       get "/:segment_id/shared-links", SegmentsController, :get_related_shared_links
+    end
+
+    scope "/:domain/annotations", PlausibleWeb.Api.Internal,
+      private: %{allow_consolidated_views: true} do
+      get "/", AnnotationsController, :index
+      post "/", AnnotationsController, :create
+      patch "/:annotation_id", AnnotationsController, :update
+      delete "/:annotation_id", AnnotationsController, :delete
     end
   end
 
@@ -717,7 +704,6 @@ defmodule PlausibleWeb.Router do
 
       put "/:domain/settings", SiteController, :update_settings
 
-      get "/:domain/export", StatsController, :csv_export
       get "/:domain", StatsController, :stats
       get "/:domain/*path", StatsController, :stats
     end

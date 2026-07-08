@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Pages report can now be broken down by URL (hostname + path) in addition to path only
+- New "AI Assistants" acquisition channel + improved recognized sources database
 - Allow querying revenue metrics (`total_revenue`, `average_revenue`) with visit dimensions in Stats API v2
 - Allow querying `views_per_visit` with a time dimension in Stats API
 - Add `bounce_rate` to page-filtered Top Stats even when imports are included, but render a metric warning about imported data not included in `bounce_rate` tooltip.
@@ -35,6 +37,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
