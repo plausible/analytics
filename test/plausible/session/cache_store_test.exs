@@ -294,6 +294,31 @@ defmodule Plausible.Session.CacheStoreTest do
     timestamp = DateTime.utc_now()
 
     event1 =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        timestamp: timestamp |> NaiveDateTime.shift(second: -10)
+      )
+
+    event2 = %{
+      event1
+      | timestamp: timestamp
+    }
+
+    CacheStore.on_event(event1, %{}, nil, buffer_insert: buffer)
+    CacheStore.on_event(event2, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[_negative_record, session]]})
+    assert session.is_bounce == false
+    assert session.duration == 10
+    assert session.pageviews == 2
+    assert session.events == 2
+    assert session.replay_session_id == 456
+  end
+
+  test "updates session counters for replayed event", %{buffer: buffer} do
+    timestamp = DateTime.utc_now()
+
+    event1 =
       build(:event, name: "pageview", timestamp: timestamp |> NaiveDateTime.shift(second: -10))
 
     event2 = %{
@@ -308,6 +333,32 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
+  end
+
+  test "treats replayed and normal events as belonging to distinct sessions even if user_id and site_id match",
+       %{buffer: buffer} do
+    timestamp = DateTime.utc_now()
+
+    event1 =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        timestamp: timestamp |> NaiveDateTime.shift(second: -10)
+      )
+
+    event2 = %{
+      event1
+      | replay_session_id: nil,
+        timestamp: timestamp
+    }
+
+    CacheStore.on_event(event1, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[session1]]})
+    CacheStore.on_event(event2, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[session2]]})
+    assert session1.session_id != session2.session_id
+    assert session1.replay_session_id == 456
+    assert is_nil(session2.replay_session_id)
   end
 
   test "does not update session counters on engagement event", %{buffer: buffer} do
