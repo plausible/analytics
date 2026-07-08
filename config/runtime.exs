@@ -742,6 +742,12 @@ case mailer_adapter do
       hackney_opts: [recv_timeout: :timer.seconds(10)],
       api_key: get_var_from_path_or_env(config_dir, "SENDGRID_API_KEY")
 
+  "Bamboo.SMTPAdapter" ->
+    raise ArgumentError, """
+    Bamboo.SMTPAdapter is no longer supported as the adapter is no longer maintained.
+    Please switch to Bamboo.Mua instead.
+    """
+
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
