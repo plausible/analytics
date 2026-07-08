@@ -57,7 +57,7 @@ defmodule Plausible.Annotations.AnnotationTest do
               granularity: "date",
               date: unquote(Macro.escape(d))
             },
-            any_timezone()
+            Enum.random(Plausible.Timezones.zone_list())
           )
 
         assert changeset.valid?
@@ -104,9 +104,12 @@ defmodule Plausible.Annotations.AnnotationTest do
     end
 
     for {dt, expected, tz} <- [
-          {"2026-06-30T14:30:00Z", ~U[2026-06-30 14:30:00Z], any_timezone()},
-          {"2026-06-30T10:00:00-02:00", ~U[2026-06-30 12:00:00Z], any_timezone()},
-          {~U[2026-06-30 14:30:00Z], ~U[2026-06-30 14:30:00Z], any_timezone()},
+          {"2026-06-30T14:30:00Z", ~U[2026-06-30 14:30:00Z],
+           Enum.random(Plausible.Timezones.zone_list())},
+          {"2026-06-30T10:00:00-02:00", ~U[2026-06-30 12:00:00Z],
+           Enum.random(Plausible.Timezones.zone_list())},
+          {~U[2026-06-30 14:30:00Z], ~U[2026-06-30 14:30:00Z],
+           Enum.random(Plausible.Timezones.zone_list())},
           {"2026-06-30T14:30:00", ~U[2026-06-30 14:30:00Z], "Etc/UTC"},
           {"2026-06-30T14:30:00", ~U[2026-06-30 11:30:00Z], "Europe/Tallinn"}
         ] do
@@ -151,6 +154,4 @@ defmodule Plausible.Annotations.AnnotationTest do
       end
     end
   end
-
-  defp any_timezone(), do: Enum.random(Plausible.Timezones.zone_list())
 end
