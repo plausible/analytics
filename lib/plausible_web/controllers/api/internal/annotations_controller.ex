@@ -10,6 +10,8 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
   alias PlausibleWeb.Api.Helpers, as: H
 
+  plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:annotations])
+
   def index(conn, params) do
     user = conn.assigns.current_user
     site = conn.assigns.site
