@@ -6,17 +6,22 @@
     class="flex flex-col gap-y-6"
     onsubmit="document.getElementById('use-code-button').disabled = true"
   >
-    <.input
-      type="text"
-      field={f[:recovery_code]}
-      autocomplete="off"
-      autofocus="autofocus"
-      maxlength="10"
-      oninvalid="document.getElementById('use-code-button').disabled = false"
-      required="required"
-      placeholder="Recovery code"
-      mt?={false}
-    />
+    <div class="flex flex-col gap-y-2">
+      <.input
+        type="text"
+        field={f[:recovery_code]}
+        autocomplete="off"
+        autofocus="autofocus"
+        maxlength="10"
+        oninvalid="document.getElementById('use-code-button').disabled = false"
+        required="required"
+        placeholder="Recovery code"
+        mt?={false}
+      />
+      <p :if={@error} class="text-xs text-red-500 text-center">
+        {@error}
+      </p>
+    </div>
 
     <.button
       id="use-code-button"

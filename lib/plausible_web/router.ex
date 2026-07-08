@@ -419,13 +419,7 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
-    scope alias: Live,
-          assigns: %{
-            connect_live_socket: true,
-            hide_header?: true,
-            hide_footer?: true,
-            disable_global_notices?: true
-          } do
+    scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [PlausibleWeb.RequireLoggedOutPlug, :app_layout]
 
       live_session :auth, on_mount: PlausibleWeb.Live.AuthLayoutContext do

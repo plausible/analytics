@@ -325,7 +325,7 @@ defmodule PlausibleWeb.AuthController do
       |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->
-        Auth.log_failed_login_attempt("Incorrect password for #{email}")
+        Auth.log_failed_login_attempt("wrong password for #{email}")
 
         conn
         |> put_flash(:login_error, "Incorrect email or password. Please try again.")
@@ -508,9 +508,7 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
 
-          conn
-          |> put_flash(:error, "The provided code is invalid. Please try again")
-          |> render_verify_2fa()
+          render_verify_2fa(conn, "The provided code is invalid. Please try again")
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user, params["return_to"])
@@ -541,9 +539,10 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
 
-          conn
-          |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
-          |> render_verify_2fa_recovery_code()
+          render_verify_2fa_recovery_code(
+            conn,
+            "The provided recovery code is invalid. Please try another one"
+          )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
@@ -551,16 +550,18 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  defp render_verify_2fa(conn) do
+  defp render_verify_2fa(conn, error \\ nil) do
     render_auth_page(conn, "verify_2fa.html",
+      error: error,
       heading: "Enter your 2FA code",
       subtitle: "Open your authenticator app and enter the 6-digit code.",
       remember_2fa_days: TwoFactor.Session.remember_2fa_days()
     )
   end
 
-  defp render_verify_2fa_recovery_code(conn) do
+  defp render_verify_2fa_recovery_code(conn, error \\ nil) do
     render_auth_page(conn, "verify_2fa_recovery_code.html",
+      error: error,
       heading: "Use a recovery code",
       subtitle: "Enter one of your saved recovery codes to sign in."
     )

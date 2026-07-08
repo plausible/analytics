@@ -1858,10 +1858,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
 
-      assert html_response(conn, 200)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "The provided code is invalid"
+      assert html_response(conn, 200) =~ "The provided code is invalid"
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
@@ -2020,10 +2017,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
-      assert html_response(conn, 200)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "The provided recovery code is invalid"
+      assert html_response(conn, 200) =~ "The provided recovery code is invalid"
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do

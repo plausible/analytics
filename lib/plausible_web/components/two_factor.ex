@@ -26,18 +26,24 @@ defmodule PlausibleWeb.Components.TwoFactor do
   attr :class, :string, default: ""
   attr :show_button?, :boolean, default: true
   attr :autofocus?, :boolean, default: false
+  attr :error, :string, default: nil
 
   def verify_2fa_input(assigns) do
     assigns = assign(assigns, :field, assigns[:form][assigns[:field]])
 
     ~H"""
     <div class={[@class, "flex flex-col gap-y-6 items-center"]}>
-      <.otp_input
-        field={@field}
-        length={6}
-        oninvalid={@show_button? && "document.getElementById('#{@id}').disabled = false"}
-        autofocus={@autofocus? && "autofocus"}
-      />
+      <div class="flex flex-col gap-y-2 w-full">
+        <.otp_input
+          field={@field}
+          length={6}
+          oninvalid={@show_button? && "document.getElementById('#{@id}').disabled = false"}
+          autofocus={@autofocus? && "autofocus"}
+        />
+        <p :if={@error} class="text-xs text-red-500 text-center">
+          {@error}
+        </p>
+      </div>
       <.button
         :if={@show_button?}
         type="submit"

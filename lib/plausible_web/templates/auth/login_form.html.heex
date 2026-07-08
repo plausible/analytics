@@ -53,23 +53,21 @@
           New here? <.styled_link href="/register">Create your account</.styled_link>
         </p>
 
-        <%= if ee?() do %>
-          <%= on_ee do %>
-            <div class="flex items-center justify-center gap-x-1 text-sm text-gray-500 dark:text-gray-400">
-              <Heroicons.lock_closed class="size-3.5" />
-              <span>
-                Continue with
-                <.styled_link href={
-                  Routes.sso_path(@conn, :login_form,
-                    return_to: @conn.params["return_to"],
-                    prefer: "manual"
-                  )
-                }>
-                  SSO
-                </.styled_link>
-              </span>
-            </div>
-          <% end %>
+        <%= on_ee do %>
+          <div class="flex items-center justify-center gap-x-1 text-sm text-gray-500 dark:text-gray-400">
+            <Heroicons.lock_closed class="size-3.5" />
+            <span>
+              Continue with
+              <.styled_link href={
+                Routes.sso_path(@conn, :login_form,
+                  return_to: @conn.params["return_to"],
+                  prefer: "manual"
+                )
+              }>
+                SSO
+              </.styled_link>
+            </span>
+          </div>
         <% end %>
       </div>
     </div>
