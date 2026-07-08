@@ -220,3 +220,16 @@ export const getAnnotationGranularity = (
       return AnnotationGranularity.date
   }
 }
+
+export const getApiFormattedPayload = ({
+  granularity,
+  datetime,
+  ...payload
+}: AnnotationPayload) => {
+  switch (granularity) {
+    case AnnotationGranularity.date:
+      return { date: datetime, granularity, ...payload }
+    case AnnotationGranularity.minute:
+      return { datetime, granularity, ...payload }
+  }
+}

@@ -190,7 +190,9 @@ const AnnotationTypeSelector = ({
           ) : null,
         tooltipContent:
           siteOptionDisabledMessage !== null ? (
-            <AnnotationTypeDisabledMessage messageType={siteOptionDisabledMessage} />
+            <AnnotationTypeDisabledMessage
+              messageType={siteOptionDisabledMessage}
+            />
           ) : null
       }
     ]}

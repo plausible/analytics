@@ -320,7 +320,9 @@ const SegmentTypeSelector = ({
           ) : null,
         tooltipContent:
           siteOptionDisabledMessage !== null ? (
-            <SegmentTypeDisabledMessage messageType={siteOptionDisabledMessage} />
+            <SegmentTypeDisabledMessage
+              messageType={siteOptionDisabledMessage}
+            />
           ) : null
       }
     ]}

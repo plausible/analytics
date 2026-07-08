@@ -723,5 +723,35 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                        }) = response
       end
     end
+
+    test "owner on a plan without site_annotations can demote a site annotation to personal",
+         %{conn: conn, user: user} do
+      subscribe_to_starter_plan(user)
+      site = new_site(owner: user)
+      refute Plausible.Annotations.site_annotations_available?(site)
+
+      annotation =
+        insert(:annotation,
+          site: site,
+          owner: user,
+          type: :site,
+          granularity: :date,
+          datetime: ~U[2026-06-15 00:00:00Z]
+        )
+
+      response =
+        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
+          "type" => "personal",
+          "note" => "converted after downgrade"
+        })
+        |> json_response(200)
+
+      assert response["type"] == "personal"
+      assert response["note"] == "converted after downgrade"
+
+      reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, annotation.id)
+      assert reloaded.type == :personal
+      assert reloaded.note == "converted after downgrade"
+    end
   end
 end

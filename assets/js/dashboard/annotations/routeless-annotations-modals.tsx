@@ -9,7 +9,11 @@ import {
   DeleteAnnotationModal,
   UpdateAnnotationModal
 } from './annotations-modals'
-import { Annotation, AnnotationPayload } from './annotations'
+import {
+  Annotation,
+  AnnotationPayload,
+  getApiFormattedPayload
+} from './annotations'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { createDateRange } from '../stats-query'
 import { formatISO } from '../util/date'
@@ -88,7 +92,7 @@ export const RoutelessAnnotationModals = () => {
         `/api/${encodeURIComponent(site.domain)}/annotations`,
         {
           method: 'POST',
-          body: payload
+          body: getApiFormattedPayload(payload)
         }
       )
       return response
