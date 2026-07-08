@@ -53,9 +53,19 @@ defmodule Plausible.Annotations.Annotation do
   end
 
   def update_changeset(annotation, attrs, owner) do
-    annotation
-    |> changeset(attrs, annotation.site.timezone)
-    |> put_change(:owner_id, owner.id)
+    changeset =
+      annotation
+      |> changeset(attrs, annotation.site.timezone)
+
+    # Users that can edit site annotations can edit
+    # 1) dangling site annotations (owner_id: nil),
+    # 2) site annotations owned by other users,
+    # in both cases becoming the new owners.
+    case fetch_field!(changeset, :owner_id) do
+      nil -> changeset |> put_assoc(:owner, owner)
+      # This case works around Ecto's limitations in overwriting owner association
+      _ -> changeset |> put_change(:owner_id, owner.id)
+    end
   end
 
   def changeset(annotation, attrs, site_timezone) do
