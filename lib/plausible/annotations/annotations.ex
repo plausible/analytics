@@ -59,7 +59,7 @@ defmodule Plausible.Annotations do
           Repo.all(
             from(annotation in Annotation,
               inner_join: site in assoc(annotation, :site),
-              inner_join: owner in assoc(annotation, :owner),
+              left_join: owner in assoc(annotation, :owner),
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where:

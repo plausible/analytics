@@ -94,11 +94,31 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         updated_at: ~U[2026-07-01 12:00:00Z]
       )
 
+      insert(:annotation,
+        site: site,
+        owner: nil,
+        type: :site,
+        note: "dangling",
+        inserted_at: ~U[2026-07-01 10:00:00Z],
+        updated_at: ~U[2026-07-01 13:00:00Z]
+      )
+
       conn = get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-01-04")
 
       results = json_response(conn, 200)
 
       assert_matches [
+                       ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "note" => "dangling",
+                         "type" => "site",
+                         "datetime" => "2026-01-04",
+                         "granularity" => "date",
+                         "owner_id" => nil,
+                         "owner_name" => nil,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }),
                        ^strict_map(%{
                          "id" => ^any(:pos_integer),
                          "note" => "shared",
