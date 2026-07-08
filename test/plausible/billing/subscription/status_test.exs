@@ -47,9 +47,7 @@ defmodule Plausible.Billing.Subscription.StatusTest do
   # Workaround for type checker in Elixir 1.20+ being
   # too smart about literals passed to macros.
   defp subscription(nil) do
-    if :erlang.phash2(1, 1) == 0 do
-      nil
-    else
+    if :erlang.phash2(1, 1) != 0 do
       %Plausible.Billing.Subscription{}
     end
   end
@@ -57,8 +55,6 @@ defmodule Plausible.Billing.Subscription.StatusTest do
   defp subscription(status) do
     if :erlang.phash2(1, 1) == 0 do
       %Plausible.Billing.Subscription{status: status}
-    else
-      nil
     end
   end
 end
