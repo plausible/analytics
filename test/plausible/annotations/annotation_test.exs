@@ -85,8 +85,14 @@ defmodule Plausible.Annotations.AnnotationTest do
       end
     end
 
-    for dt <- ["2026-06-30", ~D[2026-07-01], "invalid"] do
-      test "rejects invalid :datetime, given #{dt}" do
+    for {dt, tz, message} <- [
+          {"2026-06-30", "Etc/UTC", "is invalid"},
+          {~D[2026-07-01], "Etc/UTC", "is invalid"},
+          {"invalid", "Etc/UTC", "is invalid"},
+          {"2026-06-30T14:30:00", "Invalid/Timezone",
+           "cannot be parsed for the site timezone \"Invalid/Timezone\""}
+        ] do
+      test "rejects invalid :datetime, given #{dt} for timezone #{tz}" do
         changeset =
           Annotation.changeset(
             %Annotation{},
@@ -96,10 +102,10 @@ defmodule Plausible.Annotations.AnnotationTest do
               granularity: "minute",
               datetime: unquote(Macro.escape(dt))
             },
-            "Etc/UTC"
+            unquote(tz)
           )
 
-        assert [datetime: {"is invalid", _}] = changeset.errors
+        assert [datetime: {unquote(message), _}] = changeset.errors
       end
     end
 

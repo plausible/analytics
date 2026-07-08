@@ -94,18 +94,29 @@ defmodule Plausible.Annotations.Annotation do
          dt when is_binary(dt) <- changeset.params["datetime"],
          {:error, _} <- DateTime.from_iso8601(dt),
          {:ok, naive_dt} <- NaiveDateTime.from_iso8601(dt) do
-      utc_dt =
-        case DateTime.from_naive(naive_dt, timezone) do
-          {:ok, local_dt} -> DateTime.shift_zone!(local_dt, "Etc/UTC")
-          {:ambiguous, first, _second} -> DateTime.shift_zone!(first, "Etc/UTC")
-          {:gap, _just_before, just_after} -> DateTime.shift_zone!(just_after, "Etc/UTC")
-        end
+      case DateTime.from_naive(naive_dt, timezone) do
+        {:ok, local_dt} ->
+          force_change(changeset, :datetime, to_utc(local_dt))
 
-      force_change(changeset, :datetime, utc_dt)
+        {:ambiguous, first, _second} ->
+          force_change(changeset, :datetime, to_utc(first))
+
+        {:gap, _just_before, just_after} ->
+          force_change(changeset, :datetime, to_utc(just_after))
+
+        {:error, _} ->
+          add_error(
+            changeset,
+            :datetime,
+            "cannot be parsed for the site timezone \"#{timezone}\""
+          )
+      end
     else
       _ -> changeset
     end
   end
+
+  defp to_utc(%DateTime{} = dt), do: DateTime.shift_zone!(dt, "Etc/UTC")
 
   defp coerce_datetime(%{valid?: true} = changeset) do
     granularity = get_change(changeset, :granularity)
