@@ -398,8 +398,9 @@ defmodule Plausible.Factory do
   def annotation_factory do
     %Plausible.Annotations.Annotation{
       note: "a test annotation",
-      type: :personal,
+      type: :site,
       datetime: ~U[2026-01-04 00:00:00Z],
+      date: ~D[2026-01-04],
       granularity: :date
     }
   end
