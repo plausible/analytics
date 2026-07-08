@@ -383,13 +383,8 @@ defmodule Plausible.Ingestion.Event do
 
   on_ee do
     defp put_salts(%__MODULE__{} = event, _context) do
-      if session_id = event.request.replay_session_id do
-        computed_salt =
-          :crypto.hash(:sha, [secret_key_base(), :binary.encode_unsigned(session_id)])
-          |> binary_part(0, 16)
-
-        salts = %{previous: nil, current: computed_salt}
-        %{event | salts: salts}
+      if session_id = event.clickhouse_event_attrs.replay_session_id do
+        %{event | salts: Plausible.Session.ComputedSalts.fetch(session_id)}
       else
         %{event | salts: Plausible.Session.Salts.fetch()}
       end
@@ -601,11 +596,4 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
-
-  on_ee do
-    defp secret_key_base() do
-      Application.get_env(:plausible, PlausibleWeb.Endpoint)
-      |> Keyword.fetch!(:secret_key_base)
-    end
-  end
 end
