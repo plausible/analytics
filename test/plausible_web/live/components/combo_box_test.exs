@@ -319,12 +319,12 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       defmodule SampleSuggest do
         def suggest("", []) do
-          :timer.sleep(500)
+          :timer.sleep(600)
           [{1, "One"}, {2, "Two"}, {3, "Three"}]
         end
 
         def suggest("Echo me", _options) do
-          :timer.sleep(500)
+          :timer.sleep(510)
           [{1, "Echo me"}]
         end
       end

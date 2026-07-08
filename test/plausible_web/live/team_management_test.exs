@@ -387,6 +387,84 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :owner)
     end
 
+    test "remove member items carry data-confirm for both self and others", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      assert attr_defined?(html, "##{:erlang.phash2(user.email)}-remove", "data-confirm")
+      assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
+    end
+
+    test "self-demotion role items carry data-confirm, others do not", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      # Second owner is required so the current user's own dropdown is not disabled
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      my_hash = :erlang.phash2(user.email)
+      other_hash = :erlang.phash2(member2.email)
+
+      for role <- ~w(editor billing viewer) do
+        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected data-confirm on self #{role} item"
+
+        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on other member #{role} item"
+      end
+
+      for role <- ~w(owner admin) do
+        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on self #{role} item"
+      end
+    end
+
+    test "removes self, redirecting away from team", %{conn: conn, team: team} do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      remove_member(lv, 1)
+
+      assert_redirect(lv, "/sites?__team=none")
+    end
+
+    test "demotes self to billing, redirecting to team general", %{
+      conn: conn,
+      team: team
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "billing")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
+    end
+
+    test "demotes self to viewer, redirecting to team general", %{
+      conn: conn,
+      team: team
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "viewer")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
+    end
+
     test "billing role is supported",
          %{
            conn: conn,
@@ -400,24 +478,17 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :billing)
     end
 
-    test "degrading owner to non-admin makes everything read-only", %{conn: conn, team: team} do
+    test "demotes self to editor, redirecting to team general", %{
+      conn: conn,
+      team: team
+    } do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "billing")
+      change_role(lv, 1, "editor")
 
-      html = render(lv)
-
-      options =
-        lv
-        |> render()
-        |> find("#{member_el()} a")
-
-      assert Enum.empty?(options)
-
-      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
-      assert attr_defined?(html, ~s|#invite-member|, "disabled")
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
   end
 
