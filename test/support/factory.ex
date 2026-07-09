@@ -113,7 +113,7 @@ defmodule Plausible.Factory do
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       hostname: hostname,
-      site_id: Enum.random(1000..10_000),
+      site_id: Enum.random(1_000_000_000..2_000_000_000),
       entry_page: "/",
       pageviews: 1,
       events: 1,
@@ -140,7 +140,7 @@ defmodule Plausible.Factory do
 
     event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
-      site_id: Enum.random(1000..10_000),
+      site_id: Enum.random(1_000_000_000..2_000_000_000),
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
