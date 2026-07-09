@@ -238,6 +238,26 @@ export async function populateStats({
   expect(response.ok()).toBeTruthy()
 }
 
+export async function subscribeToPlan({
+  request,
+  domain,
+  plan
+}: {
+  request: APIRequestContext
+  domain: string
+  plan: 'starter' | 'growth' | 'business'
+}) {
+  const response = await request.post('/e2e-tests/subscribe', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain, plan }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
 export async function addGoal({
   request,
   domain,

@@ -96,6 +96,28 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
     end
 
+    def subscribe(conn, %{"domain" => domain, "plan" => plan}) do
+      site =
+        Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+        |> Plausible.Repo.preload(:team)
+
+      # v5 plan IDs from priv/plans_v5.json — Starter has no site_annotations
+      # feature, Growth and Business do.
+      paddle_plan_id =
+        case plan do
+          "starter" -> "910413"
+          "growth" -> "910429"
+          "business" -> "910445"
+        end
+
+      Plausible.Factory.insert(:subscription,
+        team: site.team,
+        paddle_plan_id: paddle_plan_id
+      )
+
+      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
     defp get_goal(site, name) do
       Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
     end
