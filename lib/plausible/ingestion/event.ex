@@ -276,7 +276,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_basic_info(%__MODULE__{} = event, _context) do
-    update_event_attrs(event, %{
+    attrs = %{
       domain: event.domain,
       site_id: event.site.id,
       timestamp: event.request.timestamp,
@@ -285,9 +285,14 @@ defmodule Plausible.Ingestion.Event do
       pathname: event.request.pathname,
       scroll_depth: event.request.scroll_depth,
       engagement_time: event.request.engagement_time,
-      interactive?: event.request.interactive?,
-      replay_session_id: event.request.replay_session_id
-    })
+      interactive?: event.request.interactive?
+    }
+
+    on_ee do
+      attrs = Map.put(attrs, :replay_session_id, event.request.replay_session_id)
+    end
+
+    update_event_attrs(event, attrs)
   end
 
   defp put_source_info(%__MODULE__{} = event, _context) do

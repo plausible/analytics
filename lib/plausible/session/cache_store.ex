@@ -3,6 +3,8 @@ defmodule Plausible.Session.CacheStore do
   Session management on the basis of incoming events.
   """
 
+  use Plausible
+
   alias Plausible.Session.WriteBuffer
 
   @lock_timeout 1000
@@ -71,8 +73,12 @@ defmodule Plausible.Session.CacheStore do
 
   defp find_session(event, user_id) do
     key =
-      if event.replay_session_id do
-        {event.site_id, user_id, event.replay_session_id}
+      on_ee do
+        if event.replay_session_id do
+          {event.site_id, user_id, event.replay_session_id}
+        else
+          {event.site_id, user_id}
+        end
       else
         {event.site_id, user_id}
       end
@@ -92,8 +98,12 @@ defmodule Plausible.Session.CacheStore do
 
   defp update_session_cache(session) do
     key =
-      if session.replay_session_id do
-        {session.site_id, session.user_id, session.replay_session_id}
+      on_ee do
+        if session.replay_session_id do
+          {session.site_id, session.user_id, session.replay_session_id}
+        else
+          {session.site_id, session.user_id}
+        end
       else
         {session.site_id, session.user_id}
       end
@@ -139,7 +149,7 @@ defmodule Plausible.Session.CacheStore do
   end
 
   defp new_session_from_event(event, session_attributes) do
-    %Plausible.ClickhouseSessionV2{
+    new_session = %Plausible.ClickhouseSessionV2{
       sign: 1,
       session_id: Plausible.ClickhouseSessionV2.random_uint64(),
       hostname: if(event.name == "pageview", do: event.hostname, else: ""),
@@ -171,9 +181,14 @@ defmodule Plausible.Session.CacheStore do
       browser_version: Map.get(session_attributes, :browser_version),
       timestamp: event.timestamp,
       start: event.timestamp,
-      replay_session_id: event.replay_session_id,
       "entry_meta.key": Map.get(event, :"meta.key"),
       "entry_meta.value": Map.get(event, :"meta.value")
     }
+
+    on_ee do
+      %{new_session | replay_session_id: event.replay_session_id}
+    else
+      new_session
+    end
   end
 end

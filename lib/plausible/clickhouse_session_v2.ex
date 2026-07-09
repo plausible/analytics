@@ -3,6 +3,7 @@ defmodule Plausible.ClickhouseSessionV2 do
   Session schema for when NumericIDs migration is complete
   """
   use Ecto.Schema
+  use Plausible
 
   defmodule BoolUInt8 do
     @moduledoc """
@@ -76,8 +77,10 @@ defmodule Plausible.ClickhouseSessionV2 do
 
     field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
 
-    # Field used during event replay
-    field :replay_session_id, Ch, type: "UInt64"
+    on_ee do
+      # Field used during event replay
+      field :replay_session_id, Ch, type: "UInt64"
+    end
   end
 
   def random_uint64() do

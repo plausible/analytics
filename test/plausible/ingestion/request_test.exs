@@ -645,27 +645,32 @@ defmodule Plausible.Ingestion.RequestTest do
 
     request = request |> Jason.encode!() |> Jason.decode!()
 
-    assert Map.drop(request, ["timestamp"]) == %{
-             "domains" => ["dummy.site"],
-             "event_name" => "pageview",
-             "hash_mode" => 1,
-             "hostname" => "dummy.site",
-             "pathname" => "/pictures/index.html",
-             "props" => %{"abc" => "qwerty", "hello" => "world"},
-             "query_params" => %{"baz" => "bam", "foo" => "bar"},
-             "referrer" => "https://example.com",
-             "remote_ip" => "127.0.0.1",
-             "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
-             "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
-             "user_agent" => "Mozilla",
-             "ip_classification" => nil,
-             "scroll_depth" => nil,
-             "engagement_time" => nil,
-             "tracker_script_version" => 0,
-             "interactive?" => true,
-             "replay_id" => nil,
-             "replay_session_id" => nil
-           }
+    expected = %{
+      "domains" => ["dummy.site"],
+      "event_name" => "pageview",
+      "hash_mode" => 1,
+      "hostname" => "dummy.site",
+      "pathname" => "/pictures/index.html",
+      "props" => %{"abc" => "qwerty", "hello" => "world"},
+      "query_params" => %{"baz" => "bam", "foo" => "bar"},
+      "referrer" => "https://example.com",
+      "remote_ip" => "127.0.0.1",
+      "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
+      "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
+      "user_agent" => "Mozilla",
+      "ip_classification" => nil,
+      "scroll_depth" => nil,
+      "engagement_time" => nil,
+      "tracker_script_version" => 0,
+      "interactive?" => true,
+      "replay_id" => nil
+    }
+
+    on_ee do
+      expected = Map.put(expected, "replay_session_id", nil)
+    end
+
+    assert Map.drop(request, ["timestamp"]) == expected
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])
   end
