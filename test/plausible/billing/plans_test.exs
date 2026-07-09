@@ -135,11 +135,11 @@ defmodule Plausible.Billing.PlansTest do
         Plans.available_plans_for(subscription, with_prices: true, customer_ip: "127.0.0.1")
 
       assert Enum.find(growth_plans, fn plan ->
-               plan.monthly_cost && plan.monthly_product_id == @v2_plan_id
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
              end)
 
       assert Enum.find(business_plans, fn plan ->
-               plan.monthly_cost && plan.monthly_product_id == @v3_business_plan_id
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v3_business_plan_id
              end)
     end
 

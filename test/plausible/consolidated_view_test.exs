@@ -136,6 +136,9 @@ defmodule Plausible.ConsolidatedViewTest do
         refute ConsolidatedView.get(team)
       end
 
+      @tag :skip
+      test "returns {:error, :upgrade_required} when team ineligible for this feature"
+
       test "creates consolidated view with stats start dates of the oldest site", %{team: team} do
         team = Teams.complete_setup(team)
 

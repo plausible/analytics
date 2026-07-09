@@ -1,11 +1,7 @@
 defmodule Plausible.Release do
-  @moduledoc """
-  Utility functions used by release scripts for routine tasks, 
-  like migrations. 
-  """
-
   use Plausible
   use Plausible.Repo
+  require Logger
 
   @app :plausible
   @start_apps [
@@ -261,7 +257,7 @@ defmodule Plausible.Release do
   end
 
   defp run_rollbacks_for(repo, step) do
-    app = Keyword.get(repo.config(), :otp_app)
+    app = Keyword.get(repo.config, :otp_app)
     IO.puts("Running rollbacks for #{app} (STEP=#{step})")
 
     {:ok, _, _} =
@@ -285,7 +281,7 @@ defmodule Plausible.Release do
   defp seeds_path(repo), do: priv_path_for(repo, "seeds.exs")
 
   defp priv_path_for(repo, filename) do
-    app = Keyword.get(repo.config(), :otp_app)
+    app = Keyword.get(repo.config, :otp_app)
     IO.puts("App: #{app}")
     repo_underscore = repo |> Module.split() |> List.last() |> Macro.underscore()
     Path.join([priv_dir(app), repo_underscore, filename])

@@ -198,7 +198,7 @@ defmodule PlausibleWeb.FaviconTest do
         Plausible.HTTPClient.Mock,
         :get,
         fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
-          {:error, %Finch.TransportError{reason: :closed}}
+          {:error, %Mint.TransportError{reason: :closed}}
         end
       )
 

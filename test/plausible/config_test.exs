@@ -151,6 +151,33 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.SMTPAdapter" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.SMTPAdapter"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"},
+        {"SMTP_HOST_SSL_ENABLED", "true"},
+        {"SMTP_RETRIES", "3"},
+        {"SMTP_MX_LOOKUPS_ENABLED", "true"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.SMTPAdapter},
+               {:server, "localhost"},
+               {:hostname, "localhost"},
+               {:port, "2525"},
+               {:username, "neo"},
+               {:password, "one"},
+               {:tls, :if_available},
+               {:allowed_tls_versions, [:tlsv1, :"tlsv1.1", :"tlsv1.2"]},
+               {:ssl, true},
+               {:retries, "3"},
+               {:no_mx_lookups, true}
+             ]
+    end
+
     test "Bamboo.Mua (no config)" do
       env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
 

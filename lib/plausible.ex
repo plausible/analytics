@@ -22,17 +22,11 @@ defmodule Plausible do
 
   # :erlang.phash2(1, 1) == 0 tricks dialyzer as per:
   # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
-  # and also tricks elixir >1.18 type checker
+  # and also tricks elixir 1.18 type checker
 
   defmacro always(term) do
     quote do
-      case :erlang.phash2(1, 1) do
-        0 ->
-          unquote(term)
-
-        1 ->
-          not unquote(term)
-      end
+      :erlang.phash2(1, 1) == 0 && unquote(term)
     end
   end
 

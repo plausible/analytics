@@ -32,7 +32,7 @@ defmodule Plausible.Stats.Query do
             sql_join_type: :left,
             smear_session_metrics: false
 
-  alias OpenTelemetry.Tracer
+  require OpenTelemetry.Tracer, as: Tracer
 
   alias Plausible.Stats.{
     DateTimeRange,

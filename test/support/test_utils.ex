@@ -1,6 +1,4 @@
 defmodule Plausible.TestUtils do
-  @moduledoc false
-
   use Plausible.Repo
   use Plausible
   alias Plausible.Factory
@@ -279,7 +277,7 @@ defmodule Plausible.TestUtils do
 
     case Finch.request(healthcheck_req, Plausible.Finch) do
       {:ok, %Finch.Response{}} -> true
-      {:error, %Finch.TransportError{reason: :econnrefused}} -> false
+      {:error, %Mint.TransportError{reason: :econnrefused}} -> false
     end
   end
 

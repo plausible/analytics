@@ -2,6 +2,7 @@ defmodule Plausible.InstallationSupport.Detection.Diagnostics do
   @moduledoc """
   Module responsible for translating diagnostics to user-friendly errors and recommendations.
   """
+  require Logger
 
   # in this struct, nil means indeterminate
   defstruct v1_detected: nil,

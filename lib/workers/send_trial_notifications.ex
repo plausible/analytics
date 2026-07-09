@@ -1,7 +1,4 @@
 defmodule Plausible.Workers.SendTrialNotifications do
-  @moduledoc """
-  Job sending trial end notification emails.
-  """
   use Plausible.Repo
 
   use Oban.Worker,
@@ -9,6 +6,8 @@ defmodule Plausible.Workers.SendTrialNotifications do
     max_attempts: 1
 
   alias Plausible.Teams
+
+  require Logger
 
   @impl Oban.Worker
   def perform(_job) do
@@ -23,23 +22,30 @@ defmodule Plausible.Workers.SendTrialNotifications do
           order_by: t.inserted_at,
           preload: [owners: o, billing_members: bm]
       )
-      |> Enum.filter(&Teams.has_active_sites?/1)
 
     for team <- teams do
       recipients = team.owners ++ team.billing_members
 
       case Date.diff(team.trial_expiry_date, Date.utc_today()) do
         7 ->
-          send_one_week_reminder(recipients, team)
+          if Teams.has_active_sites?(team) do
+            send_one_week_reminder(recipients, team)
+          end
 
         1 ->
-          send_tomorrow_reminder(recipients, team)
+          if Teams.has_active_sites?(team) do
+            send_tomorrow_reminder(recipients, team)
+          end
 
         0 ->
-          send_today_reminder(recipients, team)
+          if Teams.has_active_sites?(team) do
+            send_today_reminder(recipients, team)
+          end
 
         -1 ->
-          send_over_reminder(recipients, team)
+          if Teams.has_active_sites?(team) do
+            send_over_reminder(recipients, team)
+          end
 
         _ ->
           nil

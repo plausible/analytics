@@ -1,6 +1,4 @@
 defmodule PlausibleWeb do
-  @moduledoc false
-
   use Plausible
 
   def live_view(opts \\ []) do
@@ -65,7 +63,7 @@ defmodule PlausibleWeb do
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [view_module: 1]
 
-      use Phoenix.Component, global_prefixes: ~w(x-)
+      use Phoenix.Component
 
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Live.Components.Form

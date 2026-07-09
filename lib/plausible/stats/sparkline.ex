@@ -6,6 +6,7 @@ defmodule Plausible.Stats.Sparkline do
 
   alias Plausible.{Site, Stats}
   alias Plausible.Stats.QueryBuilder
+  require Logger
 
   @spec parallel_overview([Site.t()], NaiveDateTime.t()) :: map()
   def parallel_overview(sites, now \\ NaiveDateTime.utc_now()) when is_list(sites) do

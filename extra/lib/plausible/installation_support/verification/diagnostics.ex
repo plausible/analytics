@@ -2,6 +2,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @moduledoc """
   Module responsible for translating diagnostics to user-friendly errors and recommendations.
   """
+  require Logger
 
   # In this struct
   # - the default nil value for each field means that the value is indeterminate (e.g. we didn't even get to the part where response_status is set)

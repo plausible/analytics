@@ -543,11 +543,7 @@ defmodule Plausible.Teams.Invitations do
     end
   else
     def ensure_can_take_ownership(_site, _team, _opts) do
-      if always(true) do
-        :ok
-      else
-        {:error, :no_plan}
-      end
+      always(:ok)
     end
   end
 

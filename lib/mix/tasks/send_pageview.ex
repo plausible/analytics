@@ -7,6 +7,7 @@ defmodule Mix.Tasks.SendPageview do
   """
 
   use Mix.Task
+  require Logger
 
   @default_host "http://localhost:8000"
   @default_ip_address "127.0.0.1"

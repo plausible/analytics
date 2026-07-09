@@ -6,7 +6,7 @@ defmodule Plausible.Billing do
   """
   use Plausible
   use Plausible.Repo
-
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Auth
   alias Plausible.Billing.Subscription
   alias Plausible.Teams

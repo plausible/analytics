@@ -1,10 +1,8 @@
 defmodule Plausible.Workers.ScheduleEmailReports do
-  @moduledoc """
-  Job scheduling dispatch of weekly and monthly email reports.
-  """
   use Plausible.Repo
   use Oban.Worker, queue: :schedule_email_reports
   alias Plausible.Workers.SendEmailReport
+  require Logger
 
   @impl Oban.Worker
   @doc """

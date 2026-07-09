@@ -21,7 +21,6 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
-- Removed `Bamboo.SMTPAdapter` from supported e-mail adapters; the library is no longer in active developments and does not compile under Elixir 1.20+
 
 ### Changed
 

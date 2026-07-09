@@ -11,6 +11,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   import Ecto.Query, only: [from: 2]
   import PlausibleWeb.Components.Generic
 
+  require Plausible.Billing.Subscription.Status
+
   def update(%{team: team}, socket) do
     usage = Teams.Billing.quota_usage(team, with_features: true)
 

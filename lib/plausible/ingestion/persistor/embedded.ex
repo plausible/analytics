@@ -5,6 +5,8 @@ defmodule Plausible.Ingestion.Persistor.Embedded do
 
   alias Plausible.ClickhouseEventV2
 
+  require Logger
+
   def persist_event(ingest_event, previous_user_id, opts) do
     event = ingest_event.clickhouse_event
     session_attrs = ingest_event.clickhouse_session_attrs

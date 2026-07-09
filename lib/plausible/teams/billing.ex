@@ -251,7 +251,7 @@ defmodule Plausible.Teams.Billing do
   else
     def team_member_limit(_team), do: :unlimited
 
-    def solo?(_team), do: always(false)
+    def solo?(_team), do: false
   end
 
   @doc """
@@ -316,9 +316,11 @@ defmodule Plausible.Teams.Billing do
         @monthly_pageview_limit_for_free_10k
 
       _any ->
-        Sentry.capture_message("Unknown monthly pageview limit for plan",
-          extra: %{paddle_plan_id: subscription.paddle_plan_id}
-        )
+        if subscription do
+          Sentry.capture_message("Unknown monthly pageview limit for plan",
+            extra: %{paddle_plan_id: subscription.paddle_plan_id}
+          )
+        end
 
         @monthly_pageview_limit_for_trials
     end

@@ -110,6 +110,14 @@ defmodule Plausible.AuditTest do
         changeset = %Ecto.Changeset{data: data, changes: changes}
         assert Encoder.encode(changeset) == %{before: %{foo: "bar"}, after: %{foo: "baz"}}
       end
+
+      test "raises if encoder is not derived for a struct" do
+        struct = %{__struct__: Foo, foo: 1, bar: 2}
+
+        assert_raise Protocol.UndefinedError, fn ->
+          Encoder.encode(struct)
+        end
+      end
     end
 
     describe "Audit.Entry" do

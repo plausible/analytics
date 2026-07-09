@@ -7,6 +7,8 @@ defmodule Plausible.Google.API do
   alias Plausible.Google.SearchConsole
   alias Plausible.Stats.Query
 
+  require Logger
+
   @search_console_scope URI.encode_www_form(
                           "email https://www.googleapis.com/auth/webmasters.readonly"
                         )

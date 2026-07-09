@@ -3,13 +3,11 @@ defmodule Plausible.Audit.EncoderError do
 end
 
 defprotocol Plausible.Audit.Encoder do
-  def encode(x)
-
-  def encode(x, opts)
+  def encode(x, opts \\ [])
 end
 
 defimpl Plausible.Audit.Encoder, for: Ecto.Changeset do
-  def encode(changeset, opts \\ []) do
+  def encode(changeset, opts) do
     changes =
       Enum.reduce(changeset.changes, %{}, fn {k, v}, acc ->
         Map.put(acc, k, Plausible.Audit.Encoder.encode(v, opts))
@@ -34,7 +32,7 @@ defimpl Plausible.Audit.Encoder, for: Ecto.Changeset do
 end
 
 defimpl Plausible.Audit.Encoder, for: Map do
-  def encode(x, opts \\ []) do
+  def encode(x, opts) do
     {allow_not_loaded, data} = Map.pop(x, :__allow_not_loaded__)
     raise_on_not_loaded? = Keyword.get(opts, :raise_on_not_loaded?, true)
 
@@ -55,16 +53,14 @@ defimpl Plausible.Audit.Encoder, for: Map do
 end
 
 defimpl Plausible.Audit.Encoder, for: [Integer, BitString, Float] do
-  def encode(x, _opts \\ []), do: x
+  def encode(x, _opts), do: x
 end
 
 defimpl Plausible.Audit.Encoder, for: [DateTime, Date, NaiveDateTime, Time] do
-  def encode(x, _opts \\ []), do: to_string(x)
+  def encode(x, _opts), do: to_string(x)
 end
 
 defimpl Plausible.Audit.Encoder, for: Atom do
-  def encode(x, opts \\ [])
-
   def encode(nil, _opts), do: nil
   def encode(true, _opts), do: true
   def encode(false, _opts), do: false
@@ -72,7 +68,7 @@ defimpl Plausible.Audit.Encoder, for: Atom do
 end
 
 defimpl Plausible.Audit.Encoder, for: List do
-  def encode(x, opts \\ []) do
+  def encode(x, opts) do
     Enum.map(x, &Plausible.Audit.Encoder.encode(&1, opts))
   end
 end
@@ -120,13 +116,12 @@ defimpl Plausible.Audit.Encoder, for: Any do
 
     quote do
       defimpl Plausible.Audit.Encoder, for: unquote(module) do
-        def encode(struct, opts \\ []) do
+        def encode(struct, opts) do
           Plausible.Audit.Encoder.encode(unquote(extractor), opts)
         end
       end
     end
   end
 
-  def encode(_), do: raise("Implement me")
   def encode(_, _), do: raise("Implement me")
 end

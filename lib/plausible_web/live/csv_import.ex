@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   use PlausibleWeb, :live_view
 
+  require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
   alias Plausible.Imported
 

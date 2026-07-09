@@ -5,6 +5,8 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
   alias Plausible.Imported
   use Plausible
 
+  require Plausible.Imported.SiteImport
+
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner, :editor, :admin, :super_admin])

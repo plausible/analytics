@@ -1,10 +1,10 @@
 defmodule Plausible.OpenTelemetry do
   @moduledoc false
 
-  alias OpenTelemetry.Tracer
+  require OpenTelemetry.Tracer, as: Tracer
 
   def current_trace_id do
-    case Tracer.current_span_ctx() do
+    case OpenTelemetry.Tracer.current_span_ctx() do
       :undefined ->
         nil
 

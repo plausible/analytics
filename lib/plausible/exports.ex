@@ -167,7 +167,7 @@ defmodule Plausible.Exports do
       {:error, {:http_error, 404, _response}} ->
         nil
 
-      {:error, %Finch.TransportError{} = e} ->
+      {:error, %Mint.TransportError{} = e} ->
         raise e
     end
   end

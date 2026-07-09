@@ -20,6 +20,8 @@ defmodule Plausible.Ingestion.Counters do
 
   @behaviour :gen_cycle
 
+  require Logger
+
   alias Plausible.Ingestion.Counters.Buffer
   alias Plausible.Ingestion.Counters.Record
   alias Plausible.Ingestion.Counters.TelemetryHandler

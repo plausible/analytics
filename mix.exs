@@ -75,6 +75,7 @@ defmodule Plausible.MixProject do
     [
       {:bamboo, "~> 2.3", override: true},
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
+      {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
@@ -92,7 +93,7 @@ defmodule Plausible.MixProject do
       {:eqrcode, "~> 0.2.1"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test, :e2e_test]},
       {:excoveralls, "~> 0.10", only: :test},
-      {:finch, "~> 0.23"},
+      {:finch, "~> 0.20.0"},
       {:lazy_html, "~> 0.1.8"},
       {:fun_with_flags, "~> 1.13.0"},
       {:fun_with_flags_ui, "~> 1.0"},
@@ -137,7 +138,7 @@ defmodule Plausible.MixProject do
       {:prima, "~> 0.2.6"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
-      {:postgrex, "~> 0.22.2"},
+      {:postgrex, "~> 0.21.1"},
       {:prom_ex, "~> 1.8"},
       {:peep, "~> 3.0"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
@@ -151,7 +152,7 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.12"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:ex_money, "~> 5.24.2"},
+      {:ex_money, "~> 5.12"},
       {:mjml_eex, "~> 0.12.0"},
       {:mjml, "~> 4.0.0"},
       {:heroicons, "~> 0.5.0"},
@@ -169,7 +170,7 @@ defmodule Plausible.MixProject do
       {:zstream, "~> 0.6.4"},
       {:con_cache,
        git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
-      {:req, "~> 0.6"},
+      {:req, "~> 0.5.16"},
       {:opentelemetry_req, "~> 1.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:ex_json_schema, "~> 0.11.1"},
@@ -178,8 +179,7 @@ defmodule Plausible.MixProject do
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:phoenix_html_helpers, "~> 1.0"},
       {:libcluster, "~> 3.5"},
-      {:decimal, "~> 3.0", override: true},
-      {:logger_backends, "~> 1.0.0"}
+      {:decimal, "~> 3.0", override: true}
     ]
   end
 
