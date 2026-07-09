@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.Clickhouse do
+  @moduledoc """
+    Clickhouse utility functions
+  """
+
   use Plausible
   use Plausible.Repo
   use Plausible.ClickhouseRepo
