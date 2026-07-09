@@ -388,8 +388,8 @@ defmodule Plausible.Ingestion.Event do
 
   on_ee do
     defp put_salts(%__MODULE__{} = event, _context) do
-      if session_id = event.clickhouse_event_attrs.replay_session_id do
-        %{event | salts: Plausible.Session.ComputedSalts.fetch(session_id)}
+      if replay_session_id = event.clickhouse_event_attrs.replay_session_id do
+        %{event | salts: Plausible.Session.ComputedSalts.fetch(replay_session_id)}
       else
         %{event | salts: Plausible.Session.Salts.fetch()}
       end

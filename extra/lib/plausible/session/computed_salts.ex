@@ -38,10 +38,10 @@ defmodule Plausible.Session.ComputedSalts do
   end
 
   @spec fetch(module() | atom(), pos_integer()) :: %{previous: nil, current: binary()}
-  def fetch(name \\ __MODULE__, session_id) do
+  def fetch(name \\ __MODULE__, replay_session_id) do
     computed_salt =
       secret_key_base()
-      |> KeyGenerator.generate(:binary.encode_unsigned(session_id), cache: name)
+      |> KeyGenerator.generate(:binary.encode_unsigned(replay_session_id), cache: name)
       |> binary_part(0, 16)
 
     %{previous: nil, current: computed_salt}
