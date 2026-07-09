@@ -41,7 +41,8 @@ defmodule Plausible.Sites.IndexTest do
 
         team = Plausible.Teams.complete_setup(team)
 
-        assert Index.fetch_site_ids(user, team: team) == [regular1.id, regular2.id]
+        assert Enum.sort(Index.fetch_site_ids(user, team: team)) ==
+                 Enum.sort([regular1.id, regular2.id])
       end
     end
 
