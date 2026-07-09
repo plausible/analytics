@@ -570,7 +570,7 @@ defmodule Plausible.Ingestion.EventTest do
     # identical fingerprint
     assert event1.clickhouse_event.user_id != event2.clickhouse_event.user_id
     # replayed events with the same session for the same fingerprint have the
-    # same useer id
+    # same user id
     assert event2.clickhouse_event.user_id == event3.clickhouse_event.user_id
     # replayed event from different sessions for the same fingerprint
     # have different users
