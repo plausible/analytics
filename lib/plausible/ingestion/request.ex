@@ -60,8 +60,7 @@ defmodule Plausible.Ingestion.Request do
     on_ee do
       field :revenue_source, :map
 
-      # fields meant for replayed events only
-      field :replay_id, :integer
+      # field for replayed events
       field :replay_session_id, :integer
     end
 
@@ -137,26 +136,19 @@ defmodule Plausible.Ingestion.Request do
   end
 
   on_ee do
-    @replay_id_header "x-replay-event-id"
     @replay_session_id_header "x-replay-session-id"
     @replay_time_header "x-replay-time"
 
     defp put_replay_data(changeset, conn) do
       now = NaiveDateTime.utc_now(:second)
 
-      id =
+      replay_session_id =
         conn
-        |> Plug.Conn.get_req_header(@replay_id_header)
+        |> Plug.Conn.get_req_header(@replay_session_id_header)
         |> List.first()
         |> to_integer()
 
-      if id do
-        session_id =
-          conn
-          |> Plug.Conn.get_req_header(@replay_session_id_header)
-          |> List.first()
-          |> to_integer()
-
+      if replay_session_id do
         time =
           conn
           |> Plug.Conn.get_req_header(@replay_time_header)
@@ -165,8 +157,7 @@ defmodule Plausible.Ingestion.Request do
 
         if NaiveDateTime.compare(time, now) in [:lt, :eq] do
           changeset
-          |> Changeset.put_change(:replay_id, id)
-          |> Changeset.put_change(:replay_session_id, session_id)
+          |> Changeset.put_change(:replay_session_id, replay_session_id)
           |> Changeset.put_change(:timestamp, time)
         else
           changeset

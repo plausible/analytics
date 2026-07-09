@@ -188,7 +188,6 @@ defmodule Plausible.Ingestion.RequestTest do
       |> put_req_header("x-replay-time", "2026-06-02 12:43:00")
 
     assert {:ok, request, _conn} = Request.build(conn)
-    assert request.replay_id == 123
     assert request.replay_session_id == 456
     assert NaiveDateTime.compare(request.timestamp, ~N[2026-06-02 12:43:00]) == :eq
   end
@@ -204,7 +203,6 @@ defmodule Plausible.Ingestion.RequestTest do
     conn = build_conn(:post, "/api/events", payload)
 
     assert {:ok, request, _conn} = Request.build(conn)
-    assert is_nil(request.replay_id)
     assert is_nil(request.replay_session_id)
     assert %NaiveDateTime{} = request.timestamp
   end
@@ -227,7 +225,6 @@ defmodule Plausible.Ingestion.RequestTest do
       |> put_req_header("x-replay-time", NaiveDateTime.to_iso8601(time))
 
     assert {:ok, request, _conn} = Request.build(conn)
-    assert is_nil(request.replay_id)
     assert is_nil(request.replay_session_id)
     assert NaiveDateTime.compare(request.timestamp, time) == :lt
   end
@@ -662,8 +659,7 @@ defmodule Plausible.Ingestion.RequestTest do
       "scroll_depth" => nil,
       "engagement_time" => nil,
       "tracker_script_version" => 0,
-      "interactive?" => true,
-      "replay_id" => nil
+      "interactive?" => true
     }
 
     on_ee do
