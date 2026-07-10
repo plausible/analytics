@@ -1,18 +1,22 @@
 defmodule Plausible.Ingestion.WriteBufferTest do
   use ExUnit.Case, async: true
 
+  import ExUnit.CaptureLog
+
   alias Plausible.Ingestion.WriteBuffer
 
-  @opts WriteBuffer.compile_time_prepare(Plausible.ClickhouseEventV2)
+  @compile_time_opts WriteBuffer.compile_time_prepare(Plausible.ClickhouseEventV2)
 
-  test "keeps running when a linked process exits while trapping exits" do
-    opts =
-      @opts
-      |> Map.take([:header, :insert_sql, :insert_opts])
-      |> Map.to_list()
-      |> Keyword.put(:name, :"write_buffer_exit_#{System.unique_integer([:positive])}")
-      # large interval so the empty buffer never flushes to ClickHouse during the test
-      |> Keyword.put(:flush_interval_ms, 60_000)
+  test "keeps running and logs the reason when a linked process exits", %{test: test} do
+    opts = [
+      header: @compile_time_opts.header,
+      insert_sql: @compile_time_opts.insert_sql,
+      insert_opts: @compile_time_opts.insert_opts,
+      # unique atom is at our disposal already
+      name: test,
+      # no need to ever flush automatically on slow CI
+      flush_interval_ms: 1_000_000_000
+    ]
 
     {:ok, pid} = WriteBuffer.start_link(opts)
 
@@ -27,10 +31,16 @@ defmodule Plausible.Ingestion.WriteBufferTest do
       end)
 
     ref = Process.monitor(child)
-    Process.exit(child, :shutdown)
-    assert_receive {:DOWN, ^ref, :process, ^child, _}, 1_000
 
-    assert Process.alive?(pid)
-    assert WriteBuffer.flush(opts[:name]) == :ok
+    log =
+      capture_log(fn ->
+        Process.exit(child, :shutdown)
+        assert_receive {:DOWN, ^ref, :process, ^child, _}, 1_000
+        assert Process.alive?(pid)
+        assert WriteBuffer.flush(test) == :ok
+      end)
+
+    assert log =~ "received EXIT, keeping buffer alive"
+    assert log =~ ":shutdown"
   end
 end
