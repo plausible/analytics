@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
 
+### Fixed
+
+- Stats API `/api/v1/stats/breakdown` now returns a `400` error for an invalid `page` parameter instead of crashing with a `500`
+
 ### Removed
 
 - Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
