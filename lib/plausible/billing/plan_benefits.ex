@@ -16,7 +16,7 @@ defmodule Plausible.Billing.PlanBenefits do
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(starter_plan))
-    |> Kernel.++(["Saved Segments"])
+    |> Kernel.++(benefits_available_on_lowest_plan())
   end
 
   @doc """
@@ -27,13 +27,15 @@ defmodule Plausible.Billing.PlanBenefits do
   and Growth. Everything in Starter is also included in Growth.
   """
   def for_growth(growth_plan, starter_benefits) do
-    [
-      if(Enum.empty?(starter_benefits), do: nil, else: "Everything in Starter"),
+    lowest_plan? = Enum.empty?(starter_benefits)
+
+    if(not lowest_plan?, do: ["Everything in Starter"], else: [])
+    |> Kernel.++([
       site_limit_benefit(growth_plan),
       team_member_limit_benefit(growth_plan),
-      "Team Management",
-      if(Enum.empty?(starter_benefits), do: "Saved Segments", else: nil)
-    ]
+      "Team Management"
+    ])
+    |> Kernel.++(if(lowest_plan?, do: benefits_available_on_lowest_plan(), else: []))
     |> Kernel.++(feature_benefits(growth_plan))
     |> Kernel.--(starter_benefits)
     |> Enum.filter(& &1)
@@ -103,6 +105,10 @@ defmodule Plausible.Billing.PlanBenefits do
       "Priority support"
     ]
     |> Enum.filter(& &1)
+  end
+
+  defp benefits_available_on_lowest_plan do
+    ["Saved Segments", "Annotations"]
   end
 
   defp data_retention_benefit(%Plan{} = plan) do

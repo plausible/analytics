@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Annotations feature
 - Pages report can now be broken down by URL (hostname + path) in addition to path only
 - New "AI Assistants" acquisition channel + improved recognized sources database
 - Allow querying revenue metrics (`total_revenue`, `average_revenue`) with visit dimensions in Stats API v2

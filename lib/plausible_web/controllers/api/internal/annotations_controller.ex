@@ -10,10 +10,8 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
   alias PlausibleWeb.Api.Helpers, as: H
 
-  plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:annotations])
-
   def index(conn, params) do
-    user = conn.assigns.current_user
+    user = conn.assigns[:current_user]
     site = conn.assigns.site
     site_role = conn.assigns.site_role
 
@@ -69,7 +67,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   defp parse_relative_date(_), do: {:ok, nil}
 
   def create(conn, params) do
-    user = conn.assigns.current_user
+    user = conn.assigns[:current_user]
     site = conn.assigns.site
     site_role = conn.assigns.site_role
 
@@ -93,7 +91,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   end
 
   def update(conn, params) do
-    user = conn.assigns.current_user
+    user = conn.assigns[:current_user]
     site = conn.assigns.site
     site_role = conn.assigns.site_role
     annotation_id = normalize_annotation_id_param(params["annotation_id"])
@@ -118,7 +116,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   end
 
   def delete(conn, params) do
-    user = conn.assigns.current_user
+    user = conn.assigns[:current_user]
     site = conn.assigns.site
     site_role = conn.assigns.site_role
     annotation_id = normalize_annotation_id_param(params["annotation_id"])

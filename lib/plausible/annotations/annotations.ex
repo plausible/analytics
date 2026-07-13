@@ -43,7 +43,7 @@ defmodule Plausible.Annotations do
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where: annotation.type == :site,
-              order_by: [desc: annotation.updated_at, desc: annotation.id],
+              order_by: [asc: annotation.datetime, desc: annotation.id],
               preload: [site: site]
             )
             |> filter_by_range(range_in_site_tz)
@@ -65,7 +65,7 @@ defmodule Plausible.Annotations do
               where:
                 annotation.type == :site or
                   (annotation.type == :personal and annotation.owner_id == ^user.id),
-              order_by: [desc: annotation.updated_at, desc: annotation.id],
+              order_by: [asc: annotation.datetime, desc: annotation.id],
               preload: [site: site, owner: owner]
             )
             |> filter_by_range(range_in_site_tz)
@@ -297,6 +297,7 @@ defmodule Plausible.Annotations do
 
   defp can_update_one?(site, site_role, new_annotation_type, existing_annotation_type) do
     updating_to_site_annotation? = new_annotation_type == :site
+    updating_to_personal_annotation? = new_annotation_type == :personal
 
     cond do
       (existing_annotation_type == :site or
@@ -304,7 +305,14 @@ defmodule Plausible.Annotations do
           site_annotations_available?(site) ->
         :ok
 
-      existing_annotation_type == :personal and not updating_to_site_annotation? and
+      # Allow demoting a site annotation to personal even when
+      # site_annotations is no longer available on the plan — gives users a
+      # way to keep their annotations usable after a downgrade.
+      existing_annotation_type == :site and updating_to_personal_annotation? and
+          site_role in roles_with_maybe_site_annotations() ->
+        :ok
+
+      existing_annotation_type == :personal and updating_to_personal_annotation? and
           site_role in roles_with_personal_annotations() ->
         :ok
 

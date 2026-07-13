@@ -12,7 +12,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Email/Slack reports",
                "Google Analytics import",
                "Goals and custom events",
-               "Saved Segments"
+               "Saved Segments",
+               "Annotations"
              ]
     end
   end
@@ -28,7 +29,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Team Management",
                "Shared Links",
                "Embedded Dashboards",
-               "Shared Segments"
+               "Shared Segments",
+               "Shared Annotations"
              ]
     end
 
@@ -54,6 +56,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Unlimited team members",
                  "Team Management",
                  "Saved Segments",
+                 "Annotations",
                  "Goals and custom events",
                  "Custom Properties",
                  "Stats API (600 requests per hour)",
@@ -101,6 +104,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Stats API (600 requests per hour)",
                "Looker Studio Connector",
                "Shared Segments",
+               "Shared Annotations",
                "Consolidated View"
              ]
     end
@@ -123,6 +127,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Ecommerce revenue attribution",
                  "Funnels and user journeys",
                  "Shared Segments",
+                 "Shared Annotations",
                  "Consolidated View"
                ]
       end

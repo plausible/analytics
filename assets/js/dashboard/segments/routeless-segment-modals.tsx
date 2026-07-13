@@ -22,7 +22,10 @@ import { mutation } from '../api'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { useSegmentsContext } from '../filtering/segments-context'
 
-export type RoutelessSegmentModal = 'create' | 'update' | 'delete'
+export type RoutelessSegmentModal =
+  | { type: 'create-segment' }
+  | { type: 'update-segment' }
+  | { type: 'delete-segment' }
 
 export const RoutelessSegmentModals = () => {
   const { updateOne, addOne, removeOne } = useSegmentsContext()
@@ -153,7 +156,7 @@ export const RoutelessSegmentModals = () => {
 
   return (
     <>
-      {modal === 'update' && expandedSegment && (
+      {modal?.type === 'update-segment' && expandedSegment && (
         <UpdateSegmentModal
           user={user}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
@@ -179,7 +182,7 @@ export const RoutelessSegmentModals = () => {
           reset={patchSegment.reset}
         />
       )}
-      {modal === 'create' && (
+      {modal?.type === 'create-segment' && (
         <CreateSegmentModal
           user={user}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
@@ -204,7 +207,7 @@ export const RoutelessSegmentModals = () => {
           reset={createSegment.reset}
         />
       )}
-      {modal === 'delete' && expandedSegment && (
+      {modal?.type === 'delete-segment' && expandedSegment && (
         <DeleteSegmentModal
           segment={expandedSegment}
           onClose={() => {
