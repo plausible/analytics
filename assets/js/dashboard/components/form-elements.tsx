@@ -16,19 +16,16 @@ interface LabeledFieldProps {
   value: string
   onChange: (value: string) => void
   placeholder: string
-  recommendedMaxLength?: number
+  maxLength?: number
 }
 
 const LabeledField = ({
   label,
   id,
   value,
-  recommendedMaxLength,
+  maxLength,
   children
-}: Pick<
-  LabeledFieldProps,
-  'label' | 'id' | 'value' | 'recommendedMaxLength'
-> & {
+}: Pick<LabeledFieldProps, 'label' | 'id' | 'value' | 'maxLength'> & {
   children: ReactNode
 }) => (
   <div className="flex flex-col">
@@ -39,11 +36,11 @@ const LabeledField = ({
       {label}
     </label>
     {children}
-    {recommendedMaxLength !== undefined && (
+    {maxLength !== undefined && (
       <CharacterCounter
         id={`${id}-counter`}
         length={getCharacterCount(value)}
-        recommendedMaxLength={recommendedMaxLength}
+        maxLength={maxLength}
       />
     )}
   </div>
@@ -55,23 +52,16 @@ export const LabeledTextInput = ({
   value,
   onChange,
   placeholder,
-  recommendedMaxLength
+  maxLength
 }: LabeledFieldProps) => (
-  <LabeledField
-    label={label}
-    id={id}
-    value={value}
-    recommendedMaxLength={recommendedMaxLength}
-  >
+  <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
     <input
       autoComplete="off"
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      aria-describedby={
-        recommendedMaxLength !== undefined ? `${id}-counter` : undefined
-      }
+      aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
       className={fieldClassName}
     />
   </LabeledField>
@@ -83,17 +73,12 @@ export const LabeledTextarea = ({
   value,
   onChange,
   placeholder,
-  recommendedMaxLength,
+  maxLength,
   rows = 3
 }: LabeledFieldProps & {
   rows?: number
 }) => (
-  <LabeledField
-    label={label}
-    id={id}
-    value={value}
-    recommendedMaxLength={recommendedMaxLength}
-  >
+  <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
     <textarea
       autoComplete="off"
       id={id}
@@ -101,9 +86,7 @@ export const LabeledTextarea = ({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      aria-describedby={
-        recommendedMaxLength !== undefined ? `${id}-counter` : undefined
-      }
+      aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
       className={classNames(fieldClassName, 'resize-y leading-5')}
     />
   </LabeledField>
@@ -112,27 +95,36 @@ export const LabeledTextarea = ({
 const CharacterCounter = ({
   id,
   length,
-  recommendedMaxLength
+  maxLength
 }: {
   id: string
   length: number
-  recommendedMaxLength: number
+  maxLength: number
 }) => {
-  const overLimit = length > recommendedMaxLength
+  const closeToLimit = length > maxLength * 0.8
+  const visible = closeToLimit
+  const overLimit = length > maxLength
   return (
     <p
       id={id}
       className="mt-1.5 text-xs text-gray-500 dark:text-gray-400"
       aria-live="polite"
     >
-      {`Recommended: ${recommendedMaxLength} characters. You've used `}
-      <span
-        className={classNames('font-semibold', {
-          'text-red-500 dark:text-red-400': overLimit
-        })}
-      >
-        {length}
-      </span>
+      {visible ? (
+        <span>
+          {`Max: ${maxLength} characters. You've used `}
+          <span
+            className={classNames('font-semibold', {
+              'text-red-500 dark:text-red-400': overLimit
+            })}
+          >
+            {length}
+          </span>
+        </span>
+      ) : (
+        // reserve 1 line worth of room to avoid layout jumps when the count appears
+        <span className="opacity-0 select-none">&nbsp</span>
+      )}
     </p>
   )
 }

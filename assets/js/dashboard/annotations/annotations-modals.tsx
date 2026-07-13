@@ -4,7 +4,8 @@ import {
   ANNOTATION_TYPE_LABELS,
   AnnotationGranularity,
   AnnotationPayload,
-  AnnotationType
+  AnnotationType,
+  NOTE_MAX_LENGTH
 } from './annotations'
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
@@ -45,8 +46,6 @@ const formatAnnotationDatetime = (
   }
   return formatDay(date)
 }
-
-const NOTE_RECOMMENDED_MAX_LENGTH = 250
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -96,7 +95,7 @@ export const CreateAnnotationModal = ({
   const disabledMessage =
     type === AnnotationType.site ? siteOptionDisabledMessage : null
 
-  const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
+  const overLimit = isOverMaxLength(note, NOTE_MAX_LENGTH)
 
   return (
     <ModalLayout
@@ -109,7 +108,7 @@ export const CreateAnnotationModal = ({
         value={note}
         onChange={setNote}
         placeholder={notePlaceholder}
-        recommendedMaxLength={NOTE_RECOMMENDED_MAX_LENGTH}
+        maxLength={NOTE_MAX_LENGTH}
       />
       <AnnotationTypeSelector
         value={type}
@@ -316,7 +315,7 @@ export const UpdateAnnotationModal = ({
   const disabledMessage =
     type === AnnotationType.site ? siteOptionDisabledMessage : null
 
-  const overLimit = isOverMaxLength(note, NOTE_RECOMMENDED_MAX_LENGTH)
+  const overLimit = isOverMaxLength(note, NOTE_MAX_LENGTH)
 
   return (
     <ModalLayout
@@ -329,7 +328,7 @@ export const UpdateAnnotationModal = ({
         value={note}
         onChange={setNote}
         placeholder={notePlaceholder}
-        recommendedMaxLength={NOTE_RECOMMENDED_MAX_LENGTH}
+        maxLength={NOTE_MAX_LENGTH}
       />
       <AnnotationTypeSelector
         value={type}

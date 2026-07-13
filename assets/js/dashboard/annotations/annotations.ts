@@ -27,6 +27,9 @@ export enum AnnotationGranularity {
   minute = 'minute'
 }
 
+// the DB side limit is 255, but this looks better in the UI
+export const NOTE_MAX_LENGTH = 250
+
 export type Annotation = {
   datetime: string
   granularity: AnnotationGranularity
