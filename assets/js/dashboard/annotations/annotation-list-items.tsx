@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react'
 import classNames from 'classnames'
 import {
   Annotation,
-  getAnnotationAttribution,
+  getAnnotationAuthorship,
   getAttributionDateLabel
 } from './annotations'
 
@@ -27,14 +27,14 @@ export const AnnotationItemRow = ({ children }: { children: ReactNode }) => (
   </div>
 )
 
-export const AnnotationAttributionLine = ({
+export const AnnotationAuthorshipLine = ({
   annotation
 }: {
   annotation: Annotation
 }) => (
   <div className="flex items-baseline text-xs text-gray-300 pr-8">
     <span className="truncate min-w-0">
-      {getAnnotationAttribution(annotation)}
+      {getAnnotationAuthorship(annotation)}
     </span>
     <span className="whitespace-nowrap shrink-0">
       {` • ${getAttributionDateLabel(annotation)}`}

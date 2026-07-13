@@ -3,7 +3,7 @@ import {
   AnnotationType,
   canAddAnnotation,
   canEditAnnotation,
-  getAnnotationAttribution,
+  getAnnotationAuthorship,
   getAnnotationGranularity,
   getAnnotationTimeLabel,
   groupAnnotationsByTimeLabel
@@ -25,10 +25,10 @@ const publicUser: UserContextValue = {
   team: { identifier: null, hasConsolidatedView: false }
 }
 
-describe(`${getAnnotationAttribution.name}`, () => {
+describe(`${getAnnotationAuthorship.name}`, () => {
   it('returns the owner name for a site annotation with an owner', () => {
     expect(
-      getAnnotationAttribution({
+      getAnnotationAuthorship({
         type: AnnotationType.site,
         owner_name: 'Alice'
       })
@@ -37,7 +37,7 @@ describe(`${getAnnotationAttribution.name}`, () => {
 
   it('returns "Site note" for a site annotation with a dangling owner', () => {
     expect(
-      getAnnotationAttribution({
+      getAnnotationAuthorship({
         type: AnnotationType.site,
         owner_name: null
       })
@@ -46,7 +46,7 @@ describe(`${getAnnotationAttribution.name}`, () => {
 
   it('returns "Personal note" for a personal annotation regardless of owner (we assume personal notes are served only to the author)', () => {
     expect(
-      getAnnotationAttribution({
+      getAnnotationAuthorship({
         type: AnnotationType.personal,
         owner_name: 'Alice'
       })

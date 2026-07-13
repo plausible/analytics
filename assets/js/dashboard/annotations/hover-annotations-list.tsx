@@ -1,7 +1,7 @@
 import React from 'react'
 import { Annotation } from './annotations'
 import {
-  AnnotationAttributionLine,
+  AnnotationAuthorshipLine,
   AnnotationItemRow,
   AnnotationNote,
   AnnotationsListContainer
@@ -23,7 +23,7 @@ export const HoverAnnotationsList = ({
         {preview.map((annotation) => (
           <AnnotationItemRow key={annotation.id}>
             <div className="relative flex flex-col gap-y-px w-full max-w-64">
-              <AnnotationAttributionLine annotation={annotation} />
+              <AnnotationAuthorshipLine annotation={annotation} />
               <AnnotationNote note={annotation.note} clamp />
             </div>
           </AnnotationItemRow>

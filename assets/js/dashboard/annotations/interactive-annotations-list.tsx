@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 import { Annotation, canEditAnnotation } from './annotations'
 import {
-  AnnotationAttributionLine,
+  AnnotationAuthorshipLine,
   AnnotationItemRow,
   AnnotationNote,
   AnnotationsListContainer
@@ -39,7 +39,7 @@ export const InteractiveAnnotationsList = ({
           const editable = canEditAnnotation({ annotation, user })
           const content = (
             <>
-              <AnnotationAttributionLine annotation={annotation} />
+              <AnnotationAuthorshipLine annotation={annotation} />
               <AnnotationNote note={annotation.note} />
               {editable && !isTouchDevice && (
                 <button

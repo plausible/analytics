@@ -53,7 +53,7 @@ export const ANNOTATION_TYPE_LABELS = {
   [AnnotationType.site]: 'Site note'
 }
 
-export const getAnnotationAttribution = (
+export const getAnnotationAuthorship = (
   annotation: Pick<Annotation, 'type' | 'owner_name'>
 ): string => {
   if (annotation.type === AnnotationType.site && annotation.owner_name) {
