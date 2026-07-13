@@ -102,6 +102,12 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
           💬 Customer Support
         </.link>
       </h2>
+      <.styled_link
+        class="text-sm flex-shrink-0"
+        patch={Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index)}
+      >
+        🔥 Trial prospects
+      </.styled_link>
     </div>
     """
   end
