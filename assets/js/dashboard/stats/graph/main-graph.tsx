@@ -530,12 +530,20 @@ export const MainGraph = ({
               }
               interval={interval}
               zoomDate={zoomDate}
+              canAddAnnotation={canAddAnnotation}
             />
           )}
         </MainGraphTooltip>
       )}
     </Graph>
   )
+}
+
+type TooltipContentsProps = {
+  annotations: Annotation[] | undefined
+  interval: Interval
+  zoomDate: string | null
+  canAddAnnotation: boolean
 }
 
 const PersistentTooltipContents = ({
@@ -549,14 +557,10 @@ const PersistentTooltipContents = ({
   closeTooltip
 }: {
   annotationDatetime: string | null
-  annotations: Annotation[] | undefined
   isTouchDevice: boolean
-  interval: Interval
-  zoomDate: string | null
   onZoomToPeriod: (date: string) => void
-  canAddAnnotation: boolean
   closeTooltip: () => void
-}) => {
+} & TooltipContentsProps) => {
   const { setModal } = useRoutelessModalsContext()
 
   const hasActions = !!zoomDate || (!!annotationDatetime && canAddAnnotation)
@@ -607,12 +611,9 @@ const PersistentTooltipContents = ({
 const HoveredTooltipContents = ({
   annotations,
   interval,
-  zoomDate
-}: {
-  annotations: Annotation[] | undefined
-  interval: Interval
-  zoomDate: string | null
-}) => {
+  zoomDate,
+  canAddAnnotation
+}: TooltipContentsProps) => {
   return (
     <>
       {!!annotations?.length && (
@@ -626,7 +627,9 @@ const HoveredTooltipContents = ({
           </div>
         )}
         <div className="text-gray-300 dark:text-gray-400 text-xs">
-          Right click for more actions
+          {canAddAnnotation
+            ? 'Right click for more actions'
+            : 'Right click to pin tooltip'}
         </div>
       </div>
     </>
