@@ -176,7 +176,7 @@ const AnnotationTypeSelector = ({
           siteOptionDisabledMessage === 'upgrade-subscription-yourself' ||
           siteOptionDisabledMessage === 'upgrade-subscription-reach-out' ? (
             <UpgradePill
-              plan="Growth"
+              plan="Upgrade needed"
               linked={
                 siteOptionDisabledMessage === 'upgrade-subscription-yourself'
               }
@@ -202,9 +202,9 @@ const AnnotationTypeDisabledMessage = ({
     case 'no-permissions':
       return "You don't have enough permissions to change note to this type"
     case 'upgrade-subscription-yourself':
-      return 'Upgrade to Growth to make notes visible to others.'
+      return 'Upgrade your plan to make notes visible to others.'
     case 'upgrade-subscription-reach-out':
-      return 'Ask a team owner to upgrade to Growth to make notes visible to others.'
+      return 'Ask a team owner to upgrade your plan to make notes visible to others.'
   }
 }
 
