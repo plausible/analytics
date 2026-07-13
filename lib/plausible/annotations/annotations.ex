@@ -43,7 +43,7 @@ defmodule Plausible.Annotations do
               select: ^fields,
               where: annotation.site_id == ^site.id,
               where: annotation.type == :site,
-              order_by: [desc: annotation.updated_at, desc: annotation.id],
+              order_by: [asc: annotation.datetime, desc: annotation.id],
               preload: [site: site]
             )
             |> filter_by_range(range_in_site_tz)
@@ -65,7 +65,7 @@ defmodule Plausible.Annotations do
               where:
                 annotation.type == :site or
                   (annotation.type == :personal and annotation.owner_id == ^user.id),
-              order_by: [desc: annotation.updated_at, desc: annotation.id],
+              order_by: [asc: annotation.datetime, desc: annotation.id],
               preload: [site: site, owner: owner]
             )
             |> filter_by_range(range_in_site_tz)

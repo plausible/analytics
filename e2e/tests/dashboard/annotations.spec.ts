@@ -171,8 +171,8 @@ test('user can create annotations across granularities, edit, and delete them', 
     await expect(mondayMarker7d).toBeVisible()
 
     const expectedOnMonday = [
-      { note: personalNoteText, attribution: personalNoteAttribution },
-      { note: siteNoteText, attribution: siteNoteAttribution }
+      { note: siteNoteText, attribution: siteNoteAttribution },
+      { note: personalNoteText, attribution: personalNoteAttribution }
     ]
 
     await mondayIn7d.hover()
@@ -207,8 +207,8 @@ test('user can create annotations across granularities, edit, and delete them', 
     await mondayIn7d.hover()
     await mondayIn7d.click({ button: 'right' })
     await expectTooltipAnnotations([
-      { note: updatedNoteText, attribution: personalNoteAttribution },
-      { note: siteNoteText, attribution: siteNoteAttribution }
+      { note: siteNoteText, attribution: siteNoteAttribution },
+      { note: updatedNoteText, attribution: personalNoteAttribution }
     ])
   })
 
