@@ -85,8 +85,8 @@ defmodule Plausible.Teams.GracePeriod do
     Date.diff(end_date, Date.utc_today()) >= 0
   end
 
-  def active?(%{grace_period: %__MODULE__{manual_lock: true}}) do
-    true
+  def active?(%{grace_period: %__MODULE__{manual_lock: true}} = team) do
+    manual_lock_active?(team)
   end
 
   def active?(_team), do: false
