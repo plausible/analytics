@@ -584,7 +584,6 @@ const PersistentTooltipContents = ({
                 setModal({
                   type: 'create-annotation',
                   annotation: {
-                    note: `E.g. 'Campaign started' or 'Feature released'`,
                     type: AnnotationType.personal,
                     datetime: annotationDatetime,
                     granularity: getAnnotationGranularity(interval)

@@ -51,7 +51,10 @@ export const useGetAnnotations = () => {
 }
 
 export type RoutelessAnnotationModal =
-  | { type: 'create-annotation'; annotation: AnnotationPayload }
+  | {
+      type: 'create-annotation'
+      annotation: Pick<Annotation, 'datetime' | 'granularity' | 'type'>
+    }
   | { type: 'update-annotation'; annotation: Annotation }
   | { type: 'delete-annotation'; annotation: Annotation }
 
@@ -168,7 +171,7 @@ export const RoutelessAnnotationModals = () => {
         <CreateAnnotationModal
           user={user}
           siteAnnotationsAvailable={site.siteAnnotationsAvailable}
-          notePlaceholder={modal.annotation.note}
+          notePlaceholder={`E.g. 'Campaign started' or 'Feature released'`}
           initialType={modal.annotation.type}
           initialDatetime={modal.annotation.datetime}
           initialGranularity={modal.annotation.granularity}

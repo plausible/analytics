@@ -80,10 +80,9 @@ export const CreateAnnotationModal = ({
   } & {
     onSave: (input: AnnotationPayload) => void
   }) => {
-  const defaultNote = ''
-  const [note, setNote] = useState(defaultNote)
+  const [note, setNote] = useState('')
   const [type, setType] = useState(initialType)
-
+  const trimmedNote = note.trim()
   const granularity = initialGranularity
   const datetime = initialDatetime
 
@@ -94,8 +93,6 @@ export const CreateAnnotationModal = ({
 
   const disabledMessage =
     type === AnnotationType.site ? siteOptionDisabledMessage : null
-
-  const overLimit = isOverMaxLength(note, NOTE_MAX_LENGTH)
 
   return (
     <ModalLayout
@@ -120,22 +117,19 @@ export const CreateAnnotationModal = ({
           Cancel
         </Button>
         <SaveButton
-          disabled={
-            status === 'pending' || overLimit || disabledMessage !== null
-          }
-          onSave={() => {
-            const trimmedNote = note.trim()
-            const saveableNote = trimmedNote.length
-              ? trimmedNote
-              : notePlaceholder
-
+          disabled={isSaveButtonDisabled({
+            requestStatus: status,
+            disabledMessage,
+            trimmedNote
+          })}
+          onSave={() =>
             onSave({
-              note: saveableNote,
+              note: trimmedNote,
               type,
               datetime,
               granularity
             })
-          }}
+          }
         />
       </ModalFooter>
       {error !== null && (
@@ -306,6 +300,7 @@ export const UpdateAnnotationModal = ({
   }) => {
   const [note, setNote] = useState(annotation.note)
   const [type, setType] = useState<AnnotationType>(annotation.type)
+  const trimmedNote = note.trim()
 
   const siteOptionDisabledMessage = getAnnotationTypeDisabledMessage({
     siteAnnotationsAvailable,
@@ -314,8 +309,6 @@ export const UpdateAnnotationModal = ({
 
   const disabledMessage =
     type === AnnotationType.site ? siteOptionDisabledMessage : null
-
-  const overLimit = isOverMaxLength(note, NOTE_MAX_LENGTH)
 
   return (
     <ModalLayout
@@ -348,16 +341,12 @@ export const UpdateAnnotationModal = ({
           Cancel
         </Button>
         <SaveButton
-          disabled={
-            status === 'pending' || overLimit || disabledMessage !== null
-          }
-          onSave={() => {
-            const trimmedNote = note.trim()
-            const saveableNote = trimmedNote.length
-              ? trimmedNote
-              : notePlaceholder
-            onSave({ id: annotation.id, note: saveableNote, type })
-          }}
+          disabled={isSaveButtonDisabled({
+            requestStatus: status,
+            disabledMessage,
+            trimmedNote
+          })}
+          onSave={() => onSave({ id: annotation.id, note: trimmedNote, type })}
         />
       </ModalFooter>
       {error !== null && (
@@ -374,3 +363,17 @@ export const UpdateAnnotationModal = ({
     </ModalLayout>
   )
 }
+
+const isSaveButtonDisabled = ({
+  requestStatus,
+  disabledMessage,
+  trimmedNote
+}: {
+  requestStatus: MutationStatus
+  trimmedNote: string
+  disabledMessage: string | null
+}) =>
+  requestStatus === 'pending' ||
+  isOverMaxLength(trimmedNote, NOTE_MAX_LENGTH) ||
+  disabledMessage !== null ||
+  !trimmedNote.length
