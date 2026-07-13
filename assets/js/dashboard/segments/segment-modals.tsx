@@ -312,7 +312,7 @@ const SegmentTypeSelector = ({
           siteOptionDisabledMessage === 'upgrade-subscription-yourself' ||
           siteOptionDisabledMessage === 'upgrade-subscription-reach-out' ? (
             <UpgradePill
-              plan="Growth"
+              plan="Upgrade needed"
               linked={
                 siteOptionDisabledMessage === 'upgrade-subscription-yourself'
               }
@@ -341,10 +341,10 @@ const SegmentTypeDisabledMessage = ({
       return "You don't have enough permissions to change segment to this type"
     }
     case 'upgrade-subscription-yourself': {
-      return 'Upgrade to Growth to share segments with others.'
+      return 'Upgrade your plan to share segments with others.'
     }
     case 'upgrade-subscription-reach-out': {
-      return 'Ask a team owner to upgrade to Growth to share segments with others.'
+      return 'Ask a team owner to upgrade your plan to share segments with others.'
     }
   }
 }
