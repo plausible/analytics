@@ -302,7 +302,7 @@ export const UpdateAnnotationModal = ({
 }: AnnotationModalProps &
   ApiRequestProps & {
     onSave: (input: Pick<Annotation, 'id' | 'note' | 'type'>) => void
-    onDelete?: (annotation: Annotation) => void
+    onDelete: (annotation: Annotation) => void
     annotation: Annotation
   }) => {
   const [note, setNote] = useState(annotation.note)
@@ -337,16 +337,14 @@ export const UpdateAnnotationModal = ({
         siteOptionDisabledMessage={siteOptionDisabledMessage}
       />
       <ModalFooter>
-        {typeof onDelete === 'function' && (
-          <Button
-            theme="danger"
-            size="sm"
-            className="mr-auto"
-            onClick={() => onDelete(annotation)}
-          >
-            Delete note
-          </Button>
-        )}
+        <Button
+          theme="danger"
+          size="sm"
+          className="mr-auto"
+          onClick={() => onDelete(annotation)}
+        >
+          Delete note
+        </Button>
         <Button theme="secondary" size="sm" onClick={onClose}>
           Cancel
         </Button>
