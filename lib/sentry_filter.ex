@@ -33,6 +33,15 @@ defmodule Plausible.SentryFilter do
   end
 
   def before_send(
+        %{
+          exception: [%{type: "Finch.TransportError"}],
+          original_exception: %{reason: reason}
+        } = event
+      ) do
+    %{event | fingerprint: ["mint_transport", reason]}
+  end
+
+  def before_send(
         %{source: :logger, message: %{formatted: "Ch.Connection (#PID<" <> rest}} = event
       ) do
     if String.ends_with?(rest, ")) disconnected: ** (Mint.HTTPError) the connection is closed") do

@@ -1,7 +1,8 @@
 defmodule Mix.Tasks.GenerateReferrerFavicons do
+  @moduledoc false
+
   use Mix.Task
   use Plausible.Repo
-  require Logger
 
   @dialyzer {:nowarn_function, run: 1}
   # coveralls-ignore-start

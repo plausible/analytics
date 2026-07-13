@@ -4,7 +4,6 @@ defmodule Plausible.Workers.ImportAnalytics do
   """
 
   use Plausible.Repo
-  require Logger
 
   use Oban.Worker,
     queue: :analytics_imports,

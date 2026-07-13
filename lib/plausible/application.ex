@@ -4,8 +4,6 @@ defmodule Plausible.Application do
   use Application
   use Plausible
 
-  require Logger
-
   def start(_type, _args) do
     on_ee(do: Plausible.License.ensure_valid_license())
     on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
@@ -360,7 +358,7 @@ defmodule Plausible.Application do
   end
 
   def setup_sentry() do
-    Logger.add_backend(Sentry.LoggerBackend)
+    LoggerBackends.add(Sentry.LoggerBackend)
 
     :telemetry.attach_many(
       "oban-errors",
