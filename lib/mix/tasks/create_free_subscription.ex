@@ -1,7 +1,9 @@
 defmodule Mix.Tasks.CreateFreeSubscription do
+  @moduledoc false
+
   use Mix.Task
   use Plausible.Repo
-  require Logger
+
   alias Plausible.Billing.Subscription
 
   # coveralls-ignore-start

@@ -19,7 +19,6 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   """
 
   alias Plausible.Auth.SSO.Domain
-  require Domain
 
   @prefix "plausible-sso-verification"
 
