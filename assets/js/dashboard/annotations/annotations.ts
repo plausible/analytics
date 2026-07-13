@@ -88,30 +88,26 @@ const ROLES_WITH_PERSONAL_ANNOTATIONS = [
 ]
 
 export function canEditAnnotation({
-  annotation,
+  type,
   user
 }: {
-  annotation: Pick<Annotation, 'type' | 'owner_id'>
+  type: AnnotationType
   user: UserContextValue
 }) {
-  if (
-    annotation.type === AnnotationType.site &&
-    user.loggedIn &&
-    ROLES_WITH_MAYBE_SITE_ANNOTATIONS.includes(user.role)
-  ) {
-    return true
+  if (!user.loggedIn) {
+    return false
   }
-
-  if (
-    annotation.type === AnnotationType.personal &&
-    user.loggedIn &&
-    ROLES_WITH_PERSONAL_ANNOTATIONS.includes(user.role) &&
-    user.id === annotation.owner_id
-  ) {
-    return true
+  switch (type) {
+    case AnnotationType.site:
+      // we don't check whether site annotations are available here:
+      // even when site annotations aren't available,
+      // the user should be able to downgrade them to personal, or delete them
+      return ROLES_WITH_MAYBE_SITE_ANNOTATIONS.includes(user.role)
+    case AnnotationType.personal:
+      return ROLES_WITH_PERSONAL_ANNOTATIONS.includes(user.role)
+    default:
+      return false
   }
-
-  return false
 }
 
 export function canShowAddAnnotationButton(props: {
@@ -133,24 +129,14 @@ export function canAddAnnotation({
   user: UserContextValue
   siteAnnotationsAvailable: boolean
 }) {
-  if (
-    type === AnnotationType.site &&
-    user.loggedIn &&
-    ROLES_WITH_MAYBE_SITE_ANNOTATIONS.includes(user.role) &&
-    siteAnnotationsAvailable
-  ) {
-    return true
+  switch (type) {
+    case AnnotationType.site:
+      return siteAnnotationsAvailable && canEditAnnotation({ type, user })
+    case AnnotationType.personal:
+      return canEditAnnotation({ type, user })
+    default:
+      return false
   }
-
-  if (
-    type === AnnotationType.personal &&
-    user.loggedIn &&
-    ROLES_WITH_PERSONAL_ANNOTATIONS.includes(user.role)
-  ) {
-    return true
-  }
-
-  return false
 }
 
 export const getAnnotationTimeLabel = (

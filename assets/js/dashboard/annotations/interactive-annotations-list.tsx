@@ -36,7 +36,7 @@ export const InteractiveAnnotationsList = ({
     <ScrollableArea>
       <AnnotationsListContainer>
         {annotations.map((annotation) => {
-          const editable = canEditAnnotation({ annotation, user })
+          const editable = canEditAnnotation({ type: annotation.type, user })
           const content = (
             <>
               <AnnotationAuthorshipLine annotation={annotation} />

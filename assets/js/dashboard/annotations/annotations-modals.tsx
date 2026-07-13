@@ -5,6 +5,7 @@ import {
   AnnotationGranularity,
   AnnotationPayload,
   AnnotationType,
+  canEditAnnotation,
   NOTE_MAX_LENGTH
 } from './annotations'
 import { MutationStatus } from '@tanstack/react-query'
@@ -207,9 +208,6 @@ const AnnotationTypeDisabledMessage = ({
   }
 }
 
-const canSelectSiteAnnotation = (user: UserContextValue) =>
-  [Role.admin, Role.owner, Role.editor, 'super_admin'].includes(user.role)
-
 const getAnnotationTypeDisabledMessage = ({
   siteAnnotationsAvailable,
   user
@@ -219,7 +217,10 @@ const getAnnotationTypeDisabledMessage = ({
 }): OptionDisabledMessageType | null =>
   getOptionDisabledMessage({
     optionAvailable: siteAnnotationsAvailable,
-    userHasOptionPermissions: canSelectSiteAnnotation(user),
+    userHasOptionPermissions: canEditAnnotation({
+      type: AnnotationType.site,
+      user
+    }),
     userCanUpgradeSubscription: user.role === Role.owner
   })
 

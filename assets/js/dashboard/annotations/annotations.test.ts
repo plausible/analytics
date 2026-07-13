@@ -135,46 +135,25 @@ describe(`${canAddAnnotation.name}`, () => {
 })
 
 describe(`${canEditAnnotation.name}`, () => {
-  // Mirrors `can_update_one?` (and `get_one`'s personal-note filter) in
-  // lib/plausible/annotations/annotations.ex.
-
   it.each([[Role.admin], [Role.editor], [Role.owner]])(
     'allows editing a site annotation if the user is logged in and in role %p',
     (role) => {
       expect(
         canEditAnnotation({
-          annotation: { type: AnnotationType.site, owner_id: 1 },
-          user: loggedInUser(role, 1)
+          type: AnnotationType.site,
+          user: loggedInUser(role)
         })
       ).toBe(true)
     }
   )
-
-  it('allows editing site annotations authored by other users', () => {
-    expect(
-      canEditAnnotation({
-        annotation: { type: AnnotationType.site, owner_id: 222 },
-        user: loggedInUser(Role.owner, 111)
-      })
-    ).toBe(true)
-  })
-
-  it('allows editing a site annotation whose original author was removed (owner_id nulled)', () => {
-    expect(
-      canEditAnnotation({
-        annotation: { type: AnnotationType.site, owner_id: null },
-        user: loggedInUser(Role.admin)
-      })
-    ).toBe(true)
-  })
 
   it.each([[Role.viewer], [Role.billing]])(
     'forbids editing site annotations in role %p',
     (role) => {
       expect(
         canEditAnnotation({
-          annotation: { type: AnnotationType.site, owner_id: 1 },
-          user: loggedInUser(role, 1)
+          type: AnnotationType.site,
+          user: loggedInUser(role)
         })
       ).toBe(false)
     }
@@ -186,25 +165,13 @@ describe(`${canEditAnnotation.name}`, () => {
     [Role.editor],
     [Role.admin],
     [Role.owner]
-  ])(
-    'allows editing a personal annotation that belongs to the user when in role %p',
-    (role) => {
-      expect(
-        canEditAnnotation({
-          annotation: { type: AnnotationType.personal, owner_id: 1 },
-          user: loggedInUser(role, 1)
-        })
-      ).toBe(true)
-    }
-  )
-
-  it('forbids even site owners from editing the personal annotations of other users', () => {
+  ])('allows editing a personal annotation when in role %p', (role) => {
     expect(
       canEditAnnotation({
-        annotation: { type: AnnotationType.personal, owner_id: 222 },
-        user: loggedInUser(Role.owner, 111)
+        type: AnnotationType.personal,
+        user: loggedInUser(role)
       })
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it.each([[AnnotationType.personal], [AnnotationType.site]])(
@@ -212,7 +179,7 @@ describe(`${canEditAnnotation.name}`, () => {
     (type) => {
       expect(
         canEditAnnotation({
-          annotation: { type, owner_id: null },
+          type,
           user: publicUser
         })
       ).toBe(false)
