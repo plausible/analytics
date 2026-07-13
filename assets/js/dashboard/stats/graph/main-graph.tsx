@@ -576,7 +576,7 @@ const PersistentTooltipContents = ({
           {!!annotationDatetime && canAddAnnotation && (
             <Button
               size="xs"
-              className="flex-1 bg-gray-600/70 border-gray-600/70 hover:bg-gray-600 hover:border-gray-600"
+              className="flex-auto bg-gray-600/70 border-gray-600/70 border-transparent hover:bg-gray-600"
               onClick={() => {
                 closeTooltip()
                 setModal({
@@ -595,7 +595,7 @@ const PersistentTooltipContents = ({
           {!!zoomDate && (
             <Button
               size="xs"
-              className="flex-1 bg-gray-600/70 border-gray-600/70 hover:bg-gray-600 hover:border-gray-600"
+              className="flex-auto bg-gray-600/70 border-gray-600/70 border-transparent hover:bg-gray-600"
               onClick={() => onZoomToPeriod(zoomDate)}
             >{`View ${interval}`}</Button>
           )}
