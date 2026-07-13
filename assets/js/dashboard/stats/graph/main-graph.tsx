@@ -135,8 +135,6 @@ export const MainGraph = ({
     }
     if (tooltip.persistent && isTouchDevice === false) {
       document.addEventListener('click', onClickOutside)
-    } else {
-      document.removeEventListener('click', onClickOutside)
     }
     return () => {
       document.removeEventListener('click', onClickOutside)
