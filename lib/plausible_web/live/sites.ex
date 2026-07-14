@@ -533,6 +533,13 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sparkline, :map, required: true)
 
   def site(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :needs_verification?,
+        ee?() and is_nil(Plausible.Sites.stats_start_date(assigns.site))
+      )
+
     ~H"""
     <li
       class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
@@ -552,7 +559,17 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+        href={
+          Routes.stats_path(
+            PlausibleWeb.Endpoint,
+            :stats,
+            @site.domain,
+            if(@needs_verification?,
+              do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
+              else: []
+            )
+          )
+        }
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
@@ -565,6 +582,12 @@ defmodule PlausibleWeb.Live.Sites do
               >
                 {@site.domain}
               </h3>
+              <span
+                :if={@needs_verification?}
+                class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/40 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:text-yellow-300"
+              >
+                Setup pending
+              </span>
             </div>
           </div>
           <.site_stats sparkline={@sparkline} />

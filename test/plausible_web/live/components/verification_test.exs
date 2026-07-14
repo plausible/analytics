@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       assert element_exists?(html, ~s|a[href="https://plausible.io/contact"]|)
     end
 
-    test "renders link to verify installation at a different URL" do
+    test "renders a click-to-show-form link to verify installation at a different URL" do
       interpretation =
         Verification.Checks.interpret_diagnostics(%State{
           url: "example.com",
@@ -125,9 +125,6 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
       assert interpretation.data.offer_custom_url_input == true
 
-      expected_link_href =
-        PlausibleWeb.Router.Helpers.site_path(PlausibleWeb.Endpoint, :verification, "example.com")
-
       html =
         render_component(@component,
           domain: "example.com",
@@ -136,12 +133,11 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           interpretation: interpretation
         )
 
-      assert text_of_element(html, "#verify-custom-url-link") =~ "different URL?"
-      assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ expected_link_href
-      assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ "custom_url=true"
+      assert text_of_element(html, "#verify-custom-url-link") =~ "Click here"
+      assert element_exists?(html, ~s|a#verify-custom-url-link[phx-click="show-custom-url-form"]|)
     end
 
-    test "offers escape paths: settings and installation instructions on failure" do
+    test "offers an installation-instructions escape path on failure, no more settings link" do
       html =
         render_component(@component,
           domain: "example.com",
@@ -151,7 +147,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           flow: PlausibleWeb.Flows.review()
         )
 
-      assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
+      refute element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
 
       assert element_exists?(
                html,

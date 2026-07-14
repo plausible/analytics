@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Live.Components.Verification do
   @moduledoc """
   This component is responsible for rendering the verification progress
-  and diagnostics.
+  and diagnostics as a compact banner on top of the dashboard.
   """
   use Phoenix.LiveComponent
   use Plausible
@@ -10,6 +10,17 @@ defmodule PlausibleWeb.Live.Components.Verification do
   alias Plausible.InstallationSupport.{State, Result}
 
   import PlausibleWeb.Components.Generic
+
+  @container_id "verification-ui"
+  # Dismissing hides the banner immediately and strips `verify_installation`
+  # from the URL (the same param that got it rendered in the first place -
+  # see PlausibleWeb.StatsController), so a refresh doesn't bring it back.
+  @dismiss_onclick "document.getElementById('#{@container_id}').classList.add('hidden');" <>
+                     "var u = new window.URL(window.location.href);" <>
+                     "u.searchParams.delete('verify_installation');" <>
+                     "u.searchParams.delete('installation_type');" <>
+                     "u.searchParams.delete('flow');" <>
+                     "window.history.replaceState(null, '', u);"
 
   attr(:domain, :string, required: true)
 
@@ -28,13 +39,28 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:awaiting_first_pageview?, :boolean, default: false)
 
   def render(assigns) do
+    assigns =
+      assigns
+      |> assign(:dismiss_onclick, @dismiss_onclick)
+      |> assign(:container_id, @container_id)
+
     ~H"""
-    <div id="verification-ui">
+    <div id={@container_id} class="relative mb-4">
+      <button
+        type="button"
+        aria-label="Dismiss"
+        class="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        onclick={@dismiss_onclick}
+      >
+        <Heroicons.x_mark class="size-4" />
+      </button>
       <.render_progress :if={not @finished?} message={@message} />
       <.render_success
         :if={@finished? and @success?}
         awaiting_first_pageview?={@awaiting_first_pageview?}
         domain={@domain}
+        super_admin?={@super_admin?}
+        verification_state={@verification_state}
       />
       <.render_failed
         :if={@finished? and not @success?}
@@ -43,9 +69,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         domain={@domain}
         flow={@flow}
         installation_type={@installation_type}
-      />
-      <.render_super_admin_diagnostics
-        :if={not is_nil(@verification_state) && @super_admin? && @finished?}
+        super_admin?={@super_admin?}
         verification_state={@verification_state}
       />
     </div>
@@ -54,149 +78,122 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   defp render_progress(assigns) do
     ~H"""
-    <.focus_box>
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700">
-        <div class="block pulsating-circle"></div>
-      </div>
-      <div class="mt-8">
-        <.title>Verifying your installation</.title>
-        <p class="text-sm mt-4 animate-pulse" id="progress">{@message}</p>
-      </div>
-    </.focus_box>
+    <.notice title="Verifying your installation" theme={:gray}>
+      <:icon>
+        <div class="block pulsating-circle" />
+      </:icon>
+      <p class="animate-pulse" id="progress">{@message}</p>
+    </.notice>
     """
   end
 
   defp render_success(assigns) do
     ~H"""
-    <.focus_box>
-      <div
-        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500"
-        id="check-circle"
-      >
-        <Heroicons.check_badge class="h-6 w-6 text-green-600 bg-green-100 dark:bg-green-500 dark:text-green-200" />
-      </div>
-
-      <div class="mt-8">
-        <.title>Success!</.title>
-        <p class="text-sm mt-4">
-          Your installation is working and visitors are being counted accurately.
-          <span :if={@awaiting_first_pageview?} id="awaiting" class="text-sm mt-4 animate-pulse">
-            Awaiting your first pageview...
-          </span>
-        </p>
-      </div>
-      <.button_link
-        href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
-        class="w-full font-bold mb-4"
-      >
-        Go to the dashboard
-      </.button_link>
-    </.focus_box>
+    <.notice title="Success!" theme={:gray} icon_class="text-green-600 dark:text-green-500">
+      <:icon>
+        <Heroicons.check_badge class="size-4.5 text-green-600 dark:text-green-500" id="check-circle" />
+      </:icon>
+      Your installation is working and visitors are being counted accurately.
+      <span :if={@awaiting_first_pageview?} id="awaiting" class="animate-pulse">
+        Awaiting your first pageview...
+      </span>
+      <.super_admin_diagnostics
+        :if={@super_admin? and not is_nil(@verification_state)}
+        verification_state={@verification_state}
+      />
+    </.notice>
     """
   end
 
   defp render_failed(assigns) do
     ~H"""
-    <.focus_box>
-      <div
-        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-200"
-        id="error-circle"
-      >
-        <Heroicons.exclamation_triangle class="h-6 w-6 text-red-600 bg-red-100 dark:bg-red-200 dark:text-red-800" />
-      </div>
-
-      <div :if={@interpretation} class="mt-8">
-        <.title>{List.first(@interpretation.errors)}</.title>
-        <p id="recommendation" class="mt-4 text-sm text-ellipsis overflow-hidden">
-          <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
-          <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
-            Learn more
-          </.styled_link>
-        </p>
-      </div>
-
-      <div class="mt-6">
-        <.button_link mt?={false} href="#" phx-click="retry" class="w-full">
+    <.notice
+      title={
+        if @interpretation,
+          do: List.first(@interpretation.errors),
+          else: "We couldn't verify your installation"
+      }
+      theme={:red}
+    >
+      <:icon>
+        <Heroicons.exclamation_triangle
+          class="size-4.5 text-red-600 dark:text-red-500"
+          id="error-circle"
+        />
+      </:icon>
+      <:actions>
+        <.button_link mt?={false} href="#" phx-click="retry" size="sm">
           Verify installation again
         </.button_link>
-      </div>
-      <:footer>
-        <.focus_list>
-          <:item :if={
-            @interpretation && is_map(@interpretation.data) &&
-              @interpretation.data[:offer_custom_url_input]
+      </:actions>
+      <p :if={@interpretation} id="recommendation">
+        <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
+        <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
+          Learn more
+        </.styled_link>
+      </p>
+      <p class="mt-1.5 flex flex-wrap gap-x-4">
+        <span :if={
+          @interpretation && is_map(@interpretation.data) &&
+            @interpretation.data[:offer_custom_url_input]
+        }>
+          Is your website located at a different URL?
+          <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
+            Click here
+          </.styled_link>
+        </span>
+        <span :if={ee?() and @attempts >= 3}>
+          Need further help with your installation?
+          <.styled_link href="https://plausible.io/contact">
+            Contact us
+          </.styled_link>
+        </span>
+        <span>
+          Need to see installation instructions again?
+          <.styled_link href={
+            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+              flow: @flow,
+              installation_type: @installation_type
+            )
           }>
-            <span id="verify-custom-url-link">
-              Is your website located at a different URL?
-              <.styled_link href={
-                Routes.site_path(PlausibleWeb.Endpoint, :verification, @domain,
-                  flow: @flow,
-                  installation_type: @installation_type,
-                  custom_url: true
-                )
-              }>
-                Click here
-              </.styled_link>
-            </span>
-          </:item>
-          <:item :if={ee?() and @attempts >= 3}>
-            <b>Need further help with your installation?</b>
-            <.styled_link href="https://plausible.io/contact">
-              Contact us
-            </.styled_link>
-          </:item>
-          <:item>
-            Need to see installation instructions again?
-            <.styled_link href={
-              Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
-                flow: @flow,
-                installation_type: @installation_type
-              )
-            }>
-              Click here
-            </.styled_link>
-          </:item>
-          <:item>
-            Run verification later and go to site settings?
-            <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
-              Click here
-            </.styled_link>
-          </:item>
-        </.focus_list>
-      </:footer>
-    </.focus_box>
+            Click here
+          </.styled_link>
+        </span>
+      </p>
+      <.super_admin_diagnostics
+        :if={@super_admin? and not is_nil(@verification_state)}
+        verification_state={@verification_state}
+      />
+    </.notice>
     """
   end
 
-  defp render_super_admin_diagnostics(assigns) do
+  defp super_admin_diagnostics(assigns) do
     ~H"""
-    <.focus_box>
-      <div
-        class="flex flex-col dark:text-gray-200"
-        x-data="{ showDiagnostics: false }"
-        id="super-admin-report"
-      >
-        <p class="text-sm">
-          <a
-            href="#"
-            @click.prevent="showDiagnostics = !showDiagnostics"
-            class="bg-yellow-100 dark:bg-yellow-800/40"
-          >
-            As a super-admin, you're eligible to see diagnostics details. Click to expand.
-          </a>
-        </p>
-        <div x-show="showDiagnostics" x-cloak>
-          <.focus_list>
-            <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
-              <span class="text-sm">
-                {Phoenix.Naming.humanize(diag)}:
-                <span class="font-mono">{to_string_value(value)}</span>
-              </span>
-            </:item>
-          </.focus_list>
-        </div>
+    <div
+      class="mt-3 flex flex-col dark:text-gray-200"
+      x-data="{ showDiagnostics: false }"
+      id="super-admin-report"
+    >
+      <p class="text-sm">
+        <a
+          href="#"
+          @click.prevent="showDiagnostics = !showDiagnostics"
+          class="bg-yellow-100 dark:bg-yellow-800/40"
+        >
+          As a super-admin, you're eligible to see diagnostics details. Click to expand.
+        </a>
+      </p>
+      <div x-show="showDiagnostics" x-cloak>
+        <.focus_list>
+          <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
+            <span class="text-sm">
+              {Phoenix.Naming.humanize(diag)}: <span class="font-mono">{to_string_value(value)}</span>
+            </span>
+          </:item>
+        </.focus_list>
       </div>
-    </.focus_box>
+    </div>
     """
   end
 

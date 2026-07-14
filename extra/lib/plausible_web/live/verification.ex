@@ -1,8 +1,7 @@
 defmodule PlausibleWeb.Live.Verification do
   @moduledoc """
-  LiveView coordinating the site verification process.
-  Onboarding new sites, renders a standalone component.
-  Embedded modal variant is available for general site settings.
+  LiveView coordinating the site verification process. Rendered as a banner
+  on top of the React dashboard.
   """
   use PlausibleWeb, :live_view
 
@@ -12,10 +11,11 @@ defmodule PlausibleWeb.Live.Verification do
 
   @component PlausibleWeb.Live.Components.Verification
   @slowdown_for_frequent_checking :timer.seconds(5)
+  @use_portal? Mix.env() not in [:test, :ce_test]
 
   def mount(
-        %{"domain" => domain} = params,
-        _session,
+        _params,
+        %{"domain" => domain} = session,
         socket
       ) do
     current_user = socket.assigns.current_user
@@ -38,8 +38,6 @@ defmodule PlausibleWeb.Live.Verification do
     super_admin? = Plausible.Auth.super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
 
-    custom_url_input? = params["custom_url"] == "true"
-
     socket =
       assign(socket,
         url_to_verify: nil,
@@ -48,18 +46,18 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         has_pageviews?: has_pageviews?,
         component: @component,
-        installation_type: get_installation_type(params, site),
+        installation_type: get_installation_type(session["installation_type"], site),
         report_to: self(),
         delay: private[:delay] || 500,
         slowdown: private[:slowdown] || 500,
-        flow: params["flow"] || "",
+        flow: session["flow"] || "",
         checks_pid: nil,
         attempts: 0,
         polling_pageviews?: false,
-        custom_url_input?: custom_url_input?
+        custom_url_input?: false
       )
 
-    if connected?(socket) and not custom_url_input? do
+    if connected?(socket) do
       launch_delayed(socket)
     end
 
@@ -67,8 +65,23 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :use_portal?, @use_portal?)
+
     ~H"""
-    <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
+    <div id="verification-portal-container">
+      <%= if @use_portal? do %>
+        <.portal id="verification-portal-source" target="#verification-portal-target">
+          <.verification_content {assigns} />
+        </.portal>
+      <% else %>
+        <.verification_content {assigns} />
+      <% end %>
+    </div>
+    """
+  end
+
+  defp verification_content(assigns) do
+    ~H"""
     <.custom_url_form :if={@custom_url_input?} domain={@domain} />
     <.live_component
       :if={not @custom_url_input?}
@@ -92,6 +105,10 @@ defmodule PlausibleWeb.Live.Verification do
   def handle_event("retry", _, socket) do
     launch_delayed(socket)
     {:noreply, reset_component(socket)}
+  end
+
+  def handle_event("show-custom-url-form", _, socket) do
+    {:noreply, assign(socket, custom_url_input?: true)}
   end
 
   def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
@@ -166,24 +183,24 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info(:check_pageviews, socket) do
-    socket =
-      if has_pageviews?(socket.assigns.site) do
-        redirect_to_stats(socket)
-      else
+    if has_pageviews?(socket.assigns.site) do
+      {:noreply, assign(socket, has_pageviews?: true, polling_pageviews?: false)}
+    else
+      socket =
         socket
         |> assign(polling_pageviews?: false)
         |> schedule_pageviews_check()
-      end
 
-    {:noreply, socket}
+      {:noreply, socket}
+    end
   end
 
   @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
                                       |> Enum.map(&String.to_atom/1)
-  defp get_installation_type(params, site) do
+  defp get_installation_type(installation_type, site) do
     cond do
-      params["installation_type"] in PlausibleWeb.Tracker.supported_installation_types() ->
-        params["installation_type"]
+      installation_type in PlausibleWeb.Tracker.supported_installation_types() ->
+        installation_type
 
       (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
         Atom.to_string(saved_installation_type)
@@ -210,11 +227,6 @@ defmodule PlausibleWeb.Live.Verification do
       Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
       assign(socket, polling_pageviews?: true)
     end
-  end
-
-  defp redirect_to_stats(socket) do
-    stats_url = Routes.stats_path(PlausibleWeb.Endpoint, :stats, socket.assigns.domain, [])
-    redirect(socket, to: stats_url)
   end
 
   defp reset_component(socket) do
@@ -245,44 +257,32 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp custom_url_form(assigns) do
     ~H"""
-    <.focus_box>
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-        <Heroicons.globe_alt class="h-6 w-6 text-blue-600 dark:text-blue-200" />
-      </div>
-      <div class="mt-8">
-        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-          Enter Your Custom URL
-        </h3>
-        <p class="text-sm mt-4 text-gray-600 dark:text-gray-400">
-          Please enter the URL where your website with the Plausible script is located.
-        </p>
-        <form phx-submit="verify-custom-url" class="mt-6">
-          <div class="mb-4">
-            <label
-              for="custom_url"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Website URL
-            </label>
-            <input
-              type="url"
-              name="custom_url"
-              id="custom_url"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-              placeholder={"https://#{@domain}"}
-              value={"https://#{@domain}"}
-            />
-          </div>
-          <button
-            type="submit"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-          >
-            Verify Installation
-          </button>
-        </form>
-      </div>
-    </.focus_box>
+    <.notice title="Enter your custom URL" theme={:gray} class="mb-4">
+      <:icon>
+        <Heroicons.globe_alt class="size-4.5 text-blue-600 dark:text-blue-300" />
+      </:icon>
+      <p class="mb-3">
+        Please enter the URL where your website with the Plausible script is located.
+      </p>
+      <form phx-submit="verify-custom-url" class="flex flex-wrap items-center gap-2">
+        <label for="custom_url" class="sr-only">Website URL</label>
+        <input
+          type="url"
+          name="custom_url"
+          id="custom_url"
+          required
+          class="flex-1 min-w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
+          placeholder={"https://#{@domain}"}
+          value={"https://#{@domain}"}
+        />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-md shadow-xs text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+        >
+          Verify Installation
+        </button>
+      </form>
+    </.notice>
     """
   end
 end

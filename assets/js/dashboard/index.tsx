@@ -11,6 +11,7 @@ import { isRealTimeDashboard } from './util/filters'
 import { GraphIntervalProvider } from './stats/graph/graph-interval-context'
 import { ImportsIncludedProvider } from './stats/graph/imports-included-context'
 import { CurrentVisitorsProvider } from './current-visitors-context'
+import { VerificationLiveViewPortal } from './verification/portal'
 
 function DashboardStats({
   importedDataInView,
@@ -21,7 +22,10 @@ function DashboardStats({
 }) {
   return (
     <>
-      <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
+      <div className="col-span-full">
+        <VerificationLiveViewPortal />
+        <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
+      </div>
       <Sources />
       <Pages />
       <Locations />

@@ -603,15 +603,6 @@ defmodule PlausibleWeb.Router do
       end
 
       scope assigns: %{
-              dogfood_page_path: "/:website/verification"
-            } do
-        live "/:domain/verification",
-             on_ee(do: Verification, else: AwaitingPageviews),
-             :verification,
-             as: :site
-      end
-
-      scope assigns: %{
               dogfood_page_path: "/:website/change-domain"
             } do
         live "/:domain/change-domain", ChangeDomain, :change_domain, as: :site

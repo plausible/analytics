@@ -57,6 +57,12 @@
     data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
   >
   </div>
+  <%= if @verify_installation? do %>
+    {live_render(@conn, PlausibleWeb.Live.Verification,
+      id: "live-verification",
+      session: @verification_session
+    )}
+  <% end %>
   <div id="modal_root"></div>
   <%= if ee?() && !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="py-12 lg:py-16 lg:flex lg:items-center lg:justify-between">
