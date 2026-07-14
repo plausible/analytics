@@ -9,18 +9,21 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
   setup [:create_user, :log_in, :create_site]
 
-  # @verify_button ~s|button#launch-verification-button[phx-click="launch-verification"]|
   @retry_button ~s|a[phx-click="retry"]|
-  # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
   @progress ~s|#verification-ui p#progress|
   @awaiting ~s|#verification-ui span#awaiting|
-  @heading ~s|#verification-ui h2|
+  @heading ~s|#verification-ui h3|
 
   describe "GET /:domain" do
     @tag :ee_only
-    test "static verification screen renders", %{conn: conn, site: site} do
+    test "static verification banner renders on a freshly provisioned site", %{
+      conn: conn,
+      site: site
+    } do
       resp =
-        get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
+        conn
+        |> no_slowdown()
+        |> get("/#{site.domain}?verify_installation=true")
         |> html_response(200)
 
       assert text_of_element(resp, @progress) =~
@@ -30,12 +33,10 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     @tag :ce_build_only
-    test "static verification screen renders (ce)", %{conn: conn, site: site} do
-      resp =
-        get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
-        |> html_response(200)
+    test "no verification banner renders on CE", %{conn: conn, site: site} do
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
 
-      assert resp =~ "Awaiting your first pageview …"
+      refute resp =~ "verification-ui"
     end
   end
 
@@ -57,14 +58,11 @@ defmodule PlausibleWeb.Live.VerificationTest do
                "We're visiting your site to ensure that everything is working"
     end
 
-    @tag :ce_build_only
-    test "LiveView mounts (ce)", %{conn: conn, site: site} do
-      {_, html} = get_lv(conn, site)
-      assert html =~ "Awaiting your first pageview …"
-    end
-
     @tag :ee_only
-    test "from custom URL input form to verification", %{conn: conn, site: site} do
+    test "clicking the custom URL link swaps in the form, submitting kicks off a new run", %{
+      conn: conn,
+      site: site
+    } do
       stub_lookup_a_records(site.domain)
 
       stub_verification_result(%{
@@ -72,24 +70,21 @@ defmodule PlausibleWeb.Live.VerificationTest do
         "error" => %{"message" => "Error"}
       })
 
-      # Get liveview with ?custom_url=true query param
-      {:ok, lv, html} =
-        conn |> no_slowdown() |> live("/#{site.domain}/verification?custom_url=true")
+      {lv, _html} = get_lv(conn, site)
 
       verifying_installation_text = "Verifying your installation"
 
-      # Assert form is rendered instead of kicking off verification automatically
-      assert html =~ "Enter Your Custom URL"
+      html = lv |> render_click("show-custom-url-form")
+
+      assert html =~ "Enter your custom URL"
       assert html =~ ~s[value="https://#{site.domain}"]
       assert html =~ ~s[placeholder="https://#{site.domain}"]
       refute html =~ verifying_installation_text
 
-      # Submit custom URL form
       html = lv |> element("form") |> render_submit(%{"custom_url" => "https://abc.de"})
 
-      # Should now show verification progress and hide custom URL form
       assert html =~ verifying_installation_text
-      refute html =~ "Enter Your Custom URL"
+      refute html =~ "Enter your custom URL"
     end
 
     @tag :ee_only
@@ -161,10 +156,14 @@ defmodule PlausibleWeb.Live.VerificationTest do
       html = render(lv)
 
       refute text_of_element(html, @awaiting) =~ "Awaiting your first pageview"
-      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}/")
+      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}")
     end
 
-    test "will redirect when first pageview arrives", %{conn: conn, site: site} do
+    @tag :ee_only
+    test "shows success in place (no redirect) once first pageview arrives", %{
+      conn: conn,
+      site: site
+    } do
       stub_lookup_a_records(site.domain)
 
       stub_verification_result(%{
@@ -184,30 +183,19 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       assert eventually(fn ->
                html = render(lv)
-
-               {
-                 text(html) =~ "Awaiting",
-                 html
-               }
+               {text(html) =~ "Awaiting", html}
              end)
 
       populate_stats(site, [
         build(:pageview)
       ])
 
-      assert_redirect(lv, Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain))
-    end
+      assert eventually(fn ->
+               html = render(lv)
+               {not (text(html) =~ "Awaiting your first pageview"), html}
+             end)
 
-    @tag :ce_build_only
-    test "will redirect when first pageview arrives (ce)", %{conn: conn, site: site} do
-      {:ok, lv} = kick_off_live_verification(conn, site)
-
-      html = render(lv)
-      assert text(html) =~ "Awaiting your first pageview …"
-
-      populate_stats(site, [build(:pageview)])
-
-      assert_redirect(lv, Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain))
+      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}")
     end
 
     for {installation_type_param, expected_text, saved_installation_type} <- [
@@ -261,7 +249,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
           kick_off_live_verification(
             conn,
             site,
-            "?installation_type=#{unquote(installation_type_param)}"
+            "installation_type=#{unquote(installation_type_param)}"
           )
 
         assert html =
@@ -285,16 +273,30 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp get_lv(conn, site, qs \\ nil) do
-    {:ok, lv, html} = conn |> no_slowdown() |> live("/#{site.domain}/verification#{qs}")
+    {:ok, lv, html} =
+      conn |> no_slowdown() |> as_live() |> live(verification_path(site, qs))
+
     {lv, html}
   end
 
   defp kick_off_live_verification(conn, site, qs \\ nil) do
     {:ok, lv, _html} =
-      conn |> no_slowdown() |> no_delay() |> live("/#{site.domain}/verification#{qs}")
+      conn |> no_slowdown() |> no_delay() |> as_live() |> live(verification_path(site, qs))
 
     {:ok, lv}
   end
+
+  # `PlausibleWeb.Live.Verification` is rendered via `live_render/3` from a
+  # plain controller-rendered page rather than a live router route, so it
+  # never carries the `:live_module` assign `Phoenix.LiveViewTest.live/2`
+  # looks for. Mirrors the same workaround used in other live_render-embedded
+  # LiveView tests (e.g. props_settings_test.exs).
+  defp as_live(conn), do: assign(conn, :live_module, PlausibleWeb.Live.Verification)
+
+  defp verification_path(site, nil), do: "/#{site.domain}?verify_installation=true"
+
+  defp verification_path(site, qs),
+    do: "/#{site.domain}?verify_installation=true&#{qs}"
 
   defp no_slowdown(conn) do
     Plug.Conn.put_private(conn, :slowdown, 0)

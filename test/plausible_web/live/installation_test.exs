@@ -246,10 +246,11 @@ defmodule PlausibleWeb.Live.InstallationTest do
             {"gtm", "Verify Tag Manager installation"},
             {"npm", "Verify NPM installation"}
           ] do
-        test "submitting form with #{type} redirects to verification (EE)", %{
-          conn: conn,
-          site: site
-        } do
+        test "submitting form with #{type} redirects to the dashboard with the verification banner (EE)",
+             %{
+               conn: conn,
+               site: site
+             } do
           stub_lookup_a_records(site.domain)
           stub_detection_manual()
           {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
@@ -270,7 +271,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
           assert_redirect(
             lv,
-            Routes.site_path(conn, :verification, site.domain,
+            Routes.stats_path(conn, :stats, site.domain,
+              verify_installation: true,
               flow: "provisioning",
               installation_type: unquote(type)
             )
@@ -280,7 +282,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     @tag :ce_build_only
-    test "submitting the form redirects to verification (CE)", %{conn: conn, site: site} do
+    test "submitting the form redirects straight to the dashboard, no banner (CE)", %{
+      conn: conn,
+      site: site
+    } do
       {lv, _html} = get_lv(conn, site)
 
       lv
@@ -294,13 +299,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         }
       })
 
-      assert_redirect(
-        lv,
-        Routes.site_path(conn, :verification, site.domain,
-          flow: "provisioning",
-          installation_type: "manual"
-        )
-      )
+      assert_redirect(lv, Routes.stats_path(conn, :stats, site.domain))
     end
 
     test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
@@ -331,10 +330,11 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert Enum.any?(goals, &(&1.event_name == "404"))
     end
 
-    test "submitting form with review flow redirects to verification with flow param", %{
-      conn: conn,
-      site: site
-    } do
+    test "submitting form with review flow redirects to the dashboard with the flow param preserved",
+         %{
+           conn: conn,
+           site: site
+         } do
       on_ee do
         stub_lookup_a_records(site.domain)
         stub_detection_manual()
@@ -356,13 +356,20 @@ defmodule PlausibleWeb.Live.InstallationTest do
         }
       })
 
-      assert_redirect(
-        lv,
-        Routes.site_path(conn, :verification, site.domain,
-          flow: "review",
-          installation_type: "manual"
+      on_ee do
+        assert_redirect(
+          lv,
+          Routes.stats_path(conn, :stats, site.domain,
+            verify_installation: true,
+            flow: "review",
+            installation_type: "manual"
+          )
         )
-      )
+      end
+
+      on_ce do
+        assert_redirect(lv, Routes.stats_path(conn, :stats, site.domain))
+      end
     end
 
     @tag :ee_only

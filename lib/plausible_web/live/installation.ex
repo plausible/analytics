@@ -324,14 +324,21 @@ defmodule PlausibleWeb.Live.Installation do
         :installation
       )
 
-    {:noreply,
-     push_navigate(socket,
-       to:
-         Routes.site_path(socket, :verification, socket.assigns.site.domain,
-           flow: socket.assigns.flow,
-           installation_type: config.installation_type
-         )
-     )}
+    domain = socket.assigns.site.domain
+
+    destination =
+      on_ee do
+        Routes.stats_path(socket, :stats, domain,
+          verify_installation: true,
+          flow: socket.assigns.flow,
+          installation_type: config.installation_type
+        )
+      else
+        _need_to_use_variable_on_ce = config
+        Routes.stats_path(socket, :stats, domain, [])
+      end
+
+    {:noreply, push_navigate(socket, to: destination)}
   end
 
   defp initialize_installation_data(flow, site, params) do
