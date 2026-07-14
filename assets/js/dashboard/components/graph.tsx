@@ -274,7 +274,8 @@ function InnerGraph<T extends GraphYValues>({
             },
             xAccessor: (_d, index) => x(index),
             yAccessor: (d) => y(d.values[seriesIndex]!),
-            className: line.lineClassName
+            className: line.lineClassName,
+            seriesIndex
           })
         }
       }
@@ -872,6 +873,7 @@ function drawLine<T extends GraphYValues>({
   isDefined,
   xAccessor,
   yAccessor,
+  seriesIndex,
   className
 }: {
   svg: SelectedSVG
@@ -879,6 +881,7 @@ function drawLine<T extends GraphYValues>({
   isDefined: (d: Datum<T>, index: number) => boolean
   xAccessor: (d: Datum<T>, index: number) => number
   yAccessor: (d: Datum<T>, index: number) => number
+  seriesIndex: number
   className?: string
 }) {
   const line = d3.line<Datum<T>>().defined(isDefined).x(xAccessor).y(yAccessor)
@@ -886,7 +889,7 @@ function drawLine<T extends GraphYValues>({
   svg
     .append('path')
     .attr('class', classNames(className))
-    .attr('data-testid', 'graph-line')
+    .attr('data-testid', `graph-line-series-${seriesIndex}`)
     .datum(datum)
     .attr('d', line)
 }
