@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         env:
           DOCKER_METADATA_PR_HEAD_SHA: true
         with:
@@ -35,10 +35,10 @@ jobs:
             type=sha
 
       - name: Setup Blacksmith Builder
-        uses: useblacksmith/setup-docker-builder@722e97d12b1d06a961800dd6c05d79d951ad3c80 # v1.8.0
+        uses: useblacksmith/setup-docker-builder@ab5c1da94f53f5cd75c1038092aa276dddfccbba # v1.9.0
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build and push
         id: docker_build
-        uses: useblacksmith/build-push-action@30c71162f16ea2c27c3e21523255d209b8b538c1 # v2
+        uses: useblacksmith/build-push-action@ae61d84c78ee061560aeb3cf9ddc12ab3d0cef71 # v2
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Notify team on failure
         if: ${{ failure() && github.ref == 'refs/heads/master' }}
-        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
+        uses: fjogeleit/http-request-action@f98bb26551cd1af7d3eb2674578a80754ece88db # v2.0.1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
@@ -82,7 +82,7 @@ jobs:
 
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
-        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
+        uses: fjogeleit/http-request-action@f98bb26551cd1af7d3eb2674578a80754ece88db # v2.0.1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
