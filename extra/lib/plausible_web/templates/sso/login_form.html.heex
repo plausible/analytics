@@ -1,52 +1,54 @@
-<.focus_box>
-  <:title>
-    {Phoenix.Flash.get(@flash, :login_title) || "Enter your Single Sign-On email"}
-  </:title>
-  <:subtitle>
-    <%= if Phoenix.Flash.get(@flash, :login_instructions) do %>
-      <p class="text-gray-500 mt-1 mb-2">
-        {Phoenix.Flash.get(@flash, :login_instructions)}
-      </p>
-    <% end %>
-  </:subtitle>
+<.auth_container>
   <script :if={@autosubmit}>
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("sso-login-form").submit();
     });
   </script>
-  <.form :let={f} id="sso-login-form" for={@conn} action={Routes.sso_path(@conn, :login)}>
-    <div class="my-4 mt-8">
-      <.input
-        type="email"
-        autocomplete="username"
-        placeholder="user@example.com"
-        field={f[:email]}
-      />
+
+  <.form
+    :let={f}
+    id="sso-login-form"
+    for={@conn}
+    action={Routes.sso_path(@conn, :login)}
+    class="flex flex-col gap-y-6"
+  >
+    <div class="flex flex-col gap-y-2">
+      <label for={f[:email].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        Email
+      </label>
+      <div>
+        <.input
+          type="email"
+          autocomplete="username"
+          placeholder="example@email.com"
+          field={f[:email]}
+          mt?={false}
+          autofocus="autofocus"
+        />
+      </div>
+      <p
+        :if={login_error = Phoenix.Flash.get(@flash, :login_error)}
+        class="text-xs text-red-500"
+      >
+        {login_error}
+      </p>
     </div>
 
-    <%= if login_error = Phoenix.Flash.get(@flash, :login_error) do %>
-      <div class="text-red-500 mt-4">{login_error}</div>
-    <% end %>
+    <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
 
-    <.input type="hidden" field={f[:return_to]} />
+    <div class="flex flex-col gap-y-4">
+      <.button class="w-full" type="submit" mt?={false}>Sign in</.button>
 
-    <.button class="w-full" type="submit">Sign In</.button>
-  </.form>
-
-  <:footer>
-    <.focus_list>
-      <:item>
-        Have a standard account?
+      <p class="text-sm text-center text-gray-500 dark:text-gray-400">
         <.styled_link href={
           Routes.auth_path(@conn, :login_form,
             return_to: @conn.params["return_to"],
             prefer: "manual"
           )
         }>
-          Log in here
+          Use password instead
         </.styled_link>
-        instead.
-      </:item>
-    </.focus_list>
-  </:footer>
-</.focus_box>
+      </p>
+    </div>
+  </.form>
+</.auth_container>

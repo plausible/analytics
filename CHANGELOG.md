@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 - Update custom range datepicker styles
 - Improved site transfer UI
+- Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 
 ### Fixed
 

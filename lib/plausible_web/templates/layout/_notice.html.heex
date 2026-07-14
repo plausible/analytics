@@ -1,7 +1,3 @@
-<%= if assigns[:flash] do %>
-  {render("_flash.html", assigns)}
-<% end %>
-
 <div :if={assigns[:current_team]} class="flex flex-col gap-y-2">
   <Notice.active_grace_period
     :if={Plausible.Teams.GracePeriod.active?(@current_team)}

@@ -87,14 +87,13 @@ export async function register({
   await page.getByLabel('Full name').fill(user.name)
   await page.getByLabel('Email').fill(user.email)
   await page.getByLabel('Password', { exact: true }).fill(user.password)
-  await page.getByLabel('Confirm password', { exact: true }).fill(user.password)
   await expect(
     page.getByRole('button', { name: 'Start my free trial' })
   ).toBeEnabled()
   await page.getByRole('button', { name: 'Start my free trial' }).click()
 
   await expect(
-    page.getByRole('heading', { name: 'Activate your account' })
+    page.getByRole('heading', { name: 'Check your email' })
   ).toBeVisible()
 
   const response = await request.get('/sent-emails-api/emails.json')
@@ -124,11 +123,11 @@ export async function register({
 export async function login({ page, user }: { page: Page; user: User }) {
   await page.goto('/login', { waitUntil: 'commit' })
 
-  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
 
   await page.getByLabel('Email').fill(user.email)
   await page.getByLabel('Password').fill(user.password)
-  await page.getByRole('button', { name: 'Log in' }).click()
+  await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('button', { name: user.name })).toBeVisible()
 }

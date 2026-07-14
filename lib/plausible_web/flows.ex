@@ -15,8 +15,6 @@ defmodule PlausibleWeb.Flows do
       "Verify installation"
     ],
     register: [
-      "Register",
-      "Activate account",
       "Add site info",
       "Install Plausible",
       "Verify installation"

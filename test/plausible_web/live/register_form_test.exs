@@ -28,11 +28,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                ~s|input#register-form_password[type="password"][name="user[password]"]|
              )
 
-      assert element_exists?(
-               html,
-               ~s|input#register-form_password_confirmation[type="password"][name="user[password_confirmation]"]|
-             )
-
       assert element_exists?(html, ~s|button[type="submit"]|)
     end
 
@@ -58,7 +53,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
@@ -71,8 +65,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                action_input,
                name_input,
                email_input,
-               password_input,
-               password_confirmation_input | _
+               password_input | _
              ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
@@ -80,7 +73,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "mary.sue@plausible.test"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
-      assert text_of_attr(password_confirmation_input, "value") == "very-long-and-very-secret-123"
 
       assert %{
                name: "Mary Sue",
@@ -91,22 +83,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert String.length(password_hash) > 0
     end
 
-    test "renders only one error on empty password confirmation", %{conn: conn} do
-      mock_captcha_success()
-
-      lv = get_liveview(conn, "/register")
-
-      type_into_input(lv, "user[name]", "Mary Sue")
-      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
-      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "")
-
-      html = lv |> element("form") |> render_submit()
-
-      assert html =~ "does not match confirmation"
-      refute html =~ "can't be blank"
-    end
-
     test "renders error on failed captcha", %{conn: conn} do
       mock_captcha_failure()
 
@@ -115,7 +91,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
@@ -153,7 +128,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
@@ -166,8 +140,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                action_input,
                email_input,
                name_input,
-               password_input,
-               password_confirmation_input | _
+               password_input | _
              ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
@@ -175,7 +148,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "user@email.co"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
-      assert text_of_attr(password_confirmation_input, "value") == "very-long-and-very-secret-123"
 
       assert user =
                %{
@@ -201,7 +173,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
@@ -215,8 +186,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
                team_input,
                email_input,
                name_input,
-               password_input,
-               password_confirmation_input | _
+               password_input | _
              ] = find(html, "input") |> Enum.into([])
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
@@ -225,7 +195,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "team-user@email.co"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
-      assert text_of_attr(password_confirmation_input, "value") == "very-long-and-very-secret-123"
     end
 
     test "preserves trial_expiry_date when invitation role is :owner", %{
@@ -241,7 +210,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       _html = lv |> element("form") |> render_submit()
 
@@ -261,7 +229,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
@@ -283,7 +250,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       html = render(lv)
 
-      assert html =~ "Your invitation has expired or been revoked"
+      assert html =~ "This invitation has expired or was revoked"
     end
 
     test "renders error on failed captcha", %{conn: conn, guest_invitation: guest_invitation} do
@@ -293,7 +260,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
