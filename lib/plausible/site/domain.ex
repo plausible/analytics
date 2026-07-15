@@ -30,12 +30,10 @@ defmodule Plausible.Site.Domain do
     {updated, _} =
       Repo.update_all(
         from(s in Site.regular(),
+          where: not is_nil(s.domain_changed_from),
           where: s.domain_changed_at < ago(^expire_threshold_hours, "hour")
         ),
-        set: [
-          domain_changed_from: nil,
-          domain_changed_at: nil
-        ]
+        set: [domain_changed_from: nil]
       )
 
     {:ok, updated}

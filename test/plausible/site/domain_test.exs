@@ -83,8 +83,9 @@ defmodule Plausible.Site.DomainTest do
     assert site.domain_changed_at
 
     assert {:ok, _} = Domain.expire_change_transitions(-1)
-    refute Repo.reload!(site).domain_changed_from
-    refute Repo.reload!(site).domain_changed_at
+    expired_site = Repo.reload!(site)
+    refute expired_site.domain_changed_from
+    assert expired_site.domain_changed_at
   end
 
   test "expire changes overdue" do
@@ -99,14 +100,19 @@ defmodule Plausible.Site.DomainTest do
 
     assert {:ok, 1} = Domain.expire_change_transitions()
 
-    assert is_nil(Repo.reload!(s3).domain_changed_from)
-    assert is_nil(Repo.reload!(s3).domain_changed_at)
+    s3_after = Repo.reload!(s3)
+    assert is_nil(s3_after.domain_changed_from)
+    assert s3_after.domain_changed_at
 
     assert {:ok, 1} = Domain.expire_change_transitions(24)
-    assert is_nil(Repo.reload!(s2).domain_changed_at)
+    s2_after = Repo.reload!(s2)
+    assert is_nil(s2_after.domain_changed_from)
+    assert s2_after.domain_changed_at
 
     assert {:ok, 0} = Domain.expire_change_transitions()
-    assert Repo.reload!(s1).domain_changed_at
+    s1_after = Repo.reload!(s1)
+    assert s1_after.domain_changed_from
+    assert s1_after.domain_changed_at
   end
 
   test "new domain gets validated" do

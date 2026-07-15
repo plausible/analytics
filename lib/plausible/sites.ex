@@ -325,7 +325,6 @@ defmodule Plausible.Sites do
             site
             |> Ecto.Changeset.change()
             |> Ecto.Changeset.put_change(:domain_changed_from, nil)
-            |> Ecto.Changeset.put_change(:domain_changed_at, nil)
             |> Repo.update()
 
           _ ->
