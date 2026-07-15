@@ -91,7 +91,7 @@
         width="w-1/2"
       />
 
-      <div :if={@totp_enabled?} class="mt-2">
+      <div :if={@totp_enabled?} class="mt-6">
         <.label for={f[:two_factor_code].id} class="mb-2">
           Verify with 2FA Code
         </.label>
@@ -99,6 +99,7 @@
           form={f}
           show_button?={false}
           field={:two_factor_code}
+          class="w-1/2"
         />
       </div>
 

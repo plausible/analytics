@@ -64,15 +64,21 @@ defmodule PlausibleWeb.AuthController do
     user = conn.assigns.current_user
     flow = params["flow"] || PlausibleWeb.Flows.register()
     team_identifier = params["team_identifier"]
+    has_email_code? = Plausible.Users.has_email_code?(user)
+    has_any_memberships? = Plausible.Teams.Users.has_sites?(user)
 
-    render(conn, "activate.html",
+    render_auth_page(conn, "activate.html",
       error: nil,
-      has_email_code?: Plausible.Users.has_email_code?(user),
-      has_any_memberships?: Plausible.Teams.Users.has_sites?(user),
+      has_email_code?: has_email_code?,
+      has_any_memberships?: has_any_memberships?,
+      heading: activate_heading(has_email_code?),
       form_submit_url: "/activate?flow=#{flow}",
       team_identifier: team_identifier
     )
   end
+
+  defp activate_heading(true), do: "Check your email"
+  defp activate_heading(false), do: "Activate your account"
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
@@ -82,10 +88,17 @@ defmodule PlausibleWeb.AuthController do
       do_activate(conn, user, code)
     else
       {:error, {:rate_limit, _}} ->
-        render_error(
-          conn,
-          429,
-          "Too many activation attempts. Wait a few minutes before trying again."
+        has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
+        flow = conn.params["flow"]
+        team_identifier = conn.params["team_identifier"]
+
+        render_auth_page(conn, "activate.html",
+          error: "Too many attempts. Please wait a few minutes before trying again.",
+          has_email_code?: true,
+          has_any_memberships?: has_any_memberships?,
+          heading: activate_heading(true),
+          form_submit_url: "/activate?flow=#{flow}",
+          team_identifier: team_identifier
         )
     end
   end
@@ -116,19 +129,23 @@ defmodule PlausibleWeb.AuthController do
         end
 
       {:error, :incorrect} ->
-        render(conn, "activate.html",
-          error: "Incorrect activation code",
+        render_auth_page(conn, "activate.html",
+          error: "That code didn't work. Please try again.",
           has_email_code?: true,
           has_any_memberships?: has_any_memberships?,
-          form_submit_url: "/activate?flow=#{flow}"
+          heading: activate_heading(true),
+          form_submit_url: "/activate?flow=#{flow}",
+          team_identifier: team_identifier
         )
 
       {:error, :expired} ->
-        render(conn, "activate.html",
-          error: "Code is expired, please request another one",
+        render_auth_page(conn, "activate.html",
+          error: "The code has expired. Please request another one.",
           has_email_code?: false,
           has_any_memberships?: has_any_memberships?,
-          form_submit_url: "/activate?flow=#{flow}"
+          heading: activate_heading(false),
+          form_submit_url: "/activate?flow=#{flow}",
+          team_identifier: team_identifier
         )
     end
   end
@@ -152,11 +169,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render(conn, "password_reset_request_form.html")
+    render_password_reset_request_form(conn)
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render(conn, "password_reset_request_form.html", error: "Please enter an email address")
+    render_password_reset_request_form(conn, error: "Please enter an email address")
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
@@ -172,38 +189,62 @@ defmodule PlausibleWeb.AuthController do
             "Password reset e-mail sent. In dev environment GET /sent-emails for details."
           )
 
-          render(conn, "password_reset_request_success.html", email: email)
+          render_auth_page(conn, "password_reset_request_success.html",
+            heading: "Check your email",
+            email: email
+          )
 
         {:error, _} ->
-          render(conn, "password_reset_request_success.html", email: email)
+          render_auth_page(conn, "password_reset_request_success.html",
+            heading: "Check your email",
+            email: email
+          )
       end
     else
-      render(conn, "password_reset_request_form.html",
-        error: "Please complete the captcha to reset your password"
+      render_password_reset_request_form(conn,
+        captcha_error: "Please complete the captcha to reset your password"
       )
     end
+  end
+
+  defp render_password_reset_request_form(conn, extra_assigns \\ []) do
+    render_auth_page(
+      conn,
+      "password_reset_request_form.html",
+      Keyword.merge(
+        [
+          heading: "Reset your password",
+          subtitle: "Enter your email to receive a password reset link."
+        ],
+        extra_assigns
+      )
+    )
   end
 
   def password_reset_form(conn, params) do
     case Auth.Token.verify_password_reset(params["token"]) do
       {:ok, %{email: email}} ->
-        render(conn, "password_reset_form.html",
+        render_auth_page(conn, "password_reset_form.html",
           connect_live_socket: true,
+          heading: "Reset your password",
+          subtitle: "Choose a new password for your account",
           email: email
         )
 
       {:error, :expired} ->
-        render_error(
-          conn,
-          401,
-          "Your token has expired. Please request another password reset link."
+        conn
+        |> put_status(401)
+        |> render_auth_page("password_reset_error.html",
+          heading: "Password reset link expired",
+          subtitle: "Request a new one to reset your password."
         )
 
       {:error, _} ->
-        render_error(
-          conn,
-          401,
-          "Your token is invalid. Please request another password reset link."
+        conn
+        |> put_status(401)
+        |> render_auth_page("password_reset_error.html",
+          heading: "Password reset link invalid",
+          subtitle: "Request a new one to reset your password."
         )
     end
   end
@@ -212,7 +253,7 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> UserAuth.log_out_user()
     |> put_flash(:login_title, "Password updated successfully")
-    |> put_flash(:login_instructions, "Please log in with your new credentials")
+    |> put_flash(:login_instructions, "Please sign in with your new credentials")
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
@@ -226,13 +267,20 @@ defmodule PlausibleWeb.AuthController do
           redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
 
         _ ->
-          render(conn, "login_form.html")
+          render_login_form(conn)
       end
     end
   else
     def login_form(conn, _params) do
-      render(conn, "login_form.html")
+      render_login_form(conn)
     end
+  end
+
+  defp render_login_form(conn) do
+    heading = Phoenix.Flash.get(conn.assigns.flash, :login_title) || "Sign in to your account"
+    subtitle = Phoenix.Flash.get(conn.assigns.flash, :login_instructions)
+
+    render_auth_page(conn, "login_form.html", heading: heading, subtitle: subtitle)
   end
 
   def login(conn, %{"user" => params}) do
@@ -280,16 +328,16 @@ defmodule PlausibleWeb.AuthController do
         Auth.log_failed_login_attempt("wrong password for #{email}")
 
         conn
-        |> put_flash(:login_error, "Wrong email or password. Please try again.")
-        |> render("login_form.html")
+        |> put_flash(:login_error, "Incorrect email or password. Please try again.")
+        |> render_login_form()
 
       {:error, :user_not_found} ->
         Auth.log_failed_login_attempt("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
         conn
-        |> put_flash(:login_error, "Wrong email or password. Please try again.")
-        |> render("login_form.html")
+        |> put_flash(:login_error, "Incorrect email or password. Please try again.")
+        |> render_login_form()
 
       {:error, {:rate_limit, _}} ->
         Auth.log_failed_login_attempt("too many login attempts for #{email}")
@@ -439,9 +487,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
-          )
+          render_verify_2fa(conn)
         else
           redirect_to_login(conn)
         end
@@ -462,11 +508,7 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
 
-          conn
-          |> put_flash(:error, "The provided code is invalid. Please try again")
-          |> render("verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
-          )
+          render_verify_2fa(conn, "The provided code is invalid. Please try again")
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user, params["return_to"])
@@ -478,7 +520,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa_recovery_code.html")
+          render_verify_2fa_recovery_code(conn)
         else
           redirect_to_login(conn)
         end
@@ -497,14 +539,32 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
 
-          conn
-          |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
-          |> render("verify_2fa_recovery_code.html")
+          render_verify_2fa_recovery_code(
+            conn,
+            "The provided recovery code is invalid. Please try another one"
+          )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
       end
     end
+  end
+
+  defp render_verify_2fa(conn, error \\ nil) do
+    render_auth_page(conn, "verify_2fa.html",
+      error: error,
+      heading: "Enter your 2FA code",
+      subtitle: "Open your authenticator app and enter the 6-digit code.",
+      remember_2fa_days: TwoFactor.Session.remember_2fa_days()
+    )
+  end
+
+  defp render_verify_2fa_recovery_code(conn, error \\ nil) do
+    render_auth_page(conn, "verify_2fa_recovery_code.html",
+      error: error,
+      heading: "Use a recovery code",
+      subtitle: "Enter one of your saved recovery codes to sign in."
+    )
   end
 
   defp get_2fa_user_limited(conn) do

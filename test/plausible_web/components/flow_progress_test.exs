@@ -27,11 +27,11 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
     rendered =
       render_component(&FlowProgress.render/1,
         flow: PlausibleWeb.Flows.register(),
-        current_step: "Register"
+        current_step: "Add site info"
       )
 
     assert text_of_element(rendered, "#flow-progress") ==
-             "1 Register 2 Activate account 3 Add site info 4 Install Plausible 5 Verify installation"
+             "1 Add site info 2 Install Plausible 3 Verify installation"
   end
 
   test "invitation" do

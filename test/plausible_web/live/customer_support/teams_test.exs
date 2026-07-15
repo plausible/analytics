@@ -431,6 +431,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "shared_segments" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "true",
               "sites_api" => "true"
             }
@@ -464,6 +465,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "shared_segments" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "true",
               "sites_api" => "true",
               "sso" => "false",
@@ -658,6 +660,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "props" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "false",
               "sites_api" => "false",
               "sso" => "false"

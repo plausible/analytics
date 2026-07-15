@@ -146,7 +146,8 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
 
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)

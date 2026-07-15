@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                      ] = json_response(conn, 200)
     end
 
-    test "personal annotations of the user and all site annotations are shown with annotation owner info when viewing their site, sorted by updated_at, ascending",
+    test "personal annotations of the user and all site annotations are shown with annotation owner info when viewing their site, ordered by datetime ascending then id descending",
          %{conn: conn, user: user} do
       site = new_site()
       other_user = new_user()
@@ -69,28 +69,21 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
 
       insert(:annotation,
         site: site,
-        owner: user,
-        type: :personal,
-        note: "mine",
-        inserted_at: ~U[2026-07-01 10:00:00Z],
-        updated_at: ~U[2026-07-01 10:00:00Z]
-      )
-
-      insert(:annotation,
-        site: site,
-        owner: other_user,
-        type: :personal,
-        note: "not mine",
-        inserted_at: ~U[2026-07-01 10:00:00Z],
-        updated_at: ~U[2026-07-01 11:00:00Z]
-      )
-
-      insert(:annotation,
-        site: site,
         owner: other_user,
         type: :site,
-        note: "shared",
-        inserted_at: ~U[2026-07-01 10:00:00Z],
+        note: "site note from other user",
+        granularity: :date,
+        datetime: ~U[2026-06-29 00:00:00Z],
+        updated_at: ~U[2026-07-01 12:00:00Z]
+      )
+
+      insert(:annotation,
+        site: site,
+        owner: user,
+        type: :site,
+        note: "site note from this user",
+        granularity: :date,
+        datetime: ~U[2026-06-29 00:00:00Z],
         updated_at: ~U[2026-07-01 12:00:00Z]
       )
 
@@ -98,21 +91,44 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
         site: site,
         owner: nil,
         type: :site,
-        note: "dangling",
-        inserted_at: ~U[2026-07-01 10:00:00Z],
-        updated_at: ~U[2026-07-01 13:00:00Z]
+        note: "site note without owner",
+        granularity: :date,
+        datetime: ~U[2026-06-01 00:00:00Z]
       )
 
-      conn = get(conn, "/api/#{site.domain}/annotations?date_range=day&relative_date=2026-01-04")
+      insert(:annotation,
+        site: site,
+        owner: other_user,
+        type: :personal,
+        note: "other user's personal note",
+        granularity: :date,
+        datetime: ~U[2026-06-29 00:00:00Z]
+      )
+
+      insert(:annotation,
+        site: site,
+        owner: user,
+        type: :personal,
+        note: "my note",
+        granularity: :minute,
+        datetime: ~U[2026-06-29 00:01:00Z],
+        updated_at: ~U[2026-07-01 10:00:00Z]
+      )
+
+      conn =
+        get(
+          conn,
+          "/api/#{site.domain}/annotations?date_range_start=2026-06-01&date_range_end=2026-06-30"
+        )
 
       results = json_response(conn, 200)
 
       assert_matches [
                        ^strict_map(%{
                          "id" => ^any(:pos_integer),
-                         "note" => "dangling",
+                         "note" => "site note without owner",
                          "type" => "site",
-                         "datetime" => "2026-01-04",
+                         "datetime" => "2026-06-01",
                          "granularity" => "date",
                          "owner_id" => nil,
                          "owner_name" => nil,
@@ -121,9 +137,20 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                        }),
                        ^strict_map(%{
                          "id" => ^any(:pos_integer),
-                         "note" => "shared",
+                         "note" => "site note from this user",
                          "type" => "site",
-                         "datetime" => "2026-01-04",
+                         "datetime" => "2026-06-29",
+                         "granularity" => "date",
+                         "owner_id" => ^user.id,
+                         "owner_name" => ^user.name,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }),
+                       ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "note" => "site note from other user",
+                         "type" => "site",
+                         "datetime" => "2026-06-29",
                          "granularity" => "date",
                          "owner_id" => ^other_user.id,
                          "owner_name" => ^other_user.name,
@@ -132,10 +159,10 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                        }),
                        ^strict_map(%{
                          "id" => ^any(:pos_integer),
-                         "note" => "mine",
+                         "note" => "my note",
                          "type" => "personal",
-                         "datetime" => "2026-01-04",
-                         "granularity" => "date",
+                         "datetime" => "2026-06-29T00:01:00",
+                         "granularity" => "minute",
                          "owner_id" => ^user.id,
                          "owner_name" => ^user.name,
                          "inserted_at" => ^any(:iso8601_naive_datetime),
@@ -722,6 +749,36 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
                          "updated_at" => ^any(:iso8601_naive_datetime)
                        }) = response
       end
+    end
+
+    test "owner on a plan without site_annotations can demote a site annotation to personal",
+         %{conn: conn, user: user} do
+      subscribe_to_starter_plan(user)
+      site = new_site(owner: user)
+      refute Plausible.Annotations.site_annotations_available?(site)
+
+      annotation =
+        insert(:annotation,
+          site: site,
+          owner: user,
+          type: :site,
+          granularity: :date,
+          datetime: ~U[2026-06-15 00:00:00Z]
+        )
+
+      response =
+        patch(conn, "/api/#{site.domain}/annotations/#{annotation.id}", %{
+          "type" => "personal",
+          "note" => "converted after downgrade"
+        })
+        |> json_response(200)
+
+      assert response["type"] == "personal"
+      assert response["note"] == "converted after downgrade"
+
+      reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, annotation.id)
+      assert reloaded.type == :personal
+      assert reloaded.note == "converted after downgrade"
     end
   end
 end

@@ -11,6 +11,7 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { DashboardPeriod } from '../../dashboard-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
+import { isDateRangeCalendarOpen } from './date-range-calendar'
 
 const ArrowKeybind = ({
   keyboardKey
@@ -36,6 +37,8 @@ const ArrowKeybind = ({
       type="keydown"
       keyboardKey={keyboardKey}
       navigateProps={{ search }}
+      // Don't hijack arrow keys flatpickr uses for its own day-cell navigation.
+      shouldAlsoIgnoreWhen={[isDateRangeCalendarOpen]}
     />
   )
 }

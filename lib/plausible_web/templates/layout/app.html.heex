@@ -37,6 +37,10 @@
     ]}
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
+    <%= if !assigns[:embedded] && assigns[:flash] do %>
+      {render("_flash.html", assigns)}
+    <% end %>
+
     <%= if !assigns[:embedded] && !assigns[:hide_header?] do %>
       {render("_header.html", assigns)}
 

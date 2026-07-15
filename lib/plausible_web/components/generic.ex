@@ -6,6 +6,8 @@ defmodule PlausibleWeb.Components.Generic do
 
   import PlausibleWeb.Components.Icons
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   @notice_themes %{
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
@@ -51,6 +53,17 @@ defmodule PlausibleWeb.Components.Generic do
     "sm" => "btn-sm",
     "md" => "btn-md"
   }
+
+  attr(:class, :string, default: "")
+  slot(:inner_block, required: true)
+
+  def auth_container(assigns) do
+    ~H"""
+    <div class={["w-full max-w-md mx-auto mt-10 pb-16 px-4", @class]}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
@@ -1304,7 +1317,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <span
       class={[
-        "inline-flex items-center text-xs font-medium py-[3px] px-[7px] rounded-md",
+        "inline-flex items-center text-xs font-medium py-1 px-2 rounded-md",
         @color_classes,
         @class
       ]}
@@ -1312,6 +1325,25 @@ defmodule PlausibleWeb.Components.Generic do
     >
       {render_slot(@inner_block)}
     </span>
+    """
+  end
+
+  attr(:plan, :string, required: true)
+  attr(:color, :atom, default: :indigo, values: [:gray, :indigo, :yellow, :green, :red])
+  attr(:rest, :global)
+
+  def upgrade_pill(assigns) do
+    ~H"""
+    <.link
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      class="inline-block"
+      {@rest}
+    >
+      <.pill color={@color} class="gap-x-1">
+        <.diamond_icon class="size-3.5 [&_path]:stroke-2" />
+        {@plan}
+      </.pill>
+    </.link>
     """
   end
 

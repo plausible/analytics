@@ -15,20 +15,13 @@ type BucketExpectation = [
 const MAIN_LINE = 'path.stroke-indigo-500[data-testid="graph-line"]'
 
 async function hoverAndReadTooltip(page: Page, bucketIndex: number) {
-  await page
-    .locator(`[data-testid="graph-dot-group-${bucketIndex}"]`)
-    .first()
-    .hover()
-  const tooltip = page.locator('[data-testid="graph-tooltip"]')
+  await page.getByTestId(`graph-dot-series-1-bucket-${bucketIndex}`).hover()
+  const tooltip = page.getByTestId('graph-tooltip')
   await expect(tooltip).toBeVisible()
   return {
-    metricLabel: await tooltip
-      .locator('[data-testid="metric-label"]')
-      .innerText(),
-    mainTimeLabel: await tooltip
-      .locator('[data-testid="main-time-label"]')
-      .innerText(),
-    mainValue: await tooltip.locator('[data-testid="main-value"]').innerText()
+    metricLabel: await tooltip.getByTestId('metric-label').innerText(),
+    mainTimeLabel: await tooltip.getByTestId('main-time-label').innerText(),
+    mainValue: await tooltip.getByTestId('main-value').innerText()
   }
 }
 

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Annotations feature
 - Pages report can now be broken down by URL (hostname + path) in addition to path only
 - New "AI Assistants" acquisition channel + improved recognized sources database
 - Allow querying revenue metrics (`total_revenue`, `average_revenue`) with visit dimensions in Stats API v2
@@ -35,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Use ResizeObserver instead of polling in tracker for scroll depth. Removes forced reflows caused by the tracker script.
 - Update custom range datepicker styles
 - Improved site transfer UI
+- Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 
 ### Fixed
 
@@ -49,6 +51,7 @@ All notable changes to this project will be documented in this file.
 - Fixed issue with timestamps being rendered incorrectly in segment menus and modals for some timezones
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
 - Fixed issue with users with billing role not being able to create personal segments
+- Fixed period arrow keys hijacking custom-range calendar
 
 ## v3.2.0 - 2026-01-16
 

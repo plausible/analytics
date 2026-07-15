@@ -72,6 +72,7 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.Goals,
     Plausible.Billing.Feature.RevenueGoals,
     Plausible.Billing.Feature.SiteSegments,
+    Plausible.Billing.Feature.SiteAnnotations,
     Plausible.Billing.Feature.SitesAPI,
     Plausible.Billing.Feature.StatsAPI,
     Plausible.Billing.Feature.SSO,
@@ -209,6 +210,13 @@ defmodule Plausible.Billing.Feature.SiteSegments do
   use Plausible.Billing.Feature,
     name: :site_segments,
     display_name: "Shared Segments"
+end
+
+defmodule Plausible.Billing.Feature.SiteAnnotations do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :site_annotations,
+    display_name: "Shared Annotations"
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do

@@ -4,7 +4,7 @@ import classNames from 'classnames'
 /**
  * Themes and sizes are kept in sync with the Phoenix `button` component in
  * `lib/plausible_web/components/generic.ex`. The actual Tailwind classes live
- * in `assets/css/app.css` (.btn-base, .btn-{sm,md}, .btn-theme-*).
+ * in `assets/css/app.css` (.btn-base, .btn-{xs,sm,md}, .btn-theme-*).
  */
 
 export type ButtonTheme =
@@ -15,11 +15,12 @@ export type ButtonTheme =
   | 'ghost'
   | 'icon'
 
-export type ButtonSize = 'sm' | 'md'
+export type ButtonSize = 'xs' | 'sm' | 'md'
 
 const buttonBaseClass = 'btn-base'
 
 const buttonSizes: Record<ButtonSize, string> = {
+  xs: 'btn-xs',
   sm: 'btn-sm',
   md: 'btn-md'
 }
