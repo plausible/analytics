@@ -56,7 +56,10 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
 
       {:error, :not_found} ->
         conn
-        |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
+        |> Phoenix.Controller.put_flash(
+          :login_error,
+          "We couldn't find a Single Sign-On account for that email."
+        )
         |> Phoenix.Controller.redirect(
           to: Routes.sso_path(conn, :login_form, return_to: params["return_to"])
         )

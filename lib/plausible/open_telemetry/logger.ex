@@ -7,8 +7,6 @@ defmodule Plausible.OpenTelemetry.Logger do
   to the Logger metadata when Phoenix router dispatch starts.
   """
 
-  require Logger
-
   @doc """
   Attaches telemetry handlers to set trace_id in Logger metadata.
 

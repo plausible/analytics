@@ -12,8 +12,6 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   """
   use Plausible.DataMigration, dir: "PopulateEventSessionColumns", repo: Plausible.IngestRepo
 
-  require Logger
-
   # See https://clickhouse.com/docs/en/sql-reference/dictionaries#cache for meaning of these defaults
   @default_dictionary_config %{
     lifetime: 600_000,

@@ -1,107 +1,81 @@
-<PlausibleWeb.Components.FlowProgress.render
-  flow={@conn.params["flow"]}
-  current_step="Activate account"
-/>
+<p class="max-w-md mx-auto mt-2 px-4 text-base text-gray-500 dark:text-gray-400 text-center text-pretty">
+  <%= if @has_email_code? do %>
+    We've sent an email with your code to: <br />
+    <span class="font-semibold">{@conn.assigns[:current_user].email}</span>
+  <% else %>
+    We'll send a 4-digit activation code to: <br />
+    <span class="font-semibold">{@conn.assigns[:current_user].email}</span>
+  <% end %>
+</p>
 
-<.focus_box>
-  <:title>
-    <%= if @has_email_code? do %>
-      <%= if @has_any_memberships? do %>
-        Verify your email address
-      <% else %>
-        Activate your account
-      <% end %>
-    <% else %>
-      Activate your account
-    <% end %>
-  </:title>
+<.auth_container>
+  <%= if @has_email_code? do %>
+    <.form
+      :let={f}
+      for={@conn}
+      action={@form_submit_url}
+      class="flex flex-col gap-y-6"
+    >
+      <input type="hidden" name="team_identifier" value={@team_identifier} />
 
-  <:subtitle :if={@has_email_code?}>
-    <p class="break-all">
-      Please enter the 4-digit code we sent to <b>{@conn.assigns[:current_user].email}</b>
-    </p>
-  </:subtitle>
+      <div class="flex flex-col gap-y-2">
+        <.otp_input field={f[:code]} length={4} autofocus="autofocus" />
+        <p :if={@error} class="text-xs text-red-500 text-center">
+          {@error}
+        </p>
+      </div>
 
-  <:subtitle :if={!@has_email_code?}>
-    <p class="break-all">
-      A 4-digit activation code will be sent to <b>{@conn.assigns[:current_user].email}</b>
-    </p>
-  </:subtitle>
-
-  <div :if={@has_email_code?}>
-    <.form :let={f} for={@conn} action={@form_submit_url}>
-      <.input type="hidden" field={f[:team_identifier]} />
-      <.input
-        field={f[:code]}
-        class="tracking-widest font-medium shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-200 dark:bg-gray-900 text-center"
-        oninput="this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()"
-        onclick="this.select();"
-        maxlength="4"
-        placeholder="••••"
-        style="letter-spacing: 10px;"
-        required={true}
-      />
-      <.button id="submit" type="submit" class="w-full mt-8">
-        Activate
+      <.button type="submit" class="w-full" mt?={false}>
+        Activate account
       </.button>
     </.form>
-  </div>
 
-  <.error>{@error}</.error>
-
-  <div :if={!@has_email_code?}>
-    <.button_link method="post" class="w-full" href="/activate/request-code">
-      Request activation code
-    </.button_link>
-  </div>
-
-  <:footer :if={@has_email_code?}>
-    <b>Didn't receive an email?</b>
-
-    <.focus_list>
-      <:item>
-        Check your spam folder
-      </:item>
-      <:item>
-        <.styled_link href="/activate/request-code" method="post">
-          Send a new code
-        </.styled_link>
-        to {@conn.assigns[:current_user].email}
-      </:item>
-      <:item :if={ee?()}>
-        <.styled_link href="https://plausible.io/contact" new_tab={true}>
-          Contact us
-        </.styled_link>
-        if the problem persists
-      </:item>
-      <:item :if={ce?()}>
-        Ask on our
-        <.styled_link href="https://github.com/plausible/analytics/discussions" new_tab={true}>
-          community-supported forum
-        </.styled_link>
-      </:item>
-    </.focus_list>
-
-    <b>Entered the wrong email address?</b>
-
-    <.focus_list>
-      <:item :if={@has_any_memberships?}>
-        <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
-          Change email back to
-        </.styled_link>
-        {@conn.assigns[:current_user].previous_email}
-      </:item>
-
-      <:item :if={not @has_any_memberships?}>
+    <div class="mt-6 flex flex-col gap-y-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+      <p>
+        Didn't receive it?
+        <.styled_link href="/activate/request-code" method="post">Resend code</.styled_link>
+        or
+        <%= if @has_any_memberships? do %>
+          <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
+            use my previous email
+          </.styled_link>
+        <% else %>
+          <.styled_link method="delete" href="/me?redirect=/register">change email</.styled_link>
+        <% end %>
+      </p>
+      <p :if={ee?()}>
+        Need help?
+        <.styled_link href="https://plausible.io/contact" new_tab={true}>Contact us</.styled_link>
+      </p>
+      <p :if={ce?()}>
+        Need help? Ask on our
         <.styled_link
-          method="delete"
-          href="/me?redirect=/register"
-          data-confim="Deleting your account cannot be reversed. Are you sure?"
+          href="https://github.com/plausible/analytics/discussions"
+          new_tab={true}
         >
-          Delete this account
+          community forum
         </.styled_link>
-        and start over
-      </:item>
-    </.focus_list>
-  </:footer>
-</.focus_box>
+      </p>
+    </div>
+  <% else %>
+    <div class="flex flex-col gap-y-2">
+      <.button_link method="post" class="w-full" href="/activate/request-code">
+        Send activation code
+      </.button_link>
+      <p :if={@error} class="text-xs text-red-500 text-center">
+        {@error}
+      </p>
+    </div>
+
+    <p class="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+      Wrong email?
+      <%= if @has_any_memberships? do %>
+        <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
+          use my previous email
+        </.styled_link>
+      <% else %>
+        <.styled_link method="delete" href="/me?redirect=/register">change email</.styled_link>
+      <% end %>
+    </p>
+  <% end %>
+</.auth_container>

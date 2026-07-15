@@ -1163,6 +1163,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert growth_box =~ "Unlimited team members"
         assert growth_box =~ "Team Management"
         assert growth_box =~ "Saved Segments"
+        assert growth_box =~ "Annotations"
         assert growth_box =~ "Goals and custom events"
         assert growth_box =~ "Custom Properties"
         assert growth_box =~ "Stats API (600 requests per hour)"

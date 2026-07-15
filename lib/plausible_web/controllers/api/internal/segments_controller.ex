@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   use PlausibleWeb, :controller
   use PlausibleWeb.Plugs.ErrorHandler
   alias PlausibleWeb.Api.Helpers, as: H
+  alias Plausible.ChangesetHelpers
   alias Plausible.Segments
 
   def create(
@@ -29,7 +30,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         conn
         |> put_status(400)
         |> json(%{
-          error: Segments.serialize_first_error(errors)
+          error: ChangesetHelpers.serialize_first_error(errors)
         })
 
       {:ok, segment} ->
@@ -63,7 +64,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         conn
         |> put_status(400)
         |> json(%{
-          error: Segments.serialize_first_error(errors)
+          error: ChangesetHelpers.serialize_first_error(errors)
         })
 
       {:ok, segment} ->

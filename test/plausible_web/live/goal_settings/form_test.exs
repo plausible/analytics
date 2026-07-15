@@ -480,6 +480,9 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       |> element("#goals-form-modalseq0 form")
       |> render_submit(%{goal: %{event_name: "Purchase"}})
 
+      # Helps avoid premature close of DB connection and logging error in test output
+      _ = render(lv)
+
       updated_goal = Plausible.Goals.get(site, goal.id)
       refute Plausible.Goal.has_custom_props?(updated_goal)
       assert updated_goal.custom_props == %{}

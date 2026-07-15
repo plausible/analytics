@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       setup do
         # mock all domains resolve
         Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn _domain, _type, _record, _opts, _timeout ->
+        |> stub(:lookup, fn _domain, _type, _record, _opts, _timeout ->
           [{192, 168, 1, 2}]
         end)
 
@@ -66,6 +66,28 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert is_nil(site.domain_changed_from)
     end
 
+    test "form submission to a domain already owned by the same team shows a targeted error",
+         %{conn: conn, site: site, user: user} do
+      owned_site = new_site(owner: user)
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+      html =
+        lv
+        |> element("form")
+        |> render_submit(%{site: %{domain: owned_site.domain}})
+
+      assert html =~ "You already own this site"
+
+      expected_settings_link =
+        Routes.site_path(conn, :settings_general, owned_site.domain)
+
+      assert html =~ expected_settings_link
+
+      site = Repo.reload!(site)
+      assert site.domain != owned_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
     test "form submission to a domain in transition period", %{conn: conn, site: site} do
       _another_site = insert(:site, domain_changed_from: "foo.example.com")
       {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
@@ -80,6 +102,42 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       site = Repo.reload!(site)
       assert site.domain != "foo.example.com"
       assert is_nil(site.domain_changed_from)
+    end
+
+    test "domain swap is allowed when both sites belong to the same team",
+         %{conn: conn, site: site, user: user} do
+      other_site = new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+      new_domain = "tmp.#{site.domain}"
+
+      lv
+      |> element("form")
+      |> render_submit(%{site: %{domain: new_domain}})
+
+      on_ee do
+        render_async(lv, 500)
+      end
+
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
+
+      # Now swap: rename other_site to the original domain of site
+      original_domain = site.domain
+      other_original_domain = other_site.domain
+      {:ok, lv2, _html} = live(conn, "/#{other_original_domain}/change-domain")
+
+      lv2
+      |> element("form")
+      |> render_submit(%{site: %{domain: original_domain}})
+
+      on_ee do
+        render_async(lv2, 500)
+      end
+
+      assert_patch(lv2, "/#{URI.encode_www_form(original_domain)}/change-domain/success")
+
+      assert Repo.reload!(other_site).domain == original_domain
     end
 
     for {role, membership_type} <- [

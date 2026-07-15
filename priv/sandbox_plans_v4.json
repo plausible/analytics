@@ -126,6 +126,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -145,6 +146,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -164,6 +166,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -183,6 +186,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -202,6 +206,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -221,6 +226,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -240,6 +246,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5
@@ -259,6 +266,7 @@
       "funnels",
       "stats_api",
       "site_segments",
+      "site_annotations",
       "shared_links"
     ],
     "data_retention_in_years": 5

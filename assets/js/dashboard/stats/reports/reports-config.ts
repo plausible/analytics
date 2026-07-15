@@ -309,14 +309,14 @@ export const BREAKDOWN_REPORTS: Record<
   [BreakdownReportKey.channels]: {
     dimensions: ['visit:channel'],
     getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
-    detailsTitle: 'Top acquisition channels',
+    detailsTitle: 'Acquisition channels',
     detailsPath: 'channels',
     dimensionLabel: 'Channel'
   },
   [BreakdownReportKey.sources]: {
     dimensions: ['visit:source'],
     getMetrics: createGetMetricsFn(COMMON_BREAKDOWN_METRICS_BY_CONTEXT),
-    detailsTitle: 'Top sources',
+    detailsTitle: 'Sources',
     detailsPath: 'sources',
     dimensionLabel: 'Source'
   },
@@ -371,10 +371,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:country_name', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top countries',
+    detailsTitle: 'Countries',
     detailsPath: 'countries',
     dimensionLabel: 'Country',
     alwaysOnFilters: [['is_not', 'visit:country', ['\0\0', 'ZZ']]]
@@ -384,10 +383,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:region_name', 'visit:region', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top regions',
+    detailsTitle: 'Regions',
     detailsPath: 'regions',
     dimensionLabel: 'Region',
     alwaysOnFilters: [['is_not', 'visit:region', ['']]]
@@ -397,10 +395,9 @@ export const BREAKDOWN_REPORTS: Record<
     dimensions: ['visit:city_name', 'visit:city', 'visit:country'],
     getMetrics: createGetMetricsFn({
       ...COMMON_BREAKDOWN_METRICS_BY_CONTEXT,
-      defaultDetailedMetrics: ['visitors', 'percentage'],
       defaultCsvMetrics: ['visitors']
     }),
-    detailsTitle: 'Top cities',
+    detailsTitle: 'Cities',
     detailsPath: 'cities',
     dimensionLabel: 'City',
     alwaysOnFilters: [['is_not', 'visit:city', [0]]]

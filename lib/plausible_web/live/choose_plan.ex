@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use PlausibleWeb, :live_view
 
-  require Plausible.Billing.Subscription.Status
-
   alias PlausibleWeb.Components.Billing.{PlanBox, Notice, PageviewSlider}
   alias Plausible.Billing.{Plans, Quota, PlanBenefits}
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -233,7 +231,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               title_class="text-gray-900 dark:text-gray-200"
             >
               <p class="text-gray-600 dark:text-gray-400">
-                You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly. If your pageviews exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+                An occasional traffic spike won’t trigger extra charges or stop your stats from being counted. A single month over your tier requires no action. If your usage exceeds your tier for two consecutive months, we’ll notify you and give you one week to upgrade. If you don’t upgrade, your dashboards will be temporarily locked, but your stats will continue to be collected. You can unlock them at any time by upgrading, or they’ll unlock automatically at the start of your next billing cycle if your usage drops back within your tier.
               </p>
             </.accordion_item>
           </.accordion_menu>

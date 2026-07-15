@@ -10,9 +10,9 @@ defmodule Plausible.License do
     at hello@plausible.io to discuss obtaining a license.
   """
 
-  require Logger
-
   if Mix.env() == :prod do
+    require Logger
+
     def ensure_valid_license do
       if has_valid_license?() do
         :ok

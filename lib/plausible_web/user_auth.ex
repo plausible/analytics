@@ -10,8 +10,6 @@ defmodule PlausibleWeb.UserAuth do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
-  require Logger
-
   on_ee do
     @type login_subject() :: Auth.User.t() | Auth.SSO.Identity.t()
   else
@@ -51,7 +49,10 @@ defmodule PlausibleWeb.UserAuth do
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
-          |> Phoenix.Controller.put_flash(:login_error, "Wrong email.")
+          |> Phoenix.Controller.put_flash(
+            :login_error,
+            "We couldn't find a Single Sign-On account for that email."
+          )
           |> Phoenix.Controller.redirect(
             to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
           )

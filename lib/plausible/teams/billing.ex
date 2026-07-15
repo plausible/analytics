@@ -251,7 +251,7 @@ defmodule Plausible.Teams.Billing do
   else
     def team_member_limit(_team), do: :unlimited
 
-    def solo?(_team), do: false
+    def solo?(_team), do: always(false)
   end
 
   @doc """
@@ -316,11 +316,9 @@ defmodule Plausible.Teams.Billing do
         @monthly_pageview_limit_for_free_10k
 
       _any ->
-        if subscription do
-          Sentry.capture_message("Unknown monthly pageview limit for plan",
-            extra: %{paddle_plan_id: subscription.paddle_plan_id}
-          )
-        end
+        Sentry.capture_message("Unknown monthly pageview limit for plan",
+          extra: %{paddle_plan_id: subscription.paddle_plan_id}
+        )
 
         @monthly_pageview_limit_for_trials
     end
@@ -608,12 +606,17 @@ defmodule Plausible.Teams.Billing do
       site_segments_usage_q =
         from s in Plausible.Segments.Segment, where: s.site_id in ^site_ids and s.type == :site
 
+      site_annotations_usage_q =
+        from a in Plausible.Annotations.Annotation,
+          where: a.site_id in ^site_ids and a.type == :site
+
       [
         {Feature.SharedLinks, shared_links_usage_q},
         {Feature.Props, props_usage_q},
         {Feature.Funnels, funnels_usage_q},
         {Feature.RevenueGoals, revenue_goals_usage_q},
-        {Feature.SiteSegments, site_segments_usage_q}
+        {Feature.SiteSegments, site_segments_usage_q},
+        {Feature.SiteAnnotations, site_annotations_usage_q}
       ]
       |> Enum.reduce([], fn {feature, query}, acc ->
         if Repo.exists?(query), do: acc ++ [feature], else: acc

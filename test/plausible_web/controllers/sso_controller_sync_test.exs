@@ -141,7 +141,8 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
     end
 
@@ -265,7 +266,8 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email"
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
 
       test "redirects with error on mismatch of RelayState", %{

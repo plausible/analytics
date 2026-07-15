@@ -12,6 +12,9 @@ import { useGraphIntervalContext } from '../graph/graph-interval-context'
 import { createCsvExportRequestBody } from './csv-export-body'
 import * as api from '../../api'
 import { DateRange } from '../../stats-query'
+import { DashboardState } from '../../dashboard-state'
+import { hasConversionGoalFilter, hasPageFilter } from '../../util/filters'
+import { trackEvent } from '../../dogfood'
 import { Tooltip } from '../../util/tooltip'
 import { useBodyPortalRef } from '../breakdowns'
 
@@ -19,6 +22,27 @@ export enum ExportStatus {
   idle = 'idle',
   exporting = 'exporting',
   error = 'error'
+}
+
+function durationBucket(ms: number): string {
+  const s = ms / 1000
+  if (s >= 20) return '20s+'
+  const floor = Math.floor(s / 2) * 2
+  return `${floor}-${floor + 2}s`
+}
+
+function dogfoodTrackCsvExport(
+  isSuccess: boolean,
+  dashboardState: DashboardState,
+  startedAt: number
+): void {
+  trackEvent('csv_export', {
+    is_success: String(isSuccess),
+    goal_filter: String(hasConversionGoalFilter(dashboardState)),
+    page_filter: String(hasPageFilter(dashboardState)),
+    period: dashboardState.period,
+    duration_bucket: durationBucket(performance.now() - startedAt)
+  })
 }
 
 export function CsvExport({
@@ -37,6 +61,7 @@ export function CsvExport({
   const startExport = async () => {
     if (!canStartExport) return
     setExportStatus(ExportStatus.exporting)
+    const startedAt = performance.now()
 
     try {
       const body = createCsvExportRequestBody(dashboardState, selectedInterval)
@@ -50,8 +75,10 @@ export function CsvExport({
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       setExportStatus(ExportStatus.idle)
+      dogfoodTrackCsvExport(true, dashboardState, startedAt)
     } catch {
       setExportStatus(ExportStatus.error)
+      dogfoodTrackCsvExport(false, dashboardState, startedAt)
     }
   }
 

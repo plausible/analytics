@@ -1,33 +1,26 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import classNames from 'classnames'
 import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-// We assume that the dashboard is by default opened on a desktop. This is also a fall-back for when, for any reason, the width is not ascertained.
-const DEFAULT_WIDTH = 1080
+
 class Modal extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      viewport: DEFAULT_WIDTH
-    }
     this.node = React.createRef()
     this.handleClickOutside = this.handleClickOutside.bind(this)
-    this.handleResize = this.handleResize.bind(this)
   }
 
   componentDidMount() {
     document.body.style.overflow = 'hidden'
     document.body.style.height = '100vh'
     document.addEventListener('mousedown', this.handleClickOutside)
-    window.addEventListener('resize', this.handleResize, false)
-    this.handleResize()
   }
   componentWillUnmount() {
     document.body.style.overflow = null
     document.body.style.height = null
     document.removeEventListener('mousedown', this.handleClickOutside)
-    window.removeEventListener('resize', this.handleResize, false)
   }
   handleClickOutside(e) {
     if (this.node.current.contains(e.target)) {
@@ -35,34 +28,21 @@ class Modal extends React.Component {
     }
     this.props.onClose()
   }
-  handleResize() {
-    this.setState({ viewport: window.innerWidth })
-  }
-  /**
-   * @description
-   * Decide whether to set max-width, and if so, to what.
-   * If no max-width is available, set width instead to min-content such that we can rely on widths set on th.
-   * On >md, we use the same behaviour as before: set width to 800 pixels.
-   * Note that When a max-width comes from the parent component, we rely on that *always*.
-   */
-  getStyle() {
-    const { maxWidth } = this.props
-    const styleObject = {}
-    if (maxWidth) {
-      styleObject.maxWidth = maxWidth
-    } else {
-      styleObject.maxWidth = '880px'
-    }
-    return styleObject
-  }
-
-  getOverflowClass() {
-    return this.props.allowScroll === true
-      ? 'overflow-y-auto'
-      : 'overflow-hidden'
-  }
 
   render() {
+    // `grow` lets the panel grow with its content (the overlay handles
+    // scroll). Leave it off when a child uses `flex-1 overflow-auto` for
+    // its own inner scroll region (e.g. `BreakdownTable`).
+    const grow = this.props.grow === true
+
+    const panelClass = classNames(
+      'w-full flex flex-col bg-white p-3 md:px-6 md:py-4 box-border shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden',
+      {
+        'max-h-[calc(100dvh_-_var(--gap)*2)] transition-[height] duration-200 ease-in':
+          !grow
+      }
+    )
+
     return createPortal(
       <>
         <Keybind
@@ -74,11 +54,11 @@ class Modal extends React.Component {
         />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
-            <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:3.2rem] flex h-full w-full items-center md:items-start justify-center p-[var(--gap)] box-border">
+            <div className="[--gap:1rem] sm:[--gap:2rem] md:[--gap:3.2rem] flex h-full w-full items-start justify-center p-[var(--gap)] box-border">
               <div
                 ref={this.node}
-                className={`max-h-[calc(100dvh_-_var(--gap)*2)] w-full flex flex-col bg-white p-3 md:px-6 md:py-4 ${this.getOverflowClass()} box-border transition-[height] duration-200 ease-in shadow-2xl rounded-lg dark:bg-gray-900 focus:outline-hidden`}
-                style={this.getStyle()}
+                className={panelClass}
+                style={{ maxWidth: this.props.maxWidth || '880px' }}
                 // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                 tabIndex={0}
               >

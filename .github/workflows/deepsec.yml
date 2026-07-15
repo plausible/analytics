@@ -1,0 +1,152 @@
+name: deepsec
+
+# AI security/bug review of the PR diff, gated on the `deepsec` label.
+# Advisory only: findings are posted as a PR comment and never block merge.
+# Runs once when the label is added (re-add the label to re-run).
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deepsec-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    if: >-
+      github.event.label.name == 'deepsec' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      has_comment: ${{ steps.deepsec.outputs.has_comment }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # need history so `git diff origin/<base>` resolves
+          persist-credentials: false # PR code must not inherit the repo token
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          # pnpm version comes from `packageManager`, which lives in the
+          # deepsec workspace's package.json, not the repo root one.
+          package_json_file: .deepsec/package.json
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: .deepsec/pnpm-lock.yaml
+
+      - name: Install deepsec
+        working-directory: .deepsec
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Claude Code CLI (pinned)
+        run: npm install -g @anthropic-ai/claude-code@2.1.201
+
+      - name: Run deepsec on the PR diff
+        id: deepsec
+        working-directory: .deepsec
+        env:
+          # Direct Anthropic API. The secret holds a plain API key, so it
+          # must go through ANTHROPIC_API_KEY (x-api-key header) — feeding
+          # it to the ANTHROPIC_AUTH_TOKEN env var sends `Authorization:
+          # Bearer`, which api.anthropic.com 401s for non-OAuth keys.
+          # deepsec forwards ANTHROPIC_API_KEY to the Claude Code SDK.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          # Pin the provider endpoint so PR-added env files can't redirect
+          # provider traffic and exfiltrate the credential.
+          ANTHROPIC_BASE_URL: https://api.anthropic.com
+          CLAUDE_CODE_EXECUTABLE: claude
+          # Env indirection so the ref is never spliced into the shell text
+          # (ref names may contain `$(...)` — Actions script-injection sink).
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # Drop any PR-supplied env file before it can override the pinned base URL.
+          rm -f .env.local .env*.local
+          # Advisory gate: never fail the job on findings (would block merge via
+          # all-checks-pass). deepsec exit codes overlap, so disambiguate by output:
+          #   0                 -> clean review, no findings
+          #   1 + comment.md    -> net-new findings (post them, stay green)
+          #   1 + no comment.md -> agent/batch failure (warn, stay green — not a clean pass)
+          #   >1                -> hard runtime error (bad input / missing creds) -> fail
+          set +e
+          pnpm deepsec process \
+            --agent claude \
+            --diff "origin/${PR_BASE_REF}" \
+            --project-id analytics \
+            --root .. \
+            --concurrency 5 \
+            --max-turns 30 \
+            --comment-out ../comment.md
+          code=$?
+          set -e
+          if [ "$code" -gt 1 ]; then
+            echo "deepsec exited with runtime error code $code"
+            exit "$code"
+          fi
+          if [ -f ../comment.md ]; then
+            echo "has_comment=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_comment=false" >> "$GITHUB_OUTPUT"
+            if [ "$code" -eq 1 ]; then
+              echo "::warning title=deepsec::Agent/batch failure (exit 1, no findings emitted) — review was not completed. Re-run by re-applying the label."
+            fi
+          fi
+
+      - name: Upload comment artifact
+        if: steps.deepsec.outputs.has_comment == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: deepsec-comment
+          path: comment.md
+          retention-days: 1
+
+      # The PR comment truncates each finding (600-char description /
+      # 400-char recommendation). Export the full, untruncated findings
+      # as per-finding markdown and attach them to the run so reviewers
+      # can read the complete analysis without a local re-run.
+      - name: Export full findings (untruncated)
+        if: steps.deepsec.outputs.has_comment == 'true'
+        working-directory: .deepsec
+        run: pnpm deepsec export --format md-dir --out ../findings --project-id analytics
+
+      - name: Upload full findings artifact
+        if: steps.deepsec.outputs.has_comment == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: deepsec-findings
+          path: findings/
+          retention-days: 14
+
+  comment:
+    needs: analyze
+    if: needs.analyze.outputs.has_comment == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: deepsec-comment
+
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('comment.md', 'utf8');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const header = `🔎 **deepsec** reviewed \`${context.payload.pull_request.head.sha}\` · findings below are truncated — [full findings artifact](${runUrl}#artifacts)\n\n`;
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: header + body,
+            });
