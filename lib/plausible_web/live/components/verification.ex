@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   alias Plausible.InstallationSupport.{State, Result}
 
   import PlausibleWeb.Components.Generic
+  import PlausibleWeb.Live.Components.Form
 
   @container_id "verification-ui"
   # Dismissing hides the banner immediately and strips `verify_installation`
@@ -37,6 +38,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:flow, :string, default: "")
   attr(:installation_type, :string, default: nil)
   attr(:awaiting_first_pageview?, :boolean, default: false)
+  attr(:custom_url_input?, :boolean, default: false)
 
   def render(assigns) do
     assigns =
@@ -71,6 +73,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         installation_type={@installation_type}
         super_admin?={@super_admin?}
         verification_state={@verification_state}
+        custom_url_input?={@custom_url_input?}
       />
     </div>
     """
@@ -122,9 +125,29 @@ defmodule PlausibleWeb.Live.Components.Verification do
         />
       </:icon>
       <:actions>
-        <.button_link mt?={false} href="#" phx-click="retry" size="sm">
+        <.button_link :if={not @custom_url_input?} mt?={false} href="#" phx-click="retry" size="sm">
           Verify installation again
         </.button_link>
+        <form
+          :if={@custom_url_input?}
+          phx-submit="verify-custom-url"
+          class="flex items-center gap-2"
+        >
+          <.input
+            type="url"
+            name="custom_url"
+            id="custom_url"
+            aria-label="Website URL"
+            required
+            mt?={false}
+            width="w-44"
+            placeholder={"https://#{@domain}"}
+            value={"https://#{@domain}"}
+          />
+          <.button type="submit" mt?={false} size="sm">
+            Verify installation again
+          </.button>
+        </form>
       </:actions>
       <p :if={@interpretation} id="recommendation">
         <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
@@ -134,7 +157,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
       </p>
       <p class="mt-1.5 flex flex-wrap gap-x-4">
         <span :if={
-          @interpretation && is_map(@interpretation.data) &&
+          not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
             @interpretation.data[:offer_custom_url_input]
         }>
           Is your website located at a different URL?

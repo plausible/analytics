@@ -14,6 +14,8 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @awaiting ~s|#verification-ui span#awaiting|
   @heading ~s|#verification-ui h3|
 
+  @in_progress_text "Verifying your installation"
+
   describe "GET /:domain" do
     @tag :ee_only
     test "static verification banner renders on a freshly provisioned site", %{
@@ -29,7 +31,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert text_of_element(resp, @progress) =~
                "We're visiting your site to ensure that everything is working"
 
-      assert resp =~ "Verifying your installation"
+      assert resp =~ @in_progress_text
     end
 
     @tag :ce_build_only
@@ -52,39 +54,61 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       {_, html} = get_lv(conn, site)
 
-      assert html =~ "Verifying your installation"
+      assert html =~ @in_progress_text
 
       assert text_of_element(html, @progress) =~
                "We're visiting your site to ensure that everything is working"
     end
 
     @tag :ee_only
-    test "clicking the custom URL link swaps in the form, submitting kicks off a new run", %{
-      conn: conn,
-      site: site
-    } do
+    test "clicking the custom URL link reveals an inline form next to the retry button, submitting kicks off a new run",
+         %{
+           conn: conn,
+           site: site
+         } do
       stub_lookup_a_records(site.domain)
 
       stub_verification_result(%{
-        "completed" => false,
-        "error" => %{"message" => "Error"}
+        "completed" => true,
+        "trackerIsInHtml" => false,
+        "plausibleIsOnWindow" => false,
+        "plausibleIsInitialized" => false
       })
 
-      {lv, _html} = get_lv(conn, site)
+      {:ok, lv} = kick_off_live_verification(conn, site)
 
-      verifying_installation_text = "Verifying your installation"
+      assert eventually(fn ->
+               html = render(lv)
+
+               {
+                 text_of_element(html, @heading) =~ "We couldn't detect Plausible on your site",
+                 html
+               }
+             end)
 
       html = lv |> render_click("show-custom-url-form")
 
-      assert html =~ "Enter your custom URL"
+      refute html =~ @in_progress_text
+
+      refute element_exists?(html, @retry_button)
+      refute element_exists?(html, "#verify-custom-url-link")
+
+      assert element_exists?(
+               html,
+               ~s|form[phx-submit="verify-custom-url"] input[name="custom_url"]|
+             )
+
       assert html =~ ~s[value="https://#{site.domain}"]
       assert html =~ ~s[placeholder="https://#{site.domain}"]
-      refute html =~ verifying_installation_text
 
-      html = lv |> element("form") |> render_submit(%{"custom_url" => "https://abc.de"})
+      lv
+      |> element("form[phx-submit='verify-custom-url']")
+      |> render_submit(%{"custom_url" => "https://abc.de"})
 
-      assert html =~ verifying_installation_text
-      refute html =~ "Enter your custom URL"
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ @in_progress_text, html}
+             end)
     end
 
     @tag :ee_only

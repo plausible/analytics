@@ -137,6 +137,41 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       assert element_exists?(html, ~s|a#verify-custom-url-link[phx-click="show-custom-url-form"]|)
     end
 
+    test "renders the custom URL input inline, retry button becomes the form's submit button, hides the prompt link" do
+      interpretation =
+        Verification.Checks.interpret_diagnostics(%State{
+          url: "example.com",
+          diagnostics: %Verification.Diagnostics{
+            plausible_is_on_window: false,
+            plausible_is_initialized: false,
+            service_error: %{code: :domain_not_found}
+          }
+        })
+
+      html =
+        render_component(@component,
+          domain: "example.com",
+          finished?: true,
+          success?: false,
+          interpretation: interpretation,
+          custom_url_input?: true
+        )
+
+      refute element_exists?(html, "#verify-custom-url-link")
+      refute element_exists?(html, ~s|a[phx-click="retry"]|)
+
+      assert text_of_element(html, ~s|form[phx-submit="verify-custom-url"] button[type="submit"]|) =~
+               "Verify installation again"
+
+      assert element_exists?(
+               html,
+               ~s|form[phx-submit="verify-custom-url"] input[name="custom_url"]|
+             )
+
+      assert text_of_attr(html, ~s|form[phx-submit="verify-custom-url"] input|, "value") =~
+               "https://example.com"
+    end
+
     test "offers an installation-instructions escape path on failure, no more settings link" do
       html =
         render_component(@component,
