@@ -83,7 +83,9 @@ defmodule PlausibleWeb.Live.Components.Verification do
     ~H"""
     <.notice title="Verifying your installation" theme={:gray}>
       <:icon>
-        <div class="block pulsating-circle" />
+        <div class="loading sm">
+          <div></div>
+        </div>
       </:icon>
       <p class="animate-pulse" id="progress">{@message}</p>
     </.notice>
@@ -116,17 +118,27 @@ defmodule PlausibleWeb.Live.Components.Verification do
           do: List.first(@interpretation.errors),
           else: "We couldn't verify your installation"
       }
-      theme={:red}
+      theme={:yellow}
     >
       <:icon>
-        <Heroicons.exclamation_triangle
-          class="size-4.5 text-red-600 dark:text-red-500"
-          id="error-circle"
-        />
+        <Heroicons.exclamation_circle class="size-4.5 text-yellow-500" id="error-circle" />
       </:icon>
-      <:actions>
-        <.button_link :if={not @custom_url_input?} mt?={false} href="#" phx-click="retry" size="sm">
-          Verify installation again
+      <p :if={@interpretation} id="recommendation" class="mt-2">
+        <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
+        <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
+          Learn more
+        </.styled_link>
+      </p>
+      <div class="mt-5">
+        <.button_link
+          :if={not @custom_url_input?}
+          mt?={false}
+          href="#"
+          phx-click="retry"
+          theme="secondary"
+          size="sm"
+        >
+          Check again
         </.button_link>
         <form
           :if={@custom_url_input?}
@@ -144,45 +156,41 @@ defmodule PlausibleWeb.Live.Components.Verification do
             placeholder={"https://#{@domain}"}
             value={"https://#{@domain}"}
           />
-          <.button type="submit" mt?={false} size="sm">
-            Verify installation again
+          <.button type="submit" mt?={false} theme="secondary" size="sm">
+            Check again
           </.button>
         </form>
-      </:actions>
-      <p :if={@interpretation} id="recommendation">
-        <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
-        <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
-          Learn more
-        </.styled_link>
-      </p>
-      <p class="mt-1.5 flex flex-wrap gap-x-4">
-        <span :if={
-          not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
-            @interpretation.data[:offer_custom_url_input]
-        }>
-          Is your website located at a different URL?
-          <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
-            Click here
-          </.styled_link>
-        </span>
-        <span :if={ee?() and @attempts >= 3}>
-          Need further help with your installation?
-          <.styled_link href="https://plausible.io/contact">
-            Contact us
-          </.styled_link>
-        </span>
-        <span>
-          Need to see installation instructions again?
-          <.styled_link href={
-            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
-              flow: @flow,
-              installation_type: @installation_type
-            )
+      </div>
+      <div class="mt-5">
+        <ul class="list-disc space-y-2 ml-4 text-sm">
+          <li :if={
+            not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
+              @interpretation.data[:offer_custom_url_input]
           }>
-            Click here
-          </.styled_link>
-        </span>
-      </p>
+            Is your website located at a different URL?
+            <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
+              Click here
+            </.styled_link>
+          </li>
+          <li :if={ee?() and @attempts >= 3}>
+            Need further help with your installation?
+            <.styled_link href="https://plausible.io/contact">
+              Contact us
+            </.styled_link>
+          </li>
+          <li>
+            Need to see installation instructions again?
+            <.styled_link href={
+              Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+                flow: @flow,
+                installation_type: @installation_type
+              )
+            }>
+              Click here
+            </.styled_link>
+          </li>
+        </ul>
+      </div>
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
         verification_state={@verification_state}
@@ -194,7 +202,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   defp super_admin_diagnostics(assigns) do
     ~H"""
     <div
-      class="mt-3 flex flex-col dark:text-gray-200"
+      class="mt-5 flex flex-col dark:text-gray-200"
       x-data="{ showDiagnostics: false }"
       id="super-admin-report"
     >

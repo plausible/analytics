@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     @component PlausibleWeb.Live.Components.Verification
     @progress ~s|#verification-ui p#progress|
 
-    @pulsating_circle ~s|div#verification-ui div.pulsating-circle|
+    @loading_spinner ~s|div#verification-ui div.loading|
     @check_circle ~s|div#verification-ui #check-circle|
     @error_circle ~s|div#verification-ui #error-circle|
     @recommendations ~s|#recommendation|
@@ -24,8 +24,8 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       assert text_of_element(html, @progress) ==
                "We're visiting your site to ensure that everything is working"
 
-      assert element_exists?(html, @pulsating_circle)
-      refute class_of_element(html, @pulsating_circle) =~ "hidden"
+      assert element_exists?(html, @loading_spinner)
+      refute class_of_element(html, @loading_spinner) =~ "hidden"
       refute element_exists?(html, @recommendations)
       refute element_exists?(html, @check_circle)
       refute element_exists?(html, @super_admin_report)
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
     test "renders error badge on error" do
       html = render_component(@component, domain: "example.com", success?: false, finished?: true)
-      refute element_exists?(html, @pulsating_circle)
+      refute element_exists?(html, @loading_spinner)
       refute element_exists?(html, @check_circle)
       refute element_exists?(html, @recommendations)
       assert element_exists?(html, @error_circle)
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           finished?: true
         )
 
-      refute element_exists?(html, @pulsating_circle)
+      refute element_exists?(html, @loading_spinner)
       assert element_exists?(html, @check_circle)
     end
 
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       refute element_exists?(html, ~s|a[phx-click="retry"]|)
 
       assert text_of_element(html, ~s|form[phx-submit="verify-custom-url"] button[type="submit"]|) =~
-               "Verify installation again"
+               "Check again"
 
       assert element_exists?(
                html,
