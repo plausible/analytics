@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Verification do
   alias Plausible.InstallationSupport.{State, Verification}
 
   @component PlausibleWeb.Live.Components.Verification
-  @slowdown_for_frequent_checking :timer.seconds(5)
+  @slowdown_for_frequent_checking :timer.seconds(0)
   @use_portal? Mix.env() not in [:test, :ce_test]
 
   def mount(
