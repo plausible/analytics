@@ -81,7 +81,6 @@ defmodule PlausibleWeb.Live.Installation do
 
     {:ok,
      assign(socket,
-       trigger_submit: false,
        site: site,
        site_created?: params["site_created"] == "true",
        flow: flow
@@ -156,7 +155,6 @@ defmodule PlausibleWeb.Live.Installation do
           <.form
             for={@tracker_script_configuration_form.result}
             phx-submit="submit"
-            phx-trigger-action={@trigger_submit}
             class="mt-4"
           >
             <.input
@@ -328,19 +326,9 @@ defmodule PlausibleWeb.Live.Installation do
     else
       {:noreply, push_navigate(socket, to: navigate_path)}
     end
-
-    {:noreply,
-     push_navigate(socket,
-       to:
-         Routes.site_path(socket, :verification, socket.assigns.site.domain,
-           flow: socket.assigns.flow,
-           installation_type: config.installation_type
-         )
-     )}
   end
 
   def handle_event("send-metrics-after", _params, socket) do
-    socket = assign(socket, trigger_submit: true)
 
     {:noreply, push_navigate(socket, to: socket.assigns.navigate_path)}
   end
