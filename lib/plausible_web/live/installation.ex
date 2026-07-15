@@ -81,6 +81,7 @@ defmodule PlausibleWeb.Live.Installation do
 
     {:ok,
      assign(socket,
+       trigger_submit: false,
        site: site,
        site_created?: params["site_created"] == "true",
        flow: flow
@@ -152,7 +153,12 @@ defmodule PlausibleWeb.Live.Installation do
             />
           <% end %>
 
-          <.form for={@tracker_script_configuration_form.result} phx-submit="submit" class="mt-4">
+          <.form
+            for={@tracker_script_configuration_form.result}
+            phx-submit="submit"
+            phx-trigger-action={@trigger_submit}
+            class="mt-4"
+          >
             <.input
               type="hidden"
               field={@tracker_script_configuration_form.result[:installation_type]}
@@ -177,16 +183,7 @@ defmodule PlausibleWeb.Live.Installation do
             <% end %>
             <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 
-            <.button
-              type="submit"
-              class={
-                "w-full mt-8 " <>
-                  install_method_event_classes(
-                    @installation_type.result,
-                    recommended_installation_type
-                  )
-              }
-            >
+            <.button type="submit" class="w-full mt-8">
               {verify_cta(@installation_type.result)}
             </.button>
           </.form>
@@ -210,23 +207,6 @@ defmodule PlausibleWeb.Live.Installation do
   defp verify_cta("wordpress"), do: "Verify WordPress installation"
   defp verify_cta("gtm"), do: "Verify Tag Manager installation"
   defp verify_cta("npm"), do: "Verify NPM installation"
-
-  defp install_method_event_classes(installation_type, recommended) do
-    method = installation_method_label(installation_type)
-    match = if installation_type == recommended, do: "true", else: "false"
-
-    Enum.join(
-      [
-        "plausible-event-name=Site+installation+method",
-        "plausible-event-method=#{method}",
-        "plausible-event-recommended_match=#{match}"
-      ],
-      " "
-    )
-  end
-
-  defp installation_method_label("manual"), do: "script"
-  defp installation_method_label(other), do: other
 
   on_ee do
     defp detect_recommended_installation_type(flow, site) do
@@ -324,6 +304,31 @@ defmodule PlausibleWeb.Live.Installation do
         :installation
       )
 
+    navigate_path =
+      Routes.site_path(socket, :verification, socket.assigns.site.domain,
+        flow: socket.assigns.flow,
+        installation_type: config.installation_type
+      )
+
+    on_ee do
+      socket = assign(socket, :navigate_path, navigate_path)
+
+      selected_type = socket.assigns.installation_type.result
+      recommended_type = socket.assigns.recommended_installation_type.result
+
+      event_name = "Site installation method"
+      method = installation_method_label(socket.assigns.installation_type.result)
+      recommended_match = if(selected_type == recommended_type, do: "true", else: "false")
+
+      {:noreply,
+       push_event(socket, "send-metrics", %{
+         event_name: event_name,
+         props: %{method: method, recommended_match: recommended_match}
+       })}
+    else
+      {:noreply, push_navigate(socket, to: navigate_path)}
+    end
+
     {:noreply,
      push_navigate(socket,
        to:
@@ -333,6 +338,15 @@ defmodule PlausibleWeb.Live.Installation do
          )
      )}
   end
+
+  def handle_event("send-metrics-after", _params, socket) do
+    socket = assign(socket, trigger_submit: true)
+
+    {:noreply, push_navigate(socket, to: socket.assigns.navigate_path)}
+  end
+
+  defp installation_method_label("manual"), do: "script"
+  defp installation_method_label(other), do: other
 
   defp initialize_installation_data(flow, site, params) do
     {recommended_installation_type, v1_detected} =
