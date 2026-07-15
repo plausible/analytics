@@ -110,6 +110,18 @@ defmodule Plausible.Stats.SamplingTest do
       end
     end
 
+    describe "&fractional_sample_rate/2 for sites with less than 30 days of stats" do
+      test "estimates traffic from the site's real daily rate, not a 30-day average" do
+        # Site started 3 days before "now" (2026-07-15) and has ingested 30M
+        # events since (10M/day). A query over the last 30 days is clamped to
+        # those 3 days, where all 30M events live - 3x the sampling threshold -
+        # so it must be sampled.
+        query = range_query(~D[2026-06-15], ~D[2026-07-15], ~N[2026-07-12 00:00:00])
+
+        assert fractional_sample_rate(30_000_000, query) == 0.33
+      end
+    end
+
     def query(duration, opts \\ []) do
       unit = Keyword.get(opts, :unit, :day)
       filters = Keyword.get(opts, :filters, [])
@@ -132,6 +144,7 @@ defmodule Plausible.Stats.SamplingTest do
         utc_time_range: DateTimeRange.new!(first, last),
         timezone: "UTC",
         filters: [],
+        now: last,
         site_native_stats_start_at: native_stats_start_at
       }
     end
