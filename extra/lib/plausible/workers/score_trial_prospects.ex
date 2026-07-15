@@ -9,6 +9,8 @@ defmodule Plausible.Workers.ScoreTrialProspects do
     queue: :score_trial_prospects,
     max_attempts: 1
 
+  require Logger
+
   alias Plausible.Teams
   alias Plausible.CustomerSupport.{TrialProspect, TrialProspects}
 
@@ -16,13 +18,25 @@ defmodule Plausible.Workers.ScoreTrialProspects do
 
   @impl Oban.Worker
   def perform(_job) do
-    rows =
-      Date.utc_today()
-      |> trial_population()
-      |> Enum.flat_map(&score_team/1)
+    Date.utc_today()
+    |> trial_population()
+    |> Enum.each(&score_and_persist/1)
 
-    persist(rows)
     :ok
+  end
+
+  defp score_and_persist(team) do
+    try do
+      team
+      |> score_team()
+      |> upsert()
+    rescue
+      error ->
+        Logger.error(
+          "ScoreTrialProspects: skipping team #{team.id}: " <>
+            Exception.format(:error, error, __STACKTRACE__)
+        )
+    end
   end
 
   defp trial_population(today) do
@@ -43,8 +57,8 @@ defmodule Plausible.Workers.ScoreTrialProspects do
     traffic = Plausible.Stats.Clickhouse.trial_traffic(site_ids)
 
     case traffic do
-      %{events_in_window: 0} -> []
-      traffic -> [build_row(team, traffic, site_ids)]
+      %{events_in_window: 0} -> nil
+      traffic -> build_row(team, traffic, site_ids)
     end
   end
 
@@ -76,16 +90,12 @@ defmodule Plausible.Workers.ScoreTrialProspects do
     }
   end
 
-  defp persist(rows) do
-    scored_team_ids = Enum.map(rows, & &1.team_id)
+  defp upsert(nil), do: :ok
 
-    Repo.transaction(fn ->
-      Repo.insert_all(TrialProspect, rows,
-        on_conflict: {:replace_all_except, [:id, :team_id, :inserted_at]},
-        conflict_target: :team_id
-      )
-
-      Repo.delete_all(from p in TrialProspect, where: p.team_id not in ^scored_team_ids)
-    end)
+  defp upsert(row) do
+    Repo.insert_all(TrialProspect, [row],
+      on_conflict: {:replace_all_except, [:id, :team_id, :inserted_at]},
+      conflict_target: :team_id
+    )
   end
 end

@@ -223,13 +223,14 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
         assert Repo.get_by(TrialProspect, team_id: team_of(user).id) == nil
       end
 
-      test "removes stale rows for teams no longer in the population" do
+      test "leaves rows for teams no longer in the population untouched" do
         # eligible team
         user = new_user(trial_expiry_date: Date.add(Date.utc_today(), 7))
         site = new_site(owner: user)
         populate_stats(site, pageviews_on(Date.add(Date.utc_today(), -10), 10))
 
-        # stale: a trial that expired beyond the 60-day window, with a leftover row
+        # a trial that expired beyond the window, with a leftover row that is no
+        # longer part of the population -> must be preserved, not deleted
         old_user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -90))
         old_team = team_of(old_user)
 
@@ -246,7 +247,7 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
 
         assert :ok = perform_job(ScoreTrialProspects, %{})
 
-        assert Repo.get_by(TrialProspect, team_id: old_team.id) == nil
+        assert Repo.get_by(TrialProspect, team_id: old_team.id)
         assert Repo.get_by(TrialProspect, team_id: team_of(user).id)
       end
 
