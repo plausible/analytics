@@ -31,6 +31,8 @@ defmodule Plausible.Site.Cache do
     domain_changed_from
     ingest_rate_limit_scale_seconds
     ingest_rate_limit_threshold
+    domain_changed_at
+    native_stats_start_at
    )a
 
   @impl true
