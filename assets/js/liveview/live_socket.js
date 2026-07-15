@@ -19,8 +19,12 @@ if (csrfToken && websocketUrl) {
   let Hooks = { Modal, Dropdown }
   Hooks.Metrics = {
     mounted() {
-      this.handleEvent('send-metrics', ({ event_name }) => {
-        window.plausible(event_name)
+      this.handleEvent('send-metrics', ({ event_name, props }) => {
+        if (props) {
+          window.plausible(event_name, { props })
+        } else {
+          window.plausible(event_name)
+        }
         this.pushEvent('send-metrics-after', { event_name })
       })
     }
