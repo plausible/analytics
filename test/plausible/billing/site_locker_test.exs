@@ -85,6 +85,51 @@ defmodule Plausible.Billing.SiteLockerTest do
       refute Repo.reload!(site.team).locked
     end
 
+    test "keeps a manually locked enterprise customer locked while over limits, unlocks once usage drops within limits" do
+      user = new_user() |> subscribe_to_enterprise_plan(monthly_pageview_limit: 10_000)
+      team = team_of(user)
+      site = new_site(owner: user)
+
+      # The usage check worker flags the account for manual locking
+      # (see Plausible.Workers.CheckUsage.check_enterprise_subscriber/2)
+      team = Plausible.Teams.start_manual_lock_grace_period(team)
+      refute Repo.reload!(team).locked
+
+      # Customer support locks the team from the CS panel
+      # (see PlausibleWeb.Live.CustomerSupport.Team.lock_team/1)
+      team = Plausible.Teams.end_grace_period(team)
+      SiteLocker.set_lock_status_for(team, true)
+      team = Repo.reload!(team)
+
+      assert team.locked
+      assert team.grace_period.manual_lock
+      assert team.grace_period.is_over
+
+      over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
+
+      # while usage is still over the limit, the daily LockSites run keeps
+      # the team locked and leaves the grace period in place
+      assert SiteLocker.update_for(team, usage_mod: over_limits_usage_stub) ==
+               {:locked, :grace_period_ended_already}
+
+      team = Repo.reload!(team)
+      assert team.locked
+      assert Repo.reload!(site.team).locked
+      assert team.grace_period.manual_lock
+      assert team.grace_period.is_over
+
+      within_limits_usage_stub = monthly_pageview_usage_stub(5_000, 5_000)
+
+      # once usage drops within limits, the next run unlocks the team and
+      # removes the grace period
+      assert SiteLocker.update_for(team, usage_mod: within_limits_usage_stub) == :unlocked
+
+      team = Repo.reload!(team)
+      refute team.locked
+      refute Repo.reload!(site.team).locked
+      refute team.grace_period
+    end
+
     test "locks user who cancelled subscription and the cancelled subscription has expired" do
       user =
         new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
