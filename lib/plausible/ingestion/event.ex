@@ -129,6 +129,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
+      drop_rogue_replay: &drop_rogue_replay/2,
       drop_verification_agent: &drop_verification_agent/2,
       drop_datacenter_ip: &drop_datacenter_ip/2,
       drop_threat_ip: &drop_threat_ip/2,
@@ -191,6 +192,32 @@ defmodule Plausible.Ingestion.Event do
 
   defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
+  end
+
+  on_ee do
+    defp drop_rogue_replay(%__MODULE__{request: %{replay_session_id: nil}} = event, _context) do
+      event
+    end
+
+    defp drop_rogue_replay(%__MODULE__{} = event, _context) do
+      before_native_stats? =
+        NaiveDateTime.compare(event.request.timestamp, event.site.native_stats_start_at) == :lt
+
+      before_last_domain_change? =
+        if event.site.domain_changed_at do
+          NaiveDateTime.compare(event.request.timestamp, event.site.domain_changed_at) == :lt
+        else
+          false
+        end
+
+      if before_native_stats? or before_last_domain_change? do
+        drop(event, :rogue_replay)
+      else
+        event
+      end
+    end
+  else
+    defp drop_rogue_replay(%__MODULE__{} = event, _context), do: event
   end
 
   on_ee do

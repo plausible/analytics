@@ -518,7 +518,7 @@ defmodule Plausible.Ingestion.EventTest do
 
   @tag :ee_only
   test "replayed events have a distinct user id due to reply session-dependent salt" do
-    site = new_site()
+    site = new_site(native_stats_start_at: ~N[2026-06-01 12:00:00])
 
     payload = %{
       name: "pageview",
