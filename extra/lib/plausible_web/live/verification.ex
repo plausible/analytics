@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Live.Verification do
   """
   use PlausibleWeb, :live_view
 
-  import PlausibleWeb.Components.Generic
-
   alias Plausible.InstallationSupport.{State, Verification}
 
   @component PlausibleWeb.Live.Components.Verification
@@ -82,9 +80,7 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp verification_content(assigns) do
     ~H"""
-    <.custom_url_form :if={@custom_url_input?} domain={@domain} />
     <.live_component
-      :if={not @custom_url_input?}
       module={@component}
       installation_type={@installation_type}
       domain={@domain}
@@ -93,6 +89,7 @@ defmodule PlausibleWeb.Live.Verification do
       flow={@flow}
       awaiting_first_pageview?={not @has_pageviews?}
       super_admin?={@super_admin?}
+      custom_url_input?={@custom_url_input?}
     />
     """
   end
@@ -253,36 +250,5 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp has_pageviews?(site) do
     Plausible.Stats.Clickhouse.has_pageviews?(site)
-  end
-
-  defp custom_url_form(assigns) do
-    ~H"""
-    <.notice title="Enter your custom URL" theme={:gray} class="mb-4">
-      <:icon>
-        <Heroicons.globe_alt class="size-4.5 text-blue-600 dark:text-blue-300" />
-      </:icon>
-      <p class="mb-3">
-        Please enter the URL where your website with the Plausible script is located.
-      </p>
-      <form phx-submit="verify-custom-url" class="flex flex-wrap items-center gap-2">
-        <label for="custom_url" class="sr-only">Website URL</label>
-        <input
-          type="url"
-          name="custom_url"
-          id="custom_url"
-          required
-          class="flex-1 min-w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-          placeholder={"https://#{@domain}"}
-          value={"https://#{@domain}"}
-        />
-        <button
-          type="submit"
-          class="px-3 py-1.5 rounded-md shadow-xs text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-        >
-          Verify Installation
-        </button>
-      </form>
-    </.notice>
-    """
   end
 end
