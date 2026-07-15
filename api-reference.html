@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-602B90A4.js"></script>
+    <script src="dist/sidebar_items-B85CC5B7.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -858,6 +858,27 @@ pointers to team's regular sites.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Generic behaviour for CS resources</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.CustomerSupport.TrialProspect.html" translate="no">Plausible.CustomerSupport.TrialProspect</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Cached revenue-potential scoring for a team on (or just off) a trial.
+Rows are (re)computed daily by <a href="Plausible.Workers.ScoreTrialProspects.html"><code class="inline">Plausible.Workers.ScoreTrialProspects</code></a> and
+read by the customer support UI.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.CustomerSupport.TrialProspects.html" translate="no">Plausible.CustomerSupport.TrialProspects</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Pure scoring logic for ranking trial teams by revenue potential. Turns a
+team's partial traffic sample and premium-feature usage into an estimated MRR.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2347,6 +2368,8 @@ user, supporting alphanumeric or traffic-based sorting over the last 24 hours.</
 
   </div>
 
+    <div class="summary-synopsis"><p>  Clickhouse utility functions</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -3167,6 +3190,16 @@ To avoid blocking the queue, a timeout of 15 minutes is enforced.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Job scheduling dispatch of weekly and monthly email reports.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Workers.ScoreTrialProspects.html" translate="no">Plausible.Workers.ScoreTrialProspects</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Daily worker that scores the revenue potential of every team on (or just off)
+a trial and caches the result in the <code class="inline">trial_prospects</code> table.</p></div>
 
 </div>
 <div class="summary-row">

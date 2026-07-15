@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-602B90A4.js"></script>
+    <script src="dist/sidebar_items-B85CC5B7.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -137,6 +137,10 @@ Pages
   </h1>
 
 
+    <section id="moduledoc">
+<p>  Clickhouse utility functions</p>
+    </section>
+
 </div>
 
   <section id="summary" class="details-list">
@@ -209,6 +213,18 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#trial_traffic/1" data-no-tooltip translate="no">trial_traffic(site_ids)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Estimates a team's monthly traffic from a partial sample, computed entirely in
+ClickHouse with one light query scoped to the team's own sites. Used by
+<a href="Plausible.Workers.ScoreTrialProspects.html"><code class="inline">Plausible.Workers.ScoreTrialProspects</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#usage_breakdown/2" data-no-tooltip translate="no">usage_breakdown(site_ids, date_range)</a>
 
       </div>
@@ -236,7 +252,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">current_visitors(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L113" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L187" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -256,7 +272,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">current_visitors_12h(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L117" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L191" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -276,7 +292,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">has_pageviews?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L121" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L195" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -296,7 +312,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">imported_pageview_count(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L33" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L37" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -316,7 +332,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">imported_pageview_counts(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -344,7 +360,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">pageview_start_date_local(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L13" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L17" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -372,7 +388,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">per_site_usage_breakdown(site_ids, date_range, limit \\ Plausible.Teams.Billing.max_sites_for_usage_breakdown())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L79" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L153" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -384,6 +400,45 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="trial_traffic/1">
+
+  <div class="detail-header">
+    <a href="#trial_traffic/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">trial_traffic(site_ids)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> trial_traffic([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()]) :: %{
+  first_data_day: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>() | nil,
+  events_in_window: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  observed_days: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  estimated_monthly: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
+}</pre>
+
+      </div>
+
+<p>Estimates a team's monthly traffic from a partial sample, computed entirely in
+ClickHouse with one light query scoped to the team's own sites. Used by
+<a href="Plausible.Workers.ScoreTrialProspects.html"><code class="inline">Plausible.Workers.ScoreTrialProspects</code></a>.</p><p>Billable events = pageviews + custom events (everything except engagement).
+The window is the trailing <code class="inline">@window_days</code> complete days (up to yesterday).
+Within it, <code class="inline">min(toDate(timestamp))</code> is the team's <code class="inline">first_data_day</code>, so the
+elapsed complete days since then give <code class="inline">observed_days</code> (clamped to
+<code class="inline">[1, @window_days]</code>), and the monthly figure is
+<code class="inline">round(events_in_window / observed_days * @days_in_month)</code> — all in the DB.</p><p>Returns <code class="inline">%{first_data_day, events_in_window, observed_days, estimated_monthly}</code>.
+<code class="inline">events_in_window == 0</code> means the team had no complete day of traffic.</p>
+  </section>
+</section>
 <section class="detail" id="usage_breakdown/2">
 
   <div class="detail-header">
@@ -392,7 +447,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">usage_breakdown(site_ids, date_range)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L53" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L57" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
