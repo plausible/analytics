@@ -235,14 +235,14 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
         old_team = team_of(old_user)
 
         %TrialProspect{}
-        |> TrialProspect.changeset(%{
+        |> Ecto.Changeset.change(
           team_id: old_team.id,
           estimated_monthly: 100,
           observed_days: 5,
           first_data_day: Date.utc_today(),
           kind: :starter,
           computed_at: DateTime.utc_now() |> DateTime.truncate(:second)
-        })
+        )
         |> Repo.insert!()
 
         assert :ok = perform_job(ScoreTrialProspects, %{})

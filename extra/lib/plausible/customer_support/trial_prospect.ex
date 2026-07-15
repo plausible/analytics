@@ -5,22 +5,8 @@ defmodule Plausible.CustomerSupport.TrialProspect do
   read by the customer support UI.
   """
   use Ecto.Schema
-  import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
-
-  @fields [
-    :team_id,
-    :estimated_monthly,
-    :observed_days,
-    :first_data_day,
-    :kind,
-    :forced_by,
-    :pageview_limit,
-    :over_top_tier,
-    :estimated_mrr,
-    :computed_at
-  ]
 
   schema "trial_prospects" do
     belongs_to :team, Plausible.Teams.Team
@@ -36,19 +22,5 @@ defmodule Plausible.CustomerSupport.TrialProspect do
     field :computed_at, :utc_datetime
 
     timestamps()
-  end
-
-  def changeset(prospect, attrs) do
-    prospect
-    |> cast(attrs, @fields)
-    |> validate_required([
-      :team_id,
-      :estimated_monthly,
-      :observed_days,
-      :first_data_day,
-      :kind,
-      :computed_at
-    ])
-    |> unique_constraint(:team_id)
   end
 end
