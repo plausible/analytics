@@ -15,7 +15,7 @@ export function DetailsExternalLink({
           target="_blank"
           rel="noreferrer"
           href={href}
-          aria-label="Open page in new tab"
+          aria-label="Open page in a new tab"
           className={isActive ? 'block' : 'hidden'}
         >
           <ExternalLinkIcon />
@@ -37,7 +37,7 @@ export function IndexExternalLink({
       target="_blank"
       rel="noreferrer"
       href={href}
-      aria-label="Open page in new tab"
+      aria-label="Open page in a new tab"
       className={
         isActive
           ? 'visible md:invisible md:group-hover/row:visible'
