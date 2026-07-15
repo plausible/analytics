@@ -58,6 +58,7 @@ export function DrilldownLink({
 
     return (
       <AppNavigationLink
+        data-testid="dimension-value"
         title={`Add filter: ${title}`}
         className={classNames(className, 'group')}
         path={path}
@@ -76,7 +77,7 @@ export function DrilldownLink({
     )
   } else {
     return (
-      <span className={className}>
+      <span data-testid="dimension-value" className={className}>
         {icon}
         <span className={textClassName}>{children}</span>
       </span>
