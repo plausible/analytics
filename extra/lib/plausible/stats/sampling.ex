@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Sampling do
   Sampling related functions
   """
   @default_sample_threshold 10_000_000
+  @sampling_window_days 30
 
   import Ecto.Query
 
@@ -103,10 +104,22 @@ defmodule Plausible.Stats.Sampling do
   defp min_sample_rate(), do: 0.013
 
   defp estimate_traffic(traffic_30_day, duration, query) do
-    duration_adjusted_traffic = traffic_30_day / 30.0 * duration
+    daily_traffic = traffic_30_day / days_of_traffic_in_window(query)
 
-    estimate_by_filters(duration_adjusted_traffic, query.filters)
+    estimate_by_filters(daily_traffic * duration, query.filters)
   end
+
+  defp days_of_traffic_in_window(%Query{
+         now: %DateTime{} = now,
+         site_native_stats_start_at: %NaiveDateTime{} = at
+       }) do
+    now
+    |> Date.diff(at)
+    |> min(@sampling_window_days)
+    |> max(1)
+  end
+
+  defp days_of_traffic_in_window(%Query{}), do: @sampling_window_days
 
   @filter_traffic_multiplier 1 / 4.0
   @max_filters 2
