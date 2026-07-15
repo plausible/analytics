@@ -345,8 +345,10 @@ defmodule PlausibleWeb.Live.Installation do
     {:noreply, push_navigate(socket, to: socket.assigns.navigate_path)}
   end
 
-  defp installation_method_label("manual"), do: "script"
-  defp installation_method_label(other), do: other
+  on_ee do
+    defp installation_method_label("manual"), do: "script"
+    defp installation_method_label(other), do: other
+  end
 
   defp initialize_installation_data(flow, site, params) do
     {recommended_installation_type, v1_detected} =
