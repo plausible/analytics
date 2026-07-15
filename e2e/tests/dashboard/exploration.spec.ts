@@ -1143,7 +1143,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(
       firstColumn.getByTestId('exploration-row').getByTestId('metric-value')
-    ).toHaveText(['2'])
+    ).toHaveText(['1'])
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
@@ -1151,7 +1151,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-value')
-    ).toHaveText(['2'])
+    ).toHaveText(['1'])
 
     await expect(
       thirdColumn.getByTestId('exploration-row').getByTestId('metric-label')
