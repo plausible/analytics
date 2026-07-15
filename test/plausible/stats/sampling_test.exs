@@ -1,13 +1,13 @@
 defmodule Plausible.Stats.SamplingTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
 
   on_ee do
     import Plausible.Stats.Sampling, only: [fractional_sample_rate: 2]
     alias Plausible.Stats.{Query, DateTimeRange}
 
-    describe "&fractional_sample_rate/2" do
-      @threshold Plausible.Stats.Sampling.default_sample_threshold()
+    @threshold Plausible.Stats.Sampling.default_sample_threshold()
 
+    describe "&fractional_sample_rate/2 for date ranges of different lengths" do
       test "no traffic estimate" do
         assert fractional_sample_rate(nil, query(30)) == :no_sampling
       end
@@ -47,8 +47,7 @@ defmodule Plausible.Stats.SamplingTest do
       end
 
       test "short durations" do
-        assert fractional_sample_rate(@threshold * 15, query(1, unit: :hour)) ==
-                 :no_sampling
+        assert fractional_sample_rate(@threshold * 15, query(1, unit: :hour)) == :no_sampling
       end
 
       test "very low sampling rate" do
@@ -58,24 +57,56 @@ defmodule Plausible.Stats.SamplingTest do
       @filter ["is", "event:name", ["pageview"]]
       test "scales sampling rate according to query filters (when sampling adjustments are enabled)" do
         assert fractional_sample_rate(@threshold * 50, query(30, filters: [])) == 0.02
+        assert fractional_sample_rate(@threshold * 50, query(30, filters: [@filter])) == 0.08
 
-        assert fractional_sample_rate(@threshold * 50, query(30, filters: [@filter])) ==
-                 0.08
-
-        assert fractional_sample_rate(
-                 @threshold * 50,
-                 query(30, filters: [@filter, @filter])
-               ) == 0.32
+        assert fractional_sample_rate(@threshold * 50, query(30, filters: [@filter, @filter])) ==
+                 0.32
 
         assert fractional_sample_rate(
                  @threshold * 50,
                  query(30, filters: [@filter, @filter, @filter])
                ) == 0.32
 
-        assert fractional_sample_rate(
-                 @threshold * 10,
-                 query(30, filters: [@filter, @filter])
-               ) == :no_sampling
+        assert fractional_sample_rate(@threshold * 10, query(30, filters: [@filter, @filter])) ==
+                 :no_sampling
+      end
+    end
+
+    describe "&fractional_sample_rate/2 clamps the range to the site's stats start" do
+      test "a range with no known stats start uses the full requested range" do
+        # `site_native_stats_start_at` is only nil in tests / for sites without
+        # stats; nothing gets clamped, matching a stats start before the range.
+        without_start = range_query(~D[2025-01-01], ~D[2026-07-15], nil)
+        early_start = range_query(~D[2025-01-01], ~D[2026-07-15], ~N[1900-01-01 00:00:00])
+
+        assert fractional_sample_rate(@threshold, without_start) ==
+                 fractional_sample_rate(@threshold, early_start)
+      end
+
+      test "a range starting after stats begin is unaffected by the clamp" do
+        after_start = range_query(~D[2026-04-01], ~D[2026-07-15], ~N[2026-01-01 00:00:00])
+        no_start = range_query(~D[2026-04-01], ~D[2026-07-15], nil)
+
+        assert fractional_sample_rate(@threshold, after_start) ==
+                 fractional_sample_rate(@threshold, no_start)
+      end
+
+      test "a range starting before stats begin is treated as starting when stats begin" do
+        stats_start = ~N[2026-01-01 00:00:00]
+        range_end = ~D[2026-07-15]
+
+        from_stats_start =
+          fractional_sample_rate(@threshold, range_query(~D[2026-01-01], range_end, stats_start))
+
+        from_1970 =
+          fractional_sample_rate(@threshold, range_query(~D[1970-01-01], range_end, stats_start))
+
+        from_2025 =
+          fractional_sample_rate(@threshold, range_query(~D[2025-01-01], range_end, stats_start))
+
+        assert from_stats_start == 0.15
+        assert from_1970 == from_stats_start
+        assert from_2025 == from_stats_start
       end
     end
 
@@ -90,6 +121,18 @@ defmodule Plausible.Stats.SamplingTest do
         utc_time_range: DateTimeRange.new!(first, last),
         timezone: "UTC",
         filters: filters
+      }
+    end
+
+    defp range_query(first_date, last_date, native_stats_start_at) do
+      first = DateTime.new!(first_date, ~T[00:00:00], "Etc/UTC")
+      last = DateTime.new!(last_date, ~T[00:00:00], "Etc/UTC")
+
+      %Query{
+        utc_time_range: DateTimeRange.new!(first, last),
+        timezone: "UTC",
+        filters: [],
+        site_native_stats_start_at: native_stats_start_at
       }
     end
   end

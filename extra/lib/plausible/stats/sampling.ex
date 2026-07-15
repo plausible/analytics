@@ -70,7 +70,18 @@ defmodule Plausible.Stats.Sampling do
 
   def fractional_sample_rate(traffic_30_day, query) do
     date_range = Query.date_range(query)
-    duration = Date.diff(date_range.last, date_range.first)
+    stats_start = query.site_native_stats_start_at
+
+    # A site's traffic before their stats begin date isn't queried,
+    # so it shouldn't figure in the traffic estimation
+    start_of_range_with_stats =
+      if stats_start && Date.before?(date_range.first, stats_start) do
+        stats_start
+      else
+        date_range.first
+      end
+
+    duration = Date.diff(date_range.last, start_of_range_with_stats)
 
     estimated_traffic = estimate_traffic(traffic_30_day, duration, query)
 
