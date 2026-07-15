@@ -57,7 +57,7 @@ defmodule Plausible.Workers.ScoreTrialProspects do
         Teams.Billing.team_member_usage(team)
       )
 
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now(:second)
     naive_now = DateTime.to_naive(now)
 
     %{
