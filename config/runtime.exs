@@ -838,7 +838,9 @@ cloud_cron = [
   # First sunday of the month, 4:00 UTC
   {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
   # Daily at 4:00 UTC
-  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff}
+  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
+  # Daily at 2:00 UTC
+  {"0 2 * * *", Plausible.Workers.ScoreTrialProspects}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -868,7 +870,8 @@ cloud_queues = [
   lock_sites: 1,
   legacy_time_on_page_cutoff: 1,
   purge_cdn_cache: 1,
-  sso_domain_ownership_verification: 32
+  sso_domain_ownership_verification: 32,
+  score_trial_prospects: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
