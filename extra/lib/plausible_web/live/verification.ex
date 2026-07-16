@@ -34,7 +34,6 @@ defmodule PlausibleWeb.Live.Verification do
     private = Map.get(socket.private.connect_info, :private, %{})
 
     super_admin? = Plausible.Auth.super_admin?(current_user)
-    has_pageviews? = has_pageviews?(site)
 
     tracker_script_configuration =
       PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
@@ -45,7 +44,6 @@ defmodule PlausibleWeb.Live.Verification do
         site: site,
         super_admin?: super_admin?,
         domain: domain,
-        has_pageviews?: has_pageviews?,
         component: @component,
         tracker_script_configuration: tracker_script_configuration,
         installation_type: get_installation_type(session["installation_type"], site),
@@ -55,7 +53,6 @@ defmodule PlausibleWeb.Live.Verification do
         flow: session["flow"] || "",
         checks_pid: nil,
         attempts: 0,
-        polling_pageviews?: false,
         custom_url_input?: false
       )
 
@@ -91,7 +88,6 @@ defmodule PlausibleWeb.Live.Verification do
       id="verification-standalone"
       attempts={@attempts}
       flow={@flow}
-      awaiting_first_pageview?={not @has_pageviews?}
       super_admin?={@super_admin?}
       custom_url_input?={@custom_url_input?}
       tracker_script_configuration={@tracker_script_configuration}
@@ -170,10 +166,6 @@ defmodule PlausibleWeb.Live.Verification do
   def handle_info({:all_checks_done, %State{} = state}, socket) do
     interpretation = Verification.Checks.interpret_diagnostics(state)
 
-    if not socket.assigns.has_pageviews? do
-      schedule_pageviews_check(socket)
-    end
-
     update_component(socket,
       finished?: true,
       success?: interpretation.ok?,
@@ -182,19 +174,6 @@ defmodule PlausibleWeb.Live.Verification do
     )
 
     {:noreply, assign(socket, checks_pid: nil)}
-  end
-
-  def handle_info(:check_pageviews, socket) do
-    if has_pageviews?(socket.assigns.site) do
-      {:noreply, assign(socket, has_pageviews?: true, polling_pageviews?: false)}
-    else
-      socket =
-        socket
-        |> assign(polling_pageviews?: false)
-        |> schedule_pageviews_check()
-
-      {:noreply, socket}
-    end
   end
 
   @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
@@ -222,15 +201,6 @@ defmodule PlausibleWeb.Live.Verification do
     end
   end
 
-  defp schedule_pageviews_check(socket) do
-    if socket.assigns.polling_pageviews? do
-      socket
-    else
-      Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
-      assign(socket, polling_pageviews?: true)
-    end
-  end
-
   defp reset_component(socket) do
     update_component(socket,
       message: "We're visiting your site to ensure that everything is working",
@@ -251,9 +221,5 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp launch_delayed(socket) do
     Process.send_after(self(), {:start, socket.assigns.report_to}, socket.assigns.delay)
-  end
-
-  defp has_pageviews?(site) do
-    Plausible.Stats.Clickhouse.has_pageviews?(site)
   end
 end

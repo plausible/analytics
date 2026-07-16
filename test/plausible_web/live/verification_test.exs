@@ -11,7 +11,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
   @retry_button ~s|a[phx-click="retry"]|
   @progress ~s|#verification-ui p#progress|
-  @awaiting ~s|#verification-ui span#awaiting|
   @heading ~s|#verification-ui h3|
 
   @in_progress_text "Verifying your installation"
@@ -132,94 +131,8 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       assert eventually(fn ->
                html = render(lv)
-
-               {
-                 text_of_element(html, @awaiting) =~
-                   "Awaiting your first pageview",
-                 html
-               }
+               {html =~ "Success!", html}
              end)
-
-      html = render(lv)
-      assert html =~ "Success!"
-      assert html =~ "Awaiting your first pageview"
-    end
-
-    @tag :ee_only
-    test "won't await first pageview if site has pageviews", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview)
-      ])
-
-      stub_lookup_a_records(site.domain)
-
-      stub_verification_result(%{
-        "completed" => true,
-        "trackerIsInHtml" => true,
-        "plausibleIsOnWindow" => true,
-        "plausibleIsInitialized" => true,
-        "testEvent" => %{
-          "normalizedBody" => %{
-            "domain" => site.domain
-          },
-          "responseStatus" => 200
-        }
-      })
-
-      {:ok, lv} = kick_off_live_verification(conn, site)
-
-      assert eventually(fn ->
-               html = render(lv)
-
-               {
-                 text(html) =~ "Success",
-                 html
-               }
-             end)
-
-      html = render(lv)
-
-      refute text_of_element(html, @awaiting) =~ "Awaiting your first pageview"
-      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}")
-    end
-
-    @tag :ee_only
-    test "shows success in place (no redirect) once first pageview arrives", %{
-      conn: conn,
-      site: site
-    } do
-      stub_lookup_a_records(site.domain)
-
-      stub_verification_result(%{
-        "completed" => true,
-        "trackerIsInHtml" => true,
-        "plausibleIsOnWindow" => true,
-        "plausibleIsInitialized" => true,
-        "testEvent" => %{
-          "normalizedBody" => %{
-            "domain" => site.domain
-          },
-          "responseStatus" => 200
-        }
-      })
-
-      {:ok, lv} = kick_off_live_verification(conn, site)
-
-      assert eventually(fn ->
-               html = render(lv)
-               {text(html) =~ "Awaiting", html}
-             end)
-
-      populate_stats(site, [
-        build(:pageview)
-      ])
-
-      assert eventually(fn ->
-               html = render(lv)
-               {not (text(html) =~ "Awaiting your first pageview"), html}
-             end)
-
-      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}")
     end
 
     for {installation_type_param, expected_text, saved_installation_type} <- [

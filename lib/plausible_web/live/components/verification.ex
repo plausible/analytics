@@ -40,7 +40,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:attempts, :integer, default: 0)
   attr(:flow, :string, default: "")
   attr(:installation_type, :string, default: nil)
-  attr(:awaiting_first_pageview?, :boolean, default: false)
   attr(:custom_url_input?, :boolean, default: false)
   attr(:tracker_script_configuration, TrackerScriptConfiguration, default: nil)
 
@@ -63,7 +62,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
       <.render_progress :if={not @finished?} message={@message} />
       <.render_success
         :if={@finished? and @success?}
-        awaiting_first_pageview?={@awaiting_first_pageview?}
         domain={@domain}
         super_admin?={@super_admin?}
         verification_state={@verification_state}
@@ -104,9 +102,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
         <Heroicons.check_badge class="size-4.5 text-green-600 dark:text-green-500" id="check-circle" />
       </:icon>
       Your installation is working and visitors are being counted accurately.
-      <span :if={@awaiting_first_pageview?} id="awaiting" class="animate-pulse">
-        Awaiting your first pageview...
-      </span>
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
         verification_state={@verification_state}
