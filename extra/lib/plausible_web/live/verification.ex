@@ -46,7 +46,6 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         component: @component,
         tracker_script_configuration: tracker_script_configuration,
-        installation_type: get_installation_type(session["installation_type"], site),
         report_to: self(),
         delay: private[:delay] || 500,
         slowdown: private[:slowdown] || 500,
@@ -83,7 +82,7 @@ defmodule PlausibleWeb.Live.Verification do
     ~H"""
     <.live_component
       module={@component}
-      installation_type={@installation_type}
+      installation_type={get_installation_type(@tracker_script_configuration)}
       domain={@domain}
       id="verification-standalone"
       attempts={@attempts}
@@ -139,7 +138,7 @@ defmodule PlausibleWeb.Live.Verification do
         Verification.Checks.run(
           socket.assigns.url_to_verify,
           domain,
-          socket.assigns.installation_type,
+          get_installation_type(socket.assigns.tracker_script_configuration),
           report_to: report_to,
           slowdown: socket.assigns.slowdown
         )
@@ -178,26 +177,13 @@ defmodule PlausibleWeb.Live.Verification do
 
   @supported_installation_types_atoms PlausibleWeb.Tracker.supported_installation_types()
                                       |> Enum.map(&String.to_atom/1)
-  defp get_installation_type(installation_type, site) do
-    cond do
-      installation_type in PlausibleWeb.Tracker.supported_installation_types() ->
-        installation_type
-
-      (saved_installation_type = get_saved_installation_type(site)) in @supported_installation_types_atoms ->
-        Atom.to_string(saved_installation_type)
-
-      true ->
-        PlausibleWeb.Tracker.fallback_installation_type()
-    end
-  end
-
-  defp get_saved_installation_type(site) do
-    case PlausibleWeb.Tracker.get_tracker_script_configuration(site) do
-      %{installation_type: installation_type} ->
-        installation_type
+  defp get_installation_type(tracker_script_configuration) do
+    case tracker_script_configuration.installation_type do
+      type when type in @supported_installation_types_atoms ->
+        Atom.to_string(type)
 
       _ ->
-        nil
+        PlausibleWeb.Tracker.fallback_installation_type()
     end
   end
 
