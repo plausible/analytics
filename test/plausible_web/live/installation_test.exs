@@ -273,8 +273,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
             lv,
             Routes.stats_path(conn, :stats, site.domain,
               verify_installation: true,
-              flow: "provisioning",
-              installation_type: unquote(type)
+              flow: "provisioning"
             )
           )
         end
@@ -361,8 +360,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
           lv,
           Routes.stats_path(conn, :stats, site.domain,
             verify_installation: true,
-            flow: "review",
-            installation_type: "manual"
+            flow: "review"
           )
         )
       end

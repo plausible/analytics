@@ -118,8 +118,7 @@ defmodule PlausibleWeb.StatsController do
           verify_installation?: verify_installation?,
           verification_session: %{
             "domain" => site.domain,
-            "flow" => conn.params["flow"],
-            "installation_type" => conn.params["installation_type"]
+            "flow" => conn.params["flow"]
           }
         )
     end

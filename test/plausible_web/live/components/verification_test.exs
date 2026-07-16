@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
       assert element_exists?(
                html,
-               ~s|a[href="/example.com/installation?flow=review&installation_type=wordpress"]|
+               ~s|a[href="/example.com/installation?flow=review"]|
              )
     end
   end

@@ -135,34 +135,21 @@ defmodule PlausibleWeb.Live.VerificationTest do
              end)
     end
 
-    for {installation_type_param, expected_text, saved_installation_type} <- [
-          {"manual",
-           "Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
-           nil},
-          {"npm",
-           "Please make sure you've initialized Plausible on your site, or verify your installation manually.",
-           nil},
-          {"gtm",
-           "Please make sure you've configured the GTM template correctly, or verify your installation manually.",
-           nil},
-          {"wordpress",
-           "Please make sure you've enabled the plugin, or verify your installation manually.",
-           nil},
-          # trusts param over saved installation type
-          {"wordpress",
-           "Please make sure you've enabled the plugin, or verify your installation manually.",
+    for {expected_text, saved_installation_type} <- [
+          {"Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+           "manual"},
+          {"Please make sure you've initialized Plausible on your site, or verify your installation manually.",
            "npm"},
-          # falls back to saved installation type if no param
-          {"",
-           "Please make sure you've initialized Plausible on your site, or verify your installation manually.",
-           "npm"},
-          # falls back to manual if no param and no saved installation type
-          {"",
-           "Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+          {"Please make sure you've configured the GTM template correctly, or verify your installation manually.",
+           "gtm"},
+          {"Please make sure you've enabled the plugin, or verify your installation manually.",
+           "wordpress"},
+          # falls back to manual when there's no saved installation type
+          {"Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
            nil}
         ] do
       @tag :ee_only
-      test "eventually fails to verify installation (?installation_type=#{installation_type_param}) if saved installation type is #{inspect(saved_installation_type)}",
+      test "eventually fails to verify installation if saved installation type is #{inspect(saved_installation_type)}",
            %{
              conn: conn,
              site: site
@@ -182,24 +169,17 @@ defmodule PlausibleWeb.Live.VerificationTest do
           })
         end
 
-        {:ok, lv} =
-          kick_off_live_verification(
-            conn,
-            site,
-            "installation_type=#{unquote(installation_type_param)}"
-          )
+        {:ok, lv} = kick_off_live_verification(conn, site)
 
-        assert html =
-                 eventually(fn ->
-                   html = render(lv)
-                   {html =~ "", html}
+        html =
+          eventually(fn ->
+            html = render(lv)
 
-                   {
-                     text_of_element(html, @heading) =~
-                       "We couldn't detect Plausible on your site",
-                     html
-                   }
-                 end)
+            {
+              text_of_element(html, @heading) =~ "We couldn't detect Plausible on your site",
+              html
+            }
+          end)
 
         assert element_exists?(html, @retry_button)
 
@@ -209,16 +189,16 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
   end
 
-  defp get_lv(conn, site, qs \\ nil) do
+  defp get_lv(conn, site) do
     {:ok, lv, html} =
-      conn |> no_slowdown() |> as_live() |> live(verification_path(site, qs))
+      conn |> no_slowdown() |> as_live() |> live(verification_path(site))
 
     {lv, html}
   end
 
-  defp kick_off_live_verification(conn, site, qs \\ nil) do
+  defp kick_off_live_verification(conn, site) do
     {:ok, lv, _html} =
-      conn |> no_slowdown() |> no_delay() |> as_live() |> live(verification_path(site, qs))
+      conn |> no_slowdown() |> no_delay() |> as_live() |> live(verification_path(site))
 
     {:ok, lv}
   end
@@ -230,10 +210,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   # LiveView tests (e.g. props_settings_test.exs).
   defp as_live(conn), do: assign(conn, :live_module, PlausibleWeb.Live.Verification)
 
-  defp verification_path(site, nil), do: "/#{site.domain}?verify_installation=true"
-
-  defp verification_path(site, qs),
-    do: "/#{site.domain}?verify_installation=true&#{qs}"
+  defp verification_path(site), do: "/#{site.domain}?verify_installation=true"
 
   defp no_slowdown(conn) do
     Plug.Conn.put_private(conn, :slowdown, 0)

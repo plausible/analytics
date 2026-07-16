@@ -317,12 +317,7 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
-    config =
-      PlausibleWeb.Tracker.update_script_configuration!(
-        socket.assigns.site,
-        params,
-        :installation
-      )
+    PlausibleWeb.Tracker.update_script_configuration!(socket.assigns.site, params, :installation)
 
     domain = socket.assigns.site.domain
 
@@ -330,11 +325,9 @@ defmodule PlausibleWeb.Live.Installation do
       on_ee do
         Routes.stats_path(socket, :stats, domain,
           verify_installation: true,
-          flow: socket.assigns.flow,
-          installation_type: config.installation_type
+          flow: socket.assigns.flow
         )
       else
-        _need_to_use_variable_on_ce = config
         Routes.stats_path(socket, :stats, domain, [])
       end
 

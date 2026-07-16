@@ -22,7 +22,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
   @dismiss_onclick "document.getElementById('#{@container_id}').classList.add('hidden');" <>
                      "var u = new window.URL(window.location.href);" <>
                      "u.searchParams.delete('verify_installation');" <>
-                     "u.searchParams.delete('installation_type');" <>
                      "u.searchParams.delete('flow');" <>
                      "window.history.replaceState(null, '', u);"
 
@@ -161,7 +160,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
         attempts={@attempts}
         domain={@domain}
         flow={@flow}
-        installation_type={@installation_type}
       />
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
@@ -283,10 +281,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         <li>
           Want to choose another installation method?
           <.styled_link href={
-            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
-              flow: @flow,
-              installation_type: @installation_type
-            )
+            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)
           }>
             Click here
           </.styled_link>
