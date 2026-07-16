@@ -27,7 +27,7 @@ defmodule Plausible.IP.Tools.Registry do
       |> Enum.reject(&(&1.cidr == "::ffff:0:0/96"))
 
     (ipv4 ++ ipv6 ++ multicast())
-    |> Enum.sort_by(&(-&1.prefix_len))
+    |> Enum.sort_by(& &1.prefix_len, :desc)
     |> Enum.map(&to_clause/1)
   end
 
