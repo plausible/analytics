@@ -1,11 +1,9 @@
 name: IANA registry check
 
 on:
-  # TODO
-  push:
-  # schedule:
-  #   # Runs at 03:00 UTC on the 1st of every month.
-  #   - cron: "0 3 1 * *"
+  schedule:
+    # Runs at 09:00 UTC on the 1st of every month.
+    - cron: "0 9 1 * *"
   workflow_dispatch:
 
 permissions:
