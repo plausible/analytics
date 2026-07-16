@@ -1,6 +1,6 @@
-defmodule Plausible.Session.ComputedSalts do
+defmodule Plausible.Session.ReplaySalts do
   @moduledoc """
-  Cache for computed salts used for replayed events.
+  Cache for salts used for replayed events.
 
   It's not cleaned, however the range of possible values is limited
   to the number of replayed sessions over the lifetime of the node
@@ -39,12 +39,12 @@ defmodule Plausible.Session.ComputedSalts do
 
   @spec fetch(module() | atom(), pos_integer()) :: %{previous: nil, current: binary()}
   def fetch(name \\ __MODULE__, replay_session_id) do
-    computed_salt =
+    replay_salt =
       secret_key_base()
       |> KeyGenerator.generate(:binary.encode_unsigned(replay_session_id), cache: name)
       |> binary_part(0, 16)
 
-    %{previous: nil, current: computed_salt}
+    %{previous: nil, current: replay_salt}
   end
 
   @impl true
