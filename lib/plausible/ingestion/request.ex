@@ -167,16 +167,7 @@ defmodule Plausible.Ingestion.Request do
       end
     end
 
-    defp to_integer(s) when is_binary(s) do
-      case Integer.parse(s) do
-        {n, ""} when n > 0 ->
-          n
-
-        _ ->
-          nil
-      end
-    end
-
+    defp to_integer(s) when is_binary(s), do: String.to_integer(s)
     defp to_integer(_), do: nil
   else
     defp put_replay_data(changeset, _conn), do: changeset
