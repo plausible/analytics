@@ -850,6 +850,38 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :id, :string, required: true
+  attr :text, :string, required: true
+  attr :rows, :integer, required: true
+  attr :resizable, :boolean, default: false
+
+  def copyable_readonly_text_area(assigns) do
+    ~H"""
+    <div class={["relative w-full"]}>
+      <textarea
+        id={@id}
+        class={[
+          "w-full bg-transparent border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-750 dark:text-gray-300",
+          if(!@resizable, do: "resize-none")
+        ]}
+        rows={@rows}
+        readonly
+      ><%= @text %></textarea>
+
+      <a
+        onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
+        href="javascript:void(0)"
+        class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline bottom-2 right-4 p-2 transition-colors duration-150 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400"
+      >
+        <Heroicons.document_duplicate class="pr-1 text-current size-5" />
+        <span>
+          COPY
+        </span>
+      </a>
+    </div>
+    """
+  end
+
   slot :title
   slot :subtitle
   slot :inner_block, required: true

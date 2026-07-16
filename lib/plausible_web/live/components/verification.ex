@@ -7,7 +7,10 @@ defmodule PlausibleWeb.Live.Components.Verification do
   use Plausible
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+  alias PlausibleWeb.Components.Icons
+  alias PlausibleWeb.Live.Installation.Instructions
   alias Plausible.InstallationSupport.{State, Result}
+  alias Plausible.Site.TrackerScriptConfiguration
 
   import PlausibleWeb.Components.Generic
   import PlausibleWeb.Live.Components.Form
@@ -39,6 +42,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:installation_type, :string, default: nil)
   attr(:awaiting_first_pageview?, :boolean, default: false)
   attr(:custom_url_input?, :boolean, default: false)
+  attr(:tracker_script_configuration, TrackerScriptConfiguration, default: nil)
 
   def render(assigns) do
     assigns =
@@ -74,6 +78,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         super_admin?={@super_admin?}
         verification_state={@verification_state}
         custom_url_input?={@custom_url_input?}
+        tracker_script_configuration={@tracker_script_configuration}
       />
     </div>
     """
@@ -111,6 +116,14 @@ defmodule PlausibleWeb.Live.Components.Verification do
   end
 
   defp render_failed(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :expandable_instructions?,
+        assigns.installation_type in ["manual", "gtm"] and
+          not is_nil(assigns.tracker_script_configuration)
+      )
+
     ~H"""
     <.notice
       title={
@@ -129,73 +142,162 @@ defmodule PlausibleWeb.Live.Components.Verification do
           Learn more
         </.styled_link>
       </p>
-      <div class="mt-5">
-        <.button_link
-          :if={not @custom_url_input?}
-          mt?={false}
-          href="#"
-          phx-click="retry"
-          theme="secondary"
-          size="sm"
-        >
-          Check again
-        </.button_link>
-        <form
-          :if={@custom_url_input?}
-          phx-submit="verify-custom-url"
-          class="flex items-center gap-2"
-        >
-          <.input
-            type="url"
-            name="custom_url"
-            id="custom_url"
-            aria-label="Website URL"
-            required
-            mt?={false}
-            width="w-44"
-            placeholder={"https://#{@domain}"}
-            value={"https://#{@domain}"}
+      <div x-data="{ instructionsExpanded: false }">
+        <div class="mt-5 flex flex-wrap items-center gap-2">
+          <.retry_form_or_button custom_url_input?={@custom_url_input?} domain={@domain} />
+          <.expand_installation_instructions_button
+            :if={@expandable_instructions?}
+            installation_type={@installation_type}
           />
-          <.button type="submit" mt?={false} theme="secondary" size="sm">
-            Check again
-          </.button>
-        </form>
+          <.review_instructions_link
+            :if={@installation_type in ["wordpress", "npm"]}
+            installation_type={@installation_type}
+          />
+        </div>
+        <.expandable_installation_instructions
+          :if={@expandable_instructions?}
+          installation_type={@installation_type}
+          tracker_script_configuration={@tracker_script_configuration}
+        />
       </div>
-      <div class="mt-5">
-        <ul class="list-disc space-y-2 ml-4 text-sm">
-          <li :if={
-            not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
-              @interpretation.data[:offer_custom_url_input]
-          }>
-            Is your website located at a different URL?
-            <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
-              Click here
-            </.styled_link>
-          </li>
-          <li :if={ee?() and @attempts >= 3}>
-            Need further help with your installation?
-            <.styled_link href="https://plausible.io/contact">
-              Contact us
-            </.styled_link>
-          </li>
-          <li>
-            Need to see installation instructions again?
-            <.styled_link href={
-              Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
-                flow: @flow,
-                installation_type: @installation_type
-              )
-            }>
-              Click here
-            </.styled_link>
-          </li>
-        </ul>
-      </div>
+      <.additional_help_links
+        custom_url_input?={@custom_url_input?}
+        interpretation={@interpretation}
+        attempts={@attempts}
+        domain={@domain}
+        flow={@flow}
+        installation_type={@installation_type}
+      />
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
         verification_state={@verification_state}
       />
     </.notice>
+    """
+  end
+
+  defp retry_form_or_button(%{custom_url_input?: true} = assigns) do
+    ~H"""
+    <form phx-submit="verify-custom-url" class="flex items-center gap-2">
+      <.input
+        type="url"
+        name="custom_url"
+        id="custom_url"
+        aria-label="Website URL"
+        required
+        mt?={false}
+        width="w-44"
+        placeholder={"https://#{@domain}"}
+        value={"https://#{@domain}"}
+      />
+      <.button type="submit" mt?={false} theme="secondary" size="sm">
+        Check again
+      </.button>
+    </form>
+    """
+  end
+
+  defp retry_form_or_button(assigns) do
+    ~H"""
+    <.button_link
+      mt?={false}
+      href="#"
+      phx-click="retry"
+      theme="secondary"
+      size="sm"
+    >
+      Check again
+    </.button_link>
+    """
+  end
+
+  defp expand_installation_instructions_button(assigns) do
+    ~H"""
+    <span x-on:click.prevent="instructionsExpanded = !instructionsExpanded">
+      <.button_link
+        mt?={false}
+        href="#"
+        theme="ghost"
+        size="sm"
+        class="hover:bg-gray-900/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+      >
+        <span class="inline-flex items-center gap-0.5">
+          {review_instructions_label(@installation_type)}
+          <span x-show="!instructionsExpanded" x-cloak>
+            <Heroicons.chevron_down mini class="size-4" />
+          </span>
+          <span x-show="instructionsExpanded" x-cloak>
+            <Heroicons.chevron_up mini class="size-4" />
+          </span>
+        </span>
+      </.button_link>
+    </span>
+    """
+  end
+
+  defp review_instructions_link(assigns) do
+    ~H"""
+    <.button_link
+      mt?={false}
+      href={install_help_href(@installation_type)}
+      theme="ghost"
+      size="sm"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="hover:bg-gray-900/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+    >
+      Review instructions <Icons.external_link_icon class="inline-block size-3.5 ml-1" />
+    </.button_link>
+    """
+  end
+
+  defp expandable_installation_instructions(assigns) do
+    ~H"""
+    <div x-show="instructionsExpanded" x-cloak class="mt-5">
+      <Instructions.copy_snippet_box
+        :if={@installation_type == "manual"}
+        tracker_script_configuration={@tracker_script_configuration}
+      />
+      <Instructions.gtm_instructions_content_inner
+        :if={@installation_type == "gtm"}
+        tracker_script_configuration={@tracker_script_configuration}
+      />
+    </div>
+    """
+  end
+
+  defp additional_help_links(assigns) do
+    ~H"""
+    <div class="mt-5">
+      <ul class="list-disc space-y-2 ml-4 text-sm">
+        <li :if={
+          not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
+            @interpretation.data[:offer_custom_url_input]
+        }>
+          Is your website located at a different URL?
+          <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
+            Click here
+          </.styled_link>
+        </li>
+        <li :if={ee?() and @attempts >= 3}>
+          Need further help with your installation?
+          <.styled_link href="https://plausible.io/contact">
+            Contact us
+          </.styled_link>
+        </li>
+        <li>
+          Want to choose another installation method?
+          <.styled_link href={
+            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+              flow: @flow,
+              installation_type: @installation_type
+            )
+          }>
+            Click here
+          </.styled_link>
+        </li>
+      </ul>
+    </div>
     """
   end
 
@@ -230,4 +332,12 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   defp to_string_value(value) when is_binary(value), do: value
   defp to_string_value(value), do: inspect(value)
+
+  defp review_instructions_label("manual"), do: "View snippet"
+  defp review_instructions_label(_installation_type), do: "Review instructions"
+
+  defp install_help_href("wordpress"), do: "https://plausible.io/wordpress-analytics-plugin"
+
+  defp install_help_href("npm"),
+    do: "https://www.npmjs.com/package/@plausible-analytics/tracker"
 end
