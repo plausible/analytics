@@ -32,9 +32,11 @@ jobs:
 
       - name: Fail if the downloaded registries differ from what's committed
         run: |
-          if ! git diff --exit-code --quiet -- priv/ip/iana-ipv4-special-registry.csv priv/ip/iana-ipv6-special-registry.csv; then
+          # IANA serves these CSVs with CRLF line endings while the committed files use LF;
+          # --ignore-space-at-eol treats that difference as a non-change so only real content changes fail the check.
+          if ! git diff --exit-code --quiet --ignore-space-at-eol -- priv/ip/iana-ipv4-special-registry.csv priv/ip/iana-ipv6-special-registry.csv; then
             echo "IANA special-purpose registries are out of date. Run 'mix download_ip_registries' and commit the changes."
-            git diff -- priv/ip/iana-ipv4-special-registry.csv priv/ip/iana-ipv6-special-registry.csv
+            git diff --ignore-space-at-eol -- priv/ip/iana-ipv4-special-registry.csv priv/ip/iana-ipv6-special-registry.csv
             exit 1
           fi
 
