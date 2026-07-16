@@ -36,6 +36,9 @@ defmodule PlausibleWeb.Live.Verification do
     super_admin? = Plausible.Auth.super_admin?(current_user)
     has_pageviews? = has_pageviews?(site)
 
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
+
     socket =
       assign(socket,
         url_to_verify: nil,
@@ -44,6 +47,7 @@ defmodule PlausibleWeb.Live.Verification do
         domain: domain,
         has_pageviews?: has_pageviews?,
         component: @component,
+        tracker_script_configuration: tracker_script_configuration,
         installation_type: get_installation_type(session["installation_type"], site),
         report_to: self(),
         delay: private[:delay] || 500,
@@ -90,6 +94,7 @@ defmodule PlausibleWeb.Live.Verification do
       awaiting_first_pageview?={not @has_pageviews?}
       super_admin?={@super_admin?}
       custom_url_input?={@custom_url_input?}
+      tracker_script_configuration={@tracker_script_configuration}
     />
     """
   end
