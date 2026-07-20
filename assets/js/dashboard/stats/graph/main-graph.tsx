@@ -399,10 +399,6 @@ export const MainGraph = ({
       ? selectedDatum.main.timeLabel
       : null
 
-  // graph time labels are space-separated ("YYYY-MM-DD HH:MM:SS"); normalize to the
-  // standard ISO form ("YYYY-MM-DDTHH:MM:SS") that annotation code works with, both
-  // for the `annotationsByTimeLabel` lookup (keyed by normalized labels) and for the
-  // datetime handed to the annotation components.
   const annotationDatetime =
     selectedDatum && selectedDatum.main.isDefined
       ? normalizeGraphTimeLabel(selectedDatum.main.timeLabel)
