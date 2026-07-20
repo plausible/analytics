@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import { setupSite, populateStats, addGoal } from '../fixtures'
 
 type MetricCase = {
@@ -12,25 +12,13 @@ type BucketExpectation = [
   metricValue: string
 ]
 
-const MAIN_LINE = 'path.stroke-indigo-500[data-testid="graph-line"]'
-
-async function hoverAndReadTooltip(page: Page, bucketIndex: number) {
-  await page.getByTestId(`graph-dot-series-1-bucket-${bucketIndex}`).hover()
-  const tooltip = page.getByTestId('graph-tooltip')
-  await expect(tooltip).toBeVisible()
-  return {
-    metricLabel: await tooltip.getByTestId('metric-label').innerText(),
-    mainTimeLabel: await tooltip.getByTestId('main-time-label').innerText(),
-    mainValue: await tooltip.getByTestId('main-value').innerText()
-  }
-}
-
 test.describe('plotting all metrics', () => {
   // Time label rendering depends on locale. Set it to one with 24h clock
   test.use({ locale: 'en-GB' })
 
-  test('default view', async ({ page, request }) => {
+  test('with no filters applied', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
+    const url = '/' + domain + '?period=day&date=2021-01-01'
 
     await populateStats({
       request,
@@ -63,17 +51,17 @@ test.describe('plotting all metrics', () => {
       ]
     })
 
-    await page.goto('/' + domain + '?period=day&date=2021-01-01', {
+    await page.goto(url, {
       waitUntil: 'commit'
     })
 
-    const graphLine = page.locator(MAIN_LINE)
+    const graphLine = mainSeriesLine(page)
     await expect(graphLine).toBeVisible()
 
     const metricCases: MetricCase[] = [
       {
         selector: '#visitors',
-        expectedMetricLabel: 'UNIQUE VISITORS',
+        expectedMetricLabel: 'Unique visitors',
         expectedBuckets: [
           [0, '00:00', '1'],
           [1, '01:00', '0'],
@@ -82,7 +70,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#visits',
-        expectedMetricLabel: 'TOTAL VISITS',
+        expectedMetricLabel: 'Total visits',
         expectedBuckets: [
           [0, '00:00', '1'],
           [1, '01:00', '0'],
@@ -91,7 +79,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#pageviews',
-        expectedMetricLabel: 'TOTAL PAGEVIEWS',
+        expectedMetricLabel: 'Total pageviews',
         expectedBuckets: [
           [0, '00:00', '3'],
           [1, '01:00', '0'],
@@ -100,7 +88,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#views_per_visit',
-        expectedMetricLabel: 'VIEWS PER VISIT',
+        expectedMetricLabel: 'Views per visit',
         expectedBuckets: [
           [0, '00:00', '3'],
           [1, '01:00', '0'],
@@ -109,7 +97,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#bounce_rate',
-        expectedMetricLabel: 'BOUNCE RATE',
+        expectedMetricLabel: 'Bounce rate',
         expectedBuckets: [
           [0, '00:00', '0%'],
           [1, '01:00', '0%'],
@@ -118,7 +106,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#visit_duration',
-        expectedMetricLabel: 'VISIT DURATION',
+        expectedMetricLabel: 'Visit duration',
         expectedBuckets: [
           [0, '00:00', '20m 00s'],
           [1, '01:00', '-'],
@@ -132,29 +120,60 @@ test.describe('plotting all metrics', () => {
       expectedMetricLabel,
       expectedBuckets
     } of metricCases) {
-      await test.step(expectedMetricLabel, async () => {
+      await test.step(`selecting ${expectedMetricLabel}`, async () => {
         await page.locator(selector).click()
         await expect(graphLine).toBeVisible()
 
         for (const [bucketIndex, timeLabel, metricValue] of expectedBuckets) {
-          const tooltipInfo = await hoverAndReadTooltip(page, bucketIndex)
-          expect(tooltipInfo.metricLabel).toBe(expectedMetricLabel)
-          expect(
-            tooltipInfo.mainTimeLabel,
-            `Wrong time label for ${expectedMetricLabel}`
-          ).toBe(timeLabel)
-          expect(
-            tooltipInfo.mainValue,
-            `Wrong metric value for ${expectedMetricLabel} in ${timeLabel}`
-          ).toBe(metricValue)
+          await mainSeriesDot(page, bucketIndex).hover()
+          await expect(graphTooltip(page)).toHaveText(
+            [
+              expectedMetricLabel,
+              timeLabel,
+              metricValue,
+              'Right click for more actions'
+            ].join('')
+          )
         }
       })
     }
+
+    await test.step('keeps the last selected metric selected on page reload', async () => {
+      await page.reload({ waitUntil: 'commit' })
+      await expect(mainSeriesLine(page)).toBeVisible()
+      await mainSeriesDot(page, 0).hover()
+      await expect(graphTooltip(page)).toHaveText(
+        [
+          'Visit duration',
+          '00:00',
+          '20m 00s',
+          'Right click for more actions'
+        ].join('')
+      )
+    })
+
+    await test.step('if the last selected metric is not available in the view on page reload, corrects it to default', async () => {
+      const metricStorageKey = `metric__${domain}`
+      // set stored metric that's invalid for this view
+      await page.evaluate(
+        (k) => localStorage.setItem(k, 'scroll_depth'),
+        metricStorageKey
+      )
+      await page.reload({ waitUntil: 'commit' })
+      await expect(mainSeriesLine(page)).toBeVisible()
+      await mainSeriesDot(page, 0).hover()
+      await expect(graphTooltip(page)).toHaveText(
+        ['Unique visitors', '00:00', '1', 'Right click for more actions'].join(
+          ''
+        )
+      )
+    })
   })
 
-  test('goal-filtered view', async ({ page, request }) => {
+  test('filtered by goal', async ({ page, request }) => {
     const goalName = 'Signup'
     const { domain } = await setupSite({ page, request })
+    const url = '/' + domain + '?period=day&date=2021-01-01&f=is,goal,Signup'
 
     await addGoal({ request, domain, params: { event_name: goalName } })
 
@@ -190,18 +209,15 @@ test.describe('plotting all metrics', () => {
       ]
     })
 
-    await page.goto(
-      '/' + domain + '?period=day&date=2021-01-01&f=is,goal,Signup',
-      { waitUntil: 'commit' }
-    )
+    await page.goto(url, { waitUntil: 'commit' })
 
-    const graphLine = page.locator(MAIN_LINE)
+    const graphLine = mainSeriesLine(page)
     await expect(graphLine).toBeVisible()
 
     const metricCases: MetricCase[] = [
       {
         selector: '#visitors',
-        expectedMetricLabel: 'UNIQUE CONVERSIONS',
+        expectedMetricLabel: 'Unique conversions',
         expectedBuckets: [
           [0, '00:00', '0'],
           [1, '01:00', '0'],
@@ -211,7 +227,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#events',
-        expectedMetricLabel: 'TOTAL CONVERSIONS',
+        expectedMetricLabel: 'Total conversions',
         expectedBuckets: [
           [0, '00:00', '0'],
           [1, '01:00', '0'],
@@ -221,7 +237,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#conversion_rate',
-        expectedMetricLabel: 'CONVERSION RATE',
+        expectedMetricLabel: 'Conversion rate',
         expectedBuckets: [
           [0, '00:00', '0%'],
           [1, '01:00', '0%'],
@@ -236,28 +252,29 @@ test.describe('plotting all metrics', () => {
       expectedMetricLabel,
       expectedBuckets
     } of metricCases) {
-      await test.step(expectedMetricLabel, async () => {
+      await test.step(`selecting ${expectedMetricLabel}`, async () => {
         await page.locator(selector).click()
         await expect(graphLine).toBeVisible()
 
+        const tooltip = graphTooltip(page)
         for (const [bucketIndex, timeLabel, metricValue] of expectedBuckets) {
-          const tooltipInfo = await hoverAndReadTooltip(page, bucketIndex)
-          expect(tooltipInfo.metricLabel).toBe(expectedMetricLabel)
-          expect(
-            tooltipInfo.mainTimeLabel,
-            `Wrong time label for ${expectedMetricLabel}`
-          ).toBe(timeLabel)
-          expect(
-            tooltipInfo.mainValue,
-            `Wrong metric value for ${expectedMetricLabel} in ${timeLabel}`
-          ).toBe(metricValue)
+          await mainSeriesDot(page, bucketIndex).hover()
+          await expect(tooltip).toHaveText(
+            [
+              expectedMetricLabel,
+              timeLabel,
+              metricValue,
+              'Right click for more actions'
+            ].join('')
+          )
         }
       })
     }
   })
 
-  test('page-filtered view', async ({ page, request }) => {
+  test('filtered by page', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
+    const url = '/' + domain + '?period=day&date=2021-01-01&f=is,page,/one'
 
     await populateStats({
       request,
@@ -298,18 +315,15 @@ test.describe('plotting all metrics', () => {
       ]
     })
 
-    await page.goto(
-      '/' + domain + '?period=day&date=2021-01-01&f=is,page,/one',
-      { waitUntil: 'commit' }
-    )
+    await page.goto(url, { waitUntil: 'commit' })
 
-    const graphLine = page.locator(MAIN_LINE)
+    const graphLine = mainSeriesLine(page)
     await expect(graphLine).toBeVisible()
 
     const metricCases: MetricCase[] = [
       {
         selector: '#visitors',
-        expectedMetricLabel: 'UNIQUE VISITORS',
+        expectedMetricLabel: 'Unique visitors',
         expectedBuckets: [
           [0, '00:00', '1'],
           [5, '05:00', '1'],
@@ -318,7 +332,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#visits',
-        expectedMetricLabel: 'TOTAL VISITS',
+        expectedMetricLabel: 'Total visits',
         expectedBuckets: [
           [0, '00:00', '1'],
           [5, '05:00', '1'],
@@ -327,7 +341,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#pageviews',
-        expectedMetricLabel: 'TOTAL PAGEVIEWS',
+        expectedMetricLabel: 'Total pageviews',
         expectedBuckets: [
           [0, '00:00', '1'],
           [5, '05:00', '1'],
@@ -336,7 +350,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#bounce_rate',
-        expectedMetricLabel: 'BOUNCE RATE',
+        expectedMetricLabel: 'Bounce rate',
         expectedBuckets: [
           [0, '00:00', '100%'],
           [5, '05:00', '0%'],
@@ -345,7 +359,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#scroll_depth',
-        expectedMetricLabel: 'SCROLL DEPTH',
+        expectedMetricLabel: 'Scroll depth',
         expectedBuckets: [
           [0, '00:00', '-'],
           [5, '05:00', '90%'],
@@ -354,7 +368,7 @@ test.describe('plotting all metrics', () => {
       },
       {
         selector: '#time_on_page',
-        expectedMetricLabel: 'TIME ON PAGE',
+        expectedMetricLabel: 'Time on page',
         expectedBuckets: [
           [0, '00:00', '-'],
           [5, '05:00', '20m 00s'],
@@ -368,26 +382,27 @@ test.describe('plotting all metrics', () => {
       expectedMetricLabel,
       expectedBuckets
     } of metricCases) {
-      await test.step(expectedMetricLabel, async () => {
+      await test.step(`selecting ${expectedMetricLabel}`, async () => {
         await page.locator(selector).click()
-        await expect(
-          graphLine,
-          `Graph not visible after clicking ${selector}`
-        ).toBeVisible()
+        await expect(graphLine).toBeVisible()
 
         for (const [bucketIndex, timeLabel, metricValue] of expectedBuckets) {
-          const tooltipInfo = await hoverAndReadTooltip(page, bucketIndex)
-          expect(tooltipInfo.metricLabel).toBe(expectedMetricLabel)
-          expect(
-            tooltipInfo.mainTimeLabel,
-            `Wrong time label for ${expectedMetricLabel}`
-          ).toBe(timeLabel)
-          expect(
-            tooltipInfo.mainValue,
-            `Wrong metric value for ${expectedMetricLabel} in ${timeLabel}`
-          ).toBe(metricValue)
+          await mainSeriesDot(page, bucketIndex).hover()
+          await expect(graphTooltip(page)).toHaveText(
+            [
+              expectedMetricLabel,
+              timeLabel,
+              metricValue,
+              'Right click for more actions'
+            ].join('')
+          )
         }
       })
     }
   })
 })
+
+const graphTooltip = (page: Page) => page.getByTestId('graph-tooltip')
+const mainSeriesLine = (page: Page) => page.getByTestId('graph-line-series-1')
+const mainSeriesDot = (page: Page, bucketIndex: number) =>
+  page.getByTestId(`graph-dot-series-1-bucket-${bucketIndex}`)
