@@ -104,28 +104,28 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "Getting started"
     end
 
-    test "public site - redirect to /login when no stats because verification requires it", %{
-      conn: conn
-    } do
+    test "public site - shows an empty dashboard without stats (no verification banner)",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
+      resp = get(conn, "/some-other-public-site.io") |> html_response(200)
 
-      assert redirected_to(conn) ==
-               Routes.auth_path(conn, :login_form,
-                 return_to: "/some-other-public-site.io/verification"
-               )
+      refute resp =~ "Verifying your installation"
     end
 
-    test "public site - no stats with skip_to_dashboard", %{
-      conn: conn
-    } do
+    test "public site - anonymous visitors never see the verification banner, even with the param",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, "/some-other-public-site.io?skip_to_dashboard=true")
-      resp = html_response(conn, 200)
+      resp =
+        get(conn, "/some-other-public-site.io?verify_installation=true") |> html_response(200)
 
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      refute resp =~ "Verifying your installation"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -147,15 +147,18 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can view stats of a website I've created, enforcing pageviews check skip", %{
-      conn: conn,
-      site: site
-    } do
-      resp = conn |> get(conn |> get("/" <> site.domain) |> redirected_to()) |> html_response(200)
-      refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
-
-      resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
+    test "can view stats of a website I've created; verification banner only shows with the explicit param",
+         %{
+           conn: conn,
+           site: site
+         } do
+      resp = get(conn, "/" <> site.domain) |> html_response(200)
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      refute resp =~ "Verifying your installation"
+
+      resp = conn |> get("/" <> site.domain <> "?verify_installation=true") |> html_response(200)
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert resp =~ "Verifying your installation"
     end
 
     on_ee do
@@ -334,9 +337,9 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "does not show CRM link to the site", %{conn: conn, site: site} do
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+      resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-      refute html_response(conn, 200) =~ "/cs/sites"
+      refute resp =~ "/cs/sites"
     end
 
     test "all segments (personal or site) are stuffed into dataset, with their associated owner_id and owner_name",
@@ -390,8 +393,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "can enter verification when site is without stats", %{conn: conn} do
       site = new_site()
 
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+      assert resp =~ "Verifying your installation"
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
@@ -410,8 +413,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       site = new_site(owner: user)
       site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
-      conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+      assert resp =~ "Verifying your installation"
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
@@ -427,9 +430,9 @@ defmodule PlausibleWeb.StatsControllerTest do
     on_ee do
       test "shows CRM link to the site", %{conn: conn} do
         site = new_site()
-        conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+        resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-        assert html_response(conn, 200) =~
+        assert resp =~
                  Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)
       end
     end

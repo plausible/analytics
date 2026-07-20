@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Components.VerificationTest do
+defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
   use PlausibleWeb.ConnCase, async: true
 
   on_ee do
@@ -8,10 +8,10 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
     @moduletag :capture_log
 
-    @component PlausibleWeb.Live.Components.Verification
+    @component PlausibleWeb.Live.Components.VerificationBanner
     @progress ~s|#verification-ui p#progress|
 
-    @pulsating_circle ~s|div#verification-ui div.pulsating-circle|
+    @loading_spinner ~s|div#verification-ui div.loading|
     @check_circle ~s|div#verification-ui #check-circle|
     @error_circle ~s|div#verification-ui #error-circle|
     @recommendations ~s|#recommendation|
@@ -24,8 +24,8 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       assert text_of_element(html, @progress) ==
                "We're visiting your site to ensure that everything is working"
 
-      assert element_exists?(html, @pulsating_circle)
-      refute class_of_element(html, @pulsating_circle) =~ "hidden"
+      assert element_exists?(html, @loading_spinner)
+      refute class_of_element(html, @loading_spinner) =~ "hidden"
       refute element_exists?(html, @recommendations)
       refute element_exists?(html, @check_circle)
       refute element_exists?(html, @super_admin_report)
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
     test "renders error badge on error" do
       html = render_component(@component, domain: "example.com", success?: false, finished?: true)
-      refute element_exists?(html, @pulsating_circle)
+      refute element_exists?(html, @loading_spinner)
       refute element_exists?(html, @check_circle)
       refute element_exists?(html, @recommendations)
       assert element_exists?(html, @error_circle)
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           finished?: true
         )
 
-      refute element_exists?(html, @pulsating_circle)
+      refute element_exists?(html, @loading_spinner)
       assert element_exists?(html, @check_circle)
     end
 
@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
       assert element_exists?(html, ~s|a[href="https://plausible.io/contact"]|)
     end
 
-    test "renders link to verify installation at a different URL" do
+    test "renders a click-to-show-form link to verify installation at a different URL" do
       interpretation =
         Verification.Checks.interpret_diagnostics(%State{
           url: "example.com",
@@ -125,9 +125,6 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
       assert interpretation.data.offer_custom_url_input == true
 
-      expected_link_href =
-        PlausibleWeb.Router.Helpers.site_path(PlausibleWeb.Endpoint, :verification, "example.com")
-
       html =
         render_component(@component,
           domain: "example.com",
@@ -136,12 +133,46 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           interpretation: interpretation
         )
 
-      assert text_of_element(html, "#verify-custom-url-link") =~ "different URL?"
-      assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ expected_link_href
-      assert text_of_attr(html, "#verify-custom-url-link a", "href") =~ "custom_url=true"
+      assert text_of_element(html, "#verify-custom-url-link") =~ "Click here"
+      assert element_exists?(html, ~s|a#verify-custom-url-link[phx-click="show-custom-url-form"]|)
     end
 
-    test "offers escape paths: settings and installation instructions on failure" do
+    test "renders the custom URL input inline, retry button becomes the form's submit button, hides the prompt link" do
+      interpretation =
+        Verification.Checks.interpret_diagnostics(%State{
+          url: "example.com",
+          diagnostics: %Verification.Diagnostics{
+            plausible_is_on_window: false,
+            plausible_is_initialized: false,
+            service_error: %{code: :domain_not_found}
+          }
+        })
+
+      html =
+        render_component(@component,
+          domain: "example.com",
+          finished?: true,
+          success?: false,
+          interpretation: interpretation,
+          custom_url_input?: true
+        )
+
+      refute element_exists?(html, "#verify-custom-url-link")
+      refute element_exists?(html, ~s|a[phx-click="retry"]|)
+
+      assert text_of_element(html, ~s|form[phx-submit="verify-custom-url"] button[type="submit"]|) =~
+               "Check again"
+
+      assert element_exists?(
+               html,
+               ~s|form[phx-submit="verify-custom-url"] input[name="custom_url"]|
+             )
+
+      assert text_of_attr(html, ~s|form[phx-submit="verify-custom-url"] input|, "value") =~
+               "https://example.com"
+    end
+
+    test "offers an installation-instructions escape path on failure, no more settings link" do
       html =
         render_component(@component,
           domain: "example.com",
@@ -151,11 +182,11 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
           flow: PlausibleWeb.Flows.review()
         )
 
-      assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
+      refute element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
 
       assert element_exists?(
                html,
-               ~s|a[href="/example.com/installation?flow=review&installation_type=wordpress"]|
+               ~s|a[href="/example.com/installation?flow=review"]|
              )
     end
   end

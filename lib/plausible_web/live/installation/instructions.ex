@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
   Instruction forms and components for the Installation module
   """
   use PlausibleWeb, :component
+  import PlausibleWeb.Components.Generic
+  alias Plausible.Site.TrackerScriptConfiguration
 
   attr :tracker_script_configuration_form, :map, required: true
 
@@ -21,11 +23,7 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
       Once done, click the button below to verify your installation.
     </div>
 
-    <.snippet_form
-      text={render_snippet(@tracker_script_configuration_form.data)}
-      rows={6}
-      resizable={true}
-    />
+    <.copy_snippet_box tracker_script_configuration={@tracker_script_configuration_form.data} />
     <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
     <.script_config_control
       field={@tracker_script_configuration_form[:outbound_links]}
@@ -129,35 +127,53 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
       Tag Manager installation
     </.title>
     <div class="text-sm mt-4 leading-6">
-      <span :if={@recommended_installation_type == "gtm"}>
-        We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
-      </span>
-      <span :if={@recommended_installation_type != "gtm"}>
-        Using Google Tag Manager? Here's how to integrate Plausible:
-      </span>
-      <div class="mt-4">
-        <.focus_list>
-          <:item>
-            Copy your site's Script ID:
-            <.snippet_form
-              text={@tracker_script_configuration_form.data.id}
-              rows={1}
-              resizable={false}
-            />
-          </:item>
-
-          <:item>
-            <.styled_link href="https://plausible.io/gtm-template" new_tab={true}>
-              Install the Plausible template in GTM
-            </.styled_link>
-          </:item>
-
-          <:item>
-            Paste your Script ID into the template and click the button below to verify your installation.
-          </:item>
-        </.focus_list>
-      </div>
+      <.gtm_instructions_content
+        recommended_installation_type={@recommended_installation_type}
+        tracker_script_configuration={@tracker_script_configuration_form.data}
+      />
     </div>
+    """
+  end
+
+  attr :recommended_installation_type, :string, required: true
+  attr :tracker_script_configuration, TrackerScriptConfiguration, required: true
+
+  def gtm_instructions_content(assigns) do
+    ~H"""
+    <span :if={@recommended_installation_type == "gtm"}>
+      We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
+    </span>
+    <span :if={@recommended_installation_type != "gtm"}>
+      Using Google Tag Manager? Here's how to integrate Plausible:
+    </span>
+    <div class="mt-4">
+      <.gtm_instructions_content_inner tracker_script_configuration={@tracker_script_configuration} />
+    </div>
+    """
+  end
+
+  def gtm_instructions_content_inner(assigns) do
+    ~H"""
+    <.copyable_readonly_text_area
+      id="script-config-id"
+      text={@tracker_script_configuration.id}
+      rows={1}
+    />
+    <.focus_list>
+      <:item>
+        Copy your site's Script ID from above
+      </:item>
+
+      <:item>
+        <.styled_link href="https://plausible.io/gtm-template" new_tab={true}>
+          Install the Plausible template in GTM
+        </.styled_link>
+      </:item>
+
+      <:item>
+        Paste your Script ID into the template
+      </:item>
+    </.focus_list>
     """
   end
 
@@ -236,27 +252,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
     """
   end
 
-  defp snippet_form(assigns) do
-    ~H"""
-    <div class="relative">
-      <textarea
-        id="snippet"
-        class={"w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-750 dark:bg-gray-750 dark:text-gray-300 #{if !@resizable, do: "resize-none"}"}
-        rows={@rows}
-        readonly
-      ><%= @text %></textarea>
+  def copy_snippet_box(assigns) do
+    assigns = assign(assigns, :text, render_snippet(assigns.tracker_script_configuration))
 
-      <a
-        onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
-        href="javascript:void(0)"
-        class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline bottom-2 right-4 p-2 bg-white transition-colors duration-150 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 dark:bg-gray-750"
-      >
-        <Heroicons.document_duplicate class="pr-1 text-current size-5" />
-        <span>
-          COPY
-        </span>
-      </a>
-    </div>
+    ~H"""
+    <.copyable_readonly_text_area id="snippet" text={@text} rows={6} resizable={true} />
     """
   end
 

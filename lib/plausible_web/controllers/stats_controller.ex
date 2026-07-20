@@ -70,9 +70,6 @@ defmodule PlausibleWeb.StatsController do
 
     team_identifier = site.team.identifier
 
-    skip_to_dashboard? =
-      conn.params["skip_to_dashboard"] == "true" or consolidated_view?
-
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
     segments = Enum.map(segments, &Plausible.Segments.to_response_map(&1, site))
 
@@ -80,8 +77,18 @@ defmodule PlausibleWeb.StatsController do
       consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
         redirect(conn, to: Routes.site_path(conn, :index))
 
-      (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
+      not can_see_stats? ->
+        site = Plausible.Repo.preload(site, :owners)
+        render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
+
+      true ->
         flags = get_flags(current_user, site)
+
+        verify_installation? =
+          ee?() and
+            not is_nil(current_user) and
+            not consolidated_view? and
+            conn.params["verify_installation"] == "true"
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -106,15 +113,14 @@ defmodule PlausibleWeb.StatsController do
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
-          limited_to_segment_id: nil
+          limited_to_segment_id: nil,
+          connect_live_socket: verify_installation?,
+          verify_installation?: verify_installation?,
+          verification_session:
+            PlausibleWeb.Live.Components.VerificationBanner.query_params()
+            |> Map.new(&{&1, conn.params[&1]})
+            |> Map.put("domain", site.domain)
         )
-
-      !stats_start_date && can_see_stats? ->
-        redirect(conn, to: Routes.site_path(conn, :verification, site.domain))
-
-      Teams.locked?(site.team) ->
-        site = Plausible.Repo.preload(site, :owners)
-        render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
     end
   end
 
@@ -422,7 +428,9 @@ defmodule PlausibleWeb.StatsController do
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
-          limited_to_segment_id: limited_to_segment_id
+          limited_to_segment_id: limited_to_segment_id,
+          verify_installation?: false,
+          verification_session: %{}
         )
     end
   end
