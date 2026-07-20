@@ -507,7 +507,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
             "note" => "feature released",
             "type" => "personal",
             "granularity" => "minute",
-            "datetime" => dt
+            "datetime" => unquote(dt)
           })
           |> json_response(200)
 
