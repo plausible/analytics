@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Components.Verification do
+defmodule PlausibleWeb.Live.Components.VerificationBanner do
   @moduledoc """
   This component is responsible for rendering the verification progress
   and diagnostics as a compact banner on top of the dashboard.

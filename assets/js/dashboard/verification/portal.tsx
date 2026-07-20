@@ -4,7 +4,7 @@ import { useAppNavigate } from '../navigation/use-app-navigate'
 type VerificationFinishedDetail = {
   /**
    * Exact query param names to drop from the URL when verification banner
-   * disappears. See: PlausibleWeb.Live.Components.Verification.query_params/0
+   * disappears. See: PlausibleWeb.Live.Components.VerificationBanner.query_params/0
    */
   queryParams: string[]
 }

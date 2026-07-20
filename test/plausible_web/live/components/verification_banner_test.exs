@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Components.VerificationTest do
+defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
   use PlausibleWeb.ConnCase, async: true
 
   on_ee do
@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
 
     @moduletag :capture_log
 
-    @component PlausibleWeb.Live.Components.Verification
+    @component PlausibleWeb.Live.Components.VerificationBanner
     @progress ~s|#verification-ui p#progress|
 
     @loading_spinner ~s|div#verification-ui div.loading|
