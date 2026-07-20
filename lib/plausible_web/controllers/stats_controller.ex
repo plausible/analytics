@@ -117,7 +117,7 @@ defmodule PlausibleWeb.StatsController do
           connect_live_socket: verify_installation?,
           verify_installation?: verify_installation?,
           verification_session:
-            PlausibleWeb.Live.Components.Verification.query_params()
+            PlausibleWeb.Live.Components.VerificationBanner.query_params()
             |> Map.new(&{&1, conn.params[&1]})
             |> Map.put("domain", site.domain)
         )
