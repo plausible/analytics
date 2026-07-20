@@ -25,6 +25,15 @@ if (csrfToken && websocketUrl) {
       })
     }
   }
+  // Lets a LiveView tell the client to tear down the websocket connection
+  // once it's done with it (e.g. PlausibleWeb.Live.Verification, once its
+  // banner has been dismissed) - the server-side process then terminates
+  // gracefully.
+  Hooks.DisconnectSocket = {
+    mounted() {
+      this.handleEvent('disconnect-liveview', () => liveSocket.disconnect())
+    }
+  }
   let Uploaders = {}
   Uploaders.S3 = function (entries, onViewError) {
     entries.forEach((entry) => {

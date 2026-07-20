@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @retry_button ~s|a[phx-click="retry"]|
   @progress ~s|#verification-ui p#progress|
   @heading ~s|#verification-ui h3|
+  @banner ~s|#verification-ui|
 
   @in_progress_text "Verifying your installation"
 
@@ -133,6 +134,68 @@ defmodule PlausibleWeb.Live.VerificationTest do
                html = render(lv)
                {html =~ "Success!", html}
              end)
+    end
+
+    @tag :ee_only
+    test "the dismissed flag keeps the banner hidden even if a late update arrives while still connected",
+         %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
+
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      html = render(lv)
+      assert html =~ @in_progress_text
+      refute class_of_element(html, @banner) =~ "hidden"
+
+      html = render_click(lv, "dismiss")
+      assert class_of_element(html, @banner) =~ "hidden"
+
+      # This might look a bit counter-intuitive -- dismissing the banner
+      # closes the websocket connection and the LV process would normally
+      # die before the component gets notified of success.
+
+      # However, `Phoenix.LiveViewTest` can't simulate a real socket closing,
+      # so the process here just stays alive regardless. What this guards is
+      # the defensive `dismissed?` gate itself: if this process is ever still
+      # around when a late update arrives, for whatever reason, the banner
+      # must stay hidden.
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Success!", html}
+             end)
+
+      html = render(lv)
+      assert class_of_element(html, @banner) =~ "hidden"
+    end
+
+    @tag :ee_only
+    test "dismissing tells the client to close the websocket connection",
+         %{conn: conn, site: site} do
+      stub_lookup_a_records(site.domain)
+
+      stub_verification_result(%{
+        "completed" => false,
+        "error" => %{"message" => "Error"}
+      })
+
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      render_click(lv, "dismiss")
+
+      assert_push_event(lv, "disconnect-liveview", %{})
     end
 
     for {expected_text, saved_installation_type} <- [

@@ -16,14 +16,11 @@ defmodule PlausibleWeb.Live.Components.Verification do
   import PlausibleWeb.Live.Components.Form
 
   @container_id "verification-ui"
-  # Dismissing hides the banner immediately and strips `verify_installation`
-  # from the URL (the same param that got it rendered in the first place -
-  # see PlausibleWeb.StatsController), so a refresh doesn't bring it back.
-  @dismiss_onclick "document.getElementById('#{@container_id}').classList.add('hidden');" <>
-                     "var u = new window.URL(window.location.href);" <>
-                     "u.searchParams.delete('verify_installation');" <>
-                     "u.searchParams.delete('flow');" <>
-                     "window.history.replaceState(null, '', u);"
+
+  # All query params the verification LiveView needs must be listed here, so
+  # they can be cleaned up from the URL once verification finishes.
+  @query_params ~w(verify_installation flow)
+  def query_params, do: @query_params
 
   attr(:domain, :string, required: true)
 
@@ -41,23 +38,17 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:installation_type, :string, default: nil)
   attr(:custom_url_input?, :boolean, default: false)
   attr(:tracker_script_configuration, TrackerScriptConfiguration, default: nil)
+  attr(:dismissed?, :boolean, default: false)
 
   def render(assigns) do
     assigns =
       assigns
-      |> assign(:dismiss_onclick, @dismiss_onclick)
       |> assign(:container_id, @container_id)
+      |> assign(:query_params, @query_params)
 
     ~H"""
-    <div id={@container_id} class="relative mb-4">
-      <button
-        type="button"
-        aria-label="Dismiss"
-        class="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-        onclick={@dismiss_onclick}
-      >
-        <Heroicons.x_mark class="size-4" />
-      </button>
+    <div id={@container_id} class={["relative mb-4", @dismissed? && "hidden"]}>
+      <.dismiss_button container_id={@container_id} query_params={@query_params} />
       <.render_progress :if={not @finished?} message={@message} />
       <.render_success
         :if={@finished? and @success?}
@@ -79,6 +70,42 @@ defmodule PlausibleWeb.Live.Components.Verification do
       />
     </div>
     """
+  end
+
+  # The action of dismissing the verification banner consists of 4
+  # independent things:
+  #
+  #   1. Client-side: the inlined `onclick` instantly adds the `hidden`
+  #      class straight to the container div.
+  #
+  #   2. Client-side: instantly dispatches a `verification-finished`
+  #      window event so React router can clean up query params that are
+  #      no longer needed (see assets/js/dashboard/verification/portal.tsx).
+  #      Also makes sure that a refresh won't bring verification back.
+  #
+  #   3. Server-side (phx-click="dismiss"): sets `dismissed?` on this
+  #      component's assigns, so it stays hidden even if a later
+  #      `send_update` (e.g. :all_checks_done) re-renders it.
+  #
+  #   4. Server-side, same handler: tells the client to close the websocket
+  #      connection, since the LiveView has nothing left to do.
+  defp dismiss_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      aria-label="Dismiss"
+      class="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+      onclick={dismiss_onclick(@container_id, @query_params)}
+      phx-click="dismiss"
+    >
+      <Heroicons.x_mark class="size-4" />
+    </button>
+    """
+  end
+
+  defp dismiss_onclick(container_id, query_params) do
+    "document.getElementById('#{container_id}').classList.add('hidden');" <>
+      "window.dispatchEvent(new CustomEvent('verification-finished', { detail: { queryParams: #{Jason.encode!(query_params)} } }));"
   end
 
   defp render_progress(assigns) do
