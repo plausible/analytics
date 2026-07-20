@@ -116,10 +116,10 @@ defmodule PlausibleWeb.StatsController do
           limited_to_segment_id: nil,
           connect_live_socket: verify_installation?,
           verify_installation?: verify_installation?,
-          verification_session: %{
-            "domain" => site.domain,
-            "flow" => conn.params["flow"]
-          }
+          verification_session:
+            PlausibleWeb.Live.Components.Verification.query_params()
+            |> Map.new(&{&1, conn.params[&1]})
+            |> Map.put("domain", site.domain)
         )
     end
   end

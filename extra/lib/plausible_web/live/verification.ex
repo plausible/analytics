@@ -52,7 +52,8 @@ defmodule PlausibleWeb.Live.Verification do
         flow: session["flow"] || "",
         checks_pid: nil,
         attempts: 0,
-        custom_url_input?: false
+        custom_url_input?: false,
+        dismissed?: false
       )
 
     if connected?(socket) do
@@ -66,7 +67,7 @@ defmodule PlausibleWeb.Live.Verification do
     assigns = assign(assigns, :use_portal?, @use_portal?)
 
     ~H"""
-    <div id="verification-portal-container">
+    <div id="verification-portal-container" phx-hook="DisconnectSocket">
       <%= if @use_portal? do %>
         <.portal id="verification-portal-source" target="#verification-portal-target">
           <.verification_content {assigns} />
@@ -90,6 +91,7 @@ defmodule PlausibleWeb.Live.Verification do
       super_admin?={@super_admin?}
       custom_url_input?={@custom_url_input?}
       tracker_script_configuration={@tracker_script_configuration}
+      dismissed?={@dismissed?}
     />
     """
   end
@@ -106,6 +108,14 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_event("show-custom-url-form", _, socket) do
     {:noreply, assign(socket, custom_url_input?: true)}
+  end
+
+  # Once dismissed, this LiveView has nothing left to do - and since it's
+  # the only LiveView on the dashboard page, there's no reason to keep
+  # the websocket connection open for the rest of the browsing session.
+  def handle_event("dismiss", _, socket) do
+    update_component(socket, dismissed?: true)
+    {:noreply, socket |> assign(dismissed?: true) |> push_event("disconnect-liveview", %{})}
   end
 
   def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
