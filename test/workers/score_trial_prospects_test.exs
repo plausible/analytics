@@ -37,6 +37,21 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
         assert %{kind: :growth, forced_by: ["shared_links"]} =
                  TrialProspects.score(6_000, [Plausible.Billing.Feature.SharedLinks], 1, 0)
 
+        assert %{kind: :growth, forced_by: ["site_annotations"]} =
+                 TrialProspects.score(6_000, [Plausible.Billing.Feature.SiteAnnotations], 1, 0)
+
+        # a growth feature never downgrades a business tier forced elsewhere
+        assert %{kind: :business, forced_by: ["funnels"]} =
+                 TrialProspects.score(
+                   6_000,
+                   [
+                     Plausible.Billing.Feature.SiteAnnotations,
+                     Plausible.Billing.Feature.Funnels
+                   ],
+                   1,
+                   0
+                 )
+
         assert %{kind: :business, forced_by: ["funnels", "props"]} =
                  TrialProspects.score(
                    6_000,
@@ -169,6 +184,33 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
         assert prospect.kind == :business
         assert prospect.forced_by == ["props"]
         assert prospect.estimated_mrr == 19
+      end
+
+      test "site annotation usage forces a higher plan kind" do
+        user = new_user(trial_expiry_date: Date.add(Date.utc_today(), 7))
+        site = new_site(owner: user)
+        insert(:annotation, site: site, type: :site)
+        populate_stats(site, pageviews_on(Date.add(Date.utc_today(), -10), 10))
+
+        assert :ok = perform_job(ScoreTrialProspects, %{})
+
+        prospect = Repo.get_by!(TrialProspect, team_id: team_of(user).id)
+        assert prospect.kind == :growth
+        assert prospect.forced_by == ["site_annotations"]
+        assert prospect.estimated_mrr == 14
+      end
+
+      test "a personal annotation does not force a higher plan kind" do
+        user = new_user(trial_expiry_date: Date.add(Date.utc_today(), 7))
+        site = new_site(owner: user)
+        insert(:annotation, site: site, type: :personal, owner: user)
+        populate_stats(site, pageviews_on(Date.add(Date.utc_today(), -10), 10))
+
+        assert :ok = perform_job(ScoreTrialProspects, %{})
+
+        prospect = Repo.get_by!(TrialProspect, team_id: team_of(user).id)
+        assert prospect.kind == :starter
+        assert prospect.forced_by == []
       end
 
       test "site count alone forces a higher plan kind" do

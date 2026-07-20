@@ -28,7 +28,7 @@ defmodule Plausible.CustomerSupport.TrialProspects do
     :revenue_goals,
     :stats_api
   ]
-  @growth_features [:shared_links, :site_segments]
+  @growth_features [:shared_links, :site_segments, :site_annotations]
 
   @starter_site_limit 1
   @growth_site_limit 3
