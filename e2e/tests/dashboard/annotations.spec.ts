@@ -65,6 +65,9 @@ test('user can create annotations across granularities, edit, and delete them', 
 
   const personalNoteAttribution = 'Personal note • 29 Jun 10:00'
   const siteNoteAttribution = `${user.name} • 29 Jun`
+  // when all annotations in a bucket are exactly for the date (& time) of the bucket
+  // the attribution is shortened because it's unambiguous
+  const siteNoteAttributionUnambiguous = `${user.name}`
 
   // Asserts the tooltip's annotation list matches provided list exactly
   const expectTooltipAnnotations = async (
@@ -124,7 +127,7 @@ test('user can create annotations across granularities, edit, and delete them', 
   await test.step('right-click Monday and zoom in via "View day"', async () => {
     await mondayIn7d.hover()
     await expectTooltipAnnotations([
-      { note: siteNoteText, attribution: siteNoteAttribution }
+      { note: siteNoteText, attribution: siteNoteAttributionUnambiguous }
     ])
 
     await mondayIn7d.click({ button: 'right' })
@@ -239,7 +242,7 @@ test('user can create annotations across granularities, edit, and delete them', 
     await expect(deleteModalHeading).toBeHidden()
     await mondayIn7d.hover()
     await expectTooltipAnnotations([
-      { note: siteNoteText, attribution: siteNoteAttribution }
+      { note: siteNoteText, attribution: siteNoteAttributionUnambiguous }
     ])
     await expect(mondayMarker7d).toBeVisible()
   })

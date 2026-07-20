@@ -210,6 +210,11 @@ export const getAnnotationGranularity = (
   }
 }
 
+export const allAnnotationsAreFromThisExactDatetime = (
+  annotations: Pick<Annotation, 'datetime'>[],
+  datetime: string
+): boolean => annotations.every((a) => a.datetime === datetime)
+
 export const getApiFormattedPayload = ({
   granularity,
   datetime,

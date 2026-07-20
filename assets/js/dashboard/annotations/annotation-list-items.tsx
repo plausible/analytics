@@ -21,24 +21,28 @@ const VerticalBar = () => (
 )
 
 export const AnnotationItemRow = ({ children }: { children: ReactNode }) => (
-  <div className="group flex flex-row gap-x-2">
+  <div className="relative group flex flex-row gap-x-2">
     <VerticalBar />
     {children}
   </div>
 )
 
 export const AnnotationAuthorshipLine = ({
-  annotation
+  annotation,
+  showDateLabel
 }: {
   annotation: Annotation
+  showDateLabel: boolean
 }) => (
   <div className="flex items-baseline text-xs text-gray-300 pr-8">
     <span className="truncate min-w-0">
       {getAnnotationAuthorship(annotation)}
     </span>
-    <span className="whitespace-nowrap shrink-0">
-      {` • ${getAttributionDateLabel(annotation)}`}
-    </span>
+    {showDateLabel && (
+      <span className="whitespace-nowrap shrink-0">
+        &nbsp;{`• ${getAttributionDateLabel(annotation)}`}
+      </span>
+    )}
   </div>
 )
 

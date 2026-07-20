@@ -521,6 +521,7 @@ export const MainGraph = ({
             />
           ) : (
             <HoveredTooltipContents
+              annotationDatetime={annotationDatetime}
               annotations={
                 annotationDatetime
                   ? annotationsByTimeLabel[annotationDatetime]
@@ -538,6 +539,7 @@ export const MainGraph = ({
 }
 
 type TooltipContentsProps = {
+  annotationDatetime: string | null
   annotations: Annotation[] | undefined
   interval: Interval
   zoomDate: string | null
@@ -554,7 +556,6 @@ const PersistentTooltipContents = ({
   canAddAnnotation,
   closeTooltip
 }: {
-  annotationDatetime: string | null
   isTouchDevice: boolean
   onZoomToPeriod: (date: string) => void
   closeTooltip: () => void
@@ -564,8 +565,9 @@ const PersistentTooltipContents = ({
   const hasActions = !!zoomDate || (!!annotationDatetime && canAddAnnotation)
   return (
     <>
-      {!!annotations?.length && (
+      {!!annotationDatetime && !!annotations?.length && (
         <InteractiveAnnotationsList
+          annotationDatetime={annotationDatetime}
           annotations={annotations}
           isTouchDevice={isTouchDevice}
           closeTooltip={closeTooltip}
@@ -606,6 +608,7 @@ const PersistentTooltipContents = ({
 }
 
 const HoveredTooltipContents = ({
+  annotationDatetime,
   annotations,
   interval,
   zoomDate,
@@ -613,8 +616,11 @@ const HoveredTooltipContents = ({
 }: TooltipContentsProps) => {
   return (
     <>
-      {!!annotations?.length && (
-        <HoverAnnotationsList annotations={annotations} />
+      {!!annotationDatetime && !!annotations?.length && (
+        <HoverAnnotationsList
+          annotations={annotations}
+          annotationDatetime={annotationDatetime}
+        />
       )}
       <hr className="border-gray-600 dark:border-gray-800 my-1" />
       <div className="flex flex-col gap-y-0.5">

@@ -6,7 +6,8 @@ import {
   getAnnotationAuthorship,
   getAnnotationGranularity,
   getAnnotationTimeLabel,
-  groupAnnotationsByTimeLabel
+  groupAnnotationsByTimeLabel,
+  allAnnotationsAreFromThisExactDatetime
 } from './annotations'
 import { Interval } from '../stats/graph/intervals'
 import { Role, UserContextValue } from '../user-context'
@@ -293,5 +294,46 @@ describe(`${groupAnnotationsByTimeLabel.name}`, () => {
         Interval.day
       )
     ).toEqual({})
+  })
+})
+
+describe(`${allAnnotationsAreFromThisExactDatetime.name}`, () => {
+  it('returns true when every annotation shares the given datetime', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [
+          { datetime: '2025-02-26T10:30:00' },
+          { datetime: '2025-02-26T10:30:00' }
+        ],
+        '2025-02-26T10:30:00'
+      )
+    ).toBe(true)
+  })
+
+  it('returns true when every annotation shares the given date', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [{ datetime: '2026-07-20' }, { datetime: '2026-07-20' }],
+        '2026-07-20'
+      )
+    ).toBe(true)
+  })
+
+  it('returns false when some annotation has a different datetime', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [
+          { datetime: '2025-02-26T10:30:00' },
+          { datetime: '2025-02-26T10:31:00' }
+        ],
+        '2025-02-26T10:30:00'
+      )
+    ).toBe(false)
+  })
+
+  it('returns true when there are no annotations', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime([], '2025-02-26T10:30:00')
+    ).toBe(true)
   })
 })
