@@ -11,6 +11,24 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
 
   @verify_installation_check_timeout 20_000
 
+  # Local UI debugging only - set to one of the keys below to make every
+  # verification run return that canned interpretation, regardless of what
+  # the real check pipeline actually found. Handy for iterating on
+  # PlausibleWeb.Live.Verification's banner UI states. Must be `nil` on commit.
+  @debug_scenario nil
+
+  @debug_scenarios %{
+    0 => :success,
+    1 => %Verification.Diagnostics{},
+    2 => %Verification.Diagnostics{selected_installation_type: "wordpress"},
+    3 => %Verification.Diagnostics{
+      plausible_is_on_window: false,
+      plausible_is_initialized: false,
+      service_error: %{code: :domain_not_found}
+    },
+    4 => %Verification.Diagnostics{disallowed_by_csp: true}
+  }
+
   @spec run(String.t(), String.t(), String.t(), Keyword.t()) :: {:ok, pid()} | State.t()
   def run(url, data_domain, installation_type, opts \\ []) do
     # Timeout option for testing purposes
@@ -59,6 +77,7 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
         opts \\ []
       ) do
     telemetry? = Keyword.get(opts, :telemetry?, true)
+    {diagnostics, url} = debug_override(diagnostics, data_domain, url)
 
     result =
       Verification.Diagnostics.interpret(
@@ -96,5 +115,29 @@ defmodule Plausible.InstallationSupport.Verification.Checks do
     end
 
     result
+  end
+
+  # Also overrides `url` to a clean, query-string-free one - otherwise the
+  # real check pipeline's cache-busting query param (?plausible_verification=...)
+  # leaks into canned error messages like "We couldn't find your website at ...".
+  defp debug_override(diagnostics, data_domain, url) do
+    case Map.get(@debug_scenarios, @debug_scenario) do
+      nil ->
+        {diagnostics, url}
+
+      :success ->
+        {
+          %Verification.Diagnostics{
+            test_event: %{
+              "normalizedBody" => %{"domain" => data_domain},
+              "responseStatus" => 200
+            }
+          },
+          "https://#{data_domain}"
+        }
+
+      %Verification.Diagnostics{} = debug ->
+        {debug, "https://#{data_domain}"}
+    end
   end
 end
