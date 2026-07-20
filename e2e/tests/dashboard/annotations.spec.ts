@@ -68,6 +68,7 @@ test('user can create annotations across granularities, edit, and delete them', 
   // when all annotations in a bucket are exactly for the date (& time) of the bucket
   // the attribution is shortened because it's unambiguous
   const siteNoteAttributionUnambiguous = `${user.name}`
+  const personalNoteAttributionUnambiguous = 'Personal note'
 
   // Asserts the tooltip's annotation list matches provided list exactly
   const expectTooltipAnnotations = async (
@@ -78,7 +79,9 @@ test('user can create annotations across granularities, edit, and delete them', 
     for (const [i, { note, attribution }] of expected.entries()) {
       const row = rows.nth(i)
       await expect(row).toContainText(note)
-      await expect(row.getByText(attribution, { exact: true })).toBeVisible()
+      await expect(row.getByTestId('annotation-attribution')).toHaveText(
+        attribution
+      )
     }
   }
 
@@ -165,6 +168,18 @@ test('user can create annotations across granularities, edit, and delete them', 
     await expect(
       page.getByTestId('annotation-marker-on-bucket-10')
     ).toBeVisible()
+  })
+
+  await test.step('in day view, hovering the 10:00 bucket with the single note omits the duplicative datetime label from the note', async () => {
+    const hour10InDay = page.getByTestId('graph-dot-series-1-bucket-10')
+    await hour10InDay.hover()
+    await expect(tooltip).toBeVisible()
+    await expectTooltipAnnotations([
+      {
+        note: personalNoteText,
+        attribution: personalNoteAttributionUnambiguous
+      }
+    ])
   })
 
   await test.step('zoom back out to 7d, both annotations are visible on Monday', async () => {

@@ -1,7 +1,8 @@
 import {
   getChangeInPercentagePoints,
   getRelativeChange,
-  getLineSegments
+  getLineSegments,
+  normalizeGraphTimeLabel
 } from './main-graph-data'
 
 describe(`${getChangeInPercentagePoints.name}`, () => {
@@ -107,5 +108,17 @@ describe(`${getLineSegments.name}`, () => {
     expect(getLineSegments([nc(), nc(), nc(), gap(), gap()])).toEqual([
       { startIndexInclusive: 0, stopIndexExclusive: 3, type: 'full' }
     ])
+  })
+})
+
+describe(`${normalizeGraphTimeLabel.name}`, () => {
+  it('replaces the space separator with "T" for datetime labels', () => {
+    expect(normalizeGraphTimeLabel('2026-10-10 10:00:15')).toBe(
+      '2026-10-10T10:00:15'
+    )
+  })
+
+  it('leaves date-only labels unchanged', () => {
+    expect(normalizeGraphTimeLabel('2026-10-10')).toBe('2026-10-10')
   })
 })

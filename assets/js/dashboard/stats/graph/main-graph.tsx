@@ -36,7 +36,8 @@ import {
   getRelativeChange,
   REVENUE_METRICS,
   getFirstAndLastTimeLabels,
-  MainGraphSeriesName
+  MainGraphSeriesName,
+  normalizeGraphTimeLabel
 } from './main-graph-data'
 import { Metric, getMetricLabel } from '../metrics'
 import { extractIntervalFromDimensions, Interval } from './intervals'
@@ -46,7 +47,7 @@ import {
   AnnotationType,
   canShowAddAnnotationButton,
   getAnnotationGranularity,
-  groupAnnotationsByTimeLabel
+  groupAnnotationsByDatetime
 } from '../../annotations/annotations'
 import { useUserContext } from '../../user-context'
 import { Button } from '../../components/button'
@@ -118,8 +119,8 @@ export const MainGraph = ({
   const interval = extractIntervalFromDimensions(data.query.dimensions)
   const isRealtime = data.extraContext.isRealtime
 
-  const annotationsByTimeLabel = useMemo(
-    () => groupAnnotationsByTimeLabel(annotations, interval),
+  const annotationsByDatetime = useMemo(
+    () => groupAnnotationsByDatetime(annotations, interval),
     [annotations, interval]
   )
 
@@ -304,13 +305,15 @@ export const MainGraph = ({
     () =>
       remappedData.map((datum) => {
         const annotationsOnDatum = datum.main.isDefined
-          ? (annotationsByTimeLabel[datum.main.timeLabel] ?? [])
+          ? (annotationsByDatetime[
+              normalizeGraphTimeLabel(datum.main.timeLabel)
+            ] ?? [])
           : []
         return {
           count: annotationsOnDatum.length
         }
       }),
-    [remappedData, annotationsByTimeLabel]
+    [remappedData, annotationsByDatetime]
   )
 
   const getFormattedValue = useCallback(
@@ -396,10 +399,18 @@ export const MainGraph = ({
       ? selectedDatum.main.timeLabel
       : null
 
+  // graph time labels are space-separated ("YYYY-MM-DD HH:MM:SS"); normalize to the
+  // standard ISO form ("YYYY-MM-DDTHH:MM:SS") that annotation code works with, both
+  // for the `annotationsByTimeLabel` lookup (keyed by normalized labels) and for the
+  // datetime handed to the annotation components.
   const annotationDatetime =
     selectedDatum && selectedDatum.main.isDefined
-      ? selectedDatum.main.timeLabel
+      ? normalizeGraphTimeLabel(selectedDatum.main.timeLabel)
       : null
+
+  const annotationsForSelectedBucket = annotationDatetime
+    ? annotationsByDatetime[annotationDatetime]
+    : undefined
 
   const zoomToPeriod = useCallback(
     (date: string) => {
@@ -507,11 +518,7 @@ export const MainGraph = ({
           {tooltip.persistent ? (
             <PersistentTooltipContents
               annotationDatetime={annotationDatetime}
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotations={annotationsForSelectedBucket}
               isTouchDevice={isTouchDevice}
               interval={interval}
               zoomDate={zoomDate}
@@ -522,11 +529,7 @@ export const MainGraph = ({
           ) : (
             <HoveredTooltipContents
               annotationDatetime={annotationDatetime}
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotations={annotationsForSelectedBucket}
               interval={interval}
               zoomDate={zoomDate}
               canAddAnnotation={canAddAnnotation}

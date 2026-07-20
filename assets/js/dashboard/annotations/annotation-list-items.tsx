@@ -34,7 +34,10 @@ export const AnnotationAuthorshipLine = ({
   annotation: Annotation
   showDateLabel: boolean
 }) => (
-  <div className="flex items-baseline text-xs text-gray-300 pr-8">
+  <div
+    data-testid="annotation-attribution"
+    className="flex items-baseline text-xs text-gray-300 pr-8"
+  >
     <span className="truncate min-w-0">
       {getAnnotationAuthorship(annotation)}
     </span>
