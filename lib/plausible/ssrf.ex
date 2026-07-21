@@ -24,7 +24,7 @@ defmodule Plausible.SSRF do
 
   @doc """
   Resolves bare hostname or literal IP and returns its address(es), 
-  only if every all are allowed
+  only if all are allowed
   """
   @spec resolve_host(String.t()) :: {:ok, [:inet.ip_address()]} | {:error, error_reason()}
   def resolve_host(host) when is_binary(host) do
