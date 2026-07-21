@@ -34,7 +34,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "successful detection -> no logs, no sentry, telemetry :success" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub =
         json_response_detection_stub(%{
@@ -59,7 +59,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "domain not found -> customer website issue" do
-      stub_lookup_a_records(@expected_domain, [])
+      expect_dns_unresolvable(@expected_domain)
 
       detection_counter =
         Req.Test.stub(Plausible.InstallationSupport.Checks.Detection, fn _conn ->
@@ -88,7 +88,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
 
     for msg <- ["Execution context destroyed", "net::ERR_CONNECTION_REFUSED"] do
       test "failure due to a known :browserless_client_error (#{msg}) -> customer website issue" do
-        stub_lookup_a_records(@expected_domain)
+        stub_dns()
 
         detection_stub =
           json_response_detection_stub(%{
@@ -112,7 +112,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "failure due to an unknown :browserless_client_error -> unknown failure" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub =
         json_response_detection_stub(%{
@@ -136,7 +136,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "failure hitting the catch-all interpret clause -> unknown failure" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub = fn conn ->
         Req.Test.transport_error(conn, :econnrefused)
@@ -158,7 +158,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "failure due to a flaky browserless issue -> browserless issue" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub = fn conn ->
         conn
@@ -182,7 +182,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "failure due to a browserless timeout -> browserless issue" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub = fn conn ->
         Req.Test.transport_error(conn, :timeout)
@@ -203,7 +203,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksObservabilityTest do
     end
 
     test "failure due to internal_check_timeout -> browserless issue" do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       detection_stub = fn _conn ->
         # times out
