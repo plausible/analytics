@@ -529,6 +529,7 @@ defmodule PlausibleWeb.Router do
 
     get "/security", SettingsController, :security
     delete "/security/user-sessions/:id", SettingsController, :delete_session
+    delete "/security/oauth-connectors/:id", SettingsController, :revoke_oauth_connector
 
     post "/security/email/cancel", SettingsController, :cancel_update_email
     post "/security/email", SettingsController, :update_email

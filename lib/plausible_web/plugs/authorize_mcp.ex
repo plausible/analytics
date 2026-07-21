@@ -29,6 +29,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeMCP do
          {limit_key, hourly_limit} <- rate_limit_config(token),
          :ok <- check_rate_limit(limit_key, hourly_limit),
          :ok <- check_burst_limit(limit_key) do
+      OAuth.mark_used(token)
+
       conn
       |> assign(:current_user, token.user)
       |> assign(:current_team, token.team)

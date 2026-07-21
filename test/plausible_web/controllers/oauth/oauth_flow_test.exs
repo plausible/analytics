@@ -117,7 +117,7 @@ defmodule PlausibleWeb.OAuth.FlowTest do
   end
 
   describe "full authorization_code + refresh flow" do
-    test "approve -> code -> token -> refresh", %{conn: conn} do
+    test "approve -> code -> token -> refresh", %{conn: conn, user: user} do
       {verifier, challenge} = pkce()
 
       # Approve consent
@@ -149,6 +149,10 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       assert is_binary(resp["access_token"])
       assert is_binary(resp["refresh_token"])
       assert resp["expires_in"] == Plausible.OAuth.access_token_ttl()
+
+      # The client name from the CIMD document is captured on the grant.
+      assert [grant] = Plausible.OAuth.list_grants(user)
+      assert grant.client_name == "Test Client"
 
       # The access token authenticates against /mcp
       mcp =

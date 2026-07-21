@@ -25,7 +25,9 @@ defmodule Plausible.OAuth.AccessToken do
     :refresh_token_expires_at,
     :scopes,
     :resource,
-    :team_id
+    :team_id,
+    :last_used_at,
+    :client_name
   ]
 
   schema "oauth_access_tokens" do
@@ -34,10 +36,12 @@ defmodule Plausible.OAuth.AccessToken do
     field :refresh_token_hash, :string
     field :refresh_token_prefix, :string
     field :client_id, :string
+    field :client_name, :string
     field :scopes, {:array, :string}, default: []
     field :resource, :string
     field :access_token_expires_at, :utc_datetime_usec
     field :refresh_token_expires_at, :utc_datetime_usec
+    field :last_used_at, :utc_datetime_usec
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
@@ -57,5 +61,22 @@ defmodule Plausible.OAuth.AccessToken do
     |> validate_required(@required)
     |> unique_constraint(:access_token_hash)
     |> unique_constraint(:refresh_token_hash)
+  end
+
+  @spec last_used_humanize(t()) :: String.t()
+  def last_used_humanize(%__MODULE__{last_used_at: nil}), do: "Not yet"
+
+  def last_used_humanize(%__MODULE__{last_used_at: last_used_at}) do
+    diff = DateTime.diff(DateTime.utc_now(), last_used_at, :minute)
+
+    cond do
+      diff < 5 -> "Just recently"
+      diff < 30 -> "Several minutes ago"
+      diff < 70 -> "An hour ago"
+      diff < 24 * 60 -> "Hours ago"
+      diff < 24 * 60 * 2 -> "Yesterday"
+      diff < 24 * 60 * 7 -> "Sometime this week"
+      true -> "Long time ago"
+    end
   end
 end

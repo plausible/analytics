@@ -79,6 +79,7 @@ defmodule Plausible.OAuth do
       AuthorizationCode.changeset(%{
         code_hash: code.hash,
         client_id: attrs.client_id,
+        client_name: attrs[:client_name],
         redirect_uri: attrs.redirect_uri,
         code_challenge: attrs.code_challenge,
         code_challenge_method: attrs.code_challenge_method,
@@ -145,6 +146,7 @@ defmodule Plausible.OAuth do
         refresh_token_hash: refresh.hash,
         refresh_token_prefix: refresh.prefix,
         client_id: auth_code.client_id,
+        client_name: auth_code.client_name,
         scopes: auth_code.scopes,
         resource: auth_code.resource,
         user_id: auth_code.user_id,
@@ -214,6 +216,83 @@ defmodule Plausible.OAuth do
       nil -> {:error, :invalid_token}
       token -> {:ok, token}
     end
+  end
+
+  ## Grants management (user-facing "Connected applications")
+
+  # Only refresh last_used_at at most once per this many seconds, to avoid a
+  # write on every single MCP request.
+  @last_used_throttle_seconds 60
+
+  @doc """
+  Lists a user's currently-usable OAuth grants (those whose access or refresh
+  token has not yet expired), most recent first, with the bound team preloaded.
+  """
+  @spec list_grants(Plausible.Auth.User.t()) :: [AccessToken.t()]
+  def list_grants(user) do
+    now = DateTime.utc_now()
+
+    Repo.all(
+      from(t in AccessToken,
+        where:
+          t.user_id == ^user.id and
+            (t.access_token_expires_at > ^now or t.refresh_token_expires_at > ^now),
+        order_by: [desc: t.inserted_at],
+        preload: [:team]
+      )
+    )
+  end
+
+  @doc """
+  Revokes all grants a user holds that are bound to the given team.
+
+  Called when a user loses access to a team (removed or leaves) so their MCP
+  tokens are invalidated immediately rather than lingering until expiry. Returns
+  the number of grants revoked.
+  """
+  @spec revoke_grants_for_team_member(Plausible.Auth.User.t(), Plausible.Teams.Team.t()) ::
+          non_neg_integer()
+  def revoke_grants_for_team_member(user, team) do
+    {count, _} =
+      Repo.delete_all(
+        from(t in AccessToken, where: t.user_id == ^user.id and t.team_id == ^team.id)
+      )
+
+    count
+  end
+
+  @doc """
+  Revokes (deletes) a grant by id, scoped to the owning user. Removing the row
+  invalidates both the access and refresh tokens immediately.
+  """
+  @spec revoke_grant(Plausible.Auth.User.t(), integer() | String.t()) ::
+          :ok | {:error, :not_found}
+  def revoke_grant(user, id) do
+    query = from(t in AccessToken, where: t.id == ^id and t.user_id == ^user.id)
+
+    case Repo.delete_all(query) do
+      {n, _} when n > 0 -> :ok
+      {0, _} -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Records that an access token was just used, throttled to at most once per
+  minute to avoid a write on every request.
+  """
+  @spec mark_used(AccessToken.t()) :: :ok
+  def mark_used(%AccessToken{id: id}) do
+    now = DateTime.utc_now()
+    cutoff = DateTime.add(now, -@last_used_throttle_seconds, :second)
+
+    Repo.update_all(
+      from(t in AccessToken,
+        where: t.id == ^id and (is_nil(t.last_used_at) or t.last_used_at < ^cutoff)
+      ),
+      set: [last_used_at: now]
+    )
+
+    :ok
   end
 
   defp token_response(access_raw, refresh_raw, scopes) do

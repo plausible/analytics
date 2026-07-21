@@ -5,7 +5,7 @@
         Authorize access
       </h1>
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        <span class="font-semibold">{@ctx.client_name}</span>
+        <span class="font-semibold">{@ctx.client_name || @ctx.client_id}</span>
         wants to connect to your Plausible account
         <span :if={@ctx.client_uri} class="block text-xs text-gray-500 dark:text-gray-500 mt-1">
           {@ctx.client_uri}

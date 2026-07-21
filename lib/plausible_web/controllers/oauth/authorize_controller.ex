@@ -69,6 +69,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
     attrs = %{
       client_id: ctx.client_id,
+      client_name: ctx.client_name,
       redirect_uri: ctx.redirect_uri,
       code_challenge: ctx.code_challenge,
       code_challenge_method: ctx.code_challenge_method,
@@ -133,7 +134,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
              resource: params["resource"],
              state: state,
              team: params["team"],
-             client_name: metadata["client_name"] || client_id,
+             client_name: metadata["client_name"],
              client_uri: metadata["client_uri"]
            }}
       end

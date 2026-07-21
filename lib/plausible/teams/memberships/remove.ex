@@ -19,6 +19,11 @@ defmodule Plausible.Teams.Memberships.Remove do
         Repo.transaction(fn ->
           delete_membership!(team_membership)
 
+          Plausible.OAuth.revoke_grants_for_team_member(
+            team_membership.user,
+            team_membership.team
+          )
+
           Plausible.Segments.after_user_removed_from_team(
             team_membership.team,
             team_membership.user

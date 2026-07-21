@@ -203,6 +203,84 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       assert resp["result"]["isError"]
     end
 
+    test "the grant is eagerly revoked when the user is removed from the team", %{conn: conn} do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      _site = new_site(owner: owner)
+      member = add_member(team, role: :editor)
+      token = issue_token(member, team, ["stats:read:*", "sites:read:*"])
+
+      ping = fn ->
+        rpc(conn, token, %{jsonrpc: "2.0", id: 9, method: "ping"})
+      end
+
+      # Baseline: the token authenticates.
+      assert ping.() |> json_response(200) == %{"jsonrpc" => "2.0", "id" => 9, "result" => %{}}
+      assert [_] = Plausible.OAuth.list_grants(member)
+
+      # Remove the member from the team.
+      {:ok, _} = Plausible.Teams.Memberships.Remove.remove(team, member.id, owner)
+
+      # The grant is gone and the token no longer authenticates.
+      assert Plausible.OAuth.list_grants(member) == []
+      assert ping.() |> json_response(401)
+    end
+
+    test "a role downgrade keeps the grant but reduces access via live checks", %{conn: conn} do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      site = new_site(owner: owner)
+      member = add_member(team, role: :editor)
+      token = issue_token(member, team, ["stats:read:*", "sites:read:*"])
+
+      list_sites = fn ->
+        rpc(conn, token, %{
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: %{name: "list_sites", arguments: %{}}
+        })
+        |> json_response(200)
+      end
+
+      # Baseline: as an editor, the member sees the team's site.
+      [%{"text" => text}] = list_sites.()["result"]["content"]
+      assert site.domain in Enum.map(Jason.decode!(text)["sites"], & &1["domain"])
+
+      # Downgrade the member to a guest (a permission change, not a deletion).
+      {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, member.id)
+
+      membership
+      |> Ecto.Changeset.change(role: :guest)
+      |> Repo.update!()
+
+      # The grant is NOT revoked - downgrade isn't a membership deletion...
+      assert [_] = Plausible.OAuth.list_grants(member)
+
+      assert rpc(conn, token, %{jsonrpc: "2.0", id: 9, method: "ping"})
+             |> json_response(200) == %{"jsonrpc" => "2.0", "id" => 9, "result" => %{}}
+
+      # ...but the live per-request check now excludes guests, so no team sites
+      # are visible.
+      assert Jason.decode!(hd(list_sites.()["result"]["content"])["text"])["sites"] == []
+    end
+
+    test "grants are eagerly revoked when the user leaves the team", %{conn: conn} do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+      token = issue_token(member, team, ["stats:read:*", "sites:read:*"])
+
+      assert [_] = Plausible.OAuth.list_grants(member)
+
+      {:ok, _} = Plausible.Teams.Memberships.Leave.leave(team, member)
+
+      assert Plausible.OAuth.list_grants(member) == []
+
+      assert rpc(conn, token, %{jsonrpc: "2.0", id: 1, method: "ping"})
+             |> json_response(401)
+    end
+
     test "GET /mcp is not supported", %{conn: conn, user: user, team: team} do
       token = issue_token(user, team, ["stats:read:*"])
 

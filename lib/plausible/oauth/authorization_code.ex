@@ -23,11 +23,12 @@ defmodule Plausible.OAuth.AuthorizationCode do
     :expires_at,
     :user_id
   ]
-  @optional [:scopes, :resource, :team_id]
+  @optional [:scopes, :resource, :team_id, :client_name]
 
   schema "oauth_authorization_codes" do
     field :code_hash, :string
     field :client_id, :string
+    field :client_name, :string
     field :redirect_uri, :string
     field :code_challenge, :string
     field :code_challenge_method, :string

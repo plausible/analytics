@@ -102,6 +102,22 @@ defmodule Plausible.OAuthTest do
                OAuth.consume_authorization_code(raw, verifier, @redirect_uri, "https://evil/mcp")
     end
 
+    test "client_name propagates from the authorization code to the grant", %{
+      user: user,
+      team: team
+    } do
+      {verifier, challenge} = verifier_and_challenge()
+      attrs = code_attrs(challenge, %{client_name: "Claude Code"})
+
+      {:ok, raw} = OAuth.create_authorization_code(user, team, attrs)
+      {:ok, code} = OAuth.consume_authorization_code(raw, verifier, @redirect_uri, @resource)
+      assert code.client_name == "Claude Code"
+
+      {:ok, _tokens} = OAuth.issue_tokens(code)
+      assert [grant] = OAuth.list_grants(user)
+      assert grant.client_name == "Claude Code"
+    end
+
     test "rejects an expired code", %{user: user, team: team} do
       {verifier, challenge} = verifier_and_challenge()
       code = Token.generate(:code)
@@ -184,6 +200,152 @@ defmodule Plausible.OAuthTest do
       )
 
       assert {:error, :invalid_token} = OAuth.find_access_token(access.raw)
+    end
+  end
+
+  describe "grants management" do
+    setup do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      {:ok, user: user, team: team}
+    end
+
+    defp insert_token(user, team, opts) do
+      access = Token.generate(:access)
+      now = DateTime.utc_now()
+
+      Repo.insert!(
+        AccessToken.changeset(%{
+          access_token_hash: access.hash,
+          access_token_prefix: access.prefix,
+          refresh_token_hash: Token.generate(:refresh).hash,
+          refresh_token_prefix: "plausible-mcp-rt-x",
+          client_id: Keyword.get(opts, :client_id, @client_id),
+          scopes: ["stats:read:*"],
+          user_id: user.id,
+          team_id: team.id,
+          access_token_expires_at:
+            Keyword.get(opts, :access_expires_at, DateTime.add(now, 3600, :second)),
+          refresh_token_expires_at:
+            Keyword.get(opts, :refresh_expires_at, DateTime.add(now, 86_400, :second))
+        })
+      )
+    end
+
+    test "list_grants returns usable grants, newest first, excluding fully-expired", %{
+      user: user,
+      team: team
+    } do
+      now = DateTime.utc_now()
+
+      _expired =
+        insert_token(user, team,
+          access_expires_at: DateTime.add(now, -120, :second),
+          refresh_expires_at: DateTime.add(now, -60, :second)
+        )
+
+      active = insert_token(user, team, client_id: "https://client.example/active")
+
+      # A grant whose access token expired but refresh is still valid is still usable.
+      refreshable =
+        insert_token(user, team,
+          client_id: "https://client.example/refreshable",
+          access_expires_at: DateTime.add(now, -60, :second)
+        )
+
+      grants = OAuth.list_grants(user)
+      ids = Enum.map(grants, & &1.id)
+
+      assert active.id in ids
+      assert refreshable.id in ids
+      assert length(grants) == 2
+      assert Enum.all?(grants, &Ecto.assoc_loaded?(&1.team))
+    end
+
+    test "list_grants is scoped to the user", %{user: user, team: team} do
+      other = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other)
+      insert_token(other, other_team, [])
+
+      grant = insert_token(user, team, [])
+
+      assert Enum.map(OAuth.list_grants(user), & &1.id) == [grant.id]
+    end
+
+    test "revoke_grant deletes the row and is user-scoped", %{user: user, team: team} do
+      grant = insert_token(user, team, [])
+
+      assert :ok = OAuth.revoke_grant(user, grant.id)
+      assert OAuth.list_grants(user) == []
+      # Already gone.
+      assert {:error, :not_found} = OAuth.revoke_grant(user, grant.id)
+    end
+
+    test "revoke_grant won't delete another user's grant", %{user: user, team: team} do
+      other = new_user()
+      grant = insert_token(user, team, [])
+
+      assert {:error, :not_found} = OAuth.revoke_grant(other, grant.id)
+      assert [_] = OAuth.list_grants(user)
+    end
+
+    test "revoke_grants_for_team_member deletes only that user+team's grants", %{
+      user: user,
+      team: team
+    } do
+      other_user = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other_user)
+
+      kept_other_user = insert_token(other_user, other_team, [])
+      # Same user, but a different team - must be kept.
+      kept_other_team = insert_token(user, other_team, [])
+      _revoked_1 = insert_token(user, team, [])
+      _revoked_2 = insert_token(user, team, [])
+
+      assert 2 = OAuth.revoke_grants_for_team_member(user, team)
+
+      remaining = Repo.all(AccessToken) |> Enum.map(& &1.id) |> Enum.sort()
+      assert remaining == Enum.sort([kept_other_user.id, kept_other_team.id])
+    end
+
+    test "grants are cascade-deleted at the DB level when the user is deleted", %{
+      user: user,
+      team: team
+    } do
+      insert_token(user, team, [])
+      assert Repo.aggregate(AccessToken, :count) == 1
+
+      # Account deletion doesn't go through the team-membership removal path, but
+      # the `on_delete: :delete_all` FK on user_id guarantees the grant is purged.
+      assert {:ok, :deleted} = Plausible.Auth.delete_user(user)
+      assert Repo.aggregate(AccessToken, :count) == 0
+    end
+
+    test "grants are cascade-deleted at the DB level when the team is deleted", %{team: team} do
+      # Use a separate owner so deleting the team doesn't also delete our user.
+      user = new_user()
+      insert_token(user, team, [])
+      assert Repo.aggregate(AccessToken, :count) == 1
+
+      Repo.delete!(team)
+      assert Repo.aggregate(AccessToken, :count) == 0
+    end
+
+    test "mark_used stamps last_used_at and throttles subsequent writes", %{
+      user: user,
+      team: team
+    } do
+      token = insert_token(user, team, [])
+      assert is_nil(token.last_used_at)
+
+      assert :ok = OAuth.mark_used(token)
+      t1 = Repo.reload!(token).last_used_at
+      assert t1
+
+      # Second call within the throttle window doesn't move the timestamp.
+      assert :ok = OAuth.mark_used(token)
+      t2 = Repo.reload!(token).last_used_at
+      assert t2 == t1
     end
   end
 
