@@ -312,8 +312,8 @@ if disable_registration not in [true, false, :invite_only] do
   raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/wiki/configuration#disable_registration"
 end
 
-hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
-hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
+friendly_captcha_sitekey = get_var_from_path_or_env(config_dir, "FRIENDLY_CAPTCHA_SITEKEY")
+friendly_captcha_api_key = get_var_from_path_or_env(config_dir, "FRIENDLY_CAPTCHA_API_KEY")
 
 custom_script_name =
   config_dir
@@ -899,9 +899,9 @@ else
     queues: queues
 end
 
-config :plausible, :hcaptcha,
-  sitekey: hcaptcha_sitekey,
-  secret: hcaptcha_secret
+config :plausible, :friendly_captcha,
+  sitekey: friendly_captcha_sitekey,
+  api_key: friendly_captcha_api_key
 
 nolt_sso_secret = get_var_from_path_or_env(config_dir, "NOLT_SSO_SECRET")
 config :joken, default_signer: nolt_sso_secret
