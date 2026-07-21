@@ -40,7 +40,12 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   @spec url(String.t(), String.t(), Keyword.t()) :: boolean()
   def url(sso_domain, domain_identifier, opts \\ []) do
     url_override = Keyword.get(opts, :url_override)
-    resp = run_request(url_override || "https://" <> Path.join(sso_domain, @prefix))
+
+    resp =
+      run_request(
+        url_override || "https://" <> Path.join(sso_domain, @prefix),
+        skip_checks?: not is_nil(url_override)
+      )
 
     case resp do
       %Req.Response{body: body}
@@ -57,7 +62,9 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
     url_override = Keyword.get(opts, :url_override)
 
     with %Req.Response{body: body} = response when is_binary(body) <-
-           run_request(url_override || "https://#{sso_domain}"),
+           run_request(url_override || "https://#{sso_domain}",
+             skip_checks?: not is_nil(url_override)
+           ),
          true <- html?(response),
          html <- LazyHTML.from_document(body),
          [_ | _] <-
@@ -103,22 +110,24 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
     |> String.contains?("text/html")
   end
 
-  defp run_request(base_url) do
-    fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
+  # skip_checks?: true is only ever supplied by url_override escape hatch 
+  # used by tests (e.g. to point at a local Bypass server)
+  defp run_request(url, opts) do
+    skip_checks? = Keyword.get(opts, :skip_checks?, false)
+    base_opts = [max_redirects: 4, max_retries: 3, retry_log_level: :warning]
 
-    opts =
-      Keyword.merge(
-        [
-          base_url: base_url,
-          max_redirects: 4,
-          max_retries: 3,
-          retry_log_level: :warning
-        ],
-        fetch_body_opts
-      )
+    result =
+      if skip_checks? do
+        Req.request(Keyword.merge(base_opts, url: url, method: :get))
+      else
+        fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
+        Plausible.SSRF.get(url, Keyword.merge(base_opts, fetch_body_opts))
+      end
 
-    {_req, resp} = opts |> Req.new() |> Req.Request.run_request()
-    resp
+    case result do
+      {:ok, resp} -> resp
+      {:error, _reason} -> nil
+    end
   end
 
   @after_compile __MODULE__

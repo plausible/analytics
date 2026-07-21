@@ -14,7 +14,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       integration = SSO.initiate_saml_integration(team)
       domain = "example-#{Enum.random(1..10_000)}.com"
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+      {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
       sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
       {:ok,
