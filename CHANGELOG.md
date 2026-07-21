@@ -52,7 +52,6 @@ All notable changes to this project will be documented in this file.
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
 - Fixed issue with users with billing role not being able to create personal segments
 - Fixed period arrow keys hijacking custom-range calendar
-- Fixed sample rate calculator overestimating traffic when the queried date range starts before the site's stats begin
 
 ## v3.2.0 - 2026-01-16
 

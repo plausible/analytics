@@ -2,10 +2,37 @@ defmodule Plausible.Stats.SamplingTest do
   use Plausible.DataCase, async: false
 
   on_ee do
-    import Plausible.Stats.Sampling, only: [fractional_sample_rate: 2]
+    import Plausible.Stats.Sampling, only: [fractional_sample_rate: 2, queried_duration_days: 1]
     alias Plausible.Stats.{Query, DateTimeRange}
 
     @threshold Plausible.Stats.Sampling.default_sample_threshold()
+
+    describe "&queried_duration_days/1" do
+      test "handles 1 day range" do
+        query = range_query(~D[2026-07-20], ~D[2026-07-20], ~N[2000-01-01 00:00:00])
+
+        assert queried_duration_days(query) == 1
+      end
+
+      test "handles range in non-leap year" do
+        query = range_query(~D[2025-01-01], ~D[2025-12-31], ~N[2000-01-01 00:00:00])
+
+        assert queried_duration_days(query) == 365
+      end
+
+      test "handles range in leap year" do
+        query = range_query(~D[2024-01-01], ~D[2024-12-31], ~N[2000-01-01 00:00:00])
+
+        assert queried_duration_days(query) == 366
+      end
+
+      test "is clamped to the site's native stats start for a range extending beyond native stats start" do
+        query = range_query(~D[2026-07-01], ~D[2026-07-10], ~N[2026-07-08 00:00:00])
+
+        # Stats begin Jul 8, range ends Jul 10 -> Jul 8, 9, 10 = 3 days.
+        assert queried_duration_days(query) == 3
+      end
+    end
 
     describe "&fractional_sample_rate/2 for date ranges of different lengths" do
       test "no traffic estimate" do
@@ -72,25 +99,7 @@ defmodule Plausible.Stats.SamplingTest do
       end
     end
 
-    describe "&fractional_sample_rate/2 clamps the range to the site's stats start" do
-      test "a range with no known stats start uses the full requested range" do
-        # `site_native_stats_start_at` is only nil in tests / for sites without
-        # stats; nothing gets clamped, matching a stats start before the range.
-        without_start = range_query(~D[2025-01-01], ~D[2026-07-15], nil)
-        early_start = range_query(~D[2025-01-01], ~D[2026-07-15], ~N[1900-01-01 00:00:00])
-
-        assert fractional_sample_rate(@threshold, without_start) ==
-                 fractional_sample_rate(@threshold, early_start)
-      end
-
-      test "a range starting after stats begin is unaffected by the clamp" do
-        after_start = range_query(~D[2026-04-01], ~D[2026-07-15], ~N[2026-01-01 00:00:00])
-        no_start = range_query(~D[2026-04-01], ~D[2026-07-15], nil)
-
-        assert fractional_sample_rate(@threshold, after_start) ==
-                 fractional_sample_rate(@threshold, no_start)
-      end
-
+    describe "&fractional_sample_rate/2 clamping" do
       test "a range starting before stats begin is treated as starting when stats begin" do
         stats_start = ~N[2026-01-01 00:00:00]
         range_end = ~D[2026-07-15]
@@ -108,16 +117,9 @@ defmodule Plausible.Stats.SamplingTest do
         assert from_1970 == from_stats_start
         assert from_2025 == from_stats_start
       end
-    end
 
-    describe "&fractional_sample_rate/2 for sites with less than 30 days of stats" do
-      test "estimates traffic from the site's real daily rate, not a 30-day average" do
-        # Site started 3 days before "now" (2026-07-15) and has ingested 30M
-        # events since (10M/day). A query over the last 30 days is clamped to
-        # those 3 days, where all 30M events live - 3x the sampling threshold -
-        # so it must be sampled.
+      test "sample rate is correct if a site has ingested 30M events in the 3 days it has existed" do
         query = range_query(~D[2026-06-15], ~D[2026-07-15], ~N[2026-07-12 00:00:00])
-
         assert fractional_sample_rate(30_000_000, query) == 0.33
       end
     end
@@ -131,20 +133,22 @@ defmodule Plausible.Stats.SamplingTest do
 
       %Query{
         utc_time_range: DateTimeRange.new!(first, last),
-        timezone: "UTC",
-        filters: filters
+        timezone: "Etc/UTC",
+        filters: filters,
+        now: last,
+        # A stats start well before the range, so nothing gets clamped.
+        site_native_stats_start_at: ~N[2000-01-01 00:00:00]
       }
     end
 
     defp range_query(first_date, last_date, native_stats_start_at) do
-      first = DateTime.new!(first_date, ~T[00:00:00], "Etc/UTC")
-      last = DateTime.new!(last_date, ~T[00:00:00], "Etc/UTC")
+      utc_time_range = DateTimeRange.new!(first_date, last_date, "Etc/UTC")
 
       %Query{
-        utc_time_range: DateTimeRange.new!(first, last),
-        timezone: "UTC",
+        utc_time_range: utc_time_range,
+        timezone: "Etc/UTC",
         filters: [],
-        now: last,
+        now: utc_time_range.last,
         site_native_stats_start_at: native_stats_start_at
       }
     end
