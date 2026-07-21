@@ -59,7 +59,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_succeeds_only_after_cache_bust Error.new!(%{
                                           message: "We detected an issue with your site's cache",
                                           recommendation:
-                                            "Please clear the cache for your site to ensure that your visitors will load the latest version of your site that has Plausible correctly installed",
+                                            "Clear the cache for your site to ensure your visitors load the latest version of your site with Plausible correctly installed",
                                           url:
                                             "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
                                         })
@@ -121,10 +121,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @error_proxy_network_error Error.new!(%{
-                               message:
-                                 "We got an unexpected response from the proxy you are using for Plausible",
+                               message: "We couldn't verify your proxied installation",
                                recommendation:
-                                 "Please check that you've configured the proxied /event route correctly",
+                                 "We received an unexpected response from your proxy. Check that you've configured the proxied /event route correctly",
                                url: "https://plausible.io/docs/proxy/introduction"
                              })
   @error_plausible_network_error Error.new!(%{
@@ -174,9 +173,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   @error_csp_disallowed Error.new!(%{
                           message:
-                            "We encountered an issue with your site's Content Security Policy (CSP)",
+                            "Your site's Content Security Policy (CSP) is blocking Plausible",
                           recommendation:
-                            "Please add plausible.io domain specifically to the allowed list of domains in your site's CSP",
+                            "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics",
                           url:
                             "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
                         })
@@ -191,9 +190,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       do: handled_error(@error_csp_disallowed)
 
   @error_domain_not_found Error.new!(%{
-                            message: "We couldn't find your website at <%= @attempted_url %>",
+                            message: "We couldn't reach <%= @attempted_url %>",
                             recommendation:
-                              "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                              "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
                             url: @verify_manually_url
                           })
 
@@ -207,10 +206,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @error_browserless_network Error.new!(%{
-                               message:
-                                 "We couldn't verify your website at <%= @attempted_url %>",
+                               message: "We couldn't verify <%= @attempted_url %>",
                                recommendation:
-                                 "Accessing the website resulted in a network error. Please verify your installation manually",
+                                 "We encountered a network error while trying to access your website. You can verify your installation manually or review your installation",
                                url: @verify_manually_url
                              })
 
@@ -228,8 +226,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @error_browserless_temporary Error.new!(%{
-                                 message:
-                                   "Our verification tool encountered a temporary service error",
+                                 message: "Our verification service is temporarily unavailable",
                                  recommendation:
                                    "Please try again in a few minutes or verify your installation manually",
                                  url: @verify_manually_url
@@ -241,10 +238,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   end
 
   @error_unexpected_page_response Error.new!(%{
-                                    message:
-                                      "We couldn't verify your website at <%= @attempted_url %>",
+                                    message: "We couldn't verify <%= @attempted_url %>",
                                     recommendation:
-                                      "Accessing the website resulted in an unexpected status code <%= @page_response_status %>. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
+                                      "Accessing your website returned an unexpected status code (<%= @page_response_status %>). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually or review your installation",
                                     url: @verify_manually_url
                                   })
 
@@ -290,25 +286,25 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_plausible_not_found_for_manual Error.new!(%{
                                           message: @message_plausible_not_found,
                                           recommendation:
-                                            "Please make sure you've copied the snippet to the head of your site, or verify your installation manually",
+                                            "Make sure you've copied the snippet to the head of your site, or verify your installation manually",
                                           url: @verify_manually_url
                                         })
   @error_plausible_not_found_for_npm Error.new!(%{
                                        message: @message_plausible_not_found,
                                        recommendation:
-                                         "Please make sure you've initialized Plausible on your site, or verify your installation manually",
+                                         "Make sure you've initialized Plausible on your site, or verify your installation manually",
                                        url: @verify_manually_url
                                      })
   @error_plausible_not_found_for_gtm Error.new!(%{
                                        message: @message_plausible_not_found,
                                        recommendation:
-                                         "Please make sure you've configured the GTM template correctly, or verify your installation manually",
+                                         "Make sure you've configured the GTM template correctly, or verify your installation manually",
                                        url: @verify_manually_url
                                      })
   @error_plausible_not_found_for_wordpress Error.new!(%{
                                              message: @message_plausible_not_found,
                                              recommendation:
-                                               "Please make sure you've enabled the plugin, or verify your installation manually",
+                                               "Make sure you've enabled the WordPress plugin, or verify your installation manually",
                                              url: @verify_manually_url
                                            })
   defp error_plausible_not_found(selected_installation_type) do
@@ -320,32 +316,32 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     end
   end
 
-  @unexpected_domain_message "Plausible test event is not for this site"
+  @unexpected_domain_message "Your Plausible snippet is configured for a different domain"
   @error_unexpected_domain_for_manual Error.new!(%{
                                         message: @unexpected_domain_message,
                                         recommendation:
-                                          "Please check that the snippet on your site matches the installation instructions exactly, or verify your installation manually",
+                                          "Check that the snippet on your site matches the one shown in the installation instructions, or verify your installation manually",
                                         url: @verify_manually_url
                                       })
 
   @error_unexpected_domain_for_npm Error.new!(%{
                                      message: @unexpected_domain_message,
                                      recommendation:
-                                       "Please check that you've initialized Plausible with the correct domain, or verify your installation manually",
+                                       "Check you've initialized Plausible with the correct domain, or verify your installation manually",
                                      url: @verify_manually_url
                                    })
 
   @error_unexpected_domain_for_gtm Error.new!(%{
                                      message: @unexpected_domain_message,
                                      recommendation:
-                                       "Please check that you've entered the ID in the GTM template correctly, or verify your installation manually",
+                                       "Check you've entered the ID in the GTM template correctly, or verify your installation manually",
                                      url: @verify_manually_url
                                    })
 
   @error_unexpected_domain_for_wordpress Error.new!(%{
                                            message: @unexpected_domain_message,
                                            recommendation:
-                                             "Please check that you've installed the WordPress plugin correctly, or verify your installation manually",
+                                             "Check you've installed the WordPress plugin correctly, or verify your installation manually",
                                            url: @verify_manually_url
                                          })
   defp error_unexpected_domain(selected_installation_type) do

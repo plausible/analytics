@@ -22,12 +22,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          ok?: false,
                          data: %{offer_custom_url_input: true},
                          errors: [
-                           ^any(:string, ~r/We couldn't find your website at #{@url_to_verify}$/)
+                           ^any(:string, ~r/We couldn't reach #{@url_to_verify}$/)
                          ],
                          recommendations: [
                            %{
                              text:
-                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -49,12 +49,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          ok?: false,
                          data: %{offer_custom_url_input: true},
                          errors: [
-                           ^any(:string, ~r/We couldn't find your website at #{url_to_verify}$/)
+                           ^any(:string, ~r/We couldn't reach #{url_to_verify}$/)
                          ],
                          recommendations: [
                            %{
                              text:
-                               "Please check that the domain you entered is correct and reachable publicly. If it's intentionally private, you'll need to verify that Plausible works manually",
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -94,13 +94,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
       for {installation_type, expected_recommendation} <- [
             {"wordpress",
-             "Please check that you've installed the WordPress plugin correctly, or verify your installation manually"},
+             "Check you've installed the WordPress plugin correctly, or verify your installation manually"},
             {"gtm",
-             "Please check that you've entered the ID in the GTM template correctly, or verify your installation manually"},
+             "Check you've entered the ID in the GTM template correctly, or verify your installation manually"},
             {"npm",
-             "Please check that you've initialized Plausible with the correct domain, or verify your installation manually"},
+             "Check you've initialized Plausible with the correct domain, or verify your installation manually"},
             {"manual",
-             "Please check that the snippet on your site matches the installation instructions exactly, or verify your installation manually"}
+             "Check that the snippet on your site matches the one shown in the installation instructions, or verify your installation manually"}
           ] do
         test "returns error when test event domain doesn't match the expected domain, with recommendation for installation type: #{installation_type}" do
           verification_stub =
@@ -119,7 +119,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
           assert_matches %Result{
                            ok?: false,
-                           errors: ["Plausible test event is not for this site"],
+                           errors: ["Your Plausible snippet is configured for a different domain"],
                            recommendations: [
                              %{
                                text: unquote(expected_recommendation),
@@ -154,7 +154,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         assert_matches %Result{
                          ok?: false,
-                         errors: [^any(:string, ~r/.*proxy.*/)],
+                         errors: [^any(:string, ~r/.*proxied.*/)],
                          recommendations: [
                            %{
                              text: ^any(:string, ~r/.*proxied.*/),
@@ -213,7 +213,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Please make sure you've copied the snippet to the head of your site, or verify your installation manually",
+                               "Make sure you've copied the snippet to the head of your site, or verify your installation manually",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -236,12 +236,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert_matches %Result{
                          ok?: false,
                          errors: [
-                           "We encountered an issue with your site's Content Security Policy (CSP)"
+                           "Your site's Content Security Policy (CSP) is blocking Plausible"
                          ],
                          recommendations: [
                            %{
                              text:
-                               "Please add plausible.io domain specifically to the allowed list of domains in your site's CSP",
+                               "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
                            }
@@ -261,13 +261,11 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert_matches %Result{
                          ok?: false,
                          data: %{offer_custom_url_input: true},
-                         errors: [
-                           "We couldn't verify your website at https://example.com"
-                         ],
+                         errors: ["We couldn't verify https://example.com"],
                          recommendations: [
                            %{
                              text:
-                               "Accessing the website resulted in a network error. Please verify your installation manually",
+                               "We encountered a network error while trying to access your website. You can verify your installation manually or review your installation",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -291,13 +289,11 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         assert_matches %Result{
                          ok?: false,
                          data: %{offer_custom_url_input: true},
-                         errors: [
-                           "We couldn't verify your website at https://example.com"
-                         ],
+                         errors: ["We couldn't verify https://example.com"],
                          recommendations: [
                            %{
                              text:
-                               "Accessing the website resulted in an unexpected status code 403. Please check for anything that might be blocking us from reaching your site, like a firewall, authentication requirements, or CDN rules. If you'd prefer, you can skip this and verify your installation manually",
+                               "Accessing your website returned an unexpected status code (403). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually or review your installation",
                              url:
                                "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
                            }
@@ -309,13 +305,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
       for {installation_type, expected_recommendation} <- [
             {"wordpress",
-             "Please make sure you've enabled the plugin, or verify your installation manually"},
+             "Make sure you've enabled the WordPress plugin, or verify your installation manually"},
             {"gtm",
-             "Please make sure you've configured the GTM template correctly, or verify your installation manually"},
+             "Make sure you've configured the GTM template correctly, or verify your installation manually"},
             {"npm",
-             "Please make sure you've initialized Plausible on your site, or verify your installation manually"},
+             "Make sure you've initialized Plausible on your site, or verify your installation manually"},
             {"manual",
-             "Please make sure you've copied the snippet to the head of your site, or verify your installation manually"}
+             "Make sure you've copied the snippet to the head of your site, or verify your installation manually"}
           ] do
         test "returns error \"We couldn't detect Plausible on your site\" when plausible_is_on_window is false (with best guess recommendation for installation type: #{installation_type})" do
           verification_stub =
@@ -484,7 +480,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
         assert_matches %Result{
                          ok?: false,
-                         errors: [^any(:string, ~r/.*temporary service error.*/)],
+                         errors: [^any(:string, ~r/.*temporarily unavailable.*/)],
                          recommendations: [
                            %{
                              text: ^any(:string, ~r/.*in a few minutes.*/),
@@ -514,7 +510,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
           assert_matches %Result{
                            ok?: false,
-                           errors: [^any(:string, ~r/.*temporary service error.*/)],
+                           errors: [^any(:string, ~r/.*temporarily unavailable.*/)],
                            recommendations: [
                              %{
                                text: ^any(:string, ~r/.*in a few minutes.*/),

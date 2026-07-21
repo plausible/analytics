@@ -83,14 +83,12 @@ defmodule PlausibleWeb.Live.Verification do
     ~H"""
     <.live_component
       module={@component}
-      installation_type={get_installation_type(@tracker_script_configuration)}
       domain={@domain}
       id="verification-standalone"
       attempts={@attempts}
       flow={@flow}
       super_admin?={@super_admin?}
       custom_url_input?={@custom_url_input?}
-      tracker_script_configuration={@tracker_script_configuration}
       dismissed?={@dismissed?}
     />
     """

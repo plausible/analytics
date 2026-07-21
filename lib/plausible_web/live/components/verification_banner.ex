@@ -7,10 +7,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   use Plausible
 
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias PlausibleWeb.Components.Icons
-  alias PlausibleWeb.Live.Installation.Instructions
   alias Plausible.InstallationSupport.{State, Result}
-  alias Plausible.Site.TrackerScriptConfiguration
 
   import PlausibleWeb.Components.Generic
   import PlausibleWeb.Live.Components.Form
@@ -35,9 +32,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   attr(:interpretation, Result, default: nil)
   attr(:attempts, :integer, default: 0)
   attr(:flow, :string, default: "")
-  attr(:installation_type, :string, default: nil)
   attr(:custom_url_input?, :boolean, default: false)
-  attr(:tracker_script_configuration, TrackerScriptConfiguration, default: nil)
   attr(:dismissed?, :boolean, default: false)
 
   def render(assigns) do
@@ -62,11 +57,9 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         attempts={@attempts}
         domain={@domain}
         flow={@flow}
-        installation_type={@installation_type}
         super_admin?={@super_admin?}
         verification_state={@verification_state}
         custom_url_input?={@custom_url_input?}
-        tracker_script_configuration={@tracker_script_configuration}
       />
     </div>
     """
@@ -94,7 +87,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
     <button
       type="button"
       aria-label="Dismiss"
-      class="absolute right-2 top-2 z-10 rounded p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+      class="absolute right-2 top-2 z-10 rounded p-1 text-gray-800 hover:text-gray-600 dark:text-gray-100/60 dark:hover:text-gray-100/70"
       onclick={dismiss_onclick(@container_id, @query_params)}
       phx-click="dismiss"
     >
@@ -110,24 +103,35 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
 
   defp render_progress(assigns) do
     ~H"""
-    <.notice title="Verifying your installation" theme={:gray}>
+    <.notice
+      title="Verifying your installation"
+      theme={:indigo}
+      title_class="text-base font-semibold text-gray-900 dark:text-gray-100"
+    >
       <:icon>
-        <div class="loading sm">
-          <div></div>
-        </div>
+        <.spinner class="mt-0.5 size-4.5" />
       </:icon>
-      <p class="animate-pulse" id="progress">{@message}</p>
+      <p class="animate-pulse text-gray-800 dark:text-gray-200 text-pretty" id="progress">
+        {@message}...
+      </p>
     </.notice>
     """
   end
 
   defp render_success(assigns) do
     ~H"""
-    <.notice title="Success!" theme={:gray} icon_class="text-green-600 dark:text-green-500">
+    <.notice
+      title="Tracking is active on your site"
+      theme={:green}
+      title_class="text-base font-semibold text-green-800 dark:text-green-300"
+      icon_class="!mt-0.5 size-5 text-green-800 dark:text-green-300"
+    >
       <:icon>
-        <Heroicons.check_badge class="size-4.5 text-green-600 dark:text-green-500" id="check-circle" />
+        <Heroicons.check_circle solid id="check-circle" />
       </:icon>
-      Your installation is working and visitors are being counted accurately.
+      <p class="text-gray-800 dark:text-gray-200 text-pretty">
+        Your dashboard is ready. Data will appear here as soon as visitors start arriving.
+      </p>
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
         verification_state={@verification_state}
@@ -140,9 +144,8 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
     assigns =
       assign(
         assigns,
-        :expandable_instructions?,
-        assigns.installation_type in ["manual", "gtm"] and
-          not is_nil(assigns.tracker_script_configuration)
+        :offer_custom_url_input?,
+        offer_custom_url_input?(assigns.interpretation)
       )
 
     ~H"""
@@ -153,47 +156,129 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           else: "We couldn't verify your installation"
       }
       theme={:yellow}
+      show_icon={false}
+      title_class="text-base font-semibold text-yellow-800 dark:text-yellow-400"
     >
-      <:icon>
-        <Heroicons.exclamation_circle class="size-4.5 text-yellow-500" id="error-circle" />
-      </:icon>
-      <p :if={@interpretation} id="recommendation" class="mt-2">
-        <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
-        <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
-          Learn more
-        </.styled_link>
-      </p>
-      <div x-data="{ instructionsExpanded: false }">
-        <div class="mt-5 flex flex-wrap items-center gap-2">
-          <.retry_form_or_button custom_url_input?={@custom_url_input?} domain={@domain} />
-          <.expand_installation_instructions_button
-            :if={@expandable_instructions?}
-            installation_type={@installation_type}
-          />
-          <.review_instructions_link
-            :if={@installation_type in ["wordpress", "npm"]}
-            installation_type={@installation_type}
-          />
-        </div>
-        <.expandable_installation_instructions
-          :if={@expandable_instructions?}
-          installation_type={@installation_type}
-          tracker_script_configuration={@tracker_script_configuration}
-        />
-      </div>
-      <.additional_help_links
-        custom_url_input?={@custom_url_input?}
+      <.recommendation
+        :if={@interpretation}
         interpretation={@interpretation}
-        attempts={@attempts}
+        offer_custom_url_input?={@offer_custom_url_input?}
         domain={@domain}
         flow={@flow}
       />
+      <div class="mt-5 flex flex-wrap items-center gap-2">
+        <.retry_form_or_button custom_url_input?={@custom_url_input?} domain={@domain} />
+        <.button_link
+          :if={not @custom_url_input? and @offer_custom_url_input?}
+          mt?={false}
+          href="#"
+          phx-click="show-custom-url-form"
+          id="verify-custom-url-link"
+          theme="ghost"
+          size="sm"
+          class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+        >
+          Try another URL
+        </.button_link>
+        <.button_link
+          :if={not @custom_url_input? and not @offer_custom_url_input?}
+          mt?={false}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)}
+          theme="ghost"
+          size="sm"
+          class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+        >
+          Review installation
+        </.button_link>
+      </div>
+      <.contact_us_link :if={ee?() and @attempts >= 3} />
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
         verification_state={@verification_state}
       />
     </.notice>
     """
+  end
+
+  defp offer_custom_url_input?(interpretation) do
+    match?(%{data: %{offer_custom_url_input: true}}, interpretation)
+  end
+
+  defp recommendation(assigns) do
+    recommendation = List.first(assigns.interpretation.recommendations)
+
+    review_installation_url =
+      Routes.site_path(
+        PlausibleWeb.Endpoint,
+        :installation,
+        assigns.domain,
+        flow: assigns.flow
+      )
+
+    body =
+      recommendation_body(
+        recommendation.text,
+        recommendation.url,
+        review_installation_url,
+        assigns.offer_custom_url_input?
+      )
+
+    assigns = assign(assigns, :body, body)
+
+    ~H"""
+    <p id="recommendation" class="text-gray-800 dark:text-gray-200 text-pretty">
+      {@body}
+    </p>
+    """
+  end
+
+  @verify_manually_phrase "verify your installation manually"
+  @both_phrases "verify your installation manually or review your installation"
+
+  defp recommendation_body(
+         text,
+         verify_manually_url,
+         review_installation_url,
+         offer_custom_url_input?
+       ) do
+    cond do
+      offer_custom_url_input? and String.contains?(text, @both_phrases) ->
+        [leading, _rest] = String.split(text, @both_phrases, parts: 2)
+
+        [
+          leading,
+          external_link("verify your installation manually", verify_manually_url),
+          " or ",
+          internal_link("review your installation", review_installation_url),
+          "."
+        ]
+
+      String.contains?(text, @verify_manually_phrase) ->
+        [leading, _rest] = String.split(text, @verify_manually_phrase, parts: 2)
+
+        [
+          leading,
+          external_link("verify your installation manually", verify_manually_url),
+          "."
+        ]
+
+      true ->
+        [text, ". ", external_link("Learn more", verify_manually_url)]
+    end
+  end
+
+  defp external_link(text, url) do
+    Phoenix.HTML.raw(
+      ~s|<a href="#{html_escape(url)}" class="underline" target="_blank" rel="noopener noreferrer">#{html_escape(text)}</a>|
+    )
+  end
+
+  defp internal_link(text, url) do
+    Phoenix.HTML.raw(~s|<a href="#{html_escape(url)}" class="underline">#{html_escape(text)}</a>|)
+  end
+
+  defp html_escape(value) do
+    value |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
   end
 
   defp retry_form_or_button(%{custom_url_input?: true} = assigns) do
@@ -206,12 +291,12 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         aria-label="Website URL"
         required
         mt?={false}
-        width="w-44"
+        width="w-64 h-[38px] dark:bg-white/15 dark:border-transparent"
         placeholder={"https://#{@domain}"}
         value={"https://#{@domain}"}
       />
-      <.button type="submit" mt?={false} theme="secondary" size="sm">
-        Check again
+      <.button type="submit" mt?={false} theme="primary" size="sm">
+        Verify URL
       </.button>
     </form>
     """
@@ -225,96 +310,26 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       phx-click="retry"
       theme="secondary"
       size="sm"
+      class="dark:bg-white/15 dark:hover:bg-white/20 dark:border-transparent"
     >
       Check again
     </.button_link>
     """
   end
 
-  defp expand_installation_instructions_button(assigns) do
+  defp contact_us_link(assigns) do
     ~H"""
-    <span x-on:click.prevent="instructionsExpanded = !instructionsExpanded">
-      <.button_link
-        mt?={false}
-        href="#"
-        theme="ghost"
-        size="sm"
-        class="hover:bg-gray-900/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+    <p class="mt-5 text-[0.825rem] text-gray-800 dark:text-gray-200">
+      Need help?
+      <a
+        href="https://plausible.io/contact"
+        class="underline"
+        target="_blank"
+        rel="noopener noreferrer"
       >
-        <span class="inline-flex items-center gap-0.5">
-          {review_instructions_label(@installation_type)}
-          <span x-show="!instructionsExpanded" x-cloak>
-            <Heroicons.chevron_down mini class="size-4" />
-          </span>
-          <span x-show="instructionsExpanded" x-cloak>
-            <Heroicons.chevron_up mini class="size-4" />
-          </span>
-        </span>
-      </.button_link>
-    </span>
-    """
-  end
-
-  defp review_instructions_link(assigns) do
-    ~H"""
-    <.button_link
-      mt?={false}
-      href={install_help_href(@installation_type)}
-      theme="ghost"
-      size="sm"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="hover:bg-gray-900/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
-    >
-      Review instructions <Icons.external_link_icon class="inline-block size-3.5 ml-1" />
-    </.button_link>
-    """
-  end
-
-  defp expandable_installation_instructions(assigns) do
-    ~H"""
-    <div x-show="instructionsExpanded" x-cloak class="mt-5">
-      <Instructions.copy_snippet_box
-        :if={@installation_type == "manual"}
-        tracker_script_configuration={@tracker_script_configuration}
-      />
-      <Instructions.gtm_instructions_content_inner
-        :if={@installation_type == "gtm"}
-        tracker_script_configuration={@tracker_script_configuration}
-      />
-    </div>
-    """
-  end
-
-  defp additional_help_links(assigns) do
-    ~H"""
-    <div class="mt-5">
-      <ul class="list-disc space-y-2 ml-4 text-sm">
-        <li :if={
-          not @custom_url_input? && @interpretation && is_map(@interpretation.data) &&
-            @interpretation.data[:offer_custom_url_input]
-        }>
-          Is your website located at a different URL?
-          <.styled_link href="#" phx-click="show-custom-url-form" id="verify-custom-url-link">
-            Click here
-          </.styled_link>
-        </li>
-        <li :if={ee?() and @attempts >= 3}>
-          Need further help with your installation?
-          <.styled_link href="https://plausible.io/contact">
-            Contact us
-          </.styled_link>
-        </li>
-        <li>
-          Want to choose another installation method?
-          <.styled_link href={
-            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)
-          }>
-            Click here
-          </.styled_link>
-        </li>
-      </ul>
-    </div>
+        Contact us
+      </a>
+    </p>
     """
   end
 
@@ -325,7 +340,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       x-data="{ showDiagnostics: false }"
       id="super-admin-report"
     >
-      <p class="text-sm">
+      <p class="text-sm text-gray-800 dark:text-gray-200">
         <a
           href="#"
           @click.prevent="showDiagnostics = !showDiagnostics"
@@ -349,12 +364,4 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
 
   defp to_string_value(value) when is_binary(value), do: value
   defp to_string_value(value), do: inspect(value)
-
-  defp review_instructions_label("manual"), do: "View snippet"
-  defp review_instructions_label(_installation_type), do: "Review instructions"
-
-  defp install_help_href("wordpress"), do: "https://plausible.io/wordpress-analytics-plugin"
-
-  defp install_help_href("npm"),
-    do: "https://www.npmjs.com/package/@plausible-analytics/tracker"
 end
