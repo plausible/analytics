@@ -117,7 +117,9 @@ defmodule Plausible.TestUtils do
       team = Plausible.Teams.complete_setup(team)
       integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, ctx[:domain] || "example.com")
+      {:ok, sso_domain} =
+        SSO.Domains.add(integration, ctx[:domain] || "example.com", skip_checks?: true)
+
       _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
