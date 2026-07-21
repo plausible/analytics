@@ -92,6 +92,15 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :oauth_public do
+    plug :accepts, ["json"]
+    plug PlausibleWeb.Plugs.EnsureMCPEnabled
+  end
+
+  pipeline :mcp_authenticated do
+    plug PlausibleWeb.Plugs.AuthorizeMCP
+  end
+
   on_ee do
     pipeline :flags do
       plug :accepts, ["html"]
@@ -107,6 +116,38 @@ defmodule PlausibleWeb.Router do
   if Mix.env() in [:dev, :ce_dev, :e2e_test] do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
     forward "/sent-emails-api", Bamboo.SentEmailApiPlug
+  end
+
+  # OAuth 2.1 authorization server + MCP endpoint. Gated globally by the
+  # `:mcp_server` FunWithFlags flag (see EnsureMCPEnabled). Defined early so the
+  # literal paths win over the catch-all `/:domain` routes.
+  scope "/", PlausibleWeb do
+    pipe_through :oauth_public
+
+    get "/.well-known/oauth-protected-resource", OAuth.MetadataController, :protected_resource
+    get "/.well-known/oauth-protected-resource/*any", OAuth.MetadataController, :protected_resource
+
+    get "/.well-known/oauth-authorization-server", OAuth.MetadataController, :authorization_server
+
+    get "/.well-known/oauth-authorization-server/*any",
+        OAuth.MetadataController,
+        :authorization_server
+
+    post "/oauth/token", OAuth.TokenController, :token
+  end
+
+  scope "/oauth", PlausibleWeb do
+    pipe_through [:browser, :csrf, PlausibleWeb.Plugs.EnsureMCPEnabled]
+
+    get "/authorize", OAuth.AuthorizeController, :authorize
+    post "/authorize", OAuth.AuthorizeController, :consent
+  end
+
+  scope "/", PlausibleWeb do
+    pipe_through [:oauth_public, :mcp_authenticated]
+
+    post "/mcp", MCP.MCPController, :handle
+    get "/mcp", MCP.MCPController, :not_supported
   end
 
   on_ee do

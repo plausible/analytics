@@ -1,0 +1,80 @@
+<.auth_container>
+  <div class="flex flex-col gap-y-6">
+    <div class="flex flex-col gap-y-2 text-center">
+      <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+        Authorize access
+      </h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        <span class="font-semibold">{@ctx.client_name}</span>
+        wants to connect to your Plausible account
+        <span :if={@ctx.client_uri} class="block text-xs text-gray-500 dark:text-gray-500 mt-1">
+          {@ctx.client_uri}
+        </span>
+      </p>
+    </div>
+
+    <div class="rounded-md bg-gray-50 dark:bg-gray-900 p-4">
+      <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+        This will allow the application to:
+      </p>
+      <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+        <li :for={scope <- @ctx.scopes}>{PlausibleWeb.OAuthView.scope_description(scope)}</li>
+      </ul>
+    </div>
+
+    <.form :let={f} for={@conn} action="/oauth/authorize" method="post" class="flex flex-col gap-y-4">
+      <input type="hidden" name="client_id" value={@ctx.client_id} />
+      <input type="hidden" name="redirect_uri" value={@ctx.redirect_uri} />
+      <input type="hidden" name="response_type" value={@ctx.response_type} />
+      <input type="hidden" name="code_challenge" value={@ctx.code_challenge} />
+      <input type="hidden" name="code_challenge_method" value={@ctx.code_challenge_method} />
+      <input type="hidden" name="scope" value={Enum.join(@ctx.scopes, " ")} />
+      <input type="hidden" name="state" value={@ctx.state} />
+      <input type="hidden" name="resource" value={@ctx.resource} />
+
+      <div :if={@teams != []} class="flex flex-col gap-y-2">
+        <label
+          for={f[:team].id}
+          class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+        >
+          Grant access to team
+        </label>
+        <select
+          id="team"
+          name="team"
+          class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm"
+        >
+          <option
+            :for={team <- @teams}
+            value={team.identifier}
+            selected={@current_team && team.identifier == @current_team.identifier}
+          >
+            {team.name}
+          </option>
+        </select>
+        <p class="text-xs text-gray-500 dark:text-gray-500">
+          The connection will only be able to access the data of the selected team.
+        </p>
+      </div>
+
+      <div class="flex gap-x-3 mt-2">
+        <button
+          type="submit"
+          name="action"
+          value="deny"
+          class="btn-base btn-md btn-theme-secondary flex-1"
+        >
+          Deny
+        </button>
+        <button
+          type="submit"
+          name="action"
+          value="approve"
+          class="btn-base btn-md btn-theme-primary flex-1"
+        >
+          Approve
+        </button>
+      </div>
+    </.form>
+  </div>
+</.auth_container>
