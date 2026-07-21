@@ -291,7 +291,7 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   @tag :ee_only
-  test "updates session counters", %{buffer: buffer} do
+  test "updates session counters on replayed event", %{buffer: buffer} do
     timestamp = DateTime.utc_now()
 
     event1 =
@@ -316,8 +316,7 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.replay_session_id == 456
   end
 
-  @tag :ee_only
-  test "updates session counters for replayed event", %{buffer: buffer} do
+  test "updates session counters", %{buffer: buffer} do
     timestamp = DateTime.utc_now()
 
     event1 =
