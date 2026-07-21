@@ -55,16 +55,16 @@ defmodule PlausibleWeb.Components.Layout do
         function reapplyTheme() {
           var darkMediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
           var htmlRef = document.querySelector('html');
-          var hcaptchaRefs = Array.from(document.getElementsByClassName('h-captcha'));
+          var captchaRefs = Array.from(document.getElementsByClassName('frc-captcha'));
 
           var isDark = themePref === 'dark' || (themePref === 'system' && darkMediaPref);
 
           if (isDark) {
               htmlRef.classList.add('dark')
-              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "dark"; });
+              captchaRefs.forEach(function(ref) { ref.dataset.theme = "dark"; });
           } else {
               htmlRef.classList.remove('dark');
-              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "light"; });
+              captchaRefs.forEach(function(ref) { ref.dataset.theme = "light"; });
           }
         }
 

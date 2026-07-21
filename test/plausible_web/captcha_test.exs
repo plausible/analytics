@@ -7,16 +7,18 @@ defmodule PlausibleWeb.CaptchaTest do
   alias PlausibleWeb.Captcha
 
   describe "mocked payloads" do
-    @failure Jason.decode!(~s/{"success":false,"error-codes":["invalid-input-response"]}/)
+    @failure Jason.decode!(
+               ~s/{"success":false,"error":{"error_code":"response_invalid","detail":"the response was invalid"}}/
+             )
     @success Jason.decode!(~s/{"success":true}/)
 
     test "returns false for non-success response" do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
-        fn "https://hcaptcha.com/siteverify",
-           [{"content-type", "application/x-www-form-urlencoded"}],
-           %{response: "bad", secret: "scottiger"} ->
+        fn "https://global.frcapi.com/api/v2/captcha/siteverify",
+           [{"content-type", "application/json"}, {"x-api-key", "scottiger"}],
+           %{response: "bad", sitekey: "test"} ->
           {:ok,
            %Finch.Response{
              status: 200,
@@ -33,9 +35,9 @@ defmodule PlausibleWeb.CaptchaTest do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
-        fn "https://hcaptcha.com/siteverify",
-           [{"content-type", "application/x-www-form-urlencoded"}],
-           %{response: "good", secret: "scottiger"} ->
+        fn "https://global.frcapi.com/api/v2/captcha/siteverify",
+           [{"content-type", "application/json"}, {"x-api-key", "scottiger"}],
+           %{response: "good", sitekey: "test"} ->
           {:ok,
            %Finch.Response{
              status: 200,
@@ -50,7 +52,7 @@ defmodule PlausibleWeb.CaptchaTest do
   end
 
   describe "with patched application env" do
-    setup_patch_env(:hcaptcha, sitekey: nil)
+    setup_patch_env(:friendly_captcha, sitekey: nil)
 
     test "returns true when disabled" do
       assert Captcha.verify("disabled")
