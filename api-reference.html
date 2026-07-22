@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B85CC5B7.js"></script>
+    <script src="dist/sidebar_items-387E0362.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -1335,6 +1335,25 @@ creating and deleting funnel definitions.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.IP.Tools.html" translate="no">Plausible.IP.Tools</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Recognizes reserved and private IPv4/IPv6 addresses.
+See: <a href="Plausible.IP.Tools.Registry.html"><code class="inline">Plausible.IP.Tools.Registry</code></a></p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.IP.Tools.Registry.html" translate="no">Plausible.IP.Tools.Registry</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Compile-time-only helpers for <a href="Plausible.IP.Tools.html"><code class="inline">Plausible.IP.Tools</code></a>. </p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.ImportDeletionRepo.html" translate="no">Plausible.ImportDeletionRepo</a>
 
   </div>
@@ -1636,10 +1655,9 @@ and runs detector script via the <a href="https://docs.browserless.io/HTTP-APIs/
 
   </div>
 
-    <div class="summary-synopsis"><p>Checks if site domain has an A record.
-If not, checks if prepending <code class="inline">www.</code> helps,
-because we have specifically requested customers to register the domain with <code class="inline">www.</code> prefix.
-If not, skips all further checks.</p></div>
+    <div class="summary-synopsis"><p>Checks if site domain resolves (either A or AAAA record) to a public address.
+If not, checks if prepending <code class="inline">www.</code> helps, because we have specifically 
+requested customers to register the domain with <code class="inline">www.</code> prefix.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2002,6 +2020,16 @@ like migrations. </p></div>
   </div>
 
     <div class="summary-synopsis"><p>Helper functions for S3 exports/imports.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.SSRF.html" translate="no">Plausible.SSRF</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Guards outbound HTTP requests and DNS lookups against customer-supplied
+hostnames reaching internal, private or local network space</p></div>
 
 </div>
 <div class="summary-row">
@@ -5174,6 +5202,16 @@ plans, just with the monthly/yearly product_id's of the sandbox plans.</p></div>
 
     <div class="summary-synopsis"><p>This task downloads the Country Lite database from DB-IP for self-hosted or development purposes.
 Plausible Cloud runs a paid version of DB-IP with more detailed geolocation data.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.DownloadIpRegistries.html" translate="no">mix download_ip_registries</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Refreshes the IANA special-purpose address registries used by
+<a href="Plausible.IP.Tools.html"><code class="inline">Plausible.IP.Tools</code></a> at compile time to recognize reserved/private IPs.</p></div>
 
 </div>
 <div class="summary-row">

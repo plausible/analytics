@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B85CC5B7.js"></script>
+    <script src="dist/sidebar_items-387E0362.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,10 +138,9 @@ Pages
 
 
     <section id="moduledoc">
-<p>Checks if site domain has an A record.
-If not, checks if prepending <code class="inline">www.</code> helps,
-because we have specifically requested customers to register the domain with <code class="inline">www.</code> prefix.
-If not, skips all further checks.</p>
+<p>Checks if site domain resolves (either A or AAAA record) to a public address.
+If not, checks if prepending <code class="inline">www.</code> helps, because we have specifically 
+requested customers to register the domain with <code class="inline">www.</code> prefix.</p><p>If not, skips all further checks.</p>
     </section>
 
 </div>
@@ -187,7 +186,7 @@ If not, skips all further checks.</p>
     </a>
     <h1 class="signature" translate="no">perform_safe(state, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/url.ex#L9" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/installation_support/checks/url.ex#L10" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

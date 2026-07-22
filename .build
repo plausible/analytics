@@ -3,6 +3,7 @@ Mix.Tasks.CancelSubscription.html
 Mix.Tasks.CreatePaddleProdPlans.html
 Mix.Tasks.CreatePaddleSandboxPlans.html
 Mix.Tasks.DownloadCountryDatabase.html
+Mix.Tasks.DownloadIpRegistries.html
 Mix.Tasks.GenerateCountriesMeta.html
 Mix.Tasks.PullSandboxSubscription.html
 Mix.Tasks.SendPageview.html
@@ -135,6 +136,8 @@ Plausible.HTTPClient.html
 Plausible.HelpScout.Vault.html
 Plausible.HelpScout.html
 Plausible.Helpers.JSON.html
+Plausible.IP.Tools.Registry.html
+Plausible.IP.Tools.html
 Plausible.ImportDeletionRepo.html
 Plausible.Imported.Buffer.html
 Plausible.Imported.CSVImporter.html
@@ -206,6 +209,7 @@ Plausible.Release.html
 Plausible.Repo.html
 Plausible.RequestLogger.html
 Plausible.S3.html
+Plausible.SSRF.html
 Plausible.Segments.Filters.html
 Plausible.Segments.Segment.html
 Plausible.Segments.html
@@ -577,8 +581,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C6A14EDC.js
-dist/sidebar_items-B85CC5B7.js
+dist/search_data-345774D6.js
+dist/sidebar_items-387E0362.js
 index.html
 readme.html
 search.html
