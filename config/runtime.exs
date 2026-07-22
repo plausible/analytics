@@ -1100,3 +1100,8 @@ unless s3_disabled? do
 end
 
 config :plausible, Plausible.Cache.Adapter, sessions: [partitions: 100]
+
+config :plausible, Plausible.IP.Tools,
+  allow_reserved_ips?:
+    config_env() in [:dev, :ce_dev] and
+      get_bool_from_path_or_env(config_dir, "ALLOW_RESERVED_IPS", false)

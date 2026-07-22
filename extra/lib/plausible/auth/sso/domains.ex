@@ -12,10 +12,10 @@ defmodule Plausible.Auth.SSO.Domains do
 
   use Plausible.Auth.SSO.Domain.Status
 
-  @spec add(SSO.Integration.t(), String.t()) ::
+  @spec add(SSO.Integration.t(), String.t(), Keyword.t()) ::
           {:ok, SSO.Domain.t()} | {:error, Ecto.Changeset.t()}
-  def add(integration, domain) do
-    changeset = SSO.Domain.create_changeset(integration, domain)
+  def add(integration, domain, opts \\ []) do
+    changeset = SSO.Domain.create_changeset(integration, domain, opts)
 
     Repo.insert_with_audit(changeset, "sso_domain_added", %{team_id: integration.team_id})
   end

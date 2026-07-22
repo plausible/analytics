@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
   on_ee do
     use Bamboo.Test, shared: true
+    use Plausible.Test.Support.DNS
 
     import Phoenix.LiveViewTest
 
@@ -63,6 +64,14 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
     describe "live" do
       setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
+
+      setup do
+        # Some tests below add a domain through the real LiveView form (not
+        # a direct SSO.Domains.add/3 call we could pass skip_checks?: true
+        # to), which goes through actual DNS-backed domain validation.
+        stub_dns()
+        :ok
+      end
 
       test "init setup - basic walk through", %{conn: conn} do
         {lv, _html} = get_lv(conn)
@@ -288,7 +297,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
       defp setup_integration(team, domain) do
         integration = SSO.initiate_saml_integration(team)
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         {:ok, integration} =
