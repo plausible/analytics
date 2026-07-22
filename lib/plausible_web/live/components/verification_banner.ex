@@ -206,22 +206,14 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
 
   defp recommendation(assigns) do
     recommendation = List.first(assigns.interpretation.recommendations)
-
-    review_installation_url =
-      Routes.site_path(
-        PlausibleWeb.Endpoint,
-        :installation,
-        assigns.domain,
-        flow: assigns.flow
-      )
+    main = render_recommendation(recommendation.text, recommendation.inline_links)
 
     body =
-      recommendation_body(
-        recommendation.text,
-        recommendation.url,
-        review_installation_url,
-        assigns.offer_custom_url_input?
-      )
+      if assigns.offer_custom_url_input? do
+        [main, ". ", review_installation_link_sentence(assigns), "."]
+      else
+        [main, "."]
+      end
 
     assigns = assign(assigns, :body, body)
 
@@ -232,49 +224,31 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
     """
   end
 
-  @verify_manually_phrase "verify your installation manually"
-  @both_phrases "verify your installation manually or review your installation"
+  defp render_recommendation(text, inline_links) do
+    html =
+      Enum.reduce(inline_links, html_escape(text), fn %{text: link_text, href: href}, acc ->
+        String.replace(acc, link_text, link_markup(link_text, href), global: false)
+      end)
 
-  defp recommendation_body(
-         text,
-         verify_manually_url,
-         review_installation_url,
-         offer_custom_url_input?
-       ) do
-    cond do
-      offer_custom_url_input? and String.contains?(text, @both_phrases) ->
-        [leading, _rest] = String.split(text, @both_phrases, parts: 2)
-
-        [
-          leading,
-          external_link("verify your installation manually", verify_manually_url),
-          " or ",
-          internal_link("review your installation", review_installation_url),
-          "."
-        ]
-
-      String.contains?(text, @verify_manually_phrase) ->
-        [leading, _rest] = String.split(text, @verify_manually_phrase, parts: 2)
-
-        [
-          leading,
-          external_link("verify your installation manually", verify_manually_url),
-          "."
-        ]
-
-      true ->
-        [text, ". ", external_link("Learn more", verify_manually_url)]
-    end
+    Phoenix.HTML.raw(html)
   end
 
-  defp external_link(text, url) do
-    Phoenix.HTML.raw(
-      ~s|<a href="#{html_escape(url)}" class="underline" target="_blank" rel="noopener noreferrer">#{html_escape(text)}</a>|
-    )
+  defp review_installation_link_sentence(assigns) do
+    review_installation_url =
+      Routes.site_path(PlausibleWeb.Endpoint, :installation, assigns.domain, flow: assigns.flow)
+
+    render_recommendation("See your installation instructions again here", [
+      %{text: "here", href: review_installation_url}
+    ])
   end
 
-  defp internal_link(text, url) do
-    Phoenix.HTML.raw(~s|<a href="#{html_escape(url)}" class="underline">#{html_escape(text)}</a>|)
+  defp link_markup(text, href) do
+    external_attrs =
+      if String.starts_with?(href, "http"),
+        do: ~s| target="_blank" rel="noopener noreferrer"|,
+        else: ""
+
+    ~s|<a href="#{html_escape(href)}" class="underline"#{external_attrs}>#{html_escape(text)}</a>|
   end
 
   defp html_escape(value) do
@@ -320,15 +294,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   defp contact_us_link(assigns) do
     ~H"""
     <p class="mt-5 text-[0.825rem] text-gray-800 dark:text-gray-200">
-      Need help?
-      <a
-        href="https://plausible.io/contact"
-        class="underline"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Contact us
-      </a>
+      Need help? {Phoenix.HTML.raw(link_markup("Contact us", "https://plausible.io/contact"))}
     </p>
     """
   end

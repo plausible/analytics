@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
       assert html =~ "We couldn&#39;t verify your installation"
     end
 
-    test "renders diagnostic interpretation with inline verify/review links" do
+    test "renders diagnostic interpretation with inline verify link and standalone review-installation sentence" do
       interpretation =
         Verification.Checks.interpret_diagnostics(%State{
           url: "https://example.com",
@@ -56,7 +56,8 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
       assert [recommendation] = html |> find(@recommendations) |> Enum.map(&text/1)
       assert recommendation =~ "Check that the URL is correct and publicly accessible"
       assert recommendation =~ "verify your installation manually"
-      assert recommendation =~ "review your installation"
+      refute recommendation =~ "review your installation"
+      assert recommendation =~ "See your installation instructions again here"
 
       assert element_exists?(
                html,
@@ -97,6 +98,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
       assert recommendation =~ "verify your installation manually"
       refute recommendation =~ "review your installation"
       refute recommendation =~ "Learn more"
+      refute recommendation =~ "See your installation instructions again here"
 
       assert element_exists?(
                html,

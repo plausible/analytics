@@ -33,35 +33,56 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     """
 
     @enforce_keys [:message, :recommendation]
-    defstruct [:message, :recommendation, :url]
+    defstruct [:message, :recommendation, inline_links: []]
+
+    @required_link_prefix "https://plausible.io/"
 
     def new!(attrs) do
       message = Map.fetch!(attrs, :message)
+      recommendation = Map.fetch!(attrs, :recommendation)
+      inline_links = Map.get(attrs, :inline_links, [])
 
       if String.ends_with?(message, ".") do
         raise ArgumentError, "Error message must not end with a period: #{inspect(message)}"
       end
 
-      if String.ends_with?(attrs[:recommendation], ".") do
+      if String.ends_with?(recommendation, ".") do
         raise ArgumentError,
-              "Error recommendation must not end with a period: #{inspect(attrs[:recommendation])}"
+              "Error recommendation must not end with a period: #{inspect(recommendation)}"
       end
 
-      if is_binary(attrs[:url]) and not String.starts_with?(attrs[:url], "https://plausible.io") do
-        raise ArgumentError,
-              "Recommendation url must start with 'https://plausible.io': #{inspect(attrs[:url])}"
+      for %{text: text, href: href} <- inline_links do
+        if length(String.split(recommendation, text)) - 1 != 1 do
+          raise ArgumentError,
+                "Recommendation inline_links text #{inspect(text)} must appear exactly once in: #{inspect(recommendation)}"
+        end
+
+        if not String.starts_with?(href, @required_link_prefix) do
+          raise ArgumentError,
+                "Recommendation inline_links href must start with '#{@required_link_prefix}': #{inspect(href)}"
+        end
       end
 
       struct!(__MODULE__, attrs)
     end
   end
 
+  @verify_manually_inline_link %{
+    text: "verify your installation manually",
+    href: @verify_manually_url
+  }
+
   @error_succeeds_only_after_cache_bust Error.new!(%{
                                           message: "We detected an issue with your site's cache",
                                           recommendation:
-                                            "Clear the cache for your site to ensure your visitors load the latest version of your site with Plausible correctly installed",
-                                          url:
-                                            "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                                            "Clear the cache for your site to ensure your visitors load the latest version of your site with Plausible correctly installed. Learn more",
+                                          inline_links: [
+                                            %{
+                                              text: "Learn more",
+                                              href:
+                                                "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                                            }
+                                          ]
                                         })
 
   @spec interpret(t(), String.t(), String.t()) :: Result.t()
@@ -123,14 +144,19 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_proxy_network_error Error.new!(%{
                                message: "We couldn't verify your proxied installation",
                                recommendation:
-                                 "We received an unexpected response from your proxy. Check that you've configured the proxied /event route correctly",
-                               url: "https://plausible.io/docs/proxy/introduction"
+                                 "We received an unexpected response from your proxy. Check that you've configured the proxied /event route correctly. Learn more",
+                               inline_links: [
+                                 %{
+                                   text: "Learn more",
+                                   href: "https://plausible.io/docs/proxy/introduction"
+                                 }
+                               ]
                              })
   @error_plausible_network_error Error.new!(%{
                                    message: "We couldn't verify your website",
                                    recommendation:
                                      "Please try verifying again in a few minutes, or verify your installation manually",
-                                   url: @verify_manually_url
+                                   inline_links: [@verify_manually_inline_link]
                                  })
 
   def interpret(
@@ -175,9 +201,14 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                           message:
                             "Your site's Content Security Policy (CSP) is blocking Plausible",
                           recommendation:
-                            "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics",
-                          url:
-                            "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
+                            "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics. Learn more",
+                          inline_links: [
+                            %{
+                              text: "Learn more",
+                              href:
+                                "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
+                            }
+                          ]
                         })
   def interpret(
         %__MODULE__{
@@ -192,8 +223,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_domain_not_found Error.new!(%{
                             message: "We couldn't reach <%= @attempted_url %>",
                             recommendation:
-                              "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
-                            url: @verify_manually_url
+                              "Check that the URL is correct and publicly accessible. If your site is intentionally private, you'll need to verify your installation manually",
+                            inline_links: [@verify_manually_inline_link]
                           })
 
   def interpret(%__MODULE__{service_error: %{code: code}}, expected_domain, url)
@@ -208,8 +239,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_browserless_network Error.new!(%{
                                message: "We couldn't verify <%= @attempted_url %>",
                                recommendation:
-                                 "We encountered a network error while trying to access your website. You can verify your installation manually or review your installation",
-                               url: @verify_manually_url
+                                 "We encountered a network error while trying to access your website. You can verify your installation manually",
+                               inline_links: [@verify_manually_inline_link]
                              })
 
   def interpret(
@@ -229,7 +260,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                  message: "Our verification service is temporarily unavailable",
                                  recommendation:
                                    "Please try again in a few minutes or verify your installation manually",
-                                 url: @verify_manually_url
+                                 inline_links: [@verify_manually_inline_link]
                                })
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _expected_domain, _url)
@@ -240,8 +271,8 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
   @error_unexpected_page_response Error.new!(%{
                                     message: "We couldn't verify <%= @attempted_url %>",
                                     recommendation:
-                                      "Accessing your website returned an unexpected status code (<%= @page_response_status %>). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually or review your installation",
-                                    url: @verify_manually_url
+                                      "Accessing your website returned an unexpected status code (<%= @page_response_status %>). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually",
+                                    inline_links: [@verify_manually_inline_link]
                                   })
 
   def interpret(
@@ -287,25 +318,25 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                           message: @message_plausible_not_found,
                                           recommendation:
                                             "Make sure you've copied the snippet to the head of your site, or verify your installation manually",
-                                          url: @verify_manually_url
+                                          inline_links: [@verify_manually_inline_link]
                                         })
   @error_plausible_not_found_for_npm Error.new!(%{
                                        message: @message_plausible_not_found,
                                        recommendation:
                                          "Make sure you've initialized Plausible on your site, or verify your installation manually",
-                                       url: @verify_manually_url
+                                       inline_links: [@verify_manually_inline_link]
                                      })
   @error_plausible_not_found_for_gtm Error.new!(%{
                                        message: @message_plausible_not_found,
                                        recommendation:
                                          "Make sure you've configured the GTM template correctly, or verify your installation manually",
-                                       url: @verify_manually_url
+                                       inline_links: [@verify_manually_inline_link]
                                      })
   @error_plausible_not_found_for_wordpress Error.new!(%{
                                              message: @message_plausible_not_found,
                                              recommendation:
                                                "Make sure you've enabled the WordPress plugin, or verify your installation manually",
-                                             url: @verify_manually_url
+                                             inline_links: [@verify_manually_inline_link]
                                            })
   defp error_plausible_not_found(selected_installation_type) do
     case selected_installation_type do
@@ -321,28 +352,28 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
                                         message: @unexpected_domain_message,
                                         recommendation:
                                           "Check that the snippet on your site matches the one shown in the installation instructions, or verify your installation manually",
-                                        url: @verify_manually_url
+                                        inline_links: [@verify_manually_inline_link]
                                       })
 
   @error_unexpected_domain_for_npm Error.new!(%{
                                      message: @unexpected_domain_message,
                                      recommendation:
                                        "Check you've initialized Plausible with the correct domain, or verify your installation manually",
-                                     url: @verify_manually_url
+                                     inline_links: [@verify_manually_inline_link]
                                    })
 
   @error_unexpected_domain_for_gtm Error.new!(%{
                                      message: @unexpected_domain_message,
                                      recommendation:
                                        "Check you've entered the ID in the GTM template correctly, or verify your installation manually",
-                                     url: @verify_manually_url
+                                     inline_links: [@verify_manually_inline_link]
                                    })
 
   @error_unexpected_domain_for_wordpress Error.new!(%{
                                            message: @unexpected_domain_message,
                                            recommendation:
                                              "Check you've installed the WordPress plugin correctly, or verify your installation manually",
-                                           url: @verify_manually_url
+                                           inline_links: [@verify_manually_inline_link]
                                          })
   defp error_unexpected_domain(selected_installation_type) do
     case selected_installation_type do
@@ -368,7 +399,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     %Result{
       ok?: false,
       errors: [message],
-      recommendations: [%{text: recommendation, url: error.url}]
+      recommendations: [%{text: recommendation, inline_links: error.inline_links}]
     }
   end
 
@@ -379,7 +410,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       ok?: false,
       data: %{unhandled: true, browserless_issue: browserless_issue},
       errors: [error.message],
-      recommendations: [%{text: error.recommendation, url: error.url}]
+      recommendations: [%{text: error.recommendation, inline_links: error.inline_links}]
     }
   end
 end

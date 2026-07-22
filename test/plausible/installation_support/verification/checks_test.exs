@@ -13,6 +13,11 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
     @expected_domain "example.com"
     @url_to_verify "https://#{@expected_domain}"
+    @verify_manually_url "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+    @verify_manually_inline_link %{
+      text: "verify your installation manually",
+      href: @verify_manually_url
+    }
 
     describe "URL check" do
       test "returns error when DNS check fails with domain not found error, offers custom URL input" do
@@ -27,9 +32,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -54,9 +58,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually or review your installation",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -123,8 +126,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            recommendations: [
                              %{
                                text: unquote(expected_recommendation),
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               inline_links: [^@verify_manually_inline_link]
                              }
                            ]
                          } =
@@ -158,7 +160,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text: ^any(:string, ~r/.*proxied.*/),
-                             url: "https://plausible.io/docs/proxy/introduction"
+                             inline_links: [
+                               %{
+                                 text: "Learn more",
+                                 href: "https://plausible.io/docs/proxy/introduction"
+                               }
+                             ]
                            }
                          ]
                        } =
@@ -187,9 +194,9 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          errors: [^any(:string, ~r/.*couldn't verify.*/)],
                          recommendations: [
                            %{
-                             text: ^any(:string, ~r/.*try verifying again.*/),
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                             text:
+                               "Please try verifying again in a few minutes, or verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -214,8 +221,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            %{
                              text:
                                "Make sure you've copied the snippet to the head of your site, or verify your installation manually",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -241,9 +247,14 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
+                               "Add plausible.io to the list of allowed domains in your site's Content Security Policy to allow Plausible to collect analytics. Learn more",
+                             inline_links: [
+                               %{
+                                 text: "Learn more",
+                                 href:
+                                   "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
+                               }
+                             ]
                            }
                          ]
                        } =
@@ -265,9 +276,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "We encountered a network error while trying to access your website. You can verify your installation manually or review your installation",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               "We encountered a network error while trying to access your website. You can verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -293,9 +303,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Accessing your website returned an unexpected status code (403). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually or review your installation",
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               "Accessing your website returned an unexpected status code (403). Check for anything that might be blocking our access to your site, such as a firewall, authentication requirements, or CDN rules. You can also verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } =
@@ -330,8 +339,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            recommendations: [
                              %{
                                text: unquote(expected_recommendation),
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               inline_links: [^@verify_manually_inline_link]
                              }
                            ]
                          } =
@@ -359,8 +367,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            recommendations: [
                              %{
                                text: unquote(expected_recommendation),
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               inline_links: [^@verify_manually_inline_link]
                              }
                            ]
                          } =
@@ -422,8 +429,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text: ^any(:string, ~r/.*cache.*/),
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                             inline_links: [
+                               %{
+                                 text: "Learn more",
+                                 href:
+                                   "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
+                               }
+                             ]
                            }
                          ]
                        } = run_checks(verification_stub) |> Checks.interpret_diagnostics()
@@ -483,9 +495,9 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          errors: [^any(:string, ~r/.*temporarily unavailable.*/)],
                          recommendations: [
                            %{
-                             text: ^any(:string, ~r/.*in a few minutes.*/),
-                             url:
-                               "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                             text:
+                               "Please try again in a few minutes or verify your installation manually",
+                             inline_links: [^@verify_manually_inline_link]
                            }
                          ]
                        } = Checks.interpret_diagnostics(state)
@@ -513,9 +525,9 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                            errors: [^any(:string, ~r/.*temporarily unavailable.*/)],
                            recommendations: [
                              %{
-                               text: ^any(:string, ~r/.*in a few minutes.*/),
-                               url:
-                                 "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+                               text:
+                                 "Please try again in a few minutes or verify your installation manually",
+                               inline_links: [^@verify_manually_inline_link]
                              }
                            ]
                          } = Checks.interpret_diagnostics(state)
