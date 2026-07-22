@@ -52,18 +52,14 @@ defmodule Plausible.IP.Tools do
   end
 
   def allowed?(ip) when is_tuple(ip) and tuple_size(ip) in [4, 8] do
-    case allow_reserved_ips?() do
-      true ->
-        if reserved?(ip) do
-          Logger.warning(
-            "IP #{inspect(ip)} forcibly allowed due to :allow_reserved_ips? env set. "
-          )
-        end
+    if allow_reserved_ips?() do
+      if reserved?(ip) do
+        Logger.warning("IP #{inspect(ip)} forcibly allowed due to :allow_reserved_ips? env set. ")
+      end
 
-        true
-
-      false ->
-        not reserved?(ip)
+      true
+    else
+      not reserved?(ip)
     end
   end
 
