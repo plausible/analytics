@@ -17,7 +17,8 @@ defmodule Plausible.OAuth.AccessToken do
     :access_token_prefix,
     :client_id,
     :access_token_expires_at,
-    :user_id
+    :user_id,
+    :team_id
   ]
   @optional [
     :refresh_token_hash,
@@ -25,7 +26,6 @@ defmodule Plausible.OAuth.AccessToken do
     :refresh_token_expires_at,
     :scopes,
     :resource,
-    :team_id,
     :last_used_at,
     :client_name
   ]

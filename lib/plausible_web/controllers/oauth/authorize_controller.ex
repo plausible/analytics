@@ -18,6 +18,8 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
   plug :put_view, PlausibleWeb.OAuthView
 
+  @no_team_message "You need to belong to a team before authorizing an application. Please create or join a team and try again."
+
   def authorize(conn, params) do
     if conn.assigns[:current_user] do
       case build_context(params) do
@@ -65,24 +67,32 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp handle_decision(conn, user, ctx, "approve") do
-    team = resolve_team(conn, ctx)
+    case resolve_team(conn, ctx) do
+      nil ->
+        # A grant must be bound to exactly one team; refuse to issue a code if the
+        # approving user has no resolvable team.
+        render_error_page(conn, @no_team_message)
 
-    attrs = %{
-      client_id: ctx.client_id,
-      client_name: ctx.client_name,
-      redirect_uri: ctx.redirect_uri,
-      code_challenge: ctx.code_challenge,
-      code_challenge_method: ctx.code_challenge_method,
-      scopes: ctx.scopes,
-      resource: ctx.resource
-    }
+      team ->
+        attrs = %{
+          client_id: ctx.client_id,
+          client_name: ctx.client_name,
+          redirect_uri: ctx.redirect_uri,
+          code_challenge: ctx.code_challenge,
+          code_challenge_method: ctx.code_challenge_method,
+          scopes: ctx.scopes,
+          resource: ctx.resource
+        }
 
-    case OAuth.create_authorization_code(user, team, attrs) do
-      {:ok, code} ->
-        redirect(conn, external: redirect_with(ctx.redirect_uri, code: code, state: ctx.state))
+        case OAuth.create_authorization_code(user, team, attrs) do
+          {:ok, code} ->
+            redirect(conn,
+              external: redirect_with(ctx.redirect_uri, code: code, state: ctx.state)
+            )
 
-      {:error, _} ->
-        redirect_error(conn, ctx.redirect_uri, ctx.state, "server_error")
+          {:error, _} ->
+            redirect_error(conn, ctx.redirect_uri, ctx.state, "server_error")
+        end
     end
   end
 
@@ -162,11 +172,15 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   ## Responses
 
   defp render_consent(conn, ctx) do
-    render(conn, "authorize.html",
-      ctx: ctx,
-      teams: conn.assigns[:teams] || [],
-      current_team: conn.assigns[:current_team]
-    )
+    if is_nil(resolve_team(conn, ctx)) do
+      render_error_page(conn, @no_team_message)
+    else
+      render(conn, "authorize.html",
+        ctx: ctx,
+        teams: conn.assigns[:teams] || [],
+        current_team: conn.assigns[:current_team]
+      )
+    end
   end
 
   defp render_error_page(conn, message) do

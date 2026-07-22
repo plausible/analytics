@@ -74,6 +74,16 @@ defmodule Plausible.OAuthTest do
                OAuth.consume_authorization_code(raw, verifier, @redirect_uri, @resource)
     end
 
+    test "refuses to create a code without a team", %{user: user} do
+      {_verifier, challenge} = verifier_and_challenge()
+
+      assert {:error, changeset} =
+               OAuth.create_authorization_code(user, nil, code_attrs(challenge))
+
+      refute changeset.valid?
+      assert Keyword.has_key?(changeset.errors, :team_id)
+    end
+
     test "rejects a bad PKCE verifier", %{user: user, team: team} do
       {_verifier, challenge} = verifier_and_challenge()
       {:ok, raw} = OAuth.create_authorization_code(user, team, code_attrs(challenge))

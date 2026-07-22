@@ -116,6 +116,31 @@ defmodule PlausibleWeb.OAuth.FlowTest do
     end
   end
 
+  describe "when the user has no team" do
+    setup %{conn: conn} do
+      # Re-log-in as a freshly-created user with no team memberships at all.
+      {:ok, conn: conn} = log_in(%{user: new_user(), conn: conn})
+      {:ok, conn: conn}
+    end
+
+    test "GET consent shows an error instead of the form", %{conn: conn} do
+      {_verifier, challenge} = pkce()
+      conn = get(conn, "/oauth/authorize?" <> URI.encode_query(authorize_params(challenge)))
+
+      assert html_response(conn, 400) =~ "belong to a team"
+    end
+
+    test "POST approve is refused and issues no code", %{conn: conn} do
+      {_verifier, challenge} = pkce()
+
+      conn =
+        post(conn, "/oauth/authorize", authorize_params(challenge, %{"action" => "approve"}))
+
+      assert html_response(conn, 400) =~ "belong to a team"
+      assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+    end
+  end
+
   describe "full authorization_code + refresh flow" do
     test "approve -> code -> token -> refresh", %{conn: conn, user: user} do
       {verifier, challenge} = pkce()
