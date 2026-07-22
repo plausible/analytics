@@ -9,6 +9,8 @@ defmodule Plausible.IP.Tools do
 
   @clauses Plausible.IP.Tools.Registry.entries()
 
+  require Logger
+
   @doc """
   Returns the ranges used in `reserved?/1`, for testing purposes.
   """
@@ -40,6 +42,7 @@ defmodule Plausible.IP.Tools do
   @doc """
   Determines if IP is allowed, i.e. valid and not reserved/private.
   """
+
   @spec allowed?(:inet.ip_address() | String.t()) :: boolean()
   def allowed?(ip) when is_binary(ip) do
     case :inet.parse_address(String.to_charlist(ip)) do
@@ -49,8 +52,20 @@ defmodule Plausible.IP.Tools do
   end
 
   def allowed?(ip) when is_tuple(ip) and tuple_size(ip) in [4, 8] do
-    not reserved?(ip)
+    if allow_reserved_ips?() do
+      if reserved?(ip) do
+        Logger.warning("IP #{inspect(ip)} forcibly allowed due to :allow_reserved_ips? env set. ")
+      end
+
+      true
+    else
+      not reserved?(ip)
+    end
   end
 
   def allowed?(_ip), do: false
+
+  defp allow_reserved_ips? do
+    Application.get_env(:plausible, __MODULE__)[:allow_reserved_ips?] || false
+  end
 end

@@ -78,7 +78,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         domain = "plausible.test"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         {:ok, root_node} = @assertion |> SimpleXml.parse()

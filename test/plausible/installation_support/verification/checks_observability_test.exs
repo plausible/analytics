@@ -128,7 +128,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksObservabilityTest do
         Process.sleep(1000)
       end
 
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
       stub_verification_result(verification_stub)
 
       state =
@@ -161,7 +161,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksObservabilityTest do
     end
 
     defp run_checks(verification_stub) do
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
       stub_verification_result(verification_stub)
 
       Checks.run(@url_to_verify, @expected_domain, "manual",
