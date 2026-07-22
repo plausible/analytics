@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Success!", html}
+               {html =~ "Tracking is active on your site", html}
              end)
     end
 
@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       # must stay hidden.
       assert eventually(fn ->
                html = render(lv)
-               {html =~ "Success!", html}
+               {html =~ "Tracking is active on your site", html}
              end)
 
       html = render(lv)
@@ -199,16 +199,16 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     for {expected_text, saved_installation_type} <- [
-          {"Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+          {"Make sure you've copied the snippet to the head of your site, or verify your installation manually.",
            "manual"},
-          {"Please make sure you've initialized Plausible on your site, or verify your installation manually.",
+          {"Make sure you've initialized Plausible on your site, or verify your installation manually.",
            "npm"},
-          {"Please make sure you've configured the GTM template correctly, or verify your installation manually.",
+          {"Make sure you've configured the GTM template correctly, or verify your installation manually.",
            "gtm"},
-          {"Please make sure you've enabled the plugin, or verify your installation manually.",
+          {"Make sure you've enabled the WordPress plugin, or verify your installation manually.",
            "wordpress"},
           # falls back to manual when there's no saved installation type
-          {"Please make sure you've copied the snippet to the head of your site, or verify your installation manually.",
+          {"Make sure you've copied the snippet to the head of your site, or verify your installation manually.",
            nil}
         ] do
       @tag :ee_only
@@ -246,7 +246,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
         assert element_exists?(html, @retry_button)
 
-        assert html =~ htmlize_quotes(unquote(expected_text))
+        assert text_of_element(html, "#recommendation") =~ unquote(expected_text)
         refute element_exists?(html, "#super-admin-report")
       end
     end

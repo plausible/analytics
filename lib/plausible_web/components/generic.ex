@@ -12,25 +12,37 @@ defmodule PlausibleWeb.Components.Generic do
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
       icon: "text-gray-600 dark:text-gray-300",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-800 dark:text-gray-200 leading-5"
+    },
+    indigo: %{
+      bg: "bg-indigo-100/60 dark:bg-indigo-900/40",
+      icon: "text-indigo-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
+    },
+    green: %{
+      bg: "bg-green-100/60 dark:bg-green-900/40",
+      icon: "text-green-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
       icon: "text-yellow-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     red: %{
       bg: "bg-red-100 dark:bg-red-900/30",
       icon: "text-red-600 dark:text-red-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     white: %{
       bg: "bg-white dark:bg-gray-900 shadow-sm dark:shadow-none",
       icon: "text-gray-600 dark:text-gray-400",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
     }
   }
@@ -222,6 +234,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:icon_class, :string, default: "")
+  attr(:title_class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
   slot(:actions)
@@ -253,7 +266,14 @@ defmodule PlausibleWeb.Components.Generic do
               <% end %>
             </div>
             <div class="flex-1 flex flex-col gap-y-1.5">
-              <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+              <h3
+                :if={@title}
+                class={[
+                  @title_class == "" && "text-sm font-medium",
+                  @theme.title_text,
+                  @title_class
+                ]}
+              >
                 {@title}
               </h3>
               <div class={"#{@theme.body_text}"}>

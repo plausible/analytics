@@ -582,15 +582,9 @@ defmodule PlausibleWeb.Live.Sites do
               >
                 {@site.domain}
               </h3>
-              <span
-                :if={@needs_verification?}
-                class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/40 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:text-yellow-300"
-              >
-                Setup pending
-              </span>
             </div>
           </div>
-          <.site_stats sparkline={@sparkline} />
+          <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
         </div>
       </.unstyled_link>
 
@@ -680,6 +674,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:sparkline, :any, required: true)
+  attr(:needs_verification?, :boolean, default: false)
 
   def site_stats(assigns) do
     ~H"""
@@ -708,7 +703,10 @@ defmodule PlausibleWeb.Live.Sites do
             </p>
           </div>
 
-          <.percentage_change change={@sparkline.visitors_change} />
+          <.pill :if={@needs_verification?} color={:yellow}>
+            Setup pending
+          </.pill>
+          <.percentage_change :if={not @needs_verification?} change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
