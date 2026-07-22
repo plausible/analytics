@@ -1,5 +1,11 @@
 <div class={stats_container_class(@conn)} data-site-domain={@site.domain}>
-  <PlausibleWeb.Components.FirstDashboardLaunchBanner.render site={@site} />
+  <PlausibleWeb.Components.FirstDashboardLaunchBanner.render
+    site={@site}
+    site_role={@site_role}
+    current_user_id={if user = @conn.assigns[:current_user], do: user.id}
+    has_pageviews?={@has_pageviews?}
+    verify_installation?={@verify_installation?}
+  />
 
   <%= if Plausible.Teams.locked?(@site.team) do %>
     <div

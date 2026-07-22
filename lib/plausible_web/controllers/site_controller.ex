@@ -50,11 +50,7 @@ defmodule PlausibleWeb.SiteController do
         end
 
         redirect(conn,
-          to:
-            Routes.site_path(conn, :installation, site.domain,
-              site_created: true,
-              flow: flow
-            )
+          to: Routes.site_path(conn, :installation, site.domain, flow: flow)
         )
 
       {:error, _, :permission_denied, _} ->

@@ -374,6 +374,66 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
+  describe "GET /:domain - first dashboard launch banner" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "does not render when the site has no pageviews", %{conn: conn, site: site} do
+      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      refute resp =~ "Your first pageview has landed!"
+    end
+
+    test "renders and is initially visible for the owner when the site has pageviews",
+         %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      assert resp =~ "Your first pageview has landed!"
+      assert resp =~ "{show: true}"
+
+      assert resp =~ "first_dashboard_launched_#{user.id}_#{site.domain}"
+    end
+
+    test "renders for editors and admins", %{conn: conn, user: user} do
+      for role <- [:editor, :admin] do
+        owner = new_user()
+        site = new_site(owner: owner)
+        add_member(site.team, user: user, role: role)
+        populate_stats(site, [build(:pageview)])
+
+        resp = conn |> get("/" <> site.domain) |> html_response(200)
+
+        assert resp =~ "Your first pageview has landed!",
+               "expected banner to render for role #{role}"
+      end
+    end
+
+    test "does not render for viewers even when the site has pageviews",
+         %{conn: conn, user: user} do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(site.team, user: user, role: :viewer)
+      populate_stats(site, [build(:pageview)])
+
+      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      refute resp =~ "Your first pageview has landed!"
+    end
+
+    on_ee do
+      test "is rendered hidden while the verification banner is showing",
+           %{conn: conn, site: site} do
+        populate_stats(site, [build(:pageview)])
+
+        resp =
+          conn
+          |> get("/" <> site.domain <> "?verify_installation=true")
+          |> html_response(200)
+
+        assert resp =~ "Verifying your installation"
+        assert resp =~ "Your first pageview has landed!"
+        assert resp =~ "{show: false}"
+      end
+    end
+  end
+
   describe "GET /:domain - as a super admin" do
     @describetag :ee_only
     setup [:create_user, :make_user_super_admin, :log_in]
@@ -644,6 +704,16 @@ defmodule PlausibleWeb.StatsControllerTest do
                  ),
                  Plausible.Segments.to_response_map(%{emea_site_segment | owner_id: nil}, site)
                ])
+    end
+
+    test "does not render the first dashboard launch banner even with pageviews",
+         %{conn: conn} do
+      site = new_site(domain: "test-site.com")
+      populate_stats(site, [build(:pageview)])
+      link = insert(:shared_link, site: site)
+
+      resp = conn |> get("/share/test-site.com/?auth=#{link.slug}") |> html_response(200)
+      refute resp =~ "Your first pageview has landed!"
     end
   end
 
