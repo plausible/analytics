@@ -386,18 +386,8 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  on_ee do
-    defp put_salts(%__MODULE__{} = event, _context) do
-      if replay_session_id = event.clickhouse_event_attrs.replay_session_id do
-        %{event | salts: Plausible.Session.ReplaySalts.fetch(replay_session_id)}
-      else
-        %{event | salts: Plausible.Session.Salts.fetch()}
-      end
-    end
-  else
-    defp put_salts(%__MODULE__{} = event, _context) do
-      %{event | salts: Plausible.Session.Salts.fetch()}
-    end
+  defp put_salts(%__MODULE__{} = event, _context) do
+    %{event | salts: Plausible.Session.Salts.fetch()}
   end
 
   defp put_user_id(%__MODULE__{} = event, _context) do
@@ -578,7 +568,17 @@ defmodule Plausible.Ingestion.Event do
         user_agent = request.user_agent || ""
         root_domain = get_root_domain(hostname)
 
-        SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
+        replay_session_id =
+          on_ee do
+            to_string(request.replay_session_id)
+          else
+            ""
+          end
+
+        SipHash.hash!(
+          salt,
+          user_agent <> request.remote_ip <> domain <> root_domain <> replay_session_id
+        )
     end
   end
 
