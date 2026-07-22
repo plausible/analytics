@@ -6,6 +6,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
   on_ee do
     use Plausible.Auth.SSO.Domain.Status
     use Oban.Testing, repo: Plausible.Repo
+    use Plausible.Test.Support.DNS
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO
@@ -24,6 +25,14 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     end
 
     describe "add/2" do
+      setup do
+        # These tests exercise real add-time domain validation (including
+        # resolvability), so - unlike the rest of this module, which passes
+        # skip_checks?: true - they need DNS to actually resolve.
+        stub_dns()
+        :ok
+      end
+
       test "adds a new domain", %{integration: integration} do
         domain = generate_domain()
 
@@ -113,7 +122,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         integration: integration
       } do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         verified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
@@ -132,7 +141,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         integration: integration
       } do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         unverified_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
 
@@ -150,7 +159,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "sets domain status to in progress", %{integration: integration} do
         domain = generate_domain()
-        {:ok, _} = SSO.Domains.add(integration, domain)
+        {:ok, _} = SSO.Domains.add(integration, domain, skip_checks?: true)
         assert {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert sso_domain.status == Status.in_progress()
 
@@ -162,7 +171,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "enqueues background work", %{integration: integration} do
         domain = generate_domain()
-        {:ok, _} = SSO.Domains.add(integration, domain)
+        {:ok, _} = SSO.Domains.add(integration, domain, skip_checks?: true)
         assert {:ok, _} = SSO.Domains.start_verification(domain)
 
         assert_enqueued(
@@ -179,7 +188,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "sets domain status to unverified", %{integration: integration} do
         domain = generate_domain()
-        {:ok, _} = SSO.Domains.add(integration, domain)
+        {:ok, _} = SSO.Domains.add(integration, domain, skip_checks?: true)
         assert {:ok, sso_domain} = SSO.Domains.start_verification(domain)
         assert :ok = SSO.Domains.cancel_verification(domain)
         assert Repo.reload!(sso_domain).status == Status.unverified()
@@ -194,7 +203,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     describe "lookup/1" do
       test "looks up domain by email", %{integration: integration} do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         email = "mary.jane@" <> domain
@@ -208,7 +217,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "looks up domain by plain domain", %{integration: integration} do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         assert {:ok, found_sso_domain} = SSO.Domains.lookup(domain)
@@ -217,7 +226,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "normalizes input removing whitespace and capitalizations", %{integration: integration} do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         email = "  maRy.jAnE@" <> String.upcase(domain) <> "  "
@@ -228,7 +237,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
       test "returns error if matching domain is not verified", %{integration: integration} do
         domain = generate_domain()
-        {:ok, _sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, _sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         assert {:error, :not_found} = SSO.Domains.lookup(domain)
       end
@@ -243,7 +252,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     describe "check_can_remove/1" do
       setup %{integration: integration} do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         {:ok, domain: domain, sso_domain: sso_domain}
       end
@@ -254,7 +263,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         sso_domain: sso_domain
       } do
         other_domain = generate_domain()
-        {:ok, other_sso_domain} = SSO.Domains.add(integration, other_domain)
+        {:ok, other_sso_domain} = SSO.Domains.add(integration, other_domain, skip_checks?: true)
         _other_sso_domain = SSO.Domains.verify(other_sso_domain, skip_checks?: true)
         other_identity = new_identity("Mary Goodwill", "mary@" <> other_domain, integration)
         {:ok, _, _, _other_sso_user} = SSO.provision_user(other_identity)
@@ -296,7 +305,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     describe "remove/1,2" do
       setup %{integration: integration} do
         domain = generate_domain()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         {:ok, domain: domain, sso_domain: sso_domain}
       end

@@ -911,8 +911,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         integration = SSO.initiate_saml_integration(team)
 
-        SSO.Domains.add(integration, "sso1.example.com")
-        SSO.Domains.add(integration, "sso2.example.com")
+        SSO.Domains.add(integration, "sso1.example.com", skip_checks?: true)
+        SSO.Domains.add(integration, "sso2.example.com", skip_checks?: true)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
@@ -927,7 +927,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       test "delete domain", %{conn: conn, user: user} do
         team = team_of(user)
         integration = SSO.initiate_saml_integration(team)
-        {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com")
+        {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com", skip_checks?: true)
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
         lv |> element("button#remove-sso-domain-#{domain.identifier}") |> render_click()
@@ -937,7 +937,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       test "deprovisioning users", %{conn: conn, user: user} do
         team = team_of(user) |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
-        {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
+        {:ok, sso_domain} = SSO.Domains.add(integration, "example.com", skip_checks?: true)
 
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
