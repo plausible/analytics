@@ -54,13 +54,20 @@ defmodule Plausible.Ingestion.Event do
 
   @spec build_and_buffer(Request.t(), Keyword.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
   def build_and_buffer(%Request{domains: domains} = request, context \\ []) do
+    skip_rate_limit? =
+      on_ee do
+        not is_nil(request.replay_session_id)
+      else
+        false
+      end
+
     processed_events =
       if spam_referrer?(request) do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
           # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          case GateKeeper.check(domain) do
+          case GateKeeper.check(domain, skip_rate_limit?: skip_rate_limit?) do
             {:allow, site} ->
               processed =
                 domain
