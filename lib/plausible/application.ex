@@ -194,9 +194,6 @@ defmodule Plausible.Application do
         end,
         Plausible.Ingestion.Counters,
         Plausible.Session.Salts,
-        on_ee do
-          Plausible.Session.ReplaySalts
-        end,
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
         Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
         ReferrerBlocklist,
