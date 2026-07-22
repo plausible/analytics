@@ -30,6 +30,10 @@ defmodule Plausible.OAuth do
 
   @supported_scopes ["stats:read:*", "sites:read:*"]
 
+  # CIMD fetch limits (the SSRF-safe client owns IP/redirect protection).
+  @fetch_timeout 5_000
+  @max_metadata_bytes 1_000_000
+
   @type token_response() :: %{
           access_token: String.t(),
           token_type: String.t(),
@@ -337,16 +341,15 @@ defmodule Plausible.OAuth do
   ## SSRF
 
   This performs a server-side GET against an attacker-influenced URL, which is an
-  SSRF surface. IP/host filtering (private/loopback/link-local/ULA +
-  `169.254.169.254`, redirect limits, DNS-rebind protection) is intentionally
-  **not** hand-rolled here - it belongs in the shared SSRF-safe HTTP helper that
-  is being landed separately. Until a fetcher is configured under
-  `config :plausible, Plausible.OAuth, client_metadata_fetcher: ...`, this
-  function **fails closed** (`{:error, :client_fetch_unavailable}`) so an
-  unguarded fetch can never ship. The whole MCP surface is additionally gated by
-  the off-by-default `:mcp_server` flag.
+  SSRF surface. IP/host filtering (private/reserved/loopback/link-local + DNS
+  resolution, IP pinning, and per-hop redirect re-validation) is delegated to the
+  shared `Plausible.SSRF` helper rather than hand-rolled here. Tests may inject a
+  fetcher via `config :plausible, Plausible.OAuth, client_metadata_fetcher: ...`
+  (a `module` exposing `get/1`, or a 1-arity function); otherwise the SSRF-safe
+  client is used. The whole MCP surface is additionally gated by the
+  off-by-default `:mcp_server` flag.
   """
-  @spec fetch_client_metadata(String.t()) :: {:ok, map()} | {:error, atom()}
+  @spec fetch_client_metadata(String.t()) :: {:ok, map()} | {:error, atom() | Exception.t()}
   def fetch_client_metadata(client_id) do
     with :ok <- validate_https(client_id),
          {:ok, body} <- http_get(client_id),
@@ -369,7 +372,24 @@ defmodule Plausible.OAuth do
     case Application.get_env(:plausible, __MODULE__, [])[:client_metadata_fetcher] do
       fun when is_function(fun, 1) -> fun.(url)
       module when is_atom(module) and not is_nil(module) -> module.get(url)
-      _ -> {:error, :client_fetch_unavailable}
+      _ -> ssrf_get(url)
+    end
+  end
+
+  defp ssrf_get(url) do
+    case Plausible.SSRF.get(url, receive_timeout: @fetch_timeout, decode_body: false) do
+      {:ok, %Req.Response{status: 200, body: body}} when is_binary(body) ->
+        if byte_size(body) > @max_metadata_bytes do
+          {:error, :client_metadata_too_large}
+        else
+          {:ok, body}
+        end
+
+      {:ok, %Req.Response{}} ->
+        {:error, :client_metadata_unavailable}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

@@ -39,10 +39,3 @@ config :phoenix_live_view,
   debug_heex_annotations: true,
   debug_attributes: true,
   enable_expensive_runtime_checks: true
-
-# Development-only: wire the MCP/OAuth CIMD fetcher so the connector flow can be
-# tested locally before the shared SSRF-safe HTTP helper lands. This fetcher has
-# NO SSRF protection and must never be enabled outside dev (it raises in prod).
-# The MCP surface is additionally gated by the off-by-default :mcp_server flag.
-config :plausible, Plausible.OAuth,
-  client_metadata_fetcher: Plausible.OAuth.DevClientMetadataFetcher

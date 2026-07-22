@@ -1,5 +1,6 @@
 defmodule Plausible.OAuthTest do
   use Plausible.DataCase, async: true
+  use Plausible.Test.Support.DNS
 
   alias Plausible.OAuth
   alias Plausible.OAuth.{AccessToken, AuthorizationCode, Token}
@@ -355,9 +356,19 @@ defmodule Plausible.OAuthTest do
                {:error, :client_id_not_https}
     end
 
-    test "fails closed when no SSRF-safe fetcher is configured" do
-      # No :client_metadata_fetcher configured by default.
-      assert OAuth.fetch_client_metadata(@client_id) == {:error, :client_fetch_unavailable}
+    test "uses the SSRF-safe client and rejects restricted addresses" do
+      # No :client_metadata_fetcher override -> the real Plausible.SSRF client is
+      # used. Resolve the client_id host to a private address; SSRF must refuse to
+      # connect before any request is made.
+      stub_dns(%{"client.example" => {[{10, 0, 0, 1}], []}})
+
+      assert {:error, :restricted_address} = OAuth.fetch_client_metadata(@client_id)
+    end
+
+    test "rejects a non-resolvable client_id host via the SSRF client" do
+      stub_dns(%{"client.example" => {[], []}})
+
+      assert {:error, :dns_resolution_failed} = OAuth.fetch_client_metadata(@client_id)
     end
 
     test "validates a self-referential document with a configured fetcher" do
