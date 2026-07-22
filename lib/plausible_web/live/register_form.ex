@@ -90,6 +90,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         id="register-form"
         class="flex flex-col gap-y-6"
         action={Routes.auth_path(@socket, :login)}
+        onsubmit={form_submit_event(@invitation)}
         phx-hook="Metrics"
         phx-change="validate"
         phx-submit="register"
@@ -178,6 +179,14 @@ defmodule PlausibleWeb.Live.RegisterForm do
       </.form>
     </.auth_container>
     """
+  end
+
+  on_ee do
+    defp form_submit_event(invitation) do
+      "window.plausible('Signup#{if invitation, do: " via invitation"}')"
+    end
+  else
+    defp form_submit_event(_), do: ""
   end
 
   defp name_input(assigns) do
@@ -275,10 +284,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
     end
   end
 
-  def handle_event("send-metrics-after", _params, socket) do
-    {:noreply, assign(socket, trigger_submit: true)}
-  end
-
   defp add_user(socket, user, opts \\ []) do
     result =
       Repo.transaction(fn ->
@@ -289,12 +294,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       {:ok, _user} ->
         socket = assign(socket, disable_submit: true)
 
-        on_ee do
-          event_name = "Signup#{if socket.assigns.invitation, do: " via invitation"}"
-          {:noreply, push_event(socket, "send-metrics", %{event_name: event_name})}
-        else
-          {:noreply, assign(socket, trigger_submit: true)}
-        end
+        {:noreply, assign(socket, trigger_submit: true)}
 
       {:error, changeset} ->
         {:noreply,

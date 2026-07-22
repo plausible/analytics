@@ -17,14 +17,6 @@ let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
   let Hooks = { Modal, Dropdown }
-  Hooks.Metrics = {
-    mounted() {
-      this.handleEvent('send-metrics', ({ event_name }) => {
-        window.plausible(event_name)
-        this.pushEvent('send-metrics-after', { event_name })
-      })
-    }
-  }
   let Uploaders = {}
   Uploaders.S3 = function (entries, onViewError) {
     entries.forEach((entry) => {
