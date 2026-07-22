@@ -100,6 +100,7 @@ defmodule PlausibleWeb.StatsController do
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
+          has_pageviews?: !!stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
@@ -429,6 +430,7 @@ defmodule PlausibleWeb.StatsController do
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id,
+          has_pageviews?: false,
           verify_installation?: false,
           verification_session: %{}
         )

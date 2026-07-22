@@ -362,7 +362,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/#{URI.encode_www_form("éxample.com")}/installation?site_created=true&flow="
+               "/#{URI.encode_www_form("éxample.com")}/installation?flow="
 
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
@@ -480,7 +480,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -501,7 +501,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Plausible.Teams.Billing.site_usage(team) == 3
     end
 
@@ -515,7 +515,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+        assert redirected_to(conn) == "/example.com/installation?flow="
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -555,7 +555,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com%2Fsome_blog_site/installation?site_created=true&flow="
+               "/example.com%2Fsome_blog_site/installation?flow="
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
@@ -618,7 +618,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com/installation?site_created=true&flow="
+               "/example.com/installation?flow="
     end
 
     for role <- [:owner, :admin, :editor] do

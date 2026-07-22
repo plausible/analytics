@@ -1,52 +1,58 @@
 defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
   @moduledoc """
-  A banner that appears on the first dashboard launch
+  Dashboard banner pointing at email reports, shown once a site has stats and
+  only to roles that can access the email reports settings. Stays hidden while
+  the verification banner is up and reveals itself when that banner is dismissed.
   """
 
   use PlausibleWeb, :component
 
-  attr(:site, Plausible.Site, required: true)
-
-  def set(assigns) do
-    ~H"""
-    <script>
-      sessionStorage.setItem('<%= storage_key(@site) %>', false);
-    </script>
-    """
-  end
+  @roles_with_email_reports_access [:owner, :admin, :editor, :super_admin]
 
   attr(:site, Plausible.Site, required: true)
+  attr(:site_role, :atom, required: true)
+  attr(:current_user_id, :any, required: true)
+  attr(:has_pageviews?, :boolean, required: true)
+  attr(:verify_installation?, :boolean, default: false)
 
   def render(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :visible?,
+        assigns.has_pageviews? and assigns.site_role in @roles_with_email_reports_access
+      )
+
     ~H"""
     <div
+      :if={@visible?}
       x-cloak
-      x-data={x_data(@site)}
-      class="w-full px-4 text-sm font-bold text-center text-blue-900 bg-blue-200 rounded-sm transition"
-      style="top: 91px"
-      role="alert"
+      x-data={"{show: #{not @verify_installation?}}"}
       x-bind:class="! show ? 'hidden' : ''"
-      x-init={x_init(@site)}
+      x-on:verification-finished.window="show = true"
+      role="alert"
     >
-      <.styled_link
-        class="plausible-event-name=Weekly+Email+Note+Click"
-        href={Routes.site_path(PlausibleWeb.Endpoint, :settings_email_reports, @site.domain)}
+      <.notice
+        theme={:indigo}
+        dismissable_id={"first_dashboard_launched_#{@current_user_id}_#{@site.domain}"}
+        class="!p-4 text-center font-medium"
+        dismiss_class="top-1/2 -translate-y-1/2 right-4"
       >
-        Get weekly traffic summaries by email →
-      </.styled_link>
+        <span class="text-base mr-1">
+          🎉
+        </span>
+        <span class="text-gray-900 dark:text-gray-100">
+          Your first pageview has landed!
+        </span>
+        <.styled_link
+          class="plausible-event-name=Weekly+Email+Note+Click"
+          href={Routes.site_path(PlausibleWeb.Endpoint, :settings_email_reports, @site.domain)}
+          onclick={"localStorage['notice_dismissed__first_dashboard_launched_#{@current_user_id}_#{@site.domain}'] = 'true'"}
+        >
+          Get weekly traffic reports by email →
+        </.styled_link>
+      </.notice>
     </div>
     """
-  end
-
-  defp x_data(site) do
-    "{show: !!sessionStorage.getItem('#{storage_key(site)}')}"
-  end
-
-  defp x_init(site) do
-    "setTimeout(() => sessionStorage.removeItem('#{storage_key(site)}'), 3000)"
-  end
-
-  defp storage_key(site) do
-    "dashboard_seen_#{site.domain}"
   end
 end

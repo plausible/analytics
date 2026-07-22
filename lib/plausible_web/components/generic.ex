@@ -235,6 +235,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:icon_class, :string, default: "")
   attr(:title_class, :string, default: "")
+  attr(:dismiss_class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
   slot(:actions)
@@ -248,7 +249,12 @@ defmodule PlausibleWeb.Components.Generic do
       <div class={["rounded-md p-5 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
-          class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
+          class={[
+            "absolute",
+            @dismiss_class == "" && "right-0 top-0 m-2",
+            @theme.title_text,
+            @dismiss_class
+          ]}
           onclick={"localStorage['notice_dismissed__#{@dismissable_id}'] = 'true'; document.getElementById('#{@dismissable_id}').classList.add('hidden')"}
         >
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
