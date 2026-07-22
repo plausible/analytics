@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.Installation do
         end
       else
         # On Community Edition, there's no v1 detection, nor pre-installation
-        # site scan - we just default the pre-selected tab to "manual".
+        # site scan - we just default the preselected tab to "manual".
 
         # Although it's functionally unnecessary, we stick to using `%AsyncResult{}`
         # for these assigns to minimize branching out the CE code and maintain only

@@ -49,7 +49,7 @@ defmodule PlausibleWeb.UserAuthTest do
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
         add_member(team, user: user, role: :editor)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity(user.name, user.email, integration)
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.UserAuthTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity(user.name, user.email, integration)
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.UserAuthTest do
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
         add_member(team, user: user, role: :editor)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity(user.name, user.email, integration)
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.UserAuthTest do
         add_member(team, role: :viewer)
         add_member(team, role: :viewer)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity("Jane Doe", "jane@" <> domain, integration)
@@ -200,7 +200,7 @@ defmodule PlausibleWeb.UserAuthTest do
         another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity(user.name, user.email, integration)
@@ -229,7 +229,7 @@ defmodule PlausibleWeb.UserAuthTest do
         # personal team with site created
         new_site(owner: user)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
         identity = new_identity(user.name, user.email, integration)
