@@ -5,7 +5,11 @@
   "scripts": {
     "test": "echo \"Error: Testing done in the tracker folder\" && exit 1"
   },
-  "repository": "https://github.com/plausible/plausible",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plausible/analytics.git",
+    "directory": "tracker/npm_package"
+  },
   "keywords": [
     "web-analytics",
     "website-analytics",
