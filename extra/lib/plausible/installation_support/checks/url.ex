@@ -1,8 +1,9 @@
 defmodule Plausible.InstallationSupport.Checks.Url do
   @moduledoc """
-  Checks if site domain has an A record.
-  If not, checks if prepending `www.` helps,
-  because we have specifically requested customers to register the domain with `www.` prefix.
+  Checks if site domain resolves (either A or AAAA record) to a public address.
+  If not, checks if prepending `www.` helps, because we have specifically 
+  requested customers to register the domain with `www.` prefix.
+
   If not, skips all further checks.
   """
 
@@ -15,11 +16,11 @@ defmodule Plausible.InstallationSupport.Checks.Url do
   @spec perform(State.t(), Keyword.t()) :: State.t()
   def perform(%State{url: url} = state, _opts) when is_binary(url) do
     with {:ok, %URI{scheme: scheme} = uri} when scheme in ["http", "https"] <- URI.new(url),
-         :ok <- check_domain(uri.host) do
+         :ok <- dns_lookup(uri.host) do
       stripped_url = URI.to_string(%URI{uri | query: nil, fragment: nil})
       %State{state | url: stripped_url}
     else
-      {:error, :no_a_record} ->
+      {:error, :resolve_host_error} ->
         put_diagnostics(%State{state | skip_further_checks?: true},
           service_error: %{code: :domain_not_found}
         )
@@ -54,40 +55,19 @@ defmodule Plausible.InstallationSupport.Checks.Url do
       "www.#{domain_without_path}"
     ]
     |> Enum.reduce_while({:error, :domain_not_found}, fn d, _acc ->
+      # For local testing, run the server with ALLOW_RESERVED_IPS=true
       case dns_lookup(d) do
         :ok -> {:halt, {:ok, "https://" <> unsplit_domain(d, rest)}}
-        {:error, :no_a_record} -> {:cont, {:error, :domain_not_found}}
+        {:error, :resolve_host_error} -> {:cont, {:error, :domain_not_found}}
       end
     end)
   end
 
-  @spec dns_lookup(String.t()) :: :ok | {:error, :no_a_record}
+  @spec dns_lookup(String.t()) :: :ok | {:error, :resolve_host_error}
   defp dns_lookup(domain) do
-    lookup_timeout = 1_000
-    resolve_timeout = 1_000
-
-    case Plausible.DnsLookup.impl().lookup(
-           to_charlist(domain),
-           :in,
-           :a,
-           [timeout: resolve_timeout],
-           lookup_timeout
-         ) do
-      [{a, b, c, d} | _]
-      when is_integer(a) and is_integer(b) and is_integer(c) and is_integer(d) ->
-        :ok
-
-      # this may mean timeout or no DNS record
-      [] ->
-        {:error, :no_a_record}
-    end
-  end
-
-  defp check_domain(domain) do
-    if Application.get_env(:plausible, :environment) == "dev" and domain == "localhost" do
-      :ok
-    else
-      dns_lookup(domain)
+    case Plausible.SSRF.resolve_host(domain) do
+      {:ok, _ips} -> :ok
+      {:error, _reason} -> {:error, :resolve_host_error}
     end
   end
 

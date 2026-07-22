@@ -16,7 +16,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
     describe "URL check" do
       test "returns error when DNS check fails with domain not found error, offers custom URL input" do
-        stub_lookup_a_records(@expected_domain, [])
+        expect_dns_unresolvable(@expected_domain)
 
         assert_matches %Result{
                          ok?: false,
@@ -43,7 +43,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
 
       test "returns error when DNS check fails with invalid URL error, offers custom URL input" do
         url_to_verify = "file://#{@expected_domain}"
-        stub_lookup_a_records(@expected_domain, [])
+        expect_dns_unresolvable(@expected_domain)
 
         assert_matches %Result{
                          ok?: false,
@@ -539,7 +539,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
       installation_type = Keyword.get(opts, :installation_type, "manual")
       expected_req_count = Keyword.get(opts, :expected_req_count)
 
-      stub_lookup_a_records(@expected_domain)
+      stub_dns()
 
       if is_integer(expected_req_count) do
         counter = :atomics.new(1, [])

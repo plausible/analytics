@@ -7,9 +7,9 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
   use Plausible.DataCase, async: true
 
   on_ee do
-    import Mox
+    use Plausible.Test.Support.DNS
 
-    alias Plausible.InstallationSupport.{State, Checks, Verification}
+    alias Plausible.InstallationSupport.{Checks, State, Verification}
 
     @check Checks.Url
 
@@ -20,14 +20,7 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
             {"plausible.io/sites", ~c"plausible.io"}
           ] do
         test "guesses 'https://#{site_domain}' if A-record is found for '#{site_domain}'" do
-          Plausible.DnsLookup.Mock
-          |> expect(:lookup, fn unquote(expected_lookup_domain),
-                                _type,
-                                _record,
-                                _opts,
-                                _timeout ->
-            [{192, 168, 1, 1}]
-          end)
+          expect_dns_lookup(unquote(expected_lookup_domain), [{93, 184, 216, 34}])
 
           state =
             @check.perform(
@@ -48,13 +41,8 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
       test "guesses 'www.{domain}' if A record is not found for 'domain'" do
         site_domain = "example.com/any/deeper/path"
 
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn ~c"example.com", _type, _record, _opts, _timeout ->
-          []
-        end)
-        |> expect(:lookup, fn ~c"www.example.com", _type, _record, _opts, _timeout ->
-          [{192, 168, 1, 2}]
-        end)
+        expect_dns_lookup("example.com", [])
+        expect_dns_lookup("www.example.com", [{93, 184, 216, 34}])
 
         state =
           @check.perform(
@@ -72,14 +60,52 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
       end
 
       test "fails if no A-record is found for 'domain' or 'www.{domain}'" do
-        expected_lookups = 2
-
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, expected_lookups, fn _domain, _type, _record, _opts, _timeout ->
-          []
-        end)
-
         domain = "any.example.com"
+
+        expect_dns_lookup("any.example.com", [])
+        expect_dns_lookup("www.any.example.com", [])
+
+        state =
+          @check.perform(
+            %State{
+              data_domain: domain,
+              url: nil,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
+
+        assert state.url == nil
+        assert state.diagnostics.service_error == %{code: :domain_not_found}
+        assert state.skip_further_checks?
+      end
+
+      test "fails if 'domain' only resolves to a private/reserved address" do
+        domain = "any.example.com"
+
+        expect_dns_lookup("any.example.com", [{192, 168, 1, 1}])
+        expect_dns_lookup("www.any.example.com", [])
+
+        state =
+          @check.perform(
+            %State{
+              data_domain: domain,
+              url: nil,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
+
+        assert state.url == nil
+        assert state.diagnostics.service_error == %{code: :domain_not_found}
+        assert state.skip_further_checks?
+      end
+
+      test "fails if 'domain' only resolves to a private/reserved AAAA address" do
+        domain = "any.example.com"
+
+        expect_dns_lookup("any.example.com", [], [{0xFC00, 0, 0, 0, 0, 0, 0, 1}])
+        expect_dns_lookup("www.any.example.com", [])
 
         state =
           @check.perform(
@@ -102,10 +128,7 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         site_domain = "example-com-rollup"
         url = "https://blog.example.com/recipes?foo=bar#baz"
 
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn ~c"blog.example.com", _type, _record, _opts, _timeout ->
-          [{192, 168, 1, 1}]
-        end)
+        expect_dns_lookup("blog.example.com", [{93, 184, 216, 34}])
 
         state =
           @check.perform(
@@ -142,10 +165,28 @@ defmodule Plausible.InstallationSupport.Checks.UrlTest do
         site_domain = "example-com-rollup"
         url = "https://example.com/archives/news?p=any#fragment"
 
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn ~c"example.com", _type, _record, _opts, _timeout ->
-          []
-        end)
+        expect_dns_lookup("example.com", [])
+
+        state =
+          @check.perform(
+            %State{
+              data_domain: site_domain,
+              url: url,
+              diagnostics: %Verification.Diagnostics{}
+            },
+            []
+          )
+
+        assert state.url == url
+        assert state.diagnostics.service_error == %{code: :domain_not_found}
+        assert state.skip_further_checks?
+      end
+
+      test "rejects urls whose host only resolves to a private/reserved address" do
+        site_domain = "example-com-rollup"
+        url = "https://example.com/archives/news?p=any#fragment"
+
+        expect_dns_lookup("example.com", [{127, 0, 0, 1}])
 
         state =
           @check.perform(

@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   describe "LiveView" do
     @tag :ee_only
     test "LiveView mounts", %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => false,
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
     @tag :ee_only
     test "from custom URL input form to verification", %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => false,
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
     @tag :ee_only
     test "eventually verifies installation", %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => true,
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
         build(:pageview)
       ])
 
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => true,
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     test "will redirect when first pageview arrives", %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => true,
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
              conn: conn,
              site: site
            } do
-        stub_lookup_a_records(site.domain)
+        stub_dns()
 
         stub_verification_result(%{
           "completed" => true,

@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
   import Phoenix.LiveViewTest
 
   on_ee do
-    import Mox
+    use Plausible.Test.Support.DNS
   end
 
   alias Plausible.Repo
@@ -14,11 +14,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
 
     on_ee do
       setup do
-        # mock all domains resolve
-        Plausible.DnsLookup.Mock
-        |> stub(:lookup, fn _domain, _type, _record, _opts, _timeout ->
-          [{192, 168, 1, 2}]
-        end)
+        stub_dns()
 
         # Stub detection by default to prevent async task race conditions
         # Tests that need specific detection results can override this stub
