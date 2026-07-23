@@ -12,6 +12,7 @@ import { GraphIntervalProvider } from './stats/graph/graph-interval-context'
 import { ImportsIncludedProvider } from './stats/graph/imports-included-context'
 import { CurrentVisitorsProvider } from './current-visitors-context'
 import { VerificationLiveViewPortal } from './verification/portal'
+import { EmailReportsCTABanner } from './email-reports-cta-banner'
 
 function DashboardStats({
   importedDataInView,
@@ -23,6 +24,7 @@ function DashboardStats({
   return (
     <>
       <div className="col-span-full">
+        <EmailReportsCTABanner />
         <VerificationLiveViewPortal />
         <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
       </div>
