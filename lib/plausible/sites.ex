@@ -378,7 +378,9 @@ defmodule Plausible.Sites do
   def stats_start_date(site)
 
   on_ee do
-    # for now, we're going to always update consolidated views
+    # for now, we're going to always update consolidated views,
+    # though Repo.update! runs the actual update query only when
+    # the value has changed
     def stats_start_date(%Site{consolidated: true} = site) do
       team = Repo.preload(site, :team).team
 

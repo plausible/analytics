@@ -1,7 +1,23 @@
 defmodule Plausible.Stats.Sampling do
   @moduledoc """
-  Sampling related functions
+  This module contains the logic to calculate the sample fraction to use for a particular query.
+
+  To do so, it
+  1) estimates how much traffic the site has per day
+  2) how many days of traffic does the query cover
+  3) calculates the fraction so as not to scan more than 10M events
+
+  ### Example calculation
+  traffic = 3M / day
+  query covers = 14 days
+  events in query = 3M / day * 14 days = 42M
+
+  10M = 42M * fraction
+  ->
+  fraction = 10M / 42M
+  fraction = 0.24
   """
+
   @default_sample_threshold 10_000_000
 
   import Ecto.Query
@@ -69,8 +85,7 @@ defmodule Plausible.Stats.Sampling do
     do: :no_sampling
 
   def fractional_sample_rate(traffic_30_day, query) do
-    date_range = Query.date_range(query)
-    duration = Date.diff(date_range.last, date_range.first)
+    duration = queried_duration_days(query)
 
     estimated_traffic = estimate_traffic(traffic_30_day, duration, query)
 
@@ -89,12 +104,41 @@ defmodule Plausible.Stats.Sampling do
     end
   end
 
+  @doc """
+  Number of days of stats the query's range covers, clamped to the site's native stats
+  begin date (traffic before that isn't queried, so it shouldn't figure in the
+  traffic estimation).
+  """
+  def queried_duration_days(%Query{} = query) do
+    {first, last} = Plausible.Stats.Time.utc_boundaries(query)
+    days_in_range(first, last)
+  end
+
   defp min_sample_rate(), do: 0.013
 
-  defp estimate_traffic(traffic_30_day, duration, query) do
-    duration_adjusted_traffic = traffic_30_day / 30.0 * duration
+  defp estimate_traffic(traffic_30_day, duration, %Query{} = query) do
+    daily_traffic =
+      traffic_30_day / days_of_traffic_in_30d_window(query.now, query.site_native_stats_start_at)
 
-    estimate_by_filters(duration_adjusted_traffic, query.filters)
+    estimate_by_filters(daily_traffic * duration, query.filters)
+  end
+
+  defp days_of_traffic_in_30d_window(now, native_stats_start_at) do
+    days_from_stats_start = days_in_range(native_stats_start_at, DateTime.to_naive(now))
+
+    cond do
+      days_from_stats_start <= 1 -> 1
+      days_from_stats_start <= 30 -> days_from_stats_start
+      true -> 30
+    end
+  end
+
+  @seconds_per_day 86_400
+  # Whole days spanned by the inclusive range [first, last]. Rounds the real
+  # elapsed time so a range ending at 23:59:59 counts its final day in full,
+  # rather than diffing the date parts (which undercounts by one).
+  defp days_in_range(first, last) do
+    round(NaiveDateTime.diff(last, first, :second) / @seconds_per_day)
   end
 
   @filter_traffic_multiplier 1 / 4.0
