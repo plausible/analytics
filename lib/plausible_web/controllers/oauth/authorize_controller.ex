@@ -40,21 +40,19 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   def consent(conn, %{"action" => action} = params) do
     user = conn.assigns[:current_user]
 
-    cond do
-      is_nil(user) ->
-        redirect_to_login(conn)
+    if is_nil(user) do
+      redirect_to_login(conn)
+    else
+      case build_context(params) do
+        {:ok, ctx} ->
+          handle_decision(conn, user, ctx, action)
 
-      true ->
-        case build_context(params) do
-          {:ok, ctx} ->
-            handle_decision(conn, user, ctx, action)
+        {:redirect_error, redirect_uri, state, error} ->
+          redirect_error(conn, redirect_uri, state, error)
 
-          {:redirect_error, redirect_uri, state, error} ->
-            redirect_error(conn, redirect_uri, state, error)
-
-          {:render_error, message} ->
-            render_error_page(conn, message)
-        end
+        {:render_error, message} ->
+          render_error_page(conn, message)
+      end
     end
   end
 
