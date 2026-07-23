@@ -267,4 +267,49 @@
       </:tbody>
     </.table>
   </.tile>
+
+  <.tile :if={@mcp_enabled? or @oauth_grants != []} docs="connected-applications">
+    <:title>
+      <a id="oauth-connectors">Connected applications</a>
+    </:title>
+    <:subtitle>
+      Applications you've authorized to access your account over MCP. Revoking one
+      immediately invalidates its access and refresh tokens.
+    </:subtitle>
+
+    <p :if={@oauth_grants == []} class="text-sm text-gray-600 dark:text-gray-400">
+      You haven't connected any applications yet.
+    </p>
+
+    <.table :if={@oauth_grants != []} rows={@oauth_grants}>
+      <:thead>
+        <.th>Application</.th>
+        <.th hide_on_mobile>Team</.th>
+        <.th hide_on_mobile>Scopes</.th>
+        <.th hide_on_mobile>Last used</.th>
+        <.th invisible>Actions</.th>
+      </:thead>
+      <:tbody :let={grant}>
+        <.td truncate max_width="max-w-60">
+          <span class="font-medium">{grant.client_name || grant.client_id}</span>
+          <span
+            :if={grant.client_name}
+            class="block text-xs text-gray-500 dark:text-gray-400 truncate"
+          >
+            {grant.client_id}
+          </span>
+        </.td>
+        <.td hide_on_mobile>{(grant.team && grant.team.name) || "—"}</.td>
+        <.td hide_on_mobile>{Enum.join(grant.scopes, ", ")}</.td>
+        <.td hide_on_mobile>{Plausible.OAuth.AccessToken.last_used_humanize(grant)}</.td>
+        <.td actions>
+          <.delete_button
+            href={Routes.settings_path(@conn, :revoke_oauth_connector, grant.id)}
+            method="delete"
+            data-confirm="Are you sure you want to revoke this application's access?"
+          />
+        </.td>
+      </:tbody>
+    </.table>
+  </.tile>
 </.settings_tiles>

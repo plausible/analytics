@@ -109,6 +109,20 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails-api", Bamboo.SentEmailApiPlug
   end
 
+  scope "/.well-known", PlausibleWeb do
+    pipe_through [PlausibleWeb.Plugs.EnsureMCPEnabled]
+
+    # OAuth 2.1 authorization server metadata
+    get "/oauth-protected-resource", OAuth.MetadataController, :protected_resource
+    get "/oauth-protected-resource/*any", OAuth.MetadataController, :protected_resource
+
+    get "/oauth-authorization-server", OAuth.MetadataController, :authorization_server
+
+    get "/oauth-authorization-server/*any",
+        OAuth.MetadataController,
+        :authorization_server
+  end
+
   on_ee do
     live_session :customer_support,
       on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
@@ -447,6 +461,13 @@ defmodule PlausibleWeb.Router do
     post "/activate", AuthController, :activate
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
+
+    scope "/login/oauth" do
+      pipe_through PlausibleWeb.Plugs.EnsureMCPEnabled
+      get "/authorize", OAuth.AuthorizeController, :authorize
+      post "/authorize", OAuth.AuthorizeController, :consent
+    end
+
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
     get "/2fa/setup/force-initiate", AuthController, :force_initiate_2fa_setup
@@ -463,6 +484,11 @@ defmodule PlausibleWeb.Router do
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
+  end
+
+  scope "/login/oauth", PlausibleWeb do
+    pipe_through [:external_api, PlausibleWeb.Plugs.EnsureMCPEnabled]
+    post "/token", OAuth.TokenController, :token
   end
 
   scope "/", PlausibleWeb do
@@ -488,6 +514,7 @@ defmodule PlausibleWeb.Router do
 
     get "/security", SettingsController, :security
     delete "/security/user-sessions/:id", SettingsController, :delete_session
+    delete "/security/oauth-connectors/:id", SettingsController, :revoke_oauth_connector
 
     post "/security/email/cancel", SettingsController, :cancel_update_email
     post "/security/email", SettingsController, :update_email
