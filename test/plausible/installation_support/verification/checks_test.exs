@@ -32,7 +32,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually",
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you'll need to verify your installation manually",
                              inline_links: [^@verify_manually_inline_link]
                            }
                          ]
@@ -58,7 +58,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          recommendations: [
                            %{
                              text:
-                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you can verify your installation manually",
+                               "Check that the URL is correct and publicly accessible. If your site is intentionally private, you'll need to verify your installation manually",
                              inline_links: [^@verify_manually_inline_link]
                            }
                          ]

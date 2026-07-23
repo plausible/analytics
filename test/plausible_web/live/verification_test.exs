@@ -68,8 +68,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
          } do
       stub_dns()
 
-      stub_lookup_a_records(site.domain)
-
       stub_verification_result(%{
         "completed" => true,
         "trackerIsInHtml" => false,
@@ -141,7 +139,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
     @tag :ee_only
     test "the dismissed flag keeps the banner hidden even if a late update arrives while still connected",
          %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => true,
@@ -186,7 +184,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
     @tag :ee_only
     test "dismissing tells the client to close the websocket connection",
          %{conn: conn, site: site} do
-      stub_lookup_a_records(site.domain)
+      stub_dns()
 
       stub_verification_result(%{
         "completed" => false,

@@ -253,8 +253,6 @@ defmodule PlausibleWeb.Live.InstallationTest do
              } do
           stub_dns()
 
-          stub_lookup_a_records(site.domain)
-
           stub_detection_manual()
           {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
 
