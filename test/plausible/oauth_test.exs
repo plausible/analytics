@@ -340,6 +340,29 @@ defmodule Plausible.OAuthTest do
       assert remaining == Enum.sort([kept_other_user.id, kept_other_team.id])
     end
 
+    test "removing a member from the team eagerly revokes their grants", %{
+      user: owner,
+      team: team
+    } do
+      member = add_member(team, role: :editor)
+      insert_token(member, team, [])
+      assert [_] = OAuth.list_grants(member)
+
+      {:ok, _} = Plausible.Teams.Memberships.Remove.remove(team, member.id, owner)
+
+      assert OAuth.list_grants(member) == []
+    end
+
+    test "a member leaving the team eagerly revokes their grants", %{team: team} do
+      member = add_member(team, role: :editor)
+      insert_token(member, team, [])
+      assert [_] = OAuth.list_grants(member)
+
+      {:ok, _} = Plausible.Teams.Memberships.Leave.leave(team, member)
+
+      assert OAuth.list_grants(member) == []
+    end
+
     test "grants are cascade-deleted at the DB level when the user is deleted", %{
       user: user,
       team: team
