@@ -1057,20 +1057,6 @@ defmodule Plausible.Billing.QuotaTest do
       %{user: user, team: team}
     end
 
-    test "returns nil if usage doesn't have any sites", %{team: team} do
-      suggested_tier =
-        team
-        |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Quota.suggest_tier(
-          @highest_starter_plan,
-          @highest_growth_plan,
-          @highest_business_plan,
-          nil
-        )
-
-      assert suggested_tier == nil
-    end
-
     test "returns :custom if the monthly pageview limit exceeds regular plans",
          %{team: team} do
       suggested_tier =

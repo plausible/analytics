@@ -1262,23 +1262,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       end
     end
 
-    describe "for a user with no sites" do
-      setup [:create_user, :log_in]
-
-      test "does not allow to subscribe and renders notice", %{conn: conn} do
-        {:ok, _lv, doc} = get_liveview(conn)
-
-        check_notice_titles(doc, [Billing.upgrade_ineligible_notice_title()])
-
-        assert text_of_element(doc, "#upgrade-eligible-notice") =~
-                 "You cannot start a subscription"
-
-        assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
-        assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
-        assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
-      end
-    end
-
     describe "for a user with no sites but pending ownership transfer" do
       setup [:create_user, :log_in]
 
@@ -1314,7 +1297,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         Billing.subscription_cancelled_notice_title(),
         Billing.subscription_past_due_notice_title(),
         Billing.subscription_paused_notice_title(),
-        Billing.upgrade_ineligible_notice_title(),
         Billing.pending_site_ownerships_notice_title()
       ]
       |> Enum.each(fn title ->
