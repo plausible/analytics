@@ -491,6 +491,20 @@ defmodule PlausibleWeb.Router do
     post "/token", OAuth.TokenController, :token
   end
 
+  # MCP endpoint over Streamable HTTP, authenticated with an OAuth access token.
+  # Defined before the catch-all `/:domain` dashboard routes so the literal path
+  # wins.
+  scope "/", PlausibleWeb do
+    pipe_through [
+      :external_api,
+      PlausibleWeb.Plugs.EnsureMCPEnabled,
+      PlausibleWeb.Plugs.AuthorizeOAuthAPI
+    ]
+
+    post "/mcp", MCP.MCPController, :handle
+    get "/mcp", MCP.MCPController, :not_supported
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:shared_link]
 
