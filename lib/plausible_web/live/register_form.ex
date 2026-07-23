@@ -84,119 +84,149 @@ defmodule PlausibleWeb.Live.RegisterForm do
   def render(assigns) do
     ~H"""
     <.auth_container>
-      <div x-data={"{ captchaDone: #{not PlausibleWeb.Captcha.enabled?()} }"}>
-        <.form
-          :let={f}
-          for={@form}
-          id="register-form"
-          class="flex flex-col gap-y-6"
-          action={Routes.auth_path(@socket, :login)}
-          onsubmit={form_submit_event(@invitation)}
-          phx-hook="Metrics"
-          phx-change="validate"
-          phx-submit="register"
-          phx-trigger-action={@trigger_submit}
-        >
-          <input name="user[register_action]" type="hidden" value={@live_action} />
-          <input
-            :if={@team_identifier}
-            name="user[team_identifier]"
-            type="hidden"
-            value={@team_identifier}
-          />
+      <.form
+        :let={f}
+        for={@form}
+        id="register-form"
+        class="flex flex-col gap-y-6"
+        action={Routes.auth_path(@socket, :login)}
+        onsubmit={form_submit_event(@invitation)}
+        phx-hook="Metrics"
+        phx-change="validate"
+        phx-submit="register"
+        phx-trigger-action={@trigger_submit}
+      >
+        <input name="user[register_action]" type="hidden" value={@live_action} />
+        <input
+          :if={@team_identifier}
+          name="user[team_identifier]"
+          type="hidden"
+          value={@team_identifier}
+        />
 
-          <%= if @invitation do %>
-            <.email_input field={f[:email]} for_invitation={true} />
-            <.name_input field={f[:name]} />
-          <% else %>
-            <.name_input field={f[:name]} />
-            <.email_input field={f[:email]} for_invitation={false} />
-          <% end %>
+        <%= if @invitation do %>
+          <.email_input field={f[:email]} for_invitation={true} />
+          <.name_input field={f[:name]} />
+        <% else %>
+          <.name_input field={f[:name]} />
+          <.email_input field={f[:email]} for_invitation={false} />
+        <% end %>
 
-          <div class="flex flex-col gap-y-2">
-            <label
-              for={f[:password].id}
-              class="text-sm font-semibold text-gray-800 dark:text-gray-200"
-            >
-              Password
-            </label>
-            <div>
-              <.password_input_with_strength
-                field={f[:password]}
-                strength={@password_strength}
-                phx-debounce={200}
-                mt?={false}
-              />
-            </div>
-            <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
-          </div>
-
-          <%= if PlausibleWeb.Captcha.enabled?() do %>
-            <div>
-              <div
-                phx-update="ignore"
-                id="frc-captcha-placeholder"
-                class="frc-captcha"
-                data-sitekey={PlausibleWeb.Captcha.sitekey()}
-                data-start="auto"
-                x-init="
-                $el.addEventListener('frc:widget.complete', () => captchaDone = true);
-                $el.addEventListener('frc:widget.error', () => captchaDone = false);
-                $el.addEventListener('frc:widget.expire', () => captchaDone = false);
-              "
-              >
-              </div>
-              <p :if={@captcha_error} class="text-xs text-red-500 mt-2">
-                {@captcha_error}
-              </p>
-              <script
-                phx-update="ignore"
-                id="frc-captcha-script"
-                type="module"
-                src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.min.js"
-                async
-                defer
-              >
-              </script>
-              <script
-                phx-update="ignore"
-                id="frc-captcha-script-compat"
-                nomodule
-                src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.compat.min.js"
-                async
-                defer
-              >
-              </script>
-            </div>
-          <% end %>
-
-          <div class="flex flex-col gap-y-4">
-            <% submit_text =
-              if ce?() or @invitation do
-                "Create my account"
-              else
-                "Start my free trial"
-              end %>
-            <.button
-              id="register"
-              disabled={@disable_submit or PlausibleWeb.Captcha.enabled?()}
-              x-bind:disabled={"!captchaDone || #{@disable_submit}"}
-              type="submit"
-              class="w-full"
+        <div class="flex flex-col gap-y-2">
+          <label
+            for={f[:password].id}
+            class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+          >
+            Password
+          </label>
+          <div>
+            <.password_input_with_strength
+              field={f[:password]}
+              strength={@password_strength}
+              phx-debounce={200}
               mt?={false}
-            >
-              {submit_text}
-            </.button>
+            />
+          </div>
+          <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
+        </div>
 
-            <p class="text-sm text-center text-gray-500 dark:text-gray-400">
-              Already have an account?
-              <.styled_link href="/login">
-                Sign in
+        <%= if PlausibleWeb.Captcha.enabled?() do %>
+          <div>
+            <div
+              phx-update="ignore"
+              id="frc-captcha-placeholder"
+              class="frc-captcha hidden"
+              data-sitekey={PlausibleWeb.Captcha.sitekey()}
+              data-start="auto"
+            >
+            </div>
+            <p :if={@captcha_error} class="text-xs text-red-500 mt-2">
+              {@captcha_error}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              This site is protected by
+              <.styled_link href="https://friendlycaptcha.com" new_tab={true}>
+                Friendly Captcha
               </.styled_link>
             </p>
+            <script
+              phx-update="ignore"
+              id="frc-captcha-script"
+              type="module"
+              src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.min.js"
+              async
+              defer
+            >
+            </script>
+            <script
+              phx-update="ignore"
+              id="frc-captcha-script-compat"
+              nomodule
+              src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.compat.min.js"
+              async
+              defer
+            >
+            </script>
+            <script phx-update="ignore" id="frc-captcha-reveal">
+              (function () {
+                var SHOW_AFTER_LONG_WAIT_MS = 5000;
+                var el = document.getElementById("frc-captcha-placeholder");
+                if (!el) return;
+                function show() { el.classList.remove("hidden"); }
+                var timeout;
+                // Friendly Captcha carries the event payload on `e.detail` (not `e`).
+                el.addEventListener("frc:widget.statechange", function (e) {
+                  var d = e.detail || {};
+                  // Interactive mode means the user must click to solve: reveal the widget.
+                  if (d.mode === "interactive") { show(); }
+                  // Reveal if solving takes unusually long, then stop waiting once done.
+                  if (d.state === "requesting") {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(show, SHOW_AFTER_LONG_WAIT_MS);
+                  } else if (d.state === "completed") {
+                    clearTimeout(timeout);
+                  }
+                  // Reveal on error or expiry so the user can recover.
+                  if (d.state === "error" || d.state === "expired") { show(); }
+                  // Enable the submit button only once we hold a valid solution.
+                  window.dispatchEvent(new Event(
+                    d.state === "completed" ? "frc-captcha-ready" : "frc-captcha-reset"
+                  ));
+                });
+              })();
+            </script>
           </div>
-        </.form>
-      </div>
+        <% end %>
+
+        <div class="flex flex-col gap-y-4">
+          <% submit_text =
+            if ce?() or @invitation do
+              "Create my account"
+            else
+              "Start my free trial"
+            end %>
+          <.button
+            id="register"
+            type="submit"
+            class="w-full"
+            mt?={false}
+            data-disable-submit={to_string(@disable_submit)}
+            x-data={"{ captchaReady: #{not PlausibleWeb.Captcha.enabled?()} }"}
+            x-on:frc-captcha-ready.window="captchaReady = true"
+            x-on:frc-captcha-reset.window="captchaReady = false"
+            x-bind:disabled="!captchaReady || $el.dataset.disableSubmit === 'true'"
+          >
+            {submit_text}
+          </.button>
+
+          <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+            Already have an account?
+            <.styled_link href="/login">
+              Sign in
+            </.styled_link>
+          </p>
+        </div>
+      </.form>
     </.auth_container>
     """
   end
