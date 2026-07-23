@@ -174,6 +174,62 @@ defmodule Plausible.Ingestion.RequestTest do
   end
 
   @tag :ee_only
+  test "parses replay headers if present" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> put_req_header("x-replay-event-id", "123")
+      |> put_req_header("x-replay-session-id", "456")
+      |> put_req_header("x-replay-time", "2026-06-02 12:43:00")
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert request.replay_session_id == 456
+    assert NaiveDateTime.compare(request.timestamp, ~N[2026-06-02 12:43:00]) == :eq
+  end
+
+  @tag :ee_only
+  test "leaves replay fields empty and timestamp intact if headers not present" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert is_nil(request.replay_session_id)
+    assert %NaiveDateTime{} = request.timestamp
+  end
+
+  @tag :ee_only
+  test "leaves replay fields empty and timestamp intact if replay time in the future" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html"
+    }
+
+    now = NaiveDateTime.utc_now(:second)
+    time = NaiveDateTime.add(now, 10, :second)
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> put_req_header("x-replay-event-id", "123")
+      |> put_req_header("x-replay-session-id", "456")
+      |> put_req_header("x-replay-time", NaiveDateTime.to_iso8601(time))
+
+    assert {:ok, request, _conn} = Request.build(conn)
+    assert is_nil(request.replay_session_id)
+    assert NaiveDateTime.compare(request.timestamp, time) == :lt
+  end
+
+  @tag :ee_only
   test "parses revenue source field from a json string" do
     payload = %{
       name: "pageview",
@@ -586,25 +642,31 @@ defmodule Plausible.Ingestion.RequestTest do
 
     request = request |> Jason.encode!() |> Jason.decode!()
 
-    assert Map.drop(request, ["timestamp"]) == %{
-             "domains" => ["dummy.site"],
-             "event_name" => "pageview",
-             "hash_mode" => 1,
-             "hostname" => "dummy.site",
-             "pathname" => "/pictures/index.html",
-             "props" => %{"abc" => "qwerty", "hello" => "world"},
-             "query_params" => %{"baz" => "bam", "foo" => "bar"},
-             "referrer" => "https://example.com",
-             "remote_ip" => "127.0.0.1",
-             "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
-             "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
-             "user_agent" => "Mozilla",
-             "ip_classification" => nil,
-             "scroll_depth" => nil,
-             "engagement_time" => nil,
-             "tracker_script_version" => 0,
-             "interactive?" => true
-           }
+    expected = %{
+      "domains" => ["dummy.site"],
+      "event_name" => "pageview",
+      "hash_mode" => 1,
+      "hostname" => "dummy.site",
+      "pathname" => "/pictures/index.html",
+      "props" => %{"abc" => "qwerty", "hello" => "world"},
+      "query_params" => %{"baz" => "bam", "foo" => "bar"},
+      "referrer" => "https://example.com",
+      "remote_ip" => "127.0.0.1",
+      "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
+      "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
+      "user_agent" => "Mozilla",
+      "ip_classification" => nil,
+      "scroll_depth" => nil,
+      "engagement_time" => nil,
+      "tracker_script_version" => 0,
+      "interactive?" => true
+    }
+
+    on_ee do
+      expected = Map.put(expected, "replay_session_id", nil)
+    end
+
+    assert Map.drop(request, ["timestamp"]) == expected
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])
   end

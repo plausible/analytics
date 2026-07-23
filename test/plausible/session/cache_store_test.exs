@@ -246,6 +246,76 @@ defmodule Plausible.Session.CacheStoreTest do
     # assert Map.get(session, :"entry.meta.value") == ["true", "false"]
   end
 
+  @tag :ee_only
+  test "creates a session from a replayed event", %{buffer: buffer} do
+    event =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        "meta.key": ["logged_in", "darkmode"],
+        "meta.value": ["true", "false"]
+      )
+
+    CacheStore.on_event(event, @session_params, nil, buffer_insert: buffer)
+
+    assert_receive({:buffer, :insert, [sessions]})
+    assert [session] = sessions
+    assert session.hostname == event.hostname
+
+    assert session.site_id == event.site_id
+
+    assert session.replay_session_id == 456
+
+    assert session.user_id == event.user_id
+    assert session.entry_page == event.pathname
+    assert session.exit_page == event.pathname
+    assert session.is_bounce == true
+    assert session.duration == 0
+    assert session.pageviews == 1
+    assert session.events == 1
+    assert session.referrer == Map.get(@session_params, :referrer)
+    assert session.referrer_source == Map.get(@session_params, :referrer_source)
+    assert session.utm_medium == Map.get(@session_params, :utm_medium)
+    assert session.utm_source == Map.get(@session_params, :utm_source)
+    assert session.utm_campaign == Map.get(@session_params, :utm_campaign)
+    assert session.utm_content == Map.get(@session_params, :utm_content)
+    assert session.utm_term == Map.get(@session_params, :utm_term)
+    assert session.country_code == Map.get(@session_params, :country_code)
+    assert session.screen_size == Map.get(@session_params, :screen_size)
+    assert session.operating_system == Map.get(@session_params, :operating_system)
+    assert session.operating_system_version == Map.get(@session_params, :operating_system_version)
+    assert session.browser == Map.get(@session_params, :browser)
+    assert session.browser_version == Map.get(@session_params, :browser_version)
+    assert session.timestamp == event.timestamp
+    assert session.start === event.timestamp
+  end
+
+  @tag :ee_only
+  test "updates session counters on replayed event", %{buffer: buffer} do
+    timestamp = DateTime.utc_now()
+
+    event1 =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        timestamp: timestamp |> NaiveDateTime.shift(second: -10)
+      )
+
+    event2 = %{
+      event1
+      | timestamp: timestamp
+    }
+
+    CacheStore.on_event(event1, %{}, nil, buffer_insert: buffer)
+    CacheStore.on_event(event2, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[_negative_record, session]]})
+    assert session.is_bounce == false
+    assert session.duration == 10
+    assert session.pageviews == 2
+    assert session.events == 2
+    assert session.replay_session_id == 456
+  end
+
   test "updates session counters", %{buffer: buffer} do
     timestamp = DateTime.utc_now()
 
@@ -264,6 +334,33 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
+  end
+
+  @tag :ee_only
+  test "treats replayed and normal events as belonging to distinct sessions even if user_id and site_id match",
+       %{buffer: buffer} do
+    timestamp = DateTime.utc_now()
+
+    event1 =
+      build(:event,
+        name: "pageview",
+        replay_session_id: 456,
+        timestamp: timestamp |> NaiveDateTime.shift(second: -10)
+      )
+
+    event2 = %{
+      event1
+      | replay_session_id: nil,
+        timestamp: timestamp
+    }
+
+    CacheStore.on_event(event1, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[session1]]})
+    CacheStore.on_event(event2, %{}, nil, buffer_insert: buffer)
+    assert_receive({:buffer, :insert, [[session2]]})
+    assert session1.session_id != session2.session_id
+    assert session1.replay_session_id == 456
+    assert is_nil(session2.replay_session_id)
   end
 
   test "does not update session counters on engagement event", %{buffer: buffer} do

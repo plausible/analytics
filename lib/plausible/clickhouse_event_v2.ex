@@ -3,6 +3,7 @@ defmodule Plausible.ClickhouseEventV2 do
   Event schema for when NumericIDs migration is complete
   """
   use Ecto.Schema
+  use Plausible
   import Ecto.Changeset
 
   @primary_key false
@@ -48,6 +49,11 @@ defmodule Plausible.ClickhouseEventV2 do
 
     field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
 
+    on_ee do
+      # Field used during event replay
+      field :replay_session_id, Ch, type: "UInt64"
+    end
+
     # Virtual field used during event processing
     field :interactive?, :boolean, default: true, virtual: true, writable: :never
   end
@@ -72,7 +78,7 @@ defmodule Plausible.ClickhouseEventV2 do
         :revenue_reporting_amount,
         :revenue_reporting_currency,
         :interactive?
-      ]
+      ] ++ on_ee(do: [:replay_session_id], else: [])
     )
     |> validate_required([:name, :site_id, :hostname, :pathname, :user_id, :timestamp])
   end
