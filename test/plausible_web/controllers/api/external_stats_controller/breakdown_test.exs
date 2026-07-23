@@ -2492,6 +2492,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
     end
 
+    @invalid_page_message "Please provide page as a positive number."
+
+    test "returns error with non-integer page", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "page" => "foo"
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_page_message}
+    end
+
+    test "returns error with non-positive page", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "page" => 0
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_page_message}
+    end
+
     test "can paginate results", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/a", timestamp: ~N[2021-01-01 00:00:00]),
