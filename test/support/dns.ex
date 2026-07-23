@@ -35,15 +35,6 @@ defmodule Plausible.Test.Support.DNS do
       def expect_no_dns_lookup do
         expect(Plausible.DnsLookup.Mock, :lookup, 0, fn _, _, _, _, _ -> [] end)
       end
-
-      def stub_lookup_a_records(domain, a_records \\ [{192, 168, 1, 1}]) do
-        lookup_domain = to_charlist(domain)
-
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn ^lookup_domain, _type, _record, _opts, _timeout ->
-          a_records
-        end)
-      end
     end
   end
 end
