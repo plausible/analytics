@@ -135,6 +135,13 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert text_of_element(html, "#site-transfer-form") =~
                "You don't have an active subscription"
+
+      assert text_of_element(html, "#site-transfer-form") =~ "Start a subscription"
+
+      assert element_exists?(
+               html,
+               ~s|#site-transfer-form a[href="/billing/choose-plan?__team=none"]|
+             )
     end
 
     test "Team destination is preselected when available", %{
@@ -487,7 +494,15 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
           "form" => %{"destination" => "my_team", "my_team_available" => "true"}
         })
 
-      assert text_of_element(html, "#site-transfer-form") =~ "You don't have a subscription"
+      assert text_of_element(html, "#site-transfer-form") =~
+               "You don't have an active subscription for My personal sites."
+
+      assert text_of_element(html, "#site-transfer-form") =~ "Start a subscription"
+
+      assert element_exists?(
+               html,
+               ~s|#site-transfer-form a[href^="/billing/choose-plan?__team="]|
+             )
     end
 
     @tag :ee_only
