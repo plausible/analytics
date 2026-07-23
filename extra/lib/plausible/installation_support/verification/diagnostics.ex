@@ -102,7 +102,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when response_status in [200, 202] and
              domain == expected_domain,
-      do: handled_error(@error_succeeds_only_after_cache_bust)
+      do: named_result!(:succeeds_only_after_cache_bust)
 
   def interpret(
         %__MODULE__{
@@ -119,7 +119,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when response_status in [200, 202] and
              domain == expected_domain,
-      do: success()
+      do: named_result!(:success)
 
   def interpret(
         %__MODULE__{
@@ -137,8 +137,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when response_status in [200, 202] and
              domain != expected_domain do
-    error_unexpected_domain(selected_installation_type)
-    |> handled_error()
+    named_result!(:unexpected_domain, installation_type: selected_installation_type)
   end
 
   @error_proxy_network_error Error.new!(%{
@@ -174,9 +173,9 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     proxying? = not String.starts_with?(request_url, PlausibleWeb.Endpoint.url())
 
     if proxying? do
-      handled_error(@error_proxy_network_error)
+      named_result!(:proxy_network_error)
     else
-      handled_error(@error_plausible_network_error)
+      named_result!(:plausible_network_error)
     end
   end
 
@@ -193,8 +192,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       )
       when plausible_is_on_window != true and
              plausible_is_initialized != true do
-    error_plausible_not_found("manual")
-    |> handled_error()
+    named_result!(:plausible_not_found, installation_type: "manual")
   end
 
   @error_csp_disallowed Error.new!(%{
@@ -218,7 +216,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         _url
       ),
-      do: handled_error(@error_csp_disallowed)
+      do: named_result!(:csp_disallowed)
 
   @error_domain_not_found Error.new!(%{
                             message: "We couldn't reach <%= @attempted_url %>",
@@ -231,9 +229,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       when code in [:domain_not_found, :invalid_url] do
     attempted_url = if url, do: url, else: "https://#{expected_domain}"
 
-    @error_domain_not_found
-    |> handled_error(attempted_url: attempted_url)
-    |> struct!(data: %{offer_custom_url_input: true})
+    named_result!(:domain_not_found, attempted_url: attempted_url)
   end
 
   @error_browserless_network Error.new!(%{
@@ -251,9 +247,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       when is_binary(url) do
     attempted_url = shorten_url(url)
 
-    @error_browserless_network
-    |> handled_error(attempted_url: attempted_url)
-    |> struct!(data: %{offer_custom_url_input: true})
+    named_result!(:browserless_network_error, attempted_url: attempted_url)
   end
 
   @error_browserless_temporary Error.new!(%{
@@ -265,7 +259,7 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
 
   def interpret(%__MODULE__{service_error: %{code: code}}, _expected_domain, _url)
       when code in [:bad_browserless_response, :browserless_timeout, :internal_check_timeout] do
-    unhandled_error(@error_browserless_temporary, browserless_issue: true)
+    named_result!(:browserless_temporary)
   end
 
   @error_unexpected_page_response Error.new!(%{
@@ -290,9 +284,10 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
              plausible_is_initialized != true do
     attempted_url = shorten_url(url)
 
-    @error_unexpected_page_response
-    |> handled_error(attempted_url: attempted_url, page_response_status: page_response_status)
-    |> struct!(data: %{offer_custom_url_input: true})
+    named_result!(:unexpected_page_response,
+      attempted_url: attempted_url,
+      page_response_status: page_response_status
+    )
   end
 
   def interpret(
@@ -304,13 +299,13 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
         _expected_domain,
         _url
       ) do
-    error_plausible_not_found(selected_installation_type)
-    |> handled_error()
+    named_result!(:plausible_not_found, installation_type: selected_installation_type)
   end
 
   def interpret(%__MODULE__{} = diagnostics, _expected_domain, _url) do
-    error_plausible_not_found(diagnostics.selected_installation_type)
-    |> unhandled_error()
+    named_result!(:plausible_not_found_unhandled,
+      installation_type: diagnostics.selected_installation_type
+    )
   end
 
   @message_plausible_not_found "We couldn't detect Plausible on your site"
@@ -412,5 +407,77 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
       errors: [error.message],
       recommendations: [%{text: error.recommendation, inline_links: error.inline_links}]
     }
+  end
+
+  @doc """
+  Looks up a named interpretation result, optionally built from the given
+  assigns (e.g. `attempted_url`, `installation_type`) - keys that don't need
+  any just ignore them.
+
+  Every result `interpret/3` can produce is named here, so that verification
+  can be mocked (see `Plausible.InstallationSupport.Verification.ChecksMock`)
+  by referring to the exact same result-construction code `interpret/3`
+  itself uses - a scenario name can never silently drift from what real
+  verification would have interpreted.
+  """
+  @spec named_result!(atom()) :: Result.t()
+  def named_result!(key), do: named_result!(key, [])
+
+  @spec named_result!(atom(), Keyword.t()) :: Result.t()
+  def named_result!(:success, _assigns), do: success()
+
+  def named_result!(:succeeds_only_after_cache_bust, _assigns),
+    do: handled_error(@error_succeeds_only_after_cache_bust)
+
+  def named_result!(:csp_disallowed, _assigns), do: handled_error(@error_csp_disallowed)
+  def named_result!(:proxy_network_error, _assigns), do: handled_error(@error_proxy_network_error)
+
+  def named_result!(:plausible_network_error, _assigns),
+    do: handled_error(@error_plausible_network_error)
+
+  def named_result!(:browserless_temporary, _assigns),
+    do: unhandled_error(@error_browserless_temporary, browserless_issue: true)
+
+  def named_result!(:unexpected_domain, assigns) do
+    Keyword.fetch!(assigns, :installation_type)
+    |> error_unexpected_domain()
+    |> handled_error()
+  end
+
+  def named_result!(:plausible_not_found, assigns) do
+    Keyword.fetch!(assigns, :installation_type)
+    |> error_plausible_not_found()
+    |> handled_error()
+  end
+
+  def named_result!(:plausible_not_found_unhandled, assigns) do
+    Keyword.fetch!(assigns, :installation_type)
+    |> error_plausible_not_found()
+    |> unhandled_error()
+  end
+
+  def named_result!(:domain_not_found, assigns) do
+    @error_domain_not_found
+    |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
+
+  def named_result!(:browserless_network_error, assigns) do
+    @error_browserless_network
+    |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
+
+  def named_result!(:unexpected_page_response, assigns) do
+    @error_unexpected_page_response
+    |> handled_error(
+      attempted_url: Keyword.fetch!(assigns, :attempted_url),
+      page_response_status: Keyword.fetch!(assigns, :page_response_status)
+    )
+    |> struct!(data: %{offer_custom_url_input: true})
+  end
+
+  def named_result!(key, _assigns) do
+    raise ArgumentError, "No interpretation result named #{inspect(key)}"
   end
 end

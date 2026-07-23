@@ -194,6 +194,11 @@ defmodule Plausible.Application do
         end,
         Plausible.Ingestion.Counters,
         Plausible.Session.Salts,
+        on_ee do
+          if Mix.env() in [:dev, :e2e_test, :test] do
+            Plausible.InstallationSupport.Verification.MockScenarios
+          end
+        end,
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
         Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
         ReferrerBlocklist,
