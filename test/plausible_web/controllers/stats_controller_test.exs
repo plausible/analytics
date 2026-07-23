@@ -3,6 +3,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   use Plausible.Repo
 
   @react_container "div#stats-react-container"
+  @verification_banner "#verification-ui"
 
   describe "GET /:domain - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -112,7 +113,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       resp = get(conn, "/some-other-public-site.io") |> html_response(200)
 
-      refute resp =~ "Verifying your installation"
+      refute element_exists?(resp, @verification_banner)
     end
 
     test "public site - anonymous visitors never see the verification banner, even with the param",
@@ -125,7 +126,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         get(conn, "/some-other-public-site.io?verify_installation=true") |> html_response(200)
 
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
-      refute resp =~ "Verifying your installation"
+      refute element_exists?(resp, @verification_banner)
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -153,13 +154,12 @@ defmodule PlausibleWeb.StatsControllerTest do
              conn: conn,
              site: site
            } do
-        resp = get(conn, "/" <> site.domain) |> html_response(200)
-        refute resp =~ "Verifying your installation"
+        resp = get(conn, "/#{site.domain}") |> html_response(200)
+        refute element_exists?(resp, @verification_banner)
 
-        resp =
-          conn |> get("/" <> site.domain <> "?verify_installation=true") |> html_response(200)
+        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
 
-        assert resp =~ "Verifying your installation"
+        assert element_exists?(resp, @verification_banner)
       end
     end
 
@@ -234,21 +234,22 @@ defmodule PlausibleWeb.StatsControllerTest do
         assert cv.native_stats_start_at == twenty_days_ago
       end
 
-      test "does not redirect consolidated views to verification", %{
-        conn: conn,
-        user: user
-      } do
+      test "does not show verification banner for consolidated views even with the explicit param",
+           %{
+             conn: conn,
+             user: user
+           } do
         new_site(owner: user)
         new_site(owner: user)
         cv = user |> team_of() |> new_consolidated_view()
 
-        conn = get(conn, "/" <> cv.domain)
-        resp = html_response(conn, 200)
+        resp = get(conn, "/#{cv.domain}?verify_installation=true") |> html_response(200)
 
         assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
         assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
         assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
         assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+        refute element_exists?(resp, @verification_banner)
       end
 
       test "redirects to /sites if for some reason ineligible anymore", %{
@@ -392,11 +393,15 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can enter verification when site is without stats", %{conn: conn} do
-      site = new_site()
+    test "can enter verification regardless of whether the site has stats or not", %{conn: conn} do
+      site_without_stats = new_site()
+      site_with_stats = new_site()
+      populate_stats(site_with_stats, [build(:pageview)])
 
-      resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
-      assert resp =~ "Verifying your installation"
+      for site <- [site_without_stats, site_with_stats] do
+        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
@@ -410,13 +415,19 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
-    test "can view private locked verification without stats", %{conn: conn} do
-      user = new_user()
-      site = new_site(owner: user)
-      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+    test "can trigger verification on a locked private dashboard regardless of whether the site has stats or not",
+         %{conn: conn} do
+      site_without_stats = new_site(owner: new_user())
+      site_without_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
-      resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
-      assert resp =~ "Verifying your installation"
+      site_with_stats = new_site(owner: new_user())
+      populate_stats(site_with_stats, [build(:pageview)])
+      site_with_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+
+      for site <- [site_without_stats, site_with_stats] do
+        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
