@@ -147,18 +147,20 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can view stats of a website I've created; verification banner only shows with the explicit param",
-         %{
-           conn: conn,
-           site: site
-         } do
-      resp = get(conn, "/" <> site.domain) |> html_response(200)
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
-      refute resp =~ "Verifying your installation"
+    on_ee do
+      test "verification banner only shows with the explicit param",
+           %{
+             conn: conn,
+             site: site
+           } do
+        resp = get(conn, "/" <> site.domain) |> html_response(200)
+        refute resp =~ "Verifying your installation"
 
-      resp = conn |> get("/" <> site.domain <> "?verify_installation=true") |> html_response(200)
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
-      assert resp =~ "Verifying your installation"
+        resp =
+          conn |> get("/" <> site.domain <> "?verify_installation=true") |> html_response(200)
+
+        assert resp =~ "Verifying your installation"
+      end
     end
 
     on_ee do
