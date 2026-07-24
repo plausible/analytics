@@ -47,6 +47,11 @@ defmodule PlausibleWeb.Components.Layout do
     """
   end
 
+  def html_classes(assigns) do
+    ["h-full plausible", if(theme_preference(assigns) == "dark", do: "dark")]
+    |> Enum.reject(&is_nil/1)
+  end
+
   def theme_script(assigns) do
     ~H"""
     <script blocking="rendering">
@@ -173,11 +178,11 @@ defmodule PlausibleWeb.Components.Layout do
     """
   end
 
-  defp theme_preference(%{theme: theme}) when not is_nil(theme), do: theme
+  defp theme_preference(%{theme: theme}) when not is_nil(theme), do: to_string(theme)
 
   defp theme_preference(%{current_user: %Plausible.Auth.User{theme: theme}})
        when not is_nil(theme) do
-    theme
+    to_string(theme)
   end
 
   defp theme_preference(_assigns), do: "system"
