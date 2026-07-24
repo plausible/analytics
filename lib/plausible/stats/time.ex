@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Time do
 
   alias Plausible.Stats.{Query, DateTimeRange}
 
+  @spec utc_boundaries(Query.t()) :: {NaiveDateTime.t(), NaiveDateTime.t()}
   def utc_boundaries(%Query{
         utc_time_range: time_range,
         site_native_stats_start_at: native_stats_start_at

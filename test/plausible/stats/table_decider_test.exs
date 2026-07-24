@@ -255,7 +255,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query(filter_dimensions \\ [], dimensions \\ []) do
-    site = build(:site, id: :rand.uniform(100_000))
+    site = insert(:site)
 
     QueryBuilder.build!(site,
       metrics: [:visitors],
@@ -267,7 +267,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query_full_filters(filters) do
-    site = build(:site, id: :rand.uniform(100_000))
+    site = insert(:site)
 
     QueryBuilder.build!(site,
       metrics: [:visitors],
