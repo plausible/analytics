@@ -172,6 +172,20 @@ defmodule PlausibleWeb.Live.RegisterForm do
                 var SHOW_AFTER_LONG_WAIT_MS = 5000;
                 var el = document.getElementById("frc-captcha-placeholder");
                 if (!el) return;
+
+                // Match the widget to the app's resolved light/dark theme. This runs
+                // before the (deferred) SDK initializes, so the widget picks up the
+                // right theme from the start, and the observer keeps it in sync.
+                function applyTheme() {
+                  el.dataset.theme =
+                    document.documentElement.classList.contains("dark") ? "dark" : "light";
+                }
+                applyTheme();
+                new MutationObserver(applyTheme).observe(document.documentElement, {
+                  attributes: true,
+                  attributeFilter: ["class"]
+                });
+
                 function show() { el.classList.remove("hidden"); }
                 var timeout;
                 // Friendly Captcha carries the event payload on `e.detail` (not `e`).
