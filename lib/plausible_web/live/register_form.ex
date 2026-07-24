@@ -131,16 +131,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         </div>
 
         <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <PlausibleWeb.Components.Captcha.widget live?={true} error={@captcha_error}>
-            <:attribution>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                This site is protected by
-                <.styled_link href="https://friendlycaptcha.com" new_tab={true}>
-                  Friendly Captcha
-                </.styled_link>
-              </p>
-            </:attribution>
-          </PlausibleWeb.Components.Captcha.widget>
+          <PlausibleWeb.Components.Captcha.widget live?={true} error={@captcha_error} />
         <% end %>
 
         <div class="flex flex-col gap-y-4">
