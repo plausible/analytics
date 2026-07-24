@@ -33,7 +33,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-playwright": "^2.2.2",
     "express": "^4.21.2",
-    "globals": "^16.3.0",
+    "globals": "^17.7.0",
     "markdown-table": "^3.0.4",
     "prettier": "^3.3.3",
     "typescript": "^5.9.2",
