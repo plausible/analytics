@@ -142,11 +142,19 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.any?(&(&1 not in [property, "event:name", "event:goal"]))
 
     if has_required_event_or_goal_name_filter? and
-         not has_unsupported_filters? do
+         not has_unsupported_filters? and
+         not any_custom_prop_goal_filters?(query) do
       ["imported_custom_events"]
     else
       []
     end
+  end
+
+  # Goals with custom props cannot be queried from imported data, as imported
+  # tables are aggregated without custom properties.
+  defp any_custom_prop_goal_filters?(query) do
+    query.preloaded_goals.matching_toplevel_filters
+    |> Enum.any?(&Plausible.Goal.has_custom_props?/1)
   end
 
   defp do_decide_tables(%Query{filters: [], dimensions: []}), do: ["imported_visitors"]
@@ -172,6 +180,7 @@ defmodule Plausible.Stats.Imported.Base do
       Enum.any?(filter_dimensions, &(&1 not in ["event:page", "event:name", "event:goal"]))
 
     cond do
+      any_custom_prop_goal_filters?(query) -> []
       any_other_filters? -> []
       any_event_name_filters? and not any_page_filters? -> ["imported_custom_events"]
       any_page_filters? and not any_event_name_filters? -> ["imported_pages"]
@@ -192,11 +201,13 @@ defmodule Plausible.Stats.Imported.Base do
 
     filter_goal_table_candidates =
       query.preloaded_goals.matching_toplevel_filters
-      |> Enum.map(&Plausible.Goal.type/1)
-      |> Enum.map(fn
-        :event -> "imported_custom_events"
-        :page -> "imported_pages"
-        :scroll -> nil
+      |> Enum.map(fn goal ->
+        case {Plausible.Goal.has_custom_props?(goal), Plausible.Goal.type(goal)} do
+          {true, _} -> nil
+          {false, :event} -> "imported_custom_events"
+          {false, :page} -> "imported_pages"
+          {false, :scroll} -> nil
+        end
       end)
 
     case Enum.uniq(table_candidates ++ filter_goal_table_candidates) do
