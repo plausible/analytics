@@ -5,8 +5,9 @@ import {
   canEditAnnotation,
   getAnnotationAuthorship,
   getAnnotationGranularity,
-  getAnnotationTimeLabel,
-  groupAnnotationsByTimeLabel
+  getAnnotationDatetimeGroup,
+  groupAnnotationsByDatetime,
+  allAnnotationsAreFromThisExactDatetime
 } from './annotations'
 import { Interval } from '../stats/graph/intervals'
 import { Role, UserContextValue } from '../user-context'
@@ -199,7 +200,7 @@ describe(`${getAnnotationGranularity.name}`, () => {
   })
 })
 
-describe(`${getAnnotationTimeLabel.name}`, () => {
+describe(`${getAnnotationDatetimeGroup.name}`, () => {
   // 2025-02-26 is a Wednesday
   const dateAnnotation = {
     datetime: '2025-02-26',
@@ -215,7 +216,9 @@ describe(`${getAnnotationTimeLabel.name}`, () => {
   ])(
     `date-granularity annotation on ${dateAnnotation.datetime} bucketed to %s yields %s`,
     (interval, expected) => {
-      expect(getAnnotationTimeLabel(dateAnnotation, interval)).toBe(expected)
+      expect(getAnnotationDatetimeGroup(dateAnnotation, interval)).toBe(
+        expected
+      )
     }
   )
 
@@ -227,17 +230,19 @@ describe(`${getAnnotationTimeLabel.name}`, () => {
     [Interval.month, '2025-02-01'],
     [Interval.week, '2025-02-24'],
     [Interval.day, '2025-02-26'],
-    [Interval.hour, '2025-02-26 10:00:00'],
-    [Interval.minute, '2025-02-26 10:30:00']
+    [Interval.hour, '2025-02-26T10:00:00'],
+    [Interval.minute, '2025-02-26T10:30:00']
   ])(
     `minute granularity annotation with datetime ${minuteAnnotation.datetime} bucketed to %s yields %s`,
     (interval, expected) => {
-      expect(getAnnotationTimeLabel(minuteAnnotation, interval)).toBe(expected)
+      expect(getAnnotationDatetimeGroup(minuteAnnotation, interval)).toBe(
+        expected
+      )
     }
   )
 })
 
-describe(`${groupAnnotationsByTimeLabel.name}`, () => {
+describe(`${groupAnnotationsByDatetime.name}`, () => {
   const dateGranularity = AnnotationGranularity.date
   const annotations = [
     { id: 1, datetime: '2025-02-24 00:00:00', granularity: dateGranularity }, // Mon
@@ -246,7 +251,7 @@ describe(`${groupAnnotationsByTimeLabel.name}`, () => {
   ]
 
   it('groups annotations by day when the interval is day', () => {
-    const grouped = groupAnnotationsByTimeLabel(annotations, Interval.day)
+    const grouped = groupAnnotationsByDatetime(annotations, Interval.day)
 
     expect(Object.keys(grouped).sort()).toEqual([
       '2025-02-24',
@@ -259,7 +264,7 @@ describe(`${groupAnnotationsByTimeLabel.name}`, () => {
   })
 
   it('collapses annotations from the same week into one bucket', () => {
-    const grouped = groupAnnotationsByTimeLabel(annotations, Interval.week)
+    const grouped = groupAnnotationsByDatetime(annotations, Interval.week)
 
     expect(Object.keys(grouped).sort()).toEqual(['2025-02-24', '2025-03-03'])
     expect(grouped['2025-02-24']!.map((a) => a.id)).toEqual([1, 2])
@@ -267,7 +272,7 @@ describe(`${groupAnnotationsByTimeLabel.name}`, () => {
   })
 
   it('collapses annotations from the same month into one bucket', () => {
-    const grouped = groupAnnotationsByTimeLabel(annotations, Interval.month)
+    const grouped = groupAnnotationsByDatetime(annotations, Interval.month)
 
     expect(Object.keys(grouped).sort()).toEqual(['2025-02-01', '2025-03-01'])
     expect(grouped['2025-02-01']!.map((a) => a.id)).toEqual([1, 2])
@@ -281,17 +286,58 @@ describe(`${groupAnnotationsByTimeLabel.name}`, () => {
       { id: 12, datetime: '2025-02-26 10:00:00', granularity: dateGranularity }
     ]
 
-    const grouped = groupAnnotationsByTimeLabel(sameDay, Interval.day)
+    const grouped = groupAnnotationsByDatetime(sameDay, Interval.day)
 
     expect(grouped['2025-02-26']!.map((a) => a.id)).toEqual([10, 11, 12])
   })
 
   it('returns an empty object when there are no annotations', () => {
     expect(
-      groupAnnotationsByTimeLabel(
+      groupAnnotationsByDatetime(
         [] as { datetime: string; granularity: AnnotationGranularity }[],
         Interval.day
       )
     ).toEqual({})
+  })
+})
+
+describe(`${allAnnotationsAreFromThisExactDatetime.name}`, () => {
+  it('returns true when every annotation shares the given datetime', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [
+          { datetime: '2025-02-26T10:30:00' },
+          { datetime: '2025-02-26T10:30:00' }
+        ],
+        '2025-02-26T10:30:00'
+      )
+    ).toBe(true)
+  })
+
+  it('returns true when every annotation shares the given date', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [{ datetime: '2026-07-20' }, { datetime: '2026-07-20' }],
+        '2026-07-20'
+      )
+    ).toBe(true)
+  })
+
+  it('returns false when some annotation has a different datetime', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime(
+        [
+          { datetime: '2025-02-26T10:30:00' },
+          { datetime: '2025-02-26T10:31:00' }
+        ],
+        '2025-02-26T10:30:00'
+      )
+    ).toBe(false)
+  })
+
+  it('returns true when there are no annotations', () => {
+    expect(
+      allAnnotationsAreFromThisExactDatetime([], '2025-02-26T10:30:00')
+    ).toBe(true)
   })
 })

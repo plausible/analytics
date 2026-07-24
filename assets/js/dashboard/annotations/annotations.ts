@@ -37,9 +37,9 @@ export type Annotation = {
   note: string
 
   id: number
-  /** datetime in site timezone, example 2025-02-26 10:00:00 */
+  /** datetime in site timezone, example 2025-02-26T10:00:00 */
   inserted_at: string
-  /** datetime in site timezone, example 2025-02-26 10:00:00 */
+  /** datetime in site timezone, example 2025-02-26T10:00:00 */
   updated_at: string
 } & AnnotationOwnership
 
@@ -139,7 +139,7 @@ export function canAddAnnotation({
   }
 }
 
-export const getAnnotationTimeLabel = (
+export const getAnnotationDatetimeGroup = (
   annotation: Pick<Annotation, 'datetime' | 'granularity'>,
   interval: Interval
 ): string => {
@@ -175,24 +175,24 @@ export const getAnnotationTimeLabel = (
         case Interval.hour: {
           const [dateYYYYMMDD, timeHHMMSS] = annotation.datetime.split('T')
           // floors time to hour
-          return `${dateYYYYMMDD} ${timeHHMMSS.substring(0, 'HH'.length)}:00:00`
+          return `${dateYYYYMMDD}T${timeHHMMSS.substring(0, 'HH'.length)}:00:00`
         }
         case Interval.minute:
-          return annotation.datetime.split('T').join(' ')
+          return annotation.datetime
       }
     }
   }
 }
 
-export const groupAnnotationsByTimeLabel = <
+export const groupAnnotationsByDatetime = <
   T extends Pick<Annotation, 'datetime' | 'granularity'>
 >(
   annotations: T[],
   interval: Interval
 ): Record<string, T[] | undefined> => {
   return annotations.reduce<Record<string, T[]>>((acc, annotation) => {
-    const timeLabel = getAnnotationTimeLabel(annotation, interval)
-    return { ...acc, [timeLabel]: [...(acc[timeLabel] ?? []), annotation] }
+    const label = getAnnotationDatetimeGroup(annotation, interval)
+    return { ...acc, [label]: [...(acc[label] ?? []), annotation] }
   }, {})
 }
 
@@ -209,6 +209,11 @@ export const getAnnotationGranularity = (
       return AnnotationGranularity.date
   }
 }
+
+export const allAnnotationsAreFromThisExactDatetime = (
+  annotations: Pick<Annotation, 'datetime'>[],
+  datetime: string
+): boolean => annotations.every((a) => a.datetime === datetime)
 
 export const getApiFormattedPayload = ({
   granularity,

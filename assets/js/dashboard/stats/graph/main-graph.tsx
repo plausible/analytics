@@ -36,7 +36,8 @@ import {
   getRelativeChange,
   REVENUE_METRICS,
   getFirstAndLastTimeLabels,
-  MainGraphSeriesName
+  MainGraphSeriesName,
+  normalizeGraphTimeLabel
 } from './main-graph-data'
 import { Metric, getMetricLabel } from '../metrics'
 import { extractIntervalFromDimensions, Interval } from './intervals'
@@ -46,7 +47,7 @@ import {
   AnnotationType,
   canShowAddAnnotationButton,
   getAnnotationGranularity,
-  groupAnnotationsByTimeLabel
+  groupAnnotationsByDatetime
 } from '../../annotations/annotations'
 import { useUserContext } from '../../user-context'
 import { Button } from '../../components/button'
@@ -118,8 +119,8 @@ export const MainGraph = ({
   const interval = extractIntervalFromDimensions(data.query.dimensions)
   const isRealtime = data.extraContext.isRealtime
 
-  const annotationsByTimeLabel = useMemo(
-    () => groupAnnotationsByTimeLabel(annotations, interval),
+  const annotationsByDatetime = useMemo(
+    () => groupAnnotationsByDatetime(annotations, interval),
     [annotations, interval]
   )
 
@@ -304,13 +305,15 @@ export const MainGraph = ({
     () =>
       remappedData.map((datum) => {
         const annotationsOnDatum = datum.main.isDefined
-          ? (annotationsByTimeLabel[datum.main.timeLabel] ?? [])
+          ? (annotationsByDatetime[
+              normalizeGraphTimeLabel(datum.main.timeLabel)
+            ] ?? [])
           : []
         return {
           count: annotationsOnDatum.length
         }
       }),
-    [remappedData, annotationsByTimeLabel]
+    [remappedData, annotationsByDatetime]
   )
 
   const getFormattedValue = useCallback(
@@ -398,8 +401,12 @@ export const MainGraph = ({
 
   const annotationDatetime =
     selectedDatum && selectedDatum.main.isDefined
-      ? selectedDatum.main.timeLabel
+      ? normalizeGraphTimeLabel(selectedDatum.main.timeLabel)
       : null
+
+  const annotationsForSelectedBucket = annotationDatetime
+    ? annotationsByDatetime[annotationDatetime]
+    : undefined
 
   const zoomToPeriod = useCallback(
     (date: string) => {
@@ -507,11 +514,7 @@ export const MainGraph = ({
           {tooltip.persistent ? (
             <PersistentTooltipContents
               annotationDatetime={annotationDatetime}
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotations={annotationsForSelectedBucket}
               isTouchDevice={isTouchDevice}
               interval={interval}
               zoomDate={zoomDate}
@@ -521,11 +524,8 @@ export const MainGraph = ({
             />
           ) : (
             <HoveredTooltipContents
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotationDatetime={annotationDatetime}
+              annotations={annotationsForSelectedBucket}
               interval={interval}
               zoomDate={zoomDate}
               canAddAnnotation={canAddAnnotation}
@@ -538,6 +538,7 @@ export const MainGraph = ({
 }
 
 type TooltipContentsProps = {
+  annotationDatetime: string | null
   annotations: Annotation[] | undefined
   interval: Interval
   zoomDate: string | null
@@ -554,7 +555,6 @@ const PersistentTooltipContents = ({
   canAddAnnotation,
   closeTooltip
 }: {
-  annotationDatetime: string | null
   isTouchDevice: boolean
   onZoomToPeriod: (date: string) => void
   closeTooltip: () => void
@@ -564,8 +564,9 @@ const PersistentTooltipContents = ({
   const hasActions = !!zoomDate || (!!annotationDatetime && canAddAnnotation)
   return (
     <>
-      {!!annotations?.length && (
+      {!!annotationDatetime && !!annotations?.length && (
         <InteractiveAnnotationsList
+          annotationDatetime={annotationDatetime}
           annotations={annotations}
           isTouchDevice={isTouchDevice}
           closeTooltip={closeTooltip}
@@ -606,6 +607,7 @@ const PersistentTooltipContents = ({
 }
 
 const HoveredTooltipContents = ({
+  annotationDatetime,
   annotations,
   interval,
   zoomDate,
@@ -613,8 +615,11 @@ const HoveredTooltipContents = ({
 }: TooltipContentsProps) => {
   return (
     <>
-      {!!annotations?.length && (
-        <HoverAnnotationsList annotations={annotations} />
+      {!!annotationDatetime && !!annotations?.length && (
+        <HoverAnnotationsList
+          annotations={annotations}
+          annotationDatetime={annotationDatetime}
+        />
       )}
       <hr className="border-gray-600 dark:border-gray-800 my-1" />
       <div className="flex flex-col gap-y-0.5">
