@@ -177,7 +177,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
-    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
       case Auth.lookup(email) do
         {:ok, _user} ->
           token = Auth.Token.sign_password_reset(email)
