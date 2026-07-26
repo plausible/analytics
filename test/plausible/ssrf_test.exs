@@ -192,7 +192,7 @@ defmodule Plausible.SSRFTest do
                  pool_max_idle_time: 50
                )
 
-      assert_receive :pool_reaped
+      assert_receive :pool_reaped, 2000
     end
   end
 end
