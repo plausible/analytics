@@ -66,7 +66,7 @@ ENV MIX_ENV=$MIX_ENV
 RUN adduser -S -H -u 999 -G nogroup plausible
 
 RUN apk upgrade --no-cache
-RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates su-exec \
+RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates \
   && if [ "$MIX_ENV" = "ce" ]; then apk add --no-cache certbot; fi
 
 COPY --from=buildcontainer --chmod=555 /app/_build/${MIX_ENV}/rel/plausible /app
@@ -76,6 +76,7 @@ COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 # docker container can be started with arbitrary uid
 RUN mkdir -p /var/lib/plausible && chmod ugo+rw -R /var/lib/plausible
 
+USER 999
 WORKDIR /app
 ENV LISTEN_IP=0.0.0.0
 ENTRYPOINT ["/entrypoint.sh"]
