@@ -12,6 +12,14 @@ defmodule Plausible.InstallationSupport do
     def user_agent() do
       "Plausible Verification Agent - if abused, contact support@plausible.io"
     end
+
+    def verification_checks_mod do
+      if Mix.env() in [:dev, :e2e_test] do
+        Plausible.InstallationSupport.Verification.ChecksMock
+      else
+        Plausible.InstallationSupport.Verification.Checks
+      end
+    end
   else
     def user_agent() do
       "Plausible Community Edition"

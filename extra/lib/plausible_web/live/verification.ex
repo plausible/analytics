@@ -5,7 +5,8 @@ defmodule PlausibleWeb.Live.Verification do
   """
   use PlausibleWeb, :live_view
 
-  alias Plausible.InstallationSupport.{State, Verification}
+  alias Plausible.InstallationSupport
+  alias Plausible.InstallationSupport.State
 
   @component PlausibleWeb.Live.Components.VerificationBanner
   @slowdown_for_frequent_checking :timer.seconds(5)
@@ -143,7 +144,7 @@ defmodule PlausibleWeb.Live.Verification do
       end
 
       {:ok, pid} =
-        Verification.Checks.run(
+        InstallationSupport.verification_checks_mod().run(
           socket.assigns.url_to_verify,
           domain,
           get_installation_type(socket.assigns.tracker_script_configuration),
@@ -171,7 +172,7 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
-    interpretation = Verification.Checks.interpret_diagnostics(state)
+    interpretation = InstallationSupport.verification_checks_mod().interpret_diagnostics(state)
 
     update_component(socket,
       finished?: true,
