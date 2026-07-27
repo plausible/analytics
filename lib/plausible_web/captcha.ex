@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Captcha do
+  @moduledoc """
+  Integration with Friendly Captcha
+  """
+
   alias Plausible.HTTPClient
 
   @verify_endpoint "https://global.frcapi.com/api/v2/captcha/siteverify"
