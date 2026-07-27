@@ -537,7 +537,7 @@ defmodule PlausibleWeb.Live.Sites do
       assign(
         assigns,
         :needs_verification?,
-        ee?() and is_nil(Plausible.Sites.stats_start_date(assigns.site))
+        ee?() and assigns.site.onboarding_status == :new_site
       )
 
     ~H"""

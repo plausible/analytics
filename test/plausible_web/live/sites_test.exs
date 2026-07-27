@@ -152,6 +152,52 @@ defmodule PlausibleWeb.Live.SitesTest do
   end
 
   on_ee do
+    describe "pending setup badge and verification query parameter" do
+      @tag :ee_only
+      test "shows for a site with onboarding_status :new_site", %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        assert site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        assert dashboard_link_href =~ "verify_installation=true"
+      end
+
+      for status <- [:verification_succeeded, :first_pageview, :completed] do
+        @tag :ee_only
+        test "does not show once onboarding_status has moved to #{status} (even with stats_start_date reset)",
+             %{conn: conn, user: user} do
+          site = new_site(owner: user, onboarding_status: unquote(status), stats_start_date: nil)
+
+          {:ok, _lv, html} = live(conn, "/sites")
+
+          site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+          refute site_card =~ "Setup pending"
+
+          dashboard_link_href =
+            text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+
+          refute dashboard_link_href =~ "verify_installation=true"
+        end
+      end
+
+      @tag :ce_build_only
+      test "never shows on CE", %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        refute site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        refute dashboard_link_href =~ "verify_installation=true"
+      end
+    end
+
     describe "consolidated views appearance" do
       test "consolidated view shows up", %{conn: conn, user: user} do
         new_site(owner: user)
