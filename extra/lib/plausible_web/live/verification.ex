@@ -7,6 +7,8 @@ defmodule PlausibleWeb.Live.Verification do
 
   alias Plausible.InstallationSupport
   alias Plausible.InstallationSupport.State
+  alias Plausible.Repo
+  alias Plausible.Site
 
   @component PlausibleWeb.Live.Components.VerificationBanner
   @slowdown_for_frequent_checking :timer.seconds(5)
@@ -173,6 +175,12 @@ defmodule PlausibleWeb.Live.Verification do
 
   def handle_info({:all_checks_done, %State{} = state}, socket) do
     interpretation = InstallationSupport.verification_checks_mod().interpret_diagnostics(state)
+
+    if interpretation.ok? do
+      socket.assigns.site
+      |> Site.put_onboarding_status_advance(:verification_succeeded)
+      |> Repo.update!()
+    end
 
     update_component(socket,
       finished?: true,

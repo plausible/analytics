@@ -5,6 +5,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
   import Phoenix.LiveViewTest
 
+  alias Plausible.Repo
+  alias Plausible.Site
+
   @moduletag :capture_log
 
   setup [:create_user, :log_in, :create_site]
@@ -134,6 +137,98 @@ defmodule PlausibleWeb.Live.VerificationTest do
                html = render(lv)
                {html =~ "Tracking is active on your site", html}
              end)
+    end
+
+    @tag :ee_only
+    test "advances onboarding_status to :verification_succeeded on success", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns()
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
+
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Tracking is active on your site", html}
+             end)
+
+      assert Repo.reload!(site).onboarding_status == :verification_succeeded
+    end
+
+    @tag :ee_only
+    test "does not regress onboarding_status if already past :verification_succeeded", %{
+      conn: conn,
+      site: site
+    } do
+      site
+      |> Site.put_onboarding_status_advance(:completed)
+      |> Repo.update!()
+
+      stub_dns()
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => true,
+        "plausibleIsOnWindow" => true,
+        "plausibleIsInitialized" => true,
+        "testEvent" => %{
+          "normalizedBody" => %{
+            "domain" => site.domain
+          },
+          "responseStatus" => 200
+        }
+      })
+
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+               {html =~ "Tracking is active on your site", html}
+             end)
+
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+
+    @tag :ee_only
+    test "does not advance onboarding_status when verification fails", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns()
+
+      stub_verification_result(%{
+        "completed" => true,
+        "trackerIsInHtml" => false,
+        "plausibleIsOnWindow" => false,
+        "plausibleIsInitialized" => false
+      })
+
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      assert eventually(fn ->
+               html = render(lv)
+
+               {
+                 text_of_element(html, @heading) =~ "We couldn't detect Plausible on your site",
+                 html
+               }
+             end)
+
+      assert Repo.reload!(site).onboarding_status == :new_site
     end
 
     @tag :ee_only
