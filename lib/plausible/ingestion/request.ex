@@ -59,6 +59,9 @@ defmodule Plausible.Ingestion.Request do
 
     on_ee do
       field :revenue_source, :map
+
+      # field for replayed events
+      field :replay_session_id, :integer
     end
 
     field :query_params, :map
@@ -91,6 +94,7 @@ defmodule Plausible.Ingestion.Request do
           |> put_uri(request_body)
           |> put_hostname()
           |> put_user_agent(conn)
+          |> put_replay_data(conn)
           |> put_request_params(request_body)
           |> put_referrer(request_body)
           |> put_pathname()
@@ -129,6 +133,44 @@ defmodule Plausible.Ingestion.Request do
     end
   else
     defp put_revenue_source(changeset, _request_body), do: changeset
+  end
+
+  on_ee do
+    @replay_session_id_header "x-replay-session-id"
+    @replay_time_header "x-replay-time"
+
+    defp put_replay_data(changeset, conn) do
+      now = NaiveDateTime.utc_now(:second)
+
+      replay_session_id =
+        conn
+        |> Plug.Conn.get_req_header(@replay_session_id_header)
+        |> List.first()
+        |> to_integer()
+
+      if replay_session_id do
+        time =
+          conn
+          |> Plug.Conn.get_req_header(@replay_time_header)
+          |> List.first()
+          |> NaiveDateTime.from_iso8601!()
+
+        if NaiveDateTime.compare(time, now) in [:lt, :eq] do
+          changeset
+          |> Changeset.put_change(:replay_session_id, replay_session_id)
+          |> Changeset.put_change(:timestamp, time)
+        else
+          changeset
+        end
+      else
+        changeset
+      end
+    end
+
+    defp to_integer(s) when is_binary(s), do: String.to_integer(s)
+    defp to_integer(_), do: nil
+  else
+    defp put_replay_data(changeset, _conn), do: changeset
   end
 
   defp put_remote_ip(changeset, conn) do
