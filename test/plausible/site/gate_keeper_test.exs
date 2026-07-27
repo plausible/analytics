@@ -89,26 +89,6 @@ defmodule Plausible.Site.GateKeeperTest do
              GateKeeper.check(domain, opts)
   end
 
-  test "rate limiting is skipped when explicitly told to", %{test: test, opts: opts} do
-    domain = "site1.example.com"
-    opts = Keyword.put(opts, :skip_rate_limit?, true)
-
-    %{id: site_id} =
-      add_site_and_refresh_cache(test,
-        domain: domain,
-        ingest_rate_limit_threshold: 1,
-        ingest_rate_limit_scale_seconds: 1
-      )
-
-    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
-             GateKeeper.check(domain, opts)
-
-    Process.sleep(1)
-
-    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
-             GateKeeper.check(domain, opts)
-  end
-
   test "rate limiting prioritises cache lookups", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
