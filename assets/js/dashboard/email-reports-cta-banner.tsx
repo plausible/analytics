@@ -21,12 +21,12 @@ function getStorageKey(domain: string) {
 // Case 2 is the tricky one. By the time of the refresh, `site.statsBegin`
 // is already set, so that value alone can't distinguish "stats just
 // started" from "this site has always had stats".
-// 
+//
 // The sessionStorage entry closes that gap -- it's stamped 'pending' the
 // moment stats are still absent, so a later reload can still recognize the
 // transition. It is only ever stamped while stats are absent, so established
 // sites never pick it up and can't retrigger the CTA.
-// 
+//
 // Once shown, the same entry is stamped 'visible', so a refresh mid-display
 // resumes the CTA instead of re-deciding from scratch -- but only for three
 // seconds -- past that, the sessionStorage entry clears itself out and a

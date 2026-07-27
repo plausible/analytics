@@ -9,10 +9,11 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
     @moduletag :capture_log
 
     @component PlausibleWeb.Live.Components.VerificationBanner
+    @banner "#verification-ui"
     @progress ~s|#verification-ui p#progress|
 
-    @loading_spinner ~s|#verification-ui svg.animate-spin|
-    @check_circle ~s|#verification-ui #check-circle|
+    @loading_spinner ~s|#{@banner} svg.animate-spin|
+    @check_circle ~s|#{@banner} #check-circle|
     @recommendations ~s|#recommendation|
     @super_admin_report ~s|#super-admin-report|
 
@@ -34,7 +35,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
       refute element_exists?(html, @loading_spinner)
       refute element_exists?(html, @check_circle)
       refute element_exists?(html, @recommendations)
-      assert html =~ "We couldn&#39;t verify your installation"
+      assert text_of_element(html, @banner) =~ "We couldn't verify your installation"
     end
 
     test "renders diagnostic interpretation with inline verify link and standalone review-installation sentence" do
