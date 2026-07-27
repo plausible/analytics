@@ -1,9 +1,18 @@
 defmodule Plausible.Workers.ClickhouseCleanSites do
   @moduledoc """
-  Cleans deleted site data from ClickHouse asynchronously.
+  Cleans deleted site data from ClickHouse sequentially.
 
-  We batch up data deletions from ClickHouse as deleting a single site is
-  just as expensive as deleting many.
+  We batch up data deletions from ClickHouse as deleting a single site may be more expensive than deleting many:
+  the expense scales with the number of partitions the site or sites have rows in.
+  A single site with events since 2025-01 to 2026-06 will be more expensive to clean up
+  than a hundred sites with events only in the partition 2026-06.
+
+  Tables are cleaned one partition at a time because to clean one partition,
+  Clickhouse needs to rewrite it. It reserves room for rewriting it in full on disk.
+  Cleaning all partitions at the same time would mean Clickhouse reserving room on disk
+  equal to the size of all the partitions,
+  potentially reserving all the available disk space and shorting out INSERTs from ingestion.
+  This sequential approach prevents that.
   """
 
   use Plausible.Repo
@@ -31,7 +40,9 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_visitors"
   ]
 
-  @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
+  @settings [mutations_sync: 2]
+
+  @partition_delete_timeout :timer.minutes(15)
 
   def perform(_job) do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
@@ -41,16 +52,57 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
         "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
       )
 
+      database = current_database()
+
       for table <- @tables_to_clear do
-        IngestRepo.query!(
-          "ALTER TABLE {$0:Identifier} DELETE WHERE site_id IN {$1:Array(UInt64)}",
-          [table, deleted_sites],
-          settings: @settings
-        )
+        clean_sites_from_table(database, table, deleted_sites)
       end
     end
 
     :ok
+  end
+
+  defp clean_sites_from_table(database, table, deleted_sites_ids) do
+    for partition_id <- active_partition_ids(database, table) do
+      delete_sites_from_partition(table, partition_id, deleted_sites_ids)
+    end
+  end
+
+  defp delete_sites_from_partition(table, partition_id, deleted_sites_ids) do
+    IngestRepo.query!(
+      "ALTER TABLE {$0:Identifier} DELETE IN PARTITION ID {$1:String} WHERE site_id IN {$2:Array(UInt64)}",
+      [table, partition_id, deleted_sites_ids],
+      settings: @settings,
+      timeout: @partition_delete_timeout,
+      checkout_retries: 0
+    )
+  end
+
+  defp active_partition_ids(database, table) do
+    source =
+      if IngestRepo.clustered_table?(table) do
+        "clusterAllReplicas('{cluster}', system.parts)"
+      else
+        "system.parts"
+      end
+
+    %Ch.Result{columns: ["partition_id"], rows: rows} =
+      IngestRepo.query!(
+        """
+        SELECT DISTINCT partition_id
+        FROM #{source}
+        WHERE database = {$0:String} AND table = {$1:String} AND active
+        ORDER BY partition_id
+        """,
+        [database, table]
+      )
+
+    Enum.map(rows, fn [partition_id] -> partition_id end)
+  end
+
+  defp current_database do
+    %Ch.Result{rows: [[database]]} = IngestRepo.query!("SELECT currentDatabase()")
+    database
   end
 
   def get_deleted_sites_with_clickhouse_data() do
@@ -67,15 +119,22 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
       DBConnection.run(
         ch,
         fn conn ->
-          Ch.query!(conn, "FROM events_v2 SELECT site_id GROUP BY site_id", [],
+          Ch.query!(conn, site_ids_with_data_query(), [],
+            settings: [optimize_distinct_in_order: 1],
             timeout: :infinity
           )
         end,
         timeout: :infinity
       )
 
-    ch_sites = rows |> MapSet.new(fn [site_id] -> site_id end)
+    ch_sites = for [site_id] <- rows, not is_nil(site_id), into: MapSet.new(), do: site_id
 
     MapSet.difference(ch_sites, pg_sites) |> MapSet.to_list()
+  end
+
+  defp site_ids_with_data_query do
+    Enum.map_join(@tables_to_clear, " UNION DISTINCT ", fn table ->
+      "SELECT DISTINCT site_id FROM #{table}"
+    end)
   end
 end
