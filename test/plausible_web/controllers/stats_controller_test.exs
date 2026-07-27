@@ -149,17 +149,57 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     on_ee do
-      test "verification banner only shows with the explicit param",
+      test "verification banner showing in the provisioning flow",
            %{
              conn: conn,
+             user: user,
              site: site
            } do
-        resp = get(conn, "/#{site.domain}") |> html_response(200)
+        get_dashboard_resp = fn conn, site, q ->
+          get(conn, "/#{site.domain}#{q}") |> html_response(200)
+        end
+
+        q = "?verify_installation=true&flow=#{PlausibleWeb.Flows.provisioning()}"
+
+        # No `?verify_installation=true` query parameter -> doesn't show
+        resp = get_dashboard_resp.(conn, site, "")
         refute element_exists?(resp, @verification_banner)
 
-        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+        # site.onboarding_status != :new_site -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, q)
+          refute element_exists?(resp, @verification_banner)
+        end
 
+        # site.onboarding_status != :new_site & flow param not provided -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, "?verify_installation=true")
+          refute element_exists?(resp, @verification_banner)
+        end
+
+        # both conditions met -> shows
+        resp = get_dashboard_resp.(conn, site, q)
         assert element_exists?(resp, @verification_banner)
+      end
+
+      for flow <- [PlausibleWeb.Flows.review(), PlausibleWeb.Flows.domain_change()] do
+        test "verification banner in #{flow} flow shows when verify_installation query param is present",
+             %{
+               conn: conn,
+               site: site
+             } do
+          site
+          |> Plausible.Site.put_onboarding_status_advance(:completed)
+          |> Plausible.Repo.update!()
+
+          resp =
+            get(conn, "/#{site.domain}?verify_installation=true&flow=#{unquote(flow)}")
+            |> html_response(200)
+
+          assert element_exists?(resp, @verification_banner)
+        end
       end
     end
 

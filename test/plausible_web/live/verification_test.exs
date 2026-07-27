@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
         }
       })
 
-      {:ok, lv} = kick_off_live_verification(conn, site)
+      {:ok, lv} = kick_off_live_verification(conn, site, PlausibleWeb.Flows.review())
 
       assert eventually(fn ->
                html = render(lv)
@@ -354,9 +354,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
     {lv, html}
   end
 
-  defp kick_off_live_verification(conn, site) do
+  defp kick_off_live_verification(conn, site, flow \\ nil) do
     {:ok, lv, _html} =
-      conn |> no_slowdown() |> no_delay() |> as_live() |> live(verification_path(site))
+      conn |> no_slowdown() |> no_delay() |> as_live() |> live(verification_path(site, flow))
 
     {:ok, lv}
   end
@@ -368,7 +368,10 @@ defmodule PlausibleWeb.Live.VerificationTest do
   # LiveView tests (e.g. props_settings_test.exs).
   defp as_live(conn), do: assign(conn, :live_module, PlausibleWeb.Live.Verification)
 
-  defp verification_path(site), do: "/#{site.domain}?verify_installation=true"
+  defp verification_path(site, flow \\ nil) do
+    base = "/#{site.domain}?verify_installation=true"
+    if flow, do: base <> "&flow=#{flow}", else: base
+  end
 
   defp no_slowdown(conn) do
     Plug.Conn.put_private(conn, :slowdown, 0)

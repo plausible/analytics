@@ -88,7 +88,11 @@ defmodule PlausibleWeb.StatsController do
           ee?() and
             not is_nil(current_user) and
             not consolidated_view? and
-            conn.params["verify_installation"] == "true"
+            conn.params["verify_installation"] == "true" and
+            (conn.params["flow"] in [
+               PlausibleWeb.Flows.review(),
+               PlausibleWeb.Flows.domain_change()
+             ] or site.onboarding_status == :new_site)
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
