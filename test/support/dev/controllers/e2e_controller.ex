@@ -96,6 +96,16 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
     end
 
+    def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
+      key = String.to_existing_atom(scenario)
+
+      opts = [slowdown: params["options"]["slowdown"] || 0]
+
+      :ok = Plausible.InstallationSupport.Verification.MockScenarios.put(domain, key, opts)
+
+      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
     defp get_goal(site, name) do
       Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
     end

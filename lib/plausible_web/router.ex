@@ -176,6 +176,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        put "/verification", E2EController, :put_verification_scenario
       end
     end
   end

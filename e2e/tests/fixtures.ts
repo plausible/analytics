@@ -241,6 +241,28 @@ export async function populateStats({
   expect(response.ok()).toBeTruthy()
 }
 
+export async function setVerificationScenario({
+  request,
+  domain,
+  scenario,
+  options
+}: {
+  request: APIRequestContext
+  domain: string
+  scenario: string
+  options?: { slowdown?: number }
+}) {
+  const response = await request.put('/e2e-tests/verification', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, scenario: scenario, options: options }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
 export async function addGoal({
   request,
   domain,
