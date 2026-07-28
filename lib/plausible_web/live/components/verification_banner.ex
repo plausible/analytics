@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       |> assign(:query_params, @query_params)
 
     ~H"""
-    <div id={@container_id} class={["relative mb-4", @dismissed? && "hidden"]}>
+    <div id={@container_id} class={["relative z-0 mb-4", @dismissed? && "hidden"]}>
       <.dismiss_button container_id={@container_id} query_params={@query_params} />
       <.render_progress :if={not @finished?} message={@message} />
       <.render_success
