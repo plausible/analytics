@@ -24,9 +24,10 @@ defmodule PlausibleWeb.Components.Captcha do
       <div
         phx-update={if @live?, do: "ignore"}
         id="frc-captcha-placeholder"
-        class="frc-captcha hidden"
+        class="frc-captcha hidden mb-2"
         data-sitekey={PlausibleWeb.Captcha.sitekey()}
         data-start="auto"
+        style="width: 100%"
       >
       </div>
       <p :if={@error} class="text-xs text-red-500 mt-2">
