@@ -1,14 +1,88 @@
+defmodule Plausible.InstallationSupport.Verification.MockScenarios do
+  @moduledoc """
+  Per-domain registry of forced verification outcomes. It's a public ETS
+  table owned by a simple GenServer process. Used to bypass the real DNS
+  lookup and browserless checks when iterating on verification banner UI
+  locally, or when driving it from Playwright e2e specs.
+  """
+
+  use GenServer
+
+  alias Plausible.InstallationSupport.Verification.Diagnostics
+
+  @table __MODULE__
+
+  @type scenario :: %{
+          interpretation_result: atom(),
+          slowdown: non_neg_integer() | nil,
+          launch_delay: non_neg_integer() | nil
+        }
+
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+
+  @impl true
+  def init(nil) do
+    :ets.new(@table, [:set, :public, :named_table, read_concurrency: true])
+    {:ok, nil}
+  end
+
+  @doc """
+  Registers a mock verification for `domain`.
+
+  `key` (an atom or a string) must name a scenario recognized by
+  `Diagnostics.named_result!/2` - see `Diagnostics.named_scenario_keys/0`.
+  Returns `{:error, :unknown_scenario}` otherwise.
+
+  ### Opts
+
+  * `:slowdown` - overrides the check pipeline's default per-check delay
+  * `:launch_delay` - overrides the delay before the first check starts
+  """
+  @spec put(String.t(), atom() | String.t(), Keyword.t()) :: :ok | {:error, :unknown_scenario}
+  def put(domain, key, opts \\ []) when is_binary(domain) do
+    with {:ok, key} <- resolve_key(key) do
+      scenario = %{
+        interpretation_result: key,
+        slowdown: Keyword.get(opts, :slowdown),
+        launch_delay: Keyword.get(opts, :launch_delay)
+      }
+
+      :ets.insert(@table, {domain, scenario})
+      :ok
+    end
+  end
+
+  defp resolve_key(key) when is_atom(key) do
+    if key in Diagnostics.named_scenario_keys(), do: {:ok, key}, else: {:error, :unknown_scenario}
+  end
+
+  defp resolve_key(key) when is_binary(key) do
+    case Diagnostics.named_scenario_from_string(key) do
+      {:ok, key} -> {:ok, key}
+      :error -> {:error, :unknown_scenario}
+    end
+  end
+
+  @doc "Returns the scenario registered for `domain`, or `nil` if none was set."
+  @spec get(String.t()) :: scenario() | nil
+  def get(domain) when is_binary(domain) do
+    case :ets.lookup(@table, domain) do
+      [{^domain, scenario}] -> scenario
+      [] -> nil
+    end
+  end
+end
+
 defmodule Plausible.InstallationSupport.Verification.ChecksMock do
   @moduledoc """
   Drop-in replacement for `Plausible.InstallationSupport.Verification.Checks`
   that never performs a real DNS lookup or browserless check for a domain
   with a registered mock scenario. Used locally (`:dev`) and in Playwright
-  e2e specs (`:e2e_test`) to deterministically drive
-  `PlausibleWeb.Live.Verification`'s banner UI - see
-  `Plausible.InstallationSupport.verification_checks_mod/0`.
+  e2e specs (`:e2e_test`) to deterministically drive Verification banner UI.
 
-  When no scenario is registered for a domain (see
-  `Plausible.InstallationSupport.Verification.MockScenarios.put/3`):
+  When no scenario is registered for a domain:
 
     * in `:dev`, falls back to the real `Checks` module - casually loading a
       site with `?verify_installation=true` still verifies for real unless
