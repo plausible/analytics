@@ -43,7 +43,12 @@ defmodule PlausibleWeb.Components.Captcha do
         phx-update={if @live?, do: "ignore"}
         id="frc-captcha-script"
         type="module"
-        src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.min.js"
+        src={
+          PlausibleWeb.Router.Helpers.static_path(
+            PlausibleWeb.Endpoint,
+            "/js/friendly-captcha/site.min.js"
+          )
+        }
         async
         defer
       >
@@ -52,7 +57,12 @@ defmodule PlausibleWeb.Components.Captcha do
         phx-update={if @live?, do: "ignore"}
         id="frc-captcha-script-compat"
         nomodule
-        src="https://cdn.jsdelivr.net/npm/@friendlycaptcha/sdk@1/site.compat.min.js"
+        src={
+          PlausibleWeb.Router.Helpers.static_path(
+            PlausibleWeb.Endpoint,
+            "/js/friendly-captcha/site.compat.min.js"
+          )
+        }
         async
         defer
       >
