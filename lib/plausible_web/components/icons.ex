@@ -155,6 +155,25 @@ defmodule PlausibleWeb.Components.Icons do
 
   attr :class, :any, default: []
 
+  def copy_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" class={@class}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      >
+        <path d="M2.25 6.75v6.5a2 2 0 0 0 2 2h7.5" />
+        <path d="M7.25 12.25h6.5a2 2 0 0 0 2-2v-5.5a2 2 0 0 0-2-2h-6.5a2 2 0 0 0-2 2v5.5a2 2 0 0 0 2 2" />
+      </g>
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
   def envelope_icon(assigns) do
     ~H"""
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>

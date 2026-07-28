@@ -22,7 +22,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows the site form", %{conn: conn} do
       conn = get(conn, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add website info"
+      assert html_response(conn, 200) =~ "Add a website"
     end
 
     test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
@@ -379,7 +379,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
+      assert html_response(conn, 200) =~ "Please enter a domain or subdomain"
     end
 
     test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
@@ -529,7 +529,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
+      assert html_response(conn, 200) =~ "Please enter a domain or subdomain"
     end
 
     test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
@@ -570,7 +570,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+               "This domain is already registered. Ask the owner for access"
 
       if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
@@ -593,7 +593,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+               "This domain is already registered. Ask the owner for access"
 
       if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
@@ -660,7 +660,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           })
 
         assert html_response(conn, 200) =~
-                 "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+                 "This domain is already registered. Ask the owner for access"
       end
     end
   end

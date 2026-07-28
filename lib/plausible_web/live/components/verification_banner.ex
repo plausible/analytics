@@ -186,7 +186,12 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         <.button_link
           :if={not @custom_url_input? and not @offer_custom_url_input?}
           mt?={false}
-          href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)}
+          href={
+            Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+              flow: @flow,
+              return_to: "dashboard"
+            )
+          }
           theme="ghost"
           size="sm"
           class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
@@ -251,7 +256,10 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
 
   defp review_installation_link_sentence(assigns) do
     review_installation_url =
-      Routes.site_path(PlausibleWeb.Endpoint, :installation, assigns.domain, flow: assigns.flow)
+      Routes.site_path(PlausibleWeb.Endpoint, :installation, assigns.domain,
+        flow: assigns.flow,
+        return_to: "dashboard"
+      )
 
     render_recommendation("See your installation instructions again here", [
       %{text: "here", href: review_installation_url}

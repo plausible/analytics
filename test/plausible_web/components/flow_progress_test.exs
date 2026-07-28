@@ -30,8 +30,9 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Add site info"
       )
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Add site info 2 Install Plausible 3 Verify installation"
+    assert_dot_labels(rendered, ["Add site info", "Install Plausible"])
+
+    assert_current_step(rendered, "Add site info")
   end
 
   test "invitation" do
@@ -41,8 +42,8 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Register"
       )
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Register 2 Activate account"
+    assert_dot_labels(rendered, ["Register", "Activate account"])
+    assert_current_step(rendered, "Register")
   end
 
   test "provisioning" do
@@ -52,8 +53,9 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Add site info"
       )
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Add site info 2 Install Plausible 3 Verify installation"
+    assert_dot_labels(rendered, ["Add site info", "Install Plausible"])
+
+    assert_current_step(rendered, "Add site info")
   end
 
   test "review" do
@@ -63,8 +65,8 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Install Plausible"
       )
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Install Plausible 2 Verify installation"
+    assert_dot_labels(rendered, ["Install Plausible"])
+    assert_current_step(rendered, "Install Plausible")
   end
 
   test "domain_change" do
@@ -74,7 +76,28 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Set up new domain"
       )
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Set up new domain 2 Install Plausible 3 Verify installation"
+    assert_dot_labels(rendered, ["Set up new domain", "Install Plausible"])
+
+    assert_current_step(rendered, "Set up new domain")
+  end
+
+  defp assert_dot_labels(rendered, expected_labels) do
+    labels =
+      rendered
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#flow-progress [aria-label]")
+      |> LazyHTML.attribute("aria-label")
+
+    assert labels == expected_labels
+  end
+
+  defp assert_current_step(rendered, expected_label) do
+    current =
+      rendered
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query(~s(#flow-progress [aria-current="step"]))
+
+    assert Enum.count(current) == 1
+    assert LazyHTML.attribute(current, "aria-label") == [expected_label]
   end
 end

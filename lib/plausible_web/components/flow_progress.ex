@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.Components.FlowProgress do
   @moduledoc """
-  Component for provisioning/registration flows displaying
-  progress status. See `PlausibleWeb.Flows` for the list of
-  flow definitions.
+  Dotted progress indicator shown during the registration flow.
+  One small dot per step in `PlausibleWeb.Flows.steps/1`, with completed
+  and current steps highlighted.
   """
   use Phoenix.Component
 
@@ -20,45 +20,24 @@ defmodule PlausibleWeb.Components.FlowProgress do
       )
 
     ~H"""
-    <div :if={not Enum.empty?(@steps)} class="mt-6 hidden md:block" id="flow-progress">
-      <div class="flex items-center justify-between max-w-4xl mx-auto my-8">
-        <%= for {step, idx} <- Enum.with_index(@steps) do %>
-          <div class="flex items-center text-base">
-            <div
-              :if={idx < @current_step_idx}
-              class="size-6 bg-green-500 dark:bg-green-600 text-white rounded-full flex items-center justify-center"
-            >
-              <Heroicons.check class="size-4" />
-            </div>
-            <div
-              :if={idx == @current_step_idx}
-              class="size-6 bg-indigo-600 text-xs text-white font-bold rounded-full flex items-center justify-center"
-            >
-              {idx + 1}
-            </div>
-            <div
-              :if={idx > @current_step_idx}
-              class="size-6 bg-gray-300 text-xs text-white font-bold dark:bg-gray-800 rounded-full flex items-center justify-center"
-            >
-              {idx + 1}
-            </div>
-            <span :if={idx < @current_step_idx} class="ml-2 text-gray-500">
-              {step}
-            </span>
-            <span
-              :if={idx == @current_step_idx}
-              class="ml-2 font-semibold text-black dark:text-gray-300"
-            >
-              {step}
-            </span>
-            <span :if={idx > @current_step_idx} class="ml-2 text-gray-500">
-              {step}
-            </span>
-          </div>
-          <div :if={idx + 1 != length(@steps)} class="flex-1 h-px bg-gray-300 mx-4 dark:bg-gray-800 ">
-          </div>
-        <% end %>
-      </div>
+    <div
+      :if={not Enum.empty?(@steps)}
+      id="flow-progress"
+      class="flex items-center gap-2"
+      aria-label="Progress"
+    >
+      <span
+        :for={{step, idx} <- Enum.with_index(@steps)}
+        class={
+          cond do
+            idx == @current_step_idx -> "h-2 w-5 rounded-full bg-indigo-600 dark:bg-gray-100"
+            idx < @current_step_idx -> "size-2 rounded-full bg-indigo-600 dark:bg-gray-100"
+            true -> "size-2 rounded-full bg-gray-300 dark:bg-gray-600"
+          end
+        }
+        aria-current={idx == @current_step_idx && "step"}
+        aria-label={step}
+      />
     </div>
     """
   end

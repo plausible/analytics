@@ -3,11 +3,13 @@ import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import Alpine from 'alpinejs'
 import './liveview/live_socket'
 import comboBox from './liveview/combo-box'
+import copySnippet from './liveview/copy-snippet'
 import dropdown from './liveview/dropdown'
 import './liveview/phx_events'
 
 Alpine.data('dropdown', dropdown)
 Alpine.data('comboBox', comboBox)
+Alpine.data('copySnippet', copySnippet)
 Alpine.start()
 
 if (document.querySelectorAll('[data-modal]').length > 0) {
