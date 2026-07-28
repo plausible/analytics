@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Live.Verification do
     assigns = assign(assigns, :use_portal?, @use_portal?)
 
     ~H"""
-    <div id="verification-portal-container" phx-hook="DisconnectSocket">
+    <div id="verification-portal-container" phx-hook="VerificationLifecycle">
       <%= if @use_portal? do %>
         <.portal id="verification-portal-source" target="#verification-portal-target">
           <.verification_content {assigns} />
@@ -176,11 +176,18 @@ defmodule PlausibleWeb.Live.Verification do
   def handle_info({:all_checks_done, %State{} = state}, socket) do
     interpretation = InstallationSupport.verification_checks_mod().interpret_diagnostics(state)
 
-    if interpretation.ok? do
-      socket.assigns.site
-      |> Site.put_onboarding_status_advance(:verification_succeeded)
-      |> Repo.update!()
-    end
+    socket =
+      if interpretation.ok? do
+        socket.assigns.site
+        |> Site.put_onboarding_status_advance(:verification_succeeded)
+        |> Repo.update!()
+
+        # When verification succeeds, we'll want to strip the URL params that
+        # trigger verification, so it doesn't kick off again on page refresh.
+        push_event(socket, "verification-succeeded", %{queryParams: @component.query_params()})
+      else
+        socket
+      end
 
     update_component(socket,
       finished?: true,

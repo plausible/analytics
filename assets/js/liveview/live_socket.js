@@ -18,13 +18,19 @@ let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
   let Hooks = { Modal, Dropdown }
 
-  // Lets a LiveView tell the client to tear down the websocket connection
-  // once it's done with it (e.g. PlausibleWeb.Live.Verification, once its
-  // banner has been dismissed) - the server-side process then terminates
-  // gracefully.
-  Hooks.DisconnectSocket = {
+  Hooks.VerificationLifecycle = {
     mounted() {
+      // Lets a LiveView tell the client to tear down the websocket connection
+      // once it's done with it (e.g. PlausibleWeb.Live.Verification, once its
+      // banner has been dismissed) - the server-side process then terminates
+      // gracefully.
       this.handleEvent('disconnect-liveview', () => liveSocket.disconnect())
+
+      this.handleEvent('verification-succeeded', ({ queryParams }) => {
+        window.dispatchEvent(
+          new CustomEvent('verification-finished', { detail: { queryParams } })
+        )
+      })
     }
   }
 

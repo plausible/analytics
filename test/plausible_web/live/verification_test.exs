@@ -169,6 +169,38 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert Repo.reload!(site).onboarding_status == :verification_succeeded
     end
 
+    for flow <- [PlausibleWeb.Flows.review(), PlausibleWeb.Flows.domain_change()] do
+      @tag :ee_only
+      test "advances onboarding_status to :verification_succeeded on first success via flow=#{flow}",
+           %{conn: conn, site: site} do
+        assert site.onboarding_status == :new_site
+
+        stub_dns()
+
+        stub_verification_result(%{
+          "completed" => true,
+          "trackerIsInHtml" => true,
+          "plausibleIsOnWindow" => true,
+          "plausibleIsInitialized" => true,
+          "testEvent" => %{
+            "normalizedBody" => %{
+              "domain" => site.domain
+            },
+            "responseStatus" => 200
+          }
+        })
+
+        {:ok, lv} = kick_off_live_verification(conn, site, unquote(flow))
+
+        assert eventually(fn ->
+                 html = render(lv)
+                 {html =~ "Tracking is active on your site", html}
+               end)
+
+        assert Repo.reload!(site).onboarding_status == :verification_succeeded
+      end
+    end
+
     @tag :ee_only
     test "does not regress onboarding_status if already past :verification_succeeded", %{
       conn: conn,

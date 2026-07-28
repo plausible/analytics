@@ -46,3 +46,31 @@ test('verification success', async ({ page, request }) => {
 
   await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toBeHidden()
 })
+
+test('review flow: success keeps the banner up but does not retrigger verification on refresh', async ({
+  page,
+  request
+}) => {
+  const { domain } = await setupSite({ page, request })
+
+  await setVerificationScenario({
+    request,
+    domain,
+    scenario: 'success'
+  })
+
+  await page.goto(`/${domain}?verify_installation=true&flow=review`, {
+    waitUntil: 'commit'
+  })
+  await expectLiveViewConnected(page)
+
+  const banner = page.locator(VERIFICATION_BANNER_SELECTOR)
+  await expect(banner).toContainText(SUCCESS_MESSAGE)
+  await expect(banner).toBeVisible()
+
+  await expect(page).not.toHaveURL(/verify_installation/)
+  await expect(page).not.toHaveURL(/flow=/)
+  await page.reload({ waitUntil: 'commit' })
+
+  await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+})
