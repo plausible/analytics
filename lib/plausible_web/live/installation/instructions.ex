@@ -3,87 +3,97 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
   Instruction forms and components for the Installation module
   """
   use PlausibleWeb, :component
-  import PlausibleWeb.Components.Generic
-  alias Plausible.Site.TrackerScriptConfiguration
+  alias PlausibleWeb.Flows
 
   attr :tracker_script_configuration_form, :map, required: true
+  attr :flow, :string, required: true
 
   def manual_instructions(assigns) do
     ~H"""
-    <.title class="mt-4">
-      Script installation
-    </.title>
+    <div class="flex flex-col gap-3">
+      <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        Add this snippet to your site's
+        <code class="font-mono text-[0.825rem] text-red-700 dark:text-red-400 font-semibold">
+          &lt;head&gt;
+        </code>
+      </label>
 
-    <div class="text-sm my-4 leading-6">
-      Paste this snippet into the <code>&lt;head&gt;</code>
-      section of your site. See our
-      <.styled_link href="https://plausible.io/docs/integration-guides" new_tab={true}>
-        installation guides.
-      </.styled_link>
-      Once done, click the button below to verify your installation.
+      <.code_snippet text={render_snippet(@tracker_script_configuration_form.data)} rows={6} />
+
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Need help?
+        <.styled_link href="https://plausible.io/docs/plausible-script">
+          Read our docs
+        </.styled_link>
+      </p>
     </div>
 
-    <.copy_snippet_box tracker_script_configuration={@tracker_script_configuration_form.data} />
-    <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
-    <.script_config_control
-      field={@tracker_script_configuration_form[:outbound_links]}
-      label="Outbound links"
-      tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
-      learn_more="https://plausible.io/docs/outbound-link-click-tracking"
-    />
-    <.script_config_control
-      field={@tracker_script_configuration_form[:file_downloads]}
-      label="File downloads"
-      tooltip="Automatically track file downloads. These count towards your billable pageviews."
-      learn_more="https://plausible.io/docs/file-downloads-tracking"
-    />
-    <.script_config_control
-      field={@tracker_script_configuration_form[:form_submissions]}
-      label="Form submissions"
-      tooltip="Automatically track form submissions. These count towards your billable pageviews."
-      learn_more="https://plausible.io/docs/form-submissions-tracking"
-    />
+    <div :if={@flow == Flows.review()}>
+      <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        Optional measurements
+      </label>
+      <.script_config_control
+        field={@tracker_script_configuration_form[:outbound_links]}
+        label="Outbound links"
+        tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
+        learn_more="https://plausible.io/docs/outbound-link-click-tracking"
+      />
+      <.script_config_control
+        field={@tracker_script_configuration_form[:file_downloads]}
+        label="File downloads"
+        tooltip="Automatically track file downloads. These count towards your billable pageviews."
+        learn_more="https://plausible.io/docs/file-downloads-tracking"
+      />
+      <.script_config_control
+        field={@tracker_script_configuration_form[:form_submissions]}
+        label="Form submissions"
+        tooltip="Automatically track form submissions. These count towards your billable pageviews."
+        learn_more="https://plausible.io/docs/form-submissions-tracking"
+      />
 
-    <.disclosure>
-      <.disclosure_button class="mt-4 flex items-center group">
-        <.h2 class="text-sm font-medium">Advanced options</.h2>
-        <Heroicons.chevron_down mini class="size-4 ml-1 mt-0.5 group-data-[open=true]:rotate-180" />
-      </.disclosure_button>
-      <.disclosure_panel>
-        <ul class="list-disc list-inside mt-2 space-y-2">
-          <.advanced_option
-            variant="tagged-events"
-            label="Manual tagging"
-            tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
-            learn_more="https://plausible.io/docs/custom-event-goals"
-          />
-          <.advanced_option
-            variant="404"
-            label="404 error pages"
-            tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
-            learn_more="https://plausible.io/docs/error-pages-tracking-404"
-          />
-          <.advanced_option
-            variant="hash"
-            label="Hashed page paths"
-            tooltip="Automatically track page paths that use a # in the URL."
-            learn_more="https://plausible.io/docs/hash-based-routing"
-          />
-          <.advanced_option
-            variant="pageview-props"
-            label="Custom properties"
-            tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
-            learn_more="https://plausible.io/docs/custom-props/introduction"
-          />
-          <.advanced_option
-            variant="revenue"
-            label="Ecommerce revenue"
-            tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
-            learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
-          />
-        </ul>
-      </.disclosure_panel>
-    </.disclosure>
+      <.disclosure>
+        <.disclosure_button class="mt-10 flex items-center group">
+          <label class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer">
+            Advanced options
+          </label>
+          <Heroicons.chevron_down mini class="size-4 ml-1 mt-0.5 group-data-[open=true]:rotate-180" />
+        </.disclosure_button>
+        <.disclosure_panel>
+          <ul class="list-disc list-inside mt-2 space-y-2">
+            <.advanced_option
+              variant="tagged-events"
+              label="Manual tagging"
+              tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
+              learn_more="https://plausible.io/docs/custom-event-goals"
+            />
+            <.advanced_option
+              variant="404"
+              label="404 error pages"
+              tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
+              learn_more="https://plausible.io/docs/error-pages-tracking-404"
+            />
+            <.advanced_option
+              variant="hash"
+              label="Hashed page paths"
+              tooltip="Automatically track page paths that use a # in the URL."
+              learn_more="https://plausible.io/docs/hash-based-routing"
+            />
+            <.advanced_option
+              variant="pageview-props"
+              label="Custom properties"
+              tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
+              learn_more="https://plausible.io/docs/custom-props/introduction"
+            />
+            <.advanced_option
+              variant="revenue"
+              label="Ecommerce revenue"
+              tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
+              learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
+            />
+          </ul>
+        </.disclosure_panel>
+      </.disclosure>
+    </div>
     """
   end
 
@@ -92,28 +102,17 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
 
   def wordpress_instructions(assigns) do
     ~H"""
-    <.title class="mt-4">
-      WordPress installation
-    </.title>
-    <div class="text-sm mt-4 leading-6">
-      <div class="mb-4">
-        <span :if={@recommended_installation_type == "wordpress"}>
-          We've detected your website is using WordPress. Here's how to integrate Plausible:
-        </span>
-        <span :if={@recommended_installation_type != "wordpress"}>
-          Using Wordpress? Here's how to integrate Plausible:
-        </span>
-      </div>
-      <.focus_list>
-        <:item>
-          <.styled_link href="https://plausible.io/wordpress-analytics-plugin" new_tab={true}>
-            Install our WordPress plugin
+    <div class="flex flex-col gap-6">
+      <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Instructions</label>
+      <.steps_list>
+        <:step>
+          <.styled_link href="https://plausible.io/wordpress-analytics-plugin">
+            Install our WordPress plugin.
           </.styled_link>
-        </:item>
-        <:item>
-          After activating our plugin, click the button below to verify your installation.
-        </:item>
-      </.focus_list>
+        </:step>
+        <:step>Activate the plugin.</:step>
+        <:step>Click 'I've installed it' to verify your installation.</:step>
+      </.steps_list>
     </div>
     """
   end
@@ -123,75 +122,40 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
 
   def gtm_instructions(assigns) do
     ~H"""
-    <.title class="mt-4">
-      Tag Manager installation
-    </.title>
-    <div class="text-sm mt-4 leading-6">
-      <.gtm_instructions_content
-        recommended_installation_type={@recommended_installation_type}
-        tracker_script_configuration={@tracker_script_configuration_form.data}
-      />
+    <div class="flex flex-col gap-6">
+      <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Instructions</label>
+      <.steps_list>
+        <:step>
+          <div class="flex flex-col gap-2">
+            <span>Copy your Script ID.</span>
+            <.code_snippet text={@tracker_script_configuration_form.data.id} rows={1} />
+          </div>
+        </:step>
+        <:step>
+          <.styled_link href="https://plausible.io/gtm-template">
+            Install the Plausible template in GTM.
+          </.styled_link>
+        </:step>
+        <:step>Paste your Script ID into the template.</:step>
+        <:step>Click 'I've installed it' to verify your installation.</:step>
+      </.steps_list>
     </div>
-    """
-  end
-
-  attr :recommended_installation_type, :string, required: true
-  attr :tracker_script_configuration, TrackerScriptConfiguration, required: true
-
-  def gtm_instructions_content(assigns) do
-    ~H"""
-    <span :if={@recommended_installation_type == "gtm"}>
-      We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
-    </span>
-    <span :if={@recommended_installation_type != "gtm"}>
-      Using Google Tag Manager? Here's how to integrate Plausible:
-    </span>
-    <div class="mt-4">
-      <.gtm_instructions_content_inner tracker_script_configuration={@tracker_script_configuration} />
-    </div>
-    """
-  end
-
-  def gtm_instructions_content_inner(assigns) do
-    ~H"""
-    <.copyable_readonly_text_area
-      id="script-config-id"
-      text={@tracker_script_configuration.id}
-      rows={1}
-    />
-    <.focus_list>
-      <:item>
-        Copy your site's Script ID from above
-      </:item>
-
-      <:item>
-        <.styled_link href="https://plausible.io/gtm-template" new_tab={true}>
-          Install the Plausible template in GTM
-        </.styled_link>
-      </:item>
-
-      <:item>
-        Paste your Script ID into the template
-      </:item>
-    </.focus_list>
     """
   end
 
   def npm_instructions(assigns) do
     ~H"""
-    <.title class="my-4">
-      NPM installation
-    </.title>
-    <.focus_list>
-      <:item>
-        <.styled_link href="https://www.npmjs.com/package/@plausible-analytics/tracker" new_tab={true}>
-          Install @plausible-analytics/tracker NPM package
-        </.styled_link>
-      </:item>
-      <:item>
-        Once done, click the button below to verify your installation.
-      </:item>
-    </.focus_list>
+    <div class="flex flex-col gap-6">
+      <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Instructions</label>
+      <.steps_list>
+        <:step>
+          <.styled_link href="https://www.npmjs.com/package/@plausible-analytics/tracker">
+            Install @plausible-analytics/tracker NPM package
+          </.styled_link>
+        </:step>
+        <:step>Click 'I've installed it' to verify your installation.</:step>
+      </.steps_list>
+    </div>
     """
   end
 
@@ -252,11 +216,62 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
     """
   end
 
-  def copy_snippet_box(assigns) do
-    assigns = assign(assigns, :text, render_snippet(assigns.tracker_script_configuration))
+  slot :step, required: true
 
+  defp steps_list(assigns) do
     ~H"""
-    <.copyable_readonly_text_area id="snippet" text={@text} rows={6} resizable={true} />
+    <ol class="flex flex-col text-sm text-gray-800 dark:text-gray-200">
+      <li
+        :for={{step, idx} <- Enum.with_index(@step)}
+        class="relative flex items-start gap-3 leading-6 pb-6 last:pb-0"
+      >
+        <span
+          :if={idx + 1 < length(@step)}
+          aria-hidden="true"
+          class="absolute top-7 bottom-1 left-3 -translate-x-1/2 w-px bg-gray-300 dark:bg-gray-600"
+        />
+        <span class="shrink-0 size-6 rounded-full border border-gray-300 dark:border-gray-600 text-sm font-medium flex items-center justify-center">
+          {idx + 1}
+        </span>
+        <div class="flex-1 text-base">
+          {render_slot(step)}
+        </div>
+      </li>
+    </ol>
+    """
+  end
+
+  attr :text, :string, required: true
+  attr :rows, :integer, default: 6
+
+  defp code_snippet(assigns) do
+    ~H"""
+    <div class="relative rounded-lg bg-gray-100 dark:bg-gray-750" x-data="copySnippet">
+      <textarea
+        x-ref="snippet"
+        name="snippet"
+        rows={@rows}
+        readonly
+        class="block w-full resize-none border-0 bg-transparent px-3 py-3 text-[0.8rem] leading-4.5 font-mono text-gray-800 dark:text-gray-300 selection:bg-gray-200/80 dark:selection:bg-gray-700 focus:outline-none focus:ring-0"
+        x-on:click="copyIfNoSelection()"
+      ><%= @text %></textarea>
+
+      <.button
+        type="button"
+        theme="secondary"
+        size="xs"
+        mt?={false}
+        class="absolute top-1.5 right-1.5 shadow-xs"
+        x-on:click="copyAll()"
+      >
+        <span x-show="!copied" class="inline-flex items-center gap-x-1.5">
+          <PlausibleWeb.Components.Icons.copy_icon class="size-3.5" /> Copy
+        </span>
+        <span x-show="copied" x-cloak class="inline-flex items-center gap-x-1.5">
+          <Heroicons.check mini class="size-3.5" /> Copied!
+        </span>
+      </.button>
+    </div>
     """
   end
 
