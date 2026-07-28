@@ -9,6 +9,8 @@ defmodule Plausible.InstallationSupport.Verification.MockScenarios do
 
   use GenServer
 
+  alias Plausible.InstallationSupport.Verification.Diagnostics
+
   @type scenario :: %{
           interpretation_result: atom(),
           slowdown: non_neg_integer() | nil,
@@ -22,23 +24,37 @@ defmodule Plausible.InstallationSupport.Verification.MockScenarios do
   @doc """
   Registers a mock verification for `domain`.
 
-  The `key` must be an atom that's recognized by
-  `Plausible.InstallationSupport.Verification.Diagnostics.named_result!/2`.
+  `key` (an atom or a string) must name a scenario recognized by
+  `Diagnostics.named_result!/2` - see `Diagnostics.named_scenario_keys/0`.
+  Returns `{:error, :unknown_scenario}` otherwise.
 
   ### Opts
 
   * `:slowdown` - overrides the check pipeline's default per-check delay
   * `:launch_delay` - overrides the delay before the first check starts
   """
-  @spec put(String.t(), atom(), Keyword.t()) :: :ok
-  def put(domain, key, opts \\ []) when is_binary(domain) and is_atom(key) do
-    scenario = %{
-      interpretation_result: key,
-      slowdown: Keyword.get(opts, :slowdown),
-      launch_delay: Keyword.get(opts, :launch_delay)
-    }
+  @spec put(String.t(), atom() | String.t(), Keyword.t()) :: :ok | {:error, :unknown_scenario}
+  def put(domain, key, opts \\ []) when is_binary(domain) do
+    with {:ok, key} <- resolve_key(key) do
+      scenario = %{
+        interpretation_result: key,
+        slowdown: Keyword.get(opts, :slowdown),
+        launch_delay: Keyword.get(opts, :launch_delay)
+      }
 
-    GenServer.call(__MODULE__, {:put, domain, scenario})
+      GenServer.call(__MODULE__, {:put, domain, scenario})
+    end
+  end
+
+  defp resolve_key(key) when is_atom(key) do
+    if key in Diagnostics.named_scenario_keys(), do: {:ok, key}, else: {:error, :unknown_scenario}
+  end
+
+  defp resolve_key(key) when is_binary(key) do
+    case Diagnostics.named_scenario_from_string(key) do
+      {:ok, key} -> {:ok, key}
+      :error -> {:error, :unknown_scenario}
+    end
   end
 
   @doc "Returns the scenario registered for `domain`, or `nil` if none was set."

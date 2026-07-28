@@ -98,10 +98,6 @@ defmodule PlausibleWeb.E2EController do
     end
 
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
-      # Using `String.to_atom/1` is safe here because this is test-only code
-      # routed only under Mix.env() == :e2e_test.
-      key = String.to_atom(scenario)
-
       opts = [
         slowdown: params["options"]["slowdown"] || 0,
         launch_delay: params["options"]["launch_delay"] || 0
@@ -114,9 +110,13 @@ defmodule PlausibleWeb.E2EController do
       rate_limit_key = "site_verification:#{domain}"
       :ets.select_delete(Plausible.RateLimit, [{{{rate_limit_key, :_}, :_, :_}, [], [true]}])
 
-      :ok = Plausible.InstallationSupport.Verification.MockScenarios.put(domain, key, opts)
+      case Plausible.InstallationSupport.Verification.MockScenarios.put(domain, scenario, opts) do
+        :ok ->
+          send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
 
-      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+        {:error, :unknown_scenario} ->
+          send_resp(conn, 422, Jason.encode!(%{"error" => "Unknown scenario: #{scenario}"}))
+      end
     end
 
     defp get_goal(site, name) do

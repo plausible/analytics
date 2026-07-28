@@ -409,75 +409,86 @@ defmodule Plausible.InstallationSupport.Verification.Diagnostics do
     }
   end
 
+  # Every result `interpret/3` can produce is named here, so that verification
+  # can be mocked (see `Plausible.InstallationSupport.Verification.ChecksMock`)
+  # by referring to the exact same result-construction code `interpret/3`
+  # itself uses - a scenario name can never silently drift from what real
+  # verification would have interpreted.
+  @spec named_results() :: %{atom() => (Keyword.t() -> Result.t())}
+  defp named_results do
+    %{
+      success: fn _assigns -> success() end,
+      succeeds_only_after_cache_bust: fn _assigns ->
+        handled_error(@error_succeeds_only_after_cache_bust)
+      end,
+      csp_disallowed: fn _assigns -> handled_error(@error_csp_disallowed) end,
+      proxy_network_error: fn _assigns -> handled_error(@error_proxy_network_error) end,
+      plausible_network_error: fn _assigns -> handled_error(@error_plausible_network_error) end,
+      browserless_temporary: fn _assigns ->
+        unhandled_error(@error_browserless_temporary, browserless_issue: true)
+      end,
+      unexpected_domain: fn assigns ->
+        assigns
+        |> Keyword.fetch!(:installation_type)
+        |> error_unexpected_domain()
+        |> handled_error()
+      end,
+      plausible_not_found: fn assigns ->
+        assigns
+        |> Keyword.fetch!(:installation_type)
+        |> error_plausible_not_found()
+        |> handled_error()
+      end,
+      plausible_not_found_unhandled: fn assigns ->
+        assigns
+        |> Keyword.fetch!(:installation_type)
+        |> error_plausible_not_found()
+        |> unhandled_error()
+      end,
+      domain_not_found: fn assigns ->
+        @error_domain_not_found
+        |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
+        |> struct!(data: %{offer_custom_url_input: true})
+      end,
+      browserless_network_error: fn assigns ->
+        @error_browserless_network
+        |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
+        |> struct!(data: %{offer_custom_url_input: true})
+      end,
+      unexpected_page_response: fn assigns ->
+        @error_unexpected_page_response
+        |> handled_error(
+          attempted_url: Keyword.fetch!(assigns, :attempted_url),
+          page_response_status: Keyword.fetch!(assigns, :page_response_status)
+        )
+        |> struct!(data: %{offer_custom_url_input: true})
+      end
+    }
+  end
+
   @doc """
   Looks up a named interpretation result, optionally built from the given
   assigns (e.g. `attempted_url`, `installation_type`) - keys that don't need
   any just ignore them.
-
-  Every result `interpret/3` can produce is named here, so that verification
-  can be mocked (see `Plausible.InstallationSupport.Verification.ChecksMock`)
-  by referring to the exact same result-construction code `interpret/3`
-  itself uses - a scenario name can never silently drift from what real
-  verification would have interpreted.
   """
   @spec named_result!(atom()) :: Result.t()
   def named_result!(key), do: named_result!(key, [])
 
   @spec named_result!(atom(), Keyword.t()) :: Result.t()
-  def named_result!(:success, _assigns), do: success()
-
-  def named_result!(:succeeds_only_after_cache_bust, _assigns),
-    do: handled_error(@error_succeeds_only_after_cache_bust)
-
-  def named_result!(:csp_disallowed, _assigns), do: handled_error(@error_csp_disallowed)
-  def named_result!(:proxy_network_error, _assigns), do: handled_error(@error_proxy_network_error)
-
-  def named_result!(:plausible_network_error, _assigns),
-    do: handled_error(@error_plausible_network_error)
-
-  def named_result!(:browserless_temporary, _assigns),
-    do: unhandled_error(@error_browserless_temporary, browserless_issue: true)
-
-  def named_result!(:unexpected_domain, assigns) do
-    Keyword.fetch!(assigns, :installation_type)
-    |> error_unexpected_domain()
-    |> handled_error()
+  def named_result!(key, assigns) do
+    case Map.fetch(named_results(), key) do
+      {:ok, build_result} -> build_result.(assigns)
+      :error -> raise ArgumentError, "No interpretation result named #{inspect(key)}"
+    end
   end
 
-  def named_result!(:plausible_not_found, assigns) do
-    Keyword.fetch!(assigns, :installation_type)
-    |> error_plausible_not_found()
-    |> handled_error()
-  end
+  @doc "Returns every valid `named_result!/2` scenario key."
+  @spec named_scenario_keys() :: [atom()]
+  def named_scenario_keys, do: Map.keys(named_results())
 
-  def named_result!(:plausible_not_found_unhandled, assigns) do
-    Keyword.fetch!(assigns, :installation_type)
-    |> error_plausible_not_found()
-    |> unhandled_error()
-  end
-
-  def named_result!(:domain_not_found, assigns) do
-    @error_domain_not_found
-    |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
-    |> struct!(data: %{offer_custom_url_input: true})
-  end
-
-  def named_result!(:browserless_network_error, assigns) do
-    @error_browserless_network
-    |> handled_error(attempted_url: Keyword.fetch!(assigns, :attempted_url))
-    |> struct!(data: %{offer_custom_url_input: true})
-  end
-
-  def named_result!(:unexpected_page_response, assigns) do
-    @error_unexpected_page_response
-    |> handled_error(
-      attempted_url: Keyword.fetch!(assigns, :attempted_url),
-      page_response_status: Keyword.fetch!(assigns, :page_response_status)
-    )
-    |> struct!(data: %{offer_custom_url_input: true})
-  end
-
-  def named_result!(key, _assigns) do
-    raise ArgumentError, "No interpretation result named #{inspect(key)}"
+  @spec named_scenario_from_string(String.t()) :: {:ok, atom()} | :error
+  def named_scenario_from_string(string) when is_binary(string) do
+    named_scenario_keys()
+    |> Enum.find_value(:error, fn key -> if Atom.to_string(key) == string, do: {:ok, key} end)
   end
 end
