@@ -9,18 +9,36 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
 
   @confirmation_phrase "REMOVE REPLAYED INGEST"
 
-  @count_query """
-  SELECT count(*) AS count FROM {$0:Identifier} 
-  WHERE replay_session_id = {$1:UInt64} 
-    AND toDate(timestamp) >= {$2:Date} 
-    AND toDate(timestamp) <= {$3:Date}
+  @count_query_sessions """
+  SELECT count(*) AS count FROM sessions_v2 
+  WHERE replay_session_id = {$0:UInt64} 
+    AND toDate(start) >= {$1:Date} 
+    AND toDate(start) <= {$2:Date}
+    AND toDate(timestamp) >= {$3:Date} 
+    AND toDate(timestamp) <= {$4:Date}
   """
 
-  @purge_query """
-  ALTER TABLE {$0:Identifier} DELETE 
-  WHERE replay_session_id = {$1:UInt64} 
-    AND toDate(timestamp) >= {$2:Date} 
-    AND toDate(timestamp) <= {$3:Date}
+  @count_query_events """
+  SELECT count(*) AS count FROM events_v2 
+  WHERE replay_session_id = {$0:UInt64} 
+    AND toDate(timestamp) >= {$1:Date} 
+    AND toDate(timestamp) <= {$2:Date}
+  """
+
+  @purge_query_sessions """
+  ALTER TABLE sessions_v2 DELETE 
+  WHERE replay_session_id = {$0:UInt64} 
+    AND toDate(start) >= {$1:Date} 
+    AND toDate(start) <= {$2:Date}
+    AND toDate(timestamp) >= {$3:Date} 
+    AND toDate(timestamp) <= {$4:Date}
+  """
+
+  @purge_query_events """
+  ALTER TABLE events_v2 DELETE 
+  WHERE replay_session_id = {$0:UInt64} 
+    AND toDate(timestamp) >= {$1:Date} 
+    AND toDate(timestamp) <= {$2:Date}
   """
 
   def run(opts \\ []) do
@@ -39,10 +57,14 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
     end
 
     %{rows: [[session_count]]} =
-      IngestRepo.query!(@count_query, ["sessions_v2", session_id, from, to], @settings)
+      IngestRepo.query!(
+        @count_query_sessions,
+        [session_id, Date.add(from, -2), to, from, to],
+        @settings
+      )
 
     %{rows: [[event_count]]} =
-      IngestRepo.query!(@count_query, ["events_v2", session_id, from, to], @settings)
+      IngestRepo.query!(@count_query_events, [session_id, from, to], @settings)
 
     if session_count > 0 or event_count > 0 do
       IO.puts("""
@@ -78,10 +100,15 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
 
   defp run_purge(session_id, from, to) do
     IO.puts("Purging sessions...")
-    IngestRepo.query!(@purge_query, ["sessions_v2", session_id, from, to], @settings)
+
+    IngestRepo.query!(
+      @purge_query_sessions,
+      [session_id, Date.add(from, -2), to, from, to],
+      @settings
+    )
 
     IO.puts("Purging events...")
-    IngestRepo.query!(@purge_query, ["events_v2", session_id, from, to], @settings)
+    IngestRepo.query!(@purge_query_events, [session_id, from, to], @settings)
 
     IO.puts("Done!")
   end
