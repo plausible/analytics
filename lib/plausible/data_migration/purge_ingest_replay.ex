@@ -1,6 +1,16 @@
 defmodule Plausible.DataMigration.PurgeIngestReplay do
   @moduledoc """
-  Script purging ingest replay
+  Script purging ingest replay.
+
+  The script is used in the ingest replay procedure when a particular replay turns
+  out to be incorrect - for instance, due to too much overlap with normally ingestged
+  events.
+
+  Three options are required:
+
+  - `session_id` - `replay_session_id` to purge, provided as an integer
+  - `from` and `to` - provided as Dates; necessary for reducing scope of database scan; 
+    the date range is inclusive; to scan a single day, `from` and `to` can be the same
   """
 
   alias Plausible.IngestRepo
