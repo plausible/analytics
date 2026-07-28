@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Update custom range datepicker styles
 - Improved site transfer UI
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
+- Removed limitation that blocked users without owned sites from starting a subscription
 
 ### Fixed
 
