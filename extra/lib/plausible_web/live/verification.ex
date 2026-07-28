@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.Verification do
         component: @component,
         tracker_script_configuration: tracker_script_configuration,
         report_to: self(),
-        delay: private[:delay] || 500,
+        launch_delay: private[:launch_delay] || 500,
         slowdown: private[:slowdown] || 500,
         flow: session["flow"] || "",
         checks_pid: nil,
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Live.Verification do
       )
 
     if connected?(socket) do
-      launch_delayed(socket)
+      start_verification(socket)
     end
 
     {:ok, socket}
@@ -98,12 +98,12 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_event("launch-verification", _, socket) do
-    launch_delayed(socket)
+    start_verification(socket)
     {:noreply, reset_component(socket)}
   end
 
   def handle_event("retry", _, socket) do
-    launch_delayed(socket)
+    start_verification(socket)
     {:noreply, reset_component(socket)}
   end
 
@@ -125,7 +125,7 @@ defmodule PlausibleWeb.Live.Verification do
       |> assign(url_to_verify: custom_url)
       |> assign(custom_url_input?: false)
 
-    launch_delayed(socket)
+    start_verification(socket)
     {:noreply, reset_component(socket)}
   end
 
@@ -151,7 +151,8 @@ defmodule PlausibleWeb.Live.Verification do
           domain,
           get_installation_type(socket.assigns.tracker_script_configuration),
           report_to: report_to,
-          slowdown: socket.assigns.slowdown
+          slowdown: socket.assigns.slowdown,
+          launch_delay: socket.assigns.launch_delay
         )
 
       {:noreply, assign(socket, checks_pid: pid, attempts: socket.assigns.attempts + 1)}
@@ -229,7 +230,7 @@ defmodule PlausibleWeb.Live.Verification do
     )
   end
 
-  defp launch_delayed(socket) do
-    Process.send_after(self(), {:start, socket.assigns.report_to}, socket.assigns.delay)
+  defp start_verification(socket) do
+    send(self(), {:start, socket.assigns.report_to})
   end
 end

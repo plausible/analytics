@@ -20,7 +20,7 @@ test('verification success', async ({ page, request }) => {
     request,
     domain,
     scenario: 'success',
-    options: { slowdown: 500 }
+    options: { slowdown: 500, launch_delay: 500 }
   })
 
   await page.goto(`/${domain}?verify_installation=true`, { waitUntil: 'commit' })

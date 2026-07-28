@@ -250,7 +250,7 @@ export async function setVerificationScenario({
   request: APIRequestContext
   domain: string
   scenario: string
-  options?: { slowdown?: number }
+  options?: { slowdown?: number; launch_delay?: number }
 }) {
   const response = await request.put('/e2e-tests/verification', {
     headers: {

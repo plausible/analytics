@@ -17,7 +17,8 @@ defmodule Plausible.InstallationSupport.Verification.MockScenariosTest do
 
       assert MockScenarios.get(site.domain) == %{
                interpretation_result: :success,
-               slowdown: nil
+               slowdown: nil,
+               launch_delay: nil
              }
     end
 
@@ -28,7 +29,20 @@ defmodule Plausible.InstallationSupport.Verification.MockScenariosTest do
 
       assert MockScenarios.get(site.domain) == %{
                interpretation_result: :domain_not_found,
-               slowdown: 2000
+               slowdown: 2000,
+               launch_delay: nil
+             }
+    end
+
+    test "put/3 stores a launch_delay opt alongside the interpretation result" do
+      site = insert(:site)
+
+      :ok = MockScenarios.put(site.domain, :domain_not_found, launch_delay: 2000)
+
+      assert MockScenarios.get(site.domain) == %{
+               interpretation_result: :domain_not_found,
+               slowdown: nil,
+               launch_delay: 2000
              }
     end
 
@@ -40,7 +54,8 @@ defmodule Plausible.InstallationSupport.Verification.MockScenariosTest do
 
       assert MockScenarios.get(site.domain) == %{
                interpretation_result: :csp_disallowed,
-               slowdown: nil
+               slowdown: nil,
+               launch_delay: nil
              }
     end
 
@@ -49,23 +64,26 @@ defmodule Plausible.InstallationSupport.Verification.MockScenariosTest do
       site_b = insert(:site)
 
       :ok = MockScenarios.put(site_a.domain, :success, [])
-      :ok = MockScenarios.put(site_b.domain, :domain_not_found, slowdown: 500)
+      :ok = MockScenarios.put(site_b.domain, :domain_not_found, slowdown: 500, launch_delay: 100)
 
       assert MockScenarios.get(site_a.domain) == %{
                interpretation_result: :success,
-               slowdown: nil
+               slowdown: nil,
+               launch_delay: nil
              }
 
       assert MockScenarios.get(site_b.domain) == %{
                interpretation_result: :domain_not_found,
-               slowdown: 500
+               slowdown: 500,
+               launch_delay: 100
              }
 
       :ok = MockScenarios.put(site_a.domain, :csp_disallowed, [])
 
       assert MockScenarios.get(site_b.domain) == %{
                interpretation_result: :domain_not_found,
-               slowdown: 500
+               slowdown: 500,
+               launch_delay: 100
              }
     end
   end

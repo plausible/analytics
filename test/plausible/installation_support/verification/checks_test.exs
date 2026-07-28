@@ -40,7 +40,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          Checks.run(@url_to_verify, @expected_domain, "manual",
                            report_to: nil,
                            async?: false,
-                           slowdown: 0
+                           slowdown: 0,
+                           launch_delay: 0
                          )
                          |> Checks.interpret_diagnostics()
       end
@@ -66,7 +67,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
                          Checks.run(url_to_verify, @expected_domain, "manual",
                            report_to: nil,
                            async?: false,
-                           slowdown: 0
+                           slowdown: 0,
+                           launch_delay: 0
                          )
                          |> Checks.interpret_diagnostics()
       end
@@ -561,7 +563,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
           Checks.run(@url_to_verify, @expected_domain, installation_type,
             report_to: nil,
             async?: false,
-            slowdown: 0
+            slowdown: 0,
+            launch_delay: 0
           )
 
         assert expected_req_count == :atomics.get(counter, 1)
@@ -573,7 +576,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksTest do
         Checks.run(@url_to_verify, @expected_domain, installation_type,
           report_to: nil,
           async?: false,
-          slowdown: 0
+          slowdown: 0,
+          launch_delay: 0
         )
       end
     end

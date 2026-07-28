@@ -99,7 +99,10 @@ defmodule PlausibleWeb.E2EController do
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
       key = String.to_existing_atom(scenario)
 
-      opts = [slowdown: params["options"]["slowdown"] || 0]
+      opts = [
+        slowdown: params["options"]["slowdown"] || 0,
+        launch_delay: params["options"]["launch_delay"] || 0
+      ]
 
       :ok = Plausible.InstallationSupport.Verification.MockScenarios.put(domain, key, opts)
 

@@ -410,7 +410,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp no_delay(conn) do
-    Plug.Conn.put_private(conn, :delay, 0)
+    Plug.Conn.put_private(conn, :launch_delay, 0)
   end
 
   defp stub_verification_result(js_data) do

@@ -12,7 +12,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         domain = insert(:site).domain
 
         assert_raise RuntimeError, ~r/no scenario is registered/, fn ->
-          ChecksMock.run(@url, domain, "manual", async?: false, slowdown: 0, report_to: nil)
+          ChecksMock.run(@url, domain, "manual",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
         end
       end
 
@@ -21,7 +26,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         :ok = MockScenarios.put(domain, :success)
 
         state =
-          ChecksMock.run(@url, domain, "wordpress", async?: false, slowdown: 0, report_to: nil)
+          ChecksMock.run(@url, domain, "wordpress",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
 
         assert state.url == @url
         assert state.data_domain == domain
@@ -32,7 +42,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         domain = insert(:site).domain
         :ok = MockScenarios.put(domain, :success)
 
-        ChecksMock.run(@url, domain, "manual", async?: false, slowdown: 0, report_to: self())
+        ChecksMock.run(@url, domain, "manual",
+          async?: false,
+          slowdown: 0,
+          launch_delay: 0,
+          report_to: self()
+        )
 
         assert_received {:check_start, {ChecksMock.FakeUrlCheck, _state}}
         assert_received {:check_start, {ChecksMock.FakeVerifyInstallationCheck, _state}}
@@ -53,7 +68,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         domain = insert(:site).domain
         :ok = MockScenarios.put(domain, :success)
 
-        state = ChecksMock.run(nil, domain, "manual", async?: false, slowdown: 0, report_to: nil)
+        state =
+          ChecksMock.run(nil, domain, "manual",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
 
         assert state.url == "https://#{domain}"
       end
@@ -64,7 +85,13 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         domain = insert(:site).domain
         :ok = MockScenarios.put(domain, :success)
 
-        state = ChecksMock.run(@url, domain, "manual", async?: false, slowdown: 0, report_to: nil)
+        state =
+          ChecksMock.run(@url, domain, "manual",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
 
         assert %Result{ok?: true} = ChecksMock.interpret_diagnostics(state)
       end
@@ -74,7 +101,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         :ok = MockScenarios.put(domain, :plausible_not_found)
 
         state =
-          ChecksMock.run(@url, domain, "wordpress", async?: false, slowdown: 0, report_to: nil)
+          ChecksMock.run(@url, domain, "wordpress",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
 
         assert %Result{
                  ok?: false,
@@ -91,7 +123,12 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMockTest do
         custom_url = "https://abc.de"
 
         state =
-          ChecksMock.run(custom_url, domain, "manual", async?: false, slowdown: 0, report_to: nil)
+          ChecksMock.run(custom_url, domain, "manual",
+            async?: false,
+            slowdown: 0,
+            launch_delay: 0,
+            report_to: nil
+          )
 
         assert %Result{errors: [error]} = ChecksMock.interpret_diagnostics(state)
         assert error =~ custom_url

@@ -73,6 +73,7 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMock do
     report_to = Keyword.get(opts, :report_to, self())
     async? = Keyword.get(opts, :async?, true)
     slowdown = scenario.slowdown || Keyword.get(opts, :slowdown, 500)
+    launch_delay = scenario.launch_delay || Keyword.get(opts, :launch_delay, 500)
 
     init_state = %State{
       url: url || "https://#{data_domain}",
@@ -90,7 +91,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksMock do
     CheckRunner.run(init_state, checks,
       async?: async?,
       report_to: report_to,
-      slowdown: slowdown
+      slowdown: slowdown,
+      launch_delay: launch_delay
     )
   end
 
