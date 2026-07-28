@@ -94,6 +94,11 @@ defmodule PlausibleWeb.StatsController do
                PlausibleWeb.Flows.domain_change()
              ] or site.onboarding_status == :new_site)
 
+        show_email_reports_cta? =
+          not consolidated_view? and
+            site_role in [:owner, :admin, :editor] and
+            site.onboarding_status == :first_pageview
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
@@ -120,6 +125,7 @@ defmodule PlausibleWeb.StatsController do
           limited_to_segment_id: nil,
           connect_live_socket: verify_installation?,
           verify_installation?: verify_installation?,
+          show_email_reports_cta?: show_email_reports_cta?,
           verification_session:
             PlausibleWeb.Live.Components.VerificationBanner.query_params()
             |> Map.new(&{&1, conn.params[&1]})
@@ -434,6 +440,7 @@ defmodule PlausibleWeb.StatsController do
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id,
           verify_installation?: false,
+          show_email_reports_cta?: false,
           verification_session: %{}
         )
     end

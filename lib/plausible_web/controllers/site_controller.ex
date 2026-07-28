@@ -165,8 +165,14 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_email_reports(conn, _params) do
+  def settings_email_reports(conn, params) do
     site = conn.assigns[:site]
+
+    if params["cta_clicked"] == "true" do
+      site
+      |> Plausible.Site.put_onboarding_status_advance(:completed)
+      |> Repo.update!()
+    end
 
     conn
     |> render("settings_email_reports.html",

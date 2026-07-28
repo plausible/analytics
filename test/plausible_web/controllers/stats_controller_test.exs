@@ -129,6 +129,20 @@ defmodule PlausibleWeb.StatsControllerTest do
       refute element_exists?(resp, @verification_banner)
     end
 
+    test "public site - anonymous visitors never see the email reports CTA", %{conn: conn} do
+      public_site =
+        new_site(
+          domain: "some-other-public-site.io",
+          public: true,
+          onboarding_status: :first_pageview
+        )
+
+      resp = get(conn, "/#{public_site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
     test "can not view stats of a private website", %{conn: conn} do
       _ = insert(:user)
       conn = get(conn, "/test-site.com")
@@ -200,6 +214,64 @@ defmodule PlausibleWeb.StatsControllerTest do
 
           assert element_exists?(resp, @verification_banner)
         end
+      end
+    end
+
+    test "shows email reports CTA when onboarding_status is :first_pageview", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
+    for status <- [:new_site, :verification_succeeded, :completed] do
+      test "does not show email reports CTA when onboarding_status is #{status}", %{
+        conn: conn,
+        user: user
+      } do
+        site = new_site(owner: user, onboarding_status: unquote(status))
+
+        resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+      end
+    end
+
+    test "does not show email reports CTA for a viewer, since they can't reach the settings page it links to",
+         %{conn: conn, user: user} do
+      site = new_site(onboarding_status: :first_pageview)
+      add_guest(site, user: user, role: :viewer)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "viewer"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    on_ee do
+      test "does not show email reports CTA for consolidated views", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        cv = user |> team_of() |> new_consolidated_view()
+
+        # `onboarding_status` should always be :completed for
+        # consolidated views anyway but this test makes sure that
+        # stats_controller explicitly excludes email reports CTA
+        # for consolidated views too.
+        cv
+        |> Ecto.Changeset.change(%{onboarding_status: :first_pageview})
+        |> Plausible.Repo.update!()
+
+        resp = get(conn, "/#{cv.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
       end
     end
 
@@ -480,6 +552,28 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
+    test "does not show email reports CTA when viewing as a super admin without site membership",
+         %{conn: conn} do
+      site = new_site(onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "super_admin"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    test "still shows email reports CTA for a super admin who is also a real site member",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
     on_ee do
       test "shows CRM link to the site", %{conn: conn} do
         site = new_site()
@@ -519,6 +613,18 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+    end
+
+    test "never shows the email reports CTA, regardless of the site's onboarding_status", %{
+      conn: conn
+    } do
+      site = new_site(onboarding_status: :first_pageview)
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
     end
 
     test "if the shared link is limited to a segment, only that segment is stuffed into data-segments",

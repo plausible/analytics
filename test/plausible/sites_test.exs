@@ -173,6 +173,26 @@ defmodule Plausible.SitesTest do
       assert Repo.reload!(site).stats_start_date == Plausible.Times.today(site.timezone)
     end
 
+    test "advances onboarding_status to :first_pageview when stats are first discovered" do
+      site = insert(:site, onboarding_status: :new_site)
+
+      populate_stats(site, [build(:pageview)])
+
+      Sites.stats_start_date(site)
+
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    test "does not regress :completed onboarding_status" do
+      site = insert(:site, onboarding_status: :completed, stats_start_date: nil)
+
+      populate_stats(site, [build(:pageview)])
+
+      Sites.stats_start_date(site)
+
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+
     on_ee do
       test "resets consolidated view stats dates every time" do
         owner = new_user()

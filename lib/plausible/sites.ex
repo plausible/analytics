@@ -408,6 +408,7 @@ defmodule Plausible.Sites do
       updated_site =
         site
         |> Site.set_stats_start_date(start_date)
+        |> Site.put_onboarding_status_advance(:first_pageview)
         |> Repo.update!()
 
       updated_site.stats_start_date

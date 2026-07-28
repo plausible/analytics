@@ -412,6 +412,7 @@ defmodule PlausibleWeb.Router do
       get "/paddle/currency", Api.PaddleController, :currency
 
       put "/:domain/disable-feature", Api.InternalController, :disable_feature
+      put "/:domain/complete-onboarding", Api.InternalController, :complete_onboarding
 
       get "/sites", Api.InternalController, :sites
     end

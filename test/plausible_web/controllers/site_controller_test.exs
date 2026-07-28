@@ -917,6 +917,46 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:domain/settings/email-reports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders the page without advancing onboarding_status by default", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports")
+
+      assert html_response(conn, 200) =~ "Weekly email reports"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    test "advances onboarding_status to :completed when cta_clicked=true", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+
+    test "cta_clicked=true does not regress :completed onboarding_status", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :completed) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+  end
+
   describe "GET /:domain/settings/visibility" do
     setup [:create_user, :log_in, :create_site]
 

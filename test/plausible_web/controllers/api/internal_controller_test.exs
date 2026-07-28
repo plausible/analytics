@@ -153,4 +153,78 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
     end
   end
+
+  describe "PUT /api/:domain/complete-onboarding" do
+    setup [:create_user, :log_in]
+
+    test "when the logged-in user is the owner of the site", %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 200) == "ok"
+      assert %{onboarding_status: :completed} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "when the logged-in user is an editor guest of the site", %{conn: conn, user: user} do
+      site = new_site(onboarding_status: :first_pageview)
+      add_guest(site, user: user, role: :editor)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 200) == "ok"
+      assert %{onboarding_status: :completed} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "returns 401 when the logged-in user is a viewer of the site", %{conn: conn, user: user} do
+      site = new_site(onboarding_status: :first_pageview)
+      add_guest(site, user: user, role: :viewer)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner, admin, or editor of this site"
+             }
+
+      assert %{onboarding_status: :first_pageview} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "returns 401 when the logged-in user doesn't have site access at all", %{conn: conn} do
+      site = new_site(onboarding_status: :first_pageview)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner, admin, or editor of this site"
+             }
+
+      assert %{onboarding_status: :first_pageview} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "is idempotent - calling it again on an already-completed site is still a 200", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, onboarding_status: :completed)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 200) == "ok"
+      assert %{onboarding_status: :completed} = Plausible.Sites.get_by_domain(site.domain)
+    end
+  end
+
+  describe "PUT /api/:domain/complete-onboarding - user not logged in" do
+    test "returns 401 unauthorized", %{conn: conn} do
+      site = insert(:site, onboarding_status: :first_pageview)
+
+      conn = put(conn, "/api/#{site.domain}/complete-onboarding")
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner, admin, or editor of this site"
+             }
+
+      assert %{onboarding_status: :first_pageview} = Plausible.Sites.get_by_domain(site.domain)
+    end
+  end
 end

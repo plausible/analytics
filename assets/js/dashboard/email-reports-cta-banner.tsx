@@ -1,98 +1,42 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useSiteContext } from './site-context'
-import { useCurrentVisitorsContext } from './current-visitors-context'
+import * as api from './api'
 
-type CTAStorageState = 'pending' | 'visible'
-
-function getStorageKey(domain: string) {
-  return `email_reports_cta_${domain}`
-}
-
-// CTA for configuring weekly email reports
+// CTA for configuring weekly email reports. It displays when the
+// dashboard is loaded for the very first time, having actual data
+// (i.e. site.onboarding_status == "first_pageview"). The CTA will
+// remain visible until either:
 //
-// Renders only once, as soon as the first pageview lands. This can happen:
+// 1) it's dismissed by any site member that sees it --
+//    Notifies the backend to advance the site onboarding status via
+//    a HTTP request.
 //
-//   1. Automatically, when the dashboard stays open -- relying on the value
-//      of current-visitors changing to something other than 0.
-//
-//   2. Dashboard is refreshed and showing data for the very first time.
-//
-// Case 2 is the tricky one. By the time of the refresh, `site.statsBegin`
-// is already set, so that value alone can't distinguish "stats just
-// started" from "this site has always had stats".
-//
-// The sessionStorage entry closes that gap -- it's stamped 'pending' the
-// moment stats are still absent, so a later reload can still recognize the
-// transition. It is only ever stamped while stats are absent, so established
-// sites never pick it up and can't retrigger the CTA.
-//
-// Once shown, the same entry is stamped 'visible', so a refresh mid-display
-// resumes the CTA instead of re-deciding from scratch -- but only for three
-// seconds -- past that, the sessionStorage entry clears itself out and a
-// refresh won't bring the CTA back.
+// 2) the CTA is clicked by any site member that sees it --
+//    The link to /:domain/settings/email-reports includes a query
+//    parameter telling the controller action to advance the site's
+//    onboarding status.
 export function EmailReportsCTABanner() {
   const site = useSiteContext()
-  const currentVisitors = useCurrentVisitorsContext()
-  const hasStats = !!site.statsBegin
-  const storageKey = getStorageKey(site.domain)
-
-  const hasTriggeredRef = useRef(false)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    if (!hasStats && sessionStorage.getItem(storageKey) !== 'visible') {
-      const state: CTAStorageState = 'pending'
-      sessionStorage.setItem(storageKey, state)
-    }
-  }, [hasStats, storageKey])
-
-  useEffect(() => {
-    if (hasTriggeredRef.current) {
-      return
-    }
-
-    const storedState = sessionStorage.getItem(storageKey)
-
-    if (storedState === 'visible') {
-      hasTriggeredRef.current = true
-      setVisible(true)
-      return
-    }
-
-    const firstPageviewJustLanded = hasStats
-      ? storedState === 'pending'
-      : !!currentVisitors
-
-    if (!firstPageviewJustLanded) {
-      return
-    }
-
-    hasTriggeredRef.current = true
-    const state: CTAStorageState = 'visible'
-    sessionStorage.setItem(storageKey, state)
-    setVisible(true)
-  }, [hasStats, currentVisitors, storageKey])
-
-  useEffect(() => {
-    if (!visible) {
-      return
-    }
-
-    const timeout = setTimeout(() => {
-      sessionStorage.removeItem(storageKey)
-    }, 3000)
-
-    return () => clearTimeout(timeout)
-  }, [visible, storageKey])
+  const [visible, setVisible] = useState(site.showEmailReportsCta)
 
   if (!visible) {
     return null
   }
 
   function dismiss() {
-    sessionStorage.removeItem(storageKey)
     setVisible(false)
+
+    api
+      .mutation(`/api/${encodeURIComponent(site.domain)}/complete-onboarding`, {
+        method: 'PUT',
+        body: {}
+      })
+      .catch((error) => {
+        if (!(error instanceof api.ApiError)) {
+          throw error
+        }
+      })
   }
 
   return (
@@ -114,8 +58,8 @@ export function EmailReportsCTABanner() {
       </span>{' '}
       <a
         className="plausible-event-name=Weekly+Email+Note+Click text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150"
-        href={`/${encodeURIComponent(site.domain)}/settings/email-reports`}
-        onClick={dismiss}
+        href={`/${encodeURIComponent(site.domain)}/settings/email-reports?cta_clicked=true`}
+        onClick={() => setVisible(false)}
       >
         Get weekly traffic reports by email →
       </a>

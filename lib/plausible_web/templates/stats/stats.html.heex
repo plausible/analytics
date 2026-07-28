@@ -53,6 +53,7 @@
     data-exploration-max-journey-steps={@exploration_max_journey_steps}
     data-team-identifier={@team_identifier}
     data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
+    data-show-email-reports-cta={to_string(@show_email_reports_cta?)}
   >
   </div>
   <%= if @verify_installation? do %>
