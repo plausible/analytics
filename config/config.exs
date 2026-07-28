@@ -23,6 +23,12 @@ config :esbuild,
       ~w(js/app.js js/dashboard.tsx js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js --define:BUILD_EXTRA=true),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ],
+  # https://developer.friendlycaptcha.com/docs/v2/getting-started/install#using-the-scripts-without-a-cdn-ie-self-hosting
+  friendly_captcha: [
+    args:
+      ~w(node_modules/@friendlycaptcha/sdk/site.min.js node_modules/@friendlycaptcha/sdk/site.compat.min.js --loader:.js=copy --outbase=node_modules/@friendlycaptcha/sdk --outdir=../priv/static/js/friendly-captcha),
+    cd: Path.expand("../assets", __DIR__)
   ]
 
 config :tailwind,
