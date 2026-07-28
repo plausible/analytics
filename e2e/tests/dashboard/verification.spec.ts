@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { setupSite, setVerificationScenario } from '../fixtures'
+import { addSite, setupSite, setVerificationScenario } from '../fixtures'
 import { expectLiveViewConnected } from '../test-utils'
 
 const VERIFICATION_BANNER_SELECTOR = '#verification-ui'
 const PROGRESS_MSG_SELECTOR = '#progress'
+const HEADING_SELECTOR = 'h3'
 
 const SUCCESS_MESSAGE = 'Tracking is active on your site'
+const FAILURE_HEADING = "We couldn't detect Plausible on your site"
 const LOADING_STATE_TITLE = 'Verifying your installation'
 const LOADING_STATE_CYCLED_MESSAGES = [
   /We're visiting your site to ensure that everything is working/,
@@ -13,64 +15,154 @@ const LOADING_STATE_CYCLED_MESSAGES = [
   /We're verifying that your visitors are being counted correctly/
 ]
 
-test('verification success', async ({ page, request }) => {
+test('installation verification', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
-  await setVerificationScenario({
-    request,
-    domain,
-    scenario: 'success',
-    options: { slowdown: 500, launch_delay: 500 }
-  })
-
-  await page.goto(`/${domain}?verify_installation=true`, { waitUntil: 'commit' })
-  await expectLiveViewConnected(page)
+  const otherDomain = `other.verification.com`
+  await addSite({ page, domain: otherDomain })
 
   const banner = page.locator(VERIFICATION_BANNER_SELECTOR)
   const progress = banner.locator(PROGRESS_MSG_SELECTOR)
+  const heading = banner.locator(HEADING_SELECTOR)
 
-  await expect(banner).toContainText(LOADING_STATE_TITLE)
+  await test.step('restarts when the page is refreshed while verification is ongoing', async () => {
+    await setVerificationScenario({
+      request,
+      domain,
+      scenario: 'plausible_not_found',
+      options: { slowdown: 500, launch_delay: 500 }
+    })
 
-  for (const msg of LOADING_STATE_CYCLED_MESSAGES) {
-    await expect(progress).toHaveText(msg)
-  }
+    await page.goto(`/${domain}?verify_installation=true`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
 
-  await expect(banner).toContainText(SUCCESS_MESSAGE)
+    await expect(banner).toContainText(LOADING_STATE_TITLE)
+    await expect(progress).toHaveText(LOADING_STATE_CYCLED_MESSAGES[0]!)
+    await expect(progress).toHaveText(LOADING_STATE_CYCLED_MESSAGES[1]!)
 
-  await banner.getByRole('button', { name: 'Dismiss' }).click()
+    await page.reload({ waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
-  await expect(banner).toBeHidden()
-  await expect(page).not.toHaveURL(/verify_installation/)
+    await expect(banner).toContainText(LOADING_STATE_TITLE)
 
-  await page.reload({ waitUntil: 'commit' })
-
-  await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toBeHidden()
-})
-
-test('review flow: success keeps the banner up but does not retrigger verification on refresh', async ({
-  page,
-  request
-}) => {
-  const { domain } = await setupSite({ page, request })
-
-  await setVerificationScenario({
-    request,
-    domain,
-    scenario: 'success'
+    for (const msg of LOADING_STATE_CYCLED_MESSAGES) {
+      await expect(progress).toHaveText(msg)
+    }
   })
 
-  await page.goto(`/${domain}?verify_installation=true&flow=review`, {
-    waitUntil: 'commit'
+  await test.step('when finished with failure, refreshing kicks off verification again', async () => {
+    await expect(heading).toHaveText(FAILURE_HEADING)
+
+    await page.reload({ waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
+
+    await expect(banner).toContainText(LOADING_STATE_TITLE)
   })
-  await expectLiveViewConnected(page)
 
-  const banner = page.locator(VERIFICATION_BANNER_SELECTOR)
-  await expect(banner).toContainText(SUCCESS_MESSAGE)
-  await expect(banner).toBeVisible()
+  await test.step('navigating to the dashboard via the site switcher kicks off verification again', async () => {
+    await setVerificationScenario({ request, domain, scenario: 'success' })
 
-  await expect(page).not.toHaveURL(/verify_installation/)
-  await expect(page).not.toHaveURL(/flow=/)
-  await page.reload({ waitUntil: 'commit' })
+    await page.goto(`/${otherDomain}`, { waitUntil: 'commit' })
 
-  await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+    await page.getByRole('button', { name: otherDomain }).click()
+    await page
+      .getByTestId('sitemenu')
+      .getByRole('link', { name: new RegExp(domain) })
+      .click()
+
+    await expect(page).toHaveURL(
+      new RegExp(`${domain}\\?verify_installation=true&flow=provisioning`)
+    )
+    await expectLiveViewConnected(page)
+
+    await expect(banner).toContainText(SUCCESS_MESSAGE)
+  })
+
+  await test.step("when finished with success, a page refresh won't bring it back", async () => {
+    await page.reload({ waitUntil: 'commit' })
+
+    await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+  })
+
+  await test.step("flow=review, dismissing while in progress: refresh won't bring it back", async () => {
+    await setVerificationScenario({
+      request,
+      domain,
+      scenario: 'success',
+      options: { slowdown: 3000 }
+    })
+
+    await page.goto(`/${domain}?verify_installation=true&flow=review`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
+
+    await expect(banner).toContainText(LOADING_STATE_TITLE)
+
+    await banner.getByRole('button', { name: 'Dismiss' }).click()
+
+    await expect(banner).toBeHidden()
+    await expect(page).not.toHaveURL(/verify_installation/)
+    await expect(page).not.toHaveURL(/flow=/)
+
+    await page.reload({ waitUntil: 'commit' })
+
+    await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+  })
+
+  await test.step('flow=review, finished with failure: refresh kicks off verification again', async () => {
+    await setVerificationScenario({
+      request,
+      domain,
+      scenario: 'plausible_not_found'
+    })
+
+    await page.goto(`/${domain}?verify_installation=true&flow=review`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
+
+    await expect(heading).toHaveText(FAILURE_HEADING)
+
+    await page.reload({ waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
+
+    await expect(heading).toHaveText(FAILURE_HEADING)
+  })
+
+  await test.step("flow=domain_change, dismissing after finished with failure: refresh won't bring it back", async () => {
+    await page.goto(`/${domain}?verify_installation=true&flow=domain_change`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
+
+    await expect(heading).toHaveText(FAILURE_HEADING)
+
+    await banner.getByRole('button', { name: 'Dismiss' }).click()
+
+    await expect(banner).toBeHidden()
+    await expect(page).not.toHaveURL(/verify_installation/)
+    await expect(page).not.toHaveURL(/flow=/)
+
+    await page.reload({ waitUntil: 'commit' })
+
+    await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+  })
+
+  await test.step("flow=domain_change, finished with success: refresh won't bring it back", async () => {
+    await setVerificationScenario({ request, domain, scenario: 'success' })
+
+    await page.goto(`/${domain}?verify_installation=true&flow=domain_change`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
+
+    await expect(banner).toContainText(SUCCESS_MESSAGE)
+
+    await page.reload({ waitUntil: 'commit' })
+
+    await expect(page.locator(VERIFICATION_BANNER_SELECTOR)).toHaveCount(0)
+  })
 })

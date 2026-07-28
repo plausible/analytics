@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Api.InternalController do
+  use Plausible
   use PlausibleWeb, :controller
   use Plausible.Repo
   import Ecto.Query
@@ -63,7 +64,10 @@ defmodule PlausibleWeb.Api.InternalController do
       on: u.site_id == s.id,
       left_join: up in Plausible.Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
-      select: %{domain: s.domain},
+      select: %{
+        domain: s.domain,
+        needs_verification: ^ee?() and s.onboarding_status == :new_site
+      },
       order_by: [
         asc:
           fragment(

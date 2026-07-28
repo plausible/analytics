@@ -11,9 +11,22 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       conn = get(conn, "/api/sites")
 
       %{"data" => sites} = json_response(conn, 200)
+      domains = Enum.map(sites, & &1["domain"])
 
-      assert %{"domain" => site.domain} in sites
-      assert %{"domain" => site2.domain} in sites
+      assert site.domain in domains
+      assert site2.domain in domains
+    end
+
+    @tag :ee_only
+    test "needs_verification reflects the site's onboarding status", %{conn: conn, user: user} do
+      new_site_ = new_site(owner: user, onboarding_status: :new_site)
+      onboarded_site = new_site(owner: user, onboarding_status: :completed)
+
+      conn = get(conn, "/api/sites")
+      %{"data" => sites} = json_response(conn, 200)
+
+      assert %{"domain" => new_site_.domain, "needs_verification" => true} in sites
+      assert %{"domain" => onboarded_site.domain, "needs_verification" => false} in sites
     end
 
     test "returns a list of max 9 site domains for the current user, putting pinned first", %{
@@ -44,16 +57,14 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       %{"data" => sites} =
         json_response(conn, 200)
 
+      domains = Enum.map(sites, & &1["domain"])
+
       assert Enum.count(sites) == 9
 
-      assert [
-               %{"domain" => "site05.example.com"},
-               %{"domain" => "site07.example.com"},
-               %{"domain" => "site01.example.com"} | _
-             ] = sites
+      assert ["site05.example.com", "site07.example.com", "site01.example.com" | _] = domains
 
-      assert %{"domain" => "site09.example.com"} in sites
-      refute %{"domain" => "sites10.example.com"} in sites
+      assert "site09.example.com" in domains
+      refute "sites10.example.com" in domains
     end
   end
 

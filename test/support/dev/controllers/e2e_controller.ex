@@ -51,6 +51,7 @@ defmodule PlausibleWeb.E2EController do
       site
       |> Plausible.Site.set_native_stats_start_at(stats_start_time)
       |> Plausible.Site.set_stats_start_date(stats_start_date)
+      |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
       |> Plausible.Repo.update!()
 
       populate(events, site)
@@ -97,12 +98,21 @@ defmodule PlausibleWeb.E2EController do
     end
 
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
-      key = String.to_existing_atom(scenario)
+      # Using `String.to_atom/1` is safe here because this is test-only code
+      # routed only under Mix.env() == :e2e_test.
+      key = String.to_atom(scenario)
 
       opts = [
         slowdown: params["options"]["slowdown"] || 0,
         launch_delay: params["options"]["launch_delay"] || 0
       ]
+
+      # Registering a new scenario is treated as the start of a fresh
+      # verification "phase" in e2e specs - reset the rate limit so a spec
+      # exercising multiple scenarios/flows against the same domain doesn't
+      # hit the real per-domain verification rate limit.
+      rate_limit_key = "site_verification:#{domain}"
+      :ets.select_delete(Plausible.RateLimit, [{{{rate_limit_key, :_}, :_, :_}, [], [true]}])
 
       :ok = Plausible.InstallationSupport.Verification.MockScenarios.put(domain, key, opts)
 
