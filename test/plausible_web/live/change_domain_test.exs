@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: another_site.domain}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != another_site.domain
@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: "foo.example.com"}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != "foo.example.com"
@@ -204,7 +204,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: ""}})
 
-      assert html =~ htmlize_quotes("can't be blank")
+      assert html =~ "Please enter a domain or subdomain"
     end
 
     test "form validation shows error for invalid domain format", %{conn: conn, site: site} do
