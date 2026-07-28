@@ -14,8 +14,6 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
   WHERE replay_session_id = {$0:UInt64} 
     AND toDate(start) >= {$1:Date} 
     AND toDate(start) <= {$2:Date}
-    AND toDate(timestamp) >= {$3:Date} 
-    AND toDate(timestamp) <= {$4:Date}
   """
 
   @count_query_events """
@@ -30,8 +28,6 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
   WHERE replay_session_id = {$0:UInt64} 
     AND toDate(start) >= {$1:Date} 
     AND toDate(start) <= {$2:Date}
-    AND toDate(timestamp) >= {$3:Date} 
-    AND toDate(timestamp) <= {$4:Date}
   """
 
   @purge_query_events """
@@ -59,7 +55,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
     %{rows: [[session_count]]} =
       IngestRepo.query!(
         @count_query_sessions,
-        [session_id, Date.add(from, -2), to, from, to],
+        [session_id, from, to],
         @settings
       )
 
@@ -103,7 +99,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
 
     IngestRepo.query!(
       @purge_query_sessions,
-      [session_id, Date.add(from, -2), to, from, to],
+      [session_id, from, to],
       @settings
     )
 
