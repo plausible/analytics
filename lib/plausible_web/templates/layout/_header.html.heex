@@ -26,7 +26,8 @@
                 :if={
                   ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team]) and
                     (not Plausible.Teams.setup?(@conn.assigns[:current_team]) or
-                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles())
+                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles()) and
+                    !assigns[:hide_trial_badge?]
                 }
                 class="hidden sm:block"
               >
