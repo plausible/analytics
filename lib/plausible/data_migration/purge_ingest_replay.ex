@@ -40,11 +40,11 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
   def run(opts \\ []) do
     from = %Date{} = Keyword.fetch!(opts, :from)
     to = %Date{} = Keyword.fetch!(opts, :to)
-    session_id = String.to_integer(Keyword.fetch!(opts, :session_id))
+    session_id = Keyword.fetch!(opts, :session_id)
 
     days_scope = Date.diff(to, from)
 
-    if session_id <= 0 do
+    if not is_integer(session_id) or session_id <= 0 do
       raise ArgumentError, "Invalid session ID"
     end
 

@@ -15,7 +15,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                           PurgeIngestReplay.run(
                             from: ~D[2026-07-26],
                             to: ~D[2026-07-27],
-                            session_id: "123"
+                            session_id: 123
                           )
                end) =~ "No events found matching criteria. Aborting"
       end
@@ -66,7 +66,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                      PurgeIngestReplay.run(
                        from: ~D[2026-07-26],
                        to: ~D[2026-07-27],
-                       session_id: "#{replay_session_id}"
+                       session_id: replay_session_id
                      )
           end)
 
@@ -121,7 +121,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                           PurgeIngestReplay.run(
                             from: ~D[2026-07-26],
                             to: ~D[2026-07-27],
-                            session_id: "#{replay_session_id}"
+                            session_id: replay_session_id
                           )
                end) =~ "No events found matching criteria. Aborting"
       end
@@ -131,7 +131,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
           PurgeIngestReplay.run(
             from: ~D[2026-07-26],
             to: ~D[2026-07-27],
-            session_id: "0"
+            session_id: 0
           )
 
           assert_raise MatchError, fn ->
@@ -151,7 +151,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                        PurgeIngestReplay.run(
                          from: ~D[2026-07-27],
                          to: ~D[2026-07-26],
-                         session_id: "123"
+                         session_id: 123
                        )
                      end
 
@@ -161,7 +161,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                        PurgeIngestReplay.run(
                          from: ~D[2026-07-26],
                          to: ~D[2026-07-29],
-                         session_id: "123"
+                         session_id: 123
                        )
                      end
 
@@ -169,7 +169,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
           PurgeIngestReplay.run(
             from: ~D[2026-07-26],
             to: :invalid,
-            session_id: "123"
+            session_id: 123
           )
         end
 
@@ -177,7 +177,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
           PurgeIngestReplay.run(
             from: :invalid,
             to: ~D[2026-07-29],
-            session_id: "123"
+            session_id: 123
           )
         end
       end
