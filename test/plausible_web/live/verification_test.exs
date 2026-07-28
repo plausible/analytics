@@ -139,6 +139,37 @@ defmodule PlausibleWeb.Live.VerificationTest do
              end)
     end
 
+    for {flow, message} <- %{
+          PlausibleWeb.Flows.review() => "Visitors are being counted correctly.",
+          PlausibleWeb.Flows.domain_change() =>
+            "Visitors are being counted correctly on your new domain."
+        } do
+      @tag :ee_only
+      test "shows a flow-specific success message for flow=#{flow}", %{conn: conn, site: site} do
+        stub_dns()
+
+        stub_verification_result(%{
+          "completed" => true,
+          "trackerIsInHtml" => true,
+          "plausibleIsOnWindow" => true,
+          "plausibleIsInitialized" => true,
+          "testEvent" => %{
+            "normalizedBody" => %{
+              "domain" => site.domain
+            },
+            "responseStatus" => 200
+          }
+        })
+
+        {:ok, lv} = kick_off_live_verification(conn, site, unquote(flow))
+
+        assert eventually(fn ->
+                 html = render(lv)
+                 {html =~ unquote(message), html}
+               end)
+      end
+    end
+
     @tag :ee_only
     test "advances onboarding_status to :verification_succeeded on success", %{
       conn: conn,

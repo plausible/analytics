@@ -48,6 +48,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       <.render_success
         :if={@finished? and @success?}
         domain={@domain}
+        flow={@flow}
         super_admin?={@super_admin?}
         verification_state={@verification_state}
       />
@@ -119,6 +120,8 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   end
 
   defp render_success(assigns) do
+    assigns = assign(assigns, :success_message, success_message(assigns.flow))
+
     ~H"""
     <.notice
       title="Tracking is active on your site"
@@ -130,7 +133,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         <Heroicons.check_circle solid id="check-circle" />
       </:icon>
       <p class="text-gray-800 dark:text-gray-200 text-pretty">
-        Your dashboard is ready. Data will appear here as soon as visitors start arriving.
+        {@success_message}
       </p>
       <.super_admin_diagnostics
         :if={@super_admin? and not is_nil(@verification_state)}
@@ -198,6 +201,19 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       />
     </.notice>
     """
+  end
+
+  defp success_message(flow) do
+    cond do
+      flow == PlausibleWeb.Flows.review() ->
+        "Visitors are being counted correctly."
+
+      flow == PlausibleWeb.Flows.domain_change() ->
+        "Visitors are being counted correctly on your new domain."
+
+      true ->
+        "Your dashboard is ready. Data will appear here as soon as visitors start arriving."
+    end
   end
 
   defp offer_custom_url_input?(interpretation) do
