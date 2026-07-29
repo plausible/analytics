@@ -10,7 +10,8 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
 
   - `session_id` - `replay_session_id` to purge, provided as an integer
   - `from` and `to` - provided as Dates; necessary for reducing scope of database scan; 
-    the date range is inclusive; to scan a single day, `from` and `to` can be the same
+    the date range is inclusive; to scan a single day, `from` and `to` can be the same;
+    maximum range is 3 days
   """
 
   alias Plausible.IngestRepo
