@@ -98,13 +98,15 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_event("launch-verification", _, socket) do
+    reset_component(socket)
     start_verification(socket)
-    {:noreply, reset_component(socket)}
+    {:noreply, socket}
   end
 
   def handle_event("retry", _, socket) do
+    reset_component(socket)
     start_verification(socket)
-    {:noreply, reset_component(socket)}
+    {:noreply, socket}
   end
 
   def handle_event("show-custom-url-form", _, socket) do
@@ -125,8 +127,9 @@ defmodule PlausibleWeb.Live.Verification do
       |> assign(url_to_verify: custom_url)
       |> assign(custom_url_input?: false)
 
+    reset_component(socket)
     start_verification(socket)
-    {:noreply, reset_component(socket)}
+    {:noreply, socket}
   end
 
   def handle_info({:start, report_to}, socket) do
