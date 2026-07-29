@@ -56,7 +56,7 @@
     "@types/react-flatpickr": "^3.8.11",
     "@types/topojson-client": "^3.1.4",
     "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.3.1",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^28.11.0",
