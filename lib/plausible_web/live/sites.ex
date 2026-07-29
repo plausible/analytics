@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Sites do
   import PlausibleWeb.Live.Components.Pagination
   import PlausibleWeb.StatsView, only: [large_number_format: 1]
 
+  alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Sites.Index
   alias Plausible.Teams
@@ -967,14 +968,16 @@ defmodule PlausibleWeb.Live.Sites do
     site_entries =
       Sites.get_for_user_by_ids(assigns.current_user, page.entries, team: assigns.current_team)
 
-    sites = %{page | entries: site_entries}
-
     sparklines =
       if connected?(socket) do
         Plausible.Stats.Sparkline.parallel_overview(site_entries)
       else
         %{}
       end
+
+    site_entries = Enum.map(site_entries, &advance_onboarding_status_if_needed(&1, sparklines))
+
+    sites = %{page | entries: site_entries}
 
     consolidated_sparkline =
       if connected?(socket),
@@ -988,6 +991,23 @@ defmodule PlausibleWeb.Live.Sites do
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
+
+  defp advance_onboarding_status_if_needed(
+         %Plausible.Site{onboarding_status: :new_site} = site,
+         sparklines
+       ) do
+    case Map.get(sparklines, site.domain) do
+      %{visitors: visitors} when visitors > 0 ->
+        site
+        |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
+        |> Repo.update!()
+
+      _ ->
+        site
+    end
+  end
+
+  defp advance_onboarding_status_if_needed(site, _sparklines), do: site
 
   defp refresh_index_pins(socket) do
     assign(socket, :index_state, Index.refresh_pins(socket.assigns.index_state))

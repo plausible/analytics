@@ -164,6 +164,25 @@ defmodule PlausibleWeb.Live.SitesTest do
 
         dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
         assert dashboard_link_href =~ "verify_installation=true"
+
+        assert Repo.reload!(site).onboarding_status == :new_site
+      end
+
+      @tag :ee_only
+      test "advances onboarding_status (and hides the badge) when the site already has visitors, before its dashboard has ever been loaded",
+           %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+        populate_stats(site, [build(:pageview)])
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        refute site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        refute dashboard_link_href =~ "verify_installation=true"
+
+        assert Repo.reload!(site).onboarding_status == :first_pageview
       end
 
       for status <- [:verification_succeeded, :first_pageview, :completed] do
