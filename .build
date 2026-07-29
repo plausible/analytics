@@ -103,6 +103,7 @@ Plausible.DataMigration.OverwriteTotpSecret.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.PostgresRepo.html
 Plausible.DataMigration.PrefixTrackerScriptConfigurationId.html
+Plausible.DataMigration.PurgeIngestReplay.html
 Plausible.DataMigration.SiteImports.SiteImportSnapshot.html
 Plausible.DataMigration.SiteImports.html
 Plausible.DataMigration.VersionedSessions.html
@@ -581,8 +582,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-7F0B8FB3.js
-dist/sidebar_items-622A86FD.js
+dist/search_data-37552999.js
+dist/sidebar_items-D65AF11F.js
 index.html
 readme.html
 search.html
