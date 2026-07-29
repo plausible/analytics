@@ -59,7 +59,8 @@ defmodule Plausible.DataMigration.PurgeIngestReplay do
     end
 
     if days_scope < 0 or days_scope > 2 do
-      raise ArgumentError, "The number of days between the dates must be from 0 to 2 range"
+      raise ArgumentError,
+            "The period declared by inclusive from/to range cannot be longer than 3 days "
     end
 
     %{rows: [[session_count]]} =
