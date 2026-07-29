@@ -146,7 +146,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
 
       test "raises on invalid session date range" do
         assert_raise ArgumentError,
-                     ~r/The number of days between the dates must be from 0 to 2 range/,
+                     ~r/The period declared by inclusive from\/to range cannot be longer than 3 days/,
                      fn ->
                        PurgeIngestReplay.run(
                          from: ~D[2026-07-27],
@@ -156,7 +156,7 @@ defmodule Plausible.DataMigration.PurgeIngestReplayTest do
                      end
 
         assert_raise ArgumentError,
-                     ~r/The number of days between the dates must be from 0 to 2 range/,
+                     ~r/The period declared by inclusive from\/to range cannot be longer than 3 days/,
                      fn ->
                        PurgeIngestReplay.run(
                          from: ~D[2026-07-26],
