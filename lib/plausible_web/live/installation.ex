@@ -184,7 +184,7 @@ defmodule PlausibleWeb.Live.Installation do
               type="submit"
               class="w-full mt-8"
             >
-              {verify_cta(@installation_type.result)}
+              {submit_button_text(@installation_type.result)}
             </.button>
           </.form>
         </.async_result>
@@ -203,10 +203,14 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
-  defp verify_cta("manual"), do: "Verify Script installation"
-  defp verify_cta("wordpress"), do: "Verify WordPress installation"
-  defp verify_cta("gtm"), do: "Verify Tag Manager installation"
-  defp verify_cta("npm"), do: "Verify NPM installation"
+  on_ee do
+    defp submit_button_text("manual"), do: "Verify Script installation"
+    defp submit_button_text("wordpress"), do: "Verify WordPress installation"
+    defp submit_button_text("gtm"), do: "Verify Tag Manager installation"
+    defp submit_button_text("npm"), do: "Verify NPM installation"
+  else
+    defp submit_button_text(_), do: "Proceed to dashboard"
+  end
 
   on_ee do
     defp install_method_event(installation_type, recommended) do
