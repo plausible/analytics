@@ -29,19 +29,23 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
     show_teams? = team_options != []
 
-    show_my_team? =
-      not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id != site.team_id
+    my_team = socket.assigns[:my_team]
 
-    my_team_notice =
+    show_my_team? = not is_nil(my_team) and my_team.id != site.team_id
+
+    {my_team_notice, my_team_upgrade_href} =
       cond do
-        not is_nil(socket.assigns[:my_team]) and socket.assigns.my_team.id == site.team_id ->
-          "The site is already in your personal sites."
+        not is_nil(my_team) and my_team.id == site.team_id ->
+          {"The site is already in your personal sites.", nil}
 
-        is_nil(socket.assigns[:my_team]) ->
-          "You don't have an active subscription."
+        is_nil(my_team) ->
+          {"You don't have an active subscription.",
+           Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=none"}
 
         true ->
-          nil
+          {nil,
+           Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan) <>
+             "?__team=#{my_team.identifier}"}
       end
 
     initial_destination =
@@ -59,7 +63,9 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
         team_options: team_options,
         show_teams?: show_teams?,
         show_my_team?: show_my_team?,
-        my_team_notice: my_team_notice
+        my_team_notice: my_team_notice,
+        my_team_upgrade_href: my_team_upgrade_href,
+        my_team_no_plan_error?: false
       )
       |> assign_form(%{"destination" => initial_destination})
 
@@ -172,6 +178,17 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                 class="ml-7 mt-1 text-sm text-gray-500/60 dark:text-gray-400/60 text-pretty"
               >
                 {@my_team_notice}
+                <.styled_link :if={@my_team_upgrade_href} href={@my_team_upgrade_href}>
+                  Start a subscription
+                </.styled_link>
+              </p>
+              <p
+                :if={@my_team_no_plan_error?}
+                class="ml-7 mt-1 text-xs text-red-500 leading-4.5 text-pretty"
+              >
+                You don't have an active subscription for My personal sites.
+                <a href={@my_team_upgrade_href} class="underline">Start a subscription</a>
+                first and then try moving the site again.
               </p>
             </div>
           </fieldset>
@@ -190,7 +207,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
   end
 
   def handle_event("validate", %{"form" => params}, socket) do
-    {:noreply, assign_form(socket, params)}
+    {:noreply, socket |> assign(my_team_no_plan_error?: false) |> assign_form(params)}
   end
 
   def handle_event("save", %{"form" => params}, socket) do
@@ -228,6 +245,12 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
            socket
            |> put_flash(:success, "Site team was changed")
            |> redirect(to: Routes.site_path(socket, :index, __team: destination_team.identifier))}
+
+        {:error, :no_plan} when my_team? ->
+          {:noreply,
+           socket
+           |> assign(my_team_no_plan_error?: true)
+           |> assign_form(params, action: :insert)}
 
         {:error, reason} ->
           {:noreply,
@@ -294,10 +317,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
   defp change_team_error_message(:no_plan, false = _my_team?) do
     "This team doesn't have a subscription. Please start a subscription for the team first and then try moving the site again."
-  end
-
-  defp change_team_error_message(:no_plan, true = _my_team?) do
-    "You don't have a subscription. Please start a subscription first and then try moving the site again."
   end
 
   defp change_team_error_message({:over_plan_limits, _}, false = _my_team?) do

@@ -309,6 +309,5 @@ defmodule Plausible.Billing do
   def subscription_cancelled_notice_title(), do: "Subscription cancelled"
   def subscription_past_due_notice_title(), do: "Payment failed"
   def subscription_paused_notice_title(), do: "Subscription paused"
-  def upgrade_ineligible_notice_title(), do: "No sites owned"
   def pending_site_ownerships_notice_title(), do: "Pending ownership transfers"
 end
