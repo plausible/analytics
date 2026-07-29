@@ -47,10 +47,14 @@ defmodule PlausibleWeb.StatsController do
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    site = Plausible.Repo.preload(site, :owners)
+    site =
+      site
+      |> Plausible.Repo.preload(:owners)
+      |> Plausible.Sites.ensure_stats_start_date()
+
     site_role = conn.assigns[:site_role]
     current_user = conn.assigns[:current_user]
-    stats_start_date = Plausible.Sites.stats_start_date(site)
+    stats_start_date = site.stats_start_date
     can_see_stats? = not Teams.locked?(site.team) or site_role == :super_admin
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
@@ -374,7 +378,13 @@ defmodule PlausibleWeb.StatsController do
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
         shared_link = Plausible.Repo.preload(shared_link, :segment, site: [:owners])
-        stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
+
+        shared_link = %{
+          shared_link
+          | site: Plausible.Sites.ensure_stats_start_date(shared_link.site)
+        }
+
+        stats_start_date = shared_link.site.stats_start_date
 
         flags = get_flags(current_user, shared_link.site)
 

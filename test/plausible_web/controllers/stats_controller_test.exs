@@ -228,6 +228,19 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
     end
 
+    test "shows email reports CTA on the very first load that discovers a pageview, without needing a second refresh",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :verification_succeeded)
+      populate_stats(site, [build(:pageview)])
+
+      assert Repo.reload!(site).onboarding_status == :verification_succeeded
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
     for status <- [:new_site, :verification_succeeded, :completed] do
       test "does not show email reports CTA when onboarding_status is #{status}", %{
         conn: conn,
@@ -511,7 +524,13 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site_with_stats, [build(:pageview)])
 
       for site <- [site_without_stats, site_with_stats] do
-        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
         assert element_exists?(resp, @verification_banner)
       end
     end
@@ -537,7 +556,13 @@ defmodule PlausibleWeb.StatsControllerTest do
       site_with_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       for site <- [site_without_stats, site_with_stats] do
-        resp = get(conn, "/#{site.domain}?verify_installation=true") |> html_response(200)
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
         assert element_exists?(resp, @verification_banner)
       end
     end
