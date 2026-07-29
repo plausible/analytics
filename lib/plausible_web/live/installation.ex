@@ -333,7 +333,7 @@ defmodule PlausibleWeb.Live.Installation do
         Routes.stats_path(socket, :stats, domain, [])
       end
 
-    {:noreply, push_navigate(socket, to: destination)}
+    {:noreply, redirect(socket, to: destination)}
   end
 
   defp initialize_installation_data(flow, site, params) do
