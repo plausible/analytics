@@ -37,6 +37,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "Add site info"
     end
 
+    test "skipping the site continues the register flow at team setup", %{conn: conn} do
+      conn = get(conn, "/sites/new")
+
+      assert text_of_element(html_response(conn, 200), ~s|a[href="/team/setup?flow=register"]|) ==
+               "Skip"
+    end
+
+    test "skipping outside the register flow goes back to the site list", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=provisioning")
+
+      assert text_of_element(html_response(conn, 200), ~s|a[href="/sites"]|) ==
+               "Back to sites"
+    end
+
     test "does not display limit notice when user is on an enterprise plan", %{
       conn: conn,
       user: user
@@ -368,6 +382,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert site.timezone == "Europe/London"
       assert site.ingest_rate_limit_scale_seconds == 60
       assert site.ingest_rate_limit_threshold == 1_000_000
+    end
+
+    test "continues to team setup in the register flow", %{conn: conn} do
+      conn =
+        post(conn, "/sites?flow=register", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/team/setup?flow=register&domain=example.com"
     end
 
     test "fails to create the site if only http:// provided", %{conn: conn} do

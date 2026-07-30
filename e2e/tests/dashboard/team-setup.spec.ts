@@ -11,19 +11,15 @@ test('submitting team name via Enter key does not crash', async ({
 
   await expectLiveViewConnected(page)
 
-  await expect(page.getByRole('button', { name: 'Create Team' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create team' })).toBeVisible()
 
   const nameInput = page.locator('input[name="team[name]"]')
 
   await nameInput.clear()
   await nameInput.fill('My New Team')
 
+  // without a phx-submit handler this made a plain HTTP POST instead
   await nameInput.press('Enter')
-
-  await expect(nameInput).toHaveValue('My New Team')
-
-  // the form had no phx-submit handler and plain HTTP POST fallback was made
-  await page.getByRole('button', { name: 'Create Team' }).click()
 
   await expect(page).toHaveURL(/\/settings\/team\/general/)
 

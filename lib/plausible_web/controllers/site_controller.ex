@@ -45,9 +45,7 @@ defmodule PlausibleWeb.SiteController do
           |> Plausible.Mailer.send()
         end
 
-        redirect(conn,
-          to: Routes.site_path(conn, :installation, site.domain, flow: flow)
-        )
+        redirect(conn, to: after_site_created_path(conn, site, flow))
 
       {:error, _, :permission_denied, _} ->
         conn
@@ -68,12 +66,29 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  defp after_site_created_path(conn, site, flow) do
+    if flow == PlausibleWeb.Flows.register() do
+      Routes.team_setup_path(conn, :setup, flow: flow, domain: site.domain)
+    else
+      Routes.site_path(conn, :installation, site.domain, flow: flow)
+    end
+  end
+
+  defp skip_new_site_path(conn, flow) do
+    if flow == PlausibleWeb.Flows.register() do
+      Routes.team_setup_path(conn, :setup, flow: flow)
+    else
+      Routes.site_path(conn, :index)
+    end
+  end
+
   defp render_new_site_form(conn, flow, opts \\ []) do
     defaults = [
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
       site_limit_exceeded?: false,
       flow: flow,
       form_submit_url: "/sites?flow=#{flow}",
+      skip_url: skip_new_site_path(conn, flow),
       current_step: "Add site info",
       heading: "Add a website",
       subtitle: "Start measuring traffic on a new site."

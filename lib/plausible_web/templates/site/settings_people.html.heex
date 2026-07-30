@@ -1,6 +1,9 @@
 <.settings_tiles>
   <%= if not Plausible.Teams.setup?(@site.team) and not Plausible.Teams.Billing.solo?(@site.team) do %>
-    <PlausibleWeb.Team.Notice.owner_cta_banner :if={@site_role == :owner} />
+    <PlausibleWeb.Team.Notice.owner_cta_banner
+      :if={@site_role == :owner}
+      return_to={Routes.site_path(@conn, :settings_people, @site.domain)}
+    />
     <PlausibleWeb.Team.Notice.guest_cta_banner :if={@site_role != :owner} />
   <% end %>
 

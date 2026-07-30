@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
         current_step: "Add site info"
       )
 
-    assert_dot_labels(rendered, ["Add site info", "Install Plausible"])
+    assert_dot_labels(rendered, ["Add site info", "Create team", "Install Plausible"])
 
     assert_current_step(rendered, "Add site info")
   end

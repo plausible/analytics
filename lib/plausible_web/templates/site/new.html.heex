@@ -29,7 +29,7 @@
     </script>
 
     <div class="flex justify-end items-center gap-x-2">
-      <.button_link theme="ghost" href={Routes.site_path(@conn, :index)} mt?={false}>
+      <.button_link theme="ghost" href={@skip_url} mt?={false}>
         {if @flow == PlausibleWeb.Flows.provisioning(), do: "Back to sites", else: "Skip"}
       </.button_link>
       <.button

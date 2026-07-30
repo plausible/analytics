@@ -18,8 +18,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         |> text()
 
       assert resp =~ "Add or remove team members and adjust their roles"
-
-      refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
 
     test "renders existing guests under Guest divider", %{conn: conn, team: team, user: user} do

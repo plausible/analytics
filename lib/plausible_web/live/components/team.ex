@@ -7,6 +7,84 @@ defmodule PlausibleWeb.Live.Components.Team do
   import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth.User
+  alias Plausible.Billing.Quota
+  alias Plausible.Teams.Management.Layout
+
+  attr(:layout, :map, required: true)
+  attr(:my_role, :atom, required: true)
+  attr(:current_user, User, required: true)
+
+  def member_list(assigns) do
+    ~H"""
+    <div id="member-list">
+      <.member
+        :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+        :if={entry.role != :guest}
+        user={%User{email: entry.email, name: entry.name}}
+        role={entry.role}
+        label={entry_label(entry, @current_user)}
+        me?={entry.id == @current_user.id}
+        my_role={@my_role}
+        remove_disabled={not Layout.removable?(@layout, email)}
+        disabled={
+          (entry.role == :owner && Layout.owners_count(@layout) == 1) or
+            @my_role not in [:owner, :admin]
+        }
+      />
+    </div>
+
+    <div :if={Layout.has_guests?(@layout)} class="flex items-center mt-4 mb-4" id="guests-hr">
+      <hr class="grow border-t border-gray-200 dark:border-gray-700" />
+      <span class="mx-4 text-gray-500 text-sm">
+        Guests
+      </span>
+      <hr class="grow border-t border-gray-200 dark:border-gray-700" />
+    </div>
+
+    <div :if={Layout.has_guests?(@layout)} id="guest-list">
+      <.member
+        :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+        :if={entry.role == :guest}
+        user={%User{email: entry.email, name: entry.name}}
+        role={entry.role}
+        label={entry_label(entry, @current_user)}
+        my_role={@my_role}
+        remove_disabled={not Layout.removable?(@layout, email)}
+        disabled={@my_role not in [:owner, :admin]}
+      />
+    </div>
+    """
+  end
+
+  def entry_label(%Layout.Entry{role: :guest, type: :membership}, _), do: nil
+  def entry_label(%Layout.Entry{type: :invitation_pending}, _), do: "Invitation pending"
+  def entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation sent"
+
+  def entry_label(%Layout.Entry{meta: %{user: %{id: id, type: :sso}}}, %{id: id}),
+    do: "You (SSO)"
+
+  def entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
+  def entry_label(%Layout.Entry{meta: %{user: %{type: :sso}}}, _), do: "SSO"
+  def entry_label(_, _), do: nil
+
+  def persist_error_message(:permission_denied), do: "Permission denied"
+  def persist_error_message(:only_one_owner), do: "The team has to have at least one owner"
+
+  def persist_error_message(:disabled_2fa),
+    do: "User must have 2FA enabled to become an owner"
+
+  def persist_error_message({:over_limit, limit}) do
+    "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
+  end
+
+  @doc """
+  Whether the team is at its member limit, counting any members pending
+  addition on top of the ones already in the layout. The team owner does not
+  count towards the limit.
+  """
+  def at_limit?(layout, limit, pending_count \\ 0) do
+    not Quota.below_limit?(Layout.active_count(layout) - 1 + pending_count, limit)
+  end
 
   attr(:user, User, required: true)
   attr(:label, :string, default: nil)

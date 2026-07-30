@@ -345,7 +345,11 @@ defmodule PlausibleWeb.Live.Sites do
         </p>
         <div class="flex gap-x-2">
           <.button_link
-            href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+            href={
+              Routes.team_setup_path(PlausibleWeb.Endpoint, :setup,
+                return_to: Routes.site_path(PlausibleWeb.Endpoint, :index)
+              )
+            }
             mt?={false}
           >
             Create team

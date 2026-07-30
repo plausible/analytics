@@ -8,6 +8,8 @@ defmodule PlausibleWeb.Team.Notice do
   alias Plausible.Teams
   alias PlausibleWeb.Components.PrimaDropdown
 
+  attr :return_to, :string, required: true
+
   def owner_cta_banner(assigns) do
     ~H"""
     <aside class="mt-4 mb-4">
@@ -18,7 +20,7 @@ defmodule PlausibleWeb.Team.Notice do
         <p>
           You can also create a team and assign different roles to team members, such as admin,
           editor, viewer or billing. Team members will gain access to all your sites. <.styled_link href={
-            Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)
+            Routes.team_setup_path(PlausibleWeb.Endpoint, :setup, return_to: @return_to)
           }>
             Create your team here
           </.styled_link>.

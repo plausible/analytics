@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Flows do
     ],
     register: [
       "Add site info",
+      "Create team",
       "Install Plausible"
     ],
     invitation: [
