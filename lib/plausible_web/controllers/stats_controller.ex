@@ -313,12 +313,10 @@ defmodule PlausibleWeb.StatsController do
   defp serialize_star_path_as_query_string_fragment(conn) do
     star_path = conn.path_params["path"]
 
-    if length(star_path) > 0 do
+    if star_path != [] do
       # make the path start with a /
       # to be able to reject values that don't start with a /
       %{"return_to" => "/#{Enum.join(star_path, "/")}"} |> URI.encode_query()
-    else
-      nil
     end
   end
 
