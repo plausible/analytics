@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Removed the intermediate "Awaiting your first pageview" screen after site created. User is now taken straight to the dashboard from the installation instructions page.
 - Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
 - Removed `Bamboo.SMTPAdapter` from supported e-mail adapters; the library is no longer in active developments and does not compile under Elixir 1.20+
+- Removed timezone selection field when creating a new site. Timezone is automatically detected and can still be changed in site settings.
 
 ### Changed
 
@@ -39,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Improved site transfer UI
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 - Removed limitation that blocked users without owned sites from starting a subscription
+- Redesigned onboarding pages (add site, installation)
 
 ### Fixed
 
