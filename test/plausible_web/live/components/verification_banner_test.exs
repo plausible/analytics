@@ -101,6 +101,9 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
       refute recommendation =~ "Learn more"
       refute recommendation =~ "See your installation instructions again here"
 
+      refute element_exists?(html, "#verify-custom-url-link")
+      refute element_exists?(html, "#custom-url-form")
+
       assert element_exists?(
                html,
                ~s|#recommendation a[href="https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"]|
@@ -182,33 +185,13 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
         )
 
       assert text_of_element(html, "#verify-custom-url-link") =~ "Try another URL"
-      assert element_exists?(html, ~s|a#verify-custom-url-link[phx-click="show-custom-url-form"]|)
+      refute class_of_element(html, "#verification-failed-default-actions") =~ "hidden"
       refute html =~ "Review installation"
-    end
 
-    test "renders the custom URL input inline, replacing Check again with the Verify URL submit button, and hides the secondary action" do
-      interpretation =
-        Verification.Checks.interpret_diagnostics(%State{
-          url: "example.com",
-          diagnostics: %Verification.Diagnostics{
-            plausible_is_on_window: false,
-            plausible_is_initialized: false,
-            service_error: %{code: :domain_not_found}
-          }
-        })
-
-      html =
-        render_component(@component,
-          domain: "example.com",
-          finished?: true,
-          success?: false,
-          interpretation: interpretation,
-          custom_url_input?: true
-        )
-
-      refute element_exists?(html, "#verify-custom-url-link")
-      refute element_exists?(html, ~s|a[phx-click="retry"]|)
-      refute html =~ "Review installation"
+      # The form is always in the markup, starting hidden - revealing it on
+      # "Try another URL" is a client-side-only toggle, covered by an E2E
+      # spec instead (see e2e/tests/dashboard/verification.spec.ts).
+      assert class_of_element(html, "#custom-url-form") =~ "hidden"
 
       assert text_of_element(html, ~s|form[phx-submit="verify-custom-url"] button[type="submit"]|) =~
                "Verify URL"

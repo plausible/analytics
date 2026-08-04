@@ -61,6 +61,41 @@ test('installation verification', async ({ page, request }) => {
     await expect(banner).toContainText(LOADING_STATE_TITLE)
   })
 
+  await test.step('"Try another URL" reveals the custom URL form instantly, client-side, submitting it kicks off a new run', async () => {
+    await setVerificationScenario({
+      request,
+      domain,
+      scenario: 'domain_not_found'
+    })
+
+    await page.goto(`/${domain}?verify_installation=true`, {
+      waitUntil: 'commit'
+    })
+    await expectLiveViewConnected(page)
+
+    const defaultActions = banner.locator('#verification-failed-default-actions')
+    const customUrlForm = banner.locator('#custom-url-form')
+    const tryAnotherUrlLink = banner.getByRole('link', {
+      name: 'Try another URL'
+    })
+
+    await expect(tryAnotherUrlLink).toBeVisible()
+    await expect(customUrlForm).toBeHidden()
+    await expect(heading).toHaveText(`We couldn't reach https://${domain}`)
+
+    await tryAnotherUrlLink.click()
+
+    await expect(customUrlForm).toBeVisible()
+    await expect(defaultActions).toBeHidden()
+
+    const differentUrl = 'https://differenturl.com'
+
+    await customUrlForm.locator('input[name="custom_url"]').fill(differentUrl)
+    await customUrlForm.getByRole('button', { name: 'Verify URL' }).click()
+
+    await expect(heading).toHaveText(`We couldn't reach ${differentUrl}`)
+  })
+
   await test.step('navigating to the dashboard via the site switcher kicks off verification again', async () => {
     await setVerificationScenario({ request, domain, scenario: 'success' })
 

@@ -55,7 +55,6 @@ defmodule PlausibleWeb.Live.Verification do
         flow: session["flow"] || "",
         checks_pid: nil,
         attempts: 0,
-        custom_url_input?: false,
         dismissed?: false
       )
 
@@ -91,7 +90,6 @@ defmodule PlausibleWeb.Live.Verification do
       attempts={@attempts}
       flow={@flow}
       super_admin?={@super_admin?}
-      custom_url_input?={@custom_url_input?}
       dismissed?={@dismissed?}
     />
     """
@@ -109,10 +107,6 @@ defmodule PlausibleWeb.Live.Verification do
     {:noreply, socket}
   end
 
-  def handle_event("show-custom-url-form", _, socket) do
-    {:noreply, assign(socket, custom_url_input?: true)}
-  end
-
   # Once dismissed, this LiveView has nothing left to do - and since it's
   # the only LiveView on the dashboard page, there's no reason to keep
   # the websocket connection open for the rest of the browsing session.
@@ -122,10 +116,7 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
-    socket =
-      socket
-      |> assign(url_to_verify: custom_url)
-      |> assign(custom_url_input?: false)
+    socket = assign(socket, url_to_verify: custom_url)
 
     reset_component(socket)
     start_verification(socket)

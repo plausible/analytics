@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   use Phoenix.LiveComponent
   use Plausible
 
+  alias Phoenix.LiveView.JS
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.InstallationSupport.{State, Result}
 
@@ -32,7 +33,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   attr(:interpretation, Result, default: nil)
   attr(:attempts, :integer, default: 0)
   attr(:flow, :string, default: "")
-  attr(:custom_url_input?, :boolean, default: false)
   attr(:dismissed?, :boolean, default: false)
 
   def render(assigns) do
@@ -60,7 +60,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         flow={@flow}
         super_admin?={@super_admin?}
         verification_state={@verification_state}
-        custom_url_input?={@custom_url_input?}
       />
     </div>
     """
@@ -170,29 +169,44 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         flow={@flow}
       />
       <div class="mt-5 flex flex-wrap items-center gap-2">
-        <.retry_form_or_button custom_url_input?={@custom_url_input?} domain={@domain} />
-        <.button_link
-          :if={not @custom_url_input? and @offer_custom_url_input?}
-          mt?={false}
-          href="#"
-          phx-click="show-custom-url-form"
-          id="verify-custom-url-link"
-          theme="ghost"
-          size="sm"
-          class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
-        >
-          Try another URL
-        </.button_link>
-        <.button_link
-          :if={not @custom_url_input? and not @offer_custom_url_input?}
-          mt?={false}
-          href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)}
-          theme="ghost"
-          size="sm"
-          class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
-        >
-          Review installation
-        </.button_link>
+        <div id="verification-failed-default-actions" class="flex flex-wrap items-center gap-2">
+          <.button_link
+            mt?={false}
+            href="#"
+            phx-click="retry"
+            theme="secondary"
+            size="sm"
+            class="dark:bg-white/15 dark:hover:bg-white/20 dark:border-transparent"
+          >
+            Check again
+          </.button_link>
+          <.button_link
+            :if={@offer_custom_url_input?}
+            mt?={false}
+            href="#"
+            phx-click={
+              JS.hide(to: "#verification-failed-default-actions")
+              |> JS.show(to: "#custom-url-form", display: "flex")
+            }
+            id="verify-custom-url-link"
+            theme="ghost"
+            size="sm"
+            class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+          >
+            Try another URL
+          </.button_link>
+          <.button_link
+            :if={not @offer_custom_url_input?}
+            mt?={false}
+            href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)}
+            theme="ghost"
+            size="sm"
+            class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
+          >
+            Review installation
+          </.button_link>
+        </div>
+        <.custom_url_form :if={@offer_custom_url_input?} domain={@domain} />
       </div>
       <.contact_us_link :if={ee?() and @attempts >= 3} />
       <.super_admin_diagnostics
@@ -271,9 +285,13 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
     value |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
   end
 
-  defp retry_form_or_button(%{custom_url_input?: true} = assigns) do
+  # Rendered alongside `verification-failed-default-actions` at all times, starting
+  # hidden - clicking "Try another URL" toggles between them with a
+  # client-side `JS.hide/show`, without waiting on a server round-trip just
+  # to reveal this form.
+  defp custom_url_form(assigns) do
     ~H"""
-    <form phx-submit="verify-custom-url" class="flex items-center gap-2">
+    <form id="custom-url-form" phx-submit="verify-custom-url" class="hidden items-center gap-2">
       <.input
         type="url"
         name="custom_url"
@@ -289,21 +307,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         Verify URL
       </.button>
     </form>
-    """
-  end
-
-  defp retry_form_or_button(assigns) do
-    ~H"""
-    <.button_link
-      mt?={false}
-      href="#"
-      phx-click="retry"
-      theme="secondary"
-      size="sm"
-      class="dark:bg-white/15 dark:hover:bg-white/20 dark:border-transparent"
-    >
-      Check again
-    </.button_link>
     """
   end
 

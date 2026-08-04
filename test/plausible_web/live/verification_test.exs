@@ -64,37 +64,34 @@ defmodule PlausibleWeb.Live.VerificationTest do
     end
 
     @tag :ee_only
-    test "clicking the custom URL link reveals an inline form next to the retry button, submitting kicks off a new run",
-         %{
-           conn: conn,
-           site: site
-         } do
+    test "submitting the custom URL form kicks off a new run", %{
+      conn: conn,
+      site: site
+    } do
       stub_dns()
 
+      # Should get interpreted as `:unexpected_page_response`, which makes
+      # `@offer_custom_url_input? = true` in the verification banner
       stub_verification_result(%{
         "completed" => true,
-        "trackerIsInHtml" => false,
         "plausibleIsOnWindow" => false,
-        "plausibleIsInitialized" => false
+        "plausibleIsInitialized" => false,
+        "responseStatus" => 404
       })
 
       {:ok, lv} = kick_off_live_verification(conn, site)
 
       assert eventually(fn ->
                html = render(lv)
-
-               {
-                 text_of_element(html, @heading) =~ "We couldn't detect Plausible on your site",
-                 html
-               }
+               {element_exists?(html, "#verify-custom-url-link"), html}
              end)
 
-      html = lv |> render_click("show-custom-url-form")
+      html = render(lv)
 
-      refute html =~ @in_progress_text
-
-      refute element_exists?(html, @retry_button)
-      refute element_exists?(html, "#verify-custom-url-link")
+      # Revealing this form is a client-side-only `JS.hide/show` toggle.
+      # Regardless, here we can simply trigger the submit, even when the
+      # form itself is hidden.
+      assert class_of_element(html, "#custom-url-form") =~ "hidden"
 
       assert element_exists?(
                html,
