@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D65AF11F.js"></script>
+    <script src="dist/sidebar_items-5DBC09C8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -1747,6 +1747,18 @@ methods and whether v1 is used on the site.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Verification.ChecksMock.html" translate="no">Plausible.InstallationSupport.Verification.ChecksMock</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Drop-in replacement for <a href="Plausible.InstallationSupport.Verification.Checks.html"><code class="inline">Plausible.InstallationSupport.Verification.Checks</code></a>
+that never performs a real DNS lookup or browserless check for a domain
+with a registered mock scenario. Used locally (<code class="inline">:dev</code>) and in Playwright
+e2e specs (<code class="inline">:e2e_test</code>) to deterministically drive Verification banner UI.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.InstallationSupport.Verification.Diagnostics.html" translate="no">Plausible.InstallationSupport.Verification.Diagnostics</a>
 
   </div>
@@ -1761,6 +1773,18 @@ methods and whether v1 is used on the site.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Error that has compile-time enforced checks for the attributes.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.InstallationSupport.Verification.MockScenarios.html" translate="no">Plausible.InstallationSupport.Verification.MockScenarios</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Per-domain registry of forced verification outcomes. It's a public ETS
+table owned by a simple GenServer process. Used to bypass the real DNS
+lookup and browserless checks when iterating on verification banner UI
+locally, or when driving it from Playwright e2e specs.</p></div>
 
 </div>
 <div class="summary-row">
@@ -3432,15 +3456,6 @@ benefits for Growth, Business, and Enterprise plans.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Components.FirstDashboardLaunchBanner.html" translate="no">PlausibleWeb.Components.FirstDashboardLaunchBanner</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A banner that appears on the first dashboard launch</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="PlausibleWeb.Components.FlowProgress.html" translate="no">PlausibleWeb.Components.FlowProgress</a>
 
   </div>
@@ -3843,15 +3858,6 @@ data contains a valid token.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.AwaitingPageviews.html" translate="no">PlausibleWeb.Live.AwaitingPageviews</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A replacement for installation verification on Community Edition.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="PlausibleWeb.Live.CSVExport.html" translate="no">PlausibleWeb.Live.CSVExport</a>
 
   </div>
@@ -3953,12 +3959,12 @@ alongside with the role dropdown.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.Components.Verification.html" translate="no">PlausibleWeb.Live.Components.Verification</a>
+    <a href="PlausibleWeb.Live.Components.VerificationBanner.html" translate="no">PlausibleWeb.Live.Components.VerificationBanner</a>
 
   </div>
 
     <div class="summary-synopsis"><p>This component is responsible for rendering the verification progress
-and diagnostics.</p></div>
+and diagnostics as a compact banner on top of the dashboard.</p></div>
 
 </div>
 <div class="summary-row">
@@ -4378,9 +4384,8 @@ mount and reconnect.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>LiveView coordinating the site verification process.
-Onboarding new sites, renders a standalone component.
-Embedded modal variant is available for general site settings.</p></div>
+    <div class="summary-synopsis"><p>LiveView coordinating the site verification process. Rendered as a banner
+on top of the React dashboard.</p></div>
 
 </div>
 <div class="summary-row">

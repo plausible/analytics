@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D65AF11F.js"></script>
+    <script src="dist/sidebar_items-5DBC09C8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -197,6 +197,18 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#ensure_stats_start_date/1" data-no-tooltip translate="no">ensure_stats_start_date(site)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Ensures <code class="inline">stats_start_date</code> is set on the given site, returning the
+(possibly updated) site. <code class="inline">stats_start_date</code> stays <code class="inline">nil</code> if the site does
+not have stats yet.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#for_user_query/2" data-no-tooltip translate="no">for_user_query(user, team \\ nil)</a>
 
       </div>
@@ -331,17 +343,6 @@ created by the Plugins API, and those created in any other way
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stats_start_date/1" data-no-tooltip translate="no">stats_start_date(site)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns the date of the first event of the given site, or <code class="inline">nil</code> if the site
-does not have stats yet.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#toggle_pin/2" data-no-tooltip translate="no">toggle_pin(user, site)</a>
 
       </div>
@@ -461,7 +462,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">create_shared_link(site, name, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L426" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L428" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -493,6 +494,38 @@ does not have stats yet.</p></div>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="ensure_stats_start_date/1">
+
+  <div class="detail-header">
+    <a href="#ensure_stats_start_date/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">ensure_stats_start_date(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L381" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> ensure_stats_start_date(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()</pre>
+
+      </div>
+
+<p>Ensures <code class="inline">stats_start_date</code> is set on the given site, returning the
+(possibly updated) site. <code class="inline">stats_start_date</code> stays <code class="inline">nil</code> if the site does
+not have stats yet.</p><p>If this is the first time the function is called for the site, it queries
+imported stats and Clickhouse, choosing the earliest start date and saves
+it in the sites table - at the same time advancing <code class="inline">onboarding_status</code> to
+<code class="inline">:first_pageview</code>, so callers see that reflected immediately rather than
+needing to reload the site to notice it.</p>
   </section>
 </section>
 <section class="detail" id="for_user_query/2">
@@ -578,7 +611,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">get_for_user(user, domain, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L508" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L510" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -600,7 +633,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">get_for_user!(user, domain, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L491" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L493" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -642,7 +675,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">has_goals?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L483" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L485" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -662,7 +695,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">has_stats?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L422" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L424" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -730,7 +763,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">native_stats_start_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L418" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L420" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -836,7 +869,7 @@ even when the team does not have access to SharedLinks feature.</p>
     </a>
     <h1 class="signature" translate="no">shared_link_url(site, link)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L470" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L472" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -866,35 +899,6 @@ even when the team does not have access to SharedLinks feature.</p>
   <section class="docstring">
 
 
-  </section>
-</section>
-<section class="detail" id="stats_start_date/1">
-
-  <div class="detail-header">
-    <a href="#stats_start_date/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">stats_start_date(site)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L378" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> stats_start_date(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>() | nil</pre>
-
-      </div>
-
-<p>Returns the date of the first event of the given site, or <code class="inline">nil</code> if the site
-does not have stats yet.</p><p>If this is the first time the function is called for the site, it queries
-imported stats and Clickhouse, choosing the earliest start date and saves
-it in the sites table.</p>
   </section>
 </section>
 <section class="detail" id="toggle_pin/2">
@@ -932,7 +936,7 @@ it in the sites table.</p>
     </a>
     <h1 class="signature" translate="no">update_legacy_time_on_page_cutoff!(site, cutoff)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L476" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L478" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -952,7 +956,7 @@ it in the sites table.</p>
     </a>
     <h1 class="signature" translate="no">update_shared_link(shared_link, site, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L447" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L449" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

@@ -178,8 +178,10 @@ Plausible.InstallationSupport.Result.html
 Plausible.InstallationSupport.State.html
 Plausible.InstallationSupport.URL.html
 Plausible.InstallationSupport.Verification.Checks.html
+Plausible.InstallationSupport.Verification.ChecksMock.html
 Plausible.InstallationSupport.Verification.Diagnostics.Error.html
 Plausible.InstallationSupport.Verification.Diagnostics.html
+Plausible.InstallationSupport.Verification.MockScenarios.html
 Plausible.InstallationSupport.html
 Plausible.InternalStatsApiVersion.html
 Plausible.License.html
@@ -368,7 +370,6 @@ PlausibleWeb.BillingController.html
 PlausibleWeb.BillingView.html
 PlausibleWeb.Captcha.html
 PlausibleWeb.Components.Billing.PlanBenefits.html
-PlausibleWeb.Components.FirstDashboardLaunchBanner.html
 PlausibleWeb.Components.FlowProgress.html
 PlausibleWeb.Components.Generic.html
 PlausibleWeb.Components.Google.html
@@ -416,7 +417,6 @@ PlausibleWeb.InvitationController.html
 PlausibleWeb.LayoutView.JWT.html
 PlausibleWeb.LayoutView.html
 PlausibleWeb.Live.AuthContext.html
-PlausibleWeb.Live.AwaitingPageviews.html
 PlausibleWeb.Live.CSVExport.html
 PlausibleWeb.Live.CSVImport.html
 PlausibleWeb.Live.ChangeDomain.Form.html
@@ -428,7 +428,7 @@ PlausibleWeb.Live.Components.Form.html
 PlausibleWeb.Live.Components.Modal.html
 PlausibleWeb.Live.Components.Pagination.html
 PlausibleWeb.Live.Components.Team.html
-PlausibleWeb.Live.Components.Verification.html
+PlausibleWeb.Live.Components.VerificationBanner.html
 PlausibleWeb.Live.Components.Visitors.html
 PlausibleWeb.Live.CustomerSupport.Site.html
 PlausibleWeb.Live.CustomerSupport.Team.html
@@ -582,8 +582,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-37552999.js
-dist/sidebar_items-D65AF11F.js
+dist/search_data-91ED2505.js
+dist/sidebar_items-5DBC09C8.js
 index.html
 readme.html
 search.html

@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>PlausibleWeb.Live.AwaitingPageviews — Plausible v0.0.1</title>
+    <title>Plausible.InstallationSupport.Verification.MockScenarios — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D65AF11F.js"></script>
+    <script src="dist/sidebar_items-5DBC09C8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,19 +126,22 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/awaiting_pageviews.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L13" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">PlausibleWeb.Live.AwaitingPageviews</span> 
+    <span translate="no">Plausible.InstallationSupport.Verification.MockScenarios</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>A replacement for installation verification on Community Edition.</p>
+<p>Per-domain registry of forced verification outcomes. It's a public ETS
+table owned by a simple GenServer process. Used to bypass the real DNS
+lookup and browserless checks when iterating on verification banner UI
+locally, or when driving it from Playwright e2e specs.</p>
     </section>
 
 </div>
@@ -150,6 +153,20 @@ Pages
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:scenario/0" data-no-tooltip translate="no">scenario()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -157,31 +174,39 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_info/2" data-no-tooltip translate="no">handle_info(arg1, socket)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(init_arg)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mount/3" data-no-tooltip translate="no">mount(params, session, socket)</a>
+        <a href="#get/1" data-no-tooltip translate="no">get(domain)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Returns the scenario registered for <code class="inline">domain</code>, or <code class="inline">nil</code> if none was set.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/1" data-no-tooltip translate="no">render(assigns)</a>
+        <a href="#put/3" data-no-tooltip translate="no">put(domain, key, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Registers a mock verification for <code class="inline">domain</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(opts)</a>
+
+      </div>
 
     </div>
 
@@ -189,6 +214,48 @@ Pages
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:scenario/0">
+
+  <div class="detail-header">
+    <a href="#t:scenario/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">scenario()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L27" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> scenario() :: %{
+  interpretation_result: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  slowdown: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  launch_delay: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil
+}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -198,15 +265,15 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="handle_info/2">
+<section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#handle_info/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">handle_info(arg1, socket)</h1>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/awaiting_pageviews.ex#L5" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L21" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -215,18 +282,18 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p>
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="mount/3">
+<section class="detail" id="get/1">
 
   <div class="detail-header">
-    <a href="#mount/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">mount(params, session, socket)</h1>
+    <h1 class="signature" translate="no">get(domain)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/awaiting_pageviews.ex#L9" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L84" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -235,18 +302,26 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="#t:scenario/0">scenario</a>() | nil</pre>
+
+      </div>
+
+<p>Returns the scenario registered for <code class="inline">domain</code>, or <code class="inline">nil</code> if none was set.</p>
   </section>
 </section>
-<section class="detail" id="render/1">
+<section class="detail" id="put/3">
+
+    <span id="put/2"></span>
 
   <div class="detail-header">
-    <a href="#render/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#put/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">render(assigns)</h1>
+    <h1 class="signature" translate="no">put(domain, key, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/awaiting_pageviews.ex#L51" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -255,7 +330,42 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.1.27/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> put(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  :ok | {:error, :unknown_scenario}</pre>
+
+      </div>
+
+<p>Registers a mock verification for <code class="inline">domain</code>.</p><p><code class="inline">key</code> (an atom or a string) must name a scenario recognized by
+<code class="inline">Diagnostics.named_result!/2</code> - see <code class="inline">Diagnostics.named_scenario_keys/0</code>.
+Returns <code class="inline">{:error, :unknown_scenario}</code> otherwise.</p><h3 id="put/3-opts" class="section-heading">
+  <a href="#put/3-opts" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Opts</span>
+</h3>
+<ul><li><code class="inline">:slowdown</code> - overrides the check pipeline's default per-check delay</li><li><code class="inline">:launch_delay</code> - overrides the delay before the first check starts</li></ul>
+  </section>
+</section>
+<section class="detail" id="start_link/1">
+
+  <div class="detail-header">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">start_link(opts)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/test/support/installation_support/verification/checks_mock.ex#L33" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 
