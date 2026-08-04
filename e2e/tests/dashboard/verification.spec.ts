@@ -73,7 +73,9 @@ test('installation verification', async ({ page, request }) => {
     })
     await expectLiveViewConnected(page)
 
-    const defaultActions = banner.locator('#verification-failed-default-actions')
+    const defaultActions = banner.locator(
+      '#verification-failed-default-actions'
+    )
     const customUrlForm = banner.locator('#custom-url-form')
     const tryAnotherUrlLink = banner.getByRole('link', {
       name: 'Try another URL'
