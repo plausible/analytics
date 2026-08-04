@@ -30,7 +30,8 @@ export const VerificationLiveViewPortal = React.memo(() => {
           const nextSearch = { ...search }
           queryParams.forEach((param) => delete nextSearch[param])
           return nextSearch
-        }
+        },
+        replace: true
       })
     }
 
