@@ -45,7 +45,7 @@ jobs:
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
         options: >-
-          --health-cmd "wget -q --spider http://localhost:8123/ping"
+          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
           --health-start-period 2m
           --health-interval 10s
           --health-timeout 5s
@@ -141,7 +141,7 @@ jobs:
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
         options: >-
-          --health-cmd "wget -q --spider http://localhost:8123/ping"
+          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
           --health-start-period 2m
           --health-interval 10s
           --health-timeout 5s
