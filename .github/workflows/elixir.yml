@@ -46,6 +46,7 @@ jobs:
           CLICKHOUSE_SKIP_USER_SETUP: 1
         options: >-
           --health-cmd "wget -q --spider http://localhost:8123/ping"
+          --health-start-period 2m
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -141,6 +142,7 @@ jobs:
           CLICKHOUSE_SKIP_USER_SETUP: 1
         options: >-
           --health-cmd "wget -q --spider http://localhost:8123/ping"
+          --health-start-period 2m
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
