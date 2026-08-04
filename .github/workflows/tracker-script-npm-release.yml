@@ -11,6 +11,7 @@ jobs:
     permissions:
       pull-requests: read
       contents: read
+      id-token: write
     if: >-
       ${{ github.event.pull_request.merged == true && (
       contains(github.event.pull_request.labels.*.name, 'tracker-release: patch') ||
@@ -51,8 +52,6 @@ jobs:
       - name: Publish tracker script to NPM
         run: npm publish
         working-directory: tracker/npm_package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.TRACKER_RELEASE_NPM_TOKEN }}
 
       - name: Commit and Push changes
         uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321
