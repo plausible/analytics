@@ -12,20 +12,26 @@ defmodule Plausible.InstallationSupport.CheckRunner do
   Checks are normally run asynchronously, except when synchronous
   execution is optionally required for tests. Slowdowns can be optionally
   added, the user doesn't benefit from running the checks too quickly.
+  An optional `:launch_delay` is awaited once, before the first check
+  starts - callers that don't care about it (e.g. detection checks) can
+  simply omit the opt, since it defaults to 0 here.
   """
 
   def run(state, checks, opts) do
     async? = Keyword.get(opts, :async?, true)
     slowdown = Keyword.get(opts, :slowdown, 500)
+    launch_delay = Keyword.get(opts, :launch_delay, 0)
 
     if async? do
-      Task.start_link(fn -> do_run(state, checks, slowdown) end)
+      Task.start_link(fn -> do_run(state, checks, slowdown, launch_delay) end)
     else
-      do_run(state, checks, slowdown)
+      do_run(state, checks, slowdown, launch_delay)
     end
   end
 
-  defp do_run(state, checks, slowdown) do
+  defp do_run(state, checks, slowdown, launch_delay) do
+    if is_integer(launch_delay) and launch_delay > 0, do: :timer.sleep(launch_delay)
+
     state =
       Enum.reduce_while(
         checks,

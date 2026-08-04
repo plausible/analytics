@@ -176,6 +176,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        put "/verification", E2EController, :put_verification_scenario
       end
     end
   end
@@ -411,6 +412,7 @@ defmodule PlausibleWeb.Router do
       get "/paddle/currency", Api.PaddleController, :currency
 
       put "/:domain/disable-feature", Api.InternalController, :disable_feature
+      put "/:domain/complete-onboarding", Api.InternalController, :complete_onboarding
 
       get "/sites", Api.InternalController, :sites
     end
@@ -600,15 +602,6 @@ defmodule PlausibleWeb.Router do
               dogfood_page_path: "/:website/installation"
             } do
         live "/:domain/installation", Installation, :installation, as: :site
-      end
-
-      scope assigns: %{
-              dogfood_page_path: "/:website/verification"
-            } do
-        live "/:domain/verification",
-             on_ee(do: Verification, else: AwaitingPageviews),
-             :verification,
-             as: :site
       end
 
       scope assigns: %{

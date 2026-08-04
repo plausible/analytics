@@ -6,7 +6,7 @@ defmodule Plausible.InstallationSupport.Result do
   ok?: false,
   data: nil,
   errors: [error.message],
-  recommendations: [%{text: error.recommendation, url: error.url}]
+  recommendations: [%{text: error.recommendation, inline_links: error.inline_links}]
 
   ok?: true,
   data: %{},

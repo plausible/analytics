@@ -59,7 +59,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       site = Repo.reload!(site)
       assert site.stats_start_date == nil
-      assert Plausible.Sites.stats_start_date(site) == import_opts[:start_date]
+
+      assert Plausible.Sites.ensure_stats_start_date(site).stats_start_date ==
+               import_opts[:start_date]
+
       assert Repo.reload!(site).stats_start_date == import_opts[:start_date]
     end
 

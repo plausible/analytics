@@ -40,7 +40,7 @@ defmodule Plausible.Purge do
   Deletes imported stats from and clears the `stats_start_date` field.
 
   The `stats_start_date` is expected to get repopulated the next time
-  `Plausible.Sites.stats_start_date/1` is called.
+  `Plausible.Sites.ensure_stats_start_date/1` is called.
 
   If the input argument is a site, all imported stats are deleted. If it's a site import,
   only imported stats for that import are deleted.

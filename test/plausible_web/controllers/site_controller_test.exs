@@ -362,7 +362,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/#{URI.encode_www_form("éxample.com")}/installation?site_created=true&flow="
+               "/#{URI.encode_www_form("éxample.com")}/installation?flow="
 
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
@@ -480,7 +480,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -501,7 +501,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Plausible.Teams.Billing.site_usage(team) == 3
     end
 
@@ -515,7 +515,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+        assert redirected_to(conn) == "/example.com/installation?flow="
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -555,7 +555,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com%2Fsome_blog_site/installation?site_created=true&flow="
+               "/example.com%2Fsome_blog_site/installation?flow="
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
@@ -618,7 +618,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com/installation?site_created=true&flow="
+               "/example.com/installation?flow="
     end
 
     for role <- [:owner, :admin, :editor] do
@@ -914,6 +914,46 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
       refute resp =~ "A Better Way of Inviting People"
+    end
+  end
+
+  describe "GET /:domain/settings/email-reports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders the page without advancing onboarding_status by default", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports")
+
+      assert html_response(conn, 200) =~ "Weekly email reports"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    test "advances onboarding_status to :completed when cta_clicked=true", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+
+    test "cta_clicked=true does not regress :completed onboarding_status", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :completed) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
     end
   end
 

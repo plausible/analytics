@@ -195,7 +195,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_input_date_range(query, site, %{"period" => "all"}) do
     today = today(query)
-    start_date = Plausible.Sites.stats_start_date(site) || today
+    start_date = Plausible.Sites.ensure_stats_start_date(site).stats_start_date || today
 
     datetime_range =
       DateTimeRange.new!(start_date, today, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")

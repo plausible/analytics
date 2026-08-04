@@ -60,7 +60,8 @@
   .btn-base {
     @apply whitespace-nowrap truncate inline-flex items-center justify-center
       gap-x-2 text-sm font-medium rounded-md cursor-pointer
-      disabled:cursor-not-allowed;
+      disabled:cursor-not-allowed
+      phx-click-loading:cursor-not-allowed phx-click-loading:opacity-60;
   }
 
   .btn-xs {

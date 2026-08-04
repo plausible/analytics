@@ -44,7 +44,8 @@ config :ref_inspector,
 
 config :plausible,
   paddle_api: Plausible.Billing.PaddleApi,
-  google_api: Plausible.Google.API
+  google_api: Plausible.Google.API,
+  verification_checks_mod: Plausible.InstallationSupport.Verification.Checks
 
 config :plausible,
   # 30 minutes

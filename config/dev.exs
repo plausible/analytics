@@ -25,7 +25,9 @@ config :plausible, PlausibleWeb.Endpoint,
     ]
   ]
 
-config :plausible, paddle_api: Plausible.Billing.DevPaddleApiMock
+config :plausible,
+  paddle_api: Plausible.Billing.DevPaddleApiMock,
+  verification_checks_mod: Plausible.InstallationSupport.Verification.ChecksMock
 
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime

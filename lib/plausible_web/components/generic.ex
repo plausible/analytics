@@ -12,25 +12,37 @@ defmodule PlausibleWeb.Components.Generic do
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
       icon: "text-gray-600 dark:text-gray-300",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-800 dark:text-gray-200 leading-5"
+    },
+    indigo: %{
+      bg: "bg-indigo-100/60 dark:bg-indigo-900/40",
+      icon: "text-indigo-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
+    },
+    green: %{
+      bg: "bg-green-100/60 dark:bg-green-900/40",
+      icon: "text-green-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
       icon: "text-yellow-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     red: %{
       bg: "bg-red-100 dark:bg-red-900/30",
       icon: "text-red-600 dark:text-red-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     white: %{
       bg: "bg-white dark:bg-gray-900 shadow-sm dark:shadow-none",
       icon: "text-gray-600 dark:text-gray-400",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
     }
   }
@@ -222,6 +234,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:icon_class, :string, default: "")
+  attr(:title_class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
   slot(:actions)
@@ -253,7 +266,14 @@ defmodule PlausibleWeb.Components.Generic do
               <% end %>
             </div>
             <div class="flex-1 flex flex-col gap-y-1.5">
-              <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+              <h3
+                :if={@title}
+                class={[
+                  @title_class == "" && "text-sm font-medium",
+                  @theme.title_text,
+                  @title_class
+                ]}
+              >
                 {@title}
               </h3>
               <div class={"#{@theme.body_text}"}>
@@ -847,6 +867,38 @@ defmodule PlausibleWeb.Components.Generic do
         {render_slot(item)}
       </li>
     </ol>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :text, :string, required: true
+  attr :rows, :integer, required: true
+  attr :resizable, :boolean, default: false
+
+  def copyable_readonly_text_area(assigns) do
+    ~H"""
+    <div class={["relative w-full"]}>
+      <textarea
+        id={@id}
+        class={[
+          "w-full bg-transparent border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-750 dark:text-gray-300",
+          if(!@resizable, do: "resize-none")
+        ]}
+        rows={@rows}
+        readonly
+      ><%= @text %></textarea>
+
+      <a
+        onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
+        href="javascript:void(0)"
+        class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline bottom-2 right-4 p-2 transition-colors duration-150 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400"
+      >
+        <Heroicons.document_duplicate class="pr-1 text-current size-5" />
+        <span>
+          COPY
+        </span>
+      </a>
+    </div>
     """
   end
 

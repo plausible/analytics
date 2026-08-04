@@ -51,6 +51,7 @@ defmodule PlausibleWeb.E2EController do
       site
       |> Plausible.Site.set_native_stats_start_at(stats_start_time)
       |> Plausible.Site.set_stats_start_date(stats_start_date)
+      |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
       |> Plausible.Repo.update!()
 
       populate(events, site)
@@ -94,6 +95,28 @@ defmodule PlausibleWeb.E2EController do
       {:ok, _} = Plausible.Funnels.create(site, name, steps)
 
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
+    def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
+      opts = [
+        slowdown: params["options"]["slowdown"] || 0,
+        launch_delay: params["options"]["launch_delay"] || 0
+      ]
+
+      # Registering a new scenario is treated as the start of a fresh
+      # verification "phase" in e2e specs - reset the rate limit so a spec
+      # exercising multiple scenarios/flows against the same domain doesn't
+      # hit the real per-domain verification rate limit.
+      rate_limit_key = "site_verification:#{domain}"
+      :ets.select_delete(Plausible.RateLimit, [{{{rate_limit_key, :_}, :_, :_}, [], [true]}])
+
+      case Plausible.InstallationSupport.Verification.MockScenarios.put(domain, scenario, opts) do
+        :ok ->
+          send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+
+        {:error, :unknown_scenario} ->
+          send_resp(conn, 422, Jason.encode!(%{"error" => "Unknown scenario: #{scenario}"}))
+      end
     end
 
     defp get_goal(site, name) do

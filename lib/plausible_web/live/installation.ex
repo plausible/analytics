@@ -82,7 +82,6 @@ defmodule PlausibleWeb.Live.Installation do
     {:ok,
      assign(socket,
        site: site,
-       site_created?: params["site_created"] == "true",
        flow: flow
      )}
   end
@@ -104,7 +103,6 @@ defmodule PlausibleWeb.Live.Installation do
   def render(assigns) do
     ~H"""
     <div>
-      <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
       <.focus_box>
@@ -186,7 +184,7 @@ defmodule PlausibleWeb.Live.Installation do
               type="submit"
               class="w-full mt-8"
             >
-              {verify_cta(@installation_type.result)}
+              {submit_button_text(@installation_type.result)}
             </.button>
           </.form>
         </.async_result>
@@ -205,10 +203,14 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
-  defp verify_cta("manual"), do: "Verify Script installation"
-  defp verify_cta("wordpress"), do: "Verify WordPress installation"
-  defp verify_cta("gtm"), do: "Verify Tag Manager installation"
-  defp verify_cta("npm"), do: "Verify NPM installation"
+  on_ee do
+    defp submit_button_text("manual"), do: "Verify Script installation"
+    defp submit_button_text("wordpress"), do: "Verify WordPress installation"
+    defp submit_button_text("gtm"), do: "Verify Tag Manager installation"
+    defp submit_button_text("npm"), do: "Verify NPM installation"
+  else
+    defp submit_button_text(_), do: "Proceed to dashboard"
+  end
 
   on_ee do
     defp install_method_event(installation_type, recommended) do
@@ -321,21 +323,21 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
-    config =
-      PlausibleWeb.Tracker.update_script_configuration!(
-        socket.assigns.site,
-        params,
-        :installation
-      )
+    PlausibleWeb.Tracker.update_script_configuration!(socket.assigns.site, params, :installation)
 
-    {:noreply,
-     push_navigate(socket,
-       to:
-         Routes.site_path(socket, :verification, socket.assigns.site.domain,
-           flow: socket.assigns.flow,
-           installation_type: config.installation_type
-         )
-     )}
+    domain = socket.assigns.site.domain
+
+    destination =
+      on_ee do
+        Routes.stats_path(socket, :stats, domain,
+          verify_installation: true,
+          flow: socket.assigns.flow
+        )
+      else
+        Routes.stats_path(socket, :stats, domain, [])
+      end
+
+    {:noreply, redirect(socket, to: destination)}
   end
 
   defp initialize_installation_data(flow, site, params) do
