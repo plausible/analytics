@@ -178,7 +178,6 @@ defmodule PlausibleWeb.Live.Installation do
             <Instructions.manual_instructions
               :if={@installation_type.result == "manual"}
               tracker_script_configuration_form={@tracker_script_configuration_form.result}
-              flow={@flow}
             />
 
             <Instructions.wordpress_instructions

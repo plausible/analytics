@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 - Removed limitation that blocked users without owned sites from starting a subscription
 - Redesigned onboarding pages (add site, installation)
+- Moved tracking options (outbound links, file downloads, form submissions) from the installation page to the general site settings, where they can be toggled without going through the installation flow
 
 ### Fixed
 

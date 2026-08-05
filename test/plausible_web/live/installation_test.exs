@@ -180,41 +180,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert html =~ "async"
     end
 
-    test "manual installation shows optional measurements", %{conn: conn, site: site} do
-      on_ee do
-        stub_dns()
-        stub_detection_manual()
-      end
-
-      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
-
-      html = render_async(lv, 500)
-      assert html =~ htmlize_quotes(@submit_button_text)
-      assert html =~ "Optional measurements"
-      assert html =~ "Outbound links"
-      assert html =~ "File downloads"
-      assert html =~ "Form submissions"
-    end
-
-    test "manual installation shows advanced options in disclosure", %{conn: conn, site: site} do
-      on_ee do
-        stub_dns()
-        stub_detection_manual()
-      end
-
-      {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
-
-      html = render_async(lv, 500)
-      assert html =~ htmlize_quotes(@submit_button_text)
-      assert html =~ "Advanced options"
-      assert html =~ "Manual tagging"
-      assert html =~ "404 error pages"
-      assert html =~ "Hashed page paths"
-      assert html =~ "Custom properties"
-      assert html =~ "Ecommerce revenue"
-    end
-
-    test "toggling optional measurements updates tracker configuration", %{
+    test "tracker configuration is created with the default measurements enabled", %{
       conn: conn,
       site: site
     } do
@@ -232,22 +198,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert config.outbound_links == true
       assert config.file_downloads == true
       assert config.form_submissions == true
-
-      lv
-      |> element("form[phx-submit='submit']")
-      |> render_submit(%{
-        "tracker_script_configuration" => %{
-          "installation_type" => "manual",
-          "outbound_links" => "false",
-          "file_downloads" => "true",
-          "form_submissions" => "true"
-        }
-      })
-
-      updated_config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
-      assert updated_config.outbound_links == false
-      assert updated_config.file_downloads == true
-      assert updated_config.form_submissions == true
+      assert config.track_404_pages == true
     end
 
     on_ee do
@@ -269,10 +220,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
           |> element("form[phx-submit='submit']")
           |> render_submit(%{
             "tracker_script_configuration" => %{
-              "installation_type" => unquote(type),
-              "outbound_links" => "true",
-              "file_downloads" => "true",
-              "form_submissions" => "true"
+              "installation_type" => unquote(type)
             }
           })
 
@@ -298,42 +246,11 @@ defmodule PlausibleWeb.Live.InstallationTest do
       |> element("form[phx-submit='submit']")
       |> render_submit(%{
         "tracker_script_configuration" => %{
-          "installation_type" => "manual",
-          "outbound_links" => "true",
-          "file_downloads" => "true",
-          "form_submissions" => "true"
+          "installation_type" => "manual"
         }
       })
 
       assert_redirect(lv, Routes.stats_path(conn, :stats, site.domain))
-    end
-
-    test "404 goal gets created regardless of user options", %{conn: conn, site: site} do
-      on_ee do
-        stub_dns()
-        stub_detection_manual()
-      end
-
-      {lv, _html} = get_lv(conn, site, "?type=manual")
-
-      html = render_async(lv, 500)
-      assert html =~ htmlize_quotes(@submit_button_text)
-
-      # Test with all options disabled
-      lv
-      |> element("form[phx-submit='submit']")
-      |> render_submit(%{
-        "tracker_script_configuration" => %{
-          "installation_type" => "manual",
-          "outbound_links" => "false",
-          "file_downloads" => "false",
-          "form_submissions" => "false"
-        }
-      })
-
-      # 404 goal should still be created
-      goals = Plausible.Goals.for_site(site)
-      assert Enum.any?(goals, &(&1.event_name == "404"))
     end
 
     test "submitting form with review flow redirects to the dashboard with the flow param preserved",
@@ -355,10 +272,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       |> element("form[phx-submit='submit']")
       |> render_submit(%{
         "tracker_script_configuration" => %{
-          "installation_type" => "manual",
-          "outbound_links" => "true",
-          "file_downloads" => "true",
-          "form_submissions" => "true"
+          "installation_type" => "manual"
         }
       })
 
