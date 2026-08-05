@@ -4,6 +4,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
   alias Plausible.Repo
   alias Plausible.OAuth.{AccessToken, Token}
 
+  @version "2026-07-28"
+  @version_key "io.modelcontextprotocol/protocolVersion"
+  @caps_key "io.modelcontextprotocol/clientCapabilities"
+  @server_info_key "io.modelcontextprotocol/serverInfo"
+
   setup do
     FunWithFlags.enable(:mcp_server)
     on_exit(fn -> FunWithFlags.Store.Cache.flush() end)
@@ -31,10 +36,44 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
     access.raw
   end
 
-  defp rpc(conn, token, body) do
+  # Fully-valid per-request `_meta` for the modern protocol.
+  defp meta() do
+    %{
+      @version_key => @version,
+      @caps_key => %{},
+      "io.modelcontextprotocol/clientInfo" => %{"name" => "test-client", "version" => "1.0"}
+    }
+  end
+
+  # Sends a well-formed modern request: injects valid `_meta` into `params` and
+  # mirrors the required headers (`MCP-Protocol-Version`, `Mcp-Method`, and
+  # `Mcp-Name` for `tools/call`) from the body.
+  defp rpc(conn, token, message) do
+    method = message.method
+    params = message |> Map.get(:params, %{}) |> Map.put(:_meta, meta())
+    body = Map.put(message, :params, params)
+
+    headers =
+      [{"mcp-protocol-version", @version}, {"mcp-method", method}] ++
+        name_header(method, params)
+
+    post_rpc(conn, token, body, headers)
+  end
+
+  defp name_header("tools/call", params), do: [{"mcp-name", params[:name]}]
+  defp name_header(_method, _params), do: []
+
+  # Posts an arbitrary body and header set - used by the validation tests to
+  # deliberately omit or corrupt the envelope.
+  defp post_rpc(conn, token, body, headers) do
     conn
     |> put_req_header("authorization", "Bearer #{token}")
     |> put_req_header("content-type", "application/json")
+    |> then(fn conn ->
+      Enum.reduce(headers, conn, fn {name, value}, conn ->
+        put_req_header(conn, name, value)
+      end)
+    end)
     |> post("/mcp", Jason.encode!(body))
   end
 
@@ -72,25 +111,27 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       {:ok, token: issue_token(user, team, ["stats:read:*", "sites:read:*"])}
     end
 
-    test "initialize returns capabilities and a session id", %{conn: conn, token: token} do
-      conn =
-        rpc(conn, token, %{
-          jsonrpc: "2.0",
-          id: 1,
-          method: "initialize",
-          params: %{protocolVersion: "2025-06-18"}
-        })
+    test "server/discover returns versions, capabilities and identity, no session id",
+         %{conn: conn, token: token} do
+      conn = rpc(conn, token, %{jsonrpc: "2.0", id: 1, method: "server/discover"})
 
       resp = json_response(conn, 200)
-      assert resp["result"]["protocolVersion"] == "2025-06-18"
+      assert resp["result"]["supportedVersions"] == [@version]
       assert resp["result"]["capabilities"]["tools"] == %{}
-      assert resp["result"]["serverInfo"]["name"] == "Plausible Analytics"
-      assert [_session_id] = get_resp_header(conn, "mcp-session-id")
+      assert resp["result"]["resultType"] == "complete"
+      assert resp["result"]["_meta"][@server_info_key]["name"] == "Plausible Analytics"
+
+      # Stateless: the server never mints or echoes a session id.
+      assert get_resp_header(conn, "mcp-session-id") == []
     end
 
-    test "ping returns an empty result", %{conn: conn, token: token} do
+    test "ping returns an empty result with envelope metadata", %{conn: conn, token: token} do
       conn = rpc(conn, token, %{jsonrpc: "2.0", id: 2, method: "ping"})
-      assert json_response(conn, 200) == %{"jsonrpc" => "2.0", "id" => 2, "result" => %{}}
+      resp = json_response(conn, 200)
+      assert resp["jsonrpc"] == "2.0"
+      assert resp["id"] == 2
+      assert resp["result"]["resultType"] == "complete"
+      assert resp["result"]["_meta"][@server_info_key]["name"] == "Plausible Analytics"
     end
 
     test "notifications are acknowledged with 202 and no body", %{conn: conn, token: token} do
@@ -104,12 +145,113 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       names = Enum.map(resp["result"]["tools"], & &1["name"])
       assert "list_sites" in names
       assert "query_stats" in names
+      assert resp["result"]["resultType"] == "complete"
     end
 
-    test "unknown method returns a JSON-RPC error", %{conn: conn, token: token} do
+    test "unknown method returns 404 with a JSON-RPC error", %{conn: conn, token: token} do
       conn = rpc(conn, token, %{jsonrpc: "2.0", id: 4, method: "does/not/exist"})
-      resp = json_response(conn, 200)
+      resp = json_response(conn, 404)
       assert resp["error"]["code"] == -32_601
+    end
+  end
+
+  describe "protocol validation" do
+    setup %{user: user, team: team} do
+      {:ok, token: issue_token(user, team, ["stats:read:*", "sites:read:*"])}
+    end
+
+    test "missing MCP-Protocol-Version header -> 400 HeaderMismatch",
+         %{conn: conn, token: token} do
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta()}}
+      conn = post_rpc(conn, token, body, [{"mcp-method", "ping"}])
+      assert json_response(conn, 400)["error"]["code"] == -32_020
+    end
+
+    test "header/body protocolVersion mismatch -> 400 HeaderMismatch",
+         %{conn: conn, token: token} do
+      meta = Map.put(meta(), @version_key, "1900-01-01")
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta}}
+      headers = [{"mcp-protocol-version", @version}, {"mcp-method", "ping"}]
+      conn = post_rpc(conn, token, body, headers)
+      assert json_response(conn, 400)["error"]["code"] == -32_020
+    end
+
+    test "tools/call without Mcp-Name -> 400 HeaderMismatch", %{conn: conn, token: token} do
+      body = %{
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: %{name: "list_sites", arguments: %{}, _meta: meta()}
+      }
+
+      headers = [{"mcp-protocol-version", @version}, {"mcp-method", "tools/call"}]
+      conn = post_rpc(conn, token, body, headers)
+      assert json_response(conn, 400)["error"]["code"] == -32_020
+    end
+
+    test "missing _meta protocolVersion -> 400 Invalid params", %{conn: conn, token: token} do
+      meta = Map.delete(meta(), @version_key)
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta}}
+      headers = [{"mcp-protocol-version", @version}, {"mcp-method", "ping"}]
+      conn = post_rpc(conn, token, body, headers)
+      assert json_response(conn, 400)["error"]["code"] == -32_602
+    end
+
+    test "missing _meta clientCapabilities -> 400 Invalid params", %{conn: conn, token: token} do
+      meta = Map.delete(meta(), @caps_key)
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta}}
+      headers = [{"mcp-protocol-version", @version}, {"mcp-method", "ping"}]
+      conn = post_rpc(conn, token, body, headers)
+      assert json_response(conn, 400)["error"]["code"] == -32_602
+    end
+
+    test "unsupported protocol version -> 400 with supported list", %{conn: conn, token: token} do
+      old = "2025-06-18"
+      meta = Map.put(meta(), @version_key, old)
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta}}
+      headers = [{"mcp-protocol-version", old}, {"mcp-method", "ping"}]
+      conn = post_rpc(conn, token, body, headers)
+
+      resp = json_response(conn, 400)
+      assert resp["error"]["code"] == -32_022
+      assert resp["error"]["data"]["supported"] == [@version]
+      assert resp["error"]["data"]["requested"] == old
+    end
+
+    test "a client-sent Mcp-Session-Id is ignored and never echoed",
+         %{conn: conn, token: token} do
+      body = %{jsonrpc: "2.0", id: 1, method: "ping", params: %{_meta: meta()}}
+
+      headers = [
+        {"mcp-protocol-version", @version},
+        {"mcp-method", "ping"},
+        {"mcp-session-id", "client-supplied"}
+      ]
+
+      conn = post_rpc(conn, token, body, headers)
+      assert json_response(conn, 200)
+      assert get_resp_header(conn, "mcp-session-id") == []
+    end
+
+    test "a JSON-RPC batch (array body) is rejected -> 400 Invalid Request",
+         %{conn: conn, token: token} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> put_req_header("content-type", "application/json")
+        |> post("/mcp", Jason.encode!([%{jsonrpc: "2.0", id: 1, method: "ping"}]))
+
+      assert json_response(conn, 400)["error"]["code"] == -32_600
+    end
+
+    test "GET /mcp -> 405", %{conn: conn, token: token} do
+      conn = conn |> put_req_header("authorization", "Bearer #{token}") |> get("/mcp")
+      assert json_response(conn, 405)
+    end
+
+    test "DELETE /mcp -> 405", %{conn: conn, token: token} do
+      conn = conn |> put_req_header("authorization", "Bearer #{token}") |> delete("/mcp")
+      assert json_response(conn, 405)
     end
   end
 
@@ -234,23 +376,13 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       # The grant is NOT revoked - downgrade isn't a membership deletion...
       assert [_] = Plausible.OAuth.list_grants(member)
 
-      assert rpc(conn, token, %{jsonrpc: "2.0", id: 9, method: "ping"})
-             |> json_response(200) == %{"jsonrpc" => "2.0", "id" => 9, "result" => %{}}
+      ping = rpc(conn, token, %{jsonrpc: "2.0", id: 9, method: "ping"}) |> json_response(200)
+      assert ping["id"] == 9
+      assert ping["result"]["resultType"] == "complete"
 
       # ...but the live per-request check now excludes guests, so no team sites
       # are visible.
       assert Jason.decode!(hd(list_sites.()["result"]["content"])["text"])["sites"] == []
-    end
-
-    test "GET /mcp is not supported", %{conn: conn, user: user, team: team} do
-      token = issue_token(user, team, ["stats:read:*"])
-
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{token}")
-        |> get("/mcp")
-
-      assert json_response(conn, 405)
     end
   end
 end

@@ -505,6 +505,7 @@ defmodule PlausibleWeb.Router do
 
     post "/mcp", MCP.MCPController, :handle
     get "/mcp", MCP.MCPController, :not_supported
+    delete "/mcp", MCP.MCPController, :not_supported
   end
 
   scope "/", PlausibleWeb do
