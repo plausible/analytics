@@ -1,47 +1,54 @@
 <.settings_tiles>
-  <.tile :if={Plausible.Sites.regular?(@site)} docs="change-domain-name">
-    <:title>
-      Site domain
-    </:title>
-    <:subtitle>
-      Moving your site to a different domain? We got you!
-    </:subtitle>
-    <.input name="domain" label="Domain" value={@site.domain} disabled width="w-1/2" mt?={false} />
+  <.tile>
+    <:title>Site details</:title>
+    <:subtitle>Manage your site's domain and reporting timezone.</:subtitle>
 
-    <.button_link href={Routes.site_path(@conn, :change_domain, @site.domain)}>
-      Change domain
-    </.button_link>
+    <div class="flex flex-col gap-6">
+      <div :if={Plausible.Sites.regular?(@site)} class="flex flex-col gap-6">
+        <.settings_row label="Site domain" docs="change-domain-name">
+          <span class="text-gray-800 dark:text-gray-200">{@site.domain}</span>
+          <.tooltip centered?={true}>
+            <:tooltip_content>Change domain</:tooltip_content>
+            <.button_link
+              theme="icon"
+              size="xs"
+              mt?={false}
+              href={Routes.site_path(@conn, :change_domain, @site.domain)}
+              aria-label="Change domain"
+            >
+              <PlausibleWeb.Components.Icons.pencil_icon class="size-4.5" />
+            </.button_link>
+          </.tooltip>
+        </.settings_row>
+
+        <.settings_divider />
+      </div>
+
+      <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>
+        <.settings_row
+          label="Reporting timezone"
+          for={f[:timezone].id}
+          docs="general"
+          actions_class="gap-3"
+          x-data={"{ changed: false, saved: '#{@site.timezone}' }"}
+          x-on:change="changed = $event.target.value !== saved"
+        >
+          <.input
+            field={f[:timezone]}
+            type="select"
+            options={Plausible.Timezones.options()}
+            width="w-auto max-w-72"
+            mt?={false}
+          />
+          <.button theme="secondary" type="submit" mt?={false} disabled x-bind:disabled="!changed">
+            Save
+          </.button>
+        </.settings_row>
+      </.form>
+    </div>
   </.tile>
 
-  <.tile docs="general">
-    <:title>Site timezone</:title>
-    <:subtitle>Update your reporting timezone.</:subtitle>
-    <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>
-      <.input
-        field={f[:timezone]}
-        label="Reporting timezone"
-        type="select"
-        options={Plausible.Timezones.options()}
-        width="w-1/2"
-        mt?={false}
-      />
-      <.button type="submit">
-        Save timezone
-      </.button>
-    </.form>
-  </.tile>
-  <.tile :if={Plausible.Sites.regular?(@site)} docs="plausible-script">
-    <:title>Site installation</:title>
-    <:subtitle>
-      Control what data is collected and verify your installation.
-    </:subtitle>
-    <.button_link
-      href={
-        Routes.site_path(@conn, :installation, @site.domain, flow: PlausibleWeb.Flows.review())
-      }
-      mt?={false}
-    >
-      Review installation
-    </.button_link>
-  </.tile>
+  <div :if={Plausible.Sites.regular?(@site)}>
+    {live_render(@conn, PlausibleWeb.Live.TrackingSettings, session: %{"domain" => @site.domain})}
+  </div>
 </.settings_tiles>

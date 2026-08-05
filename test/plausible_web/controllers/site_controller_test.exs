@@ -675,13 +675,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       assert resp =~ "Settings for #{site.domain}"
+      assert resp =~ "Site details"
       assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
 
-      assert resp =~ "Site timezone"
+      assert resp =~ "Reporting timezone"
 
-      assert resp =~ "Site installation"
+      assert resp =~ "Tracking"
+
+      assert resp =~
+               Routes.site_path(conn, :installation, site.domain,
+                 flow: PlausibleWeb.Flows.review()
+               )
     end
 
     on_ee do
@@ -693,7 +698,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         resp = html_response(conn, 200)
 
         assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
-        assert text(tile_element) =~ "Site timezone"
+        assert text(tile_element) =~ "Reporting timezone"
+        refute text(tile_element) =~ "Site domain"
       end
     end
 
