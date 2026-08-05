@@ -213,3 +213,11 @@ type SeriesValue =
       isCurrent: boolean
       timeLabel: string
     }
+
+/**
+ * This function normalizes graph time labels in the format "2026-10-10 10:00:15"
+ * to the standard format "2026-10-10T10:00:15". Passes YYYY-MM-DD format date strings
+ * like "2026-01-01" through unchanged.
+ */
+export const normalizeGraphTimeLabel = (timeLabel: string) =>
+  timeLabel.split(' ').join('T')
