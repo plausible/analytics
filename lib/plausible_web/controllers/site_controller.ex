@@ -288,6 +288,7 @@ defmodule PlausibleWeb.SiteController do
         |> render("settings_general.html",
           site: site,
           changeset: changeset,
+          connect_live_socket: true,
           layout: {PlausibleWeb.LayoutView, "site_settings.html"}
         )
     end
