@@ -215,7 +215,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and team is not setup",
+    test "shows upgrade link in header when user is on trial and team is not setup",
          %{conn: conn, user: user} do
       new_site(owner: user)
 
@@ -230,11 +230,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert text_of_element(
                resp,
                ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
-             ) =~ "Upgrade"
+             ) =~ "Choose a plan"
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and is owner of a setup team",
+    test "shows upgrade link in header when user is on trial and is owner of a setup team",
          %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and has billing role in a setup team",
+    test "shows upgrade link in header when user is on trial and has billing role in a setup team",
          %{conn: base_conn} do
       member = new_user()
       owner = new_user(trial_expiry_date: Date.add(Date.utc_today(), 30))
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
-    test "does not show upgrade button in header when user is on trial but has non-billing role in a setup team",
+    test "does not show upgrade link in header when user is on trial but has non-billing role in a setup team",
          %{conn: base_conn} do
       for role <- [:admin, :editor, :viewer] do
         member = new_user()
@@ -288,7 +288,7 @@ defmodule PlausibleWeb.SiteControllerTest do
                  resp,
                  ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
                ),
-               "expected no Upgrade button for role #{role}"
+               "expected no upgrade link for role #{role}"
       end
     end
 
