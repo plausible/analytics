@@ -243,8 +243,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         %{"user" => _} = params,
         %{assigns: %{invitation: %{} = invitation}} = socket
       ) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
       user =
         params["user"]
         |> Map.put("email", invitation.email)
@@ -259,8 +258,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   def handle_event("register", %{"user" => _} = params, socket) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
       user = Auth.User.new(params["user"])
 
       add_user(socket, user)
