@@ -7,12 +7,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
   alias Plausible.Site.TrackerScriptConfiguration
 
   @migration_guide_link "https://plausible.io/docs/script-update-guide"
-
-  on_ee do
-    @submit_button_text "I've installed it"
-  else
-    @submit_button_text "Proceed to dashboard"
-  end
+  @submit_button_text "I've installed it"
 
   setup [:create_user, :log_in, :create_site]
 

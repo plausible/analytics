@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.Installation do
   alias PlausibleWeb.Live.Installation.Icons
   alias PlausibleWeb.Live.Installation.Instructions
 
+  @submit_button_text "I've installed it"
+
   on_ee do
     alias Plausible.InstallationSupport.{Detection, Result}
   end
@@ -82,7 +84,6 @@ defmodule PlausibleWeb.Live.Installation do
     {:ok,
      assign(socket,
        site: site,
-       site_created?: params["site_created"] == "true",
        flow: flow,
        return_to: params["return_to"],
        current_step: "Install Plausible",
@@ -106,6 +107,8 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :submit_button_text, @submit_button_text)
+
     ~H"""
     <div>
       <div class="flex flex-col gap-10 w-full max-w-md mx-auto mt-10 pb-16 px-4 text-gray-900 dark:text-gray-100">
@@ -204,7 +207,7 @@ defmodule PlausibleWeb.Live.Installation do
                   )
                 }
               >
-                {submit_button_text()}
+                {@submit_button_text}
               </.button>
             </div>
           </.form>
@@ -226,12 +229,6 @@ defmodule PlausibleWeb.Live.Installation do
       </div>
     </div>
     """
-  end
-
-  on_ee do
-    defp submit_button_text, do: "I've installed it"
-  else
-    defp submit_button_text, do: "Proceed to dashboard"
   end
 
   on_ee do

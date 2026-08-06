@@ -38,7 +38,7 @@ defmodule PlausibleWeb.ControllerHelpers do
     layout: {PlausibleWeb.LayoutView, :onboarding},
     hide_footer?: true,
     disable_global_notices?: true,
-    white_bg?: true
+    bg_class: "bg-white dark:bg-gray-950"
   ]
 
   def render_onboarding_page(conn, template, extra_assigns \\ []) do

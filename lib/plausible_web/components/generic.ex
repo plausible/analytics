@@ -303,6 +303,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global, include: ~w(patch))
   attr(:method, :string, default: "get")
@@ -312,6 +313,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.unstyled_link
       new_tab={@new_tab}
+      external_icon={@external_icon}
       href={@href}
       method={@method}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150 " <> @class}
@@ -377,6 +379,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
@@ -399,6 +402,7 @@ defmodule PlausibleWeb.Components.Generic do
         id={@id}
         class={@class}
         new_tab={@new_tab}
+        external_icon={@external_icon}
         href={@href}
         x-on:click="close()"
         data-ui-state={@state}
@@ -427,6 +431,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   attr(:method, :string, default: "get")
@@ -452,7 +457,7 @@ defmodule PlausibleWeb.Components.Generic do
       ~H"""
       <.link
         class={[
-          "inline-flex items-center gap-x-1",
+          @external_icon && "inline-flex items-center gap-x-1",
           @class
         ]}
         href={@href}
@@ -462,7 +467,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <.external_link_icon class={[@icon_class]} />
+        <.external_link_icon :if={@external_icon} class={[@icon_class]} />
       </.link>
       """
     else
