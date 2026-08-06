@@ -18,7 +18,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
         </code>
       </label>
 
-      <.code_snippet text={render_snippet(@tracker_script_configuration_form.data)} rows={6} />
+      <.code_snippet
+        id="manual-snippet"
+        text={render_snippet(@tracker_script_configuration_form.data)}
+        rows={6}
+      />
 
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Need help?
@@ -136,7 +140,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
         <:step>
           <div class="flex flex-col gap-2">
             <span>Copy your Script ID.</span>
-            <.code_snippet text={@tracker_script_configuration_form.data.id} rows={1} />
+            <.code_snippet
+              id="gtm-script-id-snippet"
+              text={@tracker_script_configuration_form.data.id}
+              rows={1}
+            />
           </div>
         </:step>
         <:step>
@@ -253,19 +261,24 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
     """
   end
 
+  attr :id, :string, required: true
   attr :text, :string, required: true
   attr :rows, :integer, default: 6
 
   defp code_snippet(assigns) do
     ~H"""
-    <div class="relative rounded-lg bg-gray-100 dark:bg-gray-750" x-data="copySnippet">
+    <div
+      id={@id}
+      phx-hook="CopySnippet"
+      data-copied="false"
+      class="group relative rounded-lg bg-gray-100 dark:bg-gray-750"
+    >
       <textarea
-        x-ref="snippet"
+        data-snippet
         name="snippet"
         rows={@rows}
         readonly
         class="block w-full resize-none border-0 bg-transparent px-3 py-3 text-[0.8rem] leading-4.5 font-mono text-gray-800 dark:text-gray-300 selection:bg-gray-200/80 dark:selection:bg-gray-700 focus:outline-none focus:ring-0"
-        x-on:click="copyIfNoSelection()"
       ><%= @text %></textarea>
 
       <.button
@@ -274,12 +287,12 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
         size="xs"
         mt?={false}
         class="absolute top-1.5 right-1.5 shadow-xs"
-        x-on:click="copyAll()"
+        data-copy
       >
-        <span x-show="!copied" class="inline-flex items-center gap-x-1.5">
+        <span class="inline-flex items-center gap-x-1.5 group-data-[copied=true]:hidden">
           <PlausibleWeb.Components.Icons.copy_icon class="size-3.5" /> Copy
         </span>
-        <span x-show="copied" x-cloak class="inline-flex items-center gap-x-1.5">
+        <span class="hidden items-center gap-x-1.5 group-data-[copied=true]:inline-flex">
           <Heroicons.check mini class="size-3.5" /> Copied!
         </span>
       </.button>
