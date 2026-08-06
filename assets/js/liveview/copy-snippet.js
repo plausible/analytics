@@ -1,34 +1,47 @@
 // Copy-to-clipboard behaviour for a readonly textarea holding a code snippet.
-// Expects an `x-ref="snippet"` textarea within the same `x-data` scope.
+// Expects a `[data-snippet]` textarea and a `[data-copy]` button inside the hook
+// element. The button labels are swapped through the `data-copied` attribute the
+// hook keeps on its root element.
 
 const RESET_DELAY = 2000
 
 const hasSelection = (el) => el.selectionStart !== el.selectionEnd
 
-const isFullySelected = (el) =>
-  el.selectionStart === 0 && el.selectionEnd === el.value.length
+export default {
+  mounted() {
+    this.copied = false
+    this.snippet = this.el.querySelector('[data-snippet]')
 
-export default () => ({
-  copied: false,
-  copyAll() {
-    const el = this.$refs.snippet
-    el.focus()
-    el.select()
-    document.execCommand('copy')
-    this.copied = true
+    this.snippet.addEventListener('click', () => {
+      if (hasSelection(this.snippet)) return
+      this.copyAll()
+    })
 
-    setTimeout(() => {
-      this.copied = false
-
-      // Leave it alone if the user has highlighted their own text since.
-      if (isFullySelected(el)) {
-        el.setSelectionRange(0, 0)
-        el.blur()
-      }
-    }, RESET_DELAY)
+    this.el
+      .querySelector('[data-copy]')
+      .addEventListener('click', () => this.copyAll())
   },
-  copyIfNoSelection() {
-    if (hasSelection(this.$refs.snippet)) return
-    this.copyAll()
+
+  updated() {
+    // A server-side patch resets the attribute to its rendered default.
+    this.setCopied(this.copied)
+  },
+
+  destroyed() {
+    clearTimeout(this.resetTimer)
+  },
+
+  copyAll() {
+    navigator.clipboard.writeText(this.snippet.value).then(() => {
+      this.setCopied(true)
+
+      clearTimeout(this.resetTimer)
+      this.resetTimer = setTimeout(() => this.setCopied(false), RESET_DELAY)
+    })
+  },
+
+  setCopied(copied) {
+    this.copied = copied
+    this.el.dataset.copied = copied
   }
-})
+}
