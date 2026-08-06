@@ -198,7 +198,12 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           <.button_link
             :if={not @offer_custom_url_input?}
             mt?={false}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow, return_to: "dashboard")}
+            href={
+              Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+                flow: @flow,
+                return_to: "dashboard"
+              )
+            }
             theme="ghost"
             size="sm"
             class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
