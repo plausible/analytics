@@ -254,7 +254,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       add_user(socket, user, with_team?: with_team?)
     else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+      {:noreply, captcha_failed(socket)}
     end
   end
 
@@ -265,8 +265,14 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       add_user(socket, user)
     else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+      {:noreply, captcha_failed(socket)}
     end
+  end
+
+  defp captcha_failed(socket) do
+    socket
+    |> assign(:captcha_error, "Please complete the captcha to register")
+    |> PlausibleWeb.Components.Captcha.reset()
   end
 
   defp add_user(socket, user, opts \\ []) do
@@ -282,10 +288,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
         {:noreply, assign(socket, trigger_submit: true)}
 
       {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
+        socket =
+          socket
+          |> assign(form: to_form(Map.put(changeset, :action, :validate)))
+          |> PlausibleWeb.Components.Captcha.reset()
+
+        {:noreply, socket}
     end
   end
 

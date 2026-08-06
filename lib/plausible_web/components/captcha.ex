@@ -8,17 +8,35 @@ defmodule PlausibleWeb.Components.Captcha do
     * matches the widget to the app's resolved light/dark theme,
     * reveals the widget only when the user must interact (or on error/slow solve),
     * dispatches `frc-captcha-ready` / `frc-captcha-reset` window events so the
-      submit button can gate on a valid solution.
+      submit button can gate on a valid solution,
+    * resets the widget when the server pushes the `reset-frc-captcha` event.
 
   Pass `live?={true}` from a LiveView so the widget and scripts carry
-  `phx-update="ignore"` and survive DOM patching.
+  `phx-update="ignore"` and survive DOM patching. A captcha solution is
+  single-use, so a LiveView must call `reset/1` whenever a submit fails and the
+  form stays on screen - otherwise the next submit fails on a spent solution.
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
+
+  @reset_event "reset-frc-captcha"
+
+  @doc """
+  Tells the client to discard the current captcha solution and solve a new one.
+  """
+  def reset(socket) do
+    if PlausibleWeb.Captcha.enabled?() do
+      Phoenix.LiveView.push_event(socket, @reset_event, %{})
+    else
+      socket
+    end
+  end
 
   attr :live?, :boolean, default: false
   attr :error, :string, default: nil
 
   def widget(assigns) do
+    assigns = assign(assigns, :reset_event, @reset_event)
+
     ~H"""
     <div>
       <div
@@ -106,6 +124,13 @@ defmodule PlausibleWeb.Components.Captcha do
             window.dispatchEvent(new Event(
               d.state === "completed" ? "frc-captcha-ready" : "frc-captcha-reset"
             ));
+          });
+
+          window.addEventListener("phx:<%= @reset_event %>", function () {
+            if (!window.frcaptcha) return;
+            window.frcaptcha.getAllWidgets().forEach(function (widget) {
+              if (!widget.isDestroyed) widget.reset();
+            });
           });
         })();
       </script>
