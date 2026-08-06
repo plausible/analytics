@@ -7,7 +7,9 @@ on:
 
 jobs:
   tracker-release-npm:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    # needs to be Github hosted runner, see
+    # https://docs.npmjs.com/trusted-publishers#limitations-and-future-improvements
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: read
       contents: read
