@@ -22,7 +22,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
 
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Need help?
-        <.styled_link href="https://plausible.io/docs/plausible-script">
+        <.styled_link
+          href="https://plausible.io/docs/plausible-script"
+          new_tab={true}
+          external_icon={false}
+        >
           Read our docs
         </.styled_link>
       </p>
@@ -106,7 +110,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
       <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Instructions</label>
       <.steps_list>
         <:step>
-          <.styled_link href="https://plausible.io/wordpress-analytics-plugin">
+          <.styled_link
+            href="https://plausible.io/wordpress-analytics-plugin"
+            new_tab={true}
+            external_icon={false}
+          >
             Install our WordPress plugin.
           </.styled_link>
         </:step>
@@ -132,7 +140,7 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
           </div>
         </:step>
         <:step>
-          <.styled_link href="https://plausible.io/gtm-template">
+          <.styled_link href="https://plausible.io/gtm-template" new_tab={true} external_icon={false}>
             Install the Plausible template in GTM.
           </.styled_link>
         </:step>
@@ -149,7 +157,11 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
       <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Instructions</label>
       <.steps_list>
         <:step>
-          <.styled_link href="https://www.npmjs.com/package/@plausible-analytics/tracker">
+          <.styled_link
+            href="https://www.npmjs.com/package/@plausible-analytics/tracker"
+            new_tab={true}
+            external_icon={false}
+          >
             Install @plausible-analytics/tracker NPM package
           </.styled_link>
         </:step>

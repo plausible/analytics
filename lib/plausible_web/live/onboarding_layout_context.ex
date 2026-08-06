@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.OnboardingLayoutContext do
         hide_trial_badge?: params["flow"] == Flows.register(),
         hide_footer?: true,
         disable_global_notices?: true,
-        white_bg?: true
+        bg_class: "bg-white dark:bg-gray-950"
       )
 
     {:cont, socket, layout: {PlausibleWeb.LayoutView, :onboarding}}

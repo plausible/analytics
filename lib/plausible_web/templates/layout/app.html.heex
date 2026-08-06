@@ -30,11 +30,8 @@
   </head>
   <body
     class={[
-      "flex flex-col dark:bg-gray-950",
-      if(assigns[:white_bg?],
-        do: "bg-white",
-        else: "bg-gray-50"
-      ),
+      "flex flex-col",
+      assigns[:bg_class] || "bg-gray-50 dark:bg-gray-950",
       if !assigns[:embedded] do
         "h-full"
       end
