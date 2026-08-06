@@ -39,7 +39,6 @@ All notable changes to this project will be documented in this file.
 - Improved site transfer UI
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 - Removed limitation that blocked users without owned sites from starting a subscription
-- Redesigned the trial notification in the header
 
 ### Fixed
 
