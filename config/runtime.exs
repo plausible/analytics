@@ -848,8 +848,6 @@ cloud_cron = [
   {"0 0 * * *", Plausible.Workers.LockSites},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
-  # First sunday of the month, 4:00 UTC
-  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
   # Daily at 4:00 UTC
   {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
   # Daily at 2:00 UTC
@@ -872,7 +870,6 @@ base_queues = [
   notify_exported_analytics: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1,
-  clickhouse_clean_sites: 1,
   locations_sync: 1
 ]
 
