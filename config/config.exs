@@ -37,7 +37,7 @@ config :tailwind,
 
 config :ua_inspector,
   database_path: "priv/ua_inspector",
-  remote_release: "6.5.0"
+  remote_release: "2202ef28794b4eb9a89c85dddd678d3ee957da2a"
 
 config :ref_inspector,
   database_path: "priv/ref_inspector"
