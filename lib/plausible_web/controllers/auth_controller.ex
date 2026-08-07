@@ -529,10 +529,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp render_verify_2fa(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa.html",
-      error: error,
-      remember_2fa_days: TwoFactor.Session.remember_2fa_days()
-    )
+    render_auth_page(conn, "verify_2fa.html", error: error)
   end
 
   defp render_verify_2fa_recovery_code(conn, error \\ nil) do
