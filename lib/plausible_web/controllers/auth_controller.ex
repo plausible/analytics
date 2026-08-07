@@ -165,11 +165,13 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render_password_reset_request_form(conn)
+    render_auth_page(conn, "password_reset_request_form.html")
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render_password_reset_request_form(conn, error: "Please enter an email address")
+    render_auth_page(conn, "password_reset_request_form.html",
+      error: "Please enter an email address"
+    )
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
@@ -191,14 +193,10 @@ defmodule PlausibleWeb.AuthController do
           render_auth_page(conn, "password_reset_request_success.html", email: email)
       end
     else
-      render_password_reset_request_form(conn,
+      render_auth_page(conn, "password_reset_request_form.html",
         captcha_error: "Please complete the captcha to reset your password"
       )
     end
-  end
-
-  defp render_password_reset_request_form(conn, extra_assigns \\ []) do
-    render_auth_page(conn, "password_reset_request_form.html", extra_assigns)
   end
 
   def password_reset_form(conn, params) do
@@ -465,7 +463,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa(conn)
+          render_auth_page(conn, "verify_2fa.html")
         else
           redirect_to_login(conn)
         end
@@ -485,8 +483,8 @@ defmodule PlausibleWeb.AuthController do
 
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
-
-          render_verify_2fa(conn, "The provided code is invalid. Please try again")
+          error = "The provided code is invalid. Please try again"
+          render_auth_page(conn, "verify_2fa.html", error: error)
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user, params["return_to"])
@@ -498,7 +496,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa_recovery_code(conn)
+          render_auth_page(conn, "verify_2fa_recovery_code.html")
         else
           redirect_to_login(conn)
         end
@@ -516,24 +514,13 @@ defmodule PlausibleWeb.AuthController do
 
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
-
-          render_verify_2fa_recovery_code(
-            conn,
-            "The provided recovery code is invalid. Please try another one"
-          )
+          error = "The provided recovery code is invalid. Please try another one"
+          render_auth_page(conn, "verify_2fa_recovery_code.html", error: error)
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
       end
     end
-  end
-
-  defp render_verify_2fa(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa.html", error: error)
-  end
-
-  defp render_verify_2fa_recovery_code(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa_recovery_code.html", error: error)
   end
 
   defp get_2fa_user_limited(conn) do

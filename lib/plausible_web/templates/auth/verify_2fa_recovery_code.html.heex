@@ -22,8 +22,8 @@
           placeholder="Recovery code"
           mt?={false}
         />
-        <p :if={@error} class="text-xs text-red-500 text-center">
-          {@error}
+        <p :if={error = @conn.assigns[:error]} class="text-xs text-red-500 text-center">
+          {error}
         </p>
       </div>
 
