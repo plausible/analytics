@@ -185,16 +185,10 @@ defmodule PlausibleWeb.AuthController do
             "Password reset e-mail sent. In dev environment GET /sent-emails for details."
           )
 
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
-            email: email
-          )
+          render_auth_page(conn, "password_reset_request_success.html", email: email)
 
         {:error, _} ->
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
-            email: email
-          )
+          render_auth_page(conn, "password_reset_request_success.html", email: email)
       end
     else
       render_password_reset_request_form(conn,
@@ -204,17 +198,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp render_password_reset_request_form(conn, extra_assigns \\ []) do
-    render_auth_page(
-      conn,
-      "password_reset_request_form.html",
-      Keyword.merge(
-        [
-          heading: "Reset your password",
-          subtitle: "Enter your email to receive a password reset link."
-        ],
-        extra_assigns
-      )
-    )
+    render_auth_page(conn, "password_reset_request_form.html", extra_assigns)
   end
 
   def password_reset_form(conn, params) do
@@ -222,8 +206,6 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{email: email}} ->
         render_auth_page(conn, "password_reset_form.html",
           connect_live_socket: true,
-          heading: "Reset your password",
-          subtitle: "Choose a new password for your account",
           email: email
         )
 
@@ -549,18 +531,12 @@ defmodule PlausibleWeb.AuthController do
   defp render_verify_2fa(conn, error \\ nil) do
     render_auth_page(conn, "verify_2fa.html",
       error: error,
-      heading: "Enter your 2FA code",
-      subtitle: "Open your authenticator app and enter the 6-digit code.",
       remember_2fa_days: TwoFactor.Session.remember_2fa_days()
     )
   end
 
   defp render_verify_2fa_recovery_code(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa_recovery_code.html",
-      error: error,
-      heading: "Use a recovery code",
-      subtitle: "Enter one of your saved recovery codes to sign in."
-    )
+    render_auth_page(conn, "verify_2fa_recovery_code.html", error: error)
   end
 
   defp get_2fa_user_limited(conn) do

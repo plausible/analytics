@@ -72,6 +72,32 @@ defmodule PlausibleWeb.Components.Layout do
     """
   end
 
+  attr(:heading, :string, required: true)
+  attr(:subtitle, :string, default: nil)
+  slot(:inner_block, required: true)
+
+  def auth(assigns) do
+    ~H"""
+    <div class="min-h-screen w-full bg-white dark:bg-gray-900">
+      <div class="flex justify-center pt-12 sm:pt-20">
+        <a href="/">
+          <.logo />
+        </a>
+      </div>
+
+      <div class="max-w-md mx-auto mt-10 sm:mt-16 px-4 flex flex-col gap-y-2 text-center dark:text-gray-300">
+        <h1 class="text-lg sm:text-xl font-semibold">
+          {@heading}
+        </h1>
+        <p :if={@subtitle} class="text-base text-gray-500 dark:text-gray-400 text-pretty">
+          {@subtitle}
+        </p>
+      </div>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
   attr(:selected_fn, :any, required: true)
   attr(:prefix, :string, default: "")
   attr(:options, :list, required: true)

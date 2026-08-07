@@ -24,7 +24,6 @@ defmodule PlausibleWeb.ControllerHelpers do
     do: Application.get_env(:plausible, PlausibleWeb.Endpoint)[:render_errors][:layout]
 
   @auth_layout_assigns [
-    layout: {PlausibleWeb.LayoutView, :auth},
     hide_header?: true,
     hide_footer?: true,
     disable_global_notices?: true

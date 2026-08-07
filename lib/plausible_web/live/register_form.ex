@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Teams
+  alias PlausibleWeb.Components.Layout
 
   def mount(params, _session, socket) do
     socket =
@@ -70,99 +71,102 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
-    <.auth_container class="flex gap-3 justify-center">
-      <.button_link href="/register" mt?={false}>
-        Start free trial
-      </.button_link>
-      <.button_link href="/login" theme="secondary" mt?={false}>
-        Sign in
-      </.button_link>
-    </.auth_container>
+    <Layout.auth heading={@heading} subtitle={@subtitle}>
+      <.auth_container class="flex gap-3 justify-center">
+        <.button_link href="/register" mt?={false}>
+          Start free trial
+        </.button_link>
+        <.button_link href="/login" theme="secondary" mt?={false}>
+          Sign in
+        </.button_link>
+      </.auth_container>
+    </Layout.auth>
     """
   end
 
   def render(assigns) do
     ~H"""
-    <.auth_container>
-      <.form
-        :let={f}
-        for={@form}
-        id="register-form"
-        class="flex flex-col gap-y-6"
-        action={Routes.auth_path(@socket, :login)}
-        onsubmit={form_submit_event(@invitation)}
-        phx-hook="Metrics"
-        phx-change="validate"
-        phx-submit="register"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input name="user[register_action]" type="hidden" value={@live_action} />
-        <input
-          :if={@team_identifier}
-          name="user[team_identifier]"
-          type="hidden"
-          value={@team_identifier}
-        />
+    <Layout.auth heading={@heading} subtitle={@subtitle}>
+      <.auth_container>
+        <.form
+          :let={f}
+          for={@form}
+          id="register-form"
+          class="flex flex-col gap-y-6"
+          action={Routes.auth_path(@socket, :login)}
+          onsubmit={form_submit_event(@invitation)}
+          phx-hook="Metrics"
+          phx-change="validate"
+          phx-submit="register"
+          phx-trigger-action={@trigger_submit}
+        >
+          <input name="user[register_action]" type="hidden" value={@live_action} />
+          <input
+            :if={@team_identifier}
+            name="user[team_identifier]"
+            type="hidden"
+            value={@team_identifier}
+          />
 
-        <%= if @invitation do %>
-          <.email_input field={f[:email]} for_invitation={true} />
-          <.name_input field={f[:name]} />
-        <% else %>
-          <.name_input field={f[:name]} />
-          <.email_input field={f[:email]} for_invitation={false} />
-        <% end %>
-
-        <div class="flex flex-col gap-y-2">
-          <label
-            for={f[:password].id}
-            class="text-sm font-semibold text-gray-800 dark:text-gray-200"
-          >
-            Password
-          </label>
-          <div>
-            <.password_input_with_strength
-              field={f[:password]}
-              strength={@password_strength}
-              phx-debounce={200}
-              mt?={false}
-            />
+          <%= if @invitation do %>
+            <.email_input field={f[:email]} for_invitation={true} />
+            <.name_input field={f[:name]} />
+          <% else %>
+            <.name_input field={f[:name]} />
+            <.email_input field={f[:email]} for_invitation={false} />
+          <% end %>
+          <div class="flex flex-col gap-y-2">
+            <label
+              for={f[:password].id}
+              class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+            >
+              Password
+            </label>
+            <div>
+              <.password_input_with_strength
+                field={f[:password]}
+                strength={@password_strength}
+                phx-debounce={200}
+                mt?={false}
+              />
+            </div>
+            <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
           </div>
-          <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
-        </div>
 
-        <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <PlausibleWeb.Components.Captcha.widget error={@captcha_error} />
-        <% end %>
+          <%= if PlausibleWeb.Captcha.enabled?() do %>
+            <PlausibleWeb.Components.Captcha.widget error={@captcha_error} />
+          <% end %>
 
-        <div class="flex flex-col gap-y-4">
-          <% submit_text =
-            if ce?() or @invitation do
-              "Create my account"
-            else
-              "Start my free trial"
-            end %>
-          <.button
-            id="register"
-            type="submit"
-            class="w-full"
-            mt?={false}
-            x-data={"{ captchaReady: #{not PlausibleWeb.Captcha.enabled?()} }"}
-            x-on:frc-captcha-ready.window="captchaReady = true"
-            x-on:frc-captcha-reset.window="captchaReady = false"
-            x-bind:disabled={"!captchaReady || #{@disable_submit}"}
-          >
-            {submit_text}
-          </.button>
+          <div class="flex flex-col gap-y-4">
+            <% submit_text =
+              if ce?() or @invitation do
+                "Create my account"
+              else
+                "Start my free trial"
+              end %>
+            <.button
+              id="register"
+              type="submit"
+              class="w-full"
+              mt?={false}
+              x-data={"{ captchaReady: #{not PlausibleWeb.Captcha.enabled?()} }"}
+              x-on:frc-captcha-ready.window="captchaReady = true"
+              x-on:frc-captcha-reset.window="captchaReady = false"
+              x-bind:disabled={"!captchaReady || #{@disable_submit}"}
+            >
+              {submit_text}
+            </.button>
 
-          <p class="text-sm text-center text-gray-500 dark:text-gray-400">
-            Already have an account?
-            <.styled_link href="/login">
-              Sign in
-            </.styled_link>
-          </p>
-        </div>
-      </.form>
-    </.auth_container>
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+              Already have an account?
+              <.styled_link href="/login">
+                Sign in
+              </.styled_link>
+            </p>
+          </div>
+        </.form>
+      </.auth_container>
+    </Layout.auth>
     """
   end
 

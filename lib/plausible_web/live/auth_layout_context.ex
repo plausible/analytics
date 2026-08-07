@@ -11,6 +11,6 @@ defmodule PlausibleWeb.Live.AuthLayoutContext do
         disable_global_notices?: true
       )
 
-    {:cont, socket, layout: {PlausibleWeb.LayoutView, :auth}}
+    {:cont, socket}
   end
 end
