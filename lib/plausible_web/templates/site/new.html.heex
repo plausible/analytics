@@ -1,11 +1,5 @@
-<PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Add site info" />
-
-<.focus_box>
-  <:title>
-    Add website info
-  </:title>
-
-  <.form :let={f} for={@changeset} action={@form_submit_url}>
+<div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
+  <.form :let={f} class="flex flex-col gap-y-8" for={@changeset} action={@form_submit_url}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={@site_limit_exceeded?}
       current_user={@current_user}
@@ -14,50 +8,39 @@
       resource="sites"
     />
 
-    <div class="my-6">
-      <.input
-        help_text="Just the naked domain or subdomain without 'www', 'https' etc."
-        type="text"
-        placeholder="example.com"
-        field={f[:domain]}
-        label="Domain"
-        disabled={@site_limit_exceeded?}
-      />
-    </div>
-    <div class="my-6">
-      <.input
-        type="select"
-        help_text="To make sure we agree on what 'today' means"
-        field={f[:timezone]}
-        id="tz-select"
-        value="Etc/Greenwich"
-        disabled={@site_limit_exceeded?}
-        label="Reporting timezone"
-        options={Plausible.Timezones.options()}
-      />
-    </div>
+    <.input
+      help_text="Just the naked domain or subdomain without 'www', 'https' etc."
+      type="text"
+      placeholder="example.com"
+      field={f[:domain]}
+      label="Domain"
+      disabled={@site_limit_exceeded?}
+      mt?={false}
+      autofocus="autofocus"
+    />
+
+    <input type="hidden" name={f[:timezone].name} id="tz-input" value="Etc/UTC" />
     <script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 var option;
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 if (typeof Intl !== "undefined") {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   var timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     option = document.querySelector('#tz-select option[value="' + timezoneName + '"]')
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
-
-      if (!option) {
-        var offset = (new Date()).getTimezoneOffset()
-          option = document.querySelector('#tz-select option[offset="' + offset + '"]')
+      if (typeof Intl !== "undefined") {
+        var detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (detectedTimezone) {
+          document.getElementById("tz-input").value = detectedTimezone;
+        }
       }
-
-      if (option) { option.selected = "selected"}
     </script>
 
-    <.button
-      disabled={@site_limit_exceeded?}
-      type="submit"
-      class="w-full disabled:cursor-not-allowed"
-    >
-      Install Plausible
-    </.button>
+    <div class="flex justify-end items-center gap-x-2">
+      <.button_link theme="ghost" href={Routes.site_path(@conn, :index)} mt?={false}>
+        {if @flow == PlausibleWeb.Flows.provisioning(), do: "Back to sites", else: "Skip"}
+      </.button_link>
+      <.button
+        disabled={@site_limit_exceeded?}
+        type="submit"
+        mt?={false}
+        class="disabled:cursor-not-allowed"
+      >
+        Add site
+      </.button>
+    </div>
   </.form>
-</.focus_box>
+</div>

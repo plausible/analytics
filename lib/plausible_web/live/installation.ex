@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.Installation do
   alias PlausibleWeb.Live.Installation.Icons
   alias PlausibleWeb.Live.Installation.Instructions
 
+  @submit_button_text "I've installed it"
+
   on_ee do
     alias Plausible.InstallationSupport.{Detection, Result}
   end
@@ -82,7 +84,11 @@ defmodule PlausibleWeb.Live.Installation do
     {:ok,
      assign(socket,
        site: site,
-       flow: flow
+       flow: flow,
+       return_to: params["return_to"],
+       current_step: "Install Plausible",
+       heading: "Add tracking to your site",
+       subtitle: "Install Plausible on #{site.domain} to start seeing data."
      )}
   end
 
@@ -101,45 +107,53 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :submit_button_text, @submit_button_text)
+
     ~H"""
     <div>
-      <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
-
-      <.focus_box>
+      <div class="flex flex-col gap-10 w-full max-w-md mx-auto mt-10 pb-16 px-4 text-gray-900 dark:text-gray-100">
         <.async_result :let={recommended_installation_type} assign={@recommended_installation_type}>
           <:loading>
-            <div class="text-center text-gray-500">
-              {if(@flow == Flows.review(),
-                do: "Scanning your site to detect how Plausible is integrated...",
-                else: "Determining the simplest integration path for your website..."
-              )}
-            </div>
-            <div class="flex items-center justify-center py-8">
-              <.spinner class="w-6 h-6" />
+            <div class="flex gap-3 items-center">
+              <.spinner class="size-5" />
+              <div class="text-gray-500 dark:text-gray-400 text-base">
+                {if(@flow == Flows.review(),
+                  do: "Checking how Plausible is integrated into your site...",
+                  else: "Checking how your site is built..."
+                )}
+              </div>
             </div>
           </:loading>
 
-          <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1 rounded-lg p-1 border border-gray-300 dark:border-gray-700">
-            <.tab
-              patch={"?type=manual&flow=#{@flow}"}
-              selected={@installation_type.result == "manual"}
-            >
-              <Icons.script_icon /> Script
-            </.tab>
-            <.tab
-              patch={"?type=wordpress&flow=#{@flow}"}
-              selected={@installation_type.result == "wordpress"}
-            >
-              <Icons.wordpress_icon /> WordPress
-            </.tab>
-            <%= on_ee do %>
-              <.tab patch={"?type=gtm&flow=#{@flow}"} selected={@installation_type.result == "gtm"}>
-                <Icons.tag_manager_icon /> Tag Manager
+          <div class="flex flex-col gap-3">
+            <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Installation method
+            </label>
+            <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1.5">
+              <.tab
+                patch={"?type=manual&flow=#{@flow}"}
+                selected={@installation_type.result == "manual"}
+              >
+                <Icons.script_icon /> Script
               </.tab>
-            <% end %>
-            <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
-              <Icons.npm_icon /> NPM
-            </.tab>
+              <.tab
+                patch={"?type=wordpress&flow=#{@flow}"}
+                selected={@installation_type.result == "wordpress"}
+              >
+                <Icons.wordpress_icon /> WordPress
+              </.tab>
+              <%= on_ee do %>
+                <.tab
+                  patch={"?type=gtm&flow=#{@flow}"}
+                  selected={@installation_type.result == "gtm"}
+                >
+                  <Icons.tag_manager_icon /> Tag Manager
+                </.tab>
+              <% end %>
+              <.tab patch={"?type=npm&flow=#{@flow}"} selected={@installation_type.result == "npm"}>
+                <Icons.npm_icon /> NPM
+              </.tab>
+            </div>
           </div>
 
           <%= on_ee do %>
@@ -151,19 +165,20 @@ defmodule PlausibleWeb.Live.Installation do
           <% end %>
 
           <.form
+            class="flex flex-col gap-10"
             for={@tracker_script_configuration_form.result}
             phx-submit="submit"
-            class="mt-4"
             onsubmit={install_method_event(@installation_type.result, recommended_installation_type)}
           >
-            <.input
+            <input
               type="hidden"
-              field={@tracker_script_configuration_form.result[:installation_type]}
+              name={@tracker_script_configuration_form.result[:installation_type].name}
               value={@installation_type.result}
             />
             <Instructions.manual_instructions
               :if={@installation_type.result == "manual"}
               tracker_script_configuration_form={@tracker_script_configuration_form.result}
+              flow={@flow}
             />
 
             <Instructions.wordpress_instructions
@@ -180,15 +195,28 @@ defmodule PlausibleWeb.Live.Installation do
             <% end %>
             <Instructions.npm_instructions :if={@installation_type.result == "npm"} />
 
-            <.button
-              type="submit"
-              class="w-full mt-8"
-            >
-              {submit_button_text(@installation_type.result)}
-            </.button>
+            <div class="flex justify-end items-center gap-x-2">
+              <.secondary_action flow={@flow} return_to={@return_to} domain={@site.domain} />
+              <.button
+                type="submit"
+                mt?={false}
+                class={
+                  install_method_event(
+                    @installation_type.result,
+                    recommended_installation_type
+                  )
+                }
+              >
+                {@submit_button_text}
+              </.button>
+            </div>
           </.form>
         </.async_result>
-        <:footer :if={ce?() and @installation_type.result == "manual"}>
+
+        <div
+          :if={ce?() and @installation_type.result == "manual"}
+          class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-sm"
+        >
           <.focus_list>
             <:item>
               Still using the legacy snippet with the data-domain attribute? See
@@ -197,19 +225,10 @@ defmodule PlausibleWeb.Live.Installation do
               </.styled_link>
             </:item>
           </.focus_list>
-        </:footer>
-      </.focus_box>
+        </div>
+      </div>
     </div>
     """
-  end
-
-  on_ee do
-    defp submit_button_text("manual"), do: "Verify Script installation"
-    defp submit_button_text("wordpress"), do: "Verify WordPress installation"
-    defp submit_button_text("gtm"), do: "Verify Tag Manager installation"
-    defp submit_button_text("npm"), do: "Verify NPM installation"
-  else
-    defp submit_button_text(_), do: "Proceed to dashboard"
   end
 
   on_ee do
@@ -298,19 +317,53 @@ defmodule PlausibleWeb.Live.Installation do
     end
   end
 
+  attr :flow, :string, required: true
+  attr :return_to, :string, default: nil
+  attr :domain, :string, required: true
+
+  defp secondary_action(assigns) do
+    {label, href} =
+      cond do
+        assigns.return_to == "dashboard" ->
+          {"Back to dashboard",
+           Routes.stats_path(PlausibleWeb.Endpoint, :stats, assigns.domain,
+             verify_installation: true,
+             flow: assigns.flow
+           )}
+
+        assigns.flow == Flows.review() ->
+          {"Back to settings",
+           Routes.site_path(PlausibleWeb.Endpoint, :settings_general, assigns.domain)}
+
+        assigns.flow == Flows.provisioning() ->
+          {"Back to sites", Routes.site_path(PlausibleWeb.Endpoint, :index)}
+
+        true ->
+          {"Skip", Routes.site_path(PlausibleWeb.Endpoint, :index)}
+      end
+
+    assigns = assign(assigns, label: label, href: href)
+
+    ~H"""
+    <.button_link theme="ghost" href={@href} mt?={false}>
+      {@label}
+    </.button_link>
+    """
+  end
+
   attr :selected, :boolean, default: false
   attr :patch, :string, required: true
   slot :inner_block, required: true
 
   defp tab(assigns) do
     base_classes =
-      "rounded-md px-3 py-2 text-sm font-medium flex items-center flex-1 justify-center whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-150"
+      "rounded-md border px-2.5 py-1.5 text-sm font-medium flex items-center gap-1 flex-1 justify-center whitespace-nowrap transition-colors duration-150"
 
     selected_class =
       if assigns[:selected] do
-        "bg-gray-150 dark:bg-gray-700"
+        "bg-indigo-50/80 dark:bg-indigo-900/30 border-indigo-500 text-gray-900 dark:text-gray-100"
       else
-        "bg-transparent cursor-pointer"
+        "bg-transparent border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer"
       end
 
     assigns = assign(assigns, class: "#{selected_class} #{base_classes}")

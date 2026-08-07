@@ -6,18 +6,15 @@ defmodule PlausibleWeb.Flows do
 
   @flows %{
     review: [
-      "Install Plausible",
-      "Verify installation"
+      "Install Plausible"
     ],
     domain_change: [
       "Set up new domain",
-      "Install Plausible",
-      "Verify installation"
+      "Install Plausible"
     ],
     register: [
       "Add site info",
-      "Install Plausible",
-      "Verify installation"
+      "Install Plausible"
     ],
     invitation: [
       "Register",
@@ -25,8 +22,7 @@ defmodule PlausibleWeb.Flows do
     ],
     provisioning: [
       "Add site info",
-      "Install Plausible",
-      "Verify installation"
+      "Install Plausible"
     ]
   }
 

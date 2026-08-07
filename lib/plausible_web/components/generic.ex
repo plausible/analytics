@@ -62,6 +62,7 @@ defmodule PlausibleWeb.Components.Generic do
   @button_base_class "btn-base"
 
   @button_sizes %{
+    "xs" => "btn-xs",
     "sm" => "btn-sm",
     "md" => "btn-md"
   }
@@ -302,6 +303,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global, include: ~w(patch))
   attr(:method, :string, default: "get")
@@ -311,6 +313,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.unstyled_link
       new_tab={@new_tab}
+      external_icon={@external_icon}
       href={@href}
       method={@method}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150 " <> @class}
@@ -376,6 +379,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
@@ -398,6 +402,7 @@ defmodule PlausibleWeb.Components.Generic do
         id={@id}
         class={@class}
         new_tab={@new_tab}
+        external_icon={@external_icon}
         href={@href}
         x-on:click="close()"
         data-ui-state={@state}
@@ -426,6 +431,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   attr(:method, :string, default: "get")
@@ -451,7 +457,7 @@ defmodule PlausibleWeb.Components.Generic do
       ~H"""
       <.link
         class={[
-          "inline-flex items-center gap-x-1",
+          @external_icon && "inline-flex items-center gap-x-1",
           @class
         ]}
         href={@href}
@@ -461,7 +467,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <.external_link_icon class={[@icon_class]} />
+        <.external_link_icon :if={@external_icon} class={[@icon_class]} />
       </.link>
       """
     else
@@ -477,20 +483,32 @@ defmodule PlausibleWeb.Components.Generic do
   def spinner(assigns) do
     ~H"""
     <svg
-      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
+      class={["animate-spin size-4 text-indigo-500", @class]}
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
       viewBox="0 0 24 24"
+      fill="none"
       {@rest}
     >
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
-      </circle>
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      >
-      </path>
+      <circle
+        class="opacity-20"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+        pathLength="100"
+        stroke-dasharray="30 70"
+        transform="rotate(-90 12 12)"
+      />
     </svg>
     """
   end
@@ -545,7 +563,7 @@ defmodule PlausibleWeb.Components.Generic do
       <span
         :if={@server_mode?}
         class={[
-          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
           if(@checked, do: "bg-indigo-600", else: "dark:bg-gray-600 bg-gray-200"),
           if(@disabled, do: "opacity-50")
         ]}
@@ -553,23 +571,23 @@ defmodule PlausibleWeb.Components.Generic do
         <span
           aria-hidden="true"
           class={[
-            "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
-            if(@checked, do: "dark:bg-white translate-x-5", else: "dark:bg-white translate-x-0")
+            "pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+            if(@checked, do: "dark:bg-white translate-x-4", else: "dark:bg-white translate-x-0")
           ]}
         />
       </span>
       <span
         :if={!@server_mode?}
         class={[
-          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
           if(@disabled, do: "opacity-50")
         ]}
         x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-600 bg-gray-200'"}
       >
         <span
           aria-hidden="true"
-          class="pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
-          x-bind:class={"#{@js_active_var} ? 'dark:bg-white translate-x-5' : 'dark:bg-white translate-x-0'"}
+          class="pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
+          x-bind:class={"#{@js_active_var} ? 'dark:bg-white translate-x-4' : 'dark:bg-white translate-x-0'"}
         />
       </span>
     </button>
@@ -870,38 +888,6 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :id, :string, required: true
-  attr :text, :string, required: true
-  attr :rows, :integer, required: true
-  attr :resizable, :boolean, default: false
-
-  def copyable_readonly_text_area(assigns) do
-    ~H"""
-    <div class={["relative w-full"]}>
-      <textarea
-        id={@id}
-        class={[
-          "w-full bg-transparent border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-750 dark:text-gray-300",
-          if(!@resizable, do: "resize-none")
-        ]}
-        rows={@rows}
-        readonly
-      ><%= @text %></textarea>
-
-      <a
-        onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
-        href="javascript:void(0)"
-        class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline bottom-2 right-4 p-2 transition-colors duration-150 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400"
-      >
-        <Heroicons.document_duplicate class="pr-1 text-current size-5" />
-        <span>
-          COPY
-        </span>
-      </a>
-    </div>
-    """
-  end
-
   slot :title
   slot :subtitle
   slot :inner_block, required: true
@@ -1055,7 +1041,7 @@ defmodule PlausibleWeb.Components.Generic do
       <button
         type="submit"
         class={[
-          "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
+          "relative inline-flex flex-shrink-0 h-5 w-9 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
           if(@set_to, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-600"),
           if(@disabled?, do: "cursor-not-allowed")
         ]}
@@ -1064,8 +1050,8 @@ defmodule PlausibleWeb.Components.Generic do
         <span
           aria-hidden="true"
           class={[
-            "inline-block size-5 rounded-full bg-white shadow transform transition ease-in-out duration-200",
-            if(@set_to, do: "translate-x-5", else: "translate-x-0")
+            "inline-block size-4 rounded-full bg-white shadow transform transition ease-in-out duration-200",
+            if(@set_to, do: "translate-x-4", else: "translate-x-0")
           ]}
         />
       </button>
