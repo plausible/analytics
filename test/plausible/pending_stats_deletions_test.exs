@@ -60,12 +60,5 @@ defmodule Plausible.PendingStatsDeletionsTest do
       assert pending_deletion.stats_start_date == ~D[2018-01-01]
       assert pending_deletion.stats_end_date == ~D[2020-01-01]
     end
-
-    test "returns an error when reason is not a recognized value" do
-      site = new_site()
-
-      assert {:error, changeset} = PendingStatsDeletions.store(site, :not_a_real_reason)
-      assert {"is invalid", _} = changeset.errors[:reason]
-    end
   end
 end

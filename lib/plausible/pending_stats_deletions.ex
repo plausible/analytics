@@ -8,19 +8,16 @@ defmodule Plausible.PendingStatsDeletions do
   alias Plausible.Site
   alias Plausible.Sites
 
-  @spec store(Site.t(), atom()) ::
-          {:ok, PendingStatsDeletion.t()} | {:error, Ecto.Changeset.t()}
+  @spec store(Site.t(), atom()) :: {:ok, PendingStatsDeletion.t()}
   def store(%Site{} = site, reason \\ :user_request) do
     %{stats_start_date: stats_start_date, stats_end_date: stats_end_date} =
       Sites.stats_range(site)
 
-    %PendingStatsDeletion{}
-    |> PendingStatsDeletion.changeset(%{
+    Repo.insert(%PendingStatsDeletion{
       site_id: site.id,
       stats_start_date: stats_start_date,
       stats_end_date: stats_end_date,
       reason: reason
     })
-    |> Repo.insert()
   end
 end
