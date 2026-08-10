@@ -49,7 +49,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
       %{site_ids: site_ids, stats_start: stats_start, stats_end: stats_end} ->
         Logger.notice(
-          "Clearing ClickHouse data for the following #{length(site_ids)} sites which have been deleted: #{inspect(site_ids)}"
+          "Clearing ClickHouse data for #{length(site_ids)} in range #{starts_start}..#{stats_end}"
         )
 
         for partition_id <- Clickhouse.partition_ids(stats_start, stats_end),
