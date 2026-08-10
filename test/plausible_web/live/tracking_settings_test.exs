@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
 
       html = conn |> get_liveview(site) |> render()
 
-      assert html =~ "Installation"
+      assert html =~ "Site installation"
       assert html =~ "Completed"
     end
 
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
 
       html = conn |> get_liveview(site) |> render()
 
-      assert html =~ "Installation"
+      assert html =~ "Site installation"
       assert html =~ "Pending"
     end
 
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
 
       html = conn |> get_liveview(site) |> render()
 
-      refute html =~ "Installation"
+      refute html =~ "Site installation"
       assert html =~ "https://plausible.io/docs/plausible-script"
       assert html =~ "Review"
     end
