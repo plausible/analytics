@@ -74,6 +74,52 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_count(deleted_site, "sessions_v2", 0)
   end
 
+  @tag :slow
+  test "emits telemetry for the run and for each stage", %{test: test} do
+    test_pid = self()
+
+    telemetry_run = ClickhouseCleanSites.telemetry_run_event()
+    telemetry_stage = ClickhouseCleanSites.telemetry_stage_duration()
+
+    :telemetry.attach_many(
+      "#{test}-telemetry-handler",
+      [telemetry_run, telemetry_stage],
+      fn event, measurements, metadata, _ ->
+        send(test_pid, {:telemetry_handled, event, measurements, metadata})
+      end,
+      %{}
+    )
+
+    deleted_site = new_site()
+
+    populate_stats(deleted_site, [
+      build(:pageview, timestamp: ~N[2020-01-15 12:00:00]),
+      build(:pageview, timestamp: ~N[2020-03-15 12:00:00])
+    ])
+
+    assert {:ok, _} = Plausible.Site.Removal.run(deleted_site)
+
+    ClickhouseCleanSites.perform(nil)
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                     %{stage: "list_pending_deletions"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_run,
+                     %{sites_count: 1, partitions_count: 3}, %{}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                     %{stage: "partitioned_tables"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                     %{stage: "unpartitioned_tables"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                     %{stage: "mutation_only_tables"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                     %{stage: "clear_pending_deletions"}}
+  end
+
   def assert_count(site, table, expected_count) do
     q = from(e in table, select: %{count: fragment("count()")}, where: e.site_id == ^site.id)
     await_clickhouse_count(q, expected_count)
