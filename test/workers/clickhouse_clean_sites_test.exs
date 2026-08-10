@@ -2,6 +2,7 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   use Plausible.DataCase
   import Plausible.Factory
 
+  alias Plausible.Ingestion.Counters.Record
   alias Plausible.Workers.ClickhouseCleanSites
 
   @tag :slow
@@ -27,6 +28,9 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
       build(:imported_operating_systems)
     ])
 
+    insert_ingest_counter(site.id)
+    insert_ingest_counter(deleted_site.id)
+
     assert {:ok, _} = Plausible.Site.Removal.run(deleted_site)
 
     ClickhouseCleanSites.perform(nil)
@@ -42,12 +46,46 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_count(deleted_site, "imported_devices", 0)
     assert_count(deleted_site, "imported_browsers", 0)
     assert_count(deleted_site, "imported_operating_systems", 0)
+    # ingest_counters has a projection, so it's cleared via a mutation rather
+    # than a lightweight delete - regression coverage for that special case
+    assert_count(deleted_site, "ingest_counters", 0)
     assert_count(site, "events_v2", 1)
     assert_count(site, "sessions_v2", 1)
+    assert_count(site, "ingest_counters", 1)
+  end
+
+  @tag :slow
+  test "deletes data spanning multiple monthly partitions" do
+    deleted_site = new_site()
+
+    populate_stats(deleted_site, [
+      build(:pageview, timestamp: ~N[2020-01-15 12:00:00]),
+      build(:pageview, timestamp: ~N[2020-03-15 12:00:00])
+    ])
+
+    assert {:ok, _} = Plausible.Site.Removal.run(deleted_site)
+
+    ClickhouseCleanSites.perform(nil)
+
+    assert_count(deleted_site, "events_v2", 0)
+    assert_count(deleted_site, "sessions_v2", 0)
   end
 
   def assert_count(site, table, expected_count) do
     q = from(e in table, select: %{count: fragment("count()")}, where: e.site_id == ^site.id)
     await_clickhouse_count(q, expected_count)
+  end
+
+  defp insert_ingest_counter(site_id) do
+    Plausible.IngestRepo.insert_all(Record, [
+      %{
+        event_timebucket: DateTime.utc_now() |> DateTime.truncate(:second),
+        site_id: site_id,
+        domain: "example.com",
+        metric: "pageview",
+        value: 1,
+        tracker_script_version: 0
+      }
+    ])
   end
 end

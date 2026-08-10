@@ -1,6 +1,12 @@
 defmodule Plausible.Workers.ClickhouseCleanSites do
   @moduledoc """
-  Cleans deleted site data from ClickHouse asynchronously.
+  Cleans deleted site data from ClickHouse asynchronously, using lightweight
+  deletes.
+
+  Deletes against `events_v2` and `sessions_v2` are scoped to the monthly
+  partitions covered by the pending stats deletions, so ClickHouse doesn't
+  have to touch partitions we know contain no relevant data. The remaining
+  tables aren't partitioned, so they're cleared in one go.
 
   We batch up data deletions from ClickHouse as deleting a single site is
   just as expensive as deleting many.
@@ -10,13 +16,13 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   use Oban.Worker, queue: :clickhouse_clean_sites
 
   alias Plausible.PendingStatsDeletions
+  alias Plausible.Stats.Clickhouse
 
   require Logger
 
-  @tables_to_clear [
-    "events_v2",
-    "sessions_v2",
-    "ingest_counters",
+  @partitioned_tables ["events_v2", "sessions_v2"]
+
+  @unpartitioned_tables [
     "imported_browsers",
     "imported_devices",
     "imported_entry_pages",
@@ -29,25 +35,61 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_visitors"
   ]
 
+  # ingest_counters has a projection (`ingest_counters_site_traffic_projection`), 
+  # and ClickHouse refuses lightweight deletes against tables with projections 
+  # - fall back to a mutation which rebuilds the projection.
+  @mutation_only_tables ["ingest_counters"]
+
   @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
 
   def perform(_job) do
-    deleted_sites = PendingStatsDeletions.list_by_reason().site_ids
+    case PendingStatsDeletions.list_by_reason() do
+      %{site_ids: []} ->
+        :ok
 
-    if not Enum.empty?(deleted_sites) do
-      Logger.notice(
-        "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
-      )
-
-      for table <- @tables_to_clear do
-        IngestRepo.query!(
-          "ALTER TABLE {$0:Identifier} DELETE WHERE site_id IN {$1:Array(UInt64)}",
-          [table, deleted_sites],
-          settings: @settings
+      %{site_ids: site_ids, stats_start: stats_start, stats_end: stats_end} ->
+        Logger.notice(
+          "Clearing ClickHouse data for the following #{length(site_ids)} sites which have been deleted: #{inspect(site_ids)}"
         )
-      end
-    end
 
-    :ok
+        for partition_id <- Clickhouse.partition_ids(stats_start, stats_end),
+            table <- @partitioned_tables do
+          clear_partitioned_table!(table, partition_id, site_ids)
+        end
+
+        for table <- @unpartitioned_tables do
+          clear_unpartitioned_table!(table, site_ids)
+        end
+
+        for table <- @mutation_only_tables do
+          clear_table_via_mutation!(table, site_ids)
+        end
+
+        :ok
+    end
+  end
+
+  defp clear_partitioned_table!(table, partition_id, site_ids) do
+    IngestRepo.query!(
+      "DELETE FROM {$0:Identifier} IN PARTITION ID {$1:String} WHERE site_id IN {$2:Array(UInt64)}",
+      [table, partition_id, site_ids],
+      settings: @settings
+    )
+  end
+
+  defp clear_unpartitioned_table!(table, site_ids) do
+    IngestRepo.query!(
+      "DELETE FROM {$0:Identifier} WHERE site_id IN {$1:Array(UInt64)}",
+      [table, site_ids],
+      settings: @settings
+    )
+  end
+
+  defp clear_table_via_mutation!(table, site_ids) do
+    IngestRepo.query!(
+      "ALTER TABLE {$0:Identifier} DELETE WHERE site_id IN {$1:Array(UInt64)}",
+      [table, site_ids],
+      settings: @settings
+    )
   end
 end
