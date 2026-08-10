@@ -11,5 +11,7 @@ defmodule Plausible.Repo.Migrations.PendingStatsDeletions do
 
       timestamps()
     end
+
+    create index(:pending_stats_deletions, [:reason])
   end
 end
