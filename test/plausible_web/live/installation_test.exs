@@ -7,20 +7,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
   alias Plausible.Site.TrackerScriptConfiguration
 
   @migration_guide_link "https://plausible.io/docs/script-update-guide"
-
-  on_ee do
-    @manual_button_text "Verify Script installation"
-    @wordpress_button_text "Verify WordPress installation"
-    @gtm_button_text "Verify Tag Manager installation"
-    @npm_button_text "Verify NPM installation"
-  else
-    @shared_button_text "Proceed to dashboard"
-
-    @manual_button_text @shared_button_text
-    @wordpress_button_text @shared_button_text
-    @gtm_button_text @shared_button_text
-    @npm_button_text @shared_button_text
-  end
+  @submit_button_text "I've installed it"
 
   setup [:create_user, :log_in, :create_site]
 
@@ -57,7 +44,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert text(html) =~ @wordpress_button_text
+      assert text(html) =~ @submit_button_text
     end
 
     @tag :ee_only
@@ -71,7 +58,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=wordpress")
 
       html = render_async(lv, 500)
-      assert text(html) =~ @wordpress_button_text
+      assert text(html) =~ @submit_button_text
     end
 
     @tag :ee_only
@@ -85,7 +72,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=gtm")
 
       html = render_async(lv, 500)
-      assert text(html) =~ @gtm_button_text
+      assert text(html) =~ @submit_button_text
     end
 
     @tag :ee_only
@@ -99,7 +86,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=npm")
 
       html = render_async(lv, 500)
-      assert text(html) =~ @npm_button_text
+      assert text(html) =~ @submit_button_text
     end
 
     @tag :ee_only
@@ -113,7 +100,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=manual")
 
       html = render_async(lv, 500)
-      assert text(html) =~ @manual_button_text
+      assert text(html) =~ @submit_button_text
     end
 
     on_ee do
@@ -124,28 +111,28 @@ defmodule PlausibleWeb.Live.InstallationTest do
         {lv, _html} = get_lv(conn, site, "?type=manual")
 
         html = render_async(lv, 500)
-        assert html =~ @manual_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
 
         lv
         |> element("a[href*=\"type=wordpress\"]")
         |> render_click()
 
         html = render(lv)
-        assert html =~ @wordpress_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
 
         lv
         |> element("a[href*=\"type=gtm\"]")
         |> render_click()
 
         html = render(lv)
-        assert html =~ @gtm_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
 
         lv
         |> element("a[href*=\"type=npm\"]")
         |> render_click()
 
         html = render(lv)
-        assert html =~ @npm_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
       end
     else
       test "allows switching between installation tabs (CE)", %{conn: conn, site: site} do
@@ -153,7 +140,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = render_async(lv, 500)
         assert html =~ "window.plausible"
-        assert html =~ @shared_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
 
         lv
         |> element("a[href*=\"type=wordpress\"]")
@@ -161,7 +148,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = render(lv)
         assert html =~ "https://plausible.io/wordpress-analytics-plugin"
-        assert html =~ @shared_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
 
         lv
         |> element("a[href*=\"type=npm\"]")
@@ -169,7 +156,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = render(lv)
         assert html =~ "@plausible-analytics/tracker"
-        assert html =~ @shared_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
       end
     end
 
@@ -183,7 +170,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert eventually(fn ->
                html = render(lv)
-               {html =~ @manual_button_text, html}
+               {html =~ htmlize_quotes(@submit_button_text), html}
              end)
 
       html = render(lv)
@@ -202,7 +189,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
       assert html =~ "Optional measurements"
       assert html =~ "Outbound links"
       assert html =~ "File downloads"
@@ -218,7 +205,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
       assert html =~ "Advanced options"
       assert html =~ "Manual tagging"
       assert html =~ "404 error pages"
@@ -239,7 +226,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
 
       config = TrackerScriptConfiguration |> Plausible.Repo.get_by!(site_id: site.id)
       assert config.outbound_links == true
@@ -264,12 +251,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     on_ee do
-      for {type, expected_text} <- [
-            {"manual", @manual_button_text},
-            {"wordpress", @wordpress_button_text},
-            {"gtm", @gtm_button_text},
-            {"npm", @npm_button_text}
-          ] do
+      for type <- ["manual", "wordpress", "gtm", "npm"] do
         test "submitting form with #{type} redirects to the dashboard with the verification banner (EE)",
              %{
                conn: conn,
@@ -281,7 +263,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
           {lv, _html} = get_lv(conn, site, "?type=#{unquote(type)}")
 
           html = render_async(lv, 500)
-          assert html =~ unquote(expected_text)
+          assert html =~ htmlize_quotes(@submit_button_text)
 
           lv
           |> element("form[phx-submit='submit']")
@@ -335,7 +317,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _html} = get_lv(conn, site, "?type=manual")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
 
       # Test with all options disabled
       lv
@@ -367,7 +349,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _html} = get_lv(conn, site, "?type=manual&flow=review")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
 
       lv
       |> element("form[phx-submit='submit']")
@@ -396,14 +378,14 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     @tag :ee_only
-    test "detected WordPress installation shows special message", %{conn: conn, site: site} do
+    test "detected WordPress installation preselects WordPress tab", %{conn: conn, site: site} do
       stub_dns()
       stub_detection_wordpress()
 
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert text(html) =~ "We've detected your website is using WordPress"
+      assert text(html) =~ "Install our WordPress plugin"
     end
 
     @tag :ee_only
@@ -427,21 +409,21 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       html = render_async(lv, 500)
 
-      refute text(html) =~ "We've detected your website is using WordPress"
-      assert text(html) =~ @manual_button_text
+      refute text(html) =~ "Install our WordPress plugin"
+      assert text(html) =~ @submit_button_text
     end
 
     @tag :ee_only
-    test "detected GTM installation shows special message", %{conn: conn, site: site} do
+    test "detected GTM installation preselects Tag Manager tab", %{conn: conn, site: site} do
       stub_dns()
       stub_detection_gtm()
 
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert html =~ @gtm_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
 
-      assert text(html) =~ "We've detected your website is using Google Tag Manager"
+      assert text(html) =~ "Install the Plausible template in GTM"
     end
 
     @tag :ee_only
@@ -459,7 +441,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert html =~ @npm_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
 
     @tag :ee_only
@@ -498,7 +480,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=wordpress")
 
       html = render_async(lv, 500)
-      assert html =~ @wordpress_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
       refute element_exists?(html, "a[href='#{@migration_guide_link}']")
     end
 
@@ -515,7 +497,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         assert eventually(fn ->
                  html = render(lv)
                  # Should default to manual installation when detection returns {:error, _}
-                 {html =~ @manual_button_text, html}
+                 {html =~ htmlize_quotes(@submit_button_text), html}
                end)
       end)
     end
@@ -533,7 +515,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = render_async(lv, 500)
         # Should default to manual installation when detection returns {:error, _}
-        assert html =~ @manual_button_text
+        assert html =~ htmlize_quotes(@submit_button_text)
       end)
     end
   end
@@ -560,7 +542,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
 
     test "allows editor access to installation page", %{conn: conn, user: user} do
@@ -575,7 +557,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
   end
 
@@ -593,7 +575,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?type=invalid")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
 
     test "falls back to provisioning flow when invalid flow parameter supplied", %{
@@ -608,7 +590,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?flow=invalid")
 
       html = render_async(lv, 500)
-      assert html =~ @manual_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
   end
 
@@ -628,7 +610,80 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site)
 
       html = render_async(lv, 500)
-      assert html =~ @gtm_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
+    end
+  end
+
+  describe "secondary action" do
+    @tag :ee_only
+    test "offers Skip to /sites in the register flow", %{conn: conn, site: site} do
+      stub_dns()
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=register")
+
+      html = render_async(lv, 500)
+
+      assert text_of_element(html, ~s|a[href="/sites"]|) == "Skip"
+    end
+
+    @tag :ee_only
+    test "offers Back to sites in the provisioning flow", %{conn: conn, site: site} do
+      stub_dns()
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=provisioning")
+
+      html = render_async(lv, 500)
+
+      assert text_of_element(html, ~s|a[href="/sites"]|) == "Back to sites"
+    end
+
+    @tag :ee_only
+    test "offers Back to settings in the review flow", %{conn: conn, site: site} do
+      stub_dns()
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=review")
+
+      html = render_async(lv, 500)
+
+      href = Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain)
+
+      assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to settings"
+    end
+
+    @tag :ee_only
+    test "offers Back to dashboard, keeping verification on, when return_to=dashboard", %{
+      conn: conn,
+      site: site
+    } do
+      stub_dns()
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=provisioning&return_to=dashboard")
+
+      html = render_async(lv, 500)
+
+      href =
+        Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain,
+          verify_installation: true,
+          flow: "provisioning"
+        )
+
+      assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to dashboard"
+    end
+
+    @tag :ee_only
+    test "falls back to Skip when the flow is unrecognised", %{conn: conn, site: site} do
+      stub_dns()
+      stub_detection_manual()
+
+      {lv, _} = get_lv(conn, site, "?flow=")
+
+      html = render_async(lv, 500)
+
+      assert text_of_element(html, ~s|a[href="/sites"]|) == "Skip"
     end
   end
 
@@ -652,7 +707,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       {lv, _} = get_lv(conn, site, "?flow=review")
 
       html = render_async(lv, 500)
-      assert html =~ @wordpress_button_text
+      assert html =~ htmlize_quotes(@submit_button_text)
     end
   end
 
