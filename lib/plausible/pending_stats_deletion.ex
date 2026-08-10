@@ -7,13 +7,15 @@ defmodule Plausible.PendingStatsDeletion do
 
   import Ecto.Changeset
 
+  @reasons [:user_request]
+
   @type t() :: %__MODULE__{}
 
   schema "pending_stats_deletions" do
     field :site_id, :integer
     field :stats_start_date, :date
     field :stats_end_date, :date
-    field :reason, :string
+    field :reason, Ecto.Enum, values: @reasons, default: :user_request
 
     timestamps()
   end
@@ -23,6 +25,6 @@ defmodule Plausible.PendingStatsDeletion do
   def changeset(pending_stats_deletion \\ %__MODULE__{}, attrs \\ %{}) do
     pending_stats_deletion
     |> cast(attrs, @fields)
-    |> validate_required([:site_id, :stats_start_date, :stats_end_date, :reason])
+    |> validate_required([:site_id, :reason])
   end
 end
