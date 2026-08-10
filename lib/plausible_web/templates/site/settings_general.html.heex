@@ -17,37 +17,6 @@
         </.settings_row>
 
         <.settings_divider />
-
-        <.settings_row
-          label={if ee?(), do: "Installation"}
-          docs="plausible-script"
-        >
-          <div
-            :if={ee?() and @site.onboarding_status == :new_site}
-            class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200"
-          >
-            <span class="size-2 rounded-full bg-yellow-500"></span> Pending
-          </div>
-          <div
-            :if={ee?() and @site.onboarding_status != :new_site}
-            class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200"
-          >
-            <span class="size-2 rounded-full bg-green-500"></span> Completed
-          </div>
-          <.styled_link
-            href={
-              Routes.site_path(@conn, :installation, @site.domain,
-                flow: PlausibleWeb.Flows.review()
-              )
-            }
-            aria-label="View setup"
-            class="text-sm"
-          >
-            Review
-          </.styled_link>
-        </.settings_row>
-
-        <.settings_divider />
       </div>
 
       <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>

@@ -72,6 +72,46 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
       assert html =~ "Ecommerce revenue"
       assert html =~ "https://plausible.io/docs/ecommerce-revenue-tracking"
     end
+
+    test "links to the installation review flow", %{conn: conn, site: site} do
+      html = conn |> get_liveview(site) |> render()
+
+      assert html =~
+               Routes.site_path(PlausibleWeb.Endpoint, :installation, site.domain,
+                 flow: PlausibleWeb.Flows.review()
+               )
+    end
+
+    @tag :ee_only
+    test "shows completed installation once verified", %{conn: conn, site: site} do
+      site = set_onboarding_status(site, :completed)
+
+      html = conn |> get_liveview(site) |> render()
+
+      assert html =~ "Installation"
+      assert html =~ "Completed"
+    end
+
+    @tag :ee_only
+    test "shows pending installation when never verified", %{conn: conn, site: site} do
+      site = set_onboarding_status(site, :new_site)
+
+      html = conn |> get_liveview(site) |> render()
+
+      assert html =~ "Installation"
+      assert html =~ "Pending"
+    end
+
+    @tag :ce_build_only
+    test "does not show installation status on CE", %{conn: conn, site: site} do
+      site = set_onboarding_status(site, :new_site)
+
+      html = conn |> get_liveview(site) |> render()
+
+      refute html =~ "Installation"
+      assert html =~ "https://plausible.io/docs/plausible-script"
+      assert html =~ "Review"
+    end
   end
 
   defp get_liveview(conn, site) do
@@ -93,5 +133,11 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
 
   defp configuration(site) do
     Plausible.Repo.get_by!(TrackerScriptConfiguration, site_id: site.id)
+  end
+
+  defp set_onboarding_status(site, status) do
+    site
+    |> Ecto.Changeset.change(onboarding_status: status)
+    |> Plausible.Repo.update!()
   end
 end

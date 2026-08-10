@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.Live.TrackingSettings do
   @moduledoc """
-  LiveView for the tracking tile on the site general settings page. Allows
-  toggling the measurements that are tracked automatically, and lists the ones
-  that require manual setup.
+  LiveView for the tracking tile on the site general settings page. Shows the
+  installation status, allows toggling the measurements that are tracked
+  automatically, and lists the ones that require manual setup.
   """
   use PlausibleWeb, :live_view
 
@@ -14,6 +14,8 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     "form_submissions" => "Form submission tracking"
   }
 
+  @completed_onboarding_statuses [:verification_succeeded, :first_pageview, :completed]
+
   def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
@@ -24,10 +26,12 @@ defmodule PlausibleWeb.Live.TrackingSettings do
       end)
 
     {:ok,
-     assign(socket,
+     socket
+     |> assign(
        tracker_script_configuration:
          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(socket.assigns.site)
-     )}
+     )
+     |> assign_installation_status()}
   end
 
   def render(assigns) do
@@ -35,11 +39,27 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     <div id="tracking-settings-main">
       <.flash_messages flash={@flash} />
 
-      <.tile>
+      <.tile docs={if ce?(), do: "plausible-script"}>
         <:title>Tracking</:title>
         <:subtitle>Manage how Plausible collects data for this site.</:subtitle>
 
         <div class="flex flex-col gap-6">
+          <.settings_row
+            label={if @installation_status, do: "Site installation"}
+            docs="plausible-script"
+          >
+            <.status_indicator :if={@installation_status} status={@installation_status} />
+            <.styled_link
+              href={review_installation_path(@site)}
+              aria-label="View setup"
+              class="text-sm"
+            >
+              Review
+            </.styled_link>
+          </.settings_row>
+
+          <.settings_divider />
+
           <.settings_section
             title="Default tracking"
             tooltip="Automatically track these events for your site."
@@ -128,6 +148,22 @@ defmodule PlausibleWeb.Live.TrackingSettings do
      |> put_live_flash(:success, message)}
   end
 
+  defp status_indicator(%{status: :completed} = assigns) do
+    ~H"""
+    <div class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200">
+      <span class="size-2 rounded-full bg-green-500"></span> Completed
+    </div>
+    """
+  end
+
+  defp status_indicator(%{status: :pending} = assigns) do
+    ~H"""
+    <div class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200">
+      <span class="size-2 rounded-full bg-yellow-500"></span> Pending
+    </div>
+    """
+  end
+
   attr :label, :string, required: true
   slot :icon, required: true
   slot :inner_block, required: true
@@ -163,5 +199,22 @@ defmodule PlausibleWeb.Live.TrackingSettings do
       </.button_link>
     </.tooltip>
     """
+  end
+
+  defp review_installation_path(site) do
+    Routes.site_path(PlausibleWeb.Endpoint, :installation, site.domain,
+      flow: PlausibleWeb.Flows.review()
+    )
+  end
+
+  defp assign_installation_status(socket) do
+    status =
+      cond do
+        ce?() -> nil
+        socket.assigns.site.onboarding_status in @completed_onboarding_statuses -> :completed
+        true -> :pending
+      end
+
+    assign(socket, installation_status: status)
   end
 end
