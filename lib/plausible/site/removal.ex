@@ -4,6 +4,7 @@ defmodule Plausible.Site.Removal do
   """
   use Plausible
 
+  alias Plausible.PendingStatsDeletions
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -13,6 +14,8 @@ defmodule Plausible.Site.Removal do
   def run(site, opts \\ []) do
     Repo.transaction(fn ->
       site = Repo.preload(site, :team)
+
+      {:ok, pending_stats_deletion} = PendingStatsDeletions.store(site)
 
       result = Repo.delete_all(from(s in Plausible.Site, where: s.domain == ^site.domain))
 
@@ -34,7 +37,7 @@ defmodule Plausible.Site.Removal do
         :ok = Plausible.Site.Cache.broadcast_delete(site.domain_changed_from, cache_opts)
       end
 
-      %{delete_all: result}
+      %{delete_all: result, pending_stats_deletion: pending_stats_deletion}
     end)
   end
 end
