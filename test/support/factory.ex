@@ -106,6 +106,14 @@ defmodule Plausible.Factory do
     }
   end
 
+  def pending_stats_deletion_factory do
+    %Plausible.PendingStatsDeletion{
+      site_id: sequence(:pending_stats_deletion_site_id, &(&1 + 1)),
+      stats_start_date: ~D[2020-01-01],
+      stats_end_date: Date.utc_today()
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 

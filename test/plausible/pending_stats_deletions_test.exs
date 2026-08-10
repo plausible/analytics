@@ -62,4 +62,55 @@ defmodule Plausible.PendingStatsDeletionsTest do
       assert pending_deletion.stats_end_date == ~D[2020-01-01]
     end
   end
+
+  describe "list_by_reason/1" do
+    test "returns empty site_ids and a nil range when there are no pending stats deletions" do
+      assert PendingStatsDeletions.list_by_reason() == %{
+               site_ids: [],
+               stats_start: nil,
+               stats_end: nil
+             }
+    end
+
+    test "returns the distinct site_ids and the cumulative range across all records" do
+      insert(:pending_stats_deletion,
+        site_id: 1,
+        stats_start_date: ~D[2020-01-01],
+        stats_end_date: ~D[2020-01-10]
+      )
+
+      insert(:pending_stats_deletion,
+        site_id: 1,
+        stats_start_date: ~D[2019-06-01],
+        stats_end_date: ~D[2020-01-05]
+      )
+
+      insert(:pending_stats_deletion,
+        site_id: 2,
+        stats_start_date: ~D[2021-01-01],
+        stats_end_date: ~D[2021-02-01]
+      )
+
+      assert PendingStatsDeletions.list_by_reason() == %{
+               site_ids: [1, 2],
+               stats_start: ~D[2019-06-01],
+               stats_end: ~D[2021-02-01]
+             }
+    end
+
+    test "considers records with the given reason" do
+      insert(:pending_stats_deletion,
+        site_id: 1,
+        stats_start_date: ~D[2020-01-01],
+        stats_end_date: ~D[2020-01-10],
+        reason: :user_request
+      )
+
+      assert PendingStatsDeletions.list_by_reason(:user_request) == %{
+               site_ids: [1],
+               stats_start: ~D[2020-01-01],
+               stats_end: ~D[2020-01-10]
+             }
+    end
+  end
 end
