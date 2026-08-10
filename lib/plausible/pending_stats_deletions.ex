@@ -27,12 +27,12 @@ defmodule Plausible.PendingStatsDeletions do
     end
   end
 
-  @spec list_by_reason(atom()) :: %{
+  @spec list(atom()) :: %{
           site_ids: [pos_integer()],
           stats_start: Date.t() | nil,
           stats_end: Date.t() | nil
         }
-  def list_by_reason(reason \\ :user_request) do
+  def list(reason \\ :user_request) do
     Repo.one(
       from(p in PendingStatsDeletion,
         where: p.reason == ^reason,
@@ -53,11 +53,11 @@ defmodule Plausible.PendingStatsDeletions do
   # Temporary. Bridges sites deleted before pending stats deletion tracking
   # existed. Finds sites with orphaned ClickHouse data (no matching Postgres
   # site) and records a pending deletion for each, so `ClickhouseCleanSites`
-  # picks them up via `list_by_reason/1`. Safe to run more than once. Remove
+  # picks them up via `list/1`. Safe to run more than once. Remove
   # once it's been run in every environment.
   @spec backfill_orphaned_sites() :: {:ok, non_neg_integer()}
   def backfill_orphaned_sites() do
-    already_tracked = MapSet.new(list_by_reason().site_ids)
+    already_tracked = MapSet.new(list().site_ids)
     now = NaiveDateTime.utc_now(:second)
 
     records =

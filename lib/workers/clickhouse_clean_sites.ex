@@ -43,7 +43,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
 
   def perform(_job) do
-    case PendingStatsDeletions.list_by_reason() do
+    case PendingStatsDeletions.list() do
       %{site_ids: []} ->
         :ok
 
