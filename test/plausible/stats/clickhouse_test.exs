@@ -34,4 +34,36 @@ defmodule Plausible.Stats.ClickhouseTest do
       assert pageview_counts[import2.id] == 20
     end
   end
+
+  describe "partition_ids/2" do
+    test "returns a single partition id when both dates fall in the same month" do
+      assert Clickhouse.partition_ids(~D[2024-01-01], ~D[2024-01-31]) == ["202401"]
+      assert Clickhouse.partition_ids(~D[2024-01-15], ~D[2024-01-15]) == ["202401"]
+    end
+
+    test "returns one partition id per month spanned, inclusive of both ends" do
+      assert Clickhouse.partition_ids(~D[2024-01-15], ~D[2024-03-10]) == [
+               "202401",
+               "202402",
+               "202403"
+             ]
+    end
+
+    test "year boundary" do
+      assert Clickhouse.partition_ids(~D[2023-11-05], ~D[2024-02-20]) == [
+               "202311",
+               "202312",
+               "202401",
+               "202402"
+             ]
+    end
+
+    test "returns an empty list when from_date is after to_date" do
+      assert Clickhouse.partition_ids(~D[2024-03-01], ~D[2024-01-01]) == []
+    end
+
+    test "month boundary" do
+      assert Clickhouse.partition_ids(~D[2024-01-31], ~D[2024-02-01]) == ["202401", "202402"]
+    end
+  end
 end

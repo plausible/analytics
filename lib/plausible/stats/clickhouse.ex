@@ -212,4 +212,13 @@ defmodule Plausible.Stats.Clickhouse do
   def current_visitors_12h(site) do
     Stats.current_visitors(site, Duration.new!(hour: -12))
   end
+
+  @spec partition_ids(Date.t(), Date.t()) :: list(String.t())
+  def partition_ids(from_date, to_date) do
+    from_date
+    |> Date.beginning_of_month()
+    |> Stream.iterate(&Date.shift(&1, month: 1))
+    |> Stream.take_while(&(Date.compare(&1, Date.beginning_of_month(to_date)) != :gt))
+    |> Enum.map(&Calendar.strftime(&1, "%Y%m"))
+  end
 end
