@@ -86,4 +86,24 @@ defmodule Plausible.Site.SiteRemovalTest do
       assert Plausible.ConsolidatedView.get(team)
     end
   end
+
+  test "site is removed from sites cache upon deletion", %{test: test} do
+    {:ok, _} = start_test_cache(test)
+    site = new_site(domain_changed_from: "#{test}")
+
+    Plausible.Site.Cache.refresh_all(cache_name: test)
+
+    assert Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+    assert Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+
+    assert {:ok, _} = Removal.run(site, cache_name: test)
+
+    refute Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+    refute Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+  end
+
+  defp start_test_cache(cache_name) do
+    %{start: {m, f, a}} = Plausible.Site.Cache.child_spec(cache_name: cache_name)
+    apply(m, f, a)
+  end
 end
