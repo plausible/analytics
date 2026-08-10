@@ -63,22 +63,31 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, params) do
     user = conn.assigns.current_user
     flow = params["flow"] || PlausibleWeb.Flows.register()
-    team_identifier = params["team_identifier"]
-    has_email_code? = Plausible.Users.has_email_code?(user)
-    has_any_memberships? = Plausible.Teams.Users.has_sites?(user)
 
-    render_auth_page(conn, "activate.html",
-      error: nil,
-      has_email_code?: has_email_code?,
-      has_any_memberships?: has_any_memberships?,
-      heading: activate_heading(has_email_code?),
-      form_submit_url: "/activate?flow=#{flow}",
-      team_identifier: team_identifier
+    render_activate_form(conn, flow,
+      has_email_code?: Plausible.Users.has_email_code?(user),
+      has_any_memberships?: Plausible.Teams.Users.has_sites?(user)
     )
   end
 
   defp activate_heading(true), do: "Check your email"
   defp activate_heading(false), do: "Activate your account"
+
+  defp render_activate_form(conn, flow, opts) do
+    assigns =
+      [
+        error: nil,
+        form_submit_url: "/activate?flow=#{flow}",
+        team_identifier: conn.params["team_identifier"]
+      ]
+      |> Keyword.merge(opts)
+
+    render_auth_page(
+      conn,
+      "activate.html",
+      Keyword.put(assigns, :heading, activate_heading(assigns[:has_email_code?]))
+    )
+  end
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
@@ -88,17 +97,10 @@ defmodule PlausibleWeb.AuthController do
       do_activate(conn, user, code)
     else
       {:error, {:rate_limit, _}} ->
-        has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
-        flow = conn.params["flow"]
-        team_identifier = conn.params["team_identifier"]
-
-        render_auth_page(conn, "activate.html",
+        render_activate_form(conn, conn.params["flow"],
           error: "Too many attempts. Please wait a few minutes before trying again.",
           has_email_code?: true,
-          has_any_memberships?: has_any_memberships?,
-          heading: activate_heading(true),
-          form_submit_url: "/activate?flow=#{flow}",
-          team_identifier: team_identifier
+          has_any_memberships?: Plausible.Teams.Users.has_sites?(user, include_pending?: false)
         )
     end
   end
@@ -129,23 +131,17 @@ defmodule PlausibleWeb.AuthController do
         end
 
       {:error, :incorrect} ->
-        render_auth_page(conn, "activate.html",
+        render_activate_form(conn, flow,
           error: "That code didn't work. Please try again.",
           has_email_code?: true,
-          has_any_memberships?: has_any_memberships?,
-          heading: activate_heading(true),
-          form_submit_url: "/activate?flow=#{flow}",
-          team_identifier: team_identifier
+          has_any_memberships?: has_any_memberships?
         )
 
       {:error, :expired} ->
-        render_auth_page(conn, "activate.html",
+        render_activate_form(conn, flow,
           error: "The code has expired. Please request another one.",
           has_email_code?: false,
-          has_any_memberships?: has_any_memberships?,
-          heading: activate_heading(false),
-          form_submit_url: "/activate?flow=#{flow}",
-          team_identifier: team_identifier
+          has_any_memberships?: has_any_memberships?
         )
     end
   end
