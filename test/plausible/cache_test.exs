@@ -133,6 +133,16 @@ defmodule Plausible.CacheTest do
                {ExampleCache.get("item1", cache_name: test, force?: true) == :item1, :ok}
              end)
     end
+
+    test "broadcast_delete deletes from local cache", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      :item1 = ExampleCache.put("item1", :item1, cache_name: test)
+      :ok = ExampleCache.broadcast_delete("item1", cache_name: test)
+
+      assert eventually(fn ->
+               {ExampleCache.get("item1", cache_name: test, force?: true) == nil, :ok}
+             end)
+    end
   end
 
   describe "warming the cache" do
