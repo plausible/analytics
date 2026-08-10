@@ -50,6 +50,15 @@ defmodule Plausible.PendingStatsDeletions do
     )
   end
 
+  @spec clear([pos_integer()], atom()) :: {non_neg_integer(), nil}
+  def clear(site_ids, reason \\ :user_request)
+  def clear([], _reason), do: {0, nil}
+
+  def clear(site_ids, reason) do
+    from(p in PendingStatsDeletion, where: p.site_id in ^site_ids and p.reason == ^reason)
+    |> Repo.delete_all()
+  end
+
   # Temporary. Bridges sites deleted before pending stats deletion tracking
   # existed. Finds sites with orphaned ClickHouse data (no matching Postgres
   # site) and records a pending deletion for each, so `ClickhouseCleanSites`

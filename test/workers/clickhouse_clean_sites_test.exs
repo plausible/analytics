@@ -3,6 +3,7 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   import Plausible.Factory
 
   alias Plausible.Ingestion.Counters.Record
+  alias Plausible.PendingStatsDeletion
   alias Plausible.Workers.ClickhouseCleanSites
 
   @tag :slow
@@ -52,6 +53,8 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_count(site, "events_v2", 1)
     assert_count(site, "sessions_v2", 1)
     assert_count(site, "ingest_counters", 1)
+
+    refute Repo.get_by(PendingStatsDeletion, site_id: deleted_site.id)
   end
 
   @tag :slow

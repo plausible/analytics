@@ -114,6 +114,36 @@ defmodule Plausible.PendingStatsDeletionsTest do
     end
   end
 
+  describe "clear/2" do
+    test "removes records for the given site_ids and reason" do
+      insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
+      insert(:pending_stats_deletion, site_id: 2, reason: :user_request)
+
+      assert {1, nil} = PendingStatsDeletions.clear([1])
+
+      assert PendingStatsDeletions.list() == %{
+               site_ids: [2],
+               stats_start: ~D[2020-01-01],
+               stats_end: Date.utc_today()
+             }
+    end
+
+    test "removes all matching records regardless of how many accumulated for a site" do
+      insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
+      insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
+
+      assert {2, nil} = PendingStatsDeletions.clear([1])
+      assert PendingStatsDeletions.list() == %{site_ids: [], stats_start: nil, stats_end: nil}
+    end
+
+    test "does not query the database when given an empty list of site_ids" do
+      insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
+
+      assert {0, nil} = PendingStatsDeletions.clear([])
+      assert Repo.get_by(PendingStatsDeletion, site_id: 1)
+    end
+  end
+
   describe "backfill_orphaned_sites/0" do
     @tag :slow
     test "records a pending stats deletion for a site with clickhouse data but no postgres row" do

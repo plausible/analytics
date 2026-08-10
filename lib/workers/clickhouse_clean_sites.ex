@@ -65,6 +65,8 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
           clear_table_via_mutation!(table, site_ids)
         end
 
+        PendingStatsDeletions.clear(site_ids)
+
         :ok
     end
   end
