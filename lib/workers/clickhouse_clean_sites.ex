@@ -6,12 +6,10 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   just as expensive as deleting many.
   """
 
-  use Plausible.Repo
-  use Plausible.ClickhouseRepo
   use Plausible.IngestRepo
   use Oban.Worker, queue: :clickhouse_clean_sites
 
-  import Ecto.Query
+  alias Plausible.PendingStatsDeletions
 
   require Logger
 
@@ -34,7 +32,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
 
   def perform(_job) do
-    deleted_sites = get_deleted_sites_with_clickhouse_data()
+    deleted_sites = PendingStatsDeletions.list_by_reason().site_ids
 
     if not Enum.empty?(deleted_sites) do
       Logger.notice(
@@ -51,31 +49,5 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     end
 
     :ok
-  end
-
-  def get_deleted_sites_with_clickhouse_data() do
-    pg_sites =
-      from(s in Plausible.Site.regular(), select: s.id)
-      |> Plausible.Repo.all()
-      |> MapSet.new()
-
-    {:ok, ch} =
-      Plausible.ClickhouseRepo.get_config_without_ch_query_execution_timeout()
-      |> Ch.start_link()
-
-    %Ch.Result{columns: ["site_id"], rows: rows} =
-      DBConnection.run(
-        ch,
-        fn conn ->
-          Ch.query!(conn, "FROM events_v2 SELECT site_id GROUP BY site_id", [],
-            timeout: :infinity
-          )
-        end,
-        timeout: :infinity
-      )
-
-    ch_sites = rows |> MapSet.new(fn [site_id] -> site_id end)
-
-    MapSet.difference(ch_sites, pg_sites) |> MapSet.to_list()
   end
 end

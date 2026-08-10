@@ -113,4 +113,52 @@ defmodule Plausible.PendingStatsDeletionsTest do
              }
     end
   end
+
+  describe "backfill_orphaned_sites/0" do
+    @tag :slow
+    test "records a pending stats deletion for a site with clickhouse data but no postgres row" do
+      orphaned_site = new_site()
+
+      populate_stats(orphaned_site, [
+        build(:pageview, timestamp: ~N[2020-01-01 12:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-10 12:00:00])
+      ])
+
+      Repo.delete!(orphaned_site)
+
+      assert {:ok, count} = PendingStatsDeletions.backfill_orphaned_sites()
+      assert count >= 1
+
+      pending_deletion = Repo.get_by(PendingStatsDeletion, site_id: orphaned_site.id)
+      assert pending_deletion.stats_start_date == ~D[2020-01-01]
+      assert pending_deletion.stats_end_date == ~D[2020-01-10]
+      assert pending_deletion.reason == :user_request
+    end
+
+    @tag :slow
+    test "does not record anything for a site that still exists in postgres" do
+      site = new_site()
+      populate_stats(site, [build(:pageview)])
+
+      PendingStatsDeletions.backfill_orphaned_sites()
+
+      refute Repo.get_by(PendingStatsDeletion, site_id: site.id)
+    end
+
+    @tag :slow
+    test "does not create a duplicate record when run more than once" do
+      orphaned_site = new_site()
+      populate_stats(orphaned_site, [build(:pageview)])
+      Repo.delete!(orphaned_site)
+
+      assert {:ok, _} = PendingStatsDeletions.backfill_orphaned_sites()
+      assert {:ok, _} = PendingStatsDeletions.backfill_orphaned_sites()
+
+      matching_records =
+        from(p in PendingStatsDeletion, where: p.site_id == ^orphaned_site.id)
+        |> Repo.aggregate(:count)
+
+      assert matching_records == 1
+    end
+  end
 end

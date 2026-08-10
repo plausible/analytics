@@ -5,9 +5,9 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   alias Plausible.Workers.ClickhouseCleanSites
 
   @tag :slow
-  test "deletes data from events and sessions tables" do
-    site = insert(:site)
-    deleted_site = insert(:site)
+  test "deletes data from events and sessions tables for sites pending stats deletion" do
+    site = new_site()
+    deleted_site = new_site()
 
     populate_stats(site, [
       build(:pageview)
@@ -27,17 +27,7 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
       build(:imported_operating_systems)
     ])
 
-    Repo.delete!(deleted_site)
-
-    assert Enum.member?(
-             ClickhouseCleanSites.get_deleted_sites_with_clickhouse_data(),
-             deleted_site.id
-           )
-
-    assert not Enum.member?(
-             ClickhouseCleanSites.get_deleted_sites_with_clickhouse_data(),
-             site.id
-           )
+    assert {:ok, _} = Plausible.Site.Removal.run(deleted_site)
 
     ClickhouseCleanSites.perform(nil)
 
@@ -54,11 +44,6 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_count(deleted_site, "imported_operating_systems", 0)
     assert_count(site, "events_v2", 1)
     assert_count(site, "sessions_v2", 1)
-
-    assert not Enum.member?(
-             ClickhouseCleanSites.get_deleted_sites_with_clickhouse_data(),
-             deleted_site.id
-           )
   end
 
   def assert_count(site, table, expected_count) do
