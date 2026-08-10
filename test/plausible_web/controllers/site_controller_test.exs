@@ -689,6 +689,44 @@ defmodule PlausibleWeb.SiteControllerTest do
                )
     end
 
+    @tag :ee_only
+    test "shows complete site installation once verified", %{conn: conn, site: site} do
+      site =
+        site
+        |> Ecto.Changeset.change(onboarding_status: :completed)
+        |> Plausible.Repo.update!()
+
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Site installation"
+      assert resp =~ "Complete"
+    end
+
+    @tag :ee_only
+    test "shows pending site installation when never verified", %{conn: conn, site: site} do
+      site =
+        site
+        |> Ecto.Changeset.change(onboarding_status: :new_site)
+        |> Plausible.Repo.update!()
+
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Site installation"
+      assert resp =~ "Pending"
+    end
+
+    @tag :ce_build_only
+    test "does not show site installation status on CE", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      refute resp =~ "Site installation"
+      assert resp =~ "https://plausible.io/docs/plausible-script"
+      assert resp =~ "Review"
+    end
+
     on_ee do
       test "renders only timezone section for a consolidated site", %{conn: conn, user: user} do
         team = team_of(user)

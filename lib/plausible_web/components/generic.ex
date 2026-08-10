@@ -712,7 +712,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:for, :string, default: nil)
   attr(:docs, :string, default: nil)
   attr(:tooltip, :string, default: nil)
-  attr(:actions_class, :any, default: "gap-1.5")
+  attr(:actions_class, :any, default: "gap-2.5")
   attr(:rest, :global)
   slot(:inner_block, required: true)
 

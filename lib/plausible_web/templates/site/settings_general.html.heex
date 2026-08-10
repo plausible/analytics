@@ -7,18 +7,44 @@
       <div :if={Plausible.Sites.regular?(@site)} class="flex flex-col gap-6">
         <.settings_row label="Site domain" docs="change-domain-name">
           <span class="text-gray-800 dark:text-gray-200">{@site.domain}</span>
-          <.tooltip centered?={true}>
-            <:tooltip_content>Change domain</:tooltip_content>
-            <.button_link
-              theme="icon"
-              size="xs"
-              mt?={false}
-              href={Routes.site_path(@conn, :change_domain, @site.domain)}
-              aria-label="Change domain"
-            >
-              <PlausibleWeb.Components.Icons.pencil_icon class="size-4.5" />
-            </.button_link>
-          </.tooltip>
+          <.styled_link
+            href={Routes.site_path(@conn, :change_domain, @site.domain)}
+            aria-label="Change domain"
+            class="text-sm"
+          >
+            Change
+          </.styled_link>
+        </.settings_row>
+
+        <.settings_divider />
+
+        <.settings_row
+          label={if ee?(), do: "Site installation"}
+          docs="plausible-script"
+        >
+          <div
+            :if={ee?() and @site.onboarding_status == :new_site}
+            class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200"
+          >
+            <span class="size-2 rounded-full bg-yellow-500"></span> Pending
+          </div>
+          <div
+            :if={ee?() and @site.onboarding_status != :new_site}
+            class="flex items-center gap-1.5 text-gray-800 dark:text-gray-200"
+          >
+            <span class="size-2 rounded-full bg-green-500"></span> Completed
+          </div>
+          <.styled_link
+            href={
+              Routes.site_path(@conn, :installation, @site.domain,
+                flow: PlausibleWeb.Flows.review()
+              )
+            }
+            aria-label="View setup"
+            class="text-sm"
+          >
+            Review
+          </.styled_link>
         </.settings_row>
 
         <.settings_divider />
