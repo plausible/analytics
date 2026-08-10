@@ -8,16 +8,19 @@ defmodule Plausible.PendingStatsDeletions do
   alias Plausible.Site
   alias Plausible.Sites
 
-  @spec store(Site.t(), atom()) :: {:ok, PendingStatsDeletion.t()}
+  @spec store(Site.t(), atom()) :: {:ok, PendingStatsDeletion.t() | nil}
   def store(%Site{} = site, reason \\ :user_request) do
-    %{stats_start_date: stats_start_date, stats_end_date: stats_end_date} =
-      Sites.stats_range(site)
+    case Sites.stats_range(site) do
+      %{stats_start_date: nil, stats_end_date: nil} ->
+        {:ok, nil}
 
-    Repo.insert(%PendingStatsDeletion{
-      site_id: site.id,
-      stats_start_date: stats_start_date,
-      stats_end_date: stats_end_date,
-      reason: reason
-    })
+      %{stats_start_date: stats_start_date, stats_end_date: stats_end_date} ->
+        Repo.insert(%PendingStatsDeletion{
+          site_id: site.id,
+          stats_start_date: stats_start_date,
+          stats_end_date: stats_end_date,
+          reason: reason
+        })
+    end
   end
 end

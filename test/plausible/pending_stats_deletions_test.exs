@@ -26,6 +26,7 @@ defmodule Plausible.PendingStatsDeletionsTest do
 
     test "defaults reason to :user_request" do
       site = new_site()
+      populate_stats(site, [build(:pageview)])
 
       assert {:ok, pending_deletion} = PendingStatsDeletions.store(site)
       assert pending_deletion.reason == :user_request
@@ -33,18 +34,18 @@ defmodule Plausible.PendingStatsDeletionsTest do
 
     test "accepts an explicit reason" do
       site = new_site()
+      populate_stats(site, [build(:pageview)])
 
       assert {:ok, pending_deletion} = PendingStatsDeletions.store(site, :user_request)
       assert pending_deletion.reason == :user_request
     end
 
-    test "stores a nil stats range when the site has no stats" do
+    test "does not insert anything when the site has no stats to delete" do
       site = new_site()
 
-      assert {:ok, pending_deletion} = PendingStatsDeletions.store(site)
+      assert {:ok, nil} = PendingStatsDeletions.store(site)
 
-      assert pending_deletion.stats_start_date == nil
-      assert pending_deletion.stats_end_date == nil
+      refute Repo.get_by(PendingStatsDeletion, site_id: site.id)
     end
 
     test "takes imported stats into account" do
