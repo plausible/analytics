@@ -34,6 +34,27 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  @spec pageview_end_date_local(Plausible.Site.t()) :: Date.t() | nil
+  def pageview_end_date_local(site) do
+    datetime =
+      ClickhouseRepo.one(
+        from(e in "events_v2",
+          select: fragment("max(?)", e.timestamp),
+          where: e.site_id == ^site.id,
+          where: e.timestamp >= ^site.native_stats_start_at
+        )
+      )
+
+    case datetime do
+      # no stats for this domain yet
+      ~N[1970-01-01 00:00:00] ->
+        nil
+
+      _ ->
+        Timezones.to_date_in_timezone(datetime, site.timezone)
+    end
+  end
+
   def imported_pageview_count(site) do
     Plausible.ClickhouseRepo.one(
       from(i in "imported_visitors",
