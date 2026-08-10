@@ -58,20 +58,24 @@ defmodule Plausible.PendingStatsDeletions do
   @spec backfill_orphaned_sites() :: {:ok, non_neg_integer()}
   def backfill_orphaned_sites() do
     already_tracked = MapSet.new(list_by_reason().site_ids)
+    now = NaiveDateTime.utc_now(:second)
 
-    count =
+    records =
       orphaned_clickhouse_site_ids()
       |> Enum.reject(&(&1 in already_tracked))
       |> clickhouse_stats_ranges()
       |> Enum.map(fn %{site_id: site_id, stats_start_date: start_date, stats_end_date: end_date} ->
-        Repo.insert!(%PendingStatsDeletion{
+        %{
           site_id: site_id,
           stats_start_date: start_date,
           stats_end_date: end_date,
-          reason: :user_request
-        })
+          reason: :user_request,
+          inserted_at: now,
+          updated_at: now
+        }
       end)
-      |> length()
+
+    {count, _} = Repo.insert_all(PendingStatsDeletion, records)
 
     {:ok, count}
   end
