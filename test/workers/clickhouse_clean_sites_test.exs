@@ -102,22 +102,22 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     ClickhouseCleanSites.perform(nil)
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                     %{stage: "list_pending_deletions"}}
+                    %{stage: "list_pending_deletions"}}
 
-    assert_receive {:telemetry_handled, ^telemetry_run,
-                     %{sites_count: 1, partitions_count: 3}, %{}}
-
-    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                     %{stage: "partitioned_tables"}}
+    assert_receive {:telemetry_handled, ^telemetry_run, %{sites_count: 1, partitions_count: 3},
+                    %{}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                     %{stage: "unpartitioned_tables"}}
+                    %{stage: "partitioned_tables"}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                     %{stage: "mutation_only_tables"}}
+                    %{stage: "unpartitioned_tables"}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                     %{stage: "clear_pending_deletions"}}
+                    %{stage: "mutation_only_tables"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                    %{stage: "clear_pending_deletions"}}
   end
 
   def assert_count(site, table, expected_count) do
