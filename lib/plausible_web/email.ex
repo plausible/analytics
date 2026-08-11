@@ -190,30 +190,14 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def enterprise_over_limit_internal_email(
-        team,
-        recipient_emails,
-        pageview_usage,
-        pageview_limit,
-        pageview_over,
-        site_usage,
-        site_allowance,
-        site_over
-      ) do
+  def enterprise_over_limit_internal_email(team, assigns) do
+    assigns = Map.put(assigns, :team, team)
+
     base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
     |> subject("#{team.name} has outgrown their enterprise plan")
-    |> render("enterprise_over_limit_internal.html", %{
-      team: team,
-      recipient_emails: recipient_emails,
-      pageview_usage: pageview_usage,
-      pageview_limit: pageview_limit,
-      pageview_over: pageview_over,
-      site_usage: site_usage,
-      site_allowance: site_allowance,
-      site_over: site_over
-    })
+    |> render("enterprise_over_limit_internal.html", assigns)
   end
 
   def dashboard_locked(user, team, usage, suggested_volume) do

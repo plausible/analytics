@@ -385,7 +385,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         assert Repo.reload(team_of(user)).grace_period.id == existing_grace_period.id
       end
 
-      test "checks billable pageview usage for enterprise customer, sends usage information to enterprise@plausible.io",
+      test "pageview limit exceeded -> sends internal email and starts manual lock grace period",
            %{
              user: user
            } do
@@ -413,6 +413,11 @@ defmodule Plausible.Workers.CheckUsageTest do
           to: [{nil, "enterprise@plausible.io"}],
           subject: "#{team_of(user).name} has outgrown their enterprise plan"
         )
+
+        assert user
+               |> team_of()
+               |> Repo.reload()
+               |> Plausible.Teams.GracePeriod.manual_lock_active?()
       end
 
       test "sends a single alert to enterprise@plausible.io even when the team has multiple owners/billing members",
@@ -484,19 +489,10 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
-      test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
+      test "site limit exceeded -> sends internal email and starts manual lock grace period",
            %{
              user: user
            } do
-        usage_stub =
-          Plausible.Teams.Billing
-          |> stub(:monthly_pageview_usage, fn _user ->
-            %{
-              penultimate_cycle: %{date_range: @date_range, total: 1},
-              last_cycle: %{date_range: @date_range, total: 1}
-            }
-          end)
-
         subscribe_to_enterprise_plan(user,
           site_limit: 2,
           subscription: [
@@ -507,29 +503,26 @@ defmodule Plausible.Workers.CheckUsageTest do
 
         new_site(owner: user)
         new_site(owner: user)
-        new_site(owner: user)
 
-        CheckUsage.perform(nil, usage_stub)
+        team = team_of(user)
+
+        assert Plausible.Teams.Billing.site_usage(team) == 3
+
+        CheckUsage.perform(nil)
 
         assert_email_delivered_with(
           to: [{nil, "enterprise@plausible.io"}],
-          subject: "#{team_of(user).name} has outgrown their enterprise plan"
+          subject: "#{team.name} has outgrown their enterprise plan",
+          html_body: ~r/3 \/ 2/
         )
+
+        assert team |> Repo.reload() |> Plausible.Teams.GracePeriod.manual_lock_active?()
       end
 
       test "does not alert or start a grace period when site usage is exactly at the site limit",
            %{
              user: user
            } do
-        usage_stub =
-          Plausible.Teams.Billing
-          |> stub(:monthly_pageview_usage, fn _user ->
-            %{
-              penultimate_cycle: %{date_range: @date_range, total: 1},
-              last_cycle: %{date_range: @date_range, total: 1}
-            }
-          end)
-
         subscribe_to_enterprise_plan(user,
           site_limit: 2,
           subscription: [
@@ -539,70 +532,15 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         new_site(owner: user)
-        new_site(owner: user)
 
-        CheckUsage.perform(nil, usage_stub)
+        team = team_of(user)
+
+        assert Plausible.Teams.Billing.site_usage(team) == 2
+
+        CheckUsage.perform(nil)
 
         assert_no_emails_delivered()
-        assert Repo.reload(team_of(user)).grace_period == nil
-      end
-
-      test "alerts and starts a grace period as soon as site usage is one site above the site limit",
-           %{
-             user: user
-           } do
-        usage_stub =
-          Plausible.Teams.Billing
-          |> stub(:monthly_pageview_usage, fn _user ->
-            %{
-              penultimate_cycle: %{date_range: @date_range, total: 1},
-              last_cycle: %{date_range: @date_range, total: 1}
-            }
-          end)
-
-        subscribe_to_enterprise_plan(user,
-          site_limit: 2,
-          subscription: [
-            last_bill_date: Date.shift(Date.utc_today(), day: -1),
-            status: unquote(status)
-          ]
-        )
-
-        new_site(owner: user)
-        new_site(owner: user)
-        new_site(owner: user)
-
-        CheckUsage.perform(nil, usage_stub)
-
-        assert_email_delivered_with(
-          to: [{nil, "enterprise@plausible.io"}],
-          subject: "#{team_of(user).name} has outgrown their enterprise plan"
-        )
-
-        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
-      end
-
-      test "starts grace period when plan is outgrown", %{user: user} do
-        usage_stub =
-          Plausible.Teams.Billing
-          |> stub(:monthly_pageview_usage, fn _user ->
-            %{
-              penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
-              last_cycle: %{date_range: @date_range, total: 1_100_000}
-            }
-          end)
-
-        subscribe_to_enterprise_plan(
-          user,
-          monthly_pageview_limit: 1_000_000,
-          subscription: [
-            last_bill_date: Date.shift(Date.utc_today(), day: -1),
-            status: unquote(status)
-          ]
-        )
-
-        CheckUsage.perform(nil, usage_stub)
-        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
+        assert Repo.reload(team).grace_period == nil
       end
     end
   end

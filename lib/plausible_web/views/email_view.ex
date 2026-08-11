@@ -15,9 +15,7 @@ defmodule PlausibleWeb.EmailView do
     def customer_support_team_url(team) do
       PlausibleWeb.Router.Helpers.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
     end
-  end
-
-  on_ce do
+  else
     def customer_support_team_url(_team), do: nil
   end
 
