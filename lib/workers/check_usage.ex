@@ -1,4 +1,10 @@
 defmodule Plausible.Workers.CheckUsage do
+  @moduledoc """
+  A Cron job that runs every day at 14:00, checking whether active
+  subscribers have outgrown their plan limits, in which case, starts
+  grace periods and notifies via email.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :check_usage
   require Plausible.Billing.Subscription.Status
