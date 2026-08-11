@@ -13,8 +13,10 @@ defmodule Plausible.Stats.Clickhouse do
   alias Plausible.Timezones
   alias Plausible.Stats
 
-  @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
-  def pageview_start_date_local(site) do
+  @spec pageview_start_date_local(Plausible.Site.t(), Keyword.t()) :: Date.t() | nil
+  def pageview_start_date_local(site, opts \\ []) do
+    use_site_timezone? = Keyword.get(opts, :use_site_timezone?, true)
+
     datetime =
       ClickhouseRepo.one(
         from(e in "events_v2",
@@ -30,12 +32,18 @@ defmodule Plausible.Stats.Clickhouse do
         nil
 
       _ ->
-        Timezones.to_date_in_timezone(datetime, site.timezone)
+        if use_site_timezone? do
+          Timezones.to_date_in_timezone(datetime, site.timezone)
+        else
+          NaiveDateTime.to_date(datetime)
+        end
     end
   end
 
-  @spec pageview_end_date_local(Plausible.Site.t()) :: Date.t() | nil
-  def pageview_end_date_local(site) do
+  @spec pageview_end_date_local(Plausible.Site.t(), Keyword.t()) :: Date.t() | nil
+  def pageview_end_date_local(site, opts \\ []) do
+    use_site_timezone? = Keyword.get(opts, :use_site_timezone?, true)
+
     datetime =
       ClickhouseRepo.one(
         from(e in "events_v2",
@@ -51,7 +59,11 @@ defmodule Plausible.Stats.Clickhouse do
         nil
 
       _ ->
-        Timezones.to_date_in_timezone(datetime, site.timezone)
+        if use_site_timezone? do
+          Timezones.to_date_in_timezone(datetime, site.timezone)
+        else
+          NaiveDateTime.to_date(datetime)
+        end
     end
   end
 

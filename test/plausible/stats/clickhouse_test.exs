@@ -35,6 +35,33 @@ defmodule Plausible.Stats.ClickhouseTest do
     end
   end
 
+  describe "pageview_start_date_local/2 and pageview_end_date_local/2" do
+    test "converts to the site's timezone by default" do
+      site = new_site(timezone: "Pacific/Honolulu")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-03-01 03:00:00])
+      ])
+
+      assert Clickhouse.pageview_start_date_local(site) == ~D[2020-02-29]
+      assert Clickhouse.pageview_end_date_local(site) == ~D[2020-02-29]
+    end
+
+    test "returns the raw UTC date when use_site_timezone?: false" do
+      site = new_site(timezone: "Pacific/Honolulu")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-03-01 03:00:00])
+      ])
+
+      assert Clickhouse.pageview_start_date_local(site, use_site_timezone?: false) ==
+               ~D[2020-03-01]
+
+      assert Clickhouse.pageview_end_date_local(site, use_site_timezone?: false) ==
+               ~D[2020-03-01]
+    end
+  end
+
   describe "partition_ids/2" do
     test "returns a single partition id when both dates fall in the same month" do
       assert Clickhouse.partition_ids(~D[2024-01-01], ~D[2024-01-31]) == ["202401"]

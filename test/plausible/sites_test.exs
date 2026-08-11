@@ -325,6 +325,21 @@ defmodule Plausible.SitesTest do
                stats_end_date: ~D[2020-01-01]
              }
     end
+
+    test "uses UTC dates rather than the site timezone" do
+      site = new_site(timezone: "Pacific/Honolulu")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-03-01 03:00:00])
+      ])
+
+      assert Sites.native_stats_start_date(site) == ~D[2020-02-29]
+
+      assert Sites.stats_range(site) == %{
+               stats_start_date: ~D[2020-03-01],
+               stats_end_date: ~D[2020-03-01]
+             }
+    end
   end
 
   describe "get_for_user/2" do
