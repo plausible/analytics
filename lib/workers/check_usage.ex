@@ -87,7 +87,7 @@ defmodule Plausible.Workers.CheckUsage do
 
     usage = Teams.Billing.site_usage(subscriber)
 
-    if Quota.below_limit?(usage, limit) do
+    if Quota.within_limit?(usage, limit) do
       {:below_limit, {usage, limit}}
     else
       {:over_limit, {usage, limit}}
@@ -124,25 +124,32 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   def check_enterprise_subscriber(subscriber, usage_mod) do
-    pageview_usage = check_pageview_usage_two_cycles(subscriber, usage_mod)
-    site_usage = check_site_usage_for_enterprise(subscriber)
+    {pageview_status, pageview_usage} = check_pageview_usage_two_cycles(subscriber, usage_mod)
+    {site_status, {site_usage, site_allowance}} = check_site_usage_for_enterprise(subscriber)
 
-    case {pageview_usage, site_usage} do
-      {{:below_limit, _}, {:below_limit, _}} ->
-        nil
+    if pageview_status == :below_limit and site_status == :below_limit do
+      nil
+    else
+      recipient_emails =
+        (subscriber.owners ++ subscriber.billing_members)
+        |> Enum.map(& &1.email)
+        |> Enum.uniq()
 
-      {{_, pageview_usage}, {_, {site_usage, site_allowance}}} ->
-        for owner <- subscriber.owners ++ subscriber.billing_members do
-          PlausibleWeb.Email.enterprise_over_limit_internal_email(
-            owner,
-            pageview_usage,
-            site_usage,
-            site_allowance
-          )
-          |> Plausible.Mailer.send()
-        end
+      pageview_limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 
-        Plausible.Teams.start_manual_lock_grace_period(subscriber)
+      PlausibleWeb.Email.enterprise_over_limit_internal_email(
+        subscriber,
+        recipient_emails,
+        pageview_usage,
+        pageview_limit,
+        pageview_status == :over_limit,
+        site_usage,
+        site_allowance,
+        site_status == :over_limit
+      )
+      |> Plausible.Mailer.send()
+
+      Plausible.Teams.start_manual_lock_grace_period(subscriber)
     end
   end
 

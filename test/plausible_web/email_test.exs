@@ -264,9 +264,11 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
-  describe "enterprise_over_limit_internal_email/4" do
+  describe "enterprise_over_limit_internal_email/8" do
     test "renders pageview usage by billing cycles + sites usage/limit" do
-      user = build(:user)
+      team = build(:team, name: "Acme Inc", identifier: Ecto.UUID.generate())
+      owner = build(:user, email: "owner@acme.test")
+      billing_member = build(:user, email: "billing@acme.test")
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
 
@@ -276,20 +278,63 @@ defmodule PlausibleWeb.EmailTest do
       }
 
       %{html_body: html_body, subject: subject} =
-        PlausibleWeb.Email.enterprise_over_limit_internal_email(user, pageview_usage, 80, 50)
+        PlausibleWeb.Email.enterprise_over_limit_internal_email(
+          team,
+          [owner.email, billing_member.email],
+          pageview_usage,
+          100_000_000,
+          true,
+          80,
+          50,
+          true
+        )
 
-      assert subject == "#{user.email} has outgrown their enterprise plan"
+      assert subject == "Acme Inc has outgrown their enterprise plan"
+
+      assert html_body =~ "Team: Acme Inc (#{team.identifier})"
+      assert html_body =~ "Customer email(s): owner@acme.test, billing@acme.test"
+      assert html_body =~ "Pageview limit exceeded."
+      assert html_body =~ "Site limit exceeded."
 
       assert html_body =~
                "Last billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(last_cycle)}"
 
-      assert html_body =~ "Last cycle pageview usage: 100,222,999 billable pageviews"
+      assert html_body =~ "Last cycle pageview usage: 100,222,999 / 100,000,000 billable pageviews"
 
       assert html_body =~
                "Penultimate billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}"
 
-      assert html_body =~ "Penultimate cycle pageview usage: 100,141,888 billable pageviews"
+      assert html_body =~
+               "Penultimate cycle pageview usage: 100,141,888 / 100,000,000 billable pageviews"
+
       assert html_body =~ "Site usage: 80 / 50 allowed sites"
+    end
+
+    test "renders :unlimited pageview limit" do
+      team = build(:team, name: "Acme Inc", identifier: Ecto.UUID.generate())
+      penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
+      last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
+
+      pageview_usage = %{
+        penultimate_cycle: %{date_range: penultimate_cycle, total: 100},
+        last_cycle: %{date_range: last_cycle, total: 200}
+      }
+
+      %{html_body: html_body} =
+        PlausibleWeb.Email.enterprise_over_limit_internal_email(
+          team,
+          ["owner@acme.test"],
+          pageview_usage,
+          :unlimited,
+          false,
+          80,
+          50,
+          true
+        )
+
+      assert html_body =~ "Last cycle pageview usage: 200 / unlimited billable pageviews"
+      refute html_body =~ "Pageview limit exceeded."
+      assert html_body =~ "Site limit exceeded."
     end
   end
 
