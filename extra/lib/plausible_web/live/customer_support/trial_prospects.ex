@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold sm:text-2xl">🔥 Trial prospects</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          {@total_entries} active trials — ranked by estimated MRR potential
+          {@total_entries} prospects
         </p>
       </div>
 
