@@ -12,7 +12,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   just as expensive as deleting many.
   """
 
-  use Plausible.IngestRepo
+  use Plausible.DeletionRepo
   use Oban.Worker, queue: :clickhouse_clean_sites
 
   alias Plausible.PendingStatsDeletions
@@ -100,7 +100,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   end
 
   defp clear_partitioned_table!(table, partition_id, site_ids) do
-    IngestRepo.query!(
+    DeletionRepo.query!(
       "DELETE FROM {$0:Identifier} IN PARTITION ID {$1:String} WHERE site_id IN {$2:Array(UInt64)}",
       [table, partition_id, site_ids],
       settings: @settings
@@ -108,7 +108,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   end
 
   defp clear_unpartitioned_table!(table, site_ids) do
-    IngestRepo.query!(
+    DeletionRepo.query!(
       "DELETE FROM {$0:Identifier} WHERE site_id IN {$1:Array(UInt64)}",
       [table, site_ids],
       settings: @settings
@@ -116,7 +116,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   end
 
   defp clear_table_via_mutation!(table, site_ids) do
-    IngestRepo.query!(
+    DeletionRepo.query!(
       "ALTER TABLE {$0:Identifier} DELETE WHERE site_id IN {$1:Array(UInt64)}",
       [table, site_ids],
       settings: @settings

@@ -55,8 +55,9 @@ defmodule Plausible.PendingStatsDeletions do
   def clear([], _reason), do: {0, nil}
 
   def clear(site_ids, reason) do
-    from(p in PendingStatsDeletion, where: p.site_id in ^site_ids and p.reason == ^reason)
-    |> Repo.delete_all()
+    Repo.delete_all(
+      from(p in PendingStatsDeletion, where: p.site_id in ^site_ids and p.reason == ^reason)
+    )
   end
 
   # Temporary. Bridges sites deleted before pending stats deletion tracking
@@ -96,8 +97,7 @@ defmodule Plausible.PendingStatsDeletions do
       |> MapSet.new()
 
     {:ok, ch} =
-      ClickhouseRepo.get_config_without_ch_query_execution_timeout()
-      |> Ch.start_link()
+      Ch.start_link(ClickhouseRepo.get_config_without_ch_query_execution_timeout())
 
     %Ch.Result{columns: ["site_id"], rows: rows} =
       DBConnection.run(

@@ -705,12 +705,12 @@ config :plausible, Plausible.AsyncInsertRepo,
     materialized_views_ignore_errors: 1
   ]
 
-config :plausible, Plausible.ImportDeletionRepo,
+config :plausible, Plausible.DeletionRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
-  pool_size: 1
+  pool_size: 2
 
 config :plausible, Plausible.Ingestion.Persistor,
   backend: persistor_backend,
