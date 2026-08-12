@@ -93,7 +93,10 @@ defmodule PlausibleWeb.Components.Settings do
 
   def settings_row(assigns) do
     ~H"""
-    <div class="flex items-center gap-4 text-sm" {@rest}>
+    <div
+      class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4 text-sm"
+      {@rest}
+    >
       <.settings_label
         :if={@label}
         label={@label}
@@ -101,7 +104,7 @@ defmodule PlausibleWeb.Components.Settings do
         docs={@docs}
         tooltip={@tooltip}
       />
-      <div class={["ml-auto flex items-center", @actions_class]}>
+      <div class={["flex items-center sm:ml-auto", @actions_class]}>
         {render_slot(@inner_block)}
       </div>
     </div>

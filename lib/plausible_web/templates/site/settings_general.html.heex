@@ -28,14 +28,23 @@
           x-data={"{ changed: false, saved: '#{@site.timezone}' }"}
           x-on:change="changed = $event.target.value !== saved"
         >
-          <.input
-            field={f[:timezone]}
-            type="select"
-            options={Plausible.Timezones.options()}
-            width="w-auto max-w-72"
+          <div class="min-w-0">
+            <.input
+              field={f[:timezone]}
+              type="select"
+              options={Plausible.Timezones.options()}
+              width="w-full max-w-72"
+              mt?={false}
+            />
+          </div>
+          <.button
+            theme="secondary"
+            type="submit"
+            class="shrink-0"
             mt?={false}
-          />
-          <.button theme="secondary" type="submit" mt?={false} disabled x-bind:disabled="!changed">
+            disabled
+            x-bind:disabled="!changed"
+          >
             Save
           </.button>
         </.settings_row>
