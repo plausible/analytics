@@ -81,14 +81,21 @@ defmodule PlausibleWeb.Live.Installation do
         )
       end
 
+    {heading, subtitle} =
+      if flow == Flows.review() do
+        {"Review installation", "See how to install Plausible on your site."}
+      else
+        {"Add tracking to your site", "Install Plausible on #{site.domain} to start seeing data."}
+      end
+
     {:ok,
      assign(socket,
        site: site,
        flow: flow,
        return_to: params["return_to"],
        current_step: "Install Plausible",
-       heading: "Add tracking to your site",
-       subtitle: "Install Plausible on #{site.domain} to start seeing data."
+       heading: heading,
+       subtitle: subtitle
      )}
   end
 

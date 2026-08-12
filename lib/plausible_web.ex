@@ -23,6 +23,7 @@ defmodule PlausibleWeb do
       alias Phoenix.LiveView.JS
 
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
     end
   end
@@ -31,6 +32,7 @@ defmodule PlausibleWeb do
     quote do
       use Phoenix.LiveComponent, global_prefixes: ~w(x-)
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
       alias PlausibleWeb.Router.Helpers, as: Routes
@@ -41,6 +43,7 @@ defmodule PlausibleWeb do
     quote do
       use Phoenix.Component, global_prefixes: ~w(x-)
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
       alias PlausibleWeb.Router.Helpers, as: Routes
@@ -68,6 +71,7 @@ defmodule PlausibleWeb do
       use Phoenix.Component, global_prefixes: ~w(x-)
 
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
@@ -85,6 +89,7 @@ defmodule PlausibleWeb do
         use Phoenix.Component
 
         import PlausibleWeb.Components.Generic
+        import PlausibleWeb.Components.Settings
         import PlausibleWeb.Live.Components.Form
         alias PlausibleWeb.Router.Helpers, as: Routes
       end

@@ -1,10 +1,10 @@
 <.settings_tiles>
   <.tile>
     <:title>Site details</:title>
-    <:subtitle>Manage your site's domain and reporting timezone.</:subtitle>
+    <:subtitle>Manage your site configuration</:subtitle>
 
-    <div class="flex flex-col gap-6">
-      <div :if={Plausible.Sites.regular?(@site)} class="flex flex-col gap-6">
+    <.settings_rows>
+      <%= if Plausible.Sites.regular?(@site) do %>
         <.settings_row label="Site domain" docs="change-domain-name">
           <span class="text-gray-800 dark:text-gray-200">{@site.domain}</span>
           <.styled_link
@@ -17,7 +17,7 @@
         </.settings_row>
 
         <.settings_divider />
-      </div>
+      <% end %>
 
       <.form :let={f} for={@changeset} action={"/#{URI.encode_www_form(@site.domain)}/settings"}>
         <.settings_row
@@ -40,10 +40,10 @@
           </.button>
         </.settings_row>
       </.form>
-    </div>
+    </.settings_rows>
   </.tile>
 
-  <div :if={Plausible.Sites.regular?(@site)}>
+  <%= if Plausible.Sites.regular?(@site) do %>
     {live_render(@conn, PlausibleWeb.Live.TrackingSettings, session: %{"domain" => @site.domain})}
-  </div>
+  <% end %>
 </.settings_tiles>

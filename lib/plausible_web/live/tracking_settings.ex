@@ -14,8 +14,6 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     "form_submissions" => "Form submission tracking"
   }
 
-  @completed_onboarding_statuses [:verification_succeeded, :first_pageview, :completed]
-
   def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
@@ -31,7 +29,7 @@ defmodule PlausibleWeb.Live.TrackingSettings do
        tracker_script_configuration:
          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(socket.assigns.site)
      )
-     |> assign_installation_status()}
+     |> assign(:installation_status, installation_status(socket.assigns.site))}
   end
 
   def render(assigns) do
@@ -43,9 +41,11 @@ defmodule PlausibleWeb.Live.TrackingSettings do
         <:title>Tracking</:title>
         <:subtitle>Manage how Plausible collects data for this site.</:subtitle>
 
-        <div class="flex flex-col gap-6">
+        <.settings_rows>
           <.settings_row
-            label={if @installation_status, do: "Site installation"}
+            label={
+              if @installation_status, do: "Site installation", else: "Installation instructions"
+            }
             docs="plausible-script"
           >
             <.status_indicator :if={@installation_status} status={@installation_status} />
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.TrackingSettings do
               <.learn_more href="https://plausible.io/docs/ecommerce-revenue-tracking" />
             </.measurement>
           </.settings_section>
-        </div>
+        </.settings_rows>
       </.tile>
     </div>
     """
@@ -184,7 +184,7 @@ defmodule PlausibleWeb.Live.TrackingSettings do
 
   defp learn_more(assigns) do
     ~H"""
-    <.tooltip centered?={true}>
+    <.tooltip centered?={true} interactive?={false}>
       <:tooltip_content>Learn more</:tooltip_content>
       <.button_link
         theme="icon"
@@ -207,14 +207,17 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     )
   end
 
-  defp assign_installation_status(socket) do
-    status =
-      cond do
-        ce?() -> nil
-        socket.assigns.site.onboarding_status in @completed_onboarding_statuses -> :completed
-        true -> :pending
-      end
+  on_ee do
+    @completed_onboarding_statuses [:verification_succeeded, :first_pageview, :completed]
 
-    assign(socket, installation_status: status)
+    defp installation_status(site) do
+      if site.onboarding_status in @completed_onboarding_statuses do
+        :completed
+      else
+        :pending
+      end
+    end
+  else
+    defp installation_status(_), do: nil
   end
 end
