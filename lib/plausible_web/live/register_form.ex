@@ -131,31 +131,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         </div>
 
         <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <div>
-            <div
-              phx-update="ignore"
-              id="hcaptcha-placeholder"
-              class="h-captcha"
-              data-sitekey={PlausibleWeb.Captcha.sitekey()}
-            >
-            </div>
-            <p
-              :if={@captcha_error}
-              class="text-xs text-red-500 mt-2"
-              x-data
-              x-init="hcaptcha.reset()"
-            >
-              {@captcha_error}
-            </p>
-            <script
-              phx-update="ignore"
-              id="hcaptcha-script"
-              src="https://hcaptcha.com/1/api.js"
-              async
-              defer
-            >
-            </script>
-          </div>
+          <PlausibleWeb.Components.Captcha.widget error={@captcha_error} />
         <% end %>
 
         <div class="flex flex-col gap-y-4">
@@ -165,7 +141,16 @@ defmodule PlausibleWeb.Live.RegisterForm do
             else
               "Start my free trial"
             end %>
-          <.button id="register" disabled={@disable_submit} type="submit" class="w-full" mt?={false}>
+          <.button
+            id="register"
+            type="submit"
+            class="w-full"
+            mt?={false}
+            x-data={"{ captchaReady: #{not PlausibleWeb.Captcha.enabled?()} }"}
+            x-on:frc-captcha-ready.window="captchaReady = true"
+            x-on:frc-captcha-reset.window="captchaReady = false"
+            x-bind:disabled={"!captchaReady || #{@disable_submit}"}
+          >
             {submit_text}
           </.button>
 
@@ -258,8 +243,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         %{"user" => _} = params,
         %{assigns: %{invitation: %{} = invitation}} = socket
       ) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
       user =
         params["user"]
         |> Map.put("email", invitation.email)
@@ -269,19 +253,24 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       add_user(socket, user, with_team?: with_team?)
     else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+      {:noreply, captcha_failed(socket)}
     end
   end
 
   def handle_event("register", %{"user" => _} = params, socket) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
       user = Auth.User.new(params["user"])
 
       add_user(socket, user)
     else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+      {:noreply, captcha_failed(socket)}
     end
+  end
+
+  defp captcha_failed(socket) do
+    socket
+    |> assign(:captcha_error, "Please complete the captcha to register")
+    |> PlausibleWeb.Components.Captcha.reset()
   end
 
   defp add_user(socket, user, opts \\ []) do
@@ -297,10 +286,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
         {:noreply, assign(socket, trigger_submit: true)}
 
       {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
+        socket =
+          socket
+          |> assign(form: to_form(Map.put(changeset, :action, :validate)))
+          |> PlausibleWeb.Components.Captcha.reset()
+
+        {:noreply, socket}
     end
   end
 

@@ -1,4 +1,10 @@
 defmodule Plausible.Workers.CheckUsage do
+  @moduledoc """
+  A Cron job that runs every day at 14:00, checking whether active
+  subscribers have outgrown their plan limits, in which case, starts
+  grace periods and notifies via email.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :check_usage
   require Plausible.Billing.Subscription.Status
@@ -87,16 +93,16 @@ defmodule Plausible.Workers.CheckUsage do
 
     usage = Teams.Billing.site_usage(subscriber)
 
-    if Quota.below_limit?(usage, limit) do
-      {:below_limit, {usage, limit}}
+    if Quota.within_limit?(usage, limit) do
+      {:below_limit, usage, limit}
     else
-      {:over_limit, {usage, limit}}
+      {:over_limit, usage, limit}
     end
   end
 
   def maybe_remove_grace_period(subscriber, usage_mod) do
     case check_pageview_usage_last_cycle(subscriber, usage_mod) do
-      {:below_limit, _} ->
+      {:below_limit, _, _} ->
         Plausible.Teams.remove_grace_period(subscriber)
         :ok
 
@@ -107,7 +113,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_regular_subscriber(subscriber, usage_mod) do
     case check_pageview_usage_two_cycles(subscriber, usage_mod) do
-      {:over_limit, pageview_usage} ->
+      {:over_limit, pageview_usage, _} ->
         suggested_volume =
           Plausible.Billing.Plans.suggest_volume(subscriber, pageview_usage.last_cycle.total)
 
@@ -124,25 +130,33 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   def check_enterprise_subscriber(subscriber, usage_mod) do
-    pageview_usage = check_pageview_usage_two_cycles(subscriber, usage_mod)
-    site_usage = check_site_usage_for_enterprise(subscriber)
+    {pageview_status, pageview_usage, pageview_limit} =
+      check_pageview_usage_two_cycles(subscriber, usage_mod)
 
-    case {pageview_usage, site_usage} do
-      {{:below_limit, _}, {:below_limit, _}} ->
-        nil
+    {site_status, site_usage, site_limit} =
+      check_site_usage_for_enterprise(subscriber)
 
-      {{_, pageview_usage}, {_, {site_usage, site_allowance}}} ->
-        for owner <- subscriber.owners ++ subscriber.billing_members do
-          PlausibleWeb.Email.enterprise_over_limit_internal_email(
-            owner,
-            pageview_usage,
-            site_usage,
-            site_allowance
-          )
-          |> Plausible.Mailer.send()
-        end
+    exceeds_pageview_limit? = pageview_status == :over_limit
+    exceeds_site_limit? = site_status == :over_limit
 
-        Plausible.Teams.start_manual_lock_grace_period(subscriber)
+    if exceeds_pageview_limit? or exceeds_site_limit? do
+      team_member_emails =
+        (subscriber.owners ++ subscriber.billing_members)
+        |> Enum.map(& &1.email)
+        |> Enum.uniq()
+
+      PlausibleWeb.Email.enterprise_over_limit_internal_email(subscriber, %{
+        team_member_emails: team_member_emails,
+        exceeds_pageview_limit?: exceeds_pageview_limit?,
+        pageview_usage: pageview_usage,
+        pageview_limit: pageview_limit,
+        exceeds_site_limit?: exceeds_site_limit?,
+        site_usage: site_usage,
+        site_limit: site_limit
+      })
+      |> Plausible.Mailer.send()
+
+      Plausible.Teams.start_manual_lock_grace_period(subscriber)
     end
   end
 
@@ -151,9 +165,9 @@ defmodule Plausible.Workers.CheckUsage do
     limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 
     if Quota.exceeds_last_two_usage_cycles?(usage, limit) do
-      {:over_limit, usage}
+      {:over_limit, usage, limit}
     else
-      {:below_limit, usage}
+      {:below_limit, usage, limit}
     end
   end
 
@@ -162,9 +176,9 @@ defmodule Plausible.Workers.CheckUsage do
     limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 
     if :last_cycle in Quota.exceeded_cycles(usage, limit) do
-      {:over_limit, usage}
+      {:over_limit, usage, limit}
     else
-      {:below_limit, usage}
+      {:below_limit, usage, limit}
     end
   end
 end

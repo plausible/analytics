@@ -11,6 +11,17 @@ defmodule PlausibleWeb.EmailView do
       "?__team=#{team.identifier}"
   end
 
+  on_ee do
+    def customer_support_team_url(team) do
+      PlausibleWeb.Router.Helpers.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+    end
+  else
+    def customer_support_team_url(_team), do: nil
+  end
+
+  def format_pageview_limit(:unlimited), do: "unlimited"
+  def format_pageview_limit(limit), do: PlausibleWeb.AuthView.delimit_integer(limit)
+
   def greet_recipient(%{user: %{name: name}}) when is_binary(name) do
     "Hey #{String.split(name) |> List.first()},"
   end
