@@ -432,6 +432,7 @@ PlausibleWeb.Live.Components.VerificationBanner.html
 PlausibleWeb.Live.Components.Visitors.html
 PlausibleWeb.Live.CustomerSupport.Site.html
 PlausibleWeb.Live.CustomerSupport.Team.html
+PlausibleWeb.Live.CustomerSupport.TrialProspects.html
 PlausibleWeb.Live.CustomerSupport.User.html
 PlausibleWeb.Live.CustomerSupport.html
 PlausibleWeb.Live.Flash.html
@@ -582,8 +583,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C1E1DE19.js
-dist/sidebar_items-744A8A57.js
+dist/search_data-F8C978ED.js
+dist/sidebar_items-45978D8A.js
 index.html
 readme.html
 search.html
