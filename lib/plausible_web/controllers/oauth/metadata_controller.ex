@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.OAuth.MetadataController do
   @moduledoc """
-  Serves the discovery documents an MCP client walks to find, and then use, the
-  authorization server protecting `/mcp`.
+  Serves the discovery documents an MCP client walks to learn how to authenticate for `/mcp` endpoint.
   """
 
   use PlausibleWeb, :controller
