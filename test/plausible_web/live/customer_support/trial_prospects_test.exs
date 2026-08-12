@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
       text = text(html)
 
       assert text =~ "Live Co"
-      assert text =~ "1 active trials"
+      assert text =~ "1 prospects"
       refute text =~ "Long Expired Co"
       refute text =~ "Converted Co"
     end
