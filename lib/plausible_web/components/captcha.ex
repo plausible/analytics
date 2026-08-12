@@ -1,20 +1,6 @@
 defmodule PlausibleWeb.Components.Captcha do
   @moduledoc """
   Friendly Captcha widget shared between the registration and password-reset forms.
-
-  Renders the (invisible) widget placeholder, the SDK script tags, and the reveal
-  script that:
-
-    * matches the widget to the app's resolved light/dark theme,
-    * reveals the widget only when the user must interact (or on error/slow solve),
-    * dispatches `frc-captcha-ready` / `frc-captcha-reset` window events so the
-      submit button can gate on a valid solution,
-    * resets the widget when the server pushes the `reset-frc-captcha` event.
-
-  Pass `live?={true}` from a LiveView so the widget and scripts carry
-  `phx-update="ignore"` and survive DOM patching. A captcha solution is
-  single-use, so a LiveView must call `reset/1` whenever a submit fails and the
-  form stays on screen - otherwise the next submit fails on a spent solution.
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
 
