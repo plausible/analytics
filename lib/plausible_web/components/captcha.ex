@@ -37,12 +37,6 @@ defmodule PlausibleWeb.Components.Captcha do
       <p :if={@error} class="text-xs text-red-500 mt-2">
         {@error}
       </p>
-      <p class="text-xs text-gray-500 dark:text-gray-400">
-        This site is protected by
-        <PlausibleWeb.Components.Generic.styled_link href="https://friendlycaptcha.com" new_tab={true}>
-          Friendly Captcha
-        </PlausibleWeb.Components.Generic.styled_link>
-      </p>
       <script
         phx-update={if @live?, do: "ignore"}
         id="frc-captcha-script"
