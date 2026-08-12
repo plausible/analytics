@@ -602,10 +602,16 @@ defmodule PlausibleWeb.Router do
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
-      scope assigns: %{
-              dogfood_page_path: "/:website/installation"
-            } do
-        live "/:domain/installation", Installation, :installation, as: :site
+      live_session :onboarding, on_mount: PlausibleWeb.Live.OnboardingLayoutContext do
+        scope assigns: %{
+                dogfood_page_path: "/:website/installation"
+              } do
+          live "/:domain/installation",
+               Installation,
+               :installation,
+               as: :site,
+               container: {:div, class: "flex-1 flex flex-col"}
+        end
       end
 
       scope assigns: %{

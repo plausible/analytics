@@ -115,9 +115,7 @@ export async function register({
 
   await page.getByRole('button', { name: 'Activate' }).click()
 
-  await expect(
-    page.getByRole('button', { name: 'Install Plausible' })
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add site' })).toBeVisible()
 }
 
 export async function login({ page, user }: { page: Page; user: User }) {
@@ -149,19 +147,16 @@ export async function addSite({
 }) {
   await page.goto('/sites/new', { waitUntil: 'commit' })
 
-  await expect(
-    page.getByRole('button', { name: 'Install Plausible' })
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add site' })).toBeVisible()
 
   await page.getByLabel('Domain').fill(domain)
-  await page.getByLabel('Reporting timezone').selectOption('Etc/UTC')
 
-  await page.getByRole('button', { name: 'Install Plausible' }).click()
+  await page.getByRole('button', { name: 'Add site' }).click()
 
   await expect(page).toHaveURL(/\/installation/)
 
   await expect(
-    page.getByRole('button', { name: /Verify .* installation/ })
+    page.getByRole('button', { name: "I've installed it" })
   ).toBeVisible()
 }
 
