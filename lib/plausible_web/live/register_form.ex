@@ -131,7 +131,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         </div>
 
         <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <PlausibleWeb.Components.Captcha.widget live?={true} error={@captcha_error} />
+          <PlausibleWeb.Components.Captcha.widget error={@captcha_error} />
         <% end %>
 
         <div class="flex flex-col gap-y-4">

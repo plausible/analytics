@@ -17,7 +17,6 @@ defmodule PlausibleWeb.Components.Captcha do
     end
   end
 
-  attr :live?, :boolean, default: false
   attr :error, :string, default: nil
 
   def widget(assigns) do
@@ -26,7 +25,7 @@ defmodule PlausibleWeb.Components.Captcha do
     ~H"""
     <div>
       <div
-        phx-update={if @live?, do: "ignore"}
+        phx-update="ignore"
         id="frc-captcha-placeholder"
         class="frc-captcha hidden mb-2"
         data-sitekey={PlausibleWeb.Captcha.sitekey()}
@@ -38,7 +37,6 @@ defmodule PlausibleWeb.Components.Captcha do
         {@error}
       </p>
       <script
-        phx-update={if @live?, do: "ignore"}
         id="frc-captcha-script"
         type="module"
         src={
@@ -52,7 +50,6 @@ defmodule PlausibleWeb.Components.Captcha do
       >
       </script>
       <script
-        phx-update={if @live?, do: "ignore"}
         id="frc-captcha-script-compat"
         nomodule
         src={
@@ -65,7 +62,7 @@ defmodule PlausibleWeb.Components.Captcha do
         defer
       >
       </script>
-      <script phx-update={if @live?, do: "ignore"} id="frc-captcha-reveal">
+      <script id="frc-captcha-reveal">
         (function () {
           var SHOW_AFTER_LONG_WAIT_MS = 5000;
           var el = document.getElementById("frc-captcha-placeholder");
