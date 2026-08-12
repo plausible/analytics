@@ -5,11 +5,11 @@ defmodule Plausible.Teams.Billing do
 
   import Ecto.Query
 
-  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Subscription
   alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
   alias Plausible.Teams
+  alias Plausible.Workers.CheckUsage
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
   alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks, SSO}
@@ -141,23 +141,29 @@ defmodule Plausible.Teams.Billing do
         {:needs_to_upgrade, :no_active_trial_or_subscription}
 
       Teams.GracePeriod.expired?(team) ->
-        revise_pageview_usage(team, usage_mod)
+        revise_usage(team, usage_mod)
 
       true ->
         :no_upgrade_needed
     end
   end
 
-  defp revise_pageview_usage(team, usage_mod) do
-    case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
-      {:over_limit, _, _} ->
-        {:needs_to_upgrade, :grace_period_ended}
-
-      {:below_limit, _, _} ->
-        Plausible.Teams.remove_grace_period(team)
-        :no_upgrade_needed
+  defp revise_usage(team, usage_mod) do
+    with {:below_limit, _, _} <- CheckUsage.check_pageview_usage_two_cycles(team, usage_mod),
+         :below_limit <- revise_site_usage(team) do
+      Plausible.Teams.remove_grace_period(team)
+      :no_upgrade_needed
+    else
+      _ -> {:needs_to_upgrade, :grace_period_ended}
     end
   end
+
+  defp revise_site_usage(%Teams.Team{enterprise_plan: %EnterprisePlan{}} = team) do
+    {site_usage_status, _, _} = CheckUsage.check_site_usage_for_enterprise(team)
+    site_usage_status
+  end
+
+  defp revise_site_usage(_), do: :below_limit
 
   @doc """
   Enterprise plans are always allowed to add more sites (even when
