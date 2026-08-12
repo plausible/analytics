@@ -150,10 +150,10 @@ defmodule Plausible.Teams.Billing do
 
   defp revise_pageview_usage(team, usage_mod) do
     case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
-      {:over_limit, _} ->
+      {:over_limit, _, _} ->
         {:needs_to_upgrade, :grace_period_ended}
 
-      {:below_limit, _} ->
+      {:below_limit, _, _} ->
         Plausible.Teams.remove_grace_period(team)
         :no_upgrade_needed
     end

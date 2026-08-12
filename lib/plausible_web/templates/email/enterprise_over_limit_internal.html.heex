@@ -1,14 +1,23 @@
 Automated notice about an enterprise account that has gone over their limits. <br /><br />
-Customer email: {@user.email}<br />
-Last billing cycle: {PlausibleWeb.TextHelpers.format_date_range(
-  @pageview_usage.last_cycle.date_range
-)}<br />
-Last cycle pageview usage: {PlausibleWeb.AuthView.delimit_integer(
-  @pageview_usage.last_cycle.total
-)} billable pageviews<br />
-Penultimate billing cycle: {PlausibleWeb.TextHelpers.format_date_range(
-  @pageview_usage.penultimate_cycle.date_range
-)}<br />
-Penultimate cycle pageview usage: {PlausibleWeb.AuthView.delimit_integer(
-  @pageview_usage.penultimate_cycle.total
-)} billable pageviews<br /> Site usage: {@site_usage} / {@site_allowance} allowed sites<br />
+Team name: {@team.name}<br /> Team identifier: {@team.identifier}<br />
+Customer email(s): {Enum.join(@team_member_emails, ", ")}<br />
+<a href={customer_support_team_url(@team)}>View in Customer Support</a>
+<br /><br />
+<strong>
+  Monthly pageviews: {if(@exceeds_pageview_limit?, do: "EXCEEDED", else: "OK")}
+</strong>
+<br /><br /> Last billing cycle<br />
+{PlausibleWeb.TextHelpers.format_date_range(@pageview_usage.last_cycle.date_range)}<br />
+<strong>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total)}</strong>
+/ {format_pageview_limit(@pageview_limit)}<br />
+<br /> Penultimate billing cycle<br />
+{PlausibleWeb.TextHelpers.format_date_range(@pageview_usage.penultimate_cycle.date_range)}<br />
+<strong>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.penultimate_cycle.total)}</strong>
+/ {format_pageview_limit(@pageview_limit)}<br />
+<br />
+<strong>
+  Sites: {if(@exceeds_site_limit?, do: "EXCEEDED", else: "OK")}
+</strong>
+<br /><br />
+{@site_usage} / {@site_limit} allowed sites<br />
+<br /> A manual lock grace period has been started for this account.
