@@ -104,14 +104,22 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
                     %{stage: "list_pending_deletions"}}
 
-    assert_receive {:telemetry_handled, ^telemetry_run, %{sites_count: 1, partitions_count: 3},
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                    %{stage: "get_partition_ids_events"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
+                    %{stage: "get_partition_ids_sessions"}}
+
+    # only January and March actually have data, February skipped
+    assert_receive {:telemetry_handled, ^telemetry_run,
+                    %{sites_count: 1, partitions_count_events: 2, partitions_count_sessions: 2},
                     %{}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                    %{stage: "partitioned_tables"}}
+                    %{stage: "events_deletion"}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
-                    %{stage: "unpartitioned_tables"}}
+                    %{stage: "sessions_deletion"}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
                     %{stage: "mutation_only_tables"}}

@@ -25,34 +25,19 @@ defmodule Plausible.Site.SiteRemovalTest do
 
     assert %PendingStatsDeletion{} = pending_deletion = context.pending_stats_deletion
     assert pending_deletion.site_id == site.id
-    assert pending_deletion.stats_start_date == ~D[2020-01-01]
-    assert pending_deletion.stats_end_date == ~D[2020-01-10]
     assert pending_deletion.reason == :user_request
 
     assert Repo.get_by(PendingStatsDeletion, site_id: site.id)
   end
 
-  test "site deletion accounts for pending deletion of imported stats" do
-    site = new_site()
-    insert(:site_import, site: site, start_date: ~D[2018-01-01], end_date: ~D[2018-06-01])
-
-    populate_stats(site, [
-      build(:pageview, timestamp: ~N[2020-01-01 12:00:00])
-    ])
-
-    assert {:ok, context} = Removal.run(site)
-
-    assert context.pending_stats_deletion.stats_start_date == ~D[2018-01-01]
-    assert context.pending_stats_deletion.stats_end_date == ~D[2020-01-01]
-  end
-
-  test "site deletion does not store a pending stats deletion record if the site has no stats" do
+  test "site deletion stores a pending stats deletion record even if the site has no stats" do
     site = new_site()
 
     assert {:ok, context} = Removal.run(site)
 
-    assert context.pending_stats_deletion == nil
-    refute Repo.get_by(PendingStatsDeletion, site_id: site.id)
+    assert %PendingStatsDeletion{site_id: site_id} = context.pending_stats_deletion
+    assert site_id == site.id
+    assert Repo.get_by(PendingStatsDeletion, site_id: site.id)
   end
 
   test "site deletion prunes team guest memberships" do

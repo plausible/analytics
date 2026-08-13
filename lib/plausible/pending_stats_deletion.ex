@@ -11,8 +11,6 @@ defmodule Plausible.PendingStatsDeletion do
 
   schema "pending_stats_deletions" do
     field :site_id, :integer
-    field :stats_start_date, :date
-    field :stats_end_date, :date
     field :reason, Ecto.Enum, values: @reasons, default: :user_request
 
     timestamps()

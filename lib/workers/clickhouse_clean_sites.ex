@@ -1,12 +1,11 @@
 defmodule Plausible.Workers.ClickhouseCleanSites do
   @moduledoc """
   Cleans deleted site data from ClickHouse asynchronously, using lightweight
-  deletes.
+  deletes (except for ingest counters).
 
-  Deletes against `events_v2` and `sessions_v2` are scoped to the monthly
-  partitions covered by the pending stats deletions, so ClickHouse doesn't
-  have to touch partitions we know contain no relevant data. The remaining
-  tables aren't partitioned, so they're cleared in one go.
+  Deletes against `events_v2` and `sessions_v2` scoped to relevant
+  partitions only. The remaining tables aren't partitioned, 
+  so they're cleared in one go.
 
   We batch up data deletions from ClickHouse as deleting a single site is
   just as expensive as deleting many.
@@ -17,11 +16,8 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
   alias Plausible.PendingStatsDeletions
   alias Plausible.PromEx.Plugins.PlausibleMetrics
-  alias Plausible.Stats.Clickhouse
 
   require Logger
-
-  @partitioned_tables ["events_v2", "sessions_v2"]
 
   @unpartitioned_tables [
     "imported_browsers",
@@ -50,28 +46,38 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   def telemetry_stage_duration(), do: [:plausible, :clickhouse_clean_sites, :stage]
 
   def perform(_job) do
-    pending_deletions =
-      measure_stage("list_pending_deletions", fn -> PendingStatsDeletions.list() end)
-
-    case pending_deletions do
-      %{site_ids: []} ->
+    case measure_stage("list_pending_deletions", fn -> PendingStatsDeletions.list() end) do
+      [] ->
         :ok
 
-      %{site_ids: site_ids, stats_start: stats_start, stats_end: stats_end} ->
-        partition_ids = Clickhouse.partition_ids(stats_start, stats_end)
+      site_ids ->
+        partition_ids_events =
+          measure_stage("get_partition_ids_events", fn -> partition_ids("events_v2", site_ids) end)
+
+        partition_ids_sessions =
+          measure_stage("get_partition_ids_sessions", fn ->
+            partition_ids("sessions_v2", site_ids)
+          end)
 
         :telemetry.execute(telemetry_run_event(), %{
           sites_count: length(site_ids),
-          partitions_count: length(partition_ids)
+          partitions_count_events: length(partition_ids_events),
+          partitions_count_sessions: length(partition_ids_sessions)
         })
 
         Logger.notice(
-          "Clearing ClickHouse data for #{length(site_ids)} in range #{stats_start}..#{stats_end}"
+          "Clearing ClickHouse data for #{length(site_ids)} sites across #{length(partition_ids_events)}/#{length(partition_ids_sessions)} partitions"
         )
 
-        measure_stage("partitioned_tables", fn ->
-          for partition_id <- partition_ids, table <- @partitioned_tables do
-            clear_partitioned_table!(table, partition_id, site_ids)
+        measure_stage("events_deletion", fn ->
+          for partition_id <- partition_ids_events do
+            clear_partitioned_table!("events_v2", partition_id, site_ids)
+          end
+        end)
+
+        measure_stage("sessions_deletion", fn ->
+          for partition_id <- partition_ids_sessions do
+            clear_partitioned_table!("sessions_v2", partition_id, site_ids)
           end
         end)
 
@@ -93,6 +99,15 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
         :ok
     end
+  end
+
+  defp partition_ids(table, site_ids) do
+    from(e in table,
+      where: e.site_id in ^site_ids,
+      distinct: true,
+      select: field(e, :_partition_id)
+    )
+    |> DeletionRepo.all()
   end
 
   defp measure_stage(stage, fun) do

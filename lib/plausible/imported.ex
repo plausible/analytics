@@ -64,14 +64,6 @@ defmodule Plausible.Imported do
     |> Enum.min(Date, fn -> nil end)
   end
 
-  @spec latest_import_end_date(Site.t()) :: Date.t() | nil
-  def latest_import_end_date(site) do
-    site
-    |> get_completed_imports()
-    |> Enum.map(& &1.end_date)
-    |> Enum.max(Date, fn -> nil end)
-  end
-
   @spec complete_import_ids(Site.t()) :: [non_neg_integer()]
   def complete_import_ids(site) do
     imports = get_completed_imports(site)

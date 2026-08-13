@@ -410,20 +410,15 @@ defmodule Plausible.Sites do
     end
   end
 
-  @spec native_stats_start_date(Site.t(), Keyword.t()) :: Date.t() | nil
-  def native_stats_start_date(site, opts \\ []) do
-    Plausible.Stats.Clickhouse.pageview_start_date_local(site, opts)
+  @spec native_stats_start_date(Site.t()) :: Date.t() | nil
+  def native_stats_start_date(site) do
+    Plausible.Stats.Clickhouse.pageview_start_date_local(site)
   end
 
-  @spec native_stats_end_date(Site.t(), Keyword.t()) :: Date.t() | nil
-  def native_stats_end_date(site, opts \\ []) do
-    Plausible.Stats.Clickhouse.pageview_end_date_local(site, opts)
-  end
-
-  defp compute_stats_start_date(site, opts \\ []) do
+  defp compute_stats_start_date(site) do
     [
       Plausible.Imported.earliest_import_start_date(site),
-      native_stats_start_date(site, opts)
+      native_stats_start_date(site)
     ]
     |> Enum.reject(&is_nil/1)
     |> Enum.min(Date, fn -> nil end)
@@ -431,30 +426,6 @@ defmodule Plausible.Sites do
 
   def has_stats?(site) do
     !!ensure_stats_start_date(site).stats_start_date
-  end
-
-  @spec stats_range(Site.t()) :: %{
-          stats_start_date: Date.t() | nil,
-          stats_end_date: Date.t() | nil
-        }
-  @doc """
-  Computes the range of UTC dates for which the given site has stats, across
-  both imported and native ClickHouse data.
-  """
-  def stats_range(site) do
-    stats_start_date = compute_stats_start_date(site, use_site_timezone?: false)
-
-    stats_end_date =
-      if stats_start_date do
-        [
-          Plausible.Imported.latest_import_end_date(site),
-          native_stats_end_date(site, use_site_timezone?: false)
-        ]
-        |> Enum.reject(&is_nil/1)
-        |> Enum.max(Date, fn -> nil end)
-      end
-
-    %{stats_start_date: stats_start_date, stats_end_date: stats_end_date}
   end
 
   def create_shared_link(site, name, opts \\ []) do

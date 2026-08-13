@@ -13,10 +13,8 @@ defmodule Plausible.Stats.Clickhouse do
   alias Plausible.Timezones
   alias Plausible.Stats
 
-  @spec pageview_start_date_local(Plausible.Site.t(), Keyword.t()) :: Date.t() | nil
-  def pageview_start_date_local(site, opts \\ []) do
-    use_site_timezone? = Keyword.get(opts, :use_site_timezone?, true)
-
+  @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
+  def pageview_start_date_local(site) do
     datetime =
       ClickhouseRepo.one(
         from(e in "events_v2",
@@ -32,38 +30,7 @@ defmodule Plausible.Stats.Clickhouse do
         nil
 
       _ ->
-        if use_site_timezone? do
-          Timezones.to_date_in_timezone(datetime, site.timezone)
-        else
-          NaiveDateTime.to_date(datetime)
-        end
-    end
-  end
-
-  @spec pageview_end_date_local(Plausible.Site.t(), Keyword.t()) :: Date.t() | nil
-  def pageview_end_date_local(site, opts \\ []) do
-    use_site_timezone? = Keyword.get(opts, :use_site_timezone?, true)
-
-    datetime =
-      ClickhouseRepo.one(
-        from(e in "events_v2",
-          select: fragment("max(?)", e.timestamp),
-          where: e.site_id == ^site.id,
-          where: e.timestamp >= ^site.native_stats_start_at
-        )
-      )
-
-    case datetime do
-      # no stats for this domain yet
-      ~N[1970-01-01 00:00:00] ->
-        nil
-
-      _ ->
-        if use_site_timezone? do
-          Timezones.to_date_in_timezone(datetime, site.timezone)
-        else
-          NaiveDateTime.to_date(datetime)
-        end
+        Timezones.to_date_in_timezone(datetime, site.timezone)
     end
   end
 
@@ -223,14 +190,5 @@ defmodule Plausible.Stats.Clickhouse do
 
   def current_visitors_12h(site) do
     Stats.current_visitors(site, Duration.new!(hour: -12))
-  end
-
-  @spec partition_ids(Date.t(), Date.t()) :: list(String.t())
-  def partition_ids(from_date, to_date) do
-    from_date
-    |> Date.beginning_of_month()
-    |> Stream.iterate(&Date.shift(&1, month: 1))
-    |> Stream.take_while(&(Date.compare(&1, Date.beginning_of_month(to_date)) != :gt))
-    |> Enum.map(&Calendar.strftime(&1, "%Y%m"))
   end
 end
