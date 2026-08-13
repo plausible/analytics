@@ -7,7 +7,8 @@ defmodule Plausible.Workers.CheckUsageTest do
 
   require Plausible.Billing.Subscription.Status
 
-  setup [:create_user, :create_site]
+  @moduletag :ee_only
+
   @paddle_id_10k "558018"
   @date_range Date.range(Date.utc_today(), Date.utc_today())
 
@@ -16,6 +17,8 @@ defmodule Plausible.Workers.CheckUsageTest do
     Plausible.Billing.Subscription.Status.past_due(),
     Plausible.Billing.Subscription.Status.deleted()
   ]
+
+  setup [:create_user, :create_site]
 
   test "ignores user without subscription" do
     CheckUsage.perform(nil)
@@ -271,7 +274,8 @@ defmodule Plausible.Workers.CheckUsageTest do
       end
 
       test "skips checking users who already have a grace period", %{user: user} do
-        %{grace_period: existing_grace_period} = Plausible.Teams.start_grace_period(team_of(user))
+        %{grace_period: existing_grace_period} =
+          Plausible.Teams.start_grace_period(team_of(user))
 
         usage_stub =
           Plausible.Teams.Billing
