@@ -91,7 +91,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
         class="flex flex-col gap-y-6"
         action={Routes.auth_path(@socket, :login)}
         onsubmit={form_submit_event(@invitation)}
-        phx-hook="Metrics"
         phx-change="validate"
         phx-submit="register"
         phx-trigger-action={@trigger_submit}
