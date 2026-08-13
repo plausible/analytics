@@ -83,9 +83,11 @@ defmodule Plausible.PendingStatsDeletions do
       Ch.start_link(ClickhouseRepo.get_config_without_ch_query_execution_timeout())
 
     query =
-      @all_stats_tables
-      |> Enum.map(&"SELECT site_id FROM #{&1} GROUP BY site_id")
-      |> Enum.join("\nUNION DISTINCT\n")
+      Enum.map_join(
+        @all_stats_tables,
+        "\nUNION DISTINCT\n",
+        &"SELECT site_id FROM #{&1} GROUP BY site_id"
+      )
 
     %Ch.Result{columns: ["site_id"], rows: rows} =
       DBConnection.run(
