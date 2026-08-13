@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.TrackingSettings do
 
           <.settings_section
             title="Additional tracking"
-            tooltip="Require manual setup and count towards your billable monthly pageviews."
+            tooltip="These tracking options require manual setup."
             expandable?={true}
           >
             <.measurement label="Custom event tracking">
