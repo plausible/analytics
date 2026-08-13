@@ -375,6 +375,7 @@ PlausibleWeb.Components.FlowProgress.html
 PlausibleWeb.Components.Generic.html
 PlausibleWeb.Components.Google.html
 PlausibleWeb.Components.Icons.html
+PlausibleWeb.Components.Settings.html
 PlausibleWeb.Components.Site.Feature.ToggleLive.html
 PlausibleWeb.Components.TwoFactor.html
 PlausibleWeb.ConnCase.html
@@ -476,6 +477,7 @@ PlausibleWeb.Live.SubscriptionSettings.html
 PlausibleWeb.Live.SuperAdminLiveAuth.html
 PlausibleWeb.Live.TeamManagement.html
 PlausibleWeb.Live.TeamSetup.html
+PlausibleWeb.Live.TrackingSettings.html
 PlausibleWeb.Live.Verification.html
 PlausibleWeb.LoginPreference.html
 PlausibleWeb.MJML.StatsReport.html
@@ -584,8 +586,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-1EC00A86.js
-dist/sidebar_items-2DBC22DE.js
+dist/search_data-D467B63E.js
+dist/sidebar_items-80FE0124.js
 index.html
 readme.html
 search.html
