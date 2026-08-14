@@ -11,12 +11,12 @@ defmodule PlausibleWeb.Layouts do
 
   embed_templates "layouts/*.html"
 
-  attr :embedded, :boolean, default: false
   attr :header?, :boolean, default: true
   attr :footer?, :boolean, default: true
   attr :global_notices?, :boolean, default: true
   attr :trial_badge?, :boolean, default: true
-  attr :load_dashboard_js, :boolean, default: false
+  attr :embedded?, :boolean, default: false
+  attr :load_dashboard_js?, :boolean, default: false
   attr :flash, :map, default: %{}
   attr :current_user, :any, default: nil
   attr :current_team, :any, default: nil
@@ -28,10 +28,10 @@ defmodule PlausibleWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <div class={["flex flex-col", if(!@embedded, do: "h-full")]}>
-      <.flash :if={!@embedded} flash={@flash} />
+    <div class={["flex flex-col", if(!@embedded?, do: "h-full")]}>
+      <.flash :if={not @embedded?} flash={@flash} />
 
-      <%= if !@embedded && @header? do %>
+      <%= if !@embedded? && @header? do %>
         <.header
           current_user={@current_user}
           site={@site}
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Layouts do
         {render_slot(@inner_block)}
       </main>
 
-      <%= if @embedded do %>
+      <%= if @embedded? do %>
         <div data-iframe-height></div>
         <script
           type="text/javascript"
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Layouts do
       <.footer :if={@footer?} />
       <script type="text/javascript" src={Routes.static_path(PlausibleWeb.Endpoint, "/js/app.js")}>
       </script>
-      <%= if @load_dashboard_js do %>
+      <%= if @load_dashboard_js? do %>
         <script
           type="text/javascript"
           src={Routes.static_path(PlausibleWeb.Endpoint, "/js/dashboard.js")}
@@ -74,12 +74,12 @@ defmodule PlausibleWeb.Layouts do
   def legacy(assigns) do
     ~H"""
     <.app
-      embedded={!!assigns[:embedded]}
       header?={!assigns[:hide_header?]}
       footer?={!assigns[:hide_footer?]}
       global_notices?={!assigns[:disable_global_notices?]}
       trial_badge?={!assigns[:hide_trial_badge?]}
-      load_dashboard_js={!!assigns[:load_dashboard_js]}
+      embedded?={!!assigns[:embedded]}
+      load_dashboard_js?={!!assigns[:load_dashboard_js]}
       flash={assigns[:flash] || %{}}
       current_user={assigns[:current_user]}
       current_team={assigns[:current_team]}
