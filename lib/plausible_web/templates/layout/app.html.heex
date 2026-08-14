@@ -32,6 +32,10 @@
     class={assigns[:bg_class] || "bg-gray-50 dark:bg-gray-950"}
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
-    <Layouts.legacy {assigns} />
+    <%= if Map.get(assigns, :legacy_layout?, true) do %>
+      <Layouts.legacy {assigns} />
+    <% else %>
+      {@inner_content}
+    <% end %>
   </body>
 </html>
