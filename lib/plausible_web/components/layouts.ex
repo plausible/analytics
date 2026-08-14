@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Layouts do
   attr :header?, :boolean, default: true
   attr :footer?, :boolean, default: true
   attr :global_notices?, :boolean, default: true
+  attr :trial_badge?, :boolean, default: true
   attr :load_dashboard_js, :boolean, default: false
   attr :flash, :map, default: %{}
   attr :current_user, :any, default: nil
@@ -23,7 +24,6 @@ defmodule PlausibleWeb.Layouts do
   attr :teams, :list, default: []
   attr :my_team, :any, default: nil
   attr :site, :any, default: nil
-  attr :hide_trial_badge?, :boolean, default: false
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Layouts do
           site={@site}
           current_team={@current_team}
           current_team_role={@current_team_role}
-          hide_trial_badge?={@hide_trial_badge?}
+          trial_badge?={@trial_badge?}
           teams={@teams}
           my_team={@my_team}
         />
@@ -78,6 +78,7 @@ defmodule PlausibleWeb.Layouts do
       header?={!assigns[:hide_header?]}
       footer?={!assigns[:hide_footer?]}
       global_notices?={!assigns[:disable_global_notices?]}
+      trial_badge?={!assigns[:hide_trial_badge?]}
       load_dashboard_js={!!assigns[:load_dashboard_js]}
       flash={assigns[:flash] || %{}}
       current_user={assigns[:current_user]}
@@ -86,7 +87,6 @@ defmodule PlausibleWeb.Layouts do
       teams={assigns[:teams] || []}
       my_team={assigns[:my_team]}
       site={assigns[:site]}
-      hide_trial_badge?={!!assigns[:hide_trial_badge?]}
     >
       {Map.get(assigns, :inner_layout) || @inner_content}
     </.app>

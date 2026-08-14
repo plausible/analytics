@@ -27,7 +27,7 @@
                   ee?() and Plausible.Teams.on_trial?(@current_team) and
                     (not Plausible.Teams.setup?(@current_team) or
                        @current_team_role in Plausible.Billing.allowed_roles()) and
-                    !@hide_trial_badge?
+                    @trial_badge?
                 }
                 class="hidden sm:block"
               >
