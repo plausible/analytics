@@ -276,7 +276,11 @@ defmodule PlausibleWeb.AuthController do
     heading = Phoenix.Flash.get(conn.assigns.flash, :login_title) || "Sign in to your account"
     subtitle = Phoenix.Flash.get(conn.assigns.flash, :login_instructions)
 
-    render_auth_page(conn, "login_form.html", heading: heading, subtitle: subtitle)
+    render(conn, "login_form.html",
+      legacy_layout?: false,
+      heading: heading,
+      subtitle: subtitle
+    )
   end
 
   def login(conn, %{"user" => params}) do
