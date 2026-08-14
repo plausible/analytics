@@ -185,14 +185,14 @@ defmodule PlausibleWeb.AuthController do
             "Password reset e-mail sent. In dev environment GET /sent-emails for details."
           )
 
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
+          render(conn, "password_reset_request_success.html",
+            legacy_layout?: false,
             email: email
           )
 
         {:error, _} ->
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
+          render(conn, "password_reset_request_success.html",
+            legacy_layout?: false,
             email: email
           )
       end
