@@ -37,12 +37,8 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def home_dest(conn) do
-    if conn.assigns[:current_user] do
-      "/sites"
-    else
-      "/"
-    end
+  def home_dest(current_user) do
+    if current_user, do: "/sites", else: "/"
   end
 
   def logo_path(filename) do
