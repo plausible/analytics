@@ -513,7 +513,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa_recovery_code(conn)
+          render(conn, "verify_2fa_recovery_code.html", legacy_layout?: false)
         else
           redirect_to_login(conn)
         end
@@ -532,23 +532,15 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
 
-          render_verify_2fa_recovery_code(
-            conn,
-            "The provided recovery code is invalid. Please try another one"
+          render(conn, "verify_2fa_recovery_code.html",
+            legacy_layout?: false,
+            error: "The provided recovery code is invalid. Please try another one"
           )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
       end
     end
-  end
-
-  defp render_verify_2fa_recovery_code(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa_recovery_code.html",
-      error: error,
-      heading: "Use a recovery code",
-      subtitle: "Enter one of your saved recovery codes to sign in."
-    )
   end
 
   defp get_2fa_user_limited(conn) do
