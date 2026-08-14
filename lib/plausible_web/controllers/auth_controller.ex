@@ -166,11 +166,14 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render_password_reset_request_form(conn)
+    render(conn, "password_reset_request_form.html", legacy_layout?: false)
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render_password_reset_request_form(conn, error: "Please enter an email address")
+    render(conn, "password_reset_request_form.html",
+      legacy_layout?: false,
+      error: "Please enter an email address"
+    )
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
@@ -198,24 +201,11 @@ defmodule PlausibleWeb.AuthController do
           )
       end
     else
-      render_password_reset_request_form(conn,
+      render(conn, "password_reset_request_form.html",
+        legacy_layout?: false,
         captcha_error: "Please complete the captcha to reset your password"
       )
     end
-  end
-
-  defp render_password_reset_request_form(conn, extra_assigns \\ []) do
-    render_auth_page(
-      conn,
-      "password_reset_request_form.html",
-      Keyword.merge(
-        [
-          heading: "Reset your password",
-          subtitle: "Enter your email to receive a password reset link."
-        ],
-        extra_assigns
-      )
-    )
   end
 
   def password_reset_form(conn, params) do
