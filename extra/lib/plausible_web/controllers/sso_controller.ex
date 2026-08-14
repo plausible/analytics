@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def provision_notice(conn, _params) do
-    render_auth_page(conn, "provision_notice.html", heading: "Single Sign-On required")
+    render(conn, "provision_notice.html", legacy_layout?: false)
   end
 
   def provision_issue(conn, params) do
