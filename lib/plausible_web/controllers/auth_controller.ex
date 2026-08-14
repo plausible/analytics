@@ -477,7 +477,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa.html", legacy_layout?: false)
+          render(conn, "verify_2fa.html", legacy_layout?: false, error: nil)
         else
           redirect_to_login(conn)
         end
@@ -513,7 +513,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa_recovery_code.html", legacy_layout?: false)
+          render(conn, "verify_2fa_recovery_code.html", legacy_layout?: false, error: nil)
         else
           redirect_to_login(conn)
         end
