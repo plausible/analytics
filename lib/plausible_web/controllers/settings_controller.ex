@@ -375,9 +375,13 @@ defmodule PlausibleWeb.SettingsController do
         Auth.User.password_changeset(conn.assigns.current_user)
       )
 
+    oauth_grants = Plausible.OAuth.list_grants(conn.assigns.current_user)
+
     render(conn, :security,
       totp_enabled?: Auth.TOTP.enabled?(conn.assigns.current_user),
       user_sessions: user_sessions,
+      oauth_grants: oauth_grants,
+      mcp_enabled?: FunWithFlags.enabled?(:mcp_server),
       email_changeset: email_changeset,
       password_changeset: password_changeset,
       layout: {PlausibleWeb.LayoutView, :settings}
@@ -392,6 +396,22 @@ defmodule PlausibleWeb.SettingsController do
     conn
     |> put_flash(:success, "Session logged out successfully")
     |> redirect(to: Routes.settings_path(conn, :security) <> "#user-sessions")
+  end
+
+  def revoke_oauth_connector(conn, %{"id" => id}) do
+    current_user = conn.assigns.current_user
+
+    case Plausible.OAuth.revoke_grant(current_user, id) do
+      :ok ->
+        conn
+        |> put_flash(:success, "Connected application revoked successfully")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#oauth-connectors")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Connected application not found")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#oauth-connectors")
+    end
   end
 
   defp do_update_password(user, params) do
