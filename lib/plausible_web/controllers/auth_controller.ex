@@ -76,13 +76,14 @@ defmodule PlausibleWeb.AuthController do
   defp render_activate_form(conn, flow, opts) do
     assigns =
       [
+        legacy_layout?: false,
         error: nil,
         form_submit_url: "/activate?flow=#{flow}",
         team_identifier: conn.params["team_identifier"]
       ]
       |> Keyword.merge(opts)
 
-    render_auth_page(
+    render(
       conn,
       "activate.html",
       Keyword.put(assigns, :heading, activate_heading(assigns[:has_email_code?]))
