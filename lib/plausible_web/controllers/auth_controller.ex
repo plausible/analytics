@@ -221,10 +221,9 @@ defmodule PlausibleWeb.AuthController do
   def password_reset_form(conn, params) do
     case Auth.Token.verify_password_reset(params["token"]) do
       {:ok, %{email: email}} ->
-        render_auth_page(conn, "password_reset_form.html",
+        render(conn, "password_reset_form.html",
+          legacy_layout?: false,
           connect_live_socket: true,
-          heading: "Reset your password",
-          subtitle: "Choose a new password for your account",
           email: email
         )
 
