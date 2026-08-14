@@ -1,54 +1,56 @@
-<.auth_container>
-  <script :if={@autosubmit}>
-    document.addEventListener("DOMContentLoaded", function () {
-      document.getElementById("sso-login-form").submit();
-    });
-  </script>
+<Layouts.auth heading={"Sign in with SSO"} flash={@flash}>
+  <.auth_container>
+    <script :if={@autosubmit}>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("sso-login-form").submit();
+      });
+    </script>
 
-  <.form
-    :let={f}
-    id="sso-login-form"
-    for={@conn}
-    action={Routes.sso_path(@conn, :login)}
-    class="flex flex-col gap-y-6"
-  >
-    <div class="flex flex-col gap-y-2">
-      <label for={f[:email].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-        Email
-      </label>
-      <div>
-        <.input
-          type="email"
-          autocomplete="username"
-          placeholder="example@email.com"
-          field={f[:email]}
-          mt?={false}
-          autofocus="autofocus"
-        />
+    <.form
+      :let={f}
+      id="sso-login-form"
+      for={@conn}
+      action={Routes.sso_path(@conn, :login)}
+      class="flex flex-col gap-y-6"
+    >
+      <div class="flex flex-col gap-y-2">
+        <label for={f[:email].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+          Email
+        </label>
+        <div>
+          <.input
+            type="email"
+            autocomplete="username"
+            placeholder="example@email.com"
+            field={f[:email]}
+            mt?={false}
+            autofocus="autofocus"
+          />
+        </div>
+        <p
+          :if={login_error = Phoenix.Flash.get(@flash, :login_error)}
+          class="text-xs text-red-500"
+        >
+          {login_error}
+        </p>
       </div>
-      <p
-        :if={login_error = Phoenix.Flash.get(@flash, :login_error)}
-        class="text-xs text-red-500"
-      >
-        {login_error}
-      </p>
-    </div>
 
-    <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
+      <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
 
-    <div class="flex flex-col gap-y-4">
-      <.button class="w-full" type="submit" mt?={false}>Sign in</.button>
+      <div class="flex flex-col gap-y-4">
+        <.button class="w-full" type="submit" mt?={false}>Sign in</.button>
 
-      <p class="text-sm text-center text-gray-500 dark:text-gray-400">
-        <.styled_link href={
-          Routes.auth_path(@conn, :login_form,
-            return_to: @conn.params["return_to"],
-            prefer: "manual"
-          )
-        }>
-          Use password instead
-        </.styled_link>
-      </p>
-    </div>
-  </.form>
-</.auth_container>
+        <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+          <.styled_link href={
+            Routes.auth_path(@conn, :login_form,
+              return_to: @conn.params["return_to"],
+              prefer: "manual"
+            )
+          }>
+            Use password instead
+          </.styled_link>
+        </p>
+      </div>
+    </.form>
+  </.auth_container>
+</Layouts.auth>
