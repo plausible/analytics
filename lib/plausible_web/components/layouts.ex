@@ -1,44 +1,95 @@
 defmodule PlausibleWeb.Layouts do
   @moduledoc false
 
-  use Phoenix.Component
+  use PlausibleWeb, :component
+  use Plausible
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
+  require Plausible.Billing
 
-  def legacy(assigns) do
+  alias PlausibleWeb.Components.Billing.Notice
+  alias PlausibleWeb.Components.Layout
+
+  embed_templates "layouts/*.html"
+
+  attr :embedded, :boolean, default: false
+  attr :header?, :boolean, default: true
+  attr :footer?, :boolean, default: true
+  attr :global_notices?, :boolean, default: true
+  attr :load_dashboard_js, :boolean, default: false
+  attr :flash, :map, default: %{}
+  attr :current_user, :any, default: nil
+  attr :current_team, :any, default: nil
+  attr :current_team_role, :any, default: nil
+  attr :teams, :list, default: []
+  attr :my_team, :any, default: nil
+  attr :site, :any, default: nil
+  attr :hide_trial_badge?, :boolean, default: false
+  slot :inner_block, required: true
+
+  def app(assigns) do
     ~H"""
-    <div class={["flex flex-col", if(!assigns[:embedded], do: "h-full")]}>
-      <%= if !assigns[:embedded] && assigns[:flash] do %>
-        {PlausibleWeb.LayoutView.render("_flash.html", assigns)}
-      <% end %>
+    <div class={["flex flex-col", if(!@embedded, do: "h-full")]}>
+      <.flash :if={!@embedded} flash={@flash} />
 
-      <%= if !assigns[:embedded] && !assigns[:hide_header?] do %>
-        {PlausibleWeb.LayoutView.render("_header.html", assigns)}
+      <%= if !@embedded && @header? do %>
+        <.header
+          current_user={@current_user}
+          site={@site}
+          current_team={@current_team}
+          current_team_role={@current_team_role}
+          hide_trial_badge?={@hide_trial_badge?}
+          teams={@teams}
+          my_team={@my_team}
+        />
 
-        <%= if !assigns[:disable_global_notices?] do %>
-          {PlausibleWeb.LayoutView.render("_notice.html", assigns)}
-        <% end %>
+        <.team_notices :if={@global_notices?} current_team={@current_team} />
       <% end %>
 
       <main class="flex-1 flex flex-col">
-        {Map.get(assigns, :inner_layout) || @inner_content}
+        {render_slot(@inner_block)}
       </main>
 
-      <%= if assigns[:embedded] do %>
+      <%= if @embedded do %>
         <div data-iframe-height></div>
-        <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
+        <script
+          type="text/javascript"
+          src={Routes.static_path(PlausibleWeb.Endpoint, "/js/embed.content.js")}
+        >
         </script>
       <% end %>
-      <%= if !assigns[:hide_footer?] do %>
-        {PlausibleWeb.LayoutView.render("_footer.html", assigns)}
-      <% end %>
-      <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
+      <.footer :if={@footer?} />
+      <script type="text/javascript" src={Routes.static_path(PlausibleWeb.Endpoint, "/js/app.js")}>
       </script>
-      <%= if assigns[:load_dashboard_js] do %>
-        <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
+      <%= if @load_dashboard_js do %>
+        <script
+          type="text/javascript"
+          src={Routes.static_path(PlausibleWeb.Endpoint, "/js/dashboard.js")}
+        >
         </script>
       <% end %>
     </div>
+    """
+  end
+
+  def legacy(assigns) do
+    ~H"""
+    <.app
+      embedded={!!assigns[:embedded]}
+      header?={!assigns[:hide_header?]}
+      footer?={!assigns[:hide_footer?]}
+      global_notices?={!assigns[:disable_global_notices?]}
+      load_dashboard_js={!!assigns[:load_dashboard_js]}
+      flash={assigns[:flash] || %{}}
+      current_user={assigns[:current_user]}
+      current_team={assigns[:current_team]}
+      current_team_role={assigns[:current_team_role]}
+      teams={assigns[:teams] || []}
+      my_team={assigns[:my_team]}
+      site={assigns[:site]}
+      hide_trial_badge?={!!assigns[:hide_trial_badge?]}
+    >
+      {Map.get(assigns, :inner_layout) || @inner_content}
+    </.app>
     """
   end
 end

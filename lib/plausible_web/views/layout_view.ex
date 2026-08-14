@@ -3,7 +3,6 @@ defmodule PlausibleWeb.LayoutView do
   use Plausible
 
   alias Plausible.Teams
-  alias PlausibleWeb.Components.Billing.Notice
   alias PlausibleWeb.Components.Layout
   alias PlausibleWeb.Layouts
 
@@ -163,7 +162,6 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  attr :conn, :map, required: true
   attr :teams, :list, required: true
   attr :my_team, :any, default: nil
   attr :current_team, :any, default: nil
@@ -205,7 +203,7 @@ defmodule PlausibleWeb.LayoutView do
       </.dropdown_item>
       <.dropdown_item
         :if={@pinned_team}
-        href={Routes.site_path(@conn, :index, __team: @pinned_team.identifier)}
+        href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: @pinned_team.identifier)}
       >
         <div class="flex items-center justify-between gap-2" role="none">
           <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
@@ -217,7 +215,7 @@ defmodule PlausibleWeb.LayoutView do
       <div class="max-h-[200px] overflow-y-auto">
         <.dropdown_item
           :for={team <- @other_teams}
-          href={Routes.site_path(@conn, :index, __team: team.identifier)}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: team.identifier)}
         >
           <p
             class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"

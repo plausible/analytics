@@ -2,21 +2,21 @@
   <div class="container print:max-w-full">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
-        <a href={home_dest(@conn)}>
+        <a href={if @current_user, do: "/sites", else: "/"}>
           <Layout.logo />
         </a>
       </div>
       <div class="absolute inset-y-0 right-0 flex items-center justify-end">
         <%= cond do %>
-          <% @conn.assigns[:current_user] -> %>
+          <% @current_user -> %>
             <ul class="flex items-center gap-2 w-full sm:w-auto">
               <li :if={
-                ee?() && @conn.assigns[:site] &&
-                  Plausible.Auth.super_admin?(@conn.assigns[:current_user])
+                ee?() && @site &&
+                  Plausible.Auth.super_admin?(@current_user)
               }>
                 <.styled_link
                   class="text-sm font-medium"
-                  href={"/cs/sites/site/#{@conn.assigns.site.id}"}
+                  href={"/cs/sites/site/#{@site.id}"}
                   new_tab={true}
                 >
                   CS
@@ -24,21 +24,21 @@
               </li>
               <li
                 :if={
-                  ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team]) and
-                    (not Plausible.Teams.setup?(@conn.assigns[:current_team]) or
-                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles()) and
-                    !assigns[:hide_trial_badge?]
+                  ee?() and Plausible.Teams.on_trial?(@current_team) and
+                    (not Plausible.Teams.setup?(@current_team) or
+                       @current_team_role in Plausible.Billing.allowed_roles()) and
+                    !@hide_trial_badge?
                 }
                 class="hidden sm:block"
               >
                 <div class="flex items-center gap-x-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-600/35 dark:to-purple-600/35 overflow-hidden">
                   <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {trial_notification(@conn.assigns[:current_team])}
+                    {PlausibleWeb.LayoutView.trial_notification(@current_team)}
                   </span>
                   <div class="w-px h-4 bg-indigo-500/30 dark:bg-indigo-200/30" aria-hidden="true">
                   </div>
                   <.styled_link
-                    href={Routes.settings_path(@conn, :subscription)}
+                    href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                     class="plausible-event-name=Trial+Notification+Upgrade+Click text-sm font-medium dark:!text-indigo-400 dark:hover:!text-indigo-300"
                   >
                     Choose a plan
@@ -49,10 +49,10 @@
                 <.dropdown>
                   <:button class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
                     <span class="hidden md:block text-sm font-medium truncate dark:text-gray-100">
-                      {@conn.assigns[:current_user].name}
+                      {@current_user.name}
                     </span>
                     <img
-                      src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
+                      src={Plausible.Auth.User.profile_img_url(@current_user)}
                       class="-my-0.5 w-7 rounded-full"
                     />
                   </:button>
@@ -60,22 +60,24 @@
                     <.dropdown_item>
                       <div class="text-xs text-gray-500 dark:text-gray-400">Signed in as</div>
                       <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        {@conn.assigns[:current_user].email}
+                        {@current_user.email}
                       </p>
                     </.dropdown_item>
-                    <.team_switcher
-                      conn={@conn}
+                    <PlausibleWeb.LayoutView.team_switcher
                       teams={@teams}
                       my_team={@my_team}
                       current_team={@current_team}
                     />
                     <.dropdown_divider />
-                    <.dropdown_item href={Routes.settings_path(@conn, :index)}>
+                    <.dropdown_item href={Routes.settings_path(PlausibleWeb.Endpoint, :index)}>
                       Account settings
                     </.dropdown_item>
 
                     <div :if={@my_team && @my_team.id == @current_team.id}>
-                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
+                      <.dropdown_item
+                        class="flex"
+                        href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+                      >
                         <span data-test="create-a-team-cta" class="flex-1">
                           Create a team
                         </span>
@@ -86,7 +88,7 @@
                     <div :if={Plausible.Teams.setup?(@current_team)}>
                       <.dropdown_item
                         class="flex"
-                        href={Routes.settings_path(@conn, :team_general)}
+                        href={Routes.settings_path(PlausibleWeb.Endpoint, :team_general)}
                       >
                         <span class="flex-1">
                           Team settings
@@ -113,7 +115,7 @@
                       :if={ee?()}
                       class="!flex justify-between gap-x-12"
                       new_tab
-                      href={feedback_link(@conn.assigns[:current_user])}
+                      href={PlausibleWeb.LayoutView.feedback_link(@current_user)}
                     >
                       Feature requests
                     </.dropdown_item>
@@ -129,9 +131,7 @@
                   </:menu>
                 </.dropdown>
               </li>
-              <%= if @conn.assigns[:current_user] && ee?() do %>
-                <li id="changelog-notification" class="relative py-2"></li>
-              <% end %>
+              <li :if={ee?()} id="changelog-notification" class="relative py-2"></li>
             </ul>
           <% Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false -> %>
             <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
