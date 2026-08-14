@@ -477,7 +477,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa(conn)
+          render(conn, "verify_2fa.html", legacy_layout?: false)
         else
           redirect_to_login(conn)
         end
@@ -498,7 +498,10 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
 
-          render_verify_2fa(conn, "The provided code is invalid. Please try again")
+          render(conn, "verify_2fa.html",
+            legacy_layout?: false,
+            error: "The provided code is invalid. Please try again"
+          )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user, params["return_to"])
@@ -538,15 +541,6 @@ defmodule PlausibleWeb.AuthController do
           UserAuth.log_in_user(conn, user)
       end
     end
-  end
-
-  defp render_verify_2fa(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa.html",
-      error: error,
-      heading: "Enter your 2FA code",
-      subtitle: "Open your authenticator app and enter the 6-digit code.",
-      remember_2fa_days: TwoFactor.Session.remember_2fa_days()
-    )
   end
 
   defp render_verify_2fa_recovery_code(conn, error \\ nil) do
