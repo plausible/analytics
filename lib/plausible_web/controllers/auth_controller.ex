@@ -230,17 +230,17 @@ defmodule PlausibleWeb.AuthController do
       {:error, :expired} ->
         conn
         |> put_status(401)
-        |> render_auth_page("password_reset_error.html",
-          heading: "Password reset link expired",
-          subtitle: "Request a new one to reset your password."
+        |> render("password_reset_error.html",
+          legacy_layout?: false,
+          heading: "Password reset link expired"
         )
 
       {:error, _} ->
         conn
         |> put_status(401)
-        |> render_auth_page("password_reset_error.html",
-          heading: "Password reset link invalid",
-          subtitle: "Request a new one to reset your password."
+        |> render("password_reset_error.html",
+          legacy_layout?: false,
+          heading: "Password reset link invalid"
         )
     end
   end
