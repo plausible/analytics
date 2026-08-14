@@ -79,10 +79,7 @@ defmodule PlausibleWeb.SSOController do
         _ -> :unknown
       end
 
-    render_auth_page(conn, "provision_issue.html",
-      heading: "Single Sign-On required",
-      issue: issue
-    )
+    render(conn, "provision_issue.html", legacy_layout?: false, issue: issue)
   end
 
   def saml_signin(conn, params) do
