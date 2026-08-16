@@ -65,7 +65,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
           partitions_count_sessions: length(partition_ids_sessions)
         })
 
-        Logger.notice(
+        Logger.warning(
           "Clearing ClickHouse data for #{length(site_ids)} sites across #{length(partition_ids_events)}/#{length(partition_ids_sessions)} partitions"
         )
 
