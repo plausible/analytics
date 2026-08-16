@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-80FE0124.js"></script>
+    <script src="dist/sidebar_items-8156D09D.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,7 +138,10 @@ Pages
 
 
     <section id="moduledoc">
-<p>Cleans deleted site data from ClickHouse asynchronously.</p><p>We batch up data deletions from ClickHouse as deleting a single site is
+<p>Cleans deleted site data from ClickHouse asynchronously, using lightweight
+deletes (except for ingest counters).</p><p>Deletes against <code class="inline">events_v2</code> and <code class="inline">sessions_v2</code> scoped to relevant
+partitions only. The remaining tables aren't partitioned, 
+so they're cleared in one go.</p><p>We batch up data deletions from ClickHouse as deleting a single site is
 just as expensive as deleting many.</p>
     </section>
 
@@ -158,7 +161,17 @@ just as expensive as deleting many.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_deleted_sites_with_clickhouse_data/0" data-no-tooltip translate="no">get_deleted_sites_with_clickhouse_data()</a>
+        <a href="#perform/1" data-no-tooltip translate="no">perform(job)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/oban/2.20.1/Oban.Worker.html#c:perform/1"><code class="inline">Oban.Worker.perform/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#telemetry_run_event/0" data-no-tooltip translate="no">telemetry_run_event()</a>
 
       </div>
 
@@ -166,11 +179,9 @@ just as expensive as deleting many.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#perform/1" data-no-tooltip translate="no">perform(job)</a>
+        <a href="#telemetry_stage_duration/0" data-no-tooltip translate="no">telemetry_stage_duration()</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/oban/2.20.1/Oban.Worker.html#c:perform/1"><code class="inline">Oban.Worker.perform/1</code></a>.</p></div>
 
     </div>
 
@@ -187,26 +198,6 @@ just as expensive as deleting many.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="get_deleted_sites_with_clickhouse_data/0">
-
-  <div class="detail-header">
-    <a href="#get_deleted_sites_with_clickhouse_data/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">get_deleted_sites_with_clickhouse_data()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/clickhouse_clean_sites.ex#L56" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="perform/1">
 
   <div class="detail-header">
@@ -215,7 +206,7 @@ just as expensive as deleting many.</p>
     </a>
     <h1 class="signature" translate="no">perform(job)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/clickhouse_clean_sites.ex#L36" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/clickhouse_clean_sites.ex#L48" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -225,6 +216,58 @@ just as expensive as deleting many.</p>
   <section class="docstring">
 
 <p>Callback implementation for <a href="https://hexdocs.pm/oban/2.20.1/Oban.Worker.html#c:perform/1"><code class="inline">Oban.Worker.perform/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="telemetry_run_event/0">
+
+  <div class="detail-header">
+    <a href="#telemetry_run_event/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">telemetry_run_event()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/clickhouse_clean_sites.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> telemetry_run_event() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="telemetry_stage_duration/0">
+
+  <div class="detail-header">
+    <a href="#telemetry_stage_duration/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">telemetry_stage_duration()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/clickhouse_clean_sites.ex#L46" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> telemetry_stage_duration() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
+
+      </div>
+
+
   </section>
 </section>
 

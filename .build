@@ -108,6 +108,7 @@ Plausible.DataMigration.SiteImports.SiteImportSnapshot.html
 Plausible.DataMigration.SiteImports.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
+Plausible.DeletionRepo.html
 Plausible.DnsLookup.html
 Plausible.DnsLookupInterface.html
 Plausible.Ecto.EventName.html
@@ -139,7 +140,6 @@ Plausible.HelpScout.html
 Plausible.Helpers.JSON.html
 Plausible.IP.Tools.Registry.html
 Plausible.IP.Tools.html
-Plausible.ImportDeletionRepo.html
 Plausible.Imported.Buffer.html
 Plausible.Imported.CSVImporter.html
 Plausible.Imported.GoogleAnalytics4.html
@@ -190,6 +190,8 @@ Plausible.MigrationUtils.html
 Plausible.OpenTelemetry.BeamMetrics.html
 Plausible.OpenTelemetry.Logger.html
 Plausible.Pagination.html
+Plausible.PendingStatsDeletion.html
+Plausible.PendingStatsDeletions.html
 Plausible.Plugins.API.Capabilities.html
 Plausible.Plugins.API.CustomProps.html
 Plausible.Plugins.API.Funnels.html
@@ -586,8 +588,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D467B63E.js
-dist/sidebar_items-80FE0124.js
+dist/search_data-9AAABC4D.js
+dist/sidebar_items-8156D09D.js
 index.html
 readme.html
 search.html
