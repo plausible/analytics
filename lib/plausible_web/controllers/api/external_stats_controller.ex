@@ -40,9 +40,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          {:ok, limit} <- validate_or_default_limit(params),
+         {:ok, page} <- validate_or_default_page(params),
          :ok <- ensure_custom_props_access(site, query) do
-      page = String.to_integer(Map.get(params, "page", "1"))
-
       %{results: results, meta: meta} =
         Legacy.Breakdown.breakdown(site, query, metrics, {limit, page})
 
@@ -87,6 +86,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @default_breakdown_limit 100
   defp validate_or_default_limit(_), do: {:ok, @default_breakdown_limit}
+
+  defp validate_or_default_page(%{"page" => page}) do
+    case Integer.parse(page) do
+      {page, ""} when page > 0 ->
+        {:ok, page}
+
+      _ ->
+        {:error, "Please provide page as a positive number."}
+    end
+  end
+
+  defp validate_or_default_page(_), do: {:ok, 1}
 
   defp parse_and_validate_metrics(params, query) do
     metrics =
