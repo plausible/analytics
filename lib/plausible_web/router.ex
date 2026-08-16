@@ -117,6 +117,10 @@ defmodule PlausibleWeb.Router do
         pipe_through [:browser, :csrf, :app_layout, :flags]
 
         live "/cs", CustomerSupport, :index, as: :customer_support
+
+        live "/cs/trial-prospects", CustomerSupport.TrialProspects, :index,
+          as: :customer_support_trial_prospects
+
         live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
         live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
         live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
@@ -176,6 +180,7 @@ defmodule PlausibleWeb.Router do
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
+        put "/verification", E2EController, :put_verification_scenario
       end
     end
   end
@@ -411,6 +416,7 @@ defmodule PlausibleWeb.Router do
       get "/paddle/currency", Api.PaddleController, :currency
 
       put "/:domain/disable-feature", Api.InternalController, :disable_feature
+      put "/:domain/complete-onboarding", Api.InternalController, :complete_onboarding
 
       get "/sites", Api.InternalController, :sites
     end
@@ -596,19 +602,16 @@ defmodule PlausibleWeb.Router do
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
-      scope assigns: %{
-              dogfood_page_path: "/:website/installation"
-            } do
-        live "/:domain/installation", Installation, :installation, as: :site
-      end
-
-      scope assigns: %{
-              dogfood_page_path: "/:website/verification"
-            } do
-        live "/:domain/verification",
-             on_ee(do: Verification, else: AwaitingPageviews),
-             :verification,
-             as: :site
+      live_session :onboarding, on_mount: PlausibleWeb.Live.OnboardingLayoutContext do
+        scope assigns: %{
+                dogfood_page_path: "/:website/installation"
+              } do
+          live "/:domain/installation",
+               Installation,
+               :installation,
+               as: :site,
+               container: {:div, class: "flex-1 flex flex-col"}
+        end
       end
 
       scope assigns: %{

@@ -49,15 +49,14 @@ defmodule PlausibleWeb.Components.Icons do
 
   def tag_icon(assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class={@class}>
-      <circle fill="currentColor" cx="7.25" cy="7.25" r="1.25" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path fill="currentColor" d="M8.7 10.2a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3" />
       <path
-        fill="none"
         stroke="currentColor"
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="1.5"
-        d="M4 3h5.172a2 2 0 0 1 1.414.586l5.536 5.536a3 3 0 0 1 0 4.243l-2.757 2.757a3 3 0 0 1-4.243 0l-5.536-5.536A2 2 0 0 1 3 9.172V4a1 1 0 0 1 1-1Z"
+        d="M4.8 3.602h6.206a2.4 2.4 0 0 1 1.697.703l6.643 6.643a3.597 3.597 0 0 1 0 5.092l-3.308 3.308a3.6 3.6 0 0 1-5.092 0l-6.643-6.643a2.4 2.4 0 0 1-.703-1.697V4.802a1.2 1.2 0 0 1 1.2-1.2"
       />
     </svg>
     """
@@ -149,6 +148,87 @@ defmodule PlausibleWeb.Components.Icons do
         />
         <circle cx="12" cy="16.75" r="1.25" />
       </g>
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def copy_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" class={@class}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      >
+        <path d="M2.25 6.75v6.5a2 2 0 0 0 2 2h7.5" />
+        <path d="M7.25 12.25h6.5a2 2 0 0 0 2-2v-5.5a2 2 0 0 0-2-2h-6.5a2 2 0 0 0-2 2v5.5a2 2 0 0 0 2 2" />
+      </g>
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def pencil_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="m14.063 5.897 4.041 4.041M3.667 20.334s4.799-.757 6.061-2.02l9.77-9.77a2.857 2.857 0 0 0-4.04-4.04l-9.77 9.77c-1.262 1.263-2.02 6.061-2.02 6.061z"
+      />
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def button_click_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M21.666 11.178V7.667A2.667 2.667 0 0 0 19 5H5a2.667 2.667 0 0 0-2.667 2.667v4.666A2.667 2.667 0 0 0 5 15h4.197"
+      />
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="m13.245 12.359 9.139 3.339a.43.43 0 0 1-.016.814l-4.183 1.339-1.339 4.183a.43.43 0 0 1-.814.016l-3.339-9.139a.43.43 0 0 1 .552-.552"
+      />
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def error_page_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M5.519 10.947c-2.482 2.041-3.839 3.923-3.296 4.864.829 1.435 5.765.135 11.026-2.902s8.855-6.663 8.027-8.098c-.543-.94-2.852-.707-5.86.422"
+      />
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M8.25 4.25a6 6 0 0 1 8.196 2.196l-.215.243a18 18 0 0 1-9.86 5.692l-.317.065A6 6 0 0 1 8.25 4.25M18.75 21.75l-3-5M22.75 14.25l-2.5-1M10.25 19.25v3"
+      />
     </svg>
     """
   end

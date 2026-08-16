@@ -3,6 +3,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   use Plausible.Repo
 
   @react_container "div#stats-react-container"
+  @verification_banner "#verification-ui"
 
   describe "GET /:domain - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -104,28 +105,42 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "Getting started"
     end
 
-    test "public site - redirect to /login when no stats because verification requires it", %{
-      conn: conn
-    } do
+    test "public site - shows an empty dashboard without stats (no verification banner)",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
+      resp = get(conn, "/some-other-public-site.io") |> html_response(200)
 
-      assert redirected_to(conn) ==
-               Routes.auth_path(conn, :login_form,
-                 return_to: "/some-other-public-site.io/verification"
-               )
+      refute element_exists?(resp, @verification_banner)
     end
 
-    test "public site - no stats with skip_to_dashboard", %{
-      conn: conn
-    } do
+    test "public site - anonymous visitors never see the verification banner, even with the param",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, "/some-other-public-site.io?skip_to_dashboard=true")
-      resp = html_response(conn, 200)
+      resp =
+        get(conn, "/some-other-public-site.io?verify_installation=true") |> html_response(200)
 
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      refute element_exists?(resp, @verification_banner)
+    end
+
+    test "public site - anonymous visitors never see the email reports CTA", %{conn: conn} do
+      public_site =
+        new_site(
+          domain: "some-other-public-site.io",
+          public: true,
+          onboarding_status: :first_pageview
+        )
+
+      resp = get(conn, "/#{public_site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -147,15 +162,130 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can view stats of a website I've created, enforcing pageviews check skip", %{
-      conn: conn,
-      site: site
-    } do
-      resp = conn |> get(conn |> get("/" <> site.domain) |> redirected_to()) |> html_response(200)
-      refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
+    on_ee do
+      test "verification banner showing in the provisioning flow",
+           %{
+             conn: conn,
+             user: user,
+             site: site
+           } do
+        get_dashboard_resp = fn conn, site, q ->
+          get(conn, "/#{site.domain}#{q}") |> html_response(200)
+        end
 
-      resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+        q = "?verify_installation=true&flow=#{PlausibleWeb.Flows.provisioning()}"
+
+        # No `?verify_installation=true` query parameter -> doesn't show
+        resp = get_dashboard_resp.(conn, site, "")
+        refute element_exists?(resp, @verification_banner)
+
+        # site.onboarding_status != :new_site -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, q)
+          refute element_exists?(resp, @verification_banner)
+        end
+
+        # site.onboarding_status != :new_site & flow param not provided -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, "?verify_installation=true")
+          refute element_exists?(resp, @verification_banner)
+        end
+
+        # both conditions met -> shows
+        resp = get_dashboard_resp.(conn, site, q)
+        assert element_exists?(resp, @verification_banner)
+      end
+
+      for flow <- [PlausibleWeb.Flows.review(), PlausibleWeb.Flows.domain_change()] do
+        test "verification banner in #{flow} flow shows when verify_installation query param is present",
+             %{
+               conn: conn,
+               site: site
+             } do
+          site
+          |> Plausible.Site.put_onboarding_status_advance(:completed)
+          |> Plausible.Repo.update!()
+
+          resp =
+            get(conn, "/#{site.domain}?verify_installation=true&flow=#{unquote(flow)}")
+            |> html_response(200)
+
+          assert element_exists?(resp, @verification_banner)
+        end
+      end
+    end
+
+    test "shows email reports CTA when onboarding_status is :first_pageview", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
+    test "shows email reports CTA on the very first load that discovers a pageview, without needing a second refresh",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :verification_succeeded)
+      populate_stats(site, [build(:pageview)])
+
+      assert Repo.reload!(site).onboarding_status == :verification_succeeded
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    for status <- [:new_site, :verification_succeeded, :completed] do
+      test "does not show email reports CTA when onboarding_status is #{status}", %{
+        conn: conn,
+        user: user
+      } do
+        site = new_site(owner: user, onboarding_status: unquote(status))
+
+        resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+      end
+    end
+
+    test "does not show email reports CTA for a viewer, since they can't reach the settings page it links to",
+         %{conn: conn, user: user} do
+      site = new_site(onboarding_status: :first_pageview)
+      add_guest(site, user: user, role: :viewer)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "viewer"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    on_ee do
+      test "does not show email reports CTA for consolidated views", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        cv = user |> team_of() |> new_consolidated_view()
+
+        # `onboarding_status` should always be :completed for
+        # consolidated views anyway but this test makes sure that
+        # stats_controller explicitly excludes email reports CTA
+        # for consolidated views too.
+        cv
+        |> Ecto.Changeset.change(%{onboarding_status: :first_pageview})
+        |> Plausible.Repo.update!()
+
+        resp = get(conn, "/#{cv.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+      end
     end
 
     on_ee do
@@ -229,21 +359,22 @@ defmodule PlausibleWeb.StatsControllerTest do
         assert cv.native_stats_start_at == twenty_days_ago
       end
 
-      test "does not redirect consolidated views to verification", %{
-        conn: conn,
-        user: user
-      } do
+      test "does not show verification banner for consolidated views even with the explicit param",
+           %{
+             conn: conn,
+             user: user
+           } do
         new_site(owner: user)
         new_site(owner: user)
         cv = user |> team_of() |> new_consolidated_view()
 
-        conn = get(conn, "/" <> cv.domain)
-        resp = html_response(conn, 200)
+        resp = get(conn, "/#{cv.domain}?verify_installation=true") |> html_response(200)
 
         assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
         assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
         assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
         assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+        refute element_exists?(resp, @verification_banner)
       end
 
       test "redirects to /sites if for some reason ineligible anymore", %{
@@ -334,9 +465,9 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "does not show CRM link to the site", %{conn: conn, site: site} do
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+      resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-      refute html_response(conn, 200) =~ "/cs/sites"
+      refute resp =~ "/cs/sites"
     end
 
     test "all segments (personal or site) are stuffed into dataset, with their associated owner_id and owner_name",
@@ -387,11 +518,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can enter verification when site is without stats", %{conn: conn} do
-      site = new_site()
+    test "can enter verification regardless of whether the site has stats or not", %{conn: conn} do
+      site_without_stats = new_site()
+      site_with_stats = new_site()
+      populate_stats(site_with_stats, [build(:pageview)])
 
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      for site <- [site_without_stats, site_with_stats] do
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
@@ -405,13 +546,25 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
-    test "can view private locked verification without stats", %{conn: conn} do
-      user = new_user()
-      site = new_site(owner: user)
-      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+    test "can trigger verification on a locked private dashboard regardless of whether the site has stats or not",
+         %{conn: conn} do
+      site_without_stats = new_site(owner: new_user())
+      site_without_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
-      conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      site_with_stats = new_site(owner: new_user())
+      populate_stats(site_with_stats, [build(:pageview)])
+      site_with_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+
+      for site <- [site_without_stats, site_with_stats] do
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
@@ -424,12 +577,34 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
+    test "does not show email reports CTA when viewing as a super admin without site membership",
+         %{conn: conn} do
+      site = new_site(onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "super_admin"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    test "still shows email reports CTA for a super admin who is also a real site member",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
     on_ee do
       test "shows CRM link to the site", %{conn: conn} do
         site = new_site()
-        conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+        resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-        assert html_response(conn, 200) =~
+        assert resp =~
                  Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)
       end
     end
@@ -463,6 +638,18 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+    end
+
+    test "never shows the email reports CTA, regardless of the site's onboarding_status", %{
+      conn: conn
+    } do
+      site = new_site(onboarding_status: :first_pageview)
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
     end
 
     test "if the shared link is limited to a segment, only that segment is stuffed into data-segments",

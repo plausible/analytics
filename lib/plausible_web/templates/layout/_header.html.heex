@@ -26,22 +26,23 @@
                 :if={
                   ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team]) and
                     (not Plausible.Teams.setup?(@conn.assigns[:current_team]) or
-                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles())
+                       @conn.assigns[:current_team_role] in Plausible.Billing.allowed_roles()) and
+                    !assigns[:hide_trial_badge?]
                 }
                 class="hidden sm:block"
               >
-                <div class="flex items-center p-1 rounded-lg bg-yellow-100 dark:bg-yellow-600/35 overflow-hidden">
-                  <span class="px-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div class="flex items-center gap-x-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-600/35 dark:to-purple-600/35 overflow-hidden">
+                  <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {trial_notification(@conn.assigns[:current_team])}
                   </span>
-                  <.button_link
+                  <div class="w-px h-4 bg-indigo-500/30 dark:bg-indigo-200/30" aria-hidden="true">
+                  </div>
+                  <.styled_link
                     href={Routes.settings_path(@conn, :subscription)}
-                    theme="yellow"
-                    mt?={false}
-                    class="!px-3 !py-2"
+                    class="plausible-event-name=Trial+Notification+Upgrade+Click text-sm font-medium dark:!text-indigo-400 dark:hover:!text-indigo-300"
                   >
-                    Upgrade
-                  </.button_link>
+                    Choose a plan
+                  </.styled_link>
                 </div>
               </li>
               <li class="w-full sm:w-auto">

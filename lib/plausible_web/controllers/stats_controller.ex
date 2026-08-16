@@ -47,10 +47,14 @@ defmodule PlausibleWeb.StatsController do
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    site = Plausible.Repo.preload(site, :owners)
+    site =
+      site
+      |> Plausible.Repo.preload(:owners)
+      |> Plausible.Sites.ensure_stats_start_date()
+
     site_role = conn.assigns[:site_role]
     current_user = conn.assigns[:current_user]
-    stats_start_date = Plausible.Sites.stats_start_date(site)
+    stats_start_date = site.stats_start_date
     can_see_stats? = not Teams.locked?(site.team) or site_role == :super_admin
     demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
@@ -70,9 +74,6 @@ defmodule PlausibleWeb.StatsController do
 
     team_identifier = site.team.identifier
 
-    skip_to_dashboard? =
-      conn.params["skip_to_dashboard"] == "true" or consolidated_view?
-
     {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
     segments = Enum.map(segments, &Plausible.Segments.to_response_map(&1, site))
 
@@ -80,8 +81,27 @@ defmodule PlausibleWeb.StatsController do
       consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
         redirect(conn, to: Routes.site_path(conn, :index))
 
-      (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
+      not can_see_stats? ->
+        site = Plausible.Repo.preload(site, :owners)
+        render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
+
+      true ->
         flags = get_flags(current_user, site)
+
+        verify_installation? =
+          ee?() and
+            not is_nil(current_user) and
+            not consolidated_view? and
+            conn.params["verify_installation"] == "true" and
+            (conn.params["flow"] in [
+               PlausibleWeb.Flows.review(),
+               PlausibleWeb.Flows.domain_change()
+             ] or site.onboarding_status == :new_site)
+
+        show_email_reports_cta? =
+          not consolidated_view? and
+            site_role in [:owner, :admin, :editor] and
+            site.onboarding_status == :first_pageview
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -106,15 +126,15 @@ defmodule PlausibleWeb.StatsController do
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
-          limited_to_segment_id: nil
+          limited_to_segment_id: nil,
+          connect_live_socket: verify_installation?,
+          verify_installation?: verify_installation?,
+          show_email_reports_cta?: show_email_reports_cta?,
+          verification_session:
+            PlausibleWeb.Live.Components.VerificationBanner.query_params()
+            |> Map.new(&{&1, conn.params[&1]})
+            |> Map.put("domain", site.domain)
         )
-
-      !stats_start_date && can_see_stats? ->
-        redirect(conn, to: Routes.site_path(conn, :verification, site.domain))
-
-      Teams.locked?(site.team) ->
-        site = Plausible.Repo.preload(site, :owners)
-        render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
     end
   end
 
@@ -293,12 +313,10 @@ defmodule PlausibleWeb.StatsController do
   defp serialize_star_path_as_query_string_fragment(conn) do
     star_path = conn.path_params["path"]
 
-    if length(star_path) > 0 do
+    if star_path != [] do
       # make the path start with a /
       # to be able to reject values that don't start with a /
       %{"return_to" => "/#{Enum.join(star_path, "/")}"} |> URI.encode_query()
-    else
-      nil
     end
   end
 
@@ -358,7 +376,13 @@ defmodule PlausibleWeb.StatsController do
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
         shared_link = Plausible.Repo.preload(shared_link, :segment, site: [:owners])
-        stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
+
+        shared_link = %{
+          shared_link
+          | site: Plausible.Sites.ensure_stats_start_date(shared_link.site)
+        }
+
+        stats_start_date = shared_link.site.stats_start_date
 
         flags = get_flags(current_user, shared_link.site)
 
@@ -422,7 +446,10 @@ defmodule PlausibleWeb.StatsController do
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
           team_identifier: team_identifier,
-          limited_to_segment_id: limited_to_segment_id
+          limited_to_segment_id: limited_to_segment_id,
+          verify_installation?: false,
+          show_email_reports_cta?: false,
+          verification_session: %{}
         )
     end
   end

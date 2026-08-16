@@ -139,7 +139,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         />
         <Notice.subscription_past_due class="pb-6" subscription={@subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@subscription} />
-        <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
 
         <div class="mt-6 w-full md:flex">
           <a

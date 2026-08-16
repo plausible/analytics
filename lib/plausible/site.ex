@@ -10,6 +10,8 @@ defmodule Plausible.Site do
 
   @type t() :: %__MODULE__{}
 
+  @onboarding_statuses [:new_site, :verification_succeeded, :first_pageview, :completed]
+
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
@@ -17,6 +19,7 @@ defmodule Plausible.Site do
     field :public, :boolean
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
+    field :onboarding_status, Ecto.Enum, values: @onboarding_statuses, default: :completed
     field :allowed_event_props, {:array, :string}
     field :conversions_enabled, :boolean, default: true
     field :props_enabled, :boolean, default: true
@@ -78,16 +81,25 @@ defmodule Plausible.Site do
     |> put_assoc(:team, team)
   end
 
-  def new(params), do: changeset(%__MODULE__{}, params)
+  def new(params) do
+    changeset(%__MODULE__{}, params)
+    |> put_change(:onboarding_status, initial_onboarding_status(params))
+  end
+
+  # Consolidated sites never receive direct ingestion or run per-site
+  # verification, so they'd otherwise get stuck at :new_site forever.
+  defp initial_onboarding_status(params) do
+    if Map.get(params, :consolidated) || Map.get(params, "consolidated") do
+      :completed
+    else
+      :new_site
+    end
+  end
 
   on_ee do
-    @domain_unique_error """
-    This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
-    """
+    @domain_unique_error "This domain is already registered. Ask the owner for access, or contact support@plausible.io"
   else
-    @domain_unique_error """
-    This domain cannot be registered. Perhaps one of your colleagues registered it?
-    """
+    @domain_unique_error "This domain is already registered. Ask the owner for access."
   end
 
   on_ee do
@@ -100,7 +112,8 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, @changeset_cast_fields)
     |> clean_domain()
-    |> validate_required([:domain, :timezone])
+    |> validate_required([:domain], message: "Please enter a domain or subdomain")
+    |> validate_required([:timezone])
     |> validate_timezone()
     |> validate_domain_format()
     |> validate_domain_reserved_characters()
@@ -135,7 +148,8 @@ defmodule Plausible.Site do
       :public,
       :native_stats_start_at,
       :ingest_rate_limit_threshold,
-      :ingest_rate_limit_scale_seconds
+      :ingest_rate_limit_scale_seconds,
+      :onboarding_status
     ])
     |> validate_required([:timezone, :public])
     |> validate_number(:ingest_rate_limit_scale_seconds,
@@ -176,6 +190,32 @@ defmodule Plausible.Site do
 
   def set_native_stats_start_at(site, val) do
     change(site, native_stats_start_at: val)
+  end
+
+  def onboarding_statuses, do: @onboarding_statuses
+
+  @doc """
+  Advances `onboarding_status` to `new_status`, unless the site is already at
+  or past that point in the `onboarding_statuses/0` progression - onboarding
+  status only ever moves forward, though a transition can skip an
+  intermediate value. Composable with other changes to the same changeset
+  (accepts either a site or an existing changeset).
+  """
+  def put_onboarding_status_advance(site_or_changeset, new_status) do
+    current_status =
+      case site_or_changeset do
+        %Ecto.Changeset{} = changeset -> changeset.data.onboarding_status
+        %__MODULE__{} = site -> site.onboarding_status
+      end
+
+    new_index = Enum.find_index(@onboarding_statuses, &(&1 == new_status))
+    current_index = Enum.find_index(@onboarding_statuses, &(&1 == current_status))
+
+    if new_index > current_index do
+      change(site_or_changeset, onboarding_status: new_status)
+    else
+      change(site_or_changeset)
+    end
   end
 
   defp clean_domain(changeset) do

@@ -75,6 +75,29 @@ test('user can open and close site switcher', async () => {
   expect(screen.queryAllByRole('menuitem')).toEqual([])
 })
 
+test('site switcher links to a site needing verification with verify_installation and flow params', async () => {
+  mockAPI.get('/api/sites', {
+    data: [
+      { domain, needs_verification: false },
+      { domain: 'example.com', needs_verification: true }
+    ]
+  })
+
+  render(<TopBar showCurrentVisitors={false} />, {
+    wrapper: (props) => (
+      <TestContextProviders siteOptions={{ domain }} {...props} />
+    )
+  })
+
+  const toggleSiteSwitcher = screen.getByRole('button', { name: domain })
+  await userEvent.click(toggleSiteSwitcher)
+
+  expect(screen.getByRole('link', { name: /example\.com/ })).toHaveAttribute(
+    'href',
+    '/example.com?verify_installation=true&flow=provisioning'
+  )
+})
+
 test('user can open and close filters dropdown', async () => {
   render(<TopBar showCurrentVisitors={false} />, {
     wrapper: (props) => (

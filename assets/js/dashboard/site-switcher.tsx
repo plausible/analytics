@@ -58,13 +58,17 @@ const buttonLinkClassName = classNames(
 
 const getSwitchToSiteURL = (
   currentSite: PlausibleSite,
-  site: { domain: string }
+  site: { domain: string; needsVerification?: boolean }
 ): string | null => {
   // Prevents reloading the page when the current site is selected
   if (currentSite.domain === site.domain) {
     return null
   }
-  return `/${encodeURIComponent(site.domain)}`
+  const url = `/${encodeURIComponent(site.domain)}`
+
+  return site.needsVerification
+    ? `${url}?verify_installation=true&flow=provisioning`
+    : url
 }
 
 const SiteSwitcherStatic = () => {
@@ -96,7 +100,9 @@ export const SiteSwitcher = () => {
   const sitesQuery = useQuery({
     enabled: user.loggedIn,
     queryKey: ['sites'],
-    queryFn: async (): Promise<{ data: Array<{ domain: string }> }> => {
+    queryFn: async (): Promise<{
+      data: Array<{ domain: string; needs_verification: boolean }>
+    }> => {
       const response = await get('/api/sites')
       return response
     },
@@ -121,24 +127,29 @@ export const SiteSwitcher = () => {
         <>
           {!!dashboardRouteMatch &&
             !modal &&
-            sitesQuery.data?.data.slice(0, 8).map(({ domain }, index) => (
-              <Keybind
-                key={domain}
-                keyboardKey={`${index + 1}`}
-                type="keydown"
-                handler={() => {
-                  const url = getSwitchToSiteURL(currentSite, { domain })
-                  if (!url) {
-                    closePopover()
-                  } else {
-                    closePopover()
-                    window.location.assign(url)
-                  }
-                }}
-                shouldIgnoreWhen={[isModifierPressed, isTyping]}
-                targetRef="document"
-              />
-            ))}
+            sitesQuery.data?.data
+              .slice(0, 8)
+              .map(({ domain, needs_verification }, index) => (
+                <Keybind
+                  key={domain}
+                  keyboardKey={`${index + 1}`}
+                  type="keydown"
+                  handler={() => {
+                    const url = getSwitchToSiteURL(currentSite, {
+                      domain,
+                      needsVerification: needs_verification
+                    })
+                    if (!url) {
+                      closePopover()
+                    } else {
+                      closePopover()
+                      window.location.assign(url)
+                    }
+                  }}
+                  shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                  targetRef="document"
+                />
+              ))}
 
           {!!dashboardRouteMatch &&
             !modal &&
@@ -253,12 +264,17 @@ export const SiteSwitcher = () => {
                 </a>
               )}
               {!!sitesInDropdown &&
-                sitesInDropdown.map(({ domain }, index) => (
+                sitesInDropdown.map(({ domain, needs_verification }, index) => (
                   <a
                     data-selected={currentSite.domain === domain}
                     key={domain}
                     className={menuItemClassName}
-                    href={getSwitchToSiteURL(currentSite, { domain }) ?? '#'}
+                    href={
+                      getSwitchToSiteURL(currentSite, {
+                        domain,
+                        needsVerification: needs_verification
+                      }) ?? '#'
+                    }
                     onClick={
                       currentSite.domain === domain
                         ? () => closePopover()

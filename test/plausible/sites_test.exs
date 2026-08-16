@@ -143,11 +143,11 @@ defmodule Plausible.SitesTest do
     end
   end
 
-  describe "stats_start_date" do
+  describe "ensure_stats_start_date" do
     test "is nil if site has no stats" do
       site = insert(:site)
 
-      assert Sites.stats_start_date(site) == nil
+      assert Sites.ensure_stats_start_date(site).stats_start_date == nil
     end
 
     test "is date if site does have stats" do
@@ -157,7 +157,8 @@ defmodule Plausible.SitesTest do
         build(:pageview)
       ])
 
-      assert Sites.stats_start_date(site) == Plausible.Times.today(site.timezone)
+      assert Sites.ensure_stats_start_date(site).stats_start_date ==
+               Plausible.Times.today(site.timezone)
     end
 
     test "memoizes value of start date" do
@@ -169,8 +170,31 @@ defmodule Plausible.SitesTest do
         build(:pageview)
       ])
 
-      assert Sites.stats_start_date(site) == Plausible.Times.today(site.timezone)
+      assert Sites.ensure_stats_start_date(site).stats_start_date ==
+               Plausible.Times.today(site.timezone)
+
       assert Repo.reload!(site).stats_start_date == Plausible.Times.today(site.timezone)
+    end
+
+    test "advances onboarding_status to :first_pageview when stats are first discovered, in the returned site" do
+      site = insert(:site, onboarding_status: :new_site)
+
+      populate_stats(site, [build(:pageview)])
+
+      updated_site = Sites.ensure_stats_start_date(site)
+
+      assert updated_site.onboarding_status == :first_pageview
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    test "does not regress :completed onboarding_status" do
+      site = insert(:site, onboarding_status: :completed, stats_start_date: nil)
+
+      populate_stats(site, [build(:pageview)])
+
+      Sites.ensure_stats_start_date(site)
+
+      assert Repo.reload!(site).onboarding_status == :completed
     end
 
     on_ee do
@@ -183,11 +207,12 @@ defmodule Plausible.SitesTest do
         consolidated_view = new_consolidated_view(team)
 
         assert consolidated_view.stats_start_date == ~D[2000-01-01]
-        assert Sites.stats_start_date(consolidated_view) == ~D[2000-01-01]
+        assert Sites.ensure_stats_start_date(consolidated_view).stats_start_date == ~D[2000-01-01]
 
         new_site(team: team, native_stats_start_at: ~N[1999-01-01 12:00:00])
 
-        assert Sites.stats_start_date(consolidated_view) == ~D[1999-01-01]
+        assert Sites.ensure_stats_start_date(consolidated_view).stats_start_date ==
+                 ~D[1999-01-01]
       end
     end
   end

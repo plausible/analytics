@@ -54,13 +54,20 @@ defmodule Plausible.Ingestion.Event do
 
   @spec build_and_buffer(Request.t(), Keyword.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
   def build_and_buffer(%Request{domains: domains} = request, context \\ []) do
+    skip_rate_limit? =
+      on_ee do
+        not is_nil(request.replay_session_id)
+      else
+        false
+      end
+
     processed_events =
       if spam_referrer?(request) do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
           # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          case GateKeeper.check(domain) do
+          case GateKeeper.check(domain, skip_rate_limit?: skip_rate_limit?) do
             {:allow, site} ->
               processed =
                 domain
@@ -276,7 +283,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_basic_info(%__MODULE__{} = event, _context) do
-    update_event_attrs(event, %{
+    attrs = %{
       domain: event.domain,
       site_id: event.site.id,
       timestamp: event.request.timestamp,
@@ -286,7 +293,13 @@ defmodule Plausible.Ingestion.Event do
       scroll_depth: event.request.scroll_depth,
       engagement_time: event.request.engagement_time,
       interactive?: event.request.interactive?
-    })
+    }
+
+    on_ee do
+      attrs = Map.put(attrs, :replay_session_id, event.request.replay_session_id)
+    end
+
+    update_event_attrs(event, attrs)
   end
 
   defp put_source_info(%__MODULE__{} = event, _context) do
@@ -562,7 +575,17 @@ defmodule Plausible.Ingestion.Event do
         user_agent = request.user_agent || ""
         root_domain = get_root_domain(hostname)
 
-        SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
+        replay_session_id =
+          on_ee do
+            to_string(request.replay_session_id)
+          else
+            ""
+          end
+
+        SipHash.hash!(
+          salt,
+          user_agent <> request.remote_ip <> domain <> root_domain <> replay_session_id
+        )
     end
   end
 

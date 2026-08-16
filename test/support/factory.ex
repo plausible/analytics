@@ -85,7 +85,8 @@ defmodule Plausible.Factory do
     site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
-      timezone: "Etc/UTC"
+      timezone: "Etc/UTC",
+      onboarding_status: :new_site
     }
 
     merge_attributes(site, attrs)

@@ -44,11 +44,16 @@ defmodule Plausible.Site.GateKeeper do
     with %Site{team: %{accept_traffic_until: accept_traffic_until}} = site <-
            Cache.get(domain, Keyword.get(opts, :cache_opts, [])),
          true <- Plausible.Sites.regular?(site) do
-      if not is_nil(accept_traffic_until) and
-           Date.after?(Date.utc_today(), accept_traffic_until) do
-        :payment_required
-      else
-        check_rate_limit(site, opts)
+      cond do
+        not is_nil(accept_traffic_until) and
+            Date.after?(Date.utc_today(), accept_traffic_until) ->
+          :payment_required
+
+        opts[:skip_rate_limit?] ->
+          {:allow, site}
+
+        true ->
+          check_rate_limit(site, opts)
       end
     else
       _ ->

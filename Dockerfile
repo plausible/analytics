@@ -2,8 +2,11 @@
 # platform specific, it makes sense to build it in the docker
 
 
+#### Node
+FROM node:24.17.0-alpine3.23@sha256:7c70d1235c0b4c2bc9eeed5393d19f1bbdde6885ba0d58ba62bb385d7b0f3ff1 AS nodejs
+
 #### Builder
-FROM hexpm/elixir:1.20.2-erlang-28.5.0.3-alpine-3.22.5@sha256:8875407828c1b789485f9fcc6006e1ace39bb073b0467a95df3a3905d8d86d30 AS buildcontainer
+FROM hexpm/elixir:1.20.2-erlang-28.5.0.3-alpine-3.23.5@sha256:6f03034e254126f063959873d8d3b811ee92abaabab27b62c53982c4a1034e39 AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -21,7 +24,13 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git "nodejs-current=23.11.1-r0" yarn npm python3 ca-certificates wget gnupg make gcc libc-dev brotli
+RUN apk add --no-cache git python3 ca-certificates wget gnupg make gcc libc-dev brotli
+
+# nodejs and npm come from the node image, apk can not pin a nodejs version reliably
+COPY --from=nodejs /usr/local/bin/node /usr/local/bin/node
+COPY --from=nodejs /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+  ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 COPY mix.exs ./
 COPY mix.lock ./
@@ -54,7 +63,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.22.5@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+FROM alpine:3.23.5@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}

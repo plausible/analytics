@@ -12,25 +12,37 @@ defmodule PlausibleWeb.Components.Generic do
     gray: %{
       bg: "bg-gray-100 dark:bg-gray-800",
       icon: "text-gray-600 dark:text-gray-300",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-800 dark:text-gray-200 leading-5"
+    },
+    indigo: %{
+      bg: "bg-indigo-100/60 dark:bg-indigo-900/40",
+      icon: "text-indigo-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
+    },
+    green: %{
+      bg: "bg-green-100/60 dark:bg-green-900/40",
+      icon: "text-green-500",
+      title_text: "text-gray-900 dark:text-gray-100",
+      body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     yellow: %{
       bg: "bg-yellow-100/60 dark:bg-yellow-900/40",
       icon: "text-yellow-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     red: %{
       bg: "bg-red-100 dark:bg-red-900/30",
       icon: "text-red-600 dark:text-red-500",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-100/60 leading-5"
     },
     white: %{
       bg: "bg-white dark:bg-gray-900 shadow-sm dark:shadow-none",
       icon: "text-gray-600 dark:text-gray-400",
-      title_text: "text-sm text-gray-900 dark:text-gray-100",
+      title_text: "text-gray-900 dark:text-gray-100",
       body_text: "text-sm text-gray-600 dark:text-gray-300 leading-5"
     }
   }
@@ -50,6 +62,7 @@ defmodule PlausibleWeb.Components.Generic do
   @button_base_class "btn-base"
 
   @button_sizes %{
+    "xs" => "btn-xs",
     "sm" => "btn-sm",
     "md" => "btn-md"
   }
@@ -181,9 +194,9 @@ defmodule PlausibleWeb.Components.Generic do
           href={"https://plausible.io/docs/#{@slug}"}
           rel="noopener noreferrer"
           target="_blank"
-          class="inline-block"
+          class="flex"
         >
-          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
+          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-4.5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
         </a>
       </.tooltip>
     </div>
@@ -222,6 +235,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:show_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:icon_class, :string, default: "")
+  attr(:title_class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
   slot(:actions)
@@ -253,7 +267,14 @@ defmodule PlausibleWeb.Components.Generic do
               <% end %>
             </div>
             <div class="flex-1 flex flex-col gap-y-1.5">
-              <h3 :if={@title} class={"font-medium #{@theme.title_text}"}>
+              <h3
+                :if={@title}
+                class={[
+                  @title_class == "" && "text-sm font-medium",
+                  @theme.title_text,
+                  @title_class
+                ]}
+              >
                 {@title}
               </h3>
               <div class={"#{@theme.body_text}"}>
@@ -282,6 +303,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global, include: ~w(patch))
   attr(:method, :string, default: "get")
@@ -291,6 +313,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.unstyled_link
       new_tab={@new_tab}
+      external_icon={@external_icon}
       href={@href}
       method={@method}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150 " <> @class}
@@ -356,6 +379,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
@@ -378,6 +402,7 @@ defmodule PlausibleWeb.Components.Generic do
         id={@id}
         class={@class}
         new_tab={@new_tab}
+        external_icon={@external_icon}
         href={@href}
         x-on:click="close()"
         data-ui-state={@state}
@@ -406,6 +431,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
+  attr(:external_icon, :boolean, default: true)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   attr(:method, :string, default: "get")
@@ -431,7 +457,7 @@ defmodule PlausibleWeb.Components.Generic do
       ~H"""
       <.link
         class={[
-          "inline-flex items-center gap-x-1",
+          @external_icon && "inline-flex items-center gap-x-1",
           @class
         ]}
         href={@href}
@@ -441,7 +467,7 @@ defmodule PlausibleWeb.Components.Generic do
         {@rest}
       >
         {render_slot(@inner_block)}
-        <.external_link_icon class={[@icon_class]} />
+        <.external_link_icon :if={@external_icon} class={[@icon_class]} />
       </.link>
       """
     else
@@ -457,20 +483,32 @@ defmodule PlausibleWeb.Components.Generic do
   def spinner(assigns) do
     ~H"""
     <svg
-      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
+      class={["animate-spin size-4 text-indigo-500", @class]}
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
       viewBox="0 0 24 24"
+      fill="none"
       {@rest}
     >
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
-      </circle>
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      >
-      </path>
+      <circle
+        class="opacity-20"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+        pathLength="100"
+        stroke-dasharray="30 70"
+        transform="rotate(-90 12 12)"
+      />
     </svg>
     """
   end
@@ -512,7 +550,11 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <button
       id={"#{@id}-#{@id_suffix}"}
-      class={["h-6", if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")]}
+      class={[
+        "h-6",
+        if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer"),
+        if(@server_mode?, do: "phx-click-loading:cursor-default phx-click-loading:opacity-60")
+      ]}
       aria-labelledby={@id}
       role="switch"
       type="button"
@@ -525,7 +567,7 @@ defmodule PlausibleWeb.Components.Generic do
       <span
         :if={@server_mode?}
         class={[
-          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
           if(@checked, do: "bg-indigo-600", else: "dark:bg-gray-600 bg-gray-200"),
           if(@disabled, do: "opacity-50")
         ]}
@@ -533,23 +575,23 @@ defmodule PlausibleWeb.Components.Generic do
         <span
           aria-hidden="true"
           class={[
-            "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
-            if(@checked, do: "dark:bg-white translate-x-5", else: "dark:bg-white translate-x-0")
+            "pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+            if(@checked, do: "dark:bg-white translate-x-4", else: "dark:bg-white translate-x-0")
           ]}
         />
       </span>
       <span
         :if={!@server_mode?}
         class={[
-          "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+          "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
           if(@disabled, do: "opacity-50")
         ]}
         x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-600 bg-gray-200'"}
       >
         <span
           aria-hidden="true"
-          class="pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
-          x-bind:class={"#{@js_active_var} ? 'dark:bg-white translate-x-5' : 'dark:bg-white translate-x-0'"}
+          class="pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
+          x-bind:class={"#{@js_active_var} ? 'dark:bg-white translate-x-4' : 'dark:bg-white translate-x-0'"}
         />
       </span>
     </button>
@@ -604,74 +646,10 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  def settings_tiles(assigns) do
-    ~H"""
-    <div class="text-gray-900 leading-5 dark:text-gray-100">
-      {render_slot(@inner_block)}
-    </div>
-    """
-  end
-
-  attr :docs, :string, default: nil
-  slot :inner_block, required: true
-  slot :title, required: true
-  slot :subtitle, required: false
-  attr :feature_mod, :atom, default: nil
-  attr :feature_toggle?, :boolean, default: false
-  attr :current_team, :any, default: nil
-  attr :current_user, :any, default: nil
-  attr :site, :any, default: nil
-  attr :conn, :any, default: nil
-  attr :show_content?, :boolean, default: true
-
-  def tile(assigns) do
-    ~H"""
-    <div data-test-id="settings-tile" class="shadow-sm bg-white dark:bg-gray-900 rounded-md mb-6">
-      <header class="relative py-4 px-6">
-        <.title>
-          {render_slot(@title)}
-
-          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4 z-1" />
-        </.title>
-        <div :if={@subtitle != []} class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
-          {render_slot(@subtitle)}
-        </div>
-
-        <.live_component
-          :if={@feature_toggle?}
-          module={PlausibleWeb.Components.Site.Feature.ToggleLive}
-          id={"feature-toggle-#{@site.id}-#{@feature_mod}"}
-          site={@site}
-          feature_mod={@feature_mod}
-          current_user={@current_user}
-        />
-      </header>
-      <div class={["border-b dark:border-gray-700 mx-6", if(not @show_content?, do: "hidden")]}></div>
-      <div class={["relative", if(not @show_content?, do: "hidden")]}>
-        <%= if @feature_mod do %>
-          <PlausibleWeb.Components.Billing.feature_gate
-            locked?={@feature_mod.check_availability(@current_team) != :ok}
-            current_user={@current_user}
-            current_team={@current_team}
-            site={@site}
-          >
-            <div class="p-4 sm:p-6">
-              {render_slot(@inner_block)}
-            </div>
-          </PlausibleWeb.Components.Billing.feature_gate>
-        <% else %>
-          <div class="p-4 sm:p-6">
-            {render_slot(@inner_block)}
-          </div>
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
   attr(:sticky?, :boolean, default: true)
   attr(:enabled?, :boolean, default: true)
   attr(:centered?, :boolean, default: false)
+  attr(:interactive?, :boolean, default: true)
   attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
@@ -689,7 +667,8 @@ defmodule PlausibleWeb.Components.Generic do
       "-translate-y-full",
       "z-[1000]",
       "sm:max-w-64",
-      "w-max"
+      "w-max",
+      if(!assigns.interactive?, do: "pointer-events-none")
     ]
 
     tooltip_position_classes =
@@ -712,7 +691,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-data={@wrapper_data}
         x-on:mouseenter="hovered = true"
         x-on:mouseleave="hovered = false"
-        class={["w-max relative z-[1000]"]}
+        class="w-max relative"
       >
         <div
           x-cloak
@@ -1003,7 +982,7 @@ defmodule PlausibleWeb.Components.Generic do
       <button
         type="submit"
         class={[
-          "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
+          "relative inline-flex flex-shrink-0 h-5 w-9 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
           if(@set_to, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-600"),
           if(@disabled?, do: "cursor-not-allowed")
         ]}
@@ -1012,8 +991,8 @@ defmodule PlausibleWeb.Components.Generic do
         <span
           aria-hidden="true"
           class={[
-            "inline-block size-5 rounded-full bg-white shadow transform transition ease-in-out duration-200",
-            if(@set_to, do: "translate-x-5", else: "translate-x-0")
+            "inline-block size-4 rounded-full bg-white shadow transform transition ease-in-out duration-200",
+            if(@set_to, do: "translate-x-4", else: "translate-x-0")
           ]}
         />
       </button>

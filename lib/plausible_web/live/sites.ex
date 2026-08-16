@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Sites do
   import PlausibleWeb.Live.Components.Pagination
   import PlausibleWeb.StatsView, only: [large_number_format: 1]
 
+  alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Sites.Index
   alias Plausible.Teams
@@ -533,6 +534,13 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sparkline, :map, required: true)
 
   def site(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :needs_verification?,
+        ee?() and assigns.site.onboarding_status == :new_site
+      )
+
     ~H"""
     <li
       class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
@@ -552,7 +560,17 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+        href={
+          Routes.stats_path(
+            PlausibleWeb.Endpoint,
+            :stats,
+            @site.domain,
+            if(@needs_verification?,
+              do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
+              else: []
+            )
+          )
+        }
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
         <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
@@ -567,7 +585,7 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <.site_stats sparkline={@sparkline} />
+          <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
         </div>
       </.unstyled_link>
 
@@ -657,6 +675,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:sparkline, :any, required: true)
+  attr(:needs_verification?, :boolean, default: false)
 
   def site_stats(assigns) do
     ~H"""
@@ -685,7 +704,10 @@ defmodule PlausibleWeb.Live.Sites do
             </p>
           </div>
 
-          <.percentage_change change={@sparkline.visitors_change} />
+          <.pill :if={@needs_verification?} color={:yellow}>
+            Setup pending
+          </.pill>
+          <.percentage_change :if={not @needs_verification?} change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
@@ -946,14 +968,16 @@ defmodule PlausibleWeb.Live.Sites do
     site_entries =
       Sites.get_for_user_by_ids(assigns.current_user, page.entries, team: assigns.current_team)
 
-    sites = %{page | entries: site_entries}
-
     sparklines =
       if connected?(socket) do
         Plausible.Stats.Sparkline.parallel_overview(site_entries)
       else
         %{}
       end
+
+    site_entries = Enum.map(site_entries, &advance_onboarding_status_if_needed(&1, sparklines))
+
+    sites = %{page | entries: site_entries}
 
     consolidated_sparkline =
       if connected?(socket),
@@ -967,6 +991,23 @@ defmodule PlausibleWeb.Live.Sites do
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
+
+  defp advance_onboarding_status_if_needed(
+         %Plausible.Site{onboarding_status: :new_site} = site,
+         sparklines
+       ) do
+    case Map.get(sparklines, site.domain) do
+      %{visitors: visitors} when visitors > 0 ->
+        site
+        |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
+        |> Repo.update!()
+
+      _ ->
+        site
+    end
+  end
+
+  defp advance_onboarding_status_if_needed(site, _sparklines), do: site
 
   defp refresh_index_pins(socket) do
     assign(socket, :index_state, Index.refresh_pins(socket.assigns.index_state))

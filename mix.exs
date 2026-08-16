@@ -199,6 +199,7 @@ defmodule Plausible.MixProject do
       # mix test.e2e --debug segments.spec.ts
       "test.e2e": [
         "esbuild default",
+        "esbuild friendly_captcha",
         "ecto.create --quiet",
         "ecto.migrate",
         "clean_postgres",
@@ -209,11 +210,14 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "esbuild default"
+        "esbuild default",
+        "esbuild friendly_captcha"
       ],
       "assets.deploy": [
         "tailwind default --minify",
         "esbuild default --minify",
+        # already minified upstream, so no --minify here
+        "esbuild friendly_captcha",
         "phx.digest"
       ]
     ]
