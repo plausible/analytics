@@ -145,13 +145,13 @@ defmodule Plausible.SitesTest do
 
   describe "ensure_stats_start_date" do
     test "is nil if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       assert Sites.ensure_stats_start_date(site).stats_start_date == nil
     end
 
     test "is date if site does have stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)
@@ -162,7 +162,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "memoizes value of start date" do
-      site = insert(:site)
+      site = new_site()
 
       assert site.stats_start_date == nil
 
@@ -219,13 +219,13 @@ defmodule Plausible.SitesTest do
 
   describe "native_stats_start_date" do
     test "is nil if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       assert Sites.native_stats_start_date(site) == nil
     end
 
     test "is date if site does have stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)
@@ -235,7 +235,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "ignores imported stats" do
-      site = insert(:site)
+      site = new_site()
       insert(:site_import, site: site)
 
       assert Sites.native_stats_start_date(site) == nil
@@ -244,13 +244,13 @@ defmodule Plausible.SitesTest do
 
   describe "has_stats?" do
     test "is false if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       refute Sites.has_stats?(site)
     end
 
     test "is true if site has stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)

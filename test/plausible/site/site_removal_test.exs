@@ -2,6 +2,7 @@ defmodule Plausible.Site.SiteRemovalTest do
   use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
 
+  alias Plausible.PendingStatsDeletion
   alias Plausible.Site.Removal
   alias Plausible.Sites
 
@@ -10,6 +11,33 @@ defmodule Plausible.Site.SiteRemovalTest do
     assert {:ok, context} = Removal.run(site)
     assert context.delete_all == {1, nil}
     refute Sites.get_by_domain(site.domain)
+  end
+
+  test "site deletion stores a pending stats deletion record" do
+    site = new_site()
+
+    populate_stats(site, [
+      build(:pageview, timestamp: ~N[2020-01-01 12:00:00]),
+      build(:pageview, timestamp: ~N[2020-01-10 12:00:00])
+    ])
+
+    assert {:ok, context} = Removal.run(site)
+
+    assert %PendingStatsDeletion{} = pending_deletion = context.pending_stats_deletion
+    assert pending_deletion.site_id == site.id
+    assert pending_deletion.reason == :user_request
+
+    assert Repo.get_by(PendingStatsDeletion, site_id: site.id)
+  end
+
+  test "site deletion stores a pending stats deletion record even if the site has no stats" do
+    site = new_site()
+
+    assert {:ok, context} = Removal.run(site)
+
+    assert %PendingStatsDeletion{site_id: site_id} = context.pending_stats_deletion
+    assert site_id == site.id
+    assert Repo.get_by(PendingStatsDeletion, site_id: site.id)
   end
 
   test "site deletion prunes team guest memberships" do
@@ -85,5 +113,25 @@ defmodule Plausible.Site.SiteRemovalTest do
 
       assert Plausible.ConsolidatedView.get(team)
     end
+  end
+
+  test "site is removed from sites cache upon deletion", %{test: test} do
+    {:ok, _} = start_test_cache(test)
+    site = new_site(domain_changed_from: "#{test}")
+
+    Plausible.Site.Cache.refresh_all(cache_name: test)
+
+    assert Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+    assert Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+
+    assert {:ok, _} = Removal.run(site, cache_name: test)
+
+    refute Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+    refute Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+  end
+
+  defp start_test_cache(cache_name) do
+    %{start: {m, f, a}} = Plausible.Site.Cache.child_spec(cache_name: cache_name)
+    apply(m, f, a)
   end
 end
