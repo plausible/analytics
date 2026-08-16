@@ -6,6 +6,8 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   alias Plausible.PendingStatsDeletion
   alias Plausible.Workers.ClickhouseCleanSites
 
+  @moduletag :capture_log
+
   @tag :slow
   test "deletes data from events and sessions tables for sites pending stats deletion" do
     site = new_site()
