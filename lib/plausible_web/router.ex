@@ -109,6 +109,16 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails-api", Bamboo.SentEmailApiPlug
   end
 
+  # OAuth 2.1 discovery documents
+  scope "/.well-known", PlausibleWeb do
+    pipe_through :external_api
+
+    get "/oauth-protected-resource", OAuth.MetadataController, :protected_resource
+    get "/oauth-protected-resource/mcp", OAuth.MetadataController, :protected_resource
+
+    get "/oauth-authorization-server", OAuth.MetadataController, :authorization_server
+  end
+
   on_ee do
     live_session :customer_support,
       on_mount: PlausibleWeb.Live.SuperAdminLiveAuth do
@@ -453,6 +463,10 @@ defmodule PlausibleWeb.Router do
     post "/activate", AuthController, :activate
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
+
+    get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
+    post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
+
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
     get "/2fa/setup/force-initiate", AuthController, :force_initiate_2fa_setup
@@ -469,6 +483,19 @@ defmodule PlausibleWeb.Router do
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
+  end
+
+  scope "/login/oauth", PlausibleWeb do
+    pipe_through :external_api
+    post "/token", OAuth.TokenController, :token
+  end
+
+  scope "/", PlausibleWeb do
+    pipe_through :external_api
+
+    post "/mcp", MCP.MCPController, :handle
+    get "/mcp", MCP.MCPController, :not_supported
+    delete "/mcp", MCP.MCPController, :not_supported
   end
 
   scope "/", PlausibleWeb do
