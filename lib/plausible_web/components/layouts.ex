@@ -71,24 +71,39 @@ defmodule PlausibleWeb.Layouts do
     """
   end
 
+  attr :hide_header?, :boolean, default: false
+  attr :hide_footer?, :boolean, default: false
+  attr :disable_global_notices?, :boolean, default: false
+  attr :hide_trial_badge?, :boolean, default: false
+  attr :embedded, :boolean, default: false
+  attr :load_dashboard_js, :boolean, default: false
+  attr :flash, :map, default: %{}
+  attr :current_user, :any, default: nil
+  attr :current_team, :any, default: nil
+  attr :current_team_role, :any, default: nil
+  attr :teams, :list, default: []
+  attr :my_team, :any, default: nil
+  attr :site, :any, default: nil
+  slot :inner_block, required: true
+
   def legacy(assigns) do
     ~H"""
     <.app
-      header?={!assigns[:hide_header?]}
-      footer?={!assigns[:hide_footer?]}
-      global_notices?={!assigns[:disable_global_notices?]}
-      trial_badge?={!assigns[:hide_trial_badge?]}
-      embedded?={!!assigns[:embedded]}
-      load_dashboard_js?={!!assigns[:load_dashboard_js]}
-      flash={assigns[:flash] || %{}}
-      current_user={assigns[:current_user]}
-      current_team={assigns[:current_team]}
-      current_team_role={assigns[:current_team_role]}
-      teams={assigns[:teams] || []}
-      my_team={assigns[:my_team]}
-      site={assigns[:site]}
+      header?={not @hide_header?}
+      footer?={not @hide_footer?}
+      global_notices?={not @disable_global_notices?}
+      trial_badge?={not @hide_trial_badge?}
+      embedded?={@embedded}
+      load_dashboard_js?={@load_dashboard_js}
+      flash={@flash}
+      current_user={@current_user}
+      current_team={@current_team}
+      current_team_role={@current_team_role}
+      teams={@teams}
+      my_team={@my_team}
+      site={@site}
     >
-      {Map.get(assigns, :inner_layout) || @inner_content}
+      {render_slot(@inner_block)}
     </.app>
     """
   end
