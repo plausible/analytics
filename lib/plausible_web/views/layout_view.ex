@@ -5,6 +5,7 @@ defmodule PlausibleWeb.LayoutView do
   alias Plausible.Teams
   alias PlausibleWeb.Components.Billing.Notice
   alias PlausibleWeb.Components.Layout
+  alias PlausibleWeb.Layouts
 
   require Plausible.Billing
 
@@ -170,7 +171,7 @@ defmodule PlausibleWeb.LayoutView do
   def team_switcher(assigns) do
     teams = assigns[:teams]
 
-    if teams && length(teams) > 0 do
+    if teams && teams != [] do
       current_team = assigns[:current_team]
       my_team = assigns[:my_team]
       current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
