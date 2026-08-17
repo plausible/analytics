@@ -256,8 +256,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> json_response(400)
 
         assert resp == %{
-                 "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by pages",
+                 "error" => "Funnels aren't available when the dashboard is filtered by pages",
                  "level" => "normal"
                }
       end
@@ -274,8 +273,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> json_response(400)
 
         assert resp == %{
-                 "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by goals",
+                 "error" => "Funnels aren't available when the dashboard is filtered by goals",
                  "level" => "normal"
                }
       end
@@ -290,7 +288,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert resp == %{
                  "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by realtime period",
+                   "Funnels aren't available when the dashboard is filtered by realtime period",
                  "level" => "normal"
                }
       end
