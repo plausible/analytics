@@ -482,7 +482,11 @@ PlausibleWeb.Live.TeamSetup.html
 PlausibleWeb.Live.TrackingSettings.html
 PlausibleWeb.Live.Verification.html
 PlausibleWeb.LoginPreference.html
+PlausibleWeb.MCP.MCPController.html
 PlausibleWeb.MJML.StatsReport.html
+PlausibleWeb.OAuth.AuthorizeController.html
+PlausibleWeb.OAuth.MetadataController.html
+PlausibleWeb.OAuth.TokenController.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
 PlausibleWeb.Plugins.API.Controllers.Capabilities.html
@@ -588,8 +592,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9AAABC4D.js
-dist/sidebar_items-8156D09D.js
+dist/search_data-4D06D529.js
+dist/sidebar_items-A1BCA3C1.js
 index.html
 readme.html
 search.html
