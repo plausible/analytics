@@ -1,4 +1,6 @@
 defmodule Plausible.Workers.LockSites do
+  @moduledoc false
+
   use Plausible.Repo
   use Oban.Worker, queue: :lock_sites
 
