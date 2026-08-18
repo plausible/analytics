@@ -672,8 +672,8 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   describe "hostname dimensions" do
-    @tag :ee_only
     for hostname_dim <- ["visit:entry_page_hostname", "visit:exit_page_hostname"] do
+      @tag :ee_only
       test "revenue metrics in #{hostname_dim} breakdown", %{site: site} do
         insert(:goal, site: site, event_name: "Purchase", currency: "USD")
 
