@@ -58,6 +58,7 @@ All notable changes to this project will be documented in this file.
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
 - Fixed issue with users with billing role not being able to create personal segments
 - Fixed period arrow keys hijacking custom-range calendar
+- Fixed dashboard CSV export failing when the dashboard is filtered by entry page or exit page
 
 ## v3.2.0 - 2026-01-16
 
