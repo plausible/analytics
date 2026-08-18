@@ -32,6 +32,8 @@
     class={assigns[:bg_class] || "bg-gray-50 dark:bg-gray-950"}
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
-    <Layouts.legacy {assigns} />
+    <Layouts.legacy {assigns}>
+      {@inner_content}
+    </Layouts.legacy>
   </body>
 </html>

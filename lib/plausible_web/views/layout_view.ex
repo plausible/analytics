@@ -3,7 +3,6 @@ defmodule PlausibleWeb.LayoutView do
   use Plausible
 
   alias Plausible.Teams
-  alias PlausibleWeb.Components.Billing.Notice
   alias PlausibleWeb.Components.Layout
   alias PlausibleWeb.Layouts
 
@@ -38,12 +37,8 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def home_dest(conn) do
-    if conn.assigns[:current_user] do
-      "/sites"
-    else
-      "/"
-    end
+  def home_dest(current_user) do
+    if current_user, do: "/sites", else: "/"
   end
 
   def logo_path(filename) do
@@ -163,7 +158,6 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  attr :conn, :map, required: true
   attr :teams, :list, required: true
   attr :my_team, :any, default: nil
   attr :current_team, :any, default: nil
@@ -205,7 +199,7 @@ defmodule PlausibleWeb.LayoutView do
       </.dropdown_item>
       <.dropdown_item
         :if={@pinned_team}
-        href={Routes.site_path(@conn, :index, __team: @pinned_team.identifier)}
+        href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: @pinned_team.identifier)}
       >
         <div class="flex items-center justify-between gap-2" role="none">
           <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
@@ -217,7 +211,7 @@ defmodule PlausibleWeb.LayoutView do
       <div class="max-h-[200px] overflow-y-auto">
         <.dropdown_item
           :for={team <- @other_teams}
-          href={Routes.site_path(@conn, :index, __team: team.identifier)}
+          href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: team.identifier)}
         >
           <p
             class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"
@@ -244,11 +238,6 @@ defmodule PlausibleWeb.LayoutView do
       days when days == 0 ->
         "Trial ends today"
     end
-  end
-
-  @doc "http://blog.plataformatec.com.br/2018/05/nested-layouts-with-phoenix/"
-  def render_layout(layout, assigns, do: content) do
-    render(layout, Map.put(assigns, :inner_layout, content))
   end
 
   def current_tab?(_, nil) do

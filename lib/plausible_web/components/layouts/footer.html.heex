@@ -6,8 +6,8 @@
           <img
             src={
               PlausibleWeb.Router.Helpers.static_path(
-                @conn,
-                logo_path("logo_dark.svg")
+                PlausibleWeb.Endpoint,
+                PlausibleWeb.LayoutView.logo_path("logo_dark.svg")
               )
             }
             class="inline-block w-32 mr-1"
