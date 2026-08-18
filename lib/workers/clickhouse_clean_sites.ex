@@ -37,7 +37,9 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   # - fall back to a mutation which rebuilds the projection.
   @mutation_only_tables ["ingest_counters"]
 
-  @settings if Mix.env() in [:test, :ce_test, :e2e_test], do: [mutations_sync: 2], else: []
+  @settings if Mix.env() in [:test, :ce_test, :e2e_test],
+              do: [mutations_sync: 2, lightweight_deletes_sync: 2],
+              else: [mutations_sync: 0, lightweight_deletes_sync: 0]
 
   @spec telemetry_run_event() :: [atom()]
   def telemetry_run_event(), do: [:plausible, :clickhouse_clean_sites, :run]
