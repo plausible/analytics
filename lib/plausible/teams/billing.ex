@@ -141,16 +141,16 @@ defmodule Plausible.Teams.Billing do
         {:needs_to_upgrade, :no_active_trial_or_subscription}
 
       Teams.GracePeriod.expired?(team) ->
-        revise_usage(team, usage_mod)
+        revise_usage_for_grace_period_ended(team, usage_mod)
 
       true ->
         :no_upgrade_needed
     end
   end
 
-  defp revise_usage(team, usage_mod) do
+  defp revise_usage_for_grace_period_ended(team, usage_mod) do
     with {:below_limit, _, _} <- CheckUsage.check_pageview_usage_two_cycles(team, usage_mod),
-         :below_limit <- revise_site_usage(team) do
+         :below_limit <- maybe_check_site_usage(team) do
       Plausible.Teams.remove_grace_period(team)
       :no_upgrade_needed
     else
@@ -158,12 +158,13 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  defp revise_site_usage(%Teams.Team{enterprise_plan: %EnterprisePlan{}} = team) do
+  defp maybe_check_site_usage(%Teams.Team{enterprise_plan: %EnterprisePlan{}} = team) do
     {site_usage_status, _, _} = CheckUsage.check_site_usage_for_enterprise(team)
     site_usage_status
   end
 
-  defp revise_site_usage(_), do: :below_limit
+  # Can skip this check for normal plans where site limit can't be exceeded
+  defp maybe_check_site_usage(_team_with_normal_plan), do: :below_limit
 
   @doc """
   Enterprise plans are always allowed to add more sites (even when
