@@ -76,13 +76,14 @@ defmodule PlausibleWeb.AuthController do
   defp render_activate_form(conn, flow, opts) do
     assigns =
       [
+        legacy_layout?: false,
         error: nil,
         form_submit_url: "/activate?flow=#{flow}",
         team_identifier: conn.params["team_identifier"]
       ]
       |> Keyword.merge(opts)
 
-    render_auth_page(
+    render(
       conn,
       "activate.html",
       Keyword.put(assigns, :heading, activate_heading(assigns[:has_email_code?]))
@@ -165,11 +166,14 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render_password_reset_request_form(conn)
+    render(conn, "password_reset_request_form.html", legacy_layout?: false)
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render_password_reset_request_form(conn, error: "Please enter an email address")
+    render(conn, "password_reset_request_form.html",
+      legacy_layout?: false,
+      error: "Please enter an email address"
+    )
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
@@ -185,62 +189,48 @@ defmodule PlausibleWeb.AuthController do
             "Password reset e-mail sent. In dev environment GET /sent-emails for details."
           )
 
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
+          render(conn, "password_reset_request_success.html",
+            legacy_layout?: false,
             email: email
           )
 
         {:error, _} ->
-          render_auth_page(conn, "password_reset_request_success.html",
-            heading: "Check your email",
+          render(conn, "password_reset_request_success.html",
+            legacy_layout?: false,
             email: email
           )
       end
     else
-      render_password_reset_request_form(conn,
+      render(conn, "password_reset_request_form.html",
+        legacy_layout?: false,
         captcha_error: "Please complete the captcha to reset your password"
       )
     end
   end
 
-  defp render_password_reset_request_form(conn, extra_assigns \\ []) do
-    render_auth_page(
-      conn,
-      "password_reset_request_form.html",
-      Keyword.merge(
-        [
-          heading: "Reset your password",
-          subtitle: "Enter your email to receive a password reset link."
-        ],
-        extra_assigns
-      )
-    )
-  end
-
   def password_reset_form(conn, params) do
     case Auth.Token.verify_password_reset(params["token"]) do
       {:ok, %{email: email}} ->
-        render_auth_page(conn, "password_reset_form.html",
+        render(conn, "password_reset_form.html",
+          legacy_layout?: false,
           connect_live_socket: true,
-          heading: "Reset your password",
-          subtitle: "Choose a new password for your account",
           email: email
         )
 
       {:error, :expired} ->
         conn
         |> put_status(401)
-        |> render_auth_page("password_reset_error.html",
-          heading: "Password reset link expired",
-          subtitle: "Request a new one to reset your password."
+        |> render("password_reset_error.html",
+          legacy_layout?: false,
+          heading: "Password reset link expired"
         )
 
       {:error, _} ->
         conn
         |> put_status(401)
-        |> render_auth_page("password_reset_error.html",
-          heading: "Password reset link invalid",
-          subtitle: "Request a new one to reset your password."
+        |> render("password_reset_error.html",
+          legacy_layout?: false,
+          heading: "Password reset link invalid"
         )
     end
   end
@@ -276,7 +266,11 @@ defmodule PlausibleWeb.AuthController do
     heading = Phoenix.Flash.get(conn.assigns.flash, :login_title) || "Sign in to your account"
     subtitle = Phoenix.Flash.get(conn.assigns.flash, :login_instructions)
 
-    render_auth_page(conn, "login_form.html", heading: heading, subtitle: subtitle)
+    render(conn, "login_form.html",
+      legacy_layout?: false,
+      heading: heading,
+      subtitle: subtitle
+    )
   end
 
   def login(conn, %{"user" => params}) do
@@ -483,7 +477,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa(conn)
+          render(conn, "verify_2fa.html", legacy_layout?: false, error: nil)
         else
           redirect_to_login(conn)
         end
@@ -504,7 +498,10 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
 
-          render_verify_2fa(conn, "The provided code is invalid. Please try again")
+          render(conn, "verify_2fa.html",
+            legacy_layout?: false,
+            error: "The provided code is invalid. Please try again"
+          )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user, params["return_to"])
@@ -516,7 +513,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render_verify_2fa_recovery_code(conn)
+          render(conn, "verify_2fa_recovery_code.html", legacy_layout?: false, error: nil)
         else
           redirect_to_login(conn)
         end
@@ -535,32 +532,15 @@ defmodule PlausibleWeb.AuthController do
         {:error, :invalid_code} ->
           Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
 
-          render_verify_2fa_recovery_code(
-            conn,
-            "The provided recovery code is invalid. Please try another one"
+          render(conn, "verify_2fa_recovery_code.html",
+            legacy_layout?: false,
+            error: "The provided recovery code is invalid. Please try another one"
           )
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
       end
     end
-  end
-
-  defp render_verify_2fa(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa.html",
-      error: error,
-      heading: "Enter your 2FA code",
-      subtitle: "Open your authenticator app and enter the 6-digit code.",
-      remember_2fa_days: TwoFactor.Session.remember_2fa_days()
-    )
-  end
-
-  defp render_verify_2fa_recovery_code(conn, error \\ nil) do
-    render_auth_page(conn, "verify_2fa_recovery_code.html",
-      error: error,
-      heading: "Use a recovery code",
-      subtitle: "Enter one of your saved recovery codes to sign in."
-    )
   end
 
   defp get_2fa_user_limited(conn) do

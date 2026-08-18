@@ -107,4 +107,33 @@ defmodule PlausibleWeb.Layouts do
     </.app>
     """
   end
+
+  attr :heading, :string, required: true
+  attr :subtitle, :string, default: nil
+  attr :flash, :map, default: %{}
+  slot :inner_block, required: true
+
+  def auth(assigns) do
+    ~H"""
+    <.app header?={false} footer?={false} global_notices?={false} flash={@flash}>
+      <div class="min-h-screen w-full bg-white dark:bg-gray-900">
+        <div class="flex justify-center pt-12 sm:pt-20">
+          <a href="/">
+            <Layout.logo />
+          </a>
+        </div>
+
+        <div class="max-w-md mx-auto mt-10 sm:mt-16 px-4 flex flex-col gap-y-2 text-center dark:text-gray-300">
+          <h1 class="text-lg sm:text-xl font-semibold">
+            {@heading}
+          </h1>
+          <p :if={@subtitle} class="text-base text-gray-500 dark:text-gray-400 text-pretty">
+            {@subtitle}
+          </p>
+        </div>
+        {render_slot(@inner_block)}
+      </div>
+    </.app>
+    """
+  end
 end

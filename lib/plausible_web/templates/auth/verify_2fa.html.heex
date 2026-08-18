@@ -1,45 +1,50 @@
-<.auth_container>
-  <.form
-    :let={f}
-    action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
-    for={@conn.params}
-    class="flex flex-col gap-y-6"
-    onsubmit="document.getElementById('verify-button').disabled = true"
-  >
-    <PlausibleWeb.Components.TwoFactor.verify_2fa_input
-      form={f}
-      field={:code}
-      class=""
-      autofocus?={true}
-      error={@error}
-    />
-
-    <div class="flex justify-center items-center">
-      <.input
-        type="checkbox"
-        field={f[:remember_2fa]}
-        value="true"
-        label={"Remember this device for #{@remember_2fa_days} days"}
-        mt?={false}
-        class="block size-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+<Layouts.auth
+  heading="Enter your 2FA code"
+  subtitle="Open your authenticator app and enter the 6-digit code."
+>
+  <.auth_container>
+    <.form
+      :let={f}
+      action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
+      for={@conn.params}
+      class="flex flex-col gap-y-6"
+      onsubmit="document.getElementById('verify-button').disabled = true"
+    >
+      <PlausibleWeb.Components.TwoFactor.verify_2fa_input
+        form={f}
+        field={:code}
+        class=""
+        autofocus?={true}
+        error={@error}
       />
+
+      <div class="flex justify-center items-center">
+        <.input
+          type="checkbox"
+          field={f[:remember_2fa]}
+          value="true"
+          label={"Remember this device for #{PlausibleWeb.TwoFactor.Session.remember_2fa_days()} days"}
+          mt?={false}
+          class="block size-5 rounded-sm dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+        />
+      </div>
+
+      <.input type="hidden" field={f[:return_to]} mt?={false} />
+    </.form>
+
+    <div class="mt-6 flex flex-col gap-y-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+      <p>
+        Can't access your authenticator app?
+        <.styled_link href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}>
+          Use a recovery code
+        </.styled_link>
+      </p>
+      <p :if={ee?()}>
+        Need help?
+        <.styled_link href="https://plausible.io/contact">
+          Contact us
+        </.styled_link>
+      </p>
     </div>
-
-    <.input type="hidden" field={f[:return_to]} mt?={false} />
-  </.form>
-
-  <div class="mt-6 flex flex-col gap-y-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-    <p>
-      Can't access your authenticator app?
-      <.styled_link href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}>
-        Use a recovery code
-      </.styled_link>
-    </p>
-    <p :if={ee?()}>
-      Need help?
-      <.styled_link href="https://plausible.io/contact">
-        Contact us
-      </.styled_link>
-    </p>
-  </div>
-</.auth_container>
+  </.auth_container>
+</Layouts.auth>

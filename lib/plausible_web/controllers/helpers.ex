@@ -23,17 +23,6 @@ defmodule PlausibleWeb.ControllerHelpers do
   defp error_layout,
     do: Application.get_env(:plausible, PlausibleWeb.Endpoint)[:render_errors][:layout]
 
-  @auth_layout_assigns [
-    layout: {PlausibleWeb.LayoutView, :auth},
-    hide_header?: true,
-    hide_footer?: true,
-    disable_global_notices?: true
-  ]
-
-  def render_auth_page(conn, template, extra_assigns \\ []) do
-    render(conn, template, Keyword.merge(@auth_layout_assigns, extra_assigns))
-  end
-
   @onboarding_layout_assigns [
     layout: {PlausibleWeb.LayoutView, :onboarding},
     hide_footer?: true,

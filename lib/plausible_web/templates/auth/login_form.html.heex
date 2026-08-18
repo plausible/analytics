@@ -1,75 +1,80 @@
-<.auth_container>
-  <.form :let={f} for={@conn} action="/login" class="flex flex-col gap-y-6">
-    <div class="flex flex-col gap-y-2">
-      <label for={f[:email].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-        Email
-      </label>
-      <div>
-        <.input
-          type="email"
-          autocomplete="username"
-          placeholder="example@email.com"
-          field={f[:email]}
-          mt?={false}
-          autofocus="autofocus"
-        />
-      </div>
-    </div>
-
-    <div class="relative flex flex-col gap-y-2">
-      <label for="current-password" class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-        Password
-      </label>
-      <.password_field
-        id="current-password"
-        autocomplete="current-password"
-        field={f[:password]}
-        mt?={false}
-      />
-      <.styled_link href="/password/request-reset" class="text-sm absolute top-0 right-0">
-        Forgot password?
-      </.styled_link>
-      <p
-        :if={login_error = Phoenix.Flash.get(@flash, :login_error)}
-        class="text-xs text-red-500"
-      >
-        {login_error}
-      </p>
-    </div>
-
-    <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
-
-    <div class="flex flex-col gap-y-6">
-      <.button class="w-full" type="submit">Sign in</.button>
-
+<Layouts.auth heading={@heading} subtitle={@subtitle}>
+  <.auth_container>
+    <.form :let={f} for={@conn} action="/login" class="flex flex-col gap-y-6">
       <div class="flex flex-col gap-y-2">
-        <p
-          :if={
-            Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) ==
-              false
-          }
-          class="text-sm text-center text-gray-500 dark:text-gray-400"
-        >
-          New here? <.styled_link href="/register">Create your account</.styled_link>
-        </p>
-
-        <%= on_ee do %>
-          <div class="flex items-center justify-center gap-x-1 text-sm text-gray-500 dark:text-gray-400">
-            <Heroicons.lock_closed class="size-3.5" />
-            <span>
-              Continue with
-              <.styled_link href={
-                Routes.sso_path(@conn, :login_form,
-                  return_to: @conn.params["return_to"],
-                  prefer: "manual"
-                )
-              }>
-                SSO
-              </.styled_link>
-            </span>
-          </div>
-        <% end %>
+        <label for={f[:email].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+          Email
+        </label>
+        <div>
+          <.input
+            type="email"
+            autocomplete="username"
+            placeholder="example@email.com"
+            field={f[:email]}
+            mt?={false}
+            autofocus="autofocus"
+          />
+        </div>
       </div>
-    </div>
-  </.form>
-</.auth_container>
+
+      <div class="relative flex flex-col gap-y-2">
+        <label
+          for="current-password"
+          class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+        >
+          Password
+        </label>
+        <.password_field
+          id="current-password"
+          autocomplete="current-password"
+          field={f[:password]}
+          mt?={false}
+        />
+        <.styled_link href="/password/request-reset" class="text-sm absolute top-0 right-0">
+          Forgot password?
+        </.styled_link>
+        <p
+          :if={login_error = Phoenix.Flash.get(@flash, :login_error)}
+          class="text-xs text-red-500"
+        >
+          {login_error}
+        </p>
+      </div>
+
+      <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
+
+      <div class="flex flex-col gap-y-6">
+        <.button class="w-full" type="submit">Sign in</.button>
+
+        <div class="flex flex-col gap-y-2">
+          <p
+            :if={
+              Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) ==
+                false
+            }
+            class="text-sm text-center text-gray-500 dark:text-gray-400"
+          >
+            New here? <.styled_link href="/register">Create your account</.styled_link>
+          </p>
+
+          <%= on_ee do %>
+            <div class="flex items-center justify-center gap-x-1 text-sm text-gray-500 dark:text-gray-400">
+              <Heroicons.lock_closed class="size-3.5" />
+              <span>
+                Continue with
+                <.styled_link href={
+                  Routes.sso_path(@conn, :login_form,
+                    return_to: @conn.params["return_to"],
+                    prefer: "manual"
+                  )
+                }>
+                  SSO
+                </.styled_link>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </.form>
+  </.auth_container>
+</Layouts.auth>
