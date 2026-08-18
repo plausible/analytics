@@ -29,7 +29,10 @@
     {render("_tracking.html", assigns)}
   </head>
   <body
-    class={assigns[:bg_class] || "bg-gray-50 dark:bg-gray-950"}
+    class={[
+      if(!assigns[:embedded], do: "h-full"),
+      assigns[:bg_class] || "bg-gray-50 dark:bg-gray-950"
+    ]}
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
     <%= if Map.get(assigns, :legacy_layout?, true) do %>
