@@ -116,8 +116,7 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_receive {:telemetry_handled, ^telemetry_run, %{sites_count: 1}, %{}}
 
     # only January and March actually have data, February skipped
-    assert_receive {:telemetry_handled, ^telemetry_partitions, %{count: 2},
-                    %{table: "events_v2"}}
+    assert_receive {:telemetry_handled, ^telemetry_partitions, %{count: 2}, %{table: "events_v2"}}
 
     assert_receive {:telemetry_handled, ^telemetry_partitions, %{count: 2},
                     %{table: "sessions_v2"}}
