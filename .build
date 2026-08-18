@@ -340,7 +340,6 @@ Plausible.Workers.ExpireDomainChangeTransitions.html
 Plausible.Workers.ExportAnalytics.html
 Plausible.Workers.ImportAnalytics.html
 Plausible.Workers.LocalImportAnalyticsCleaner.html
-Plausible.Workers.LockSites.html
 Plausible.Workers.NotifyAnnualRenewal.html
 Plausible.Workers.NotifyExportedAnalytics.html
 Plausible.Workers.PurgeCDNCache.html
@@ -592,8 +591,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4D06D529.js
-dist/sidebar_items-A1BCA3C1.js
+dist/search_data-B8E9E17B.js
+dist/sidebar_items-197E52B2.js
 index.html
 readme.html
 search.html
