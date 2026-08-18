@@ -188,46 +188,80 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"utm_terms.csv" in zip
     end
 
-    # Regression test: the custom_props.csv prop key discovery query used to
-    # crash with an Ecto.QueryError when filtering by entry or exit page, as
-    # those are the only filter dimensions that make the events query join
-    # sessions, shifting the positional binding of the meta array join.
-    test "exports with an entry_page filter", %{conn: conn, site: site} do
+    test "exports custom props with an entry_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
       populate_stats(site, [
-        build(:pageview, user_id: 123, pathname: "/blog"),
-        build(:pageview, user_id: 123, pathname: "/another")
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/blog")
       ])
 
-      conn =
-        do_export(conn, site, %{
+      custom_props =
+        conn
+        |> do_export(site, %{
           @base_params
           | date_range: "day",
             filters: [["is", "visit:entry_page", ["/blog"]]]
         })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      assert {"content-type", "application/zip; charset=utf-8"} =
-               List.keyfind(conn.resp_headers, "content-type", 0)
-
-      assert {:ok, _zip} = :zip.unzip(response(conn, 200), [:memory])
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
     end
 
-    test "exports with an exit_page filter", %{conn: conn, site: site} do
+    test "exports custom props with an exit_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
       populate_stats(site, [
-        build(:pageview, user_id: 123, pathname: "/blog"),
-        build(:pageview, user_id: 123, pathname: "/another")
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/another")
       ])
 
-      conn =
-        do_export(conn, site, %{
+      custom_props =
+        conn
+        |> do_export(site, %{
           @base_params
           | date_range: "day",
             filters: [["is", "visit:exit_page", ["/another"]]]
         })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      assert {"content-type", "application/zip; charset=utf-8"} =
-               List.keyfind(conn.resp_headers, "content-type", 0)
-
-      assert {:ok, _zip} = :zip.unzip(response(conn, 200), [:memory])
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
     end
 
     test "limits pages.csv and exit_pages.csv to 100 rows", %{conn: conn, site: site} do
