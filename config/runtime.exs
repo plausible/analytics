@@ -705,12 +705,12 @@ config :plausible, Plausible.AsyncInsertRepo,
     materialized_views_ignore_errors: 1
   ]
 
-config :plausible, Plausible.ImportDeletionRepo,
+config :plausible, Plausible.DeletionRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
-  pool_size: 1
+  pool_size: 2
 
 config :plausible, Plausible.Ingestion.Persistor,
   backend: persistor_backend,
@@ -848,10 +848,10 @@ cloud_cron = [
   {"0 0 * * *", Plausible.Workers.LockSites},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
-  # First sunday of the month, 4:00 UTC
-  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
-  # Daily at 4:00 UTC
-  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
+  # Every Tuesday, 3:00 UTC
+  {"0 3 * * TUE", Plausible.Workers.ClickhouseCleanSites},
+  # Daily at 5:00 UTC
+  {"0 5 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
   # Daily at 2:00 UTC
   {"0 2 * * *", Plausible.Workers.ScoreTrialProspects}
 ]

@@ -7,7 +7,8 @@ defmodule Plausible.Workers.CheckUsageTest do
 
   require Plausible.Billing.Subscription.Status
 
-  setup [:create_user, :create_site]
+  @moduletag :ee_only
+
   @paddle_id_10k "558018"
   @date_range Date.range(Date.utc_today(), Date.utc_today())
 
@@ -16,6 +17,8 @@ defmodule Plausible.Workers.CheckUsageTest do
     Plausible.Billing.Subscription.Status.past_due(),
     Plausible.Billing.Subscription.Status.deleted()
   ]
+
+  setup [:create_user, :create_site]
 
   test "ignores user without subscription" do
     CheckUsage.perform(nil)
@@ -271,7 +274,8 @@ defmodule Plausible.Workers.CheckUsageTest do
       end
 
       test "skips checking users who already have a grace period", %{user: user} do
-        %{grace_period: existing_grace_period} = Plausible.Teams.start_grace_period(team_of(user))
+        %{grace_period: existing_grace_period} =
+          Plausible.Teams.start_grace_period(team_of(user))
 
         usage_stub =
           Plausible.Teams.Billing
@@ -541,6 +545,28 @@ defmodule Plausible.Workers.CheckUsageTest do
 
         assert_no_emails_delivered()
         assert Repo.reload(team).grace_period == nil
+      end
+
+      test "respects grandfathered unlimited site limit" do
+        user = new_user(team: [inserted_at: ~N[2021-05-04 23:59:59]])
+
+        subscribe_to_enterprise_plan(user,
+          site_limit: 2,
+          subscription: [
+            last_bill_date: Date.shift(Date.utc_today(), day: -1),
+            status: unquote(status)
+          ]
+        )
+
+        new_site(owner: user)
+        new_site(owner: user)
+        new_site(owner: user)
+
+        CheckUsage.perform(nil)
+
+        assert_no_emails_delivered()
+
+        assert Repo.reload(team_of(user)).grace_period == nil
       end
     end
   end

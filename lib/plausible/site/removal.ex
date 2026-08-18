@@ -4,15 +4,18 @@ defmodule Plausible.Site.Removal do
   """
   use Plausible
 
+  alias Plausible.PendingStatsDeletions
   alias Plausible.Repo
   alias Plausible.Teams
 
   import Ecto.Query
 
-  @spec run(Plausible.Site.t()) :: {:ok, map()}
-  def run(site) do
+  @spec run(Plausible.Site.t(), Keyword.t()) :: {:ok, map()}
+  def run(site, opts \\ []) do
     Repo.transaction(fn ->
       site = Repo.preload(site, :team)
+
+      {:ok, pending_stats_deletion} = PendingStatsDeletions.store(site)
 
       result = Repo.delete_all(from(s in Plausible.Site, where: s.domain == ^site.domain))
 
@@ -27,7 +30,14 @@ defmodule Plausible.Site.Removal do
         Plausible.Billing.SiteLocker.update_for(site.team, send_email?: false)
       end
 
-      %{delete_all: result}
+      cache_opts = Keyword.take(opts, [:cache_name, :multicall_timeout])
+      :ok = Plausible.Site.Cache.broadcast_delete(site.domain, cache_opts)
+
+      if site.domain_changed_from do
+        :ok = Plausible.Site.Cache.broadcast_delete(site.domain_changed_from, cache_opts)
+      end
+
+      %{delete_all: result, pending_stats_deletion: pending_stats_deletion}
     end)
   end
 end

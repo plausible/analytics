@@ -219,6 +219,26 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :unhandled],
               event_name: InstallationSupport.Verification.Checks.telemetry_event_unhandled()
             )
+        ),
+        distribution(
+          metric_prefix ++ [:clickhouse_clean_sites, :stage, :duration],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_stage_duration(),
+          reporter_options: [
+            buckets: [10, 50, 100, 500, 1_000, 5_000, 10_000, 30_000, 60_000, 300_000, 600_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration,
+          tags: [:stage]
+        ),
+        last_value(
+          metric_prefix ++ [:clickhouse_clean_sites, :run, :sites_count],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_run_event(),
+          measurement: :sites_count
+        ),
+        last_value(
+          metric_prefix ++ [:clickhouse_clean_sites, :run, :partitions_count],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_run_event(),
+          measurement: :partitions_count
         )
       ]
       |> Enum.concat(persistor_metrics(metric_prefix))

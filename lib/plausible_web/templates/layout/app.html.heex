@@ -33,7 +33,9 @@
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
     <%= if Map.get(assigns, :legacy_layout?, true) do %>
-      <Layouts.legacy {assigns} />
+      <Layouts.legacy {assigns}>
+        {@inner_content}
+      </Layouts.legacy>
     <% else %>
       {@inner_content}
     <% end %>

@@ -88,8 +88,8 @@ defmodule Plausible.Workers.CheckUsage do
     :ok
   end
 
-  defp check_site_usage_for_enterprise(subscriber) do
-    limit = subscriber.enterprise_plan.site_limit
+  def check_site_usage_for_enterprise(subscriber) do
+    limit = Teams.Billing.site_limit(subscriber)
 
     usage = Teams.Billing.site_usage(subscriber)
 
