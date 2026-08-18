@@ -50,6 +50,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       lv = get_liveview(conn, "/register")
 
+      on_ee do
+        html = render(lv)
+        assert_signup_tracking(html, "none")
+      end
+
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
@@ -93,6 +98,10 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert html =~ "Please complete the captcha to register"
       assert_push_event(lv, "reset-frc-captcha", %{})
 
+      on_ee do
+        assert_signup_tracking(html, "Please complete the captcha to register")
+      end
+
       refute Repo.one(User)
     end
 
@@ -111,6 +120,10 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert html =~ "has already been taken"
       assert_push_event(lv, "reset-frc-captcha", %{})
+
+      on_ee do
+        assert_signup_tracking(html, "has already been taken")
+      end
     end
   end
 
@@ -277,6 +290,12 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     lv
     |> element("form")
     |> render_change(%{id => text})
+  end
+
+  defp assert_signup_tracking(html, previous_error) do
+    assert html =~ "Signup"
+    assert html =~ "previous_error"
+    assert html =~ previous_error
   end
 
   defp mock_captcha_success() do

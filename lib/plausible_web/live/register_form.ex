@@ -50,6 +50,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
          disable_submit: false,
+         signup_previous_error: nil,
          trigger_submit: false,
          heading: heading,
          subtitle: subtitle
@@ -95,7 +96,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           id="register-form"
           class="flex flex-col gap-y-6"
           action={Routes.auth_path(@socket, :login)}
-          onsubmit={form_submit_event(@invitation)}
+          onsubmit={form_submit_event(@invitation, @signup_previous_error)}
           phx-change="validate"
           phx-submit="register"
           phx-trigger-action={@trigger_submit}
@@ -172,11 +173,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   on_ee do
-    defp form_submit_event(invitation) do
-      "window.plausible('Signup#{if invitation, do: " via invitation"}')"
+    defp form_submit_event(invitation, previous_error) do
+      options = Jason.encode!(%{"props" => %{"previous_error" => previous_error || "none"}})
+
+      "window.plausible('Signup#{if invitation, do: " via invitation"}', #{options})"
     end
   else
-    defp form_submit_event(_), do: ""
+    defp form_submit_event(_, _), do: ""
   end
 
   defp name_input(assigns) do
@@ -273,8 +276,10 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   defp captcha_failed(socket) do
+    error = "Please complete the captcha to register"
+
     socket
-    |> assign(:captcha_error, "Please complete the captcha to register")
+    |> assign(captcha_error: error, signup_previous_error: error)
     |> PlausibleWeb.Components.Captcha.reset()
   end
 
@@ -293,10 +298,20 @@ defmodule PlausibleWeb.Live.RegisterForm do
       {:error, changeset} ->
         socket =
           socket
-          |> assign(form: to_form(Map.put(changeset, :action, :validate)))
+          |> assign(
+            form: to_form(Map.put(changeset, :action, :validate)),
+            signup_previous_error: signup_error(changeset)
+          )
           |> PlausibleWeb.Components.Captcha.reset()
 
         {:noreply, socket}
+    end
+  end
+
+  defp signup_error(changeset) do
+    case List.first(changeset.errors) do
+      {_field, {message, _options}} -> message
+      nil -> "unknown"
     end
   end
 
