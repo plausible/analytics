@@ -670,4 +670,54 @@ defmodule Plausible.Stats.QueryTest do
       assert results == [%{dimensions: ["author"], metrics: [1]}]
     end
   end
+
+  describe "hostname dimensions" do
+    @tag :ee_only
+    for hostname_dim <- ["visit:entry_page_hostname", "visit:exit_page_hostname"] do
+      test "revenue metrics in #{hostname_dim} breakdown", %{site: site} do
+        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+
+        populate_stats(site, [
+          build(:pageview,
+            user_id: 1,
+            hostname: "onetwothree.com",
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          build(:event,
+            name: "Purchase",
+            user_id: 1,
+            hostname: "onetwothree.com",
+            revenue_reporting_amount: Decimal.new("100"),
+            revenue_reporting_currency: "USD",
+            timestamp: ~N[2021-01-01 00:00:10]
+          ),
+          build(:pageview,
+            user_id: 1,
+            hostname: "onetwothree.com",
+            timestamp: ~N[2021-01-01 00:00:20]
+          )
+        ])
+
+        {:ok, query} =
+          QueryBuilder.build(site, %ParsedQueryParams{
+            metrics: [:total_revenue, :average_revenue],
+            input_date_range: :all,
+            dimensions: [unquote(hostname_dim)],
+            filters: [[:is, "event:goal", ["Purchase"]]]
+          })
+
+        %Stats.QueryResult{results: results} = Stats.query(site, query)
+
+        assert results == [
+                 %{
+                   dimensions: ["onetwothree.com"],
+                   metrics: [
+                     %{currency: :USD, long: "$100.00", short: "$100.0", value: 100.0},
+                     %{currency: :USD, long: "$100.00", short: "$100.0", value: 100.0}
+                   ]
+                 }
+               ]
+      end
+    end
+  end
 end
