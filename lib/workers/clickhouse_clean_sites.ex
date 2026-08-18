@@ -42,6 +42,9 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   @spec telemetry_run_event() :: [atom()]
   def telemetry_run_event(), do: [:plausible, :clickhouse_clean_sites, :run]
 
+  @spec telemetry_partitions_event() :: [atom()]
+  def telemetry_partitions_event(), do: [:plausible, :clickhouse_clean_sites, :partitions]
+
   @spec telemetry_stage_duration() :: [atom()]
   def telemetry_stage_duration(), do: [:plausible, :clickhouse_clean_sites, :stage]
 
@@ -59,11 +62,19 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
             partition_ids("sessions_v2", site_ids)
           end)
 
-        :telemetry.execute(telemetry_run_event(), %{
-          sites_count: length(site_ids),
-          partitions_count_events: length(partition_ids_events),
-          partitions_count_sessions: length(partition_ids_sessions)
-        })
+        :telemetry.execute(telemetry_run_event(), %{sites_count: length(site_ids)})
+
+        :telemetry.execute(
+          telemetry_partitions_event(),
+          %{count: length(partition_ids_events)},
+          %{table: "events_v2"}
+        )
+
+        :telemetry.execute(
+          telemetry_partitions_event(),
+          %{count: length(partition_ids_sessions)},
+          %{table: "sessions_v2"}
+        )
 
         Logger.warning(
           "Clearing ClickHouse data for #{length(site_ids)} sites across #{length(partition_ids_events)}/#{length(partition_ids_sessions)} partitions"

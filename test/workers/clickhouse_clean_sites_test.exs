@@ -81,11 +81,12 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     test_pid = self()
 
     telemetry_run = ClickhouseCleanSites.telemetry_run_event()
+    telemetry_partitions = ClickhouseCleanSites.telemetry_partitions_event()
     telemetry_stage = ClickhouseCleanSites.telemetry_stage_duration()
 
     :telemetry.attach_many(
       "#{test}-telemetry-handler",
-      [telemetry_run, telemetry_stage],
+      [telemetry_run, telemetry_partitions, telemetry_stage],
       fn event, measurements, metadata, _ ->
         send(test_pid, {:telemetry_handled, event, measurements, metadata})
       end,
@@ -112,10 +113,14 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
                     %{stage: "get_partition_ids_sessions"}}
 
+    assert_receive {:telemetry_handled, ^telemetry_run, %{sites_count: 1}, %{}}
+
     # only January and March actually have data, February skipped
-    assert_receive {:telemetry_handled, ^telemetry_run,
-                    %{sites_count: 1, partitions_count_events: 2, partitions_count_sessions: 2},
-                    %{}}
+    assert_receive {:telemetry_handled, ^telemetry_partitions, %{count: 2},
+                    %{table: "events_v2"}}
+
+    assert_receive {:telemetry_handled, ^telemetry_partitions, %{count: 2},
+                    %{table: "sessions_v2"}}
 
     assert_receive {:telemetry_handled, ^telemetry_stage, %{duration: _},
                     %{stage: "events_deletion"}}

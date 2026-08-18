@@ -237,8 +237,9 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         ),
         last_value(
           metric_prefix ++ [:clickhouse_clean_sites, :run, :partitions_count],
-          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_run_event(),
-          measurement: :partitions_count
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_partitions_event(),
+          measurement: :count,
+          tags: [:table]
         )
       ]
       |> Enum.concat(persistor_metrics(metric_prefix))
