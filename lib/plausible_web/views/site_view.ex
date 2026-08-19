@@ -2,6 +2,9 @@ defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
   use Plausible
 
+  alias PlausibleWeb.Layouts
+  alias PlausibleWeb.Components.Site.NewSiteForm
+
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
