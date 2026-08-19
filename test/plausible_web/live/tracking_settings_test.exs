@@ -61,41 +61,41 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
       assert Enum.any?(Plausible.Goals.for_site(site), &(&1.event_name == "File Download"))
     end
 
-    on_ee do
-      test "shows a confirmation dialog when disabling a measurement whose goal is part of a funnel",
-           %{conn: conn, site: site} do
-        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-          file_downloads: true
-        })
+    @tag :ee_only
+    test "shows a confirmation dialog when disabling a measurement whose goal is part of a funnel",
+         %{conn: conn, site: site} do
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        file_downloads: true
+      })
 
-        other_goal = insert(:goal, site: site, page_path: "/checkout")
+      other_goal = insert(:goal, site: site, page_path: "/checkout")
 
-        file_download_goal =
-          Enum.find(Plausible.Goals.for_site(site), &(&1.event_name == "File Download"))
+      file_download_goal =
+        Enum.find(Plausible.Goals.for_site(site), &(&1.event_name == "File Download"))
 
-        {:ok, _funnel} =
-          Plausible.Funnels.create(site, "File download funnel", [
-            %{"goal_id" => other_goal.id},
-            %{"goal_id" => file_download_goal.id}
-          ])
+      {:ok, _funnel} =
+        Plausible.Funnels.create(site, "File download funnel", [
+          %{"goal_id" => other_goal.id},
+          %{"goal_id" => file_download_goal.id}
+        ])
 
-        html = conn |> get_liveview(site) |> render()
+      html = conn |> get_liveview(site) |> render()
 
-        assert confirm_text(html, "file_downloads") =~ "is part of some funnel(s)"
-      end
+      assert confirm_text(html, "file_downloads") =~ "is part of some funnel(s)"
+    end
 
-      test "does not show a confirmation dialog when the goal is not part of a funnel", %{
-        conn: conn,
-        site: site
-      } do
-        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-          file_downloads: true
-        })
+    @tag :ee_only
+    test "does not show a confirmation dialog when the goal is not part of a funnel", %{
+      conn: conn,
+      site: site
+    } do
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        file_downloads: true
+      })
 
-        html = conn |> get_liveview(site) |> render()
+      html = conn |> get_liveview(site) |> render()
 
-        assert confirm_text(html, "file_downloads") == nil
-      end
+      assert confirm_text(html, "file_downloads") == nil
     end
 
     @tag :ee_only
