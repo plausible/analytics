@@ -25,16 +25,24 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "Add a website"
     end
 
-    test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
+    test "default flow is 'register', shows onboarding steps regardless of sites provisioned", %{
+      conn: conn1,
+      user: user
+    } do
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
 
       new_site(owner: user, domain: "test-site.com")
 
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
+    end
+
+    test "does not show onboarding steps when ?flow=provisioning", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=provisioning")
+      refute html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
     test "does not display limit notice when user is on an enterprise plan", %{
