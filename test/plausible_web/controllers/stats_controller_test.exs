@@ -596,6 +596,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       resp = html_response(conn, 200)
 
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+
+      assert text_of_attr(resp, @react_container, "data-engaged-sessions-filter-available") ==
+               "true"
+
       assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
     end
 

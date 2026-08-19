@@ -85,7 +85,10 @@ export function createStatsQuery(
     dimensions: reportParams.dimensions || [],
     metrics: reportParams.metrics,
     filters: [
-      ...remapToApiFilters(dashboardState.filters),
+      ...remapToApiFilters(
+        dashboardState.filters,
+        dashboardState.engagedSessionsOnly
+      ),
       ...(reportParams.alwaysOnFilters ?? [])
     ],
     order_by: reportParams.order_by || null,

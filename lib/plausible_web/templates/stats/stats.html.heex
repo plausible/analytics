@@ -39,6 +39,9 @@
     data-background={@conn.assigns[:background]}
     data-is-dbip={to_string(@dbip?)}
     data-current-user-role={@site_role}
+    data-engaged-sessions-filter-available={
+      to_string(Plausible.Auth.super_admin?(@conn.assigns[:current_user]))
+    }
     data-current-user-id={
       if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
     }

@@ -111,7 +111,10 @@ export function dashboardStateToParams(
     queryObj.to = formatISO(dashboardState.to)
   }
   if (dashboardState.filters) {
-    queryObj.filters = serializeApiFilters(dashboardState.filters)
+    queryObj.filters = serializeApiFilters(
+      dashboardState.filters,
+      dashboardState.engagedSessionsOnly
+    )
   }
   if (dashboardState.with_imported) {
     queryObj.with_imported = String(dashboardState.with_imported)
