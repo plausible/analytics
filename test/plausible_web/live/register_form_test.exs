@@ -292,10 +292,12 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     |> render_change(%{id => text})
   end
 
-  defp assert_signup_tracking(html, previous_error) do
-    assert html =~ "Signup"
-    assert html =~ "previous_error"
-    assert html =~ previous_error
+  on_ee do
+    defp assert_signup_tracking(html, previous_error) do
+      assert html =~ "Signup"
+      assert html =~ "previous_error"
+      assert html =~ previous_error
+    end
   end
 
   defp mock_captcha_success() do
