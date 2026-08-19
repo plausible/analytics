@@ -72,9 +72,7 @@ defmodule PlausibleWeb.SiteController do
     defaults = [
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
       site_limit_exceeded?: false,
-      flow: flow,
       form_submit_url: "/sites?flow=#{flow}",
-      current_step: "Add site info",
       bg_class: "bg-white dark:bg-gray-950",
       legacy_layout?: false
     ]
