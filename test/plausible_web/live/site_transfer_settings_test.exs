@@ -289,7 +289,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
 
       assert_email_delivered_with(
         to: [nil: "john.doe@example.com"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+        subject: @subject_prefix <> "Request to transfer a site to you"
       )
     end
 

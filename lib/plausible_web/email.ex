@@ -261,7 +261,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("new-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to a site")
     |> render("new_user_invitation.html",
       invitation_id: invitation_id,
       site: site,
@@ -273,7 +273,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("existing-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to a site")
     |> render("existing_user_invitation.html",
       site: site,
       inviter: inviter
@@ -315,7 +315,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("ownership-transfer-request")
-    |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
+    |> subject("[#{Plausible.product_name()}] Request to transfer a site to you")
     |> render("ownership_transfer_request.html",
       invitation_id: invitation_id,
       inviter: inviter,

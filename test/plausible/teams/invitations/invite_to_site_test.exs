@@ -46,7 +46,9 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
 
       assert_email_delivered_with(
         to: [nil: invitee.email],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to a site",
+        text_body:
+          ~r/#{Regex.escape("#{inviter.email} has invited you to one of their sites on #{Plausible.product_name()}.")}/
       )
     end
 
@@ -59,8 +61,10 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}",
-        html_body: ~r/#{invitation_id}/
+        subject: @subject_prefix <> "You've been invited to a site",
+        html_body: ~r/#{invitation_id}/,
+        text_body:
+          ~r/#{Regex.escape("#{inviter.email} has invited you to join one of their sites on #{Plausible.product_name()}.")}/
       )
     end
 
@@ -130,7 +134,9 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+        subject: @subject_prefix <> "Request to transfer a site to you",
+        text_body:
+          ~r/#{Regex.escape("#{inviter.email} has requested to transfer the ownership of one of their sites on #{Plausible.product_name()} to you.")}/
       )
     end
 
@@ -144,7 +150,7 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+        subject: @subject_prefix <> "Request to transfer a site to you"
       )
     end
 

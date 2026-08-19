@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert_email_delivered_with(
           to: [nil: "arbitrary@example.com"],
-          subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}",
+          subject: @subject_prefix <> "Request to transfer a site to you",
           html_body: ~r/#{user.email}/
         )
       end

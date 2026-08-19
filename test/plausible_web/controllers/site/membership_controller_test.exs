@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert_email_delivered_with(
         to: [nil: "john.doe@example.com"],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to a site"
       )
     end
 
@@ -150,7 +150,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert_email_delivered_with(
         to: [nil: existing_user.email],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to a site"
       )
     end
 
@@ -184,7 +184,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert_email_delivered_with(
         to: [nil: "joe@example.com"],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to a site"
       )
 
       req2 =
@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert_email_delivered_with(
         to: [nil: "joe@example.com"],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to a site"
       )
 
       assert Phoenix.Flash.get(req2.assigns.flash, :success) =~
