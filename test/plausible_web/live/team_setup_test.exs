@@ -124,15 +124,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
-      team = Repo.reload!(team)
-
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
     end
 
-    test "allows updating pending invitation role in place", %{conn: conn, team: team} do
+    test "allows updating pending invitation role in place", %{conn: conn} do
       lv = get_child_lv(conn)
       add_invite(lv, "new@example.com", "admin")
 
@@ -148,11 +146,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       save_layout(lv)
 
-      team = Repo.reload!(team)
-
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
     end
 
@@ -207,7 +203,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert_email_delivered_with(
         to: [nil: "guest@example.com"],
-        subject: @subject_prefix <> "Welcome to \"A-Team!\" team"
+        subject: @subject_prefix <> "Welcome to your new team"
       )
     end
 

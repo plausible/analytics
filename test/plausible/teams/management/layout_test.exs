@@ -282,7 +282,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert_email_delivered_with(
         to: [nil: "test@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
 
       layout = Layout.init(team)
@@ -373,7 +373,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
 
       assert_email_delivered_with(
@@ -410,7 +410,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
 
       assert_email_delivered_with(

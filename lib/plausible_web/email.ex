@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("new-user-team-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] You've been invited to a team")
     |> render("new_user_team_invitation.html",
       invitation_id: invitation_id,
       team: team,
@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("existing-user-team-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] You've been invited to a team")
     |> render("existing_user_team_invitation.html",
       team: team,
       inviter: inviter
@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(email)
     |> tag("guest-to-team-member-promotion")
-    |> subject("[#{Plausible.product_name()}] Welcome to \"#{team.name}\" team")
+    |> subject("[#{Plausible.product_name()}] Welcome to your new team")
     |> render("guest_to_team_member_promotion.html", inviter: inviter, team: team)
   end
 

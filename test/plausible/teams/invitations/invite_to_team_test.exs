@@ -28,7 +28,9 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
         assert_email_delivered_with(
           to: [nil: invitee.email],
-          subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+          subject: @subject_prefix <> "You've been invited to a team",
+          text_body:
+            ~r/#{Regex.escape("#{inviter.email} has invited you to their team on #{Plausible.product_name()}.")}/
         )
       end
     end
@@ -52,8 +54,10 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
         assert_email_delivered_with(
           to: [nil: invitee.email],
-          subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team",
-          html_body: ~r/#{team_invitation.invitation_id}/
+          subject: @subject_prefix <> "You've been invited to a team",
+          html_body: ~r/#{team_invitation.invitation_id}/,
+          text_body:
+            ~r/#{Regex.escape("#{inviter.email} has invited you to join their team on #{Plausible.product_name()}.")}/
         )
       end
     end
@@ -77,7 +81,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
         assert_email_delivered_with(
           to: [nil: invitee.email],
-          subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+          subject: @subject_prefix <> "You've been invited to a team"
         )
       end
     end

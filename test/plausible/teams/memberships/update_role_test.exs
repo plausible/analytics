@@ -111,7 +111,9 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
 
     assert_email_delivered_with(
       to: [nil: user.email],
-      subject: @subject_prefix <> "Welcome to \"#{team.name}\" team"
+      subject: @subject_prefix <> "Welcome to your new team",
+      text_body:
+        ~r/#{Regex.escape("#{owner.email} has promoted you to a team member on #{Plausible.product_name()}.")}/
     )
   end
 
