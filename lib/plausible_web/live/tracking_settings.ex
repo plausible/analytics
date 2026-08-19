@@ -14,6 +14,12 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     "form_submissions" => "Form submission tracking"
   }
 
+  @special_goal_event_names %{
+    "outbound_links" => "Outbound Link: Click",
+    "file_downloads" => "File Download",
+    "form_submissions" => "Form: Submission"
+  }
+
   def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
@@ -29,7 +35,8 @@ defmodule PlausibleWeb.Live.TrackingSettings do
        tracker_script_configuration:
          PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(socket.assigns.site)
      )
-     |> assign(:installation_status, installation_status(socket.assigns.site))}
+     |> assign(:installation_status, installation_status(socket.assigns.site))
+     |> assign_goals()}
   end
 
   def render(assigns) do
@@ -71,6 +78,13 @@ defmodule PlausibleWeb.Live.TrackingSettings do
                 checked={@tracker_script_configuration.outbound_links}
                 phx-click="toggle"
                 phx-value-field="outbound_links"
+                data-confirm={
+                  toggle_confirmation_text(
+                    "outbound_links",
+                    @tracker_script_configuration.outbound_links,
+                    @goals
+                  )
+                }
               />
             </.measurement>
             <.measurement label="File downloads">
@@ -80,6 +94,13 @@ defmodule PlausibleWeb.Live.TrackingSettings do
                 checked={@tracker_script_configuration.file_downloads}
                 phx-click="toggle"
                 phx-value-field="file_downloads"
+                data-confirm={
+                  toggle_confirmation_text(
+                    "file_downloads",
+                    @tracker_script_configuration.file_downloads,
+                    @goals
+                  )
+                }
               />
             </.measurement>
             <.measurement label="Form submissions">
@@ -89,6 +110,13 @@ defmodule PlausibleWeb.Live.TrackingSettings do
                 checked={@tracker_script_configuration.form_submissions}
                 phx-click="toggle"
                 phx-value-field="form_submissions"
+                data-confirm={
+                  toggle_confirmation_text(
+                    "form_submissions",
+                    @tracker_script_configuration.form_submissions,
+                    @goals
+                  )
+                }
               />
             </.measurement>
           </.settings_section>
@@ -145,7 +173,29 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     {:noreply,
      socket
      |> assign(tracker_script_configuration: updated_configuration)
+     |> assign_goals()
      |> put_live_flash(:success, message)}
+  end
+
+  defp assign_goals(socket) do
+    assign(socket, :goals, Plausible.Goals.for_site(socket.assigns.site, preload_funnels?: true))
+  end
+
+  defp toggle_confirmation_text(_field, false, _goals), do: nil
+
+  defp toggle_confirmation_text(field, true, goals) do
+    event_name = Map.fetch!(@special_goal_event_names, field)
+    goal = Enum.find(goals, &(&1.event_name == event_name))
+
+    if goal && not Enum.empty?(goal.funnels) do
+      """
+      The goal:
+
+      #{goal}
+
+      is part of some funnel(s). If you disable this, the associated funnels will be either reduced or deleted completely. Are you sure you want to continue?
+      """
+    end
   end
 
   defp status_indicator(%{status: :completed} = assigns) do
