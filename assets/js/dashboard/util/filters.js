@@ -39,6 +39,11 @@ export const FILTER_OPERATIONS = {
   has_not_done: 'has_not_done'
 }
 
+const ENGAGED_SESSIONS_API_FILTER = [
+  'has_done',
+  ['is', 'event:name', ['engagement']]
+]
+
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.is]: 'is',
   [FILTER_OPERATIONS.isNot]: 'is not',
@@ -240,8 +245,11 @@ function remapApiFilterKey(apiFilterKey) {
   return apiFilterKey // maybe throw?
 }
 
-export function remapToApiFilters(filters) {
-  return filters.map(remapToApiFilter)
+export function remapToApiFilters(filters, engagedSessionsOnly = false) {
+  const apiFilters = filters.map(remapToApiFilter)
+  return engagedSessionsOnly
+    ? [...apiFilters, ENGAGED_SESSIONS_API_FILTER]
+    : apiFilters
 }
 
 export function remapFromApiFilters(apiFilters) {
@@ -260,8 +268,8 @@ export function remapFromApiFilters(apiFilters) {
   })
 }
 
-export function serializeApiFilters(filters) {
-  return JSON.stringify(remapToApiFilters(filters))
+export function serializeApiFilters(filters, engagedSessionsOnly = false) {
+  return JSON.stringify(remapToApiFilters(filters, engagedSessionsOnly))
 }
 
 function remapToApiFilter([operation, filterKey, clauses, ...modifiers]) {

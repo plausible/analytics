@@ -147,7 +147,10 @@ export function createCsvExportRequestBody(
   return {
     date_range: createDateRange(dashboardState),
     relative_date: dashboardState.date ? formatISO(dashboardState.date) : null,
-    filters: remapToApiFilters(dashboardState.filters),
+    filters: remapToApiFilters(
+      dashboardState.filters,
+      dashboardState.engagedSessionsOnly
+    ),
     include: { imports: dashboardState.with_imported },
     reports: reports
   }

@@ -1,4 +1,10 @@
-import React, { createContext, useMemo, useContext, ReactNode } from 'react'
+import React, {
+  createContext,
+  useMemo,
+  useContext,
+  ReactNode,
+  useState
+} from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -25,6 +31,7 @@ import { useSegmentsContext } from './filtering/segments-context'
 
 const dashboardStateContextDefaultValue = {
   dashboardState: dashboardStateDefaultValue,
+  setEngagedSessionsOnly: (_enabled: boolean) => {},
   otherSearch: {} as Record<string, unknown>,
   expandedSegment: null as (SavedSegment & { segment_data: SegmentData }) | null
 }
@@ -49,6 +56,7 @@ export default function DashboardStateContextProvider({
     SavedSegment & { segment_data: SegmentData }
   >('expandedSegment')
   const site = useSiteContext()
+  const [engagedSessionsOnly, setEngagedSessionsOnly] = useState(false)
 
   const {
     compare_from,
@@ -113,7 +121,8 @@ export default function DashboardStateContextProvider({
         : defaultValues.with_imported,
       filters,
       resolvedFilters,
-      labels: (labels as FilterClauseLabels) || defaultValues.labels
+      labels: (labels as FilterClauseLabels) || defaultValues.labels,
+      engagedSessionsOnly
     }
   }, [
     compare_from,
@@ -129,7 +138,8 @@ export default function DashboardStateContextProvider({
     with_imported,
     site,
     expandedSegment,
-    segmentsContext.segments
+    segmentsContext.segments,
+    engagedSessionsOnly
   ])
 
   useClearExpandedSegmentModeOnFilterClear({ expandedSegment, dashboardState })
@@ -148,6 +158,7 @@ export default function DashboardStateContextProvider({
     <DashboardStateContext.Provider
       value={{
         dashboardState,
+        setEngagedSessionsOnly,
         otherSearch,
         expandedSegment
       }}
