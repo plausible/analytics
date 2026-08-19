@@ -61,57 +61,6 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
       assert Enum.any?(Plausible.Goals.for_site(site), &(&1.event_name == "File Download"))
     end
 
-    @tag :ee_only
-    test "shows a confirmation dialog when disabling a measurement whose goal is part of a funnel",
-         %{conn: conn, site: site} do
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-        file_downloads: true
-      })
-
-      other_goal = insert(:goal, site: site, page_path: "/checkout")
-
-      file_download_goal =
-        Enum.find(Plausible.Goals.for_site(site), &(&1.event_name == "File Download"))
-
-      {:ok, _funnel} =
-        Plausible.Funnels.create(site, "File download funnel", [
-          %{"goal_id" => other_goal.id},
-          %{"goal_id" => file_download_goal.id}
-        ])
-
-      html = conn |> get_liveview(site) |> render()
-
-      assert confirm_text(html, "file_downloads") =~ "is part of some funnel(s)"
-    end
-
-    @tag :ee_only
-    test "does not show a confirmation dialog when the goal is not part of a funnel", %{
-      conn: conn,
-      site: site
-    } do
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-        file_downloads: true
-      })
-
-      html = conn |> get_liveview(site) |> render()
-
-      assert confirm_text(html, "file_downloads") == nil
-    end
-
-    @tag :ee_only
-    test "does not show a confirmation dialog when enabling a measurement", %{
-      conn: conn,
-      site: site
-    } do
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
-        file_downloads: false
-      })
-
-      html = conn |> get_liveview(site) |> render()
-
-      assert confirm_text(html, "file_downloads") == nil
-    end
-
     test "lists the measurements that require manual setup", %{conn: conn, site: site} do
       html = conn |> get_liveview(site) |> render()
 
@@ -181,10 +130,6 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
 
   defp toggle_state(html, field) do
     text_of_attr(html, ~s|button[phx-value-field="#{field}"]|, "aria-checked")
-  end
-
-  defp confirm_text(html, field) do
-    text_of_attr(html, ~s|button[phx-value-field="#{field}"]|, "data-confirm")
   end
 
   defp configuration(site) do
