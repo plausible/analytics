@@ -332,10 +332,6 @@ defmodule PlausibleWeb.Live.Installation do
       <Layouts.onboarding
         current_step={Flows.installation_step()}
         current_user={@current_user}
-        current_team={@current_team}
-        current_team_role={@current_team_role}
-        teams={@teams}
-        my_team={@my_team}
         flash={@flash}
       >
         {render_slot(@inner_block)}
