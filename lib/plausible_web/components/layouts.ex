@@ -138,10 +138,6 @@ defmodule PlausibleWeb.Layouts do
   end
 
   attr :current_user, :any, default: nil
-  attr :current_team, :any, default: nil
-  attr :current_team_role, :any, default: nil
-  attr :teams, :any, default: []
-  attr :my_team, :any, default: nil
   attr :current_step, :string, required: true
   attr :flash, :map, default: %{}
   slot :inner_block, required: true
@@ -153,10 +149,6 @@ defmodule PlausibleWeb.Layouts do
       global_notices?={false}
       trial_badge?={false}
       current_user={@current_user}
-      current_team={@current_team}
-      current_team_role={@current_team_role}
-      teams={@teams}
-      my_team={@my_team}
       flash={@flash}
     >
       <div class="flex-1 flex flex-col">
