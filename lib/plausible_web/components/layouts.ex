@@ -136,4 +136,45 @@ defmodule PlausibleWeb.Layouts do
     </.app>
     """
   end
+
+  attr :current_user, :any, default: nil
+  attr :current_team, :any, default: nil
+  attr :current_team_role, :any, default: nil
+  attr :teams, :any, default: []
+  attr :my_team, :any, default: nil
+  attr :flow, :atom, default: nil
+  attr :current_step, :string, default: nil
+  attr :flash, :map, default: %{}
+  slot :inner_block, required: true
+
+  def onboarding(assigns) do
+    ~H"""
+    <.app
+      footer?={false}
+      global_notices?={false}
+      trial_badge?={@flow != PlausibleWeb.Flows.register()}
+      current_user={@current_user}
+      current_team={@current_team}
+      current_team_role={@current_team_role}
+      teams={@teams}
+      my_team={@my_team}
+      flash={@flash}
+    >
+      <div class="flex-1 flex flex-col">
+        <div class="flex-1">
+          {render_slot(@inner_block)}
+        </div>
+        <div
+          :if={@flow == PlausibleWeb.Flows.register() and @current_step not in [nil, ""]}
+          class="pb-20 flex justify-center"
+        >
+          <PlausibleWeb.Components.FlowProgress.render
+            flow={@flow}
+            current_step={@current_step}
+          />
+        </div>
+      </div>
+    </.app>
+    """
+  end
 end
