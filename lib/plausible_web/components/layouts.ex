@@ -142,8 +142,7 @@ defmodule PlausibleWeb.Layouts do
   attr :current_team_role, :any, default: nil
   attr :teams, :any, default: []
   attr :my_team, :any, default: nil
-  attr :flow, :atom, default: nil
-  attr :current_step, :string, default: nil
+  attr :current_step, :string, required: true
   attr :flash, :map, default: %{}
   slot :inner_block, required: true
 
@@ -152,7 +151,7 @@ defmodule PlausibleWeb.Layouts do
     <.app
       footer?={false}
       global_notices?={false}
-      trial_badge?={@flow != PlausibleWeb.Flows.register()}
+      trial_badge?={false}
       current_user={@current_user}
       current_team={@current_team}
       current_team_role={@current_team_role}
@@ -164,12 +163,9 @@ defmodule PlausibleWeb.Layouts do
         <div class="flex-1">
           {render_slot(@inner_block)}
         </div>
-        <div
-          :if={@flow == PlausibleWeb.Flows.register() and @current_step not in [nil, ""]}
-          class="pb-20 flex justify-center"
-        >
+        <div class="pb-20 flex justify-center">
           <PlausibleWeb.Components.FlowProgress.render
-            flow={@flow}
+            steps={PlausibleWeb.Flows.onboarding_steps()}
             current_step={@current_step}
           />
         </div>

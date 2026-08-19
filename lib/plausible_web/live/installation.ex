@@ -93,7 +93,6 @@ defmodule PlausibleWeb.Live.Installation do
        site: site,
        flow: flow,
        return_to: params["return_to"],
-       current_step: "Install Plausible",
        heading: heading,
        subtitle: subtitle
      )}
@@ -331,8 +330,7 @@ defmodule PlausibleWeb.Live.Installation do
     if assigns.flow == Flows.register() do
       ~H"""
       <Layouts.onboarding
-        flow={@flow}
-        current_step={@current_step}
+        current_step={Flows.installation_step()}
         current_user={@current_user}
         current_team={@current_team}
         current_team_role={@current_team_role}
