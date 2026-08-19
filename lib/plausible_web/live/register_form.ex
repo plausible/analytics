@@ -10,6 +10,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Teams
   alias PlausibleWeb.Layouts
 
+  @signup_error_categories %{
+    name: "name",
+    email: "email",
+    password: "password"
+  }
+
   def mount(params, _session, socket) do
     socket =
       socket
@@ -279,7 +285,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     error = "Please complete the captcha to register"
 
     socket
-    |> assign(captcha_error: error, signup_previous_error: error)
+    |> assign(captcha_error: error, signup_previous_error: "captcha")
     |> PlausibleWeb.Components.Captcha.reset()
   end
 
@@ -310,7 +316,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   defp signup_error(changeset) do
     case List.first(changeset.errors) do
-      {_field, {message, _options}} -> message
+      {field, _error} -> Map.get(@signup_error_categories, field, "unknown")
       nil -> "unknown"
     end
   end

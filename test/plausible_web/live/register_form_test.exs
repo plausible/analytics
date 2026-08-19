@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert_push_event(lv, "reset-frc-captcha", %{})
 
       on_ee do
-        assert_signup_tracking(html, "Please complete the captcha to register")
+        assert_signup_tracking(html, "captcha")
       end
 
       refute Repo.one(User)
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert_push_event(lv, "reset-frc-captcha", %{})
 
       on_ee do
-        assert_signup_tracking(html, "has already been taken")
+        assert_signup_tracking(html, "email")
       end
     end
   end
@@ -293,10 +293,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
   end
 
   on_ee do
-    defp assert_signup_tracking(html, previous_error) do
-      assert html =~ "Signup"
-      assert html =~ "previous_error"
-      assert html =~ previous_error
+    defp assert_signup_tracking(html, previous_error_category) do
+      options = Jason.encode!(%{"props" => %{"previous_error" => previous_error_category}})
+
+      assert text_of_attr(html, "#register-form", "onsubmit") ==
+               "window.plausible('Signup', #{options})"
     end
   end
 
