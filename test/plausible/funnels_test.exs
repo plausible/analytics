@@ -379,6 +379,9 @@ defmodule Plausible.FunnelsTest do
 
         assert Enum.at(non_strict_funnel_data.steps, 2).visitors == 1
         assert Enum.at(strict_funnel_data.steps, 2).visitors == 0
+
+        assert non_strict_funnel_data.strict_order == false
+        assert strict_funnel_data.strict_order == true
       end
 
       test "funnels can be evaluated even where there are no visits yet", %{

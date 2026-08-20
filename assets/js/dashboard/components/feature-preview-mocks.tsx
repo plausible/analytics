@@ -26,34 +26,29 @@ export function PropertiesPreviewMock() {
 }
 
 export function FunnelsPreviewMock() {
-  const steps = [{ visitors: 100 }, { visitors: 55 }, { visitors: 24 }]
+  const steps = [100, 55, 32, 12]
 
   return (
-    <div className="size-full flex flex-col pt-5">
-      <div className="h-4 w-32 bg-gray-400/60 dark:bg-gray-600 rounded-md mb-8" />
-
-      <div className="flex-1 flex items-end justify-between lg:justify-around gap-6">
-        {steps.map((step, i) => (
+    <div className="size-full flex flex-col gap-4 pt-4">
+      <div className="flex-1 flex gap-4">
+        {steps.map((fill, i) => (
           <div
             key={i}
-            className="relative h-full flex-1 max-w-[160px] flex flex-col justify-end rounded-md overflow-hidden"
+            className={classNames(
+              'flex-1 flex-col rounded-lg border border-gray-400 dark:border-gray-500 overflow-hidden',
+              i === 3 ? 'hidden lg:flex' : 'flex'
+            )}
           >
-            <div
-              className="w-full bg-indigo-100 dark:bg-gray-700"
-              style={{ height: `${100 - step.visitors}%` }}
-            />
-            <div
-              className="w-full bg-indigo-500"
-              style={{ height: `${step.visitors}%` }}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-around gap-6 pt-4 pb-2">
-        {steps.map((_, i) => (
-          <div key={i} className="flex-1 max-w-[160px] flex justify-center">
-            <div className="h-3 w-3/5 bg-gray-400/70 dark:bg-gray-600 rounded-md" />
+            <div className="flex flex-col gap-3 px-3 pt-3 pb-5">
+              <div className="h-3 w-24 bg-gray-400/70 dark:bg-gray-500/80 rounded" />
+              <div className="h-3 w-12 bg-gray-400/70 dark:bg-gray-500/80 rounded" />
+            </div>
+            <div className="relative flex-1">
+              <div
+                className="absolute inset-x-0 rounded-lg bottom-0 bg-indigo-200/70 dark:bg-indigo-500/30"
+                style={{ height: `${fill}%` }}
+              />
+            </div>
           </div>
         ))}
       </div>

@@ -82,3 +82,7 @@ export function percentageFormatter(number: number | null): string {
     return '-'
   }
 }
+
+export function rateFormatter(rate: string): string {
+  return percentageFormatter(Number(rate))
+}
