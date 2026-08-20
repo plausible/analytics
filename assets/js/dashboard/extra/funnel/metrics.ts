@@ -18,7 +18,7 @@ export type FunnelResponse = {
   never_entering_visitors_percentage: string
 }
 
-export type StepOutcome = {
+type StepOutcome = {
   visitors: number
   rate: string
 }
