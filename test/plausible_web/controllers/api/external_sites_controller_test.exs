@@ -1181,7 +1181,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert_email_delivered_with(
           to: [nil: "test@example.com"],
-          subject: ~r/You've been invited to #{site.domain}/
+          subject: ~r/You've been invited to a site/
         )
       end
 

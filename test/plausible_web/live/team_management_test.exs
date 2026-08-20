@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
   describe "live" do
     setup [:create_user, :log_in, :create_team, :setup_team]
 
-    test "renders member, immediately delivers invitation", %{conn: conn, user: user, team: team} do
+    test "renders member, immediately delivers invitation", %{conn: conn, user: user} do
       {lv, html} = get_liveview(conn, with_html?: true)
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "#{user.name}"
@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+        subject: @subject_prefix <> "You've been invited to a team"
       )
     end
 
@@ -364,7 +364,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert_email_delivered_with(
         to: [nil: member2.email],
-        subject: @subject_prefix <> "Welcome to \"#{team.name}\" team"
+        subject: @subject_prefix <> "Welcome to your new team"
       )
     end
 
