@@ -994,15 +994,24 @@ test('funnels', async ({ page, request }) => {
 
     await expect(report.getByRole('heading')).toHaveText('Shopping 11 Funnel')
 
-    await expect(report.getByText('3-step flexible funnel')).toBeVisible()
+    await expect(report.getByText('3-step funnel')).toBeVisible()
 
-    await expect(report.getByText('CR: 33.3%')).toBeVisible()
+    await expect(report.getByText('Sequential')).toBeVisible()
+
+    await expect(report.getByText(/Conversion rate:\s*33\.3%/)).toBeVisible()
 
     const steps = report.locator('[data-testid^="funnel-step-"]')
     await expect(steps).toHaveCount(3)
     await expect(steps.nth(0)).toContainText('Visit /products')
     await expect(steps.nth(0)).toContainText('100%')
     await expect(steps.nth(2)).toContainText('33.3%')
+
+    const outcome = steps.nth(1).getByRole('button')
+    await expect(outcome).toHaveAccessibleName(/continued .* dropped off/)
+
+    await expect(outcome).not.toHaveAttribute('data-open')
+    await outcome.click()
+    await expect(outcome).toHaveAttribute('data-open', 'true')
   })
 
   await test.step('loading more', async () => {
