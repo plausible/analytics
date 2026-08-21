@@ -1360,14 +1360,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "renders looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      assert resp =~ "Google Looker Studio Connector"
+      assert resp =~ "Google Data Studio Connector"
     end
 
     @tag :ce_build_only
     test "does not render looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      refute resp =~ "Google Looker Studio Connector"
+      refute resp =~ "Google Data Studio Connector"
     end
   end
 
