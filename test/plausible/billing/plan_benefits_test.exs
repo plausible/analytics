@@ -60,7 +60,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Goals and custom events",
                  "Custom Properties",
                  "Stats API (600 requests per hour)",
-                 "Looker Studio Connector",
+                 "Data Studio Connector",
                  "Shared Links",
                  "Embedded Dashboards"
                ]
@@ -81,7 +81,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "5 years of data retention",
                "Custom Properties",
                "Stats API (600 requests per hour)",
-               "Looker Studio Connector",
+               "Data Studio Connector",
                "Ecommerce revenue attribution",
                "Funnels and user journeys",
                "Consolidated View"
@@ -102,7 +102,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Ecommerce revenue attribution",
                "Funnels and user journeys",
                "Stats API (600 requests per hour)",
-               "Looker Studio Connector",
+               "Data Studio Connector",
                "Shared Segments",
                "Shared Annotations",
                "Consolidated View"
