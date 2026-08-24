@@ -88,10 +88,17 @@ defmodule Plausible.TeamDeletionScheduleTest do
                :scheduled,
                :first_notice_sent,
                :reminder_sent,
-               :deleted,
+               :completed,
                :cancelled,
                :snoozed
              ]
+    end
+
+    test "terminal_statuses/0 and active_statuses/0 partition statuses/0" do
+      terminal = TeamDeletionSchedule.terminal_statuses()
+      active = TeamDeletionSchedule.active_statuses()
+
+      assert Enum.sort(terminal ++ active) == Enum.sort(TeamDeletionSchedule.statuses())
     end
   end
 
@@ -158,7 +165,7 @@ defmodule Plausible.TeamDeletionScheduleTest do
       assert {:ok, _} = Repo.insert(struct(TeamDeletionSchedule, base))
     end
 
-    test "allows a new schedule once the previous one is deleted" do
+    test "allows a new schedule once the previous one is completed" do
       team = insert(:team)
       today = Date.utc_today()
 
@@ -171,7 +178,7 @@ defmodule Plausible.TeamDeletionScheduleTest do
       }
 
       assert {:ok, _} =
-               struct(TeamDeletionSchedule, Map.put(base, :status, :deleted))
+               struct(TeamDeletionSchedule, Map.put(base, :status, :completed))
                |> Repo.insert()
 
       assert {:ok, _} = Repo.insert(struct(TeamDeletionSchedule, base))
