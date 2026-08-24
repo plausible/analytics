@@ -215,7 +215,7 @@ function StepOutcomes({
       onClick={() => setOpen((shown) => !shown)}
       style={{ left: OUTCOME_INSET_PX, bottom: OUTCOME_INSET_PX }}
       className={classNames(
-        'group/outcome absolute overflow-hidden rounded-md text-left cursor-pointer bg-white/70 dark:bg-gray-900/60 backdrop-blur-xs',
+        'group/outcome absolute overflow-hidden rounded-md text-left cursor-default bg-white/70 dark:bg-gray-900/60 backdrop-blur-xs',
         'ring-1 ring-gray-900/5 dark:ring-white/10 shadow-xs',
         'w-[var(--outcome-w,max-content)] h-[var(--outcome-h,auto)]',
         'transition-[width,height] duration-200 ease-out',
