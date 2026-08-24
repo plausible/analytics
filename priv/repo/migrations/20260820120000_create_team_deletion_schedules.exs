@@ -22,14 +22,14 @@ defmodule Plausible.Repo.Migrations.CreateTeamDeletionSchedules do
     create index(:team_deletion_schedules, [:deletion_date])
     create index(:team_deletion_schedules, [:first_notice_due_date])
 
-    # Only one active (i.e. not yet cancelled/deleted) schedule per team - a team
+    # Only one active (i.e. not yet cancelled/completed) schedule per team - a team
     # can churn, come back, and churn again over time, so this isn't a plain
     # unique index on team_id.
     create index(
              :team_deletion_schedules,
              [:team_id],
              unique: true,
-             where: "status NOT IN ('cancelled', 'deleted')",
+             where: "status NOT IN ('cancelled', 'completed')",
              name: :one_active_schedule_per_team
            )
   end
