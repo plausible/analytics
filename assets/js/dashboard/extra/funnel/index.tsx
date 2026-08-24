@@ -78,29 +78,35 @@ function stepOutcomes(
   finalStep: boolean
 ): Outcome[] {
   const continued = rateFormatter(step.continued.rate)
-  const droppedOff = rateFormatter(step.droppedOff.rate)
   const continuedVerb = entryStep
     ? 'entered'
     : finalStep
       ? 'converted'
       : 'continued'
 
-  return [
+  const outcomes: Outcome[] = [
     {
       kind: 'continued',
       symbol: finalStep ? '✓' : '→',
       rate: continued,
       detail: `${continued} ${continuedVerb}`,
       count: `(${numberLongFormatter(step.continued.visitors)})`
-    },
-    {
-      kind: 'droppedOff',
-      symbol: entryStep ? '✕' : '↓',
-      rate: droppedOff,
-      detail: `${droppedOff} ${entryStep ? 'didn’t' : 'dropped off'}`,
-      count: `(${numberLongFormatter(step.droppedOff.visitors)})`
     }
   ]
+
+  if (!entryStep) {
+    const droppedOff = rateFormatter(step.droppedOff.rate)
+
+    outcomes.push({
+      kind: 'droppedOff',
+      symbol: '↓',
+      rate: droppedOff,
+      detail: `${droppedOff} dropped off`,
+      count: `(${numberLongFormatter(step.droppedOff.visitors)})`
+    })
+  }
+
+  return outcomes
 }
 
 function OutcomeText({
@@ -121,16 +127,7 @@ function OutcomeText({
           : 'text-gray-900 dark:text-gray-100'
       )}
     >
-      <span
-        className={classNames(
-          'font-semibold',
-          dropoff
-            ? 'text-red-600 dark:text-red-500'
-            : 'text-green-600 dark:text-green-500'
-        )}
-      >
-        {outcome.symbol}
-      </span>
+      <span className="font-semibold">{outcome.symbol}</span>
       <span className="flex flex-wrap gap-x-1">
         <span className="whitespace-nowrap">
           {detailed ? outcome.detail : outcome.rate}
@@ -297,7 +294,7 @@ function StepColumn({
   return (
     <div
       data-testid={`funnel-step-${index}`}
-      className="group/step relative flex flex-col hover:z-20 focus-within:z-20"
+      className="group/step flex flex-col"
       style={{ gap: BAR_TOP_GAP }}
     >
       <div className="relative flex flex-col gap-0.5 pl-2">
