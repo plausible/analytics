@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
