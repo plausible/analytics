@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Redesigned onboarding pages (add site, installation)
 - Moved tracking options (outbound links, file downloads, form submissions) from the installation page to the general site settings, where they can be toggled without going through the installation flow
 - Replaced HCaptcha with Friendly Captcha
+- Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
 
 ### Fixed
 
