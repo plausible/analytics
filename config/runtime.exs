@@ -846,6 +846,9 @@ cloud_cron = [
   {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
   # Every midnight
   {"0 0 * * *", Plausible.Workers.LockSites},
+  # Daily at 7, ahead of AcceptTrafficUntil/SendTrialNotifications
+  # TODO: enable
+  # {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
   # Every Tuesday, 3:00 UTC
@@ -881,6 +884,7 @@ cloud_queues = [
   check_usage: 1,
   notify_annual_renewal: 1,
   lock_sites: 1,
+  scan_inactive_teams: 1,
   legacy_time_on_page_cutoff: 1,
   purge_cdn_cache: 1,
   sso_domain_ownership_verification: 32,

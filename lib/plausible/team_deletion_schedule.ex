@@ -7,7 +7,10 @@ defmodule Plausible.TeamDeletionSchedule do
   use Ecto.Schema
 
   @categories [:expired_trial, :expired_subscription]
-  @statuses [:scheduled, :first_notice_sent, :reminder_sent, :deleted, :cancelled, :snoozed]
+  @statuses [:scheduled, :first_notice_sent, :reminder_sent, :completed, :cancelled, :snoozed]
+
+  # Indicate permanent end of schedule lifecycle
+  @terminal_statuses [:cancelled, :completed]
 
   @type t() :: %__MODULE__{}
 
@@ -33,4 +36,10 @@ defmodule Plausible.TeamDeletionSchedule do
 
   @spec statuses() :: [atom()]
   def statuses, do: @statuses
+
+  @spec terminal_statuses() :: [atom()]
+  def terminal_statuses, do: @terminal_statuses
+
+  @spec active_statuses() :: [atom()]
+  def active_statuses, do: @statuses -- @terminal_statuses
 end
