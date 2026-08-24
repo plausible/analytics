@@ -6,6 +6,7 @@ import React, {
   useState
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 
 import * as api from '../../api'
@@ -13,6 +14,7 @@ import LazyLoader from '../../components/lazy-loader'
 import { DashboardState } from '../../dashboard-state'
 import { getStaleTime } from '../../hooks/api-client'
 import { numberLongFormatter, rateFormatter } from '../../util/number-formatter'
+import { Tooltip } from '../../util/tooltip'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { FunnelResponse, StepMetrics, stepMetrics } from './metrics'
@@ -372,7 +374,22 @@ function FunnelHeader({
             |
           </span>
 
-          <span>{funnel.strict_order ? 'Strict' : 'Sequential'}</span>
+          <div className="flex items-center gap-1">
+            {funnel.strict_order ? 'Strict' : 'Sequential'}
+            <Tooltip
+              className="flex"
+              containerRef={{ current: document.body }}
+              info={
+                <span>
+                  {funnel.strict_order
+                    ? 'No other activity is allowed between steps.'
+                    : 'Other activity is allowed between steps.'}
+                </span>
+              }
+            >
+              <InformationCircleIcon className="size-3.5" />
+            </Tooltip>
+          </div>
 
           <span className="text-gray-300 dark:text-gray-600 select-none">
             |
