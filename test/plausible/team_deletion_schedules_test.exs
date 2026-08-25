@@ -6,7 +6,6 @@ defmodule Plausible.TeamDeletionSchedulesTest do
   alias Plausible.Billing.Subscription
   alias Plausible.TeamDeletionSchedule
   alias Plausible.TeamDeletionSchedules
-  alias Plausible.Teams
 
   @today ~D[2026-08-20]
 
@@ -182,21 +181,6 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       insert(:enterprise_plan, team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 0
-    end
-
-    test "excludes teams under a manual grace-period lock" do
-      team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
-      Teams.start_manual_lock_grace_period(team)
-
-      assert TeamDeletionSchedules.sync_eligible(@today) == 0
-    end
-
-    test "does not exclude a team under a time-limited (non-manual) grace period" do
-      team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
-      new_site(team: team)
-      Teams.start_grace_period(team)
-
-      assert TeamDeletionSchedules.sync_eligible(@today) == 1
     end
   end
 

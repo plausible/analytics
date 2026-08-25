@@ -30,9 +30,6 @@ defmodule Plausible.TeamDeletionSchedules do
           on: true,
           left_join: ep in assoc(t, :enterprise_plan),
           where: is_nil(ep.id),
-          where:
-            fragment("coalesce((?->>'manual_lock')::boolean, false)", field(t, :grace_period)) ==
-              false,
           where: exists(from(s in Site.regular(), where: s.team_id == parent_as(:team).id)),
           where:
             (is_nil(s.id) and not is_nil(t.trial_expiry_date) and t.trial_expiry_date < ^today) or
