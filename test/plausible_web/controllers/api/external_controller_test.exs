@@ -1278,7 +1278,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              }
     end
 
-    test "salts rotating once does not", %{conn: conn, site: site} do
+    test "salts rotating once keeps the same session", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       Plausible.Session.WriteBuffer.flush()
       Plausible.Session.Salts.rotate()
