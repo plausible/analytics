@@ -10,6 +10,7 @@ defmodule Plausible.TeamDeletionSchedules do
   alias Plausible.Billing.Subscription
   alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
+  alias Plausible.Site
   alias Plausible.TeamDeletionSchedule
   alias Plausible.Teams
   alias Plausible.Teams.DeletionSchedule
@@ -32,6 +33,7 @@ defmodule Plausible.TeamDeletionSchedules do
           where:
             fragment("coalesce((?->>'manual_lock')::boolean, false)", field(t, :grace_period)) ==
               false,
+          where: exists(from(s in Site.regular(), where: s.team_id == parent_as(:team).id)),
           where:
             (is_nil(s.id) and not is_nil(t.trial_expiry_date) and t.trial_expiry_date < ^today) or
               (not is_nil(s.id) and

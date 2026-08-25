@@ -13,6 +13,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
   describe "sync_eligible/1 - expired trials" do
     test "schedules a team whose trial expired with no subscription" do
       team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      new_site(team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
 
@@ -38,6 +39,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
     test "marks a long-expired trial as backlog, due today" do
       team = insert(:team, trial_expiry_date: Date.shift(@today, day: -400))
+      new_site(team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
 
@@ -48,6 +50,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
     test "does not mark a recently-expired trial as backlog" do
       team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      new_site(team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
 
@@ -55,11 +58,18 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       refute schedule.is_backlog
       assert schedule.first_notice_due_date == Date.shift(team.trial_expiry_date, day: 30)
     end
+
+    test "does not schedule a team with an expired trial but no sites" do
+      insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+
+      assert TeamDeletionSchedules.sync_eligible(@today) == 0
+    end
   end
 
   describe "sync_eligible/1 - churned subscriptions" do
     test "schedules a team with a deleted subscription past its paid period" do
       team = insert(:team)
+      new_site(team: team)
 
       insert(:subscription,
         team: team,
@@ -76,6 +86,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
     test "schedules a team with a paused subscription past its paid period" do
       team = insert(:team)
+      new_site(team: team)
 
       insert(:subscription,
         team: team,
@@ -89,6 +100,18 @@ defmodule Plausible.TeamDeletionSchedulesTest do
                team_id: team.id,
                category: :expired_subscription
              )
+    end
+
+    test "does not schedule a churned subscription team with no sites" do
+      team = insert(:team)
+
+      insert(:subscription,
+        team: team,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Date.shift(@today, day: -1)
+      )
+
+      assert TeamDeletionSchedules.sync_eligible(@today) == 0
     end
 
     test "does not schedule a subscription whose paid period ends today" do
@@ -170,6 +193,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
     test "does not exclude a team under a time-limited (non-manual) grace period" do
       team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      new_site(team: team)
       Teams.start_grace_period(team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
@@ -178,7 +202,8 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
   describe "sync_eligible/1 - idempotency" do
     test "does not create a duplicate schedule on a second run" do
-      insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      new_site(team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
       assert TeamDeletionSchedules.sync_eligible(@today) == 0
@@ -191,6 +216,21 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       insert(:team_deletion_schedule, team: team, status: :first_notice_sent)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 0
+    end
+
+    test "does not re-schedule a completed team with no sites left to delete" do
+      team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      insert(:team_deletion_schedule, team: team, status: :completed)
+
+      assert TeamDeletionSchedules.sync_eligible(@today) == 0
+    end
+
+    test "re-schedules a completed team if it still has sites (e.g. a partial deletion retry)" do
+      team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+      new_site(team: team)
+      insert(:team_deletion_schedule, team: team, status: :completed)
+
+      assert TeamDeletionSchedules.sync_eligible(@today) == 1
     end
   end
 
