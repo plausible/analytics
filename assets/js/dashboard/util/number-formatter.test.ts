@@ -26,7 +26,20 @@ describe('rateFormatter()', () => {
     expect(rateFormatter('100')).toEqual('100%')
     expect(rateFormatter('33.33')).toEqual('33.3%')
     expect(rateFormatter('50.0')).toEqual('50%')
+  })
+
+  it('keeps two decimals for a rate that is close to an extreme', () => {
+    expect(rateFormatter('0.01')).toEqual('0.01%')
     expect(rateFormatter('0.05')).toEqual('0.05%')
+    expect(rateFormatter('99.95')).toEqual('99.95%')
+    expect(rateFormatter('99.99')).toEqual('99.99%')
+  })
+
+  it('keeps a pair of rates apart from 0% and 100%', () => {
+    expect([rateFormatter('0.01'), rateFormatter('99.99')]).toEqual([
+      '0.01%',
+      '99.99%'
+    ])
   })
 })
 
