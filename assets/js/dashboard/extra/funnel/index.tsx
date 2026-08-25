@@ -1,10 +1,4 @@
-import React, {
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState
-} from 'react'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
@@ -18,6 +12,7 @@ import { Tooltip } from '../../util/tooltip'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { FunnelResponse, StepMetrics, stepMetrics } from './metrics'
+import { StepOutcomes } from './outcome-box'
 
 const FUNNEL_REPORT_ID = 'funnel'
 
@@ -35,7 +30,6 @@ const MIN_COLUMN_WIDTH = '12rem'
 
 const BAR_MIN_HEIGHT = '8px'
 const BAR_TOP_GAP = '0.75rem'
-const OUTCOME_INSET_PX = 4
 
 function gridTemplateColumns(stepCount: number): string {
   if (stepCount <= VISIBLE_COLUMNS) {
@@ -64,190 +58,6 @@ function userFacingMessage(error: Error): string | null {
     payload.level === 'normal'
 
   return written && error.message ? error.message : null
-}
-
-type Outcome = {
-  kind: 'continued' | 'droppedOff'
-  symbol: string
-  rate: string
-  detail: string
-  count: string
-}
-
-function stepOutcomes(
-  step: StepMetrics,
-  entryStep: boolean,
-  finalStep: boolean
-): Outcome[] {
-  const continued = rateFormatter(step.continued.rate)
-  const continuedVerb = entryStep
-    ? 'entered'
-    : finalStep
-      ? 'converted'
-      : 'continued'
-
-  const outcomes: Outcome[] = [
-    {
-      kind: 'continued',
-      symbol: finalStep ? '✓' : '→',
-      rate: continued,
-      detail: `${continued} ${continuedVerb}`,
-      count: `(${numberLongFormatter(step.continued.visitors)})`
-    }
-  ]
-
-  if (!entryStep) {
-    const droppedOff = rateFormatter(step.droppedOff.rate)
-
-    outcomes.push({
-      kind: 'droppedOff',
-      symbol: '↓',
-      rate: droppedOff,
-      detail: `${droppedOff} dropped off`,
-      count: `(${numberLongFormatter(step.droppedOff.visitors)})`
-    })
-  }
-
-  return outcomes
-}
-
-function OutcomeText({
-  outcome,
-  detailed
-}: {
-  outcome: Outcome
-  detailed: boolean
-}): ReactNode {
-  const dropoff = outcome.kind === 'droppedOff'
-
-  return (
-    <span
-      className={classNames(
-        'flex items-start gap-1 font-medium',
-        dropoff
-          ? 'text-gray-500 dark:text-gray-400'
-          : 'text-gray-900 dark:text-gray-100'
-      )}
-    >
-      <span className="font-semibold">{outcome.symbol}</span>
-      <span className="flex flex-wrap gap-x-1">
-        <span className="whitespace-nowrap">
-          {detailed ? outcome.detail : outcome.rate}
-        </span>
-        {detailed && <span className="whitespace-nowrap">{outcome.count}</span>}
-      </span>
-    </span>
-  )
-}
-
-// CSS cannot transition to an automatic size, so this measures the compact and
-// the expanded contents and publishes both sizes in pixels.
-function useOutcomeSize(measureKey: string) {
-  const box = useRef<HTMLButtonElement>(null)
-  const compact = useRef<HTMLDivElement>(null)
-  const expanded = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const boxElement = box.current
-    const compactElement = compact.current
-    const expandedElement = expanded.current
-    const plot = boxElement?.parentElement
-
-    if (!boxElement || !compactElement || !expandedElement || !plot) {
-      return
-    }
-
-    const publish = (): void => {
-      const expandedAt = (width: string): DOMRect => {
-        expandedElement.style.width = width
-        return expandedElement.getBoundingClientRect()
-      }
-
-      const unwrapped = expandedAt('max-content')
-      const room = plot.clientWidth - 2 * OUTCOME_INSET_PX
-      const grown =
-        unwrapped.width <= room ? unwrapped : expandedAt('min-content')
-      expandedElement.style.width = ''
-
-      const collapsed = compactElement.getBoundingClientRect()
-
-      boxElement.style.setProperty('--outcome-w', `${collapsed.width}px`)
-      boxElement.style.setProperty('--outcome-h', `${collapsed.height}px`)
-      boxElement.style.setProperty('--outcome-grown-w', `${grown.width}px`)
-      boxElement.style.setProperty('--outcome-grown-h', `${grown.height}px`)
-    }
-
-    publish()
-
-    // Watching the expanded element would loop, because publish resizes it.
-    const observer = new ResizeObserver(publish)
-    observer.observe(plot)
-    observer.observe(compactElement)
-
-    return () => observer.disconnect()
-  }, [measureKey])
-
-  return { box, compact, expanded }
-}
-
-function StepOutcomes({
-  step,
-  entryStep,
-  finalStep
-}: {
-  step: StepMetrics
-  entryStep: boolean
-  finalStep: boolean
-}): ReactNode {
-  const [open, setOpen] = useState(false)
-
-  const outcomes = stepOutcomes(step, entryStep, finalStep)
-  const label = outcomes
-    .map(({ detail, count }) => `${detail} ${count}`)
-    .join(', ')
-
-  const { box, compact, expanded } = useOutcomeSize(label)
-
-  return (
-    <button
-      ref={box}
-      type="button"
-      aria-label={label}
-      data-open={open || undefined}
-      onClick={() => setOpen((shown) => !shown)}
-      style={{ left: OUTCOME_INSET_PX, bottom: OUTCOME_INSET_PX }}
-      className={classNames(
-        'group/outcome absolute overflow-hidden rounded-md text-left cursor-default bg-white/70 dark:bg-gray-900/60 backdrop-blur-xs',
-        'ring-1 ring-gray-900/5 dark:ring-white/10 shadow-xs',
-        'w-[var(--outcome-w,max-content)] h-[var(--outcome-h,auto)]',
-        'transition-[width,height] duration-200 ease-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40',
-        'group-hover/step:w-[var(--outcome-grown-w)] group-hover/step:h-[var(--outcome-grown-h)]',
-        'focus-visible:w-[var(--outcome-grown-w)] focus-visible:h-[var(--outcome-grown-h)]',
-        'data-open:w-[var(--outcome-grown-w)] data-open:h-[var(--outcome-grown-h)]'
-      )}
-    >
-      <div
-        ref={compact}
-        aria-hidden="true"
-        className="flex items-center gap-1.5 w-max px-1.5 py-0.5 text-xs leading-4 whitespace-nowrap transition-opacity duration-200 starting:opacity-0 group-hover/step:opacity-0 group-focus-visible/outcome:opacity-0 group-data-open/outcome:opacity-0"
-      >
-        {outcomes.map((outcome) => (
-          <OutcomeText key={outcome.kind} outcome={outcome} detailed={false} />
-        ))}
-      </div>
-
-      <div
-        ref={expanded}
-        aria-hidden="true"
-        className="absolute top-0 left-0 flex flex-col gap-0.5 w-[var(--outcome-grown-w,max-content)] px-1.5 py-0.5 text-xs leading-4 opacity-0 transition-opacity duration-150 group-hover/step:opacity-100 group-focus-visible/outcome:opacity-100 group-data-open/outcome:opacity-100"
-      >
-        {outcomes.map((outcome) => (
-          <OutcomeText key={outcome.kind} outcome={outcome} detailed={true} />
-        ))}
-      </div>
-    </button>
-  )
 }
 
 function StepHeader({ step }: { step: StepMetrics }): ReactNode {
