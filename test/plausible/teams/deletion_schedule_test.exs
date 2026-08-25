@@ -8,8 +8,8 @@ defmodule Plausible.Teams.DeletionScheduleTest do
       assert DeletionSchedule.deletion_offset_days(:expired_trial) == 60
     end
 
-    test "returns the subscription offset for :expired_subscription" do
-      assert DeletionSchedule.deletion_offset_days(:expired_subscription) == 180
+    test "returns the subscription offset for :churned_subscription" do
+      assert DeletionSchedule.deletion_offset_days(:churned_subscription) == 180
     end
   end
 
@@ -19,7 +19,7 @@ defmodule Plausible.Teams.DeletionScheduleTest do
     end
 
     test "adds the subscription offset to the expiry date" do
-      assert DeletionSchedule.deletion_date(:expired_subscription, ~D[2026-01-01]) ==
+      assert DeletionSchedule.deletion_date(:churned_subscription, ~D[2026-01-01]) ==
                ~D[2026-06-30]
     end
   end

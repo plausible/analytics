@@ -1,6 +1,7 @@
 defmodule Plausible.TeamDeletionSchedules do
   @moduledoc """
-  Context for scheduling inactive teams deletion (trial or subscription expired).
+  Context for scheduling inactive teams deletion (trial expired or subscription
+  churned).
   """
 
   import Ecto.Query
@@ -31,11 +32,7 @@ defmodule Plausible.TeamDeletionSchedules do
           left_join: ep in assoc(t, :enterprise_plan),
           where: is_nil(ep.id),
           where: exists(from(s in Site.regular(), where: s.team_id == parent_as(:team).id)),
-          where:
-            (is_nil(s.id) and not is_nil(t.trial_expiry_date) and t.trial_expiry_date < ^today) or
-              (not is_nil(s.id) and
-                 s.status in [^Subscription.Status.deleted(), ^Subscription.Status.paused()] and
-                 s.paddle_plan_id != "free_10k" and s.next_bill_date < ^today),
+          where: ^eligible_category?(today),
           where:
             not exists(
               from(sch in TeamDeletionSchedule,
@@ -87,6 +84,26 @@ defmodule Plausible.TeamDeletionSchedules do
     end
   end
 
+  defp eligible_category?(today) do
+    dynamic(^expired_trial?(today) or ^churned_subscription?(today))
+  end
+
+  defp expired_trial?(today) do
+    dynamic(
+      [t, s],
+      is_nil(s.id) and not is_nil(t.trial_expiry_date) and t.trial_expiry_date < ^today
+    )
+  end
+
+  defp churned_subscription?(today) do
+    dynamic(
+      [_t, s],
+      not is_nil(s.id) and
+        s.status in [^Subscription.Status.deleted(), ^Subscription.Status.paused()] and
+        s.paddle_plan_id != "free_10k" and s.next_bill_date < ^today
+    )
+  end
+
   defp terminal_statuses_index_predicate do
     values = Enum.map_join(TeamDeletionSchedule.terminal_statuses(), ", ", &"'#{&1}'")
     "(team_id) WHERE status NOT IN (#{values})"
@@ -95,7 +112,7 @@ defmodule Plausible.TeamDeletionSchedules do
   defp build_schedule_row(candidate, today, now) do
     {category, expiry_date} =
       if candidate.has_subscription? do
-        {:expired_subscription, candidate.next_bill_date}
+        {:churned_subscription, candidate.next_bill_date}
       else
         {:expired_trial, candidate.trial_expiry_date}
       end

@@ -6,7 +6,7 @@ defmodule Plausible.TeamDeletionSchedule do
 
   use Ecto.Schema
 
-  @categories [:expired_trial, :expired_subscription]
+  @categories [:expired_trial, :churned_subscription]
   @statuses [:scheduled, :first_notice_sent, :reminder_sent, :completed, :cancelled, :snoozed]
 
   # Indicate permanent end of schedule lifecycle
