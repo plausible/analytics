@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user.email)
     |> tag("cancelled-email")
-    |> subject("Mind sharing your thoughts on Plausible?")
+    |> subject("Where did Plausible fall short?")
     |> render("cancellation_email.html", user: user)
   end
 
