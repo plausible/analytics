@@ -6,6 +6,7 @@ defmodule Plausible.Workers.ScanInactiveTeamsTest do
 
   test "schedules a team whose trial has expired" do
     team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+    new_site(team: team)
 
     ScanInactiveTeams.perform(nil)
 
@@ -23,7 +24,8 @@ defmodule Plausible.Workers.ScanInactiveTeamsTest do
   end
 
   test "is idempotent across repeated runs" do
-    insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+    team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+    new_site(team: team)
 
     ScanInactiveTeams.perform(nil)
     ScanInactiveTeams.perform(nil)
@@ -44,7 +46,8 @@ defmodule Plausible.Workers.ScanInactiveTeamsTest do
       %{}
     )
 
-    insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+    team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+    new_site(team: team)
 
     ScanInactiveTeams.perform(nil)
 
