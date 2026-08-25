@@ -304,7 +304,7 @@ export default function Funnel({
       >
         {columns.map((step, index) => (
           <StepColumn
-            key={index}
+            key={`${funnelName}-${index}`}
             step={step}
             index={index}
             finalStep={index === columns.length - 1}
