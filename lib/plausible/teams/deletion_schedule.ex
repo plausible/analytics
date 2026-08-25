@@ -21,11 +21,11 @@ defmodule Plausible.Teams.DeletionSchedule do
   def backlog_reminder_before_deletion_days, do: @backlog_reminder_before_deletion_days
   def backlog_release_window_days, do: @backlog_release_window_days
 
-  @spec deletion_offset_days(:expired_trial | :expired_subscription) :: pos_integer()
+  @spec deletion_offset_days(:expired_trial | :churned_subscription) :: pos_integer()
   def deletion_offset_days(:expired_trial), do: @trial_deletion_offset_days
-  def deletion_offset_days(:expired_subscription), do: @subscription_deletion_offset_days
+  def deletion_offset_days(:churned_subscription), do: @subscription_deletion_offset_days
 
-  @spec deletion_date(:expired_trial | :expired_subscription, Date.t()) :: Date.t()
+  @spec deletion_date(:expired_trial | :churned_subscription, Date.t()) :: Date.t()
   def deletion_date(category, expiry_date) do
     Date.add(expiry_date, deletion_offset_days(category))
   end

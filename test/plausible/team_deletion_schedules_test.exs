@@ -79,7 +79,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
 
       schedule = Repo.get_by!(TeamDeletionSchedule, team_id: team.id)
-      assert schedule.category == :expired_subscription
+      assert schedule.category == :churned_subscription
       assert schedule.deletion_date == Date.shift(schedule.expiry_date, day: 180)
     end
 
@@ -97,7 +97,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
       assert Repo.get_by(TeamDeletionSchedule,
                team_id: team.id,
-               category: :expired_subscription
+               category: :churned_subscription
              )
     end
 

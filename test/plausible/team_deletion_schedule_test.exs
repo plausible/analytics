@@ -40,10 +40,10 @@ defmodule Plausible.TeamDeletionScheduleTest do
                  first_notice_due_date: Date.shift(today, day: 30)
                })
 
-      assert {:ok, %{category: :expired_subscription}} =
+      assert {:ok, %{category: :churned_subscription}} =
                Repo.insert(%TeamDeletionSchedule{
                  team_id: team2.id,
-                 category: :expired_subscription,
+                 category: :churned_subscription,
                  expiry_date: today,
                  deletion_date: Date.shift(today, day: 180),
                  first_notice_due_date: Date.shift(today, day: 150)
@@ -82,7 +82,7 @@ defmodule Plausible.TeamDeletionScheduleTest do
     end
 
     test "categories/0 and statuses/0 expose the valid enum values" do
-      assert TeamDeletionSchedule.categories() == [:expired_trial, :expired_subscription]
+      assert TeamDeletionSchedule.categories() == [:expired_trial, :churned_subscription]
 
       assert TeamDeletionSchedule.statuses() == [
                :scheduled,
@@ -171,7 +171,7 @@ defmodule Plausible.TeamDeletionScheduleTest do
 
       base = %{
         team_id: team.id,
-        category: :expired_subscription,
+        category: :churned_subscription,
         expiry_date: today,
         deletion_date: Date.shift(today, day: 180),
         first_notice_due_date: Date.shift(today, day: 150)
