@@ -69,21 +69,7 @@ defmodule Plausible.TeamDeletionSchedules do
     team = Teams.with_subscription(team)
 
     if Subscriptions.active?(team.subscription) do
-      {:ok, count} =
-        Repo.transact(fn ->
-          case active_schedule_for(team.id) do
-            nil ->
-              {:ok, 0}
-
-            schedule ->
-              case cancel(schedule) do
-                {:ok, _} -> {:ok, 1}
-                {:error, _} -> {:ok, 0}
-              end
-          end
-        end)
-
-      count
+      cancel_active_schedule(team.id)
     else
       0
     end
@@ -170,6 +156,25 @@ defmodule Plausible.TeamDeletionSchedules do
 
   defp transition(%TeamDeletionSchedule{status: from}, to, _extra_changes) do
     {:error, {:invalid_transition, from, to}}
+  end
+
+  defp cancel_active_schedule(team_id) do
+    {:ok, count} =
+      Repo.transact(fn ->
+        case active_schedule_for(team_id) do
+          nil -> {:ok, 0}
+          schedule -> {:ok, cancel_count(schedule)}
+        end
+      end)
+
+    count
+  end
+
+  defp cancel_count(schedule) do
+    case cancel(schedule) do
+      {:ok, _} -> 1
+      {:error, _} -> 0
+    end
   end
 
   defp active_schedule_for(team_id) do
