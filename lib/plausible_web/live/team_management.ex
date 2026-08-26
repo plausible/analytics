@@ -18,7 +18,31 @@ defmodule PlausibleWeb.Live.TeamManagement do
         :team_management
       end
 
+    socket =
+      if mode == :team_setup do
+        setup_team_name(socket)
+      else
+        socket
+      end
+
     {:ok, socket |> assign(mode: mode) |> reset()}
+  end
+
+  # In team setup the name is part of this form, so that creating the team can
+  # only ever happen with a name this LiveView has accepted.
+  defp setup_team_name(
+         %{assigns: %{current_user: current_user, current_team: current_team}} = socket
+       ) do
+    current_team =
+      current_team
+      |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s team"})
+      |> Plausible.Repo.update!()
+
+    assign(socket,
+      current_team: current_team,
+      team_name_form: to_form(Teams.Team.name_changeset(current_team, %{})),
+      locked?: Plausible.Teams.Billing.solo?(current_team)
+    )
   end
 
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
@@ -39,6 +63,32 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   def render(assigns) do
     ~H"""
+    <.form
+      :let={f}
+      :if={@mode == :team_setup}
+      for={@team_name_form}
+      method="post"
+      phx-change="update-team"
+      phx-submit="update-team"
+      phx-blur="update-team"
+      id="update-team-form"
+      class="mt-4 mb-8"
+    >
+      <.input
+        type="text"
+        placeholder={"#{@current_user.name}'s team"}
+        autofocus={not @locked?}
+        field={f[:name]}
+        label="Name"
+        width="w-full"
+        phx-debounce="500"
+      />
+    </.form>
+
+    <.label :if={@mode == :team_setup} class="mb-2">
+      Team members
+    </.label>
+
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
@@ -158,6 +208,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         id="save-layout"
         type="submit"
         phx-click="save-team-layout"
+        disabled={not @team_name_form.source.valid?}
         class="mt-8 w-full"
       >
         Create Team
@@ -221,14 +272,31 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, socket}
   end
 
+  def handle_event("update-team", %{"team" => %{"name" => name}}, socket) do
+    changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
+
+    socket =
+      case Plausible.Repo.update(changeset) do
+        {:ok, team} ->
+          assign(socket, team_name_form: to_form(changeset), current_team: team)
+
+        {:error, changeset} ->
+          assign(socket, team_name_form: to_form(changeset))
+      end
+
+    {:noreply, socket}
+  end
+
   def handle_event(
         "save-team-layout",
         _params,
         socket
       ) do
-    socket = save_team_layout(socket)
-
-    {:noreply, socket}
+    if team_name_accepted?(socket) do
+      {:noreply, save_team_layout(socket)}
+    else
+      {:noreply, put_live_flash(socket, :error, "Please fix the team name first")}
+    end
   end
 
   def handle_event("remove-member", %{"email" => email}, %{assigns: %{layout: layout}} = socket) do
@@ -262,6 +330,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
     {:noreply, socket}
   end
+
+  defp team_name_accepted?(%{assigns: %{mode: :team_setup}} = socket) do
+    socket.assigns.team_name_form.source.valid?
+  end
+
+  defp team_name_accepted?(_socket), do: true
 
   defp valid_email?(email) do
     String.contains?(email, "@") and String.contains?(email, ".")
