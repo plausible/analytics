@@ -48,6 +48,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   def handle_event("save-team", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
+    # TODO: if this prolongs trial_expiry_date (or otherwise makes the team
+    # eligible again) cancely any Plausible.TeamDeletionSchedule
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
         success("Team saved")
