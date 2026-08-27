@@ -10,16 +10,18 @@ defmodule Plausible.Teams.DeletionSchedule do
   @reminder_before_deletion_days 5
 
   @backlog_deletion_offset_days 30
-  @backlog_reminder_before_deletion_days 5
   @backlog_release_window_days 30
+
+  # how many domains to include in notifications
+  @notification_site_list_limit 3
 
   def trial_deletion_offset_days, do: @trial_deletion_offset_days
   def subscription_deletion_offset_days, do: @subscription_deletion_offset_days
   def first_notice_before_deletion_days, do: @first_notice_before_deletion_days
   def reminder_before_deletion_days, do: @reminder_before_deletion_days
   def backlog_deletion_offset_days, do: @backlog_deletion_offset_days
-  def backlog_reminder_before_deletion_days, do: @backlog_reminder_before_deletion_days
   def backlog_release_window_days, do: @backlog_release_window_days
+  def notification_site_list_limit, do: @notification_site_list_limit
 
   @spec deletion_offset_days(:expired_trial | :churned_subscription) :: pos_integer()
   def deletion_offset_days(:expired_trial), do: @trial_deletion_offset_days
@@ -43,12 +45,5 @@ defmodule Plausible.Teams.DeletionSchedule do
     first_notice_sent_at
     |> NaiveDateTime.to_date()
     |> Date.add(@backlog_deletion_offset_days)
-  end
-
-  @spec backlog_reminder_due_date(NaiveDateTime.t()) :: Date.t()
-  def backlog_reminder_due_date(first_notice_sent_at) do
-    first_notice_sent_at
-    |> NaiveDateTime.to_date()
-    |> Date.add(@backlog_deletion_offset_days - @backlog_reminder_before_deletion_days)
   end
 end

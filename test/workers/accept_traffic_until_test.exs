@@ -63,6 +63,70 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     assert_final_notification(user.email)
   end
 
+  test "tomorrow: augments the email with the deletion date and marks the schedule notified" do
+    tomorrow = Date.utc_today() |> Date.add(+1)
+    user = new_user(team: [accept_traffic_until: tomorrow])
+    team = team_of(user)
+
+    new_site(owner: user) |> populate_stats([build(:pageview)])
+
+    schedule = insert(:team_deletion_schedule, team: team, deletion_date: ~D[2026-10-19])
+
+    {:ok, 1} = AcceptTrafficUntil.perform(nil)
+
+    assert_email_delivered_with(
+      to: [nil: user.email],
+      html_body:
+        ~r/permanently delete your Plausible dashboards and all their stats on 19 Oct 2026/
+    )
+
+    assert Repo.reload!(schedule).status == :first_notice_sent
+    assert Repo.reload!(schedule).first_notice_sent_at
+  end
+
+  test "tomorrow: does not augment or mark anything when there is no pending trial schedule" do
+    tomorrow = Date.utc_today() |> Date.add(+1)
+    user = new_user(team: [accept_traffic_until: tomorrow])
+
+    new_site(owner: user) |> populate_stats([build(:pageview)])
+
+    {:ok, 1} = AcceptTrafficUntil.perform(nil)
+
+    assert_receive {:delivered_email, email}
+    assert email.to == [nil: user.email]
+    refute email.html_body =~ "permanently delete"
+  end
+
+  test "tomorrow: ignores a backlog trial schedule (not yet spread out for sending)" do
+    tomorrow = Date.utc_today() |> Date.add(+1)
+    user = new_user(team: [accept_traffic_until: tomorrow])
+    team = team_of(user)
+
+    new_site(owner: user) |> populate_stats([build(:pageview)])
+
+    schedule = insert(:team_deletion_schedule, team: team, is_backlog: true)
+
+    {:ok, 1} = AcceptTrafficUntil.perform(nil)
+
+    assert_receive {:delivered_email, email}
+    refute email.html_body =~ "permanently delete"
+    assert Repo.reload!(schedule).status == :scheduled
+  end
+
+  test "tomorrow: dry_run does not mark the schedule as notified" do
+    tomorrow = Date.utc_today() |> Date.add(+1)
+    user = new_user(team: [accept_traffic_until: tomorrow])
+    team = team_of(user)
+
+    new_site(owner: user) |> populate_stats([build(:pageview)])
+
+    schedule = insert(:team_deletion_schedule, team: team)
+
+    {:ok, 1} = AcceptTrafficUntil.dry_run(Date.utc_today())
+
+    assert Repo.reload!(schedule).status == :scheduled
+  end
+
   test "next week: sends one e-mail" do
     next_week = Date.utc_today() |> Date.add(+7)
     user = new_user(team: [accept_traffic_until: next_week])

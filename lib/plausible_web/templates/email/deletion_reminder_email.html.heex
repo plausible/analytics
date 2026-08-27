@@ -1,13 +1,12 @@
-This is your final reminder. We'll permanently delete the Plausible dashboards and stats for your <strong>{@team.name}</strong> team on {date_format(@deletion_date)}.
-<%= if @sites.domains != [] do %>
-  <br /><br />
-  This covers {site_list(@sites)}.
+This is your final reminder. We'll permanently delete the Plausible dashboards and stats for your
+<strong>{@team.name}</strong>
+team on {date_format(@deletion_date)}.
+<%= if @sites_summary.domains != [] do %>
+  <br /><br /> This covers {domains_list(@sites_summary.domains, @sites_summary.more_count)}.
 <% end %>
-<br /><br />
-This cannot be undone.
-<br /><br />
-<a href={choose_plan_url(@team)}>Subscribe</a> before {date_format(@deletion_date)} to keep your dashboards and historical stats.
-<br /><br />
-If you don't plan to subscribe, <a href="https://plausible.io/docs/export-stats">export your stats</a> before then.
-<br /><br />
-If you have any questions, just reply to this email and we'll help.
+<br /><br /> This cannot be undone. <br /><br />
+<a href={choose_plan_url(@team)}>Subscribe</a>
+before {date_format(@deletion_date)} to keep your dashboards and historical stats. <br /><br />
+If you don't plan to subscribe,
+<a href="https://plausible.io/docs/export-stats">export your stats</a>
+before then. <br /><br /> If you have any questions, just reply to this email and we'll help.

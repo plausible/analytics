@@ -75,6 +75,57 @@ defmodule Plausible.TeamDeletionSchedules do
     end
   end
 
+  @doc """
+  Schedules due for their first notice - still scheduled and
+  past their first_notice_due_date.
+  """
+  @spec due_for_first_notice(Date.t()) :: [TeamDeletionSchedule.t()]
+  def due_for_first_notice(today \\ Date.utc_today()) do
+    Repo.all(
+      from(sch in TeamDeletionSchedule,
+        where: sch.status == :scheduled,
+        where: sch.first_notice_due_date <= ^today,
+        preload: [team: [:owners, :billing_members]]
+      )
+    )
+  end
+
+  @doc """
+  Schedules due for the reminder: first notice already sent.
+  Applies to backlog rows too.
+  """
+  @spec due_for_reminder(Date.t()) :: [TeamDeletionSchedule.t()]
+  def due_for_reminder(today \\ Date.utc_today()) do
+    reminder_threshold = Date.add(today, DeletionSchedule.reminder_before_deletion_days())
+
+    Repo.all(
+      from(sch in TeamDeletionSchedule,
+        where: sch.status == :first_notice_sent,
+        where: sch.deletion_date <= ^reminder_threshold,
+        preload: [team: [:owners, :billing_members]]
+      )
+    )
+  end
+
+  @doc """
+  Pending, non-backlog expired trial schedules for the
+  given team ids, keyed by `team_id`
+  """
+  @spec pending_steady_state_trials_by_team_id([pos_integer()]) :: %{
+          pos_integer() => TeamDeletionSchedule.t()
+        }
+  def pending_steady_state_trials_by_team_id([]), do: %{}
+
+  def pending_steady_state_trials_by_team_id(team_ids) do
+    TeamDeletionSchedule
+    |> where([sch], sch.team_id in ^team_ids)
+    |> where([sch], sch.category == :expired_trial)
+    |> where([sch], sch.status == :scheduled)
+    |> where([sch], sch.is_backlog == false)
+    |> Repo.all()
+    |> Map.new(&{&1.team_id, &1})
+  end
+
   @type transition_result ::
           {:ok, TeamDeletionSchedule.t()} | {:error, {:invalid_transition, atom(), atom()}}
 
@@ -90,61 +141,73 @@ defmodule Plausible.TeamDeletionSchedules do
   @spec transitions() :: %{atom() => [atom()]}
   def transitions, do: @transitions
 
-  @spec mark_first_notice_sent(TeamDeletionSchedule.t(), NaiveDateTime.t()) :: transition_result
-  def mark_first_notice_sent(schedule, now \\ NaiveDateTime.utc_now(:second))
+  @spec mark_first_notice_sent(TeamDeletionSchedule.t(), keyword()) :: transition_result
+  def mark_first_notice_sent(schedule, opts \\ [])
 
-  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: true} = schedule, now) do
-    transition(schedule, :first_notice_sent, %{
-      first_notice_sent_at: now,
-      deletion_date: DeletionSchedule.backlog_deletion_date(now)
-    })
+  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: true} = schedule, opts) do
+    now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
+
+    transition(
+      schedule,
+      :first_notice_sent,
+      %{first_notice_sent_at: now, deletion_date: DeletionSchedule.backlog_deletion_date(now)},
+      opts
+    )
   end
 
-  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: false} = schedule, now) do
-    transition(schedule, :first_notice_sent, %{first_notice_sent_at: now})
+  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: false} = schedule, opts) do
+    now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
+    transition(schedule, :first_notice_sent, %{first_notice_sent_at: now}, opts)
   end
 
-  @spec mark_reminder_sent(TeamDeletionSchedule.t(), NaiveDateTime.t()) :: transition_result
-  def mark_reminder_sent(schedule, now \\ NaiveDateTime.utc_now(:second)) do
-    transition(schedule, :reminder_sent, %{reminder_sent_at: now})
+  @spec mark_reminder_sent(TeamDeletionSchedule.t(), keyword()) :: transition_result
+  def mark_reminder_sent(schedule, opts \\ []) do
+    now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
+    transition(schedule, :reminder_sent, %{reminder_sent_at: now}, opts)
   end
 
-  @spec mark_completed(TeamDeletionSchedule.t()) :: transition_result
-  def mark_completed(schedule) do
-    transition(schedule, :completed)
+  @spec mark_completed(TeamDeletionSchedule.t(), keyword()) :: transition_result
+  def mark_completed(schedule, opts \\ []) do
+    transition(schedule, :completed, %{}, opts)
   end
 
-  @spec cancel(TeamDeletionSchedule.t()) :: transition_result
-  def cancel(schedule) do
-    transition(schedule, :cancelled)
+  @spec cancel(TeamDeletionSchedule.t(), keyword()) :: transition_result
+  def cancel(schedule, opts \\ []) do
+    transition(schedule, :cancelled, %{}, opts)
   end
 
-  @spec snooze(TeamDeletionSchedule.t(), Date.t(), String.t() | nil) :: transition_result
-  def snooze(schedule, until_date, note \\ nil) do
-    transition(schedule, :snoozed, %{snoozed_until: until_date, snooze_note: note})
+  @spec snooze(TeamDeletionSchedule.t(), Date.t(), keyword()) :: transition_result
+  def snooze(schedule, until_date, opts \\ []) do
+    note = Keyword.get(opts, :note)
+    transition(schedule, :snoozed, %{snoozed_until: until_date, snooze_note: note}, opts)
   end
 
   @doc """
   Unsnoozes a schedule once its snooze has lapsed without the team
   resubscribing. Restarts the notice cycle from scratch
   """
-  @spec unsnooze(TeamDeletionSchedule.t(), Date.t()) :: transition_result
-  def unsnooze(schedule, today \\ Date.utc_today()) do
-    transition(schedule, :scheduled, %{
-      is_backlog: true,
-      first_notice_due_date: today,
-      first_notice_sent_at: nil,
-      reminder_sent_at: nil,
-      snoozed_until: nil,
-      snooze_note: nil
-    })
+  @spec unsnooze(TeamDeletionSchedule.t(), keyword()) :: transition_result
+  def unsnooze(schedule, opts \\ []) do
+    today = Keyword.get(opts, :today, Date.utc_today())
+
+    transition(
+      schedule,
+      :scheduled,
+      %{
+        is_backlog: true,
+        first_notice_due_date: today,
+        first_notice_sent_at: nil,
+        reminder_sent_at: nil,
+        snoozed_until: nil,
+        snooze_note: nil
+      },
+      opts
+    )
   end
 
   @valid_transitions for {from, tos} <- @transitions, to <- tos, do: {from, to}
 
-  defp transition(schedule, to, extra_changes \\ %{})
-
-  defp transition(%TeamDeletionSchedule{status: from} = schedule, to, extra_changes)
+  defp transition(%TeamDeletionSchedule{status: from} = schedule, to, extra_changes, _opts)
        when {from, to} in @valid_transitions do
     updated =
       schedule
@@ -154,7 +217,15 @@ defmodule Plausible.TeamDeletionSchedules do
     {:ok, updated}
   end
 
-  defp transition(%TeamDeletionSchedule{status: from}, to, _extra_changes) do
+  defp transition(%TeamDeletionSchedule{status: from, team_id: team_id}, to, _extra_changes, opts) do
+    report_if_invalid? = Keyword.get(opts, :report_if_invalid?, false)
+
+    if report_if_invalid? do
+      Sentry.capture_message("Invalid team deletion schedule transition",
+        extra: %{from: from, to: to, team_id: team_id}
+      )
+    end
+
     {:error, {:invalid_transition, from, to}}
   end
 
