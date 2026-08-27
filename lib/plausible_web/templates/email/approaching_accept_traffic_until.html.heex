@@ -1,9 +1,15 @@
-Your sites are still sending us data, but your account is no longer active. We'll stop counting your stats {@time}.
+Your sites are still sending us data, but your account is no longer active. We'll stop counting new stats {@time}.
 <br /><br />
-We're writing because we think losing your privacy-first analytics is a bad trade, not just an admin notice. Without Plausible, you're likely back to Google Analytics: cookie banners, complex reports, and your visitors' data going to Google.
+We're writing because we think losing your privacy-first analytics is a bad trade, not just an admin notice. Without Plausible, you're likely back to Google Analytics: cookie banners, complex reports and your visitors' data going to Google.
 <br /><br />
-Plausible is still the same thing it was when you signed up. Lightweight. No cookies. No personal data. One clear dashboard. EU-hosted infrastructure. We're a small independent team and subscriptions are what keeps us running.
+Plausible is still the same thing it was when you signed up. Lightweight. No cookies. No personal data. One clear dashboard. EU-hosted infrastructure. We're a small independent team and subscriptions are what keep us running.
 <br /><br />
 If you'd like to keep counting your stats without tracking your visitors, <a href={plausible_url() <> "?__team=#{@team.identifier}"}>start a Plausible subscription</a>.
+<%= if @deletion_date do %>
+  <br /><br />
+  If you don't subscribe, we'll permanently delete your Plausible dashboards and all their stats on {date_format(@deletion_date)}. This cannot be undone.
+  <br /><br />
+  If you don't plan to subscribe, <a href="https://plausible.io/docs/export-stats">export your stats</a> before then.
+<% end %>
 <br /><br />
 Not sure it's the right fit? Just reply to this email and we'll help you figure it out.

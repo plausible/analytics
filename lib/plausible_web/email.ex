@@ -556,11 +556,12 @@ defmodule PlausibleWeb.Email do
     |> render("approaching_accept_traffic_until.html",
       time: "next week",
       user: %{email: notification.email, name: notification.name},
-      team: notification.team
+      team: notification.team,
+      deletion_date: nil
     )
   end
 
-  def approaching_accept_traffic_until_tomorrow(notification) do
+  def approaching_accept_traffic_until_tomorrow(notification, deletion_date \\ nil) do
     base_email()
     |> to(notification.email)
     |> tag("drop-traffic-warning-final")
@@ -568,7 +569,35 @@ defmodule PlausibleWeb.Email do
     |> render("approaching_accept_traffic_until.html",
       time: "tomorrow",
       user: %{email: notification.email, name: notification.name},
-      team: notification.team
+      team: notification.team,
+      deletion_date: deletion_date
+    )
+  end
+
+  def deletion_full_notice_email(user, team, schedule, sites_summary) do
+    base_email()
+    |> to(user)
+    |> tag("deletion-full-notice")
+    |> subject("Your Plausible dashboards and stats will be deleted in 30 days")
+    |> render("deletion_full_notice_email.html",
+      user: user,
+      team: team,
+      category: schedule.category,
+      deletion_date: schedule.deletion_date,
+      sites_summary: sites_summary
+    )
+  end
+
+  def deletion_reminder_email(user, team, schedule, sites_summary) do
+    base_email()
+    |> to(user)
+    |> tag("deletion-reminder")
+    |> subject("Final notice: your Plausible dashboards and stats will be deleted in 5 days")
+    |> render("deletion_reminder_email.html",
+      user: user,
+      team: team,
+      deletion_date: schedule.deletion_date,
+      sites_summary: sites_summary
     )
   end
 
