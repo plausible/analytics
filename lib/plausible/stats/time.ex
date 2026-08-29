@@ -95,15 +95,14 @@ defmodule Plausible.Stats.Time do
   defp time_labels_for_dimension("time:hour", query) do
     time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
 
-    from_timestamp = time_range.first |> Map.merge(%{minute: 0, second: 0})
-    n_buckets = DateTime.diff(time_range.last, from_timestamp, :hour)
+    from_timestamp = beginning_of_hour(time_range.first)
+    to_timestamp = beginning_of_hour(time_range.last)
 
-    Enum.map(0..n_buckets, fn step ->
-      from_timestamp
-      |> DateTime.to_naive()
-      |> NaiveDateTime.shift(hour: step)
-      |> format_datetime()
-    end)
+    from_timestamp
+    |> Stream.iterate(&NaiveDateTime.shift(&1, hour: 1))
+    |> Enum.take_while(&(NaiveDateTime.compare(&1, to_timestamp) != :gt))
+    |> Enum.filter(&hour_occurs?(&1, query.timezone))
+    |> Enum.map(&format_datetime/1)
   end
 
   defp time_labels_for_dimension("time:minute", query) do
@@ -119,6 +118,15 @@ defmodule Plausible.Stats.Time do
         DateTime.before?(datetime, current_minute)
     end)
     |> Enum.map(&format_datetime/1)
+  end
+
+  defp beginning_of_hour(%DateTime{} = datetime) do
+    datetime |> DateTime.to_naive() |> Map.merge(%{minute: 0, second: 0})
+  end
+
+  defp hour_occurs?(naive_hour, timezone) do
+    [naive_hour, NaiveDateTime.add(naive_hour, 3599)]
+    |> Enum.any?(&(not match?({:gap, _, _}, DateTime.from_naive(&1, timezone))))
   end
 
   def partial_time_labels(time_labels, query) do

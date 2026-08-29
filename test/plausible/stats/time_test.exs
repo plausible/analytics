@@ -388,6 +388,59 @@ defmodule Plausible.Stats.TimeTest do
              ]
     end
 
+    test "with time:hour dimension on a day that loses an hour to DST" do
+      # Clocks jump 02:00 -> 03:00, so the day has 23 hours and no 02:00 at all.
+      labels =
+        time_labels(%{
+          dimensions: ["time:hour"],
+          utc_time_range:
+            DateTimeRange.new!(~D[2024-03-10], ~D[2024-03-10], "America/New_York")
+            |> DateTimeRange.to_timezone("Etc/UTC"),
+          timezone: "America/New_York"
+        })
+
+      assert length(labels) == 23
+      assert List.first(labels) == "2024-03-10 00:00:00"
+      assert List.last(labels) == "2024-03-10 23:00:00"
+      refute "2024-03-10 02:00:00" in labels
+    end
+
+    test "with time:hour dimension on a day that repeats an hour due to DST" do
+      # Clocks fall back 02:00 -> 01:00, so the day has 25 hours but only 24 buckets.
+      labels =
+        time_labels(%{
+          dimensions: ["time:hour"],
+          utc_time_range:
+            DateTimeRange.new!(~D[2024-11-03], ~D[2024-11-03], "America/New_York")
+            |> DateTimeRange.to_timezone("Etc/UTC"),
+          timezone: "America/New_York"
+        })
+
+      assert length(labels) == 24
+      assert List.first(labels) == "2024-11-03 00:00:00"
+      assert List.last(labels) == "2024-11-03 23:00:00"
+      assert Enum.count(labels, &(&1 == "2024-11-03 01:00:00")) == 1
+    end
+
+    test "with time:hour dimension in a timezone whose DST transition is not on the hour" do
+      # Chatham switches at 02:45 local, so the 02:00 and 03:00 hours are cut short
+      # but both still exist.
+      for date <- [~D[2024-09-29], ~D[2024-04-07]] do
+        labels =
+          time_labels(%{
+            dimensions: ["time:hour"],
+            utc_time_range:
+              DateTimeRange.new!(date, date, "Pacific/Chatham")
+              |> DateTimeRange.to_timezone("Etc/UTC"),
+            timezone: "Pacific/Chatham"
+          })
+
+        assert length(labels) == 24
+        assert List.first(labels) == "#{date} 00:00:00"
+        assert List.last(labels) == "#{date} 23:00:00"
+      end
+    end
+
     test "with time:minute dimension" do
       now = DateTime.new!(~D[2024-01-01], ~T[12:30:57], "UTC")
 
