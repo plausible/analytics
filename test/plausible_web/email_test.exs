@@ -439,16 +439,19 @@ defmodule PlausibleWeb.EmailTest do
       %{html_body: body, subject: subject} =
         PlausibleWeb.Email.deletion_full_notice_email(user, team, schedule, sites_summary)
 
+      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
+      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
+
+      body = text(body)
+
       assert subject == "Your Plausible dashboards and stats will be deleted in 30 days"
       assert body =~ "Your Plausible trial ended a while ago"
       refute body =~ "subscription lapsed"
 
       assert body =~
-               "we'll permanently delete the Plausible dashboards and stats for your <strong>My Team</strong> team on 19 Oct 2026. This cannot be undone."
+               "we'll permanently delete the Plausible dashboards and stats for your My Team team on 19 Oct 2026. This cannot be undone."
 
       assert body =~ "This covers a.example.com, b.example.com."
-      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
-      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
     end
 
     test "renders subscription copy for a churned_subscription schedule" do
@@ -505,16 +508,19 @@ defmodule PlausibleWeb.EmailTest do
       %{html_body: body, subject: subject} =
         PlausibleWeb.Email.deletion_reminder_email(user, team, schedule, sites_summary)
 
+      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
+      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
+
+      body = text(body)
+
       assert subject ==
                "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
 
       assert body =~
-               "We'll permanently delete the Plausible dashboards and stats for your <strong>My Team</strong> team on 19 Oct 2026."
+               "We'll permanently delete the Plausible dashboards and stats for your My Team team on 19 Oct 2026."
 
       assert body =~ "This covers a.example.com (and 3 more sites)."
       assert body =~ "This cannot be undone."
-      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
-      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
     end
   end
 
