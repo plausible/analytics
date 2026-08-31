@@ -6,7 +6,7 @@
 FROM node:24.17.0-alpine3.23@sha256:7c70d1235c0b4c2bc9eeed5393d19f1bbdde6885ba0d58ba62bb385d7b0f3ff1 AS nodejs
 
 #### Builder
-FROM hexpm/elixir:1.20.2-erlang-28.5.0.3-alpine-3.23.5@sha256:6f03034e254126f063959873d8d3b811ee92abaabab27b62c53982c4a1034e39 AS buildcontainer
+FROM hexpm/elixir:1.20.4-erlang-28.5.0.5-alpine-3.23.5@sha256:743f3bddec5e9d65b7f65902b1f4ce2a625e58cea6e8e93238757b042bec78db AS buildcontainer
 
 ARG MIX_ENV=ce
 
