@@ -4,6 +4,8 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
 
   alias Plausible.Workers.AcceptTrafficUntil
 
+  import ExUnit.CaptureIO
+
   @moduletag :ee_only
 
   test "does not send any notifications when sites have no stats" do
@@ -122,7 +124,9 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
 
     schedule = insert(:team_deletion_schedule, team: team)
 
-    {:ok, 1} = AcceptTrafficUntil.dry_run(Date.utc_today())
+    assert capture_io(fn ->
+             {:ok, 1} = AcceptTrafficUntil.dry_run(Date.utc_today())
+           end) == "Will send final notification to #{user.email}\n"
 
     assert Repo.reload!(schedule).status == :scheduled
   end
