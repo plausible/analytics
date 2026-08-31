@@ -622,6 +622,42 @@ defmodule Plausible.TeamDeletionSchedulesTest do
     end
   end
 
+  describe "due_for_deletion/1" do
+    test "returns a reminder_sent row whose deletion_date has arrived" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :reminder_sent,
+          deletion_date: @today
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_deletion(@today)
+      assert id == schedule.id
+    end
+
+    test "returns a row whose deletion_date is overdue (missed run catch-up)" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :reminder_sent,
+          deletion_date: Date.shift(@today, day: -3)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_deletion(@today)
+      assert id == schedule.id
+    end
+
+    test "does not return a row whose deletion_date is still in the future" do
+      insert(:team_deletion_schedule, status: :reminder_sent, deletion_date: @today)
+
+      assert TeamDeletionSchedules.due_for_deletion(Date.shift(@today, day: -1)) == []
+    end
+
+    test "does not return a row that hasn't had its reminder sent yet" do
+      insert(:team_deletion_schedule, status: :first_notice_sent, deletion_date: @today)
+
+      assert TeamDeletionSchedules.due_for_deletion(@today) == []
+    end
+  end
+
   describe "pending_steady_state_trials_by_team_id/1" do
     test "returns a scheduled, non-backlog expired_trial schedule keyed by team_id" do
       team = insert(:team)

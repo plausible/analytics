@@ -5,7 +5,7 @@ defmodule Plausible.PendingStatsDeletion do
 
   use Ecto.Schema
 
-  @reasons [:user_request, :inactive_trial, :inactive_subscription]
+  @reasons [:user_request, :expired_trial, :churned_subscription]
 
   @type t() :: %__MODULE__{}
 
