@@ -7,9 +7,11 @@ Plausible is still the same thing it was when you signed up. Lightweight. No coo
 If you'd like to keep counting your stats without tracking your visitors, <a href={plausible_url() <> "?__team=#{@team.identifier}"}>start a Plausible subscription</a>.
 <%= if @deletion_date do %>
   <br /><br />
-  If you don't subscribe, we'll permanently delete your Plausible dashboards and all their stats on {date_format(@deletion_date)}. This cannot be undone.
-  <br /><br />
-  If you don't plan to subscribe, <a href="https://plausible.io/docs/export-stats">export your stats</a> before then.
+  If you don't subscribe, we'll permanently delete your Plausible dashboards and all their stats on {date_format(
+    @deletion_date
+  )}. This cannot be undone. <br /><br /> If you don't plan to subscribe,
+  <a href="https://plausible.io/docs/export-stats">export your stats</a>
+  before then.
 <% end %>
 <br /><br />
 Not sure it's the right fit? Just reply to this email and we'll help you figure it out.
