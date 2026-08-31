@@ -18,6 +18,7 @@ defmodule Plausible.Repo.Migrations.CreateTeamDeletionSchedules do
       timestamps()
     end
 
+    create index(:team_deletion_schedules, [:team_id])
     create index(:team_deletion_schedules, [:status])
     create index(:team_deletion_schedules, [:deletion_date])
     create index(:team_deletion_schedules, [:first_notice_due_date])
