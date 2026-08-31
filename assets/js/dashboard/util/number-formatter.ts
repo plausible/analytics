@@ -82,3 +82,11 @@ export function percentageFormatter(number: number | null): string {
     return '-'
   }
 }
+
+export function rateFormatter(rate: string): string {
+  const value = Number(rate)
+  const nearExtreme =
+    (value > 0 && value < 0.1) || (value > 99.9 && value < 100)
+
+  return Number(value.toFixed(nearExtreme ? 2 : 1)) + '%'
+}

@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Redesigned onboarding pages (add site, installation)
 - Moved tracking options (outbound links, file downloads, form submissions) from the installation page to the general site settings, where they can be toggled without going through the installation flow
 - Replaced HCaptcha with Friendly Captcha
+- Redesigned funnel report on dashboard to be more consistent with the rest of the UI. It now includes a `Strict`/`Sequential` label, and percentage drop-off between individual funnel steps is now visible by default.
 - Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
 
 ### Fixed

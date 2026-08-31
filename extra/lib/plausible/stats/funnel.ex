@@ -56,6 +56,7 @@ defmodule Plausible.Stats.Funnel do
     {:ok,
      %{
        name: funnel.name,
+       strict_order: funnel.strict_order,
        steps: steps,
        all_visitors: all_visitors,
        entering_visitors: visitors_at_first_step,
