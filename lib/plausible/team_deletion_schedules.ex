@@ -140,6 +140,20 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   @doc """
+  Schedules whose snooze has lapsed: still snoozed, past their
+  snoozed_until date.
+  """
+  @spec due_for_unsnooze(Date.t()) :: [TeamDeletionSchedule.t()]
+  def due_for_unsnooze(today \\ Date.utc_today()) do
+    Repo.all(
+      from(sch in TeamDeletionSchedule,
+        where: sch.status == :snoozed,
+        where: sch.snoozed_until <= ^today
+      )
+    )
+  end
+
+  @doc """
   Get the team's current active (non-terminal) deletion schedule, if any
   """
   @spec active_schedule_for_team(Teams.Team.t()) :: TeamDeletionSchedule.t() | nil
