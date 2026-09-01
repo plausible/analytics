@@ -102,6 +102,80 @@ defmodule Plausible.TeamDeletionScheduleTest do
     end
   end
 
+  describe "crm_changeset/2" do
+    test "is valid for a snoozed_until date in the future" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+      until_date = Date.shift(Date.utc_today(), day: 1)
+
+      changeset =
+        TeamDeletionSchedule.crm_changeset(schedule, %{
+          "snoozed_until" => Date.to_iso8601(until_date),
+          "snooze_note" => "customer asked for time"
+        })
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_change(changeset, :snoozed_until) == until_date
+      assert Ecto.Changeset.get_change(changeset, :snooze_note) == "customer asked for time"
+    end
+
+    test "does not require a note" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+      until_date = Date.shift(Date.utc_today(), day: 1)
+
+      changeset =
+        TeamDeletionSchedule.crm_changeset(schedule, %{
+          "snoozed_until" => Date.to_iso8601(until_date)
+        })
+
+      assert changeset.valid?
+    end
+
+    test "requires snoozed_until" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+
+      changeset = TeamDeletionSchedule.crm_changeset(schedule, %{})
+
+      refute changeset.valid?
+      assert {"can't be blank", _} = changeset.errors[:snoozed_until]
+    end
+
+    test "rejects a snoozed_until of today" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+
+      changeset =
+        TeamDeletionSchedule.crm_changeset(schedule, %{
+          "snoozed_until" => Date.to_iso8601(Date.utc_today())
+        })
+
+      refute changeset.valid?
+      assert {"must be in the future", _} = changeset.errors[:snoozed_until]
+    end
+
+    test "rejects a snoozed_until in the past" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+
+      changeset =
+        TeamDeletionSchedule.crm_changeset(schedule, %{
+          "snoozed_until" => Date.to_iso8601(Date.shift(Date.utc_today(), day: -1))
+        })
+
+      refute changeset.valid?
+      assert {"must be in the future", _} = changeset.errors[:snoozed_until]
+    end
+
+    test "does not touch status" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+      until_date = Date.shift(Date.utc_today(), day: 1)
+
+      changeset =
+        TeamDeletionSchedule.crm_changeset(schedule, %{
+          "snoozed_until" => Date.to_iso8601(until_date)
+        })
+
+      refute Ecto.Changeset.get_change(changeset, :status)
+    end
+  end
+
   describe "team_id foreign key" do
     test "deleting the team cascades to the schedule" do
       schedule = insert(:team_deletion_schedule)
