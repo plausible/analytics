@@ -198,6 +198,7 @@ defmodule Plausible.MixProject do
       # mix test.e2e --ui
       # mix test.e2e --debug segments.spec.ts
       "test.e2e": [
+        "tailwind default",
         "esbuild default",
         "esbuild friendly_captcha",
         "ecto.create --quiet",
