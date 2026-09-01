@@ -154,6 +154,34 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text_of_attr(html, "#team_accept_traffic_until", "value") == "2029-01-15"
       end
 
+      test "prolonging trial_expiry_date cancels a pending expired-trial deletion schedule", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            category: :expired_trial,
+            status: :scheduled,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+
+        lv
+        |> element(~s|form[phx-submit="save-team"]|)
+        |> render_submit(%{"team" => %{"trial_expiry_date" => "2029-01-01"}})
+
+        html = render(lv)
+        refute text(html) =~ "Deletion scheduled"
+
+        assert Plausible.Repo.reload!(schedule).status == :cancelled
+      end
+
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))

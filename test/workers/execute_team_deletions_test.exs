@@ -12,7 +12,7 @@ defmodule Plausible.Workers.ExecuteTeamDeletionsTest do
   test "deletes the team's site and marks the schedule completed, keeping the team intact" do
     owner = new_user()
     site = new_site(owner: owner)
-    team = team_of(owner)
+    team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
     schedule =
       insert(:team_deletion_schedule,
@@ -31,7 +31,7 @@ defmodule Plausible.Workers.ExecuteTeamDeletionsTest do
   test "deletes every site owned by the team" do
     owner = new_user()
     site_a = new_site(owner: owner)
-    team = team_of(owner)
+    team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
     site_b = new_site(team: team)
 
     insert(:team_deletion_schedule, team: team, status: :reminder_sent, deletion_date: @today)
@@ -68,7 +68,7 @@ defmodule Plausible.Workers.ExecuteTeamDeletionsTest do
   test "passes the schedule's category through as the pending stats deletion reason (expired_trial)" do
     owner = new_user()
     site = new_site(owner: owner)
-    team = team_of(owner)
+    team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
     insert(:team_deletion_schedule,
       team: team,
@@ -86,6 +86,12 @@ defmodule Plausible.Workers.ExecuteTeamDeletionsTest do
     owner = new_user()
     site = new_site(owner: owner)
     team = team_of(owner)
+
+    insert(:subscription,
+      team: team,
+      status: Subscription.Status.deleted(),
+      next_bill_date: Date.shift(@today, day: -400)
+    )
 
     insert(:team_deletion_schedule,
       team: team,

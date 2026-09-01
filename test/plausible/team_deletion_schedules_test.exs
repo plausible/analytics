@@ -242,12 +242,36 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       assert Repo.reload(schedule).status == :cancelled
     end
 
-    test "does not cancel when the team has no subscription at all" do
-      team = insert(:team)
+    test "does not cancel when the team has no subscription and its trial is still expired" do
+      team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
       assert TeamDeletionSchedules.cancel_for_team(team) == 0
       assert Repo.reload(schedule).status == :scheduled
+    end
+
+    test "cancels when the team has no subscription but its trial is no longer expired" do
+      team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: 30))
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
+    end
+
+    test "cancels when the team's trial_expiry_date is today (no longer counts as expired)" do
+      team = insert(:team, trial_expiry_date: Date.utc_today())
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
+    end
+
+    test "cancels when the team has no subscription and no trial_expiry_date at all" do
+      team = insert(:team, trial_expiry_date: nil)
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
     end
 
     test "does not cancel for a paused subscription" do
