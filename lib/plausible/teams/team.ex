@@ -66,6 +66,9 @@ defmodule Plausible.Teams.Team do
     has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
+    has_one :team_deletion_schedule, Plausible.TeamDeletionSchedule,
+      where: [status: {:in, Plausible.TeamDeletionSchedule.active_statuses()}]
+
     on_ee do
       has_one :sso_integration, Plausible.Auth.SSO.Integration
     end
