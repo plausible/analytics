@@ -219,7 +219,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         lv
         |> element(~s|form[phx-submit="snooze-schedule"]|)
-        |> render_submit(%{"until" => "2026-09-20", "note" => "give them time"})
+        |> render_submit(%{
+          "team_deletion_schedule" => %{
+            "snoozed_until" => "2026-09-20",
+            "snooze_note" => "give them time"
+          }
+        })
 
         html = render(lv)
         assert text(html) =~ "Snoozed until 2026-09-20"
@@ -229,6 +234,52 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert updated.status == :snoozed
         assert updated.snoozed_until == ~D[2026-09-20]
         assert updated.snooze_note == "give them time"
+      end
+
+      test "rejects a snooze date that isn't in the future", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        today_iso = Date.to_iso8601(Date.utc_today())
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => today_iso}})
+
+        assert text(html) =~ "must be in the future"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
+      end
+
+      test "rejects a blank snooze date", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => ""}})
+
+        assert text(html) =~ "can't be blank"
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
       end
 
       test "allows unsnoozing a snoozed schedule", %{conn: conn, user: user} do

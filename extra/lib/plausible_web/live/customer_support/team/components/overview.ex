@@ -5,20 +5,27 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
 
+  alias Plausible.TeamDeletionSchedule
   alias Plausible.TeamDeletionSchedules
 
   def update(%{team: team}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
     schedule = TeamDeletionSchedules.active_schedule_for_team(team)
+    snooze_form = schedule && to_form(TeamDeletionSchedule.crm_changeset(schedule, %{}))
 
-    {:ok, assign(socket, team: team, form: form, schedule: schedule)}
+    {:ok, assign(socket, team: team, form: form, schedule: schedule, snooze_form: snooze_form)}
   end
 
   def render(assigns) do
     ~H"""
     <div class="mt-8">
-      <.deletion_schedule :if={@schedule} schedule={@schedule} myself={@myself} />
+      <.deletion_schedule
+        :if={@schedule}
+        schedule={@schedule}
+        snooze_form={@snooze_form}
+        myself={@myself}
+      />
 
       <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
         <.input field={f[:trial_expiry_date]} type="date" label="Trial Expiry Date" />
@@ -51,6 +58,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   end
 
   attr :schedule, :any, required: true
+  attr :snooze_form, :any, required: true
   attr :myself, :any, required: true
 
   defp deletion_schedule(assigns) do
@@ -75,16 +83,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
           </.button>
         </div>
 
-        <form
+        <.form
+          :let={f}
           :if={@schedule.status != :snoozed}
+          for={@snooze_form}
           phx-submit="snooze-schedule"
           phx-target={@myself}
           class="mt-3 flex items-end gap-x-4"
         >
-          <.input type="date" name="until" value="" label="Snooze until" />
-          <.input type="text" name="note" value="" label="Note (optional)" />
+          <.input field={f[:snoozed_until]} type="date" label="Snooze until" />
+          <.input field={f[:snooze_note]} type="text" label="Note (optional)" />
           <.button type="submit">Snooze</.button>
-        </form>
+        </.form>
       </.notice>
     </div>
     """
@@ -159,28 +169,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     end
   end
 
-  def handle_event("snooze-schedule", %{"until" => until_str} = params, socket) do
-    case Date.from_iso8601(until_str) do
-      {:ok, until_date} ->
-        note =
-          case params |> Map.get("note", "") |> String.trim() do
-            "" -> nil
-            note -> note
-          end
+  def handle_event("snooze-schedule", %{"team_deletion_schedule" => params}, socket) do
+    changeset = TeamDeletionSchedule.crm_changeset(socket.assigns.schedule, params)
 
-        case TeamDeletionSchedules.snooze(socket.assigns.schedule, until_date, note: note) do
-          {:ok, schedule} ->
-            success("Deletion snoozed until #{until_date}")
-            {:noreply, assign(socket, schedule: schedule)}
+    if changeset.valid? do
+      until_date = Ecto.Changeset.get_change(changeset, :snoozed_until)
+      note = Ecto.Changeset.get_change(changeset, :snooze_note)
 
-          {:error, {:invalid_transition, _, _}} ->
-            failure("Could not snooze - schedule is no longer in a snoozable state")
-            {:noreply, socket}
-        end
+      case TeamDeletionSchedules.snooze(socket.assigns.schedule, until_date, note: note) do
+        {:ok, schedule} ->
+          success("Deletion snoozed until #{until_date}")
+          {:noreply, assign(socket, schedule: schedule)}
 
-      {:error, _} ->
-        failure("Invalid date")
-        {:noreply, socket}
+        {:error, {:invalid_transition, _, _}} ->
+          failure("Could not snooze - schedule is no longer in a snoozable state")
+          {:noreply, socket}
+      end
+    else
+      {:noreply, assign(socket, snooze_form: to_form(%{changeset | action: :validate}))}
     end
   end
 
