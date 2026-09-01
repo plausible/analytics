@@ -57,35 +57,35 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     ~H"""
     <div class="mb-6">
       <.notice theme={notice_theme(@schedule.status)} title="Deletion scheduled">
-        <%= deletion_sentence(@schedule) %>
+        {deletion_sentence(@schedule)}
 
-      <div :if={@schedule.status == :snoozed} class="mt-3">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          Snoozed until <strong>{@schedule.snoozed_until}</strong><span :if={@schedule.snooze_note}> — "{@schedule.snooze_note}"</span>.
-        </p>
+        <div :if={@schedule.status == :snoozed} class="mt-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Snoozed until
+            <strong>{@schedule.snoozed_until}</strong><span :if={@schedule.snooze_note}> — "{@schedule.snooze_note}"</span>.
+          </p>
 
-        <.button
-          class="mt-2"
-          phx-click="unsnooze-schedule"
+          <.button
+            class="mt-2"
+            phx-click="unsnooze-schedule"
+            phx-target={@myself}
+            data-confirm="Resume the deletion schedule now? This restarts the notice cycle."
+          >
+            Unsnooze
+          </.button>
+        </div>
+
+        <form
+          :if={@schedule.status != :snoozed}
+          phx-submit="snooze-schedule"
           phx-target={@myself}
-          data-confirm="Resume the deletion schedule now? This restarts the notice cycle."
+          class="mt-3 flex items-end gap-x-4"
         >
-          Unsnooze
-        </.button>
-      </div>
-
-      <form
-        :if={@schedule.status != :snoozed}
-        phx-submit="snooze-schedule"
-        phx-target={@myself}
-        class="mt-3 flex items-end gap-x-4"
-      >
-        <.input type="date" name="until" value="" label="Snooze until" />
-        <.input type="text" name="note" value="" label="Note (optional)" />
-        <.button type="submit">Snooze</.button>
-      </form>
-    </.notice>
-
+          <.input type="date" name="until" value="" label="Snooze until" />
+          <.input type="text" name="note" value="" label="Note (optional)" />
+          <.button type="submit">Snooze</.button>
+        </form>
+      </.notice>
     </div>
     """
   end
@@ -130,12 +130,15 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   def handle_event("save-team", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
-    # TODO: if this prolongs trial_expiry_date (or otherwise makes the team
-    # eligible again) cancely any Plausible.TeamDeletionSchedule
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
+        # Prolonging trial_expiry_date (or otherwise making the team
+        # eligible again) cancels any pending deletion schedule.
+        TeamDeletionSchedules.cancel_for_team(team)
+        schedule = TeamDeletionSchedules.active_schedule_for_team(team)
+
         success("Team saved")
-        {:noreply, assign(socket, team: team, form: to_form(changeset))}
+        {:noreply, assign(socket, team: team, form: to_form(changeset), schedule: schedule)}
 
       {:error, changeset} ->
         failure("Error saving team: #{inspect(changeset.errors)}")
