@@ -2,7 +2,7 @@ import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 
 import { numberLongFormatter, rateFormatter } from '../../util/number-formatter'
-import { StepMetrics } from './metrics'
+import { StepOutcome, StepValues } from './metrics'
 
 // The outcome box sits at the foot of a funnel bar. By default it is a compact
 // pill with the rates only ("→ 55% ↓ 45%"). On hover, focus, or touch it grows
@@ -23,38 +23,40 @@ type Outcome = {
   count: string
 }
 
+function outcome(
+  kind: Outcome['kind'],
+  symbol: string,
+  { rate, visitors }: StepOutcome,
+  verb: string
+): Outcome {
+  const formatted = rateFormatter(rate)
+
+  return {
+    kind,
+    symbol,
+    rate: formatted,
+    detail: `${formatted} ${verb}`,
+    count: `(${numberLongFormatter(visitors)})`
+  }
+}
+
 function stepOutcomes(
-  step: StepMetrics,
+  values: StepValues,
   entryStep: boolean,
   finalStep: boolean
 ): Outcome[] {
-  const continued = rateFormatter(step.continued.rate)
   const continuedVerb = entryStep
     ? 'entered'
     : finalStep
       ? 'converted'
       : 'continued'
 
-  const outcomes: Outcome[] = [
-    {
-      kind: 'continued',
-      symbol: finalStep ? '✓' : '→',
-      rate: continued,
-      detail: `${continued} ${continuedVerb}`,
-      count: `(${numberLongFormatter(step.continued.visitors)})`
-    }
+  const outcomes = [
+    outcome('continued', finalStep ? '✓' : '→', values.continued, continuedVerb)
   ]
 
   if (!entryStep) {
-    const droppedOff = rateFormatter(step.droppedOff.rate)
-
-    outcomes.push({
-      kind: 'droppedOff',
-      symbol: '↓',
-      rate: droppedOff,
-      detail: `${droppedOff} dropped off`,
-      count: `(${numberLongFormatter(step.droppedOff.visitors)})`
-    })
+    outcomes.push(outcome('droppedOff', '↓', values.droppedOff, 'dropped off'))
   }
 
   return outcomes
@@ -67,13 +69,11 @@ function OutcomeText({
   outcome: Outcome
   detailed: boolean
 }): ReactNode {
-  const dropoff = outcome.kind === 'droppedOff'
-
   return (
     <span
       className={classNames(
         'flex items-start gap-1 font-medium',
-        dropoff
+        outcome.kind === 'droppedOff'
           ? 'text-gray-500 dark:text-gray-400'
           : 'text-gray-900 dark:text-gray-100'
       )}
@@ -143,28 +143,32 @@ function useOutcomeSize(measureKey: string) {
 }
 
 export function StepOutcomes({
-  step,
+  values,
   entryStep,
-  finalStep
+  finalStep,
+  previousPeriod
 }: {
-  step: StepMetrics
+  values: StepValues
   entryStep: boolean
   finalStep: boolean
+  previousPeriod?: boolean
 }): ReactNode {
   const [open, setOpen] = useState(false)
 
-  const outcomes = stepOutcomes(step, entryStep, finalStep)
+  const outcomes = stepOutcomes(values, entryStep, finalStep)
   const label = outcomes
     .map(({ detail, count }) => `${detail} ${count}`)
     .join(', ')
 
-  const { box, compact, expanded } = useOutcomeSize(label)
+  const accessibleName = previousPeriod ? `Previous period: ${label}` : label
+
+  const { box, compact, expanded } = useOutcomeSize(accessibleName)
 
   return (
     <button
       ref={box}
       type="button"
-      aria-label={label}
+      aria-label={accessibleName}
       data-open={open || undefined}
       onClick={() => setOpen((shown) => !shown)}
       style={{ left: OUTCOME_INSET_PX, bottom: OUTCOME_INSET_PX }}
@@ -174,7 +178,7 @@ export function StepOutcomes({
         'w-[var(--outcome-w,max-content)] h-[var(--outcome-h,auto)]',
         'transition-[width,height] duration-200 ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40',
-        'group-hover/step:w-[var(--outcome-grown-w)] group-hover/step:h-[var(--outcome-grown-h)]',
+        'group-hover/bar:w-[var(--outcome-grown-w)] group-hover/bar:h-[var(--outcome-grown-h)]',
         'focus-visible:w-[var(--outcome-grown-w)] focus-visible:h-[var(--outcome-grown-h)]',
         'data-open:w-[var(--outcome-grown-w)] data-open:h-[var(--outcome-grown-h)]'
       )}
@@ -182,7 +186,7 @@ export function StepOutcomes({
       <div
         ref={compact}
         aria-hidden="true"
-        className="flex items-center gap-1.5 w-max px-1.5 py-0.5 text-xs leading-4 whitespace-nowrap transition-opacity duration-200 starting:opacity-0 group-hover/step:opacity-0 group-focus-visible/outcome:opacity-0 group-data-open/outcome:opacity-0"
+        className="flex items-center gap-1.5 w-max px-1.5 py-0.5 text-xs leading-4 whitespace-nowrap transition-opacity duration-200 starting:opacity-0 group-hover/bar:opacity-0 group-focus-visible/outcome:opacity-0 group-data-open/outcome:opacity-0"
       >
         {outcomes.map((outcome) => (
           <OutcomeText key={outcome.kind} outcome={outcome} detailed={false} />
@@ -192,7 +196,7 @@ export function StepOutcomes({
       <div
         ref={expanded}
         aria-hidden="true"
-        className="absolute top-0 left-0 flex flex-col gap-0.5 w-[var(--outcome-grown-w,max-content)] px-1.5 py-0.5 text-xs leading-4 opacity-0 transition-opacity duration-150 group-hover/step:opacity-100 group-focus-visible/outcome:opacity-100 group-data-open/outcome:opacity-100"
+        className="absolute top-0 left-0 flex flex-col gap-0.5 w-[var(--outcome-grown-w,max-content)] px-1.5 py-0.5 text-xs leading-4 opacity-0 transition-opacity duration-150 group-hover/bar:opacity-100 group-focus-visible/outcome:opacity-100 group-data-open/outcome:opacity-100"
       >
         {outcomes.map((outcome) => (
           <OutcomeText key={outcome.kind} outcome={outcome} detailed={true} />
