@@ -126,6 +126,16 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   @doc """
+  Get the team's current active (non-terminal) deletion schedule, if any
+  """
+  @spec active_schedule_for_team(Teams.Team.t()) :: TeamDeletionSchedule.t() | nil
+  def active_schedule_for_team(team) do
+    team.id
+    |> active_schedule_query()
+    |> Repo.one()
+  end
+
+  @doc """
   Pending, non-backlog expired trial schedules for the
   given team ids, keyed by `team_id`
   """
@@ -267,11 +277,16 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   defp active_schedule_for(team_id) do
+    team_id
+    |> active_schedule_query()
+    |> lock("FOR UPDATE")
+    |> Repo.one()
+  end
+
+  defp active_schedule_query(team_id) do
     TeamDeletionSchedule
     |> where([sch], sch.team_id == ^team_id)
     |> where([sch], sch.status in ^TeamDeletionSchedule.active_statuses())
-    |> lock("FOR UPDATE")
-    |> Repo.one()
   end
 
   defp eligible_category?(today) do

@@ -159,6 +159,76 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
       end
+
+      test "does not show a deletion schedule section when there is none", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+
+        refute text(html) =~ "Deletion scheduled"
+      end
+
+      test "shows an active deletion schedule and allows snoozing it", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        lv
+        |> element(~s|form[phx-submit="snooze-schedule"]|)
+        |> render_submit(%{"until" => "2026-09-20", "note" => "give them time"})
+
+        html = render(lv)
+        assert text(html) =~ "Snoozed until 2026-09-20"
+        assert text(html) =~ "give them time"
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :snoozed
+        assert updated.snoozed_until == ~D[2026-09-20]
+        assert updated.snooze_note == "give them time"
+      end
+
+      test "allows unsnoozing a snoozed schedule", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :snoozed,
+            snoozed_until: ~D[2026-09-20],
+            snooze_note: "customer asked for time",
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Snoozed until"
+        assert element_exists?(html, ~s|button[phx-click="unsnooze-schedule"]|)
+
+        lv |> element(~s|button[phx-click="unsnooze-schedule"]|) |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :scheduled
+        assert updated.is_backlog
+      end
     end
 
     describe "sites" do
