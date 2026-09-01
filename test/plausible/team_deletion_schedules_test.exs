@@ -713,6 +713,39 @@ defmodule Plausible.TeamDeletionSchedulesTest do
     end
   end
 
+  describe "due_for_unsnooze/1" do
+    test "returns a snoozed row whose snoozed_until has arrived" do
+      schedule =
+        insert(:team_deletion_schedule, status: :snoozed, snoozed_until: @today)
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_unsnooze(@today)
+      assert id == schedule.id
+    end
+
+    test "returns a row whose snoozed_until is overdue (missed run catch-up)" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :snoozed,
+          snoozed_until: Date.shift(@today, day: -3)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_unsnooze(@today)
+      assert id == schedule.id
+    end
+
+    test "does not return a row whose snoozed_until is still in the future" do
+      insert(:team_deletion_schedule, status: :snoozed, snoozed_until: Date.shift(@today, day: 1))
+
+      assert TeamDeletionSchedules.due_for_unsnooze(@today) == []
+    end
+
+    test "does not return a row that isn't snoozed" do
+      insert(:team_deletion_schedule, status: :reminder_sent, deletion_date: @today)
+
+      assert TeamDeletionSchedules.due_for_unsnooze(@today) == []
+    end
+  end
+
   describe "pending_steady_state_trials_by_team_id/1" do
     test "returns a scheduled, non-backlog expired_trial schedule keyed by team_id" do
       team = insert(:team)

@@ -846,6 +846,10 @@ cloud_cron = [
   {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
   # Every midnight
   {"0 0 * * *", Plausible.Workers.LockSites},
+  # Daily at 6, ahead of ScanInactiveTeams - restarts the notice cycle for
+  # any lapsed snoozes so they're immediately eligible again same-day
+  # TODO: enable
+  # {"0 6 * * *", Plausible.Workers.UnsnoozeTeamDeletions},
   # Daily at 7, ahead of AcceptTrafficUntil/SendTrialNotifications
   # TODO: enable
   # {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
@@ -891,6 +895,7 @@ cloud_queues = [
   notify_annual_renewal: 1,
   lock_sites: 1,
   scan_inactive_teams: 1,
+  unsnooze_team_deletions: 1,
   deletion_notification_emails: 1,
   execute_team_deletions: 1,
   legacy_time_on_page_cutoff: 1,
