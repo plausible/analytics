@@ -296,6 +296,37 @@ defmodule Plausible.TeamDeletionSchedulesTest do
     end
   end
 
+  describe "active_schedule_for_team/1" do
+    test "returns the team's active schedule" do
+      team = insert(:team)
+      schedule = insert(:team_deletion_schedule, team: team, status: :reminder_sent)
+
+      assert result = TeamDeletionSchedules.active_schedule_for_team(team)
+      assert result.id == schedule.id
+    end
+
+    test "returns nil for a team with no schedule at all" do
+      team = insert(:team)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
+    end
+
+    test "returns nil when the team's only schedule is terminal" do
+      team = insert(:team)
+      insert(:team_deletion_schedule, team: team, status: :cancelled)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
+    end
+
+    test "does not return another team's schedule" do
+      team = insert(:team)
+      other_team = insert(:team)
+      insert(:team_deletion_schedule, team: other_team, status: :scheduled)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
+    end
+  end
+
   describe "transitions/0" do
     test "matches the schema's known statuses" do
       transitions = TeamDeletionSchedules.transitions()
