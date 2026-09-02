@@ -21,6 +21,13 @@ defmodule Plausible.Teams.Team do
   @trial_accept_traffic_until_offset_days 14
   @subscription_accept_traffic_until_offset_days 30
 
+  @max_name_length 50
+  # `teams.name` is a varchar(255), which counts code points. Capping bytes
+  # keeps the column safe, since a code point is never shorter than a byte.
+  @max_name_bytes 255
+  @suggested_name_suffix "'s team"
+  @suggested_name_fallback "My team"
+
   on_ee do
     @derive {Plausible.Audit.Encoder,
              only: [
@@ -84,6 +91,35 @@ defmodule Plausible.Teams.Team do
     timestamps()
   end
 
+  @doc """
+  Builds the team name suggested for a user, shortening the user's name as
+  needed, so that the result stays within the name length limit.
+
+  Falls back to a generic name when the user's name would make the suggestion
+  invalid, so that the suggestion is always safe to persist.
+  """
+  def suggested_name(user_name) when is_binary(user_name) do
+    room = @max_name_length - String.length(@suggested_name_suffix)
+
+    suggested =
+      user_name
+      |> String.slice(0, room)
+      |> String.trim_trailing()
+      |> Kernel.<>(@suggested_name_suffix)
+
+    if valid_suggestion?(suggested) do
+      suggested
+    else
+      @suggested_name_fallback
+    end
+  end
+
+  def suggested_name(_user_name), do: @suggested_name_fallback
+
+  defp valid_suggestion?(name) do
+    byte_size(name) <= @max_name_bytes and not contains_scheme?(name)
+  end
+
   def crm_changeset(team, params) do
     team
     |> cast(params, [
@@ -93,6 +129,7 @@ defmodule Plausible.Teams.Team do
       :allow_next_upgrade_override,
       :accept_traffic_until
     ])
+    |> validate_name()
     |> maybe_bump_accept_traffic_until()
   end
 
@@ -100,6 +137,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(attrs, [:name])
     |> validate_required(:name)
+    |> validate_name()
     |> start_trial(today)
     |> maybe_bump_accept_traffic_until()
     |> maybe_set_identifier()
@@ -109,6 +147,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(attrs, [:name])
     |> validate_required(:name)
+    |> validate_name()
     |> validate_exclusion(:name, [Plausible.Teams.default_name()])
   end
 
@@ -132,6 +171,23 @@ defmodule Plausible.Teams.Team do
   def end_trial(team) do
     change(team, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
   end
+
+  defp validate_name(changeset) do
+    changeset
+    |> validate_length(:name, max: @max_name_length)
+    |> validate_length(:name, count: :bytes, max: @max_name_bytes)
+    |> validate_change(:name, fn :name, name ->
+      if contains_scheme?(name) do
+        [name: "cannot contain a URL"]
+      else
+        []
+      end
+    end)
+  end
+
+  # Team names end up in invitation e-mails, so reject names carrying an
+  # explicit URL scheme. Bare hostnames are deliberately left alone.
+  defp contains_scheme?(name), do: String.contains?(name, "://")
 
   defp maybe_set_identifier(changeset) do
     if get_field(changeset, :identifier) do
