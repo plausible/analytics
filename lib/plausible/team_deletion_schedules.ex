@@ -352,17 +352,25 @@ defmodule Plausible.TeamDeletionSchedules do
 
     deletion_date = DeletionSchedule.deletion_date(category, expiry_date)
     steady_state_first_notice_due_date = DeletionSchedule.first_notice_due_date(deletion_date)
-    is_backlog? = Date.before?(steady_state_first_notice_due_date, today)
+    backlog? = Date.before?(steady_state_first_notice_due_date, today)
+
+    first_notice_due_date =
+      if backlog? do
+        # Spread backlog rows across the release window rather than piling
+        # them all onto the day they're first discovered.
+        offset = rem(candidate.team_id, DeletionSchedule.backlog_release_window_days())
+        Date.add(today, offset)
+      else
+        steady_state_first_notice_due_date
+      end
 
     %{
       team_id: candidate.team_id,
       category: category,
       expiry_date: expiry_date,
       deletion_date: deletion_date,
-      # Backlog rows will be spread-out eventually.
-      # `today` is temporary for now.
-      first_notice_due_date: if(is_backlog?, do: today, else: steady_state_first_notice_due_date),
-      is_backlog: is_backlog?,
+      first_notice_due_date: first_notice_due_date,
+      is_backlog: backlog?,
       status: :scheduled,
       inserted_at: now,
       updated_at: now

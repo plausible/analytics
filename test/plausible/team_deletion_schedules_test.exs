@@ -36,15 +36,39 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       assert TeamDeletionSchedules.sync_eligible(@today) == 0
     end
 
-    test "marks a long-expired trial as backlog, due today" do
+    test "marks a long-expired trial as backlog, spread across the release window" do
       team = insert(:team, trial_expiry_date: Date.shift(@today, day: -400))
       new_site(team: team)
 
       assert TeamDeletionSchedules.sync_eligible(@today) == 1
 
       schedule = Repo.get_by!(TeamDeletionSchedule, team_id: team.id)
+      window = Plausible.Teams.DeletionSchedule.backlog_release_window_days()
+
       assert schedule.is_backlog
-      assert schedule.first_notice_due_date == @today
+      assert schedule.first_notice_due_date == Date.add(@today, rem(team.id, window))
+    end
+
+    test "spreads multiple backlog rows across the release window based on team_id" do
+      teams =
+        for _ <- 1..5 do
+          team = insert(:team, trial_expiry_date: Date.shift(@today, day: -400))
+          new_site(team: team)
+          team
+        end
+
+      assert TeamDeletionSchedules.sync_eligible(@today) == 5
+
+      window = Plausible.Teams.DeletionSchedule.backlog_release_window_days()
+
+      due_dates =
+        for team <- teams do
+          schedule = Repo.get_by!(TeamDeletionSchedule, team_id: team.id)
+          assert schedule.first_notice_due_date == Date.add(@today, rem(team.id, window))
+          schedule.first_notice_due_date
+        end
+
+      assert length(Enum.uniq(due_dates)) > 1
     end
 
     test "does not mark a recently-expired trial as backlog" do
