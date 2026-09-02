@@ -72,6 +72,34 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
       assert updated.deletion_date == Date.shift(@today, day: 30)
     end
 
+    test "sends the backlog first notice email with the finalized deletion date, not the stale placeholder" do
+      owner = new_user()
+      new_site(owner: owner)
+      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :expired_trial,
+        status: :scheduled,
+        is_backlog: true,
+        first_notice_due_date: @today,
+        deletion_date: ~D[2024-01-01]
+      )
+
+      SendDeletionNotifications.perform(nil, @today)
+
+      finalized_date = Date.shift(@today, day: 30)
+
+      assert_email_delivered_with(
+        to: [{owner.name, owner.email}],
+        html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(finalized_date))}/
+      )
+
+      refute_email_delivered_with(
+        html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(~D[2024-01-01]))}/
+      )
+    end
+
     test "does not touch a row whose first_notice_due_date hasn't arrived" do
       owner = new_user()
       new_site(owner: owner)
