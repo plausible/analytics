@@ -43,10 +43,10 @@ defmodule Plausible.Stats.Funnel do
        name: funnel.name,
        strict_order: funnel.strict_order,
        comparison: comparison,
-       date_range: iso_date_range(query.utc_time_range, query.timezone),
+       date_range: tz_date_range(query.utc_time_range, query.timezone),
        comparison_date_range:
          if(query.comparison_utc_time_range,
-           do: iso_date_range(query.comparison_utc_time_range, query.timezone)
+           do: tz_date_range(query.comparison_utc_time_range, query.timezone)
          )
      })}
   end
@@ -190,8 +190,8 @@ defmodule Plausible.Stats.Funnel do
     |> Enum.reverse()
   end
 
-  defp iso_date_range(utc_time_range, timezone) do
+  defp tz_date_range(utc_time_range, timezone) do
     range = DateTimeRange.to_date_range(utc_time_range, timezone)
-    [Date.to_iso8601(range.first), Date.to_iso8601(range.last)]
+    [range.first, range.last]
   end
 end
