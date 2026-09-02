@@ -10,7 +10,7 @@ defmodule Plausible.Teams.DeletionSchedule do
   @reminder_before_deletion_days 5
 
   @backlog_deletion_offset_days 30
-  @backlog_release_window_days 30
+  @backlog_release_window_days 60
 
   # how many domains to include in notifications
   @notification_site_list_limit 3
