@@ -1042,3 +1042,139 @@ test('funnels', async ({ page, request }) => {
     ])
   })
 })
+
+test('funnels - comparisons', async ({ page, request }) => {
+  const report = getReport(page)
+  const { domain } = await setupSite({ page, request })
+
+  const thirtyDays = 30 * 24 * 60
+  const yesterday = 24 * 60
+
+  await populateStats({
+    request,
+    domain,
+    events: [
+      {
+        user_id: 120,
+        name: 'pageview',
+        pathname: '/products',
+        timestamp: { minutesAgo: thirtyDays + 60 }
+      },
+      {
+        user_id: 120,
+        name: 'pageview',
+        pathname: '/cart',
+        timestamp: { minutesAgo: thirtyDays + 55 }
+      },
+      {
+        user_id: 120,
+        name: 'pageview',
+        pathname: '/checkout',
+        timestamp: { minutesAgo: thirtyDays + 50 }
+      },
+      {
+        user_id: 121,
+        name: 'pageview',
+        pathname: '/products',
+        timestamp: { minutesAgo: thirtyDays + 55 }
+      },
+      {
+        user_id: 121,
+        name: 'pageview',
+        pathname: '/cart',
+        timestamp: { minutesAgo: thirtyDays + 50 }
+      },
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/products',
+        timestamp: { minutesAgo: yesterday + 60 }
+      },
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/cart',
+        timestamp: { minutesAgo: yesterday + 55 }
+      },
+      {
+        user_id: 123,
+        name: 'pageview',
+        pathname: '/checkout',
+        timestamp: { minutesAgo: yesterday + 50 }
+      },
+      {
+        user_id: 124,
+        name: 'pageview',
+        pathname: '/products',
+        timestamp: { minutesAgo: yesterday + 55 }
+      },
+      {
+        user_id: 124,
+        name: 'pageview',
+        pathname: '/cart',
+        timestamp: { minutesAgo: yesterday + 50 }
+      },
+      {
+        user_id: 125,
+        name: 'pageview',
+        pathname: '/products',
+        timestamp: { minutesAgo: yesterday + 50 }
+      }
+    ]
+  })
+
+  await addPageviewGoal({ page, domain, pathname: '/products' })
+  await addPageviewGoal({ page, domain, pathname: '/cart' })
+  await addPageviewGoal({ page, domain, pathname: '/checkout' })
+
+  await addFunnel({
+    request,
+    domain,
+    name: `Shopping Funnel`,
+    steps: ['Visit /products', 'Visit /cart', 'Visit /checkout']
+  })
+
+  await page.goto('/' + domain, { waitUntil: 'commit' })
+
+  const funnelsTabButton = tabButtonWithDropdown(report, 'Funnels')
+
+  await test.step('rendering funnels', async () => {
+    await funnelsTabButton.click()
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
+    await dropdown(report)
+      .getByRole('button', { name: 'Shopping Funnel' })
+      .click()
+
+    await expect(tabButton(funnelsTabButton, 'Funnels')).toHaveAttribute(
+      'data-active',
+      'true'
+    )
+
+    // enable compare
+    await page.keyboard.press('x')
+
+    await expect(report.getByRole('heading')).toHaveText('Shopping Funnel')
+
+    await expect(report.getByText('3-step funnel')).toBeVisible()
+
+    await expect(report.getByText('Sequential')).toBeVisible()
+
+    await expect(report.getByText(/Conversion rate:\s*33\.3%/)).toBeVisible()
+
+    await expect(report.getByTestId('change-arrow').first()).toHaveText('16.7%')
+
+    const steps = report.locator('[data-testid^="funnel-step-"]')
+    await expect(steps).toHaveCount(3)
+    await expect(steps.nth(0)).toContainText('Visit /products')
+    await expect(steps.nth(0)).toContainText('100% entered')
+    await expect(steps.nth(0)).toContainText('3 visitors')
+    await expect(steps.nth(0)).toContainText('2 visitors')
+    await expect(steps.nth(1)).toContainText('Visit /cart')
+    await expect(steps.nth(1)).toContainText('66.7% continued')
+    await expect(steps.nth(1)).toContainText('100% continued')
+    await expect(steps.nth(1)).toContainText('2 visitors')
+    await expect(steps.nth(2)).toContainText('Visit /checkout')
+    await expect(steps.nth(2)).toContainText('33.3%')
+    await expect(steps.nth(2)).toContainText('50% converted')
+  })
+})
