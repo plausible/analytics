@@ -37,6 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
         assert %{
                  "name" => "Test funnel",
                  "strict_order" => false,
+                 "comparison" => nil,
                  "all_visitors" => 3,
                  "entering_visitors" => 2,
                  "entering_visitors_percentage" => "66.67",
@@ -261,6 +262,122 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  "error" =>
                    "Funnels and user journeys is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
                } == resp
+      end
+    end
+
+    describe "GET /api/stats/funnel - comparisons" do
+      setup [:create_user, :log_in, :create_site]
+
+      @comparison_stats [
+        # 2021-01-02: one visitor reaches Signup
+        {"/blog/announcement", @user_id, ~N[2021-01-02 12:00:00]},
+        {"Signup", @user_id, ~N[2021-01-02 12:01:00]},
+        # 2021-01-01: two visitors enter, one reaches Signup
+        {"/blog/announcement", @user_id, ~N[2021-01-01 12:00:00]},
+        {"/blog/announcement", @other_user_id, ~N[2021-01-01 13:00:00]},
+        {"Signup", @other_user_id, ~N[2021-01-01 13:01:00]}
+      ]
+
+      defp populate_comparison_stats(site) do
+        populate_stats(
+          site,
+          Enum.map(@comparison_stats, fn
+            {"/" <> _ = pathname, user_id, timestamp} ->
+              build(:pageview, pathname: pathname, user_id: user_id, timestamp: timestamp)
+
+            {name, user_id, timestamp} ->
+              build(:event, name: name, user_id: user_id, timestamp: timestamp)
+          end)
+        )
+      end
+
+      test "gives no comparison without a comparison param", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        populate_comparison_stats(site)
+
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&date=2021-01-02")
+          |> json_response(200)
+
+        assert resp["comparison"] == nil
+        assert resp["comparison_date_range"] == nil
+        assert resp["date_range"] == ["2021-01-02", "2021-01-02"]
+      end
+
+      test "compares against the previous period", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        populate_comparison_stats(site)
+
+        resp =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&date=2021-01-02&comparison=previous_period"
+          )
+          |> json_response(200)
+
+        assert %{
+                 "all_visitors" => 1,
+                 "entering_visitors" => 1,
+                 "date_range" => ["2021-01-02", "2021-01-02"],
+                 "comparison_date_range" => ["2021-01-01", "2021-01-01"],
+                 "steps" => [
+                   %{"label" => "Visit /blog/announcement", "visitors" => 1},
+                   %{"label" => "Signup", "visitors" => 1, "conversion_rate" => "100"},
+                   %{"label" => "Visit /cart/add/product", "visitors" => 0},
+                   %{"label" => "Purchase", "visitors" => 0}
+                 ],
+                 "comparison" => %{
+                   "all_visitors" => 2,
+                   "entering_visitors" => 2,
+                   "entering_visitors_percentage" => "100",
+                   "never_entering_visitors" => 0,
+                   "never_entering_visitors_percentage" => "0",
+                   "steps" => [
+                     %{
+                       "label" => "Visit /blog/announcement",
+                       "visitors" => 2,
+                       "conversion_rate" => "100"
+                     },
+                     %{
+                       "label" => "Signup",
+                       "visitors" => 1,
+                       "conversion_rate" => "50",
+                       "dropoff" => 1,
+                       "dropoff_percentage" => "50"
+                     },
+                     %{"label" => "Visit /cart/add/product", "visitors" => 0},
+                     %{"label" => "Purchase", "visitors" => 0}
+                   ]
+                 }
+               } = resp
+      end
+
+      test "compares against a custom period", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        populate_comparison_stats(site)
+
+        resp =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&date=2021-01-02&comparison=custom&compare_from=2021-01-01&compare_to=2021-01-01"
+          )
+          |> json_response(200)
+
+        assert %{
+                 "date_range" => ["2021-01-02", "2021-01-02"],
+                 "comparison_date_range" => ["2021-01-01", "2021-01-01"],
+                 "comparison" => %{
+                   "all_visitors" => 2,
+                   "entering_visitors" => 2,
+                   "steps" => [
+                     %{"visitors" => 2},
+                     %{"visitors" => 1},
+                     %{"visitors" => 0},
+                     %{"visitors" => 0}
+                   ]
+                 }
+               } = resp
       end
     end
 

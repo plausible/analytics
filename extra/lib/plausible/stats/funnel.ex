@@ -14,7 +14,7 @@ defmodule Plausible.Stats.Funnel do
   import Plausible.Stats.Util, only: [percentage: 2]
 
   alias Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Base, Query}
+  alias Plausible.Stats.{Base, Comparisons, DateTimeRange, Query}
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
@@ -29,6 +29,29 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(_site, query, %Funnel{} = funnel) do
+    comparison =
+      if query.comparison_utc_time_range do
+        query
+        |> Comparisons.get_comparison_query()
+        |> compute(funnel)
+      end
+
+    {:ok,
+     query
+     |> compute(funnel)
+     |> Map.merge(%{
+       name: funnel.name,
+       strict_order: funnel.strict_order,
+       comparison: comparison,
+       date_range: tz_date_range(query.utc_time_range, query.timezone),
+       comparison_date_range:
+         if(query.comparison_utc_time_range,
+           do: tz_date_range(query.comparison_utc_time_range, query.timezone)
+         )
+     })}
+  end
+
+  defp compute(query, funnel) do
     goals = Enum.map(funnel.steps, & &1.goal)
 
     funnel_data =
@@ -53,17 +76,14 @@ defmodule Plausible.Stats.Funnel do
 
     visitors_at_first_step = List.first(steps).visitors
 
-    {:ok,
-     %{
-       name: funnel.name,
-       strict_order: funnel.strict_order,
-       steps: steps,
-       all_visitors: all_visitors,
-       entering_visitors: visitors_at_first_step,
-       entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
-       never_entering_visitors: all_visitors - visitors_at_first_step,
-       never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
-     }}
+    %{
+      steps: steps,
+      all_visitors: all_visitors,
+      entering_visitors: visitors_at_first_step,
+      entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
+      never_entering_visitors: all_visitors - visitors_at_first_step,
+      never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
+    }
   end
 
   defp funnel_query(query, funnel_definition) do
@@ -168,5 +188,10 @@ defmodule Plausible.Stats.Funnel do
     end)
     |> elem(2)
     |> Enum.reverse()
+  end
+
+  defp tz_date_range(utc_time_range, timezone) do
+    range = DateTimeRange.to_date_range(utc_time_range, timezone)
+    [range.first, range.last]
   end
 end

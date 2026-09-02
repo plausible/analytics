@@ -123,7 +123,7 @@ export function MetricValueTooltipContent({
   comparisonDateRangeLabel
 }: {
   value: ValueType
-  comparison: { value: ValueType; change: number } | null
+  comparison: { value: ValueType; change?: number } | null
   metric: Metric
   metricLabel: string
   dateRangeLabel: string
@@ -146,11 +146,13 @@ export function MetricValueTooltipContent({
                 {dateRangeLabel}
               </div>
             </div>
-            <ChangeArrow
-              metric={metric}
-              change={comparison.change}
-              className="text-xs/6 font-medium text-white"
-            />
+            {comparison.change != null && (
+              <ChangeArrow
+                metric={metric}
+                change={comparison.change}
+                className="text-xs/6 font-medium text-white"
+              />
+            )}
           </div>
         </div>
         <div className="w-full border-t border-gray-600" />
