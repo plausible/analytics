@@ -406,7 +406,7 @@ defmodule Plausible.Stats.TimeTest do
     end
 
     test "with time:hour dimension on a day that repeats an hour due to DST" do
-      # Clocks fall back 02:00 -> 01:00, so the day has 25 hours but only 24 buckets.
+      # Each occurrence of 01:00 has its own absolute bucket.
       labels =
         time_labels(%{
           dimensions: ["time:hour"],
@@ -416,16 +416,14 @@ defmodule Plausible.Stats.TimeTest do
           timezone: "America/New_York"
         })
 
-      assert length(labels) == 24
+      assert length(labels) == 25
       assert List.first(labels) == "2024-11-03 00:00:00"
       assert List.last(labels) == "2024-11-03 23:00:00"
-      assert Enum.count(labels, &(&1 == "2024-11-03 01:00:00")) == 1
+      assert Enum.count(labels, &(&1 == "2024-11-03 01:00:00")) == 2
     end
 
     test "with time:hour dimension in a timezone whose DST transition is not on the hour" do
-      # Chatham switches at 02:45 local, so the 02:00 and 03:00 hours are cut short
-      # but both still exist.
-      for date <- [~D[2024-09-29], ~D[2024-04-07]] do
+      for {date, count} <- [{~D[2024-09-29], 23}, {~D[2024-04-07], 25}] do
         labels =
           time_labels(%{
             dimensions: ["time:hour"],
@@ -435,10 +433,43 @@ defmodule Plausible.Stats.TimeTest do
             timezone: "Pacific/Chatham"
           })
 
-        assert length(labels) == 24
+        assert length(labels) == count
         assert List.first(labels) == "#{date} 00:00:00"
         assert List.last(labels) == "#{date} 23:00:00"
       end
+    end
+
+    test "hourly keys preserve a sub-day window across a backward transition" do
+      query = %{
+        dimensions: ["time:hour"],
+        utc_time_range: DateTimeRange.new!(~U[2024-04-06 13:30:00Z], ~U[2024-04-06 14:30:00Z]),
+        timezone: "Pacific/Chatham"
+      }
+
+      assert time_labels(query) == ["2024-04-07 03:00:00", "2024-04-07 03:00:00"]
+      assert time_keys(query) == [1_712_409_300, 1_712_412_900]
+    end
+
+    test "present index identifies the second occurrence of a repeated hour" do
+      query = %{
+        dimensions: ["time:hour"],
+        utc_time_range: DateTimeRange.new!(~D[2024-11-03], ~D[2024-11-03], "America/New_York"),
+        now: ~U[2024-11-03 06:30:00Z],
+        timezone: "America/New_York"
+      }
+
+      assert present_index(time_labels(query), query) == 2
+    end
+
+    test "explicit UTC range includes both occurrences of an ambiguous midnight" do
+      query = %{
+        dimensions: ["time:hour"],
+        utc_time_range: DateTimeRange.new!(~U[2023-11-05 04:30:00Z], ~U[2023-11-05 05:30:00Z]),
+        timezone: "America/Havana"
+      }
+
+      assert time_labels(query) == ["2023-11-05 00:00:00", "2023-11-05 00:00:00"]
+      assert time_keys(query) == [1_699_156_800, 1_699_160_400]
     end
 
     test "with time:minute dimension" do

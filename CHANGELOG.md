@@ -62,7 +62,7 @@ All notable changes to this project will be documented in this file.
 - Fixed period arrow keys hijacking custom-range calendar
 - Fixed dashboard CSV export failing when the dashboard is filtered by entry page or exit page
 - Fixed entry page hostname breakdown crashing when revenue metrics are queried
-- Fixed hourly time labels on daylight saving time transition days, where the last hour of the day was missing from the graph in timezones that had just moved their clocks forward
+- Fixed missing and duplicated hourly metrics across daylight saving time transitions in graphs, comparisons, CSV exports and Stats API timeseries
 
 ## v3.2.0 - 2026-01-16
 

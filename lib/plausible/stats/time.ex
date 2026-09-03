@@ -50,6 +50,18 @@ defmodule Plausible.Stats.Time do
     time_labels_for_dimension(time_dimension(query), query)
   end
 
+  def time_keys(query) do
+    if time_dimension(query) == "time:hour" do
+      Enum.map(hourly_buckets(query), &DateTime.to_unix(&1.first))
+    else
+      time_labels(query)
+    end
+  end
+
+  def hour_label(key, timezone) when is_integer(key) do
+    key |> DateTime.from_unix!() |> DateTime.shift_zone!(timezone) |> format_datetime()
+  end
+
   defp time_labels_for_dimension("time:month", query) do
     date_range = Query.date_range(query)
 
@@ -93,16 +105,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp time_labels_for_dimension("time:hour", query) do
-    time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
-
-    from_timestamp = beginning_of_hour(time_range.first)
-    to_timestamp = beginning_of_hour(time_range.last)
-
-    from_timestamp
-    |> Stream.iterate(&NaiveDateTime.shift(&1, hour: 1))
-    |> Enum.take_while(&(NaiveDateTime.compare(&1, to_timestamp) != :gt))
-    |> Enum.filter(&hour_occurs?(&1, query.timezone))
-    |> Enum.map(&format_datetime/1)
+    Enum.map(hourly_buckets(query), &format_datetime(&1.first))
   end
 
   defp time_labels_for_dimension("time:minute", query) do
@@ -120,16 +123,60 @@ defmodule Plausible.Stats.Time do
     |> Enum.map(&format_datetime/1)
   end
 
-  defp beginning_of_hour(%DateTime{} = datetime) do
-    datetime |> DateTime.to_naive() |> Map.merge(%{minute: 0, second: 0})
+  defp hourly_buckets(query) do
+    range = query.utc_time_range
+
+    range
+    |> DateTimeRange.to_date_range(query.timezone)
+    |> Enum.flat_map(fn date ->
+      day_start = start_of_day(date, query.timezone)
+      day_end = date |> Date.add(1) |> start_of_day(query.timezone) |> DateTime.add(-1)
+
+      # ClickHouse toStartOfHour rounds elapsed seconds from the local day start.
+      # Advancing wall-clock hours would collapse repeated hours at DST fall-back.
+      day_start
+      |> Stream.iterate(&DateTime.add(&1, 3600))
+      |> Enum.take_while(&(not DateTime.after?(&1, day_end)))
+      |> Enum.map(fn first ->
+        last = Enum.min([DateTime.add(first, 3599), day_end], DateTime)
+        %DateTimeRange{first: first, last: last}
+      end)
+    end)
+    |> Enum.filter(fn bucket ->
+      not DateTime.after?(bucket.first, range.last) and
+        not DateTime.before?(bucket.last, range.first)
+    end)
   end
 
-  defp hour_occurs?(naive_hour, timezone) do
-    [naive_hour, NaiveDateTime.add(naive_hour, 3599)]
-    |> Enum.any?(&(not match?({:gap, _, _}, DateTime.from_naive(&1, timezone))))
+  defp start_of_day(date, timezone) do
+    case DateTime.new(date, ~T[00:00:00], timezone) do
+      {:ok, datetime} -> datetime
+      {:ambiguous, first, _second} -> first
+      {:gap, _before, first} -> first
+    end
   end
 
   def partial_time_labels(time_labels, query) do
+    if time_dimension(query) == "time:hour" do
+      buckets = Enum.filter(hourly_buckets(query), &(format_datetime(&1.first) in time_labels))
+      first = List.first(buckets)
+      last = List.last(buckets)
+      cutoff = Enum.min([query.utc_time_range.last, query.now], DateTime)
+
+      [
+        if(first && DateTime.before?(first.first, query.utc_time_range.first),
+          do: format_datetime(first.first)
+        ),
+        if(last && DateTime.after?(last.last, cutoff), do: format_datetime(last.first))
+      ]
+      |> Enum.uniq()
+      |> Enum.reject(&is_nil/1)
+    else
+      partial_calendar_time_labels(time_labels, query)
+    end
+  end
+
+  defp partial_calendar_time_labels(time_labels, query) do
     time_dimension = time_dimension(query)
 
     range_start = to_naive_in_tz!(query.utc_time_range.first, query.timezone)
@@ -202,6 +249,17 @@ defmodule Plausible.Stats.Time do
   end
 
   def present_index(time_labels, query) do
+    if time_dimension(query) == "time:hour" do
+      Enum.find_index(hourly_buckets(query), fn bucket ->
+        not DateTime.before?(query.now, bucket.first) and
+          not DateTime.after?(query.now, bucket.last)
+      end)
+    else
+      calendar_present_index(time_labels, query)
+    end
+  end
+
+  defp calendar_present_index(time_labels, query) do
     now = DateTime.shift_zone!(query.now, query.timezone)
 
     current_label =
@@ -219,9 +277,6 @@ defmodule Plausible.Stats.Time do
         "time:day" ->
           DateTime.to_date(now)
           |> Date.to_string()
-
-        "time:hour" ->
-          Calendar.strftime(now, "%Y-%m-%d %H:00:00")
 
         "time:minute" ->
           Calendar.strftime(now, "%Y-%m-%d %H:%M:00")
