@@ -31,7 +31,19 @@ const funnel: FunnelResponse = {
       dropoff: 45,
       dropoff_percentage: '75',
       conversion_rate: '15',
-      conversion_rate_step: '25'
+      conversion_rate_step: '25',
+      revenue: {
+        short: '$1.2K',
+        long: '$1,200.00',
+        value: 1200,
+        currency: 'USD'
+      },
+      revenue_per_visitor: {
+        short: '$80.0',
+        long: '$80.00',
+        value: 80,
+        currency: 'USD'
+      }
     }
   ]
 }
@@ -65,7 +77,19 @@ const comparison: NonNullable<FunnelResponse['comparison']> = {
       dropoff: 32,
       dropoff_percentage: '80',
       conversion_rate: '10',
-      conversion_rate_step: '20'
+      conversion_rate_step: '20',
+      revenue: {
+        short: '$800.0',
+        long: '$800.00',
+        value: 800,
+        currency: 'USD'
+      },
+      revenue_per_visitor: {
+        short: '$100.0',
+        long: '$100.00',
+        value: 100,
+        currency: 'USD'
+      }
     }
   ]
 }
@@ -127,13 +151,53 @@ describe('stepMetrics()', () => {
       visitors: 80,
       conversionRate: '100',
       continued: { visitors: 80, rate: '40' },
-      droppedOff: { visitors: 120, rate: '60' }
+      droppedOff: { visitors: 120, rate: '60' },
+      revenue: null,
+      revenuePerVisitor: null
     })
     expect(thirdStep.comparison).toEqual({
       visitors: 8,
       conversionRate: '10',
       continued: { visitors: 8, rate: '20' },
-      droppedOff: { visitors: 32, rate: '80' }
+      droppedOff: { visitors: 32, rate: '80' },
+      revenue: {
+        short: '$800.0',
+        long: '$800.00',
+        value: 800,
+        currency: 'USD'
+      },
+      revenuePerVisitor: {
+        short: '$100.0',
+        long: '$100.00',
+        value: 100,
+        currency: 'USD'
+      }
+    })
+  })
+
+  it('gives no revenue for the steps that are not revenue goals', () => {
+    const [firstStep, secondStep] = stepMetrics(funnel)
+
+    expect([firstStep, secondStep].map(({ revenue }) => revenue)).toEqual([
+      null,
+      null
+    ])
+  })
+
+  it('keeps the revenue of a step whose goal is a revenue goal', () => {
+    const [, , thirdStep] = stepMetrics(funnel)
+
+    expect(thirdStep.revenue).toEqual({
+      short: '$1.2K',
+      long: '$1,200.00',
+      value: 1200,
+      currency: 'USD'
+    })
+    expect(thirdStep.revenuePerVisitor).toEqual({
+      short: '$80.0',
+      long: '$80.00',
+      value: 80,
+      currency: 'USD'
     })
   })
 

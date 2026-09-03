@@ -547,6 +547,276 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
     end
 
+    describe "GET /api/stats/funnel - revenue" do
+      setup [:create_user, :log_in, :create_site]
+
+      test "reports revenue on the step whose goal is a revenue goal", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, funnel} = setup_checkout_funnel(site)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/checkout", user_id: @user_id),
+          build(:pageview, pathname: "/checkout", user_id: @other_user_id),
+          purchase(@user_id, "100"),
+          purchase(@other_user_id, "300")
+        ])
+
+        assert [checkout_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        refute Map.has_key?(checkout_step, "revenue")
+        refute Map.has_key?(checkout_step, "revenue_per_visitor")
+
+        assert %{
+                 "visitors" => 2,
+                 "revenue" => %{
+                   "short" => "$400.0",
+                   "long" => "$400.00",
+                   "value" => 400.0,
+                   "currency" => "USD"
+                 },
+                 "revenue_per_visitor" => %{
+                   "short" => "$200.0",
+                   "long" => "$200.00",
+                   "value" => 200.0,
+                   "currency" => "USD"
+                 }
+               } = purchase_step
+      end
+
+      test "divides the revenue by visitors, not by orders", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_checkout_funnel(site)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/checkout", user_id: @user_id),
+          purchase(@user_id, "100"),
+          purchase(@user_id, "300")
+        ])
+
+        assert [_checkout_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        assert %{
+                 "visitors" => 1,
+                 "revenue" => %{"long" => "$400.00"},
+                 "revenue_per_visitor" => %{"long" => "$400.00"}
+               } = purchase_step
+      end
+
+      test "counts the revenue of a mid-funnel step for everyone who reached it", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, [checkout, thanks]} =
+          setup_goals(site, [{"page_path", "/checkout"}, {"page_path", "/thanks"}])
+
+        purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+        {:ok, funnel} = funnel_with_goals(site, [checkout, purchase, thanks])
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          purchase(@user_id, "100", timestamp: ~N[2021-01-01 12:01:00]),
+          build(:pageview,
+            pathname: "/thanks",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:02:00]
+          ),
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 13:00:00]
+          ),
+          purchase(@other_user_id, "300", timestamp: ~N[2021-01-01 13:01:00])
+        ])
+
+        assert [_checkout_step, purchase_step, thanks_step] =
+                 funnel_steps(conn, site, funnel, "period=day&date=2021-01-01")
+
+        assert %{
+                 "visitors" => 2,
+                 "revenue" => %{"long" => "$400.00"},
+                 "revenue_per_visitor" => %{"long" => "$200.00"}
+               } = purchase_step
+
+        refute Map.has_key?(thanks_step, "revenue")
+      end
+
+      test "reports revenue for the comparison period", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_checkout_funnel(site)
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-02 12:00:00]
+          ),
+          purchase(@user_id, "100", timestamp: ~N[2021-01-02 12:01:00]),
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          purchase(@other_user_id, "300", timestamp: ~N[2021-01-01 12:01:00])
+        ])
+
+        resp =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&date=2021-01-02&comparison=previous_period"
+          )
+          |> json_response(200)
+
+        assert %{
+                 "steps" => [
+                   _checkout_step,
+                   %{"revenue" => %{"long" => "$100.00"}}
+                 ],
+                 "comparison" => %{
+                   "steps" => [
+                     _previous_checkout_step,
+                     %{"revenue" => %{"long" => "$300.00"}}
+                   ]
+                 }
+               } = resp
+      end
+
+      test "keeps every step in its own goal's currency", %{conn: conn, site: site} do
+        donation = insert(:goal, site: site, event_name: "Donation", currency: "EUR")
+        purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+        {:ok, funnel} = funnel_with_goals(site, [donation, purchase])
+
+        populate_stats(site, [
+          build(:event,
+            name: "Donation",
+            user_id: @user_id,
+            revenue_reporting_amount: Decimal.new("10"),
+            revenue_reporting_currency: "EUR"
+          ),
+          purchase(@user_id, "50")
+        ])
+
+        assert [donation_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        assert %{"revenue" => %{"long" => "€10.00", "currency" => "EUR"}} = donation_step
+        assert %{"revenue" => %{"long" => "$50.00", "currency" => "USD"}} = purchase_step
+      end
+
+      test "reports no revenue for a funnel without a revenue goal", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
+          build(:event, name: "Signup", user_id: @user_id)
+        ])
+
+        for step <- funnel_steps(conn, site, funnel) do
+          refute Map.has_key?(step, "revenue")
+          refute Map.has_key?(step, "revenue_per_visitor")
+        end
+      end
+
+      test "reports no revenue when the site has no access to revenue goals", %{
+        conn: conn,
+        site: site,
+        user: user
+      } do
+        {:ok, funnel} = setup_checkout_funnel(site)
+
+        site.team
+        |> Plausible.Teams.Team.end_trial()
+        |> Plausible.Repo.update!()
+
+        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.Funnels])
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/checkout", user_id: @user_id),
+          purchase(@user_id, "100")
+        ])
+
+        assert [_checkout_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        refute Map.has_key?(purchase_step, "revenue")
+        refute Map.has_key?(purchase_step, "revenue_per_visitor")
+      end
+
+      test "reports zero revenue when the payment does not follow the order of a strict-order funnel",
+           %{
+             conn: conn,
+             site: site
+           } do
+        {:ok, [checkout, signup]} =
+          setup_goals(site, [{"page_path", "/checkout"}, {"event_name", "Signup"}])
+
+        purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+        {:ok, funnel} = funnel_with_goals(site, [checkout, signup, purchase], strict_order?: true)
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          purchase(@user_id, "100", timestamp: ~N[2021-01-01 12:01:00]),
+          build(:event,
+            name: "Signup",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:02:00]
+          )
+        ])
+
+        assert [_checkout_step, _signup_step, purchase_step] =
+                 funnel_steps(conn, site, funnel, "period=day&date=2021-01-01")
+
+        assert %{
+                 "visitors" => 0,
+                 "revenue" => %{"long" => "$0.00"},
+                 "revenue_per_visitor" => %{"long" => "$0.00"}
+               } = purchase_step
+      end
+    end
+
+    defp setup_checkout_funnel(site) do
+      {:ok, [checkout]} = setup_goals(site, [{"page_path", "/checkout"}])
+      purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+
+      funnel_with_goals(site, [checkout, purchase])
+    end
+
+    defp funnel_with_goals(site, goals, opts \\ []) do
+      Plausible.Funnels.create(
+        site,
+        "Test funnel",
+        Enum.map(goals, &%{"goal_id" => &1.id}),
+        opts
+      )
+    end
+
+    defp purchase(user_id, amount, attrs \\ []) do
+      build(
+        :event,
+        Keyword.merge(
+          [
+            name: "Purchase",
+            user_id: user_id,
+            revenue_reporting_amount: Decimal.new(amount),
+            revenue_reporting_currency: "USD"
+          ],
+          attrs
+        )
+      )
+    end
+
+    defp funnel_steps(conn, site, funnel, params \\ "period=day") do
+      conn
+      |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?#{params}")
+      |> json_response(200)
+      |> Map.fetch!("steps")
+    end
+
     defp setup_goals(site, goals) when is_list(goals) do
       goals =
         Enum.map(goals, fn {type, value} ->
@@ -560,12 +830,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
     defp setup_funnel(site, goal_names, opts \\ []) do
       {:ok, goals} = setup_goals(site, goal_names)
 
-      Plausible.Funnels.create(
-        site,
-        "Test funnel",
-        Enum.map(goals, &%{"goal_id" => &1.id}),
-        opts
-      )
+      funnel_with_goals(site, goals, opts)
     end
   end
 end
