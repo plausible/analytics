@@ -67,14 +67,14 @@ defmodule Plausible.TeamDeletionSchedules do
   schedule based on an expired trial) its trial_expiry_date got prolonged
   past today, e.g. by staff via the CRM.
   """
-  @spec cancel_for_team(Teams.Team.t()) :: non_neg_integer()
+  @spec cancel_for_team(Teams.Team.t()) :: :no_schedule | :ok
   def cancel_for_team(team) do
     team = Teams.with_subscription(team)
 
     if should_cancel?(team) do
       cancel_active_schedule(team.id)
     else
-      0
+      :no_schedule
     end
   end
 
@@ -286,21 +286,21 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   defp cancel_active_schedule(team_id) do
-    {:ok, count} =
+    {:ok, result} =
       Repo.transact(fn ->
         case active_schedule_for(team_id) do
-          nil -> {:ok, 0}
-          schedule -> {:ok, cancel_count(schedule)}
+          nil -> {:ok, :no_schedule}
+          schedule -> {:ok, cancel_result(schedule)}
         end
       end)
 
-    count
+    result
   end
 
-  defp cancel_count(schedule) do
+  defp cancel_result(schedule) do
     case cancel(schedule) do
-      {:ok, _} -> 1
-      {:error, _} -> 0
+      {:ok, _} -> :ok
+      {:error, _} -> :no_schedule
     end
   end
 

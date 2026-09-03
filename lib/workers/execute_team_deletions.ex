@@ -21,7 +21,7 @@ defmodule Plausible.Workers.ExecuteTeamDeletions do
     for schedule <- TeamDeletionSchedules.due_for_deletion(today) do
       team = schedule.team
 
-      if TeamDeletionSchedules.cancel_for_team(team) == 0 do
+      if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
         execute(schedule, team)
       end
     end

@@ -224,7 +224,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
       insert(:subscription, team: team, status: Subscription.Status.active())
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert TeamDeletionSchedules.cancel_for_team(team) == :ok
       assert Repo.reload(schedule).status == :cancelled
     end
 
@@ -238,7 +238,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
         next_bill_date: Date.shift(Date.utc_today(), day: 10)
       )
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert TeamDeletionSchedules.cancel_for_team(team) == :ok
       assert Repo.reload(schedule).status == :cancelled
     end
 
@@ -246,7 +246,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 0
+      assert TeamDeletionSchedules.cancel_for_team(team) == :no_schedule
       assert Repo.reload(schedule).status == :scheduled
     end
 
@@ -254,7 +254,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: 30))
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert TeamDeletionSchedules.cancel_for_team(team) == :ok
       assert Repo.reload(schedule).status == :cancelled
     end
 
@@ -262,7 +262,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       team = insert(:team, trial_expiry_date: Date.utc_today())
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert TeamDeletionSchedules.cancel_for_team(team) == :ok
       assert Repo.reload(schedule).status == :cancelled
     end
 
@@ -270,7 +270,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       team = insert(:team, trial_expiry_date: nil)
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert TeamDeletionSchedules.cancel_for_team(team) == :ok
       assert Repo.reload(schedule).status == :cancelled
     end
 
@@ -279,7 +279,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
       insert(:subscription, team: team, status: Subscription.Status.paused())
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 0
+      assert TeamDeletionSchedules.cancel_for_team(team) == :no_schedule
       assert Repo.reload(schedule).status == :scheduled
     end
 
@@ -293,7 +293,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
         next_bill_date: Date.shift(Date.utc_today(), day: -1)
       )
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 0
+      assert TeamDeletionSchedules.cancel_for_team(team) == :no_schedule
       assert Repo.reload(schedule).status == :scheduled
     end
 
@@ -306,8 +306,8 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       insert(:subscription, team: team1, status: Subscription.Status.active())
       insert(:subscription, team: team2, status: Subscription.Status.active())
 
-      assert TeamDeletionSchedules.cancel_for_team(team1) == 0
-      assert TeamDeletionSchedules.cancel_for_team(team2) == 0
+      assert TeamDeletionSchedules.cancel_for_team(team1) == :no_schedule
+      assert TeamDeletionSchedules.cancel_for_team(team2) == :no_schedule
       assert Repo.reload(cancelled).status == :cancelled
       assert Repo.reload(completed).status == :completed
     end
@@ -316,7 +316,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       team = insert(:team)
       insert(:subscription, team: team, status: Subscription.Status.active())
 
-      assert TeamDeletionSchedules.cancel_for_team(team) == 0
+      assert TeamDeletionSchedules.cancel_for_team(team) == :no_schedule
     end
   end
 
