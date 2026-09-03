@@ -187,6 +187,8 @@ Plausible.InternalStatsApiVersion.html
 Plausible.License.html
 Plausible.Mailer.html
 Plausible.MigrationUtils.html
+Plausible.OAuth.AuthorizationCode.html
+Plausible.OAuth.Grant.html
 Plausible.OpenTelemetry.BeamMetrics.html
 Plausible.OpenTelemetry.Logger.html
 Plausible.Pagination.html
@@ -591,8 +593,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A054CFDA.js
-dist/sidebar_items-1EBF74D7.js
+dist/search_data-3FB0860C.js
+dist/sidebar_items-6DA634AD.js
 index.html
 readme.html
 search.html
