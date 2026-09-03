@@ -29,7 +29,7 @@ defmodule Plausible.Workers.SendDeletionNotifications do
     for schedule <- TeamDeletionSchedules.due_for_first_notice(today) do
       team = schedule.team
 
-      if TeamDeletionSchedules.cancel_for_team(team) == 0 do
+      if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
         summary = sites_summary(team)
 
         for recipient <- team.owners ++ team.billing_members do
@@ -47,7 +47,7 @@ defmodule Plausible.Workers.SendDeletionNotifications do
     for schedule <- TeamDeletionSchedules.due_for_reminder(today) do
       team = schedule.team
 
-      if TeamDeletionSchedules.cancel_for_team(team) == 0 do
+      if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
         summary = sites_summary(team)
 
         for recipient <- team.owners ++ team.billing_members do

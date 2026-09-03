@@ -5,16 +5,28 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
 
+  alias Plausible.TeamDeletionSchedule
+  alias Plausible.TeamDeletionSchedules
+
   def update(%{team: team}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
+    schedule = TeamDeletionSchedules.active_schedule_for_team(team)
+    snooze_form = schedule && to_form(TeamDeletionSchedule.crm_changeset(schedule, %{}))
 
-    {:ok, assign(socket, team: team, form: form)}
+    {:ok, assign(socket, team: team, form: form, schedule: schedule, snooze_form: snooze_form)}
   end
 
   def render(assigns) do
     ~H"""
     <div class="mt-8">
+      <.deletion_schedule
+        :if={@schedule}
+        schedule={@schedule}
+        snooze_form={@snooze_form}
+        myself={@myself}
+      />
+
       <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
         <.input field={f[:trial_expiry_date]} type="date" label="Trial Expiry Date" />
         <.input field={f[:accept_traffic_until]} type="date" label="Accept traffic Until" />
@@ -45,15 +57,98 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     """
   end
 
+  attr :schedule, :any, required: true
+  attr :snooze_form, :any, required: true
+  attr :myself, :any, required: true
+
+  defp deletion_schedule(assigns) do
+    ~H"""
+    <div class="mb-6">
+      <.notice theme={notice_theme(@schedule.status)} title="Deletion scheduled">
+        {deletion_sentence(@schedule)}
+
+        <div :if={@schedule.status == :snoozed} class="mt-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Snoozed until
+            <strong>{@schedule.snoozed_until}</strong><span :if={@schedule.snooze_note}> — "{@schedule.snooze_note}"</span>.
+          </p>
+
+          <.button
+            class="mt-2"
+            phx-click="unsnooze-schedule"
+            phx-target={@myself}
+            data-confirm="Resume the deletion schedule now? This restarts the notice cycle."
+          >
+            Unsnooze
+          </.button>
+        </div>
+
+        <.form
+          :let={f}
+          :if={@schedule.status != :snoozed}
+          for={@snooze_form}
+          phx-submit="snooze-schedule"
+          phx-target={@myself}
+          class="mt-3 flex items-end gap-x-4"
+        >
+          <.input field={f[:snoozed_until]} type="date" label="Snooze until" />
+          <.input field={f[:snooze_note]} type="text" label="Note (optional)" />
+          <.button type="submit">Snooze</.button>
+        </.form>
+      </.notice>
+    </div>
+    """
+  end
+
+  defp notice_theme(:snoozed), do: :gray
+  defp notice_theme(_), do: :yellow
+
+  defp deletion_sentence(schedule) do
+    category =
+      case schedule.category do
+        :expired_trial -> "expired trial"
+        :churned_subscription -> "churned subscription"
+      end
+
+    status_detail =
+      case schedule.status do
+        :scheduled ->
+          "Pending. First notice due #{schedule.first_notice_due_date}."
+
+        :first_notice_sent ->
+          "First notice sent #{format_dt(schedule.first_notice_sent_at)}."
+
+        :reminder_sent ->
+          "Reminder sent #{format_dt(schedule.reminder_sent_at)}."
+
+        :snoozed ->
+          "Snoozed."
+
+        :cancelled ->
+          "Cancelled."
+
+        :completed ->
+          "Completed."
+      end
+
+    "#{String.capitalize(category)}. Stats deletion on #{schedule.deletion_date}. #{status_detail}"
+  end
+
+  defp format_dt(nil), do: "N/A"
+  defp format_dt(%NaiveDateTime{} = dt), do: NaiveDateTime.to_date(dt) |> Date.to_string()
+
   def handle_event("save-team", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
-    # TODO: if this prolongs trial_expiry_date (or otherwise makes the team
-    # eligible again) cancely any Plausible.TeamDeletionSchedule
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
+        # Prolonging trial_expiry_date (or otherwise making the team
+        # eligible again) cancels any pending deletion schedule.
+        TeamDeletionSchedules.cancel_for_team(team)
+        schedule = TeamDeletionSchedules.active_schedule_for_team(team)
+
         success("Team saved")
-        {:noreply, assign(socket, team: team, form: to_form(changeset))}
+        {:noreply, assign(socket, team: team, form: to_form(changeset), schedule: schedule)}
 
       {:error, changeset} ->
         failure("Error saving team: #{inspect(changeset.errors)}")
@@ -70,6 +165,39 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
       {:error, :active_subscription} ->
         failure("The team has an active subscription which must be canceled first.")
 
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("snooze-schedule", %{"team_deletion_schedule" => params}, socket) do
+    changeset = TeamDeletionSchedule.crm_changeset(socket.assigns.schedule, params)
+
+    if changeset.valid? do
+      until_date = Ecto.Changeset.get_change(changeset, :snoozed_until)
+      note = Ecto.Changeset.get_change(changeset, :snooze_note)
+
+      case TeamDeletionSchedules.snooze(socket.assigns.schedule, until_date, note: note) do
+        {:ok, schedule} ->
+          success("Deletion snoozed until #{until_date}")
+          {:noreply, assign(socket, schedule: schedule)}
+
+        {:error, {:invalid_transition, _, _}} ->
+          failure("Could not snooze - schedule is no longer in a snoozable state")
+          {:noreply, socket}
+      end
+    else
+      {:noreply, assign(socket, snooze_form: to_form(%{changeset | action: :validate}))}
+    end
+  end
+
+  def handle_event("unsnooze-schedule", _params, socket) do
+    case TeamDeletionSchedules.unsnooze(socket.assigns.schedule) do
+      {:ok, schedule} ->
+        success("Deletion schedule resumed")
+        {:noreply, assign(socket, schedule: schedule)}
+
+      {:error, {:invalid_transition, _, _}} ->
+        failure("Could not resume - schedule is not currently snoozed")
         {:noreply, socket}
     end
   end
