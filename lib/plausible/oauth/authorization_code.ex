@@ -24,7 +24,6 @@ defmodule Plausible.OAuth.AuthorizationCode do
   @optional [:scopes, :client_name]
 
   schema "oauth_authorization_codes" do
-    field :raw, :string, virtual: true
     field :code_hash, :string
     field :client_id, :string
     field :client_name, :string
