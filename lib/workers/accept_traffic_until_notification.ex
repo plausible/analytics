@@ -61,42 +61,54 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     for notification <- notifications do
       case {has_stats?(notification.site_ids, today), notification.deadline} do
         {true, ^tomorrow} ->
-          schedule = Map.get(pending_trial_schedules_by_team_id, notification.team.id)
-          deletion_date = schedule && schedule.deletion_date
-
-          if dry_run? do
-            IO.puts("Will send final notification to #{notification.email}")
-          else
-            notification
-            |> store_sent(today)
-            |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(deletion_date)
-            |> Plausible.Mailer.send()
-          end
+          send_final_notice(notification, pending_trial_schedules_by_team_id, today, dry_run?)
 
         {true, ^next_week} ->
-          if dry_run? do
-            IO.puts("Will send weekly notification to #{notification.email}")
-          else
-            notification
-            |> store_sent(today)
-            |> PlausibleWeb.Email.approaching_accept_traffic_until()
-            |> Plausible.Mailer.send()
-          end
+          send_weekly_notice(notification, today, dry_run?)
 
         _ ->
           nil
       end
     end
 
-    if not dry_run? do
-      pending_trial_schedules_by_team_id
-      |> Map.values()
-      |> Enum.each(fn schedule ->
-        TeamDeletionSchedules.mark_first_notice_sent(schedule, report_if_invalid?: true)
-      end)
-    end
-
     {:ok, Enum.count(notifications)}
+  end
+
+  defp send_final_notice(notification, _pending_by_team_id, _today, true = _dry_run?) do
+    IO.puts("Will send final notification to #{notification.email}")
+  end
+
+  defp send_final_notice(notification, pending_trial_schedules_by_team_id, today, false) do
+    deletion_date =
+      case Map.get(pending_trial_schedules_by_team_id, notification.team.id) do
+        nil ->
+          nil
+
+        schedule ->
+          # Advance the schedule before composing/sending the email,
+          # so a crash right after this point can never leave it stuck at :scheduled 
+          # while the customer has already been told the deletion date.
+          case TeamDeletionSchedules.mark_first_notice_sent(schedule, report_if_invalid?: true) do
+            {:ok, updated} -> updated.deletion_date
+            {:error, _} -> nil
+          end
+      end
+
+    notification
+    |> store_sent(today)
+    |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(deletion_date)
+    |> Plausible.Mailer.send()
+  end
+
+  defp send_weekly_notice(notification, _today, true = _dry_run?) do
+    IO.puts("Will send weekly notification to #{notification.email}")
+  end
+
+  defp send_weekly_notice(notification, today, false) do
+    notification
+    |> store_sent(today)
+    |> PlausibleWeb.Email.approaching_accept_traffic_until()
+    |> Plausible.Mailer.send()
   end
 
   defp has_stats?(site_ids, today) do
