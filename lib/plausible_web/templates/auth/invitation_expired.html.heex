@@ -1,0 +1,16 @@
+<Layouts.auth heading={@heading} subtitle={@subtitle} flash={@flash}>
+  <.auth_container class="flex gap-3 justify-center">
+    <.button_link
+      :if={
+        Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false
+      }
+      href="/register"
+      mt?={false}
+    >
+      Start free trial
+    </.button_link>
+    <.button_link href="/login" theme="secondary" mt?={false}>
+      Sign in
+    </.button_link>
+  </.auth_container>
+</Layouts.auth>

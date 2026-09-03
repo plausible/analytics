@@ -38,9 +38,10 @@ defmodule PlausibleWeb.Live.RegisterFormSyncTest do
 
     test "register event over the LiveView socket cannot bypass invite_only via an invalid invitation",
          %{conn: conn} do
-      assert {:ok, _lv, html} = live(conn, "/register/invitation/does-not-exist")
+      mock_captcha_success()
 
-      assert html =~ "This invitation has expired or was revoked"
+      assert {:error, {:redirect, %{to: "/invitation-expired"}}} =
+               live(conn, "/register/invitation/does-not-exist")
     end
 
     test "registration from a valid invitation still works", %{conn: conn, invitation: invitation} do

@@ -467,6 +467,8 @@ defmodule PlausibleWeb.Router do
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
 
+    get "/invitation-expired", AuthController, :invitation_expired
+
     get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
     post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
 

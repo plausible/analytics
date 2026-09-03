@@ -33,13 +33,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
     if socket.assigns.live_action == :register_from_invitation_form and
          socket.assigns.invitation == nil do
-      {:ok,
-       assign(socket,
-         invitation_expired: true,
-         heading: "Invitation no longer valid",
-         subtitle:
-           "This invitation has expired or was revoked. Ask your team admin to send you a new invitation."
-       )}
+      {:ok, redirect(socket, to: "/invitation-expired")}
     else
       changeset =
         if invitation = socket.assigns.invitation do
@@ -75,21 +69,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
     else
       {"Start your 30-day free trial", "No credit card required. Cancel anytime."}
     end
-  end
-
-  def render(%{invitation_expired: true} = assigns) do
-    ~H"""
-    <Layouts.auth heading={@heading} subtitle={@subtitle} flash={@flash}>
-      <.auth_container class="flex gap-3 justify-center">
-        <.button_link href="/register" mt?={false}>
-          Start free trial
-        </.button_link>
-        <.button_link href="/login" theme="secondary" mt?={false}>
-          Sign in
-        </.button_link>
-      </.auth_container>
-    </Layouts.auth>
-    """
   end
 
   def render(assigns) do
