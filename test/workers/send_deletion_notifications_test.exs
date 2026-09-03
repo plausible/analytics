@@ -1,61 +1,84 @@
 defmodule Plausible.Workers.SendDeletionNotificationsTest do
   use Plausible.DataCase, async: true
-  use Bamboo.Test
 
-  require Plausible.Billing.Subscription.Status
+  on_ee do
+    use Bamboo.Test
 
-  alias Plausible.Billing.Subscription
-  alias Plausible.Workers.SendDeletionNotifications
+    require Plausible.Billing.Subscription.Status
 
-  @today ~D[2026-08-20]
+    alias Plausible.Billing.Subscription
+    alias Plausible.Workers.SendDeletionNotifications
 
-  describe "first notices" do
-    test "sends the full notice email to owners and billing members" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner)
+    @today ~D[2026-08-20]
 
-      insert(:team_membership, team: team, user: build(:user), role: :billing)
+    describe "first notices" do
+      test "sends the full notice email to owners and billing members" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      insert(:subscription,
-        team: team,
-        status: Subscription.Status.deleted(),
-        next_bill_date: Date.shift(@today, day: -400)
-      )
+        insert(:team_membership, team: team, user: build(:user), role: :billing)
 
-      schedule =
-        insert(:team_deletion_schedule,
+        insert(:subscription,
           team: team,
-          category: :churned_subscription,
-          status: :scheduled,
-          first_notice_due_date: @today,
-          deletion_date: ~D[2026-10-19]
+          status: Subscription.Status.deleted(),
+          next_bill_date: Date.shift(@today, day: -400)
         )
 
-      SendDeletionNotifications.perform(nil, @today)
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            category: :churned_subscription,
+            status: :scheduled,
+            first_notice_due_date: @today,
+            deletion_date: ~D[2026-10-19]
+          )
 
-      team = Repo.preload(team, [:owners, :billing_members])
-      recipients = team.owners ++ team.billing_members
+        SendDeletionNotifications.perform(nil, @today)
 
-      assert length(recipients) == 2
+        team = Repo.preload(team, [:owners, :billing_members])
+        recipients = team.owners ++ team.billing_members
 
-      for recipient <- recipients do
-        assert_email_delivered_with(
-          to: [{recipient.name, recipient.email}],
-          subject: "Your Plausible dashboards and stats will be deleted in 30 days"
-        )
+        assert length(recipients) == 2
+
+        for recipient <- recipients do
+          assert_email_delivered_with(
+            to: [{recipient.name, recipient.email}],
+            subject: "Your Plausible dashboards and stats will be deleted in 30 days"
+          )
+        end
+
+        assert Repo.reload!(schedule).status == :first_notice_sent
+        assert Repo.reload!(schedule).first_notice_sent_at
       end
 
-      assert Repo.reload!(schedule).status == :first_notice_sent
-      assert Repo.reload!(schedule).first_notice_sent_at
-    end
+      test "finalizes a backlog row's deletion_date anchored to when the notice actually sends" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
-    test "finalizes a backlog row's deletion_date anchored to when the notice actually sends" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            category: :expired_trial,
+            status: :scheduled,
+            is_backlog: true,
+            first_notice_due_date: @today,
+            deletion_date: ~D[2024-01-01]
+          )
 
-      schedule =
+        SendDeletionNotifications.perform(nil, @today)
+
+        updated = Repo.reload!(schedule)
+        assert updated.status == :first_notice_sent
+        assert updated.deletion_date == Date.shift(@today, day: 30)
+      end
+
+      test "sends the backlog first notice email with the finalized deletion date, not the stale placeholder" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+
         insert(:team_deletion_schedule,
           team: team,
           category: :expired_trial,
@@ -65,180 +88,160 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
           deletion_date: ~D[2024-01-01]
         )
 
-      SendDeletionNotifications.perform(nil, @today)
+        SendDeletionNotifications.perform(nil, @today)
 
-      updated = Repo.reload!(schedule)
-      assert updated.status == :first_notice_sent
-      assert updated.deletion_date == Date.shift(@today, day: 30)
-    end
+        finalized_date = Date.shift(@today, day: 30)
 
-    test "sends the backlog first notice email with the finalized deletion date, not the stale placeholder" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
-
-      insert(:team_deletion_schedule,
-        team: team,
-        category: :expired_trial,
-        status: :scheduled,
-        is_backlog: true,
-        first_notice_due_date: @today,
-        deletion_date: ~D[2024-01-01]
-      )
-
-      SendDeletionNotifications.perform(nil, @today)
-
-      finalized_date = Date.shift(@today, day: 30)
-
-      assert_email_delivered_with(
-        to: [{owner.name, owner.email}],
-        html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(finalized_date))}/
-      )
-
-      refute_email_delivered_with(
-        html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(~D[2024-01-01]))}/
-      )
-    end
-
-    test "does not touch a row whose first_notice_due_date hasn't arrived" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner)
-
-      schedule =
-        insert(:team_deletion_schedule,
-          team: team,
-          status: :scheduled,
-          first_notice_due_date: Date.shift(@today, day: 1)
+        assert_email_delivered_with(
+          to: [{owner.name, owner.email}],
+          html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(finalized_date))}/
         )
 
-      SendDeletionNotifications.perform(nil, @today)
+        refute_email_delivered_with(
+          html_body: ~r/#{Regex.escape(PlausibleWeb.EmailView.date_format(~D[2024-01-01]))}/
+        )
+      end
 
-      refute_email_delivered_with(
-        subject: "Your Plausible dashboards and stats will be deleted in 30 days"
-      )
+      test "does not touch a row whose first_notice_due_date hasn't arrived" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      assert Repo.reload!(schedule).status == :scheduled
-    end
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :scheduled,
+            first_notice_due_date: Date.shift(@today, day: 1)
+          )
 
-    test "cancels instead of sending when the team has reactivated since the last scan" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner)
+        SendDeletionNotifications.perform(nil, @today)
 
-      schedule =
-        insert(:team_deletion_schedule,
-          team: team,
-          status: :scheduled,
-          first_notice_due_date: @today
+        refute_email_delivered_with(
+          subject: "Your Plausible dashboards and stats will be deleted in 30 days"
         )
 
-      insert(:subscription, team: team, status: Subscription.Status.active())
+        assert Repo.reload!(schedule).status == :scheduled
+      end
 
-      SendDeletionNotifications.perform(nil, @today)
+      test "cancels instead of sending when the team has reactivated since the last scan" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      refute_email_delivered_with(
-        subject: "Your Plausible dashboards and stats will be deleted in 30 days"
-      )
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :scheduled,
+            first_notice_due_date: @today
+          )
 
-      assert Repo.reload!(schedule).status == :cancelled
-    end
-  end
+        insert(:subscription, team: team, status: Subscription.Status.active())
 
-  describe "reminders" do
-    test "sends the reminder email and advances status" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+        SendDeletionNotifications.perform(nil, @today)
 
-      schedule =
-        insert(:team_deletion_schedule,
-          team: team,
-          status: :first_notice_sent,
-          deletion_date: Date.shift(@today, day: 3)
+        refute_email_delivered_with(
+          subject: "Your Plausible dashboards and stats will be deleted in 30 days"
         )
 
-      SendDeletionNotifications.perform(nil, @today)
-
-      assert_email_delivered_with(
-        to: [{owner.name, owner.email}],
-        subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
-      )
-
-      updated = Repo.reload!(schedule)
-      assert updated.status == :reminder_sent
-      assert updated.reminder_sent_at
+        assert Repo.reload!(schedule).status == :cancelled
+      end
     end
 
-    test "does not touch a row whose deletion_date is still more than 5 days out" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner)
+    describe "reminders" do
+      test "sends the reminder email and advances status" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
-      schedule =
-        insert(:team_deletion_schedule,
-          team: team,
-          status: :first_notice_sent,
-          deletion_date: Date.shift(@today, day: 6)
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :first_notice_sent,
+            deletion_date: Date.shift(@today, day: 3)
+          )
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        assert_email_delivered_with(
+          to: [{owner.name, owner.email}],
+          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
         )
 
-      SendDeletionNotifications.perform(nil, @today)
+        updated = Repo.reload!(schedule)
+        assert updated.status == :reminder_sent
+        assert updated.reminder_sent_at
+      end
 
-      refute_email_delivered_with(
-        subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
-      )
+      test "does not touch a row whose deletion_date is still more than 5 days out" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      assert Repo.reload!(schedule).status == :first_notice_sent
-    end
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :first_notice_sent,
+            deletion_date: Date.shift(@today, day: 6)
+          )
 
-    test "cancels instead of sending when the team has reactivated since the last scan" do
-      owner = new_user()
-      new_site(owner: owner)
-      team = team_of(owner)
+        SendDeletionNotifications.perform(nil, @today)
 
-      schedule =
-        insert(:team_deletion_schedule,
-          team: team,
-          status: :first_notice_sent,
-          deletion_date: Date.shift(@today, day: 3)
+        refute_email_delivered_with(
+          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
         )
 
-      insert(:subscription, team: team, status: Subscription.Status.active())
+        assert Repo.reload!(schedule).status == :first_notice_sent
+      end
 
-      SendDeletionNotifications.perform(nil, @today)
+      test "cancels instead of sending when the team has reactivated since the last scan" do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      refute_email_delivered_with(
-        subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
-      )
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :first_notice_sent,
+            deletion_date: Date.shift(@today, day: 3)
+          )
 
-      assert Repo.reload!(schedule).status == :cancelled
+        insert(:subscription, team: team, status: Subscription.Status.active())
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        refute_email_delivered_with(
+          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
+        )
+
+        assert Repo.reload!(schedule).status == :cancelled
+      end
     end
-  end
 
-  describe "sites_summary/1" do
-    test "returns every domain uncapped when the team has few sites" do
-      owner = new_user()
-      new_site(owner: owner)
-      new_site(owner: owner)
-      team = team_of(owner)
+    describe "sites_summary/1" do
+      test "returns every domain uncapped when the team has few sites" do
+        owner = new_user()
+        new_site(owner: owner)
+        new_site(owner: owner)
+        team = team_of(owner)
 
-      summary = SendDeletionNotifications.sites_summary(team)
+        summary = SendDeletionNotifications.sites_summary(team)
 
-      assert length(summary.domains) == 2
-      assert summary.more_count == 0
-    end
+        assert length(summary.domains) == 2
+        assert summary.more_count == 0
+      end
 
-    test "caps the domain list and reports how many more sites exist" do
-      owner = new_user()
+      test "caps the domain list and reports how many more sites exist" do
+        owner = new_user()
 
-      for _ <- 1..13, do: new_site(owner: owner)
+        for _ <- 1..13, do: new_site(owner: owner)
 
-      team = team_of(owner)
+        team = team_of(owner)
 
-      summary = SendDeletionNotifications.sites_summary(team)
+        summary = SendDeletionNotifications.sites_summary(team)
 
-      assert length(summary.domains) == 3
-      assert summary.more_count == 10
+        assert length(summary.domains) == 3
+        assert summary.more_count == 10
+      end
     end
   end
 end
