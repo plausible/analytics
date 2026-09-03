@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Repo
   alias Plausible.Teams
   alias PlausibleWeb.Layouts
+  alias PlausibleWeb.Plugs.MaybeDisableRegistration
 
   @signup_error_categories %{
     name: "name",
@@ -257,27 +258,37 @@ defmodule PlausibleWeb.Live.RegisterForm do
         %{"user" => _} = params,
         %{assigns: %{invitation: %{} = invitation}} = socket
       ) do
-    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
-      user =
-        params["user"]
-        |> Map.put("email", invitation.email)
-        |> Auth.User.new()
+    cond do
+      MaybeDisableRegistration.invited_registration_disabled?() ->
+        {:noreply, deny_registration(socket)}
 
-      with_team? = invitation.type == :site_transfer
+      not PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) ->
+        {:noreply, captcha_failed(socket)}
 
-      add_user(socket, user, with_team?: with_team?)
-    else
-      {:noreply, captcha_failed(socket)}
+      true ->
+        user =
+          params["user"]
+          |> Map.put("email", invitation.email)
+          |> Auth.User.new()
+
+        with_team? = invitation.type == :site_transfer
+
+        add_user(socket, user, with_team?: with_team?)
     end
   end
 
   def handle_event("register", %{"user" => _} = params, socket) do
-    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
-      user = Auth.User.new(params["user"])
+    cond do
+      MaybeDisableRegistration.public_registration_disabled?() ->
+        {:noreply, deny_registration(socket)}
 
-      add_user(socket, user)
-    else
-      {:noreply, captcha_failed(socket)}
+      not PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) ->
+        {:noreply, captcha_failed(socket)}
+
+      true ->
+        user = Auth.User.new(params["user"])
+
+        add_user(socket, user)
     end
   end
 
@@ -287,6 +298,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
     socket
     |> assign(captcha_error: error, signup_previous_error: "captcha")
     |> PlausibleWeb.Components.Captcha.reset()
+  end
+
+  defp deny_registration(socket) do
+    socket
+    |> put_flash(:error, MaybeDisableRegistration.disabled_message())
+    |> redirect(to: Routes.auth_path(socket, :login_form))
   end
 
   defp add_user(socket, user, opts \\ []) do
