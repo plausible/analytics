@@ -537,6 +537,8 @@ defmodule Plausible.Sites do
         where: coalesce(gm.role, tm.role) in ^roles,
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         where: is_nil(gm.id) or gm.site_id == s.id,
+        order_by: [desc: s.domain == ^domain],
+        limit: 1,
         select: s
       )
 
