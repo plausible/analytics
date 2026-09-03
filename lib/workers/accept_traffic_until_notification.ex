@@ -53,7 +53,7 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
 
     pending_trial_schedules_by_team_id =
       notifications
-      |> Enum.filter(&(&1.deadline == tomorrow))
+      |> Enum.filter(&(Date.compare(&1.deadline, tomorrow) == :eq))
       |> Enum.map(& &1.team.id)
       |> Enum.uniq()
       |> TeamDeletionSchedules.pending_steady_state_trials_by_team_id()
