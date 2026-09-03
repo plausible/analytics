@@ -112,6 +112,19 @@ defmodule Plausible.Factory do
     }
   end
 
+  def team_deletion_schedule_factory do
+    today = Date.utc_today()
+    deletion_date = Date.shift(today, day: 60)
+
+    %Plausible.TeamDeletionSchedule{
+      team: build(:team),
+      category: :expired_trial,
+      expiry_date: today,
+      deletion_date: deletion_date,
+      first_notice_due_date: Date.shift(deletion_date, day: -30)
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
