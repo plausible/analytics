@@ -12,10 +12,12 @@ defmodule Plausible.Site.Removal do
 
   @spec run(Plausible.Site.t(), Keyword.t()) :: {:ok, map()}
   def run(site, opts \\ []) do
+    reason = Keyword.get(opts, :reason, :user_request)
+
     Repo.transaction(fn ->
       site = Repo.preload(site, :team)
 
-      {:ok, pending_stats_deletion} = PendingStatsDeletions.store(site)
+      {:ok, pending_stats_deletion} = PendingStatsDeletions.store(site, reason)
 
       result = Repo.delete_all(from(s in Plausible.Site, where: s.domain == ^site.domain))
 
