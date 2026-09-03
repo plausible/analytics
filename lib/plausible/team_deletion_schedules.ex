@@ -110,6 +110,22 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   @doc """
+  Schedules ready for deletion: reminder already sent, past their
+  deletion_date.
+  """
+  @spec due_for_deletion(Date.t()) :: [TeamDeletionSchedule.t()]
+  def due_for_deletion(today \\ Date.utc_today()) do
+    Repo.all(
+      from(sch in TeamDeletionSchedule,
+        inner_join: t in assoc(sch, :team),
+        where: sch.status == :reminder_sent,
+        where: sch.deletion_date <= ^today,
+        preload: [team: t]
+      )
+    )
+  end
+
+  @doc """
   Pending, non-backlog expired trial schedules for the
   given team ids, keyed by `team_id`
   """
