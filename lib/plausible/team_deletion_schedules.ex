@@ -69,19 +69,120 @@ defmodule Plausible.TeamDeletionSchedules do
     team = Teams.with_subscription(team)
 
     if Subscriptions.active?(team.subscription) do
-      {count, _} =
-        Repo.update_all(
-          from(sch in TeamDeletionSchedule,
-            where: sch.team_id == ^team.id,
-            where: sch.status in ^TeamDeletionSchedule.active_statuses()
-          ),
-          set: [status: :cancelled, updated_at: NaiveDateTime.utc_now(:second)]
-        )
-
-      count
+      cancel_active_schedule(team.id)
     else
       0
     end
+  end
+
+  @type transition_result ::
+          {:ok, TeamDeletionSchedule.t()} | {:error, {:invalid_transition, atom(), atom()}}
+
+  @transitions %{
+    scheduled: [:first_notice_sent, :cancelled, :snoozed],
+    first_notice_sent: [:reminder_sent, :cancelled, :snoozed],
+    reminder_sent: [:completed, :cancelled, :snoozed],
+    snoozed: [:cancelled, :scheduled],
+    completed: [],
+    cancelled: []
+  }
+
+  @spec transitions() :: %{atom() => [atom()]}
+  def transitions, do: @transitions
+
+  @spec mark_first_notice_sent(TeamDeletionSchedule.t(), NaiveDateTime.t()) :: transition_result
+  def mark_first_notice_sent(schedule, now \\ NaiveDateTime.utc_now(:second))
+
+  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: true} = schedule, now) do
+    transition(schedule, :first_notice_sent, %{
+      first_notice_sent_at: now,
+      deletion_date: DeletionSchedule.backlog_deletion_date(now)
+    })
+  end
+
+  def mark_first_notice_sent(%TeamDeletionSchedule{is_backlog: false} = schedule, now) do
+    transition(schedule, :first_notice_sent, %{first_notice_sent_at: now})
+  end
+
+  @spec mark_reminder_sent(TeamDeletionSchedule.t(), NaiveDateTime.t()) :: transition_result
+  def mark_reminder_sent(schedule, now \\ NaiveDateTime.utc_now(:second)) do
+    transition(schedule, :reminder_sent, %{reminder_sent_at: now})
+  end
+
+  @spec mark_completed(TeamDeletionSchedule.t()) :: transition_result
+  def mark_completed(schedule) do
+    transition(schedule, :completed)
+  end
+
+  @spec cancel(TeamDeletionSchedule.t()) :: transition_result
+  def cancel(schedule) do
+    transition(schedule, :cancelled)
+  end
+
+  @spec snooze(TeamDeletionSchedule.t(), Date.t(), String.t() | nil) :: transition_result
+  def snooze(schedule, until_date, note \\ nil) do
+    transition(schedule, :snoozed, %{snoozed_until: until_date, snooze_note: note})
+  end
+
+  @doc """
+  Unsnoozes a schedule once its snooze has lapsed without the team
+  resubscribing. Restarts the notice cycle from scratch
+  """
+  @spec unsnooze(TeamDeletionSchedule.t(), Date.t()) :: transition_result
+  def unsnooze(schedule, today \\ Date.utc_today()) do
+    transition(schedule, :scheduled, %{
+      is_backlog: true,
+      first_notice_due_date: today,
+      first_notice_sent_at: nil,
+      reminder_sent_at: nil,
+      snoozed_until: nil,
+      snooze_note: nil
+    })
+  end
+
+  @valid_transitions for {from, tos} <- @transitions, to <- tos, do: {from, to}
+
+  defp transition(schedule, to, extra_changes \\ %{})
+
+  defp transition(%TeamDeletionSchedule{status: from} = schedule, to, extra_changes)
+       when {from, to} in @valid_transitions do
+    updated =
+      schedule
+      |> Ecto.Changeset.change(Map.put(extra_changes, :status, to))
+      |> Repo.update!()
+
+    {:ok, updated}
+  end
+
+  defp transition(%TeamDeletionSchedule{status: from}, to, _extra_changes) do
+    {:error, {:invalid_transition, from, to}}
+  end
+
+  defp cancel_active_schedule(team_id) do
+    {:ok, count} =
+      Repo.transact(fn ->
+        case active_schedule_for(team_id) do
+          nil -> {:ok, 0}
+          schedule -> {:ok, cancel_count(schedule)}
+        end
+      end)
+
+    count
+  end
+
+  defp cancel_count(schedule) do
+    case cancel(schedule) do
+      {:ok, _} -> 1
+      {:error, _} -> 0
+    end
+  end
+
+  defp active_schedule_for(team_id) do
+    TeamDeletionSchedule
+    |> where([sch], sch.team_id == ^team_id)
+    |> where([sch], sch.status in ^TeamDeletionSchedule.active_statuses())
+    |> lock("FOR UPDATE")
+    |> Repo.one()
   end
 
   defp eligible_category?(today) do

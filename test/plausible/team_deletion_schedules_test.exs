@@ -295,4 +295,182 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       assert TeamDeletionSchedules.cancel_for_team(team) == 0
     end
   end
+
+  describe "transitions/0" do
+    test "matches the schema's known statuses" do
+      transitions = TeamDeletionSchedules.transitions()
+
+      assert Map.keys(transitions) |> Enum.sort() == Enum.sort(TeamDeletionSchedule.statuses())
+
+      for {_from, targets} <- transitions, target <- targets do
+        assert target in TeamDeletionSchedule.statuses()
+      end
+    end
+  end
+
+  describe "mark_first_notice_sent/2" do
+    test "sends the first notice for a steady-state schedule, keeping its deletion_date" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :scheduled,
+          is_backlog: false,
+          deletion_date: ~D[2026-10-19]
+        )
+
+      now = ~N[2026-08-20 10:00:00]
+
+      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now)
+      assert updated.status == :first_notice_sent
+      assert updated.first_notice_sent_at == now
+      assert updated.deletion_date == ~D[2026-10-19]
+    end
+
+    test "sends the first notice for a backlog schedule, anchoring deletion_date to now" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :scheduled,
+          is_backlog: true,
+          deletion_date: ~D[2026-01-01]
+        )
+
+      now = ~N[2026-08-20 10:00:00]
+
+      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now)
+      assert updated.status == :first_notice_sent
+      assert updated.first_notice_sent_at == now
+      assert updated.deletion_date == Plausible.Teams.DeletionSchedule.backlog_deletion_date(now)
+    end
+
+    test "rejects any status other than :scheduled" do
+      for status <- TeamDeletionSchedule.statuses() -- [:scheduled] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.mark_first_notice_sent(schedule, ~N[2026-08-20 10:00:00]) ==
+                 {:error, {:invalid_transition, status, :first_notice_sent}}
+      end
+    end
+  end
+
+  describe "mark_reminder_sent/2" do
+    test "sends the reminder for a schedule that already sent its first notice" do
+      schedule = insert(:team_deletion_schedule, status: :first_notice_sent)
+      now = ~N[2026-08-20 10:00:00]
+
+      assert {:ok, updated} = TeamDeletionSchedules.mark_reminder_sent(schedule, now)
+      assert updated.status == :reminder_sent
+      assert updated.reminder_sent_at == now
+    end
+
+    test "rejects any status other than :first_notice_sent" do
+      for status <- TeamDeletionSchedule.statuses() -- [:first_notice_sent] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.mark_reminder_sent(schedule, ~N[2026-08-20 10:00:00]) ==
+                 {:error, {:invalid_transition, status, :reminder_sent}}
+      end
+    end
+  end
+
+  describe "mark_completed/1" do
+    test "completes a schedule that already sent its reminder" do
+      schedule = insert(:team_deletion_schedule, status: :reminder_sent)
+
+      assert {:ok, updated} = TeamDeletionSchedules.mark_completed(schedule)
+      assert updated.status == :completed
+    end
+
+    test "rejects any status other than :reminder_sent" do
+      for status <- TeamDeletionSchedule.statuses() -- [:reminder_sent] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.mark_completed(schedule) ==
+                 {:error, {:invalid_transition, status, :completed}}
+      end
+    end
+  end
+
+  describe "cancel/1" do
+    test "cancels a schedule from any active status" do
+      for status <- [:scheduled, :first_notice_sent, :reminder_sent, :snoozed] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert {:ok, updated} = TeamDeletionSchedules.cancel(schedule)
+        assert updated.status == :cancelled
+      end
+    end
+
+    test "rejects an already-terminal status" do
+      for status <- [:completed, :cancelled] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.cancel(schedule) ==
+                 {:error, {:invalid_transition, status, :cancelled}}
+      end
+    end
+  end
+
+  describe "snooze/3" do
+    test "snoozes a schedule from any active, not-yet-snoozed status" do
+      for status <- [:scheduled, :first_notice_sent, :reminder_sent] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert {:ok, updated} =
+                 TeamDeletionSchedules.snooze(schedule, ~D[2026-09-20], "customer asked for time")
+
+        assert updated.status == :snoozed
+        assert updated.snoozed_until == ~D[2026-09-20]
+        assert updated.snooze_note == "customer asked for time"
+      end
+    end
+
+    test "defaults the note to nil" do
+      schedule = insert(:team_deletion_schedule, status: :scheduled)
+
+      assert {:ok, updated} = TeamDeletionSchedules.snooze(schedule, ~D[2026-09-20])
+      assert updated.snooze_note == nil
+    end
+
+    test "rejects an already-snoozed or terminal status" do
+      for status <- [:snoozed, :completed, :cancelled] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.snooze(schedule, ~D[2026-09-20]) ==
+                 {:error, {:invalid_transition, status, :snoozed}}
+      end
+    end
+  end
+
+  describe "unsnooze/2" do
+    test "restarts a snoozed schedule as a fresh backlog row due today" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :snoozed,
+          is_backlog: false,
+          snoozed_until: ~D[2026-09-20],
+          snooze_note: "customer asked for time",
+          first_notice_sent_at: ~N[2026-07-01 10:00:00],
+          reminder_sent_at: ~N[2026-07-20 10:00:00]
+        )
+
+      today = ~D[2026-08-20]
+
+      assert {:ok, updated} = TeamDeletionSchedules.unsnooze(schedule, today)
+      assert updated.status == :scheduled
+      assert updated.is_backlog
+      assert updated.first_notice_due_date == today
+      assert updated.first_notice_sent_at == nil
+      assert updated.reminder_sent_at == nil
+      assert updated.snoozed_until == nil
+      assert updated.snooze_note == nil
+    end
+
+    test "rejects any status other than :snoozed" do
+      for status <- TeamDeletionSchedule.statuses() -- [:snoozed] do
+        schedule = insert(:team_deletion_schedule, status: status)
+
+        assert TeamDeletionSchedules.unsnooze(schedule, ~D[2026-08-20]) ==
+                 {:error, {:invalid_transition, status, :scheduled}}
+      end
+    end
+  end
 end
