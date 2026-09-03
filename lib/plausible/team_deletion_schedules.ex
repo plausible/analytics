@@ -120,7 +120,7 @@ defmodule Plausible.TeamDeletionSchedules do
         inner_join: t in assoc(sch, :team),
         where: sch.status == :reminder_sent,
         where: sch.deletion_date <= ^today,
-        preload: [:team]
+        preload: [team: t]
       )
     )
   end
