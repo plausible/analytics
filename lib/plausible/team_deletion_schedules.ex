@@ -117,6 +117,7 @@ defmodule Plausible.TeamDeletionSchedules do
   def due_for_deletion(today \\ Date.utc_today()) do
     Repo.all(
       from(sch in TeamDeletionSchedule,
+        inner_join: t in assoc(sch, :team),
         where: sch.status == :reminder_sent,
         where: sch.deletion_date <= ^today,
         preload: [:team]
