@@ -31,6 +31,7 @@ describe('parseSiteFromDataset', () => {
       data-legacy-time-on-page-cutoff="2022-01-01T00:00:00Z"
       data-embedded=""
       data-is-dbip="false"
+      data-engaged-sessions-filter-available="true"
       data-current-user-role="owner"
       data-current-user-id="1"
       data-flags="{}"
@@ -60,6 +61,7 @@ describe('parseSiteFromDataset', () => {
     embedded: false,
     background: undefined,
     isDbip: false,
+    engagedSessionsFilterAvailable: true,
     flags: {},
     shared: false,
     isConsolidatedView: false,

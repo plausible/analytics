@@ -15,6 +15,7 @@ import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
 import { CsvExport, ExportStatus } from '../stats/csv-export/csv-export'
+import { useSiteContext } from '../site-context'
 
 function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   const { dashboardState } = useDashboardStateContext()
@@ -41,8 +42,29 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   )
 }
 
+function EngagedSessionsSwitchItem() {
+  const { dashboardState, setEngagedSessionsOnly } = useDashboardStateContext()
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        setEngagedSessionsOnly(!dashboardState.engagedSessionsOnly)
+      }
+      className={classNames(
+        popover.items.classNames.navigationLink,
+        popover.items.classNames.hoverLink
+      )}
+    >
+      Only sessions with engagement
+      <Toggle on={dashboardState.engagedSessionsOnly} />
+    </button>
+  )
+}
+
 function DashboardOptionsMenuItems() {
   const { dashboardState } = useDashboardStateContext()
+  const site = useSiteContext()
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useGraphIntervalContext()
   const imports = useImportsIncludedContext()
@@ -111,6 +133,7 @@ function DashboardOptionsMenuItems() {
             exportStatus={exportStatus}
             setExportStatus={setExportStatus}
           />
+          {site.engagedSessionsFilterAvailable && <EngagedSessionsSwitchItem />}
           {imports.status === 'visible' && (
             <>
               <ImportedSwitchItem disabled={imports.disabled} />

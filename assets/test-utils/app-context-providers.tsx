@@ -48,6 +48,7 @@ export const DEFAULT_SITE: PlausibleSite = {
   embedded: false,
   background: '',
   isDbip: false,
+  engagedSessionsFilterAvailable: false,
   flags: {},
   shared: false,
   isConsolidatedView: false,

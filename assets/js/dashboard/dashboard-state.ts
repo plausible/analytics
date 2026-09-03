@@ -50,6 +50,7 @@ export type DashboardState = {
   resolvedFilters: Filter[]
   labels: FilterClauseLabels
   with_imported: boolean
+  engagedSessionsOnly: boolean
 }
 
 export const dashboardStateDefaultValue: DashboardState = {
@@ -64,7 +65,8 @@ export const dashboardStateDefaultValue: DashboardState = {
   filters: [],
   resolvedFilters: [],
   labels: {},
-  with_imported: true
+  with_imported: true,
+  engagedSessionsOnly: false
 }
 
 export type BreakdownResultMeta = {

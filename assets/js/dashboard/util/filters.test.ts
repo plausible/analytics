@@ -79,4 +79,10 @@ describe(`${serializeApiFilters.name}`, () => {
       JSON.stringify([['has_not_done', ['is', 'event:goal', ['Signup']]]])
     )
   })
+
+  it('adds the engaged sessions filter in API format', () => {
+    expect(serializeApiFilters([], true)).toEqual(
+      JSON.stringify([['has_done', ['is', 'event:name', ['engagement']]]])
+    )
+  })
 })
