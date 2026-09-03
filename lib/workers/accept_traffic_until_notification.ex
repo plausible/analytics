@@ -80,18 +80,14 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
 
   defp send_final_notice(notification, pending_trial_schedules_by_team_id, today, false) do
     deletion_date =
-      case Map.get(pending_trial_schedules_by_team_id, notification.team.id) do
-        nil ->
-          nil
-
-        schedule ->
-          # Advance the schedule before composing/sending the email,
-          # so a crash right after this point can never leave it stuck at :scheduled 
-          # while the customer has already been told the deletion date.
-          case TeamDeletionSchedules.mark_first_notice_sent(schedule, report_if_invalid?: true) do
-            {:ok, updated} -> updated.deletion_date
-            {:error, _} -> nil
-          end
+      if schedule = Map.get(pending_trial_schedules_by_team_id, notification.team.id) do
+        # Advance the schedule before composing/sending the email,
+        # so a crash right after this point can never leave it stuck at :scheduled 
+        # while the customer has already been told the deletion date.
+        case TeamDeletionSchedules.mark_first_notice_sent(schedule, report_if_invalid?: true) do
+          {:ok, updated} -> updated.deletion_date
+          {:error, _} -> nil
+        end
       end
 
     notification
