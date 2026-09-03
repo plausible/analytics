@@ -13,7 +13,11 @@ import {
   MetricValueTooltipContent
 } from '../../stats/breakdowns'
 import { ChangeArrow } from '../../stats/reports/change-arrow'
-import { numberLongFormatter, rateFormatter } from '../../util/number-formatter'
+import { formatMoneyShort } from '../../util/money'
+import {
+  numberShortFormatter,
+  rateFormatter
+} from '../../util/number-formatter'
 import { Tooltip } from '../../util/tooltip'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
@@ -134,11 +138,23 @@ function PeriodStats({
       </span>
       <span
         className={classNames(
-          'text-xs font-medium truncate',
+          'flex items-baseline gap-1 text-xs font-medium',
           !muted && 'text-gray-500 dark:text-gray-400'
         )}
       >
-        {numberLongFormatter(values.visitors)} visitors
+        <span className="min-w-0 truncate">
+          {numberShortFormatter(values.visitors)} visitors
+        </span>
+        {values.revenue && (
+          <>
+            <span aria-hidden="true" className="shrink-0">
+              •
+            </span>
+            <span className="min-w-0 truncate">
+              {formatMoneyShort(values.revenue)}
+            </span>
+          </>
+        )}
       </span>
     </div>
   )
