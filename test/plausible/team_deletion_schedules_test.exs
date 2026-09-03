@@ -319,7 +319,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
       now = ~N[2026-08-20 10:00:00]
 
-      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now)
+      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now: now)
       assert updated.status == :first_notice_sent
       assert updated.first_notice_sent_at == now
       assert updated.deletion_date == ~D[2026-10-19]
@@ -335,7 +335,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
       now = ~N[2026-08-20 10:00:00]
 
-      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now)
+      assert {:ok, updated} = TeamDeletionSchedules.mark_first_notice_sent(schedule, now: now)
       assert updated.status == :first_notice_sent
       assert updated.first_notice_sent_at == now
       assert updated.deletion_date == Plausible.Teams.DeletionSchedule.backlog_deletion_date(now)
@@ -345,7 +345,9 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       for status <- TeamDeletionSchedule.statuses() -- [:scheduled] do
         schedule = insert(:team_deletion_schedule, status: status)
 
-        assert TeamDeletionSchedules.mark_first_notice_sent(schedule, ~N[2026-08-20 10:00:00]) ==
+        assert TeamDeletionSchedules.mark_first_notice_sent(schedule,
+                 now: ~N[2026-08-20 10:00:00]
+               ) ==
                  {:error, {:invalid_transition, status, :first_notice_sent}}
       end
     end
@@ -356,7 +358,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       schedule = insert(:team_deletion_schedule, status: :first_notice_sent)
       now = ~N[2026-08-20 10:00:00]
 
-      assert {:ok, updated} = TeamDeletionSchedules.mark_reminder_sent(schedule, now)
+      assert {:ok, updated} = TeamDeletionSchedules.mark_reminder_sent(schedule, now: now)
       assert updated.status == :reminder_sent
       assert updated.reminder_sent_at == now
     end
@@ -365,7 +367,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       for status <- TeamDeletionSchedule.statuses() -- [:first_notice_sent] do
         schedule = insert(:team_deletion_schedule, status: status)
 
-        assert TeamDeletionSchedules.mark_reminder_sent(schedule, ~N[2026-08-20 10:00:00]) ==
+        assert TeamDeletionSchedules.mark_reminder_sent(schedule, now: ~N[2026-08-20 10:00:00]) ==
                  {:error, {:invalid_transition, status, :reminder_sent}}
       end
     end
@@ -415,7 +417,9 @@ defmodule Plausible.TeamDeletionSchedulesTest do
         schedule = insert(:team_deletion_schedule, status: status)
 
         assert {:ok, updated} =
-                 TeamDeletionSchedules.snooze(schedule, ~D[2026-09-20], "customer asked for time")
+                 TeamDeletionSchedules.snooze(schedule, ~D[2026-09-20],
+                   note: "customer asked for time"
+                 )
 
         assert updated.status == :snoozed
         assert updated.snoozed_until == ~D[2026-09-20]
@@ -454,7 +458,7 @@ defmodule Plausible.TeamDeletionSchedulesTest do
 
       today = ~D[2026-08-20]
 
-      assert {:ok, updated} = TeamDeletionSchedules.unsnooze(schedule, today)
+      assert {:ok, updated} = TeamDeletionSchedules.unsnooze(schedule, today: today)
       assert updated.status == :scheduled
       assert updated.is_backlog
       assert updated.first_notice_due_date == today
@@ -468,9 +472,217 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       for status <- TeamDeletionSchedule.statuses() -- [:snoozed] do
         schedule = insert(:team_deletion_schedule, status: status)
 
-        assert TeamDeletionSchedules.unsnooze(schedule, ~D[2026-08-20]) ==
+        assert TeamDeletionSchedules.unsnooze(schedule, today: ~D[2026-08-20]) ==
                  {:error, {:invalid_transition, status, :scheduled}}
       end
+    end
+  end
+
+  describe "report_if_invalid? option" do
+    setup do
+      Plausible.Test.Support.Sentry.setup(self())
+      :ok
+    end
+
+    test "does not report to Sentry by default" do
+      schedule = insert(:team_deletion_schedule, status: :completed)
+
+      assert TeamDeletionSchedules.cancel(schedule) ==
+               {:error, {:invalid_transition, :completed, :cancelled}}
+
+      assert [] = Sentry.Test.pop_sentry_reports()
+    end
+
+    test "reports an invalid transition to Sentry when set" do
+      schedule = insert(:team_deletion_schedule, status: :completed)
+
+      assert TeamDeletionSchedules.cancel(schedule, report_if_invalid?: true) ==
+               {:error, {:invalid_transition, :completed, :cancelled}}
+
+      assert [report] = Sentry.Test.pop_sentry_reports()
+      assert report.message.formatted == "Invalid team deletion schedule transition"
+      assert report.extra.from == :completed
+      assert report.extra.to == :cancelled
+      assert report.extra.team_id == schedule.team_id
+    end
+
+    test "does not report a successful transition even when set" do
+      schedule = insert(:team_deletion_schedule, status: :scheduled)
+
+      assert {:ok, _} = TeamDeletionSchedules.cancel(schedule, report_if_invalid?: true)
+
+      assert [] = Sentry.Test.pop_sentry_reports()
+    end
+  end
+
+  describe "due_for_first_notice/1" do
+    test "returns a scheduled row whose first_notice_due_date has arrived" do
+      owner = new_user()
+      new_site(owner: owner)
+
+      schedule =
+        insert(:team_deletion_schedule,
+          team: team_of(owner),
+          status: :scheduled,
+          first_notice_due_date: @today
+        )
+
+      [due] = TeamDeletionSchedules.due_for_first_notice(@today)
+      assert due.id == schedule.id
+      assert [%Plausible.Auth.User{}] = due.team.owners
+    end
+
+    test "returns a row whose first_notice_due_date is overdue (missed run catch-up)" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :scheduled,
+          first_notice_due_date: Date.shift(@today, day: -3)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_first_notice(@today)
+      assert id == schedule.id
+    end
+
+    test "does not return a row whose first_notice_due_date is still in the future" do
+      insert(:team_deletion_schedule, status: :scheduled, first_notice_due_date: @today)
+
+      assert TeamDeletionSchedules.due_for_first_notice(Date.shift(@today, day: -1)) == []
+    end
+
+    test "does not return a row that already had its first notice sent" do
+      insert(:team_deletion_schedule,
+        status: :first_notice_sent,
+        first_notice_due_date: @today
+      )
+
+      assert TeamDeletionSchedules.due_for_first_notice(@today) == []
+    end
+
+    test "does not return a currently-snoozed row" do
+      insert(:team_deletion_schedule,
+        status: :snoozed,
+        first_notice_due_date: @today,
+        snoozed_until: Date.shift(@today, day: 1)
+      )
+
+      assert TeamDeletionSchedules.due_for_first_notice(@today) == []
+    end
+
+    test "returns a row whose snooze has already lapsed" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :scheduled,
+          first_notice_due_date: @today,
+          snoozed_until: Date.shift(@today, day: -1)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_first_notice(@today)
+      assert id == schedule.id
+    end
+  end
+
+  describe "due_for_reminder/1" do
+    test "returns a first_notice_sent row within 5 days of its deletion_date" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :first_notice_sent,
+          deletion_date: Date.shift(@today, day: 5)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_reminder(@today)
+      assert id == schedule.id
+    end
+
+    test "does not return a row whose deletion_date is more than 5 days out" do
+      insert(:team_deletion_schedule,
+        status: :first_notice_sent,
+        deletion_date: Date.shift(@today, day: 6)
+      )
+
+      assert TeamDeletionSchedules.due_for_reminder(@today) == []
+    end
+
+    test "does not return a scheduled (not yet first-notified) row" do
+      insert(:team_deletion_schedule,
+        status: :scheduled,
+        deletion_date: Date.shift(@today, day: 5)
+      )
+
+      assert TeamDeletionSchedules.due_for_reminder(@today) == []
+    end
+
+    test "does not return a currently-snoozed row" do
+      insert(:team_deletion_schedule,
+        status: :snoozed,
+        deletion_date: Date.shift(@today, day: 5),
+        snoozed_until: Date.shift(@today, day: 1)
+      )
+
+      assert TeamDeletionSchedules.due_for_reminder(@today) == []
+    end
+  end
+
+  describe "pending_steady_state_trials_by_team_id/1" do
+    test "returns a scheduled, non-backlog expired_trial schedule keyed by team_id" do
+      team = insert(:team)
+
+      schedule =
+        insert(:team_deletion_schedule,
+          team: team,
+          category: :expired_trial,
+          status: :scheduled,
+          is_backlog: false
+        )
+
+      team_id = team.id
+
+      assert %{^team_id => result} =
+               TeamDeletionSchedules.pending_steady_state_trials_by_team_id([team.id])
+
+      assert result.id == schedule.id
+    end
+
+    test "excludes a backlog trial schedule" do
+      team = insert(:team)
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :expired_trial,
+        status: :scheduled,
+        is_backlog: true
+      )
+
+      assert TeamDeletionSchedules.pending_steady_state_trials_by_team_id([team.id]) == %{}
+    end
+
+    test "excludes a churned_subscription schedule" do
+      team = insert(:team)
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :churned_subscription,
+        status: :scheduled,
+        is_backlog: false
+      )
+
+      assert TeamDeletionSchedules.pending_steady_state_trials_by_team_id([team.id]) == %{}
+    end
+
+    test "excludes a schedule whose first notice was already sent" do
+      team = insert(:team)
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :expired_trial,
+        status: :first_notice_sent,
+        is_backlog: false
+      )
+
+      assert TeamDeletionSchedules.pending_steady_state_trials_by_team_id([team.id]) == %{}
+    end
+
+    test "returns an empty map without querying for an empty list of team ids" do
+      assert TeamDeletionSchedules.pending_steady_state_trials_by_team_id([]) == %{}
     end
   end
 end

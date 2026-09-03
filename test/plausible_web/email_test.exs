@@ -356,7 +356,7 @@ defmodule PlausibleWeb.EmailTest do
       assert body =~ "Hey John,"
 
       assert body =~
-               "Your sites are still sending us data, but your account is no longer active. We'll stop counting your stats next week."
+               "Your sites are still sending us data, but your account is no longer active. We'll stop counting new stats next week."
     end
 
     test "renders final warning" do
@@ -379,7 +379,151 @@ defmodule PlausibleWeb.EmailTest do
       assert body =~ plausible_link(team: team, label: "start a Plausible subscription")
 
       assert body =~
-               "Your sites are still sending us data, but your account is no longer active. We'll stop counting your stats tomorrow."
+               "Your sites are still sending us data, but your account is no longer active. We'll stop counting new stats tomorrow."
+    end
+
+    test "final warning does not mention deletion when no deletion_date is given" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      notification = %{
+        id: user.id,
+        email: user.email,
+        deadline: Date.add(Date.utc_today(), 1),
+        site_ids: [1, 2, 3],
+        name: user.name,
+        team: team
+      }
+
+      %{html_body: body} =
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(notification)
+
+      refute body =~ "permanently delete"
+    end
+
+    test "final warning mentions the deletion date when given" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      notification = %{
+        id: user.id,
+        email: user.email,
+        deadline: Date.add(Date.utc_today(), 1),
+        site_ids: [1, 2, 3],
+        name: user.name,
+        team: team
+      }
+
+      deletion_date = ~D[2026-10-19]
+
+      %{html_body: body} =
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(notification, deletion_date)
+
+      assert body =~
+               "If you don't subscribe, we'll permanently delete your Plausible dashboards and all their stats on #{PlausibleWeb.EmailView.date_format(deletion_date)}. This cannot be undone."
+
+      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
+    end
+  end
+
+  describe "deletion_full_notice_email/4" do
+    test "renders trial copy for an expired_trial schedule" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate(), name: "My Team")
+
+      schedule =
+        build(:team_deletion_schedule, category: :expired_trial, deletion_date: ~D[2026-10-19])
+
+      sites_summary = %{domains: ["a.example.com", "b.example.com"], more_count: 0}
+
+      %{html_body: body, subject: subject} =
+        PlausibleWeb.Email.deletion_full_notice_email(user, team, schedule, sites_summary)
+
+      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
+      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
+
+      body = text(body)
+
+      days = Plausible.Teams.DeletionSchedule.first_notice_before_deletion_days()
+      assert subject == "Your Plausible dashboards and stats will be deleted in #{days} days"
+      assert body =~ "Your Plausible trial ended a while ago"
+      refute body =~ "subscription lapsed"
+
+      assert body =~
+               "we'll permanently delete the Plausible dashboards and stats for your My Team team on 19 Oct 2026. This cannot be undone."
+
+      assert body =~ "This covers a.example.com, b.example.com."
+    end
+
+    test "renders subscription copy for a churned_subscription schedule" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      schedule =
+        build(:team_deletion_schedule,
+          category: :churned_subscription,
+          deletion_date: ~D[2026-10-19]
+        )
+
+      sites_summary = %{domains: [], more_count: 0}
+
+      %{html_body: body} =
+        PlausibleWeb.Email.deletion_full_notice_email(user, team, schedule, sites_summary)
+
+      assert body =~ "Your Plausible subscription lapsed a while ago"
+      refute body =~ "trial ended"
+    end
+
+    test "caps the listed domains and mentions how many more there are" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+      schedule = build(:team_deletion_schedule, deletion_date: ~D[2026-10-19])
+      sites_summary = %{domains: ["a.example.com", "b.example.com"], more_count: 7}
+
+      %{html_body: body} =
+        PlausibleWeb.Email.deletion_full_notice_email(user, team, schedule, sites_summary)
+
+      assert body =~ "This covers a.example.com, b.example.com (and 7 more sites)."
+    end
+
+    test "omits the site list entirely when there are no domains to show" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+      schedule = build(:team_deletion_schedule, deletion_date: ~D[2026-10-19])
+      sites_summary = %{domains: [], more_count: 0}
+
+      %{html_body: body} =
+        PlausibleWeb.Email.deletion_full_notice_email(user, team, schedule, sites_summary)
+
+      refute body =~ "This covers"
+    end
+  end
+
+  describe "deletion_reminder_email/4" do
+    test "renders the deletion date, site list, and subscribe link" do
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate(), name: "My Team")
+      schedule = build(:team_deletion_schedule, deletion_date: ~D[2026-10-19])
+      sites_summary = %{domains: ["a.example.com"], more_count: 3}
+
+      %{html_body: body, subject: subject} =
+        PlausibleWeb.Email.deletion_reminder_email(user, team, schedule, sites_summary)
+
+      assert body =~ PlausibleWeb.EmailView.choose_plan_url(team)
+      assert body =~ ~s|<a href="https://plausible.io/docs/export-stats">export your stats</a>|
+
+      body = text(body)
+
+      days = Plausible.Teams.DeletionSchedule.reminder_before_deletion_days()
+
+      assert subject ==
+               "Final notice: your Plausible dashboards and stats will be deleted in #{days} days"
+
+      assert body =~
+               "We'll permanently delete the Plausible dashboards and stats for your My Team team on 19 Oct 2026."
+
+      assert body =~ "This covers a.example.com (and 3 more sites)."
+      assert body =~ "This cannot be undone."
     end
   end
 

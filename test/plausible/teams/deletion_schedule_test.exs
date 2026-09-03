@@ -47,18 +47,18 @@ defmodule Plausible.Teams.DeletionScheduleTest do
 
       assert Date.diff(delayed, on_time) == 5
     end
+
+    test "reminder_due_date/1 applies uniformly on top of it (no separate backlog variant needed)" do
+      first_notice_sent_at = ~N[2026-08-20 10:00:00]
+      deletion_date = DeletionSchedule.backlog_deletion_date(first_notice_sent_at)
+
+      assert DeletionSchedule.reminder_due_date(deletion_date) == ~D[2026-09-14]
+    end
   end
 
-  describe "backlog_reminder_due_date/1" do
-    test "is 25 days after the first notice was sent (5 days before the 30-day backlog deletion)" do
-      first_notice_sent_at = ~N[2026-08-20 10:00:00]
-
-      assert DeletionSchedule.backlog_reminder_due_date(first_notice_sent_at) == ~D[2026-09-14]
-
-      assert Date.diff(
-               DeletionSchedule.backlog_deletion_date(first_notice_sent_at),
-               DeletionSchedule.backlog_reminder_due_date(first_notice_sent_at)
-             ) == 5
+  describe "notification_site_list_limit/0" do
+    test "returns the configured cap" do
+      assert DeletionSchedule.notification_site_list_limit() == 3
     end
   end
 end

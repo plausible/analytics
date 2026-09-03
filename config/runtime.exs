@@ -851,6 +851,9 @@ cloud_cron = [
   # {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
+  # Daily at 9, after AcceptTrafficUntil
+  # TODO: enable
+  # {"0 9 * * *", Plausible.Workers.SendDeletionNotifications},
   # Every Tuesday, 3:00 UTC
   {"0 3 * * TUE", Plausible.Workers.ClickhouseCleanSites},
   # Daily at 5:00 UTC
@@ -885,6 +888,7 @@ cloud_queues = [
   notify_annual_renewal: 1,
   lock_sites: 1,
   scan_inactive_teams: 1,
+  deletion_notification_emails: 1,
   legacy_time_on_page_cutoff: 1,
   purge_cdn_cache: 1,
   sso_domain_ownership_verification: 32,
