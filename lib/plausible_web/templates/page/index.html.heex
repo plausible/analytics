@@ -20,7 +20,10 @@
           Login
         </.styled_link>
       </:item>
-      <:item>
+      <:item :if={
+        Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) ==
+          false
+      }>
         <.styled_link href={Routes.auth_path(@conn, :register_form)}>
           Register
         </.styled_link>
