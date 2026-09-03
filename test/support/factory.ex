@@ -3,6 +3,7 @@ defmodule Plausible.Factory do
   See https://ecto.hexdocs.pm/test-factories.html
   """
   use ExMachina.Ecto, repo: Plausible.Repo
+  use Plausible
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
@@ -112,17 +113,19 @@ defmodule Plausible.Factory do
     }
   end
 
-  def team_deletion_schedule_factory do
-    today = Date.utc_today()
-    deletion_date = Date.shift(today, day: 60)
+  on_ee do
+    def team_deletion_schedule_factory do
+      today = Date.utc_today()
+      deletion_date = Date.shift(today, day: 60)
 
-    %Plausible.TeamDeletionSchedule{
-      team: build(:team),
-      category: :expired_trial,
-      expiry_date: today,
-      deletion_date: deletion_date,
-      first_notice_due_date: Date.shift(deletion_date, day: -30)
-    }
+      %Plausible.TeamDeletionSchedule{
+        team: build(:team),
+        category: :expired_trial,
+        expiry_date: today,
+        deletion_date: deletion_date,
+        first_notice_due_date: Date.shift(deletion_date, day: -30)
+      }
+    end
   end
 
   def ch_session_factory do

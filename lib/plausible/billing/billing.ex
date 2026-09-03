@@ -9,7 +9,6 @@ defmodule Plausible.Billing do
 
   alias Plausible.Auth
   alias Plausible.Billing.Subscription
-  alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
   defmacro allowed_roles(), do: [:owner, :billing]
@@ -149,7 +148,7 @@ defmodule Plausible.Billing do
         |> Repo.preload(:team)
 
       Plausible.Teams.update_accept_traffic_until(subscription.team)
-      TeamDeletionSchedules.cancel_for_team(subscription.team)
+      cancel_pending_deletion(subscription.team)
 
       subscription
     end
@@ -255,8 +254,14 @@ defmodule Plausible.Billing do
     |> Plausible.Teams.remove_grace_period()
     |> Plausible.Teams.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_for/1)
-    |> tap(&TeamDeletionSchedules.cancel_for_team/1)
+    |> tap(&cancel_pending_deletion/1)
     |> maybe_adjust_api_key_limits()
+  end
+
+  on_ee do
+    defp cancel_pending_deletion(team), do: Plausible.TeamDeletionSchedules.cancel_for_team(team)
+  else
+    defp cancel_pending_deletion(_team), do: 0
   end
 
   defp maybe_adjust_api_key_limits(team) do
