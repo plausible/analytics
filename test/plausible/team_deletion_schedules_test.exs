@@ -242,12 +242,36 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       assert Repo.reload(schedule).status == :cancelled
     end
 
-    test "does not cancel when the team has no subscription at all" do
-      team = insert(:team)
+    test "does not cancel when the team has no subscription and its trial is still expired" do
+      team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
       schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
 
       assert TeamDeletionSchedules.cancel_for_team(team) == 0
       assert Repo.reload(schedule).status == :scheduled
+    end
+
+    test "cancels when the team has no subscription but its trial is no longer expired" do
+      team = insert(:team, trial_expiry_date: Date.shift(Date.utc_today(), day: 30))
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
+    end
+
+    test "cancels when the team's trial_expiry_date is today (no longer counts as expired)" do
+      team = insert(:team, trial_expiry_date: Date.utc_today())
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
+    end
+
+    test "cancels when the team has no subscription and no trial_expiry_date at all" do
+      team = insert(:team, trial_expiry_date: nil)
+      schedule = insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+      assert TeamDeletionSchedules.cancel_for_team(team) == 1
+      assert Repo.reload(schedule).status == :cancelled
     end
 
     test "does not cancel for a paused subscription" do
@@ -293,6 +317,37 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       insert(:subscription, team: team, status: Subscription.Status.active())
 
       assert TeamDeletionSchedules.cancel_for_team(team) == 0
+    end
+  end
+
+  describe "active_schedule_for_team/1" do
+    test "returns the team's active schedule" do
+      team = insert(:team)
+      schedule = insert(:team_deletion_schedule, team: team, status: :reminder_sent)
+
+      assert result = TeamDeletionSchedules.active_schedule_for_team(team)
+      assert result.id == schedule.id
+    end
+
+    test "returns nil for a team with no schedule at all" do
+      team = insert(:team)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
+    end
+
+    test "returns nil when the team's only schedule is terminal" do
+      team = insert(:team)
+      insert(:team_deletion_schedule, team: team, status: :cancelled)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
+    end
+
+    test "does not return another team's schedule" do
+      team = insert(:team)
+      other_team = insert(:team)
+      insert(:team_deletion_schedule, team: other_team, status: :scheduled)
+
+      assert TeamDeletionSchedules.active_schedule_for_team(team) == nil
     end
   end
 
@@ -655,6 +710,39 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       insert(:team_deletion_schedule, status: :first_notice_sent, deletion_date: @today)
 
       assert TeamDeletionSchedules.due_for_deletion(@today) == []
+    end
+  end
+
+  describe "due_for_unsnooze/1" do
+    test "returns a snoozed row whose snoozed_until has arrived" do
+      schedule =
+        insert(:team_deletion_schedule, status: :snoozed, snoozed_until: @today)
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_unsnooze(@today)
+      assert id == schedule.id
+    end
+
+    test "returns a row whose snoozed_until is overdue (missed run catch-up)" do
+      schedule =
+        insert(:team_deletion_schedule,
+          status: :snoozed,
+          snoozed_until: Date.shift(@today, day: -3)
+        )
+
+      assert [%{id: id}] = TeamDeletionSchedules.due_for_unsnooze(@today)
+      assert id == schedule.id
+    end
+
+    test "does not return a row whose snoozed_until is still in the future" do
+      insert(:team_deletion_schedule, status: :snoozed, snoozed_until: Date.shift(@today, day: 1))
+
+      assert TeamDeletionSchedules.due_for_unsnooze(@today) == []
+    end
+
+    test "does not return a row that isn't snoozed" do
+      insert(:team_deletion_schedule, status: :reminder_sent, deletion_date: @today)
+
+      assert TeamDeletionSchedules.due_for_unsnooze(@today) == []
     end
   end
 

@@ -62,17 +62,31 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   @doc """
-  Cancels any pending deletion schedule for a team
+  Cancels any pending deletion schedule for a team that's no longer
+  eligible for it - either its subscription became active, or (for a
+  schedule based on an expired trial) its trial_expiry_date got prolonged
+  past today, e.g. by staff via the CRM.
   """
   @spec cancel_for_team(Teams.Team.t()) :: non_neg_integer()
   def cancel_for_team(team) do
     team = Teams.with_subscription(team)
 
-    if Subscriptions.active?(team.subscription) do
+    if should_cancel?(team) do
       cancel_active_schedule(team.id)
     else
       0
     end
+  end
+
+  defp should_cancel?(%{subscription: nil} = team) do
+    # Teams.on_trial?/1 treats a cleared trial_expiry_date as "not on
+    # trial", but here a cleared date means there's no trial-based justification 
+    # for the schedule at all, so it should cancel too.
+    Teams.on_trial?(team) or is_nil(team.trial_expiry_date)
+  end
+
+  defp should_cancel?(team) do
+    Subscriptions.active?(team.subscription)
   end
 
   @doc """
@@ -123,6 +137,30 @@ defmodule Plausible.TeamDeletionSchedules do
         preload: [team: t]
       )
     )
+  end
+
+  @doc """
+  Schedules whose snooze has lapsed: still snoozed, past their
+  snoozed_until date.
+  """
+  @spec due_for_unsnooze(Date.t()) :: [TeamDeletionSchedule.t()]
+  def due_for_unsnooze(today \\ Date.utc_today()) do
+    Repo.all(
+      from(sch in TeamDeletionSchedule,
+        where: sch.status == :snoozed,
+        where: sch.snoozed_until <= ^today
+      )
+    )
+  end
+
+  @doc """
+  Get the team's current active (non-terminal) deletion schedule, if any
+  """
+  @spec active_schedule_for_team(Teams.Team.t()) :: TeamDeletionSchedule.t() | nil
+  def active_schedule_for_team(team) do
+    team.id
+    |> active_schedule_query()
+    |> Repo.one()
   end
 
   @doc """
@@ -267,11 +305,16 @@ defmodule Plausible.TeamDeletionSchedules do
   end
 
   defp active_schedule_for(team_id) do
+    team_id
+    |> active_schedule_query()
+    |> lock("FOR UPDATE")
+    |> Repo.one()
+  end
+
+  defp active_schedule_query(team_id) do
     TeamDeletionSchedule
     |> where([sch], sch.team_id == ^team_id)
     |> where([sch], sch.status in ^TeamDeletionSchedule.active_statuses())
-    |> lock("FOR UPDATE")
-    |> Repo.one()
   end
 
   defp eligible_category?(today) do

@@ -17,6 +17,12 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
 
       insert(:team_membership, team: team, user: build(:user), role: :billing)
 
+      insert(:subscription,
+        team: team,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Date.shift(@today, day: -400)
+      )
+
       schedule =
         insert(:team_deletion_schedule,
           team: team,
@@ -47,7 +53,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
     test "finalizes a backlog row's deletion_date anchored to when the notice actually sends" do
       owner = new_user()
       new_site(owner: owner)
-      team = team_of(owner)
+      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
       schedule =
         insert(:team_deletion_schedule,
@@ -115,7 +121,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
     test "sends the reminder email and advances status" do
       owner = new_user()
       new_site(owner: owner)
-      team = team_of(owner)
+      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
 
       schedule =
         insert(:team_deletion_schedule,
