@@ -97,6 +97,8 @@ defmodule Plausible.Auth do
     }
   }
 
+  @type registration_context() :: :default | :invitation
+
   @rate_limit_types Map.keys(@rate_limits)
 
   @type rate_limit_type() :: unquote(Enum.reduce(@rate_limit_types, &{:|, [], [&1, &2]}))
@@ -120,6 +122,27 @@ defmodule Plausible.Auth do
     end
 
     :ok
+  end
+
+  @spec check_registration_enabled(registration_context()) ::
+          :ok | {:error, registration_context(), String.t()}
+  def check_registration_enabled(context) do
+    disabled_for =
+      if context == :invitation do
+        [true]
+      else
+        [:invite_only, true]
+      end
+
+    selfhost_config = Application.fetch_env!(:plausible, :selfhost)
+    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
+    first_launch? = Plausible.Release.should_be_first_launch?()
+
+    if not first_launch? and disable_registration in disabled_for do
+      {:error, disable_registration, "Registration is disabled on this instance"}
+    else
+      :ok
+    end
   end
 
   @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil
