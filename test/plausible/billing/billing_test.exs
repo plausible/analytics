@@ -436,6 +436,7 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(team).locked
     end
 
+    @tag :ee_only
     test "cancels a pending team deletion schedule if subscription is changed from past_due to active" do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
@@ -453,6 +454,7 @@ defmodule Plausible.BillingTest do
       assert Repo.reload!(schedule).status == :cancelled
     end
 
+    @tag :ee_only
     test "does not cancel a pending team deletion schedule if the update doesn't make the subscription active" do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
@@ -676,6 +678,7 @@ defmodule Plausible.BillingTest do
       assert res == {:ok, nil}
     end
 
+    @tag :ee_only
     test "cancels a pending team deletion schedule" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)
