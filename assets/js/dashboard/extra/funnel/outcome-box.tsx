@@ -1,6 +1,7 @@
 import React, { ReactNode, useLayoutEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 
+import { formatMoneyLong } from '../../util/money'
 import { numberLongFormatter, rateFormatter } from '../../util/number-formatter'
 import { StepOutcome, StepValues } from './metrics'
 
@@ -38,6 +39,30 @@ function outcome(
     detail: `${formatted} ${verb}`,
     count: `(${numberLongFormatter(visitors)})`
   }
+}
+
+type RevenueFigure = {
+  kind: 'total' | 'perVisitor'
+  text: string
+}
+
+function stepRevenue(values: StepValues): RevenueFigure[] {
+  if (!values.revenue) {
+    return []
+  }
+
+  const figures: RevenueFigure[] = [
+    { kind: 'total', text: `${formatMoneyLong(values.revenue)} revenue` }
+  ]
+
+  if (values.revenuePerVisitor) {
+    figures.push({
+      kind: 'perVisitor',
+      text: `${formatMoneyLong(values.revenuePerVisitor)} per visitor`
+    })
+  }
+
+  return figures
 }
 
 function stepOutcomes(
@@ -156,9 +181,11 @@ export function StepOutcomes({
   const [open, setOpen] = useState(false)
 
   const outcomes = stepOutcomes(values, entryStep, finalStep)
-  const label = outcomes
-    .map(({ detail, count }) => `${detail} ${count}`)
-    .join(', ')
+  const revenueFigures = stepRevenue(values)
+  const label = [
+    ...outcomes.map(({ detail, count }) => `${detail} ${count}`),
+    ...revenueFigures.map(({ text }) => text)
+  ].join(', ')
 
   const accessibleName = previousPeriod ? `Previous period: ${label}` : label
 
@@ -200,6 +227,22 @@ export function StepOutcomes({
       >
         {outcomes.map((outcome) => (
           <OutcomeText key={outcome.kind} outcome={outcome} detailed={true} />
+        ))}
+        {revenueFigures.length > 0 && (
+          <span className="shrink-0 h-px my-1 bg-gray-900/10 dark:bg-white/15" />
+        )}
+        {revenueFigures.map(({ kind, text }) => (
+          <span
+            key={kind}
+            className={classNames(
+              'font-medium',
+              kind === 'perVisitor'
+                ? 'text-gray-500 dark:text-gray-400'
+                : 'text-gray-900 dark:text-gray-100'
+            )}
+          >
+            {text}
+          </span>
         ))}
       </div>
     </button>
