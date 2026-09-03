@@ -97,9 +97,10 @@ defmodule Plausible.TeamDeletionSchedules do
   def due_for_first_notice(today \\ Date.utc_today()) do
     Repo.all(
       from(sch in TeamDeletionSchedule,
+        inner_join: t in assoc(sch, :team),
         where: sch.status == :scheduled,
         where: sch.first_notice_due_date <= ^today,
-        preload: [team: [:owners, :billing_members]]
+        preload: [team: {t, [:owners, :billing_members]}]
       )
     )
   end
@@ -114,9 +115,10 @@ defmodule Plausible.TeamDeletionSchedules do
 
     Repo.all(
       from(sch in TeamDeletionSchedule,
+        inner_join: t in assoc(sch, :team),
         where: sch.status == :first_notice_sent,
         where: sch.deletion_date <= ^reminder_threshold,
-        preload: [team: [:owners, :billing_members]]
+        preload: [team: {t, [:owners, :billing_members]}]
       )
     )
   end
@@ -129,6 +131,7 @@ defmodule Plausible.TeamDeletionSchedules do
   def due_for_deletion(today \\ Date.utc_today()) do
     Repo.all(
       from(sch in TeamDeletionSchedule,
+        inner_join: t in assoc(sch, :team),
         where: sch.status == :reminder_sent,
         where: sch.deletion_date <= ^today,
         preload: [:team]
