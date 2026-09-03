@@ -86,6 +86,36 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     assert Repo.reload!(schedule).first_notice_sent_at
   end
 
+  test "tomorrow: marks every pending schedule in a multi-team batch" do
+    tomorrow = Date.utc_today() |> Date.add(+1)
+
+    users_and_schedules =
+      for n <- 1..3 do
+        user = new_user(team: [accept_traffic_until: tomorrow])
+        team = team_of(user)
+        new_site(owner: user) |> populate_stats([build(:pageview)])
+
+        schedule =
+          insert(:team_deletion_schedule, team: team, deletion_date: Date.add(tomorrow, n))
+
+        {user, schedule}
+      end
+
+    {:ok, 3} = AcceptTrafficUntil.perform(nil)
+
+    for {user, schedule} <- users_and_schedules do
+      updated = Repo.reload!(schedule)
+      assert updated.status == :first_notice_sent
+      assert updated.first_notice_sent_at
+
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        html_body:
+          ~r/permanently delete your Plausible dashboards and all their stats on #{PlausibleWeb.EmailView.date_format(updated.deletion_date)}/
+      )
+    end
+  end
+
   test "tomorrow: does not augment or mark anything when there is no pending trial schedule" do
     tomorrow = Date.utc_today() |> Date.add(+1)
     user = new_user(team: [accept_traffic_until: tomorrow])
