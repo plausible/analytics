@@ -126,7 +126,7 @@ defmodule Plausible.Auth do
 
   @spec check_registration_enabled(registration_context()) ::
           :ok | {:error, registration_context(), String.t()}
-  def check_registration_enabled(context) do
+  def check_registration_enabled(context \\ :default) do
     disabled_for =
       if context == :invitation do
         [true]

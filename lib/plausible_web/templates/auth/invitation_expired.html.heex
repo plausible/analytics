@@ -1,9 +1,7 @@
 <Layouts.auth heading={@heading} subtitle={@subtitle} flash={@flash}>
   <.auth_container class="flex gap-3 justify-center">
     <.button_link
-      :if={
-        Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false
-      }
+      :if={Plausible.Auth.check_registration_enabled() == :ok}
       href="/register"
       mt?={false}
     >
