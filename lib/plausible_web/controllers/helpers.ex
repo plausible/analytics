@@ -23,22 +23,6 @@ defmodule PlausibleWeb.ControllerHelpers do
   defp error_layout,
     do: Application.get_env(:plausible, PlausibleWeb.Endpoint)[:render_errors][:layout]
 
-  @onboarding_layout_assigns [
-    layout: {PlausibleWeb.LayoutView, :onboarding},
-    hide_footer?: true,
-    disable_global_notices?: true,
-    bg_class: "bg-white dark:bg-gray-950"
-  ]
-
-  def render_onboarding_page(conn, template, extra_assigns \\ []) do
-    assigns =
-      @onboarding_layout_assigns
-      |> Keyword.put(:hide_trial_badge?, conn.params["flow"] == PlausibleWeb.Flows.register())
-      |> Keyword.merge(extra_assigns)
-
-    render(conn, template, assigns)
-  end
-
   def debug_metadata(conn) do
     %{
       request_method: conn.method,

@@ -72,11 +72,9 @@ defmodule PlausibleWeb.SiteController do
     defaults = [
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
       site_limit_exceeded?: false,
-      flow: flow,
       form_submit_url: "/sites?flow=#{flow}",
-      current_step: "Add site info",
-      heading: "Add a website",
-      subtitle: "Start measuring traffic on a new site."
+      bg_class: "bg-white dark:bg-gray-950",
+      legacy_layout?: false
     ]
 
     assigns =
@@ -86,7 +84,11 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Teams.Billing.site_limit(conn.assigns.current_team)
       end)
 
-    render_onboarding_page(conn, "new.html", assigns)
+    if flow == PlausibleWeb.Flows.register() do
+      render(conn, "onboarding_new_site.html", assigns)
+    else
+      render(conn, "provisioning_new_site.html", assigns)
+    end
   end
 
   def settings(conn, %{"domain" => domain}) do

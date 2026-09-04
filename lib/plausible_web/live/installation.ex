@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.Installation do
   use Plausible
   use PlausibleWeb, :live_view
 
-  alias PlausibleWeb.Flows
+  alias PlausibleWeb.{Flows, Layouts}
   alias Phoenix.LiveView.AsyncResult
   alias PlausibleWeb.Live.Installation.Icons
   alias PlausibleWeb.Live.Installation.Instructions
@@ -93,7 +93,6 @@ defmodule PlausibleWeb.Live.Installation do
        site: site,
        flow: flow,
        return_to: params["return_to"],
-       current_step: "Install Plausible",
        heading: heading,
        subtitle: subtitle
      )}
@@ -117,7 +116,11 @@ defmodule PlausibleWeb.Live.Installation do
     assigns = assign(assigns, :submit_button_text, @submit_button_text)
 
     ~H"""
-    <div>
+    <.onboarding_or_app_layout {assigns}>
+      <PlausibleWeb.Components.Site.NewSiteForm.heading_and_subtitle
+        heading={@heading}
+        subtitle={@subtitle}
+      />
       <div class="flex flex-col gap-10 w-full max-w-md mx-auto mt-10 pb-16 px-4 text-gray-900 dark:text-gray-100">
         <.async_result :let={recommended_installation_type} assign={@recommended_installation_type}>
           <:loading>
@@ -233,7 +236,7 @@ defmodule PlausibleWeb.Live.Installation do
           </.focus_list>
         </div>
       </div>
-    </div>
+    </.onboarding_or_app_layout>
     """
   end
 
@@ -320,6 +323,34 @@ defmodule PlausibleWeb.Live.Installation do
         installation_type: AsyncResult.loading(),
         tracker_script_configuration_form: AsyncResult.loading()
       )
+    end
+  end
+
+  defp onboarding_or_app_layout(assigns) do
+    if assigns.flow == Flows.register() do
+      ~H"""
+      <Layouts.onboarding
+        current_step={Flows.installation_step()}
+        current_user={@current_user}
+        flash={@flash}
+      >
+        {render_slot(@inner_block)}
+      </Layouts.onboarding>
+      """
+    else
+      ~H"""
+      <Layouts.app
+        footer?={false}
+        current_user={@current_user}
+        current_team={@current_team}
+        current_team_role={@current_team_role}
+        teams={@teams}
+        my_team={@my_team}
+        flash={@flash}
+      >
+        {render_slot(@inner_block)}
+      </Layouts.app>
+      """
     end
   end
 

@@ -136,4 +136,33 @@ defmodule PlausibleWeb.Layouts do
     </.app>
     """
   end
+
+  attr :current_user, :any, default: nil
+  attr :current_step, :string, required: true
+  attr :flash, :map, default: %{}
+  slot :inner_block, required: true
+
+  def onboarding(assigns) do
+    ~H"""
+    <.app
+      footer?={false}
+      global_notices?={false}
+      trial_badge?={false}
+      current_user={@current_user}
+      flash={@flash}
+    >
+      <div class="flex-1 flex flex-col">
+        <div class="flex-1">
+          {render_slot(@inner_block)}
+        </div>
+        <div class="pb-20 flex justify-center">
+          <PlausibleWeb.Components.FlowProgress.render
+            steps={PlausibleWeb.Flows.onboarding_steps()}
+            current_step={@current_step}
+          />
+        </div>
+      </div>
+    </.app>
+    """
+  end
 end
