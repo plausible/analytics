@@ -236,27 +236,49 @@ defmodule PlausibleWeb.Live.RegisterForm do
         %{"user" => _} = params,
         %{assigns: %{invitation: %{} = invitation}} = socket
       ) do
-    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
-      user =
-        params["user"]
-        |> Map.put("email", invitation.email)
-        |> Auth.User.new()
+    case Plausible.Auth.check_registration_enabled(:invitation) do
+      :ok ->
+        if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+          user =
+            params["user"]
+            |> Map.put("email", invitation.email)
+            |> Auth.User.new()
 
-      with_team? = invitation.type == :site_transfer
+          with_team? = invitation.type == :site_transfer
 
-      add_user(socket, user, with_team?: with_team?)
-    else
-      {:noreply, captcha_failed(socket)}
+          add_user(socket, user, with_team?: with_team?)
+        else
+          {:noreply, captcha_failed(socket)}
+        end
+
+      {:error, _, message} ->
+        socket =
+          socket
+          |> put_flash(:error, message)
+          |> redirect(to: Routes.auth_path(socket, :login_form))
+
+        {:noreply, socket}
     end
   end
 
   def handle_event("register", %{"user" => _} = params, socket) do
-    if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
-      user = Auth.User.new(params["user"])
+    case Plausible.Auth.check_registration_enabled(:default) do
+      :ok ->
+        if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+          user = Auth.User.new(params["user"])
 
-      add_user(socket, user)
-    else
-      {:noreply, captcha_failed(socket)}
+          add_user(socket, user)
+        else
+          {:noreply, captcha_failed(socket)}
+        end
+
+      {:error, _, message} ->
+        socket =
+          socket
+          |> put_flash(:error, message)
+          |> redirect(to: Routes.auth_path(socket, :login_form))
+
+        {:noreply, socket}
     end
   end
 

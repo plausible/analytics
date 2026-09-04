@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.RegisterFormSyncTest do
     # never disabled. Every test here depends on that.
     inviter = new_user()
     site = new_site(owner: inviter)
-    invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
+    invitation = invite_guest(site, build(:user).email, role: :editor, inviter: inviter)
 
     {:ok, invitation: invitation}
   end
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.RegisterFormSyncTest do
       |> element("form")
       |> render_submit(%{"user" => %{"name" => "Mary Sue", "password" => @strong_password}})
 
-      assert Repo.get_by(User, email: "user@email.co")
+      assert Repo.get_by(User, email: invitation.team_invitation.email)
     end
   end
 
@@ -82,6 +82,107 @@ defmodule PlausibleWeb.Live.RegisterFormSyncTest do
                live(conn, "/register/invitation/does-not-exist")
 
       assert flash["error"] == "Registration is disabled on this instance"
+    end
+  end
+
+  describe "DISABLE_REGISTRATION=true with another session open" do
+    setup do
+      # We emulate a situation where another user has a LV session running when
+      # the first user registers in the meantime.
+      patch_disable_registration(false)
+    end
+
+    test "concluding register isn't allowed for ongoing session", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, "/register")
+
+      patch_disable_registration(true)
+
+      attacker_email = build(:user).email
+
+      result =
+        render_hook(lv, "register", %{
+          "user" => %{
+            "name" => "Attacker",
+            "email" => attacker_email,
+            "password" => @strong_password
+          }
+        })
+
+      refute Repo.get_by(User, email: attacker_email)
+      # flash seems to be serialized to cookie encoded format,
+      # but it's confirmed to show the right notification
+      assert {:error, {:redirect, %{to: "/login", flash: _}}} = result
+    end
+
+    test "concluding register from invitation isn't allowed for ongoing session", %{
+      conn: conn,
+      invitation: invitation
+    } do
+      {:ok, lv, _html} = live(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      patch_disable_registration(true)
+
+      attacker_email = build(:user).email
+
+      result =
+        render_hook(lv, "register", %{
+          "user" => %{
+            "name" => "Attacker",
+            "email" => attacker_email,
+            "password" => @strong_password
+          }
+        })
+
+      refute Repo.get_by(User, email: attacker_email)
+      # flash seems to be serialized to cookie encoded format,
+      # but it's confirmed to show the right notification
+      assert {:error, {:redirect, %{to: "/login", flash: _}}} = result
+    end
+  end
+
+  describe "DISABLE_REGISTRATION=invite_only with another session open" do
+    setup do
+      # We emulate a situation where another user has a LV session running when
+      # the first user registers in the meantime.
+      patch_disable_registration(false)
+    end
+
+    test "concluding register isn't allowed for ongoing session", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, "/register")
+
+      patch_disable_registration(:invite_only)
+
+      attacker_email = build(:user).email
+
+      result =
+        render_hook(lv, "register", %{
+          "user" => %{
+            "name" => "Attacker",
+            "email" => attacker_email,
+            "password" => @strong_password
+          }
+        })
+
+      refute Repo.get_by(User, email: attacker_email)
+      # flash seems to be serialized to cookie encoded format,
+      # but it's confirmed to show the right notification
+      assert {:error, {:redirect, %{to: "/login", flash: _}}} = result
+    end
+
+    test "concluding register from invitation is still allowed for ongoing session", %{
+      conn: conn,
+      invitation: invitation
+    } do
+      mock_captcha_success()
+      {:ok, lv, _html} = live(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      patch_disable_registration(:invite_only)
+
+      lv
+      |> element("form")
+      |> render_submit(%{"user" => %{"name" => "Mary Sue", "password" => @strong_password}})
+
+      assert Repo.get_by(User, email: invitation.team_invitation.email)
     end
   end
 
