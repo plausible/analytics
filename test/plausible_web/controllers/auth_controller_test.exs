@@ -29,6 +29,16 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "GET /invitation-expired" do
+    test "shows invitation expired notification", %{conn: conn} do
+      conn = get(conn, "/invitation-expired")
+
+      html = html_response(conn, 200)
+
+      assert html =~ "This invitation has expired or was revoked"
+    end
+  end
+
   describe "POST /login (register_action = register_form)" do
     test "registering sends an activation link", %{conn: conn} do
       Repo.insert!(

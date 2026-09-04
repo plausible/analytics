@@ -438,21 +438,26 @@ defmodule PlausibleWeb.Router do
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [PlausibleWeb.RequireLoggedOutPlug, :app_layout]
 
-      scope assigns: %{disable_registration_for: [:invite_only, true]} do
+      scope assigns: %{registration_context: :default} do
         pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
 
-        live "/register", RegisterForm, :register_form, as: :auth
+        live_session :default, on_mount: PlausibleWeb.Live.RegistrationContext do
+          live "/register", RegisterForm, :register_form, as: :auth
+        end
       end
 
       scope assigns: %{
-              disable_registration_for: true,
+              registration_context: :invitation,
               dogfood_page_path: "/register/invitation/:invitation_id"
             } do
         pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
 
-        live "/register/invitation/:invitation_id",
-             RegisterForm,
-             :register_from_invitation_form, as: :auth
+        live_session :invitation,
+          on_mount: {PlausibleWeb.Live.RegistrationContext, :invitation} do
+          live "/register/invitation/:invitation_id",
+               RegisterForm,
+               :register_from_invitation_form, as: :auth
+        end
       end
     end
 
@@ -461,6 +466,8 @@ defmodule PlausibleWeb.Router do
     post "/activate", AuthController, :activate
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
+
+    get "/invitation-expired", AuthController, :invitation_expired
 
     get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
     post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize

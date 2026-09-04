@@ -1,4 +1,4 @@
-<Layouts.auth heading={@heading} subtitle={@subtitle}>
+<Layouts.auth heading={@heading} subtitle={@subtitle} flash={@flash}>
   <.auth_container>
     <.form :let={f} for={@conn} action="/login" class="flex flex-col gap-y-6">
       <div class="flex flex-col gap-y-2">
@@ -48,10 +48,7 @@
 
         <div class="flex flex-col gap-y-2">
           <p
-            :if={
-              Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) ==
-                false
-            }
+            :if={Plausible.Auth.check_registration_enabled() == :ok}
             class="text-sm text-center text-gray-500 dark:text-gray-400"
           >
             New here? <.styled_link href="/register">Create your account</.styled_link>

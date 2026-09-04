@@ -20,7 +20,7 @@
           Login
         </.styled_link>
       </:item>
-      <:item>
+      <:item :if={Plausible.Auth.check_registration_enabled() == :ok}>
         <.styled_link href={Routes.auth_path(@conn, :register_form)}>
           Register
         </.styled_link>
