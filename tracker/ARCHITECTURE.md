@@ -6,7 +6,7 @@ to how the code is laid out.
 ## Installation Support
 
 The tracker subdirectory also includes site verification and pre-installation checks that are run in headless browser, via
-browserless.io. These files live under the `/tracker/installation-support/` director and are meant to provide Plausible
+browserless.io. These files live under the `/tracker/installation-support/` directory and are meant to provide Plausible
 installation support - checking the site for what technologies to recommend and verifying whether Plausible has been
 installed correctly. Please see `lib/plausible/installation_support/checks/installation.ex` for the Elixir context and how
 this JS code ends up being used.

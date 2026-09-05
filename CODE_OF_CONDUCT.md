@@ -62,4 +62,4 @@ reporter of any incident.
 
 This Code of Conduct is adapted from the [Contributor Covenant code of conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html).
 
-Some inspiration was also taken from [Basecamp's code of conduct](https://basecamp.com/handbook/appendix-07-code-of-conduct)
+Some inspiration was also taken from [Basecamp's code of conduct](https://basecamp.com/handbook/code-of-conduct)
