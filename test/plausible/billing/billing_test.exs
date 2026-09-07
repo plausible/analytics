@@ -436,6 +436,39 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(team).locked
     end
 
+    test "cancels a pending team deletion schedule if subscription is changed from past_due to active" do
+      user = new_user()
+      subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
+      team = team_of(user)
+      schedule = insert(:team_deletion_schedule, team: team, status: :first_notice_sent)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription_of(user).paddle_subscription_id,
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
+        "old_status" => "past_due"
+      })
+      |> Billing.subscription_updated()
+
+      assert Repo.reload!(schedule).status == :cancelled
+    end
+
+    test "does not cancel a pending team deletion schedule if the update doesn't make the subscription active" do
+      user = new_user()
+      subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
+      team = team_of(user)
+      schedule = insert(:team_deletion_schedule, team: team, status: :first_notice_sent)
+
+      %{@subscription_updated_params | "old_status" => "past_due", "status" => "paused"}
+      |> Map.merge(%{
+        "subscription_id" => subscription_of(user).paddle_subscription_id,
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+      })
+      |> Billing.subscription_updated()
+
+      assert Repo.reload!(schedule).status == :first_notice_sent
+    end
+
     @tag :ee_only
     test "updates accept_traffic_until" do
       user = new_user() |> subscribe_to_growth_plan()
@@ -641,6 +674,19 @@ defmodule Plausible.BillingTest do
         })
 
       assert res == {:ok, nil}
+    end
+
+    test "cancels a pending team deletion schedule" do
+      user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
+      schedule = insert(:team_deletion_schedule, team: team, status: :first_notice_sent)
+
+      Billing.subscription_payment_succeeded(%{
+        "alert_name" => "subscription_payment_succeeded",
+        "subscription_id" => subscription_of(user).paddle_subscription_id
+      })
+
+      assert Repo.reload!(schedule).status == :cancelled
     end
   end
 
