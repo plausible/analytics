@@ -254,12 +254,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       refute Repo.get_by(User, email: "mary.sue@plausible.test")
     end
 
-    test "renders expired invitation notice on on-existent invitation ID", %{conn: conn} do
-      lv = get_liveview(conn, "/register/invitation/doesnotexist")
+    test "redirects to expired invitation notice on on-existent invitation ID", %{conn: conn} do
+      conn = assign(conn, :live_module, PlausibleWeb.Live.RegisterForm)
 
-      html = render(lv)
-
-      assert html =~ "This invitation has expired or was revoked"
+      assert {:error, {:redirect, %{to: "/invitation-expired"}}} =
+               live(conn, "/register/invitation/doesnotexist")
     end
 
     test "renders error on failed captcha", %{conn: conn, guest_invitation: guest_invitation} do
