@@ -905,7 +905,7 @@ if config_env() in [:prod, :ce, :load] do
       {Oban.Plugins.Reindexer, schedule: "0 1 * * *"}
     ],
     queues: if(cron_enabled, do: queues, else: []),
-    peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
+    peer: if(cron_enabled, do: Oban.Peers.Database, else: false)
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
