@@ -42,6 +42,33 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         refute_search_result(resp, "site", consolidated_site.id)
       end
 
+      test "shows a pending-deletion badge for a team with an active schedule", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+        insert(:team_deletion_schedule, team: team, status: :scheduled)
+
+        conn = get(conn, @cs_index)
+        resp = html_response(conn, 200)
+
+        assert text_of_element(resp, ~s|a[data-test-type="team"][data-test-id="#{team.id}"]|) =~
+                 "🧨"
+      end
+
+      test "does not show a pending-deletion badge for a team without one", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        conn = get(conn, @cs_index)
+        resp = html_response(conn, 200)
+
+        refute text_of_element(resp, ~s|a[data-test-type="team"][data-test-id="#{team.id}"]|) =~
+                 "🧨"
+      end
+
       test "filters as you type", %{conn: conn, site: site, user: user} do
         site2 = new_site(owner: user, domain: "hello.example.com")
         {:ok, lv, _html} = live(conn, @cs_index)

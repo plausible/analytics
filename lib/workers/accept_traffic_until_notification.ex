@@ -5,6 +5,8 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     - their sites still receive traffic (i.e. have stats for yesterday)
     - `site.accept_traffic_until` is approaching either tomorrow or exactly in 7 days
 
+  If there's steady state team deletion pending, a notice is included.
+
   Users having no sites or sites that receive no traffic, won't be notified.
   We make a tiny effort here to make sure we send the same notification at most once a day.
   """
@@ -13,6 +15,7 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
 
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
+  alias Plausible.TeamDeletionSchedules
 
   def dry_run(date) do
     perform(nil, date, true)
@@ -48,27 +51,20 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
           group_by: [u.id, t.id]
       )
 
+    pending_trial_schedules_by_team_id =
+      notifications
+      |> Enum.filter(&(Date.compare(&1.deadline, tomorrow) == :eq))
+      |> Enum.map(& &1.team.id)
+      |> Enum.uniq()
+      |> TeamDeletionSchedules.pending_steady_state_trials_by_team_id()
+
     for notification <- notifications do
       case {has_stats?(notification.site_ids, today), notification.deadline} do
         {true, ^tomorrow} ->
-          if dry_run? do
-            IO.puts("Will send final notification to #{notification.email}")
-          else
-            notification
-            |> store_sent(today)
-            |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow()
-            |> Plausible.Mailer.send()
-          end
+          send_final_notice(notification, pending_trial_schedules_by_team_id, today, dry_run?)
 
         {true, ^next_week} ->
-          if dry_run? do
-            IO.puts("Will send weekly notification to #{notification.email}")
-          else
-            notification
-            |> store_sent(today)
-            |> PlausibleWeb.Email.approaching_accept_traffic_until()
-            |> Plausible.Mailer.send()
-          end
+          send_weekly_notice(notification, today, dry_run?)
 
         _ ->
           nil
@@ -76,6 +72,39 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     end
 
     {:ok, Enum.count(notifications)}
+  end
+
+  defp send_final_notice(notification, _pending_by_team_id, _today, true = _dry_run?) do
+    IO.puts("Will send final notification to #{notification.email}")
+  end
+
+  defp send_final_notice(notification, pending_trial_schedules_by_team_id, today, false) do
+    deletion_date =
+      if schedule = Map.get(pending_trial_schedules_by_team_id, notification.team.id) do
+        # Advance the schedule before composing/sending the email,
+        # so a crash right after this point can never leave it stuck at :scheduled 
+        # while the customer has already been told the deletion date.
+        case TeamDeletionSchedules.mark_first_notice_sent(schedule, report_if_invalid?: true) do
+          {:ok, updated} -> updated.deletion_date
+          {:error, _} -> nil
+        end
+      end
+
+    notification
+    |> store_sent(today)
+    |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(deletion_date)
+    |> Plausible.Mailer.send()
+  end
+
+  defp send_weekly_notice(notification, _today, true = _dry_run?) do
+    IO.puts("Will send weekly notification to #{notification.email}")
+  end
+
+  defp send_weekly_notice(notification, today, false) do
+    notification
+    |> store_sent(today)
+    |> PlausibleWeb.Email.approaching_accept_traffic_until()
+    |> Plausible.Mailer.send()
   end
 
   defp has_stats?(site_ids, today) do
