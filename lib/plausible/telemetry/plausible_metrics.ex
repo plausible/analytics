@@ -265,7 +265,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:execute_team_deletions, :sites_deleted],
           event_name: Plausible.Workers.ExecuteTeamDeletions.telemetry_sites_deleted_event(),
           reporter_options: [
-            buckets: [1, 2, 5, 10, 25, 50, 100, 250]
+            buckets: [1, 2, 5, 10, 25, 50, 100, 250, 500, 1_000]
           ],
           measurement: :count,
           tags: [:category]
