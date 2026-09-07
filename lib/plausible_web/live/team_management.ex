@@ -117,45 +117,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
             />
           </div>
 
-          <.dropdown id="input-role-picker">
-            <:button class="role inline-flex items-center gap-x-2 font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              {@input_role |> Atom.to_string() |> String.capitalize()}
-              <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-            </:button>
-            <:menu class="dropdown-items max-w-60">
-              <.role_item role={:owner} disabled={@my_role != :owner} phx-click="switch-role">
-                Manage the team without restrictions
-              </.role_item>
-              <.role_item
-                role={:admin}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Manage all team settings
-              </.role_item>
-              <.role_item
-                role={:editor}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Create and view new sites
-              </.role_item>
-              <.role_item
-                role={:billing}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Manage subscription
-              </.role_item>
-              <.role_item
-                role={:viewer}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                View all sites under your team
-              </.role_item>
-            </:menu>
-          </.dropdown>
+          <.role_picker
+            id="input-role-picker"
+            role={@input_role}
+            my_role={@my_role}
+            phx-click="switch-role"
+          />
 
           <.button
             id="invite-member"
