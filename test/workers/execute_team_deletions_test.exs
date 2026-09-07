@@ -164,5 +164,73 @@ defmodule Plausible.Workers.ExecuteTeamDeletionsTest do
       assert Repo.reload(site)
       assert Repo.reload!(schedule).status == :cancelled
     end
+
+    test "emits telemetry for an executed deletion, tagged by category, with a sites_deleted count",
+         %{test: test} do
+      test_pid = self()
+      telemetry_run = ExecuteTeamDeletions.telemetry_run_event()
+      telemetry_sites_deleted = ExecuteTeamDeletions.telemetry_sites_deleted_event()
+
+      :telemetry.attach_many(
+        "#{test}-telemetry-handler",
+        [telemetry_run, telemetry_sites_deleted],
+        fn event, measurements, metadata, _ ->
+          send(test_pid, {:telemetry_handled, event, measurements, metadata})
+        end,
+        %{}
+      )
+
+      owner = new_user()
+      new_site(owner: owner)
+      team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+      new_site(team: team)
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :expired_trial,
+        status: :reminder_sent,
+        deletion_date: @today
+      )
+
+      assert :ok = ExecuteTeamDeletions.perform(nil, @today)
+
+      assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                      %{outcome: :executed, category: :expired_trial}}
+
+      assert_receive {:telemetry_handled, ^telemetry_sites_deleted, %{count: 2},
+                      %{category: :expired_trial}}
+    end
+
+    test "emits telemetry for a cancelled schedule, without a sites_deleted event", %{test: test} do
+      test_pid = self()
+      telemetry_run = ExecuteTeamDeletions.telemetry_run_event()
+
+      :telemetry.attach(
+        "#{test}-telemetry-handler",
+        telemetry_run,
+        fn event, measurements, metadata, _ ->
+          send(test_pid, {:telemetry_handled, event, measurements, metadata})
+        end,
+        %{}
+      )
+
+      owner = new_user()
+      new_site(owner: owner)
+      team = team_of(owner)
+
+      insert(:team_deletion_schedule,
+        team: team,
+        category: :churned_subscription,
+        status: :reminder_sent,
+        deletion_date: @today
+      )
+
+      insert(:subscription, team: team, status: Subscription.Status.active())
+
+      assert :ok = ExecuteTeamDeletions.perform(nil, @today)
+
+      assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                      %{outcome: :cancelled, category: :churned_subscription}}
+    end
   end
 end
