@@ -240,6 +240,35 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_partitions_event(),
           measurement: :count,
           tags: [:table]
+        ),
+        last_value(
+          metric_prefix ++ [:scan_inactive_teams, :run, :created_count],
+          event_name: Plausible.Workers.ScanInactiveTeams.telemetry_run_event(),
+          measurement: :created
+        ),
+        last_value(
+          metric_prefix ++ [:unsnooze_team_deletions, :run, :count],
+          event_name: Plausible.Workers.UnsnoozeTeamDeletions.telemetry_run_event(),
+          measurement: :count
+        ),
+        counter(
+          metric_prefix ++ [:send_deletion_notifications, :run, :total],
+          event_name: Plausible.Workers.SendDeletionNotifications.telemetry_run_event(),
+          tags: [:stage, :outcome, :category]
+        ),
+        counter(
+          metric_prefix ++ [:execute_team_deletions, :run, :total],
+          event_name: Plausible.Workers.ExecuteTeamDeletions.telemetry_run_event(),
+          tags: [:outcome, :category]
+        ),
+        distribution(
+          metric_prefix ++ [:execute_team_deletions, :sites_deleted],
+          event_name: Plausible.Workers.ExecuteTeamDeletions.telemetry_sites_deleted_event(),
+          reporter_options: [
+            buckets: [1, 2, 5, 10, 25, 50, 100, 250]
+          ],
+          measurement: :count,
+          tags: [:category]
         )
       ]
       |> Enum.concat(persistor_metrics(metric_prefix))

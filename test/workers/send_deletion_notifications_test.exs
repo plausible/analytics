@@ -217,6 +217,104 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
       end
     end
 
+    describe "telemetry" do
+      setup %{test: test} do
+        test_pid = self()
+        telemetry_run = SendDeletionNotifications.telemetry_run_event()
+
+        :telemetry.attach(
+          "#{test}-telemetry-handler",
+          telemetry_run,
+          fn event, measurements, metadata, _ ->
+            send(test_pid, {:telemetry_handled, event, measurements, metadata})
+          end,
+          %{}
+        )
+
+        %{telemetry_run: telemetry_run}
+      end
+
+      test "emits a :sent first notice event", %{telemetry_run: telemetry_run} do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+
+        insert(:team_deletion_schedule,
+          team: team,
+          category: :churned_subscription,
+          status: :scheduled,
+          first_notice_due_date: @today
+        )
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                        %{stage: :first_notice, outcome: :sent, category: :churned_subscription}}
+      end
+
+      test "emits a :cancelled first notice event when the team has reactivated", %{
+        telemetry_run: telemetry_run
+      } do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
+
+        insert(:team_deletion_schedule,
+          team: team,
+          category: :expired_trial,
+          status: :scheduled,
+          first_notice_due_date: @today
+        )
+
+        insert(:subscription, team: team, status: Subscription.Status.active())
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                        %{stage: :first_notice, outcome: :cancelled, category: :expired_trial}}
+      end
+
+      test "emits a :sent reminder event", %{telemetry_run: telemetry_run} do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner) |> Plausible.Teams.Team.end_trial() |> Repo.update!()
+
+        insert(:team_deletion_schedule,
+          team: team,
+          category: :churned_subscription,
+          status: :first_notice_sent,
+          deletion_date: Date.shift(@today, day: 3)
+        )
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                        %{stage: :reminder, outcome: :sent, category: :churned_subscription}}
+      end
+
+      test "emits a :cancelled reminder event when the team has reactivated", %{
+        telemetry_run: telemetry_run
+      } do
+        owner = new_user()
+        new_site(owner: owner)
+        team = team_of(owner)
+
+        insert(:team_deletion_schedule,
+          team: team,
+          category: :expired_trial,
+          status: :first_notice_sent,
+          deletion_date: Date.shift(@today, day: 3)
+        )
+
+        insert(:subscription, team: team, status: Subscription.Status.active())
+
+        SendDeletionNotifications.perform(nil, @today)
+
+        assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1},
+                        %{stage: :reminder, outcome: :cancelled, category: :expired_trial}}
+      end
+    end
+
     describe "sites_summary/1" do
       test "returns every domain uncapped when the team has few sites" do
         owner = new_user()
