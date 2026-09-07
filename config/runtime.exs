@@ -855,9 +855,10 @@ cloud_cron = [
   # {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
-  # Daily at 9, after AcceptTrafficUntil
+  # Weekdays at 9, after AcceptTrafficUntil - no deletion notices go out on
+  # weekends; anything due Sat/Sun is simply picked up on Monday instead
   # TODO: enable
-  # {"0 9 * * *", Plausible.Workers.SendDeletionNotifications},
+  # {"0 9 * * 1-5", Plausible.Workers.SendDeletionNotifications},
   # Daily at 10, after SendDeletionNotifications
   # TODO: enable
   # {"0 10 * * *", Plausible.Workers.ExecuteTeamDeletions},

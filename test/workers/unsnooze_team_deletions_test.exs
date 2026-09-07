@@ -62,5 +62,26 @@ defmodule Plausible.Workers.UnsnoozeTeamDeletionsTest do
 
       assert Repo.reload!(schedule).status == :reminder_sent
     end
+
+    test "emits telemetry with the number of unsnoozed schedules", %{test: test} do
+      test_pid = self()
+      telemetry_run = UnsnoozeTeamDeletions.telemetry_run_event()
+
+      :telemetry.attach(
+        "#{test}-telemetry-handler",
+        telemetry_run,
+        fn event, measurements, metadata, _ ->
+          send(test_pid, {:telemetry_handled, event, measurements, metadata})
+        end,
+        %{}
+      )
+
+      insert(:team_deletion_schedule, status: :snoozed, snoozed_until: @today)
+      insert(:team_deletion_schedule, status: :snoozed, snoozed_until: Date.shift(@today, day: 1))
+
+      assert :ok = UnsnoozeTeamDeletions.perform(nil, @today)
+
+      assert_receive {:telemetry_handled, ^telemetry_run, %{count: 1}, %{}}
+    end
   end
 end
