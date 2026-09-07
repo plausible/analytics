@@ -43,10 +43,10 @@ defmodule Plausible.Site.SiteRemovalTest do
   test "site deletion accepts an explicit reason for the pending stats deletion" do
     site = new_site()
 
-    assert {:ok, context} = Removal.run(site, reason: :inactive_trial)
+    assert {:ok, context} = Removal.run(site, reason: :expired_trial)
 
-    assert context.pending_stats_deletion.reason == :inactive_trial
-    assert Repo.get_by(PendingStatsDeletion, site_id: site.id, reason: :inactive_trial)
+    assert context.pending_stats_deletion.reason == :expired_trial
+    assert Repo.get_by(PendingStatsDeletion, site_id: site.id, reason: :expired_trial)
   end
 
   test "site deletion prunes team guest memberships" do

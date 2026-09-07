@@ -6,6 +6,8 @@ defmodule Plausible.TeamDeletionSchedule do
 
   use Ecto.Schema
 
+  import Ecto.Changeset
+
   @categories [:expired_trial, :churned_subscription]
   @statuses [:scheduled, :first_notice_sent, :reminder_sent, :completed, :cancelled, :snoozed]
 
@@ -42,4 +44,23 @@ defmodule Plausible.TeamDeletionSchedule do
 
   @spec active_statuses() :: [atom()]
   def active_statuses, do: @statuses -- @terminal_statuses
+
+  @doc """
+  Validates staff submitted snooze input from the CRM - snoozed_until is
+  required and must be in the future. Doesn't touch status, the actual
+  transition happens via Plausible.TeamDeletionSchedules.snooze/3.
+  """
+  @spec crm_changeset(t(), map()) :: Ecto.Changeset.t()
+  def crm_changeset(schedule, params) do
+    schedule
+    |> cast(params, [:snoozed_until, :snooze_note])
+    |> validate_required([:snoozed_until])
+    |> validate_change(:snoozed_until, fn field, date ->
+      if Date.after?(date, Date.utc_today()) do
+        []
+      else
+        [{field, "must be in the future"}]
+      end
+    end)
+  end
 end
