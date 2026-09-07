@@ -16,13 +16,21 @@ defmodule Plausible.Workers.ExecuteTeamDeletions do
   alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
+  @spec telemetry_run_event() :: [atom()]
+  def telemetry_run_event(), do: [:plausible, :execute_team_deletions, :run]
+
+  @spec telemetry_sites_deleted_event() :: [atom()]
+  def telemetry_sites_deleted_event(), do: [:plausible, :execute_team_deletions, :sites_deleted]
+
   @impl Oban.Worker
   def perform(_job, today \\ Date.utc_today()) do
     for schedule <- TeamDeletionSchedules.due_for_deletion(today) do
       team = schedule.team
 
-      if TeamDeletionSchedules.cancel_for_team(team) == 0 do
+      if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
         execute(schedule, team)
+      else
+        report(schedule, :cancelled)
       end
     end
 
@@ -31,11 +39,26 @@ defmodule Plausible.Workers.ExecuteTeamDeletions do
 
   defp execute(schedule, team) do
     Repo.transaction(fn ->
-      for site <- Teams.owned_sites(team) do
+      sites = Teams.owned_sites(team)
+
+      for site <- sites do
         Plausible.Site.Removal.run(site, reason: schedule.category)
       end
 
       TeamDeletionSchedules.mark_completed(schedule, report_if_invalid?: true)
+
+      report(schedule, :executed)
+
+      :telemetry.execute(telemetry_sites_deleted_event(), %{count: length(sites)}, %{
+        category: schedule.category
+      })
     end)
+  end
+
+  defp report(schedule, outcome) do
+    :telemetry.execute(telemetry_run_event(), %{count: 1}, %{
+      outcome: outcome,
+      category: schedule.category
+    })
   end
 end
