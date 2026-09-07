@@ -27,28 +27,32 @@ defmodule Plausible.Workers.SendDeletionNotifications do
 
   defp send_first_notices(today, now) do
     for schedule <- TeamDeletionSchedules.due_for_first_notice(today) do
-      team = schedule.team
+      send_first_notice(schedule, now)
+    end
+  end
 
-      if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
-        # Finalize the schedule (which, for backlog rows, anchors deletion_date
-        # to `now`) before composing the email, so the date we tell the
-        # customer matches the date we actually persist.
-        case TeamDeletionSchedules.mark_first_notice_sent(schedule,
-               now: now,
-               report_if_invalid?: true
-             ) do
-          {:ok, schedule} ->
-            summary = sites_summary(team)
+  defp send_first_notice(schedule, now) do
+    team = schedule.team
 
-            for recipient <- team.owners ++ team.billing_members do
-              recipient
-              |> PlausibleWeb.Email.deletion_full_notice_email(team, schedule, summary)
-              |> Plausible.Mailer.send()
-            end
+    if TeamDeletionSchedules.cancel_for_team(team) == :no_schedule do
+      # Finalize the schedule (which, for backlog rows, anchors deletion_date
+      # to `now`) before composing the email, so the date we tell the
+      # customer matches the date we actually persist.
+      case TeamDeletionSchedules.mark_first_notice_sent(schedule,
+             now: now,
+             report_if_invalid?: true
+           ) do
+        {:ok, schedule} ->
+          summary = sites_summary(team)
 
-          {:error, _} ->
-            :ok
-        end
+          for recipient <- team.owners ++ team.billing_members do
+            recipient
+            |> PlausibleWeb.Email.deletion_full_notice_email(team, schedule, summary)
+            |> Plausible.Mailer.send()
+          end
+
+        {:error, _} ->
+          :ok
       end
     end
   end
