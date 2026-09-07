@@ -352,6 +352,15 @@ defmodule PlausibleWeb.AuthController do
     conn |> send_resp(403, "") |> halt()
   end
 
+  def invitation_expired(conn, _params) do
+    render(conn, "invitation_expired.html",
+      legacy_layout?: false,
+      heading: "Invitation no longer valid",
+      subtitle:
+        "This invitation has expired or was revoked. Ask your team admin to send you a new invitation. "
+    )
+  end
+
   defp accept_team_invitation(conn, team_identifier, user, params \\ [])
 
   defp accept_team_invitation(conn, no_identifier, _user, params)
