@@ -7,8 +7,6 @@ type FunnelStep = {
   dropoff_percentage: string
   conversion_rate: string
   conversion_rate_step: string
-  // Only steps whose goal is a revenue goal report money, each in its own
-  // goal's currency.
   revenue?: RevenueMetricValue | null
   revenue_per_visitor?: RevenueMetricValue | null
 }
