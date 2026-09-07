@@ -126,8 +126,15 @@ defmodule Plausible.Site.SiteRemovalTest do
 
     assert {:ok, _} = Removal.run(site, cache_name: test)
 
-    refute Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
-    refute Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+    assert eventually(fn ->
+             current_domain =
+               Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+
+             previous_domain =
+               Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+
+             {is_nil(current_domain) and is_nil(previous_domain), :ok}
+           end)
   end
 
   defp start_test_cache(cache_name) do
