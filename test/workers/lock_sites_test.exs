@@ -3,6 +3,7 @@ defmodule Plausible.Workers.LockSitesTest do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.LockSites
   alias Plausible.Billing.Subscription
+  alias Plausible.Teams
 
   @moduletag :ee_only
 
@@ -12,11 +13,36 @@ defmodule Plausible.Workers.LockSitesTest do
 
     user
     |> team_of()
-    |> Plausible.Teams.start_manual_lock_grace_period()
+    |> Teams.start_manual_lock_grace_period()
 
     LockSites.perform(nil)
 
     refute Repo.reload!(site.team).locked
+  end
+
+  test "does not unlock a manually locked enterprise team" do
+    user = new_user()
+    site = new_site(owner: user)
+    team = team_of(user)
+
+    subscribe_to_enterprise_plan(user, site_limit: 1)
+
+    new_site(owner: user)
+    assert Teams.Billing.site_usage(team) == 2
+
+    team =
+      team
+      |> Teams.start_manual_lock_grace_period()
+      |> Teams.end_grace_period()
+
+    Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+
+    LockSites.perform(nil)
+
+    team = Repo.reload!(site.team)
+    assert team.locked
+    assert team.grace_period
+    assert team.grace_period.manual_lock
   end
 
   test "does not lock trial user's site" do

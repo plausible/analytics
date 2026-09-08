@@ -105,7 +105,7 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.1.0"},
       {:nimble_csv, "~> 1.3"},
       {:nimble_totp, "~> 1.0"},
-      {:oban, "~> 2.20.1"},
+      {:oban, "~> 2.24.1"},
       {:observer_cli, "~> 1.7"},
       {:opentelemetry, "~> 1.7"},
       {:opentelemetry_api, "~> 1.5"},
@@ -198,7 +198,9 @@ defmodule Plausible.MixProject do
       # mix test.e2e --ui
       # mix test.e2e --debug segments.spec.ts
       "test.e2e": [
+        "tailwind default",
         "esbuild default",
+        "esbuild friendly_captcha",
         "ecto.create --quiet",
         "ecto.migrate",
         "clean_postgres",
@@ -209,11 +211,14 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "esbuild default"
+        "esbuild default",
+        "esbuild friendly_captcha"
       ],
       "assets.deploy": [
         "tailwind default --minify",
         "esbuild default --minify",
+        # already minified upstream, so no --minify here
+        "esbuild friendly_captcha",
         "phx.digest"
       ]
     ]

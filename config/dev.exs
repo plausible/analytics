@@ -7,6 +7,8 @@ config :plausible, PlausibleWeb.Endpoint,
   check_origin: false,
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    # Not watched: these are vendored files that only change on npm install.
+    esbuild: {Esbuild, :install_and_run, [:friendly_captcha, []]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
     npm: ["--prefix", "assets", "run", "typecheck", "--", "--watch", "--preserveWatchOutput"],
     npm: [

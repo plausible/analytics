@@ -1,4 +1,4 @@
-defmodule Plausible.ImportDeletionRepo do
+defmodule Plausible.DeletionRepo do
   @moduledoc """
   A dedicated repo for import related mutations
   """
@@ -9,7 +9,7 @@ defmodule Plausible.ImportDeletionRepo do
 
   defmacro __using__(_) do
     quote do
-      alias Plausible.ImportDeletionRepo
+      alias Plausible.DeletionRepo
       import Ecto
       import Ecto.Query, only: [from: 1, from: 2]
     end

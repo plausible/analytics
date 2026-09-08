@@ -116,8 +116,23 @@
   }
 
   .btn-theme-icon {
-    @apply border border-transparent text-gray-400 dark:text-gray-400
-      hover:text-gray-900 dark:hover:text-gray-100;
+    @apply border border-transparent text-gray-500 dark:text-gray-400
+      hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100
+      dark:hover:bg-gray-800 hover:border-gray-100 dark:hover:border-gray-800
+      disabled:text-gray-400 disabled:dark:text-gray-600
+      disabled:hover:bg-transparent disabled:hover:border-transparent;
+  }
+
+  .btn-theme-icon.btn-xs {
+    @apply px-1;
+  }
+
+  .btn-theme-icon.btn-sm {
+    @apply px-2;
+  }
+
+  .btn-theme-icon.btn-md {
+    @apply px-2.5;
   }
 }
 

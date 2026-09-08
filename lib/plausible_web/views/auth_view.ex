@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthView do
   use Plausible
   use PlausibleWeb, :view
   alias Plausible.Billing.Plans
+  alias PlausibleWeb.Layouts
 
   def subscription_quota(subscription, options \\ [])
 

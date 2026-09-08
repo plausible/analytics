@@ -194,9 +194,9 @@ defmodule PlausibleWeb.Components.Generic do
           href={"https://plausible.io/docs/#{@slug}"}
           rel="noopener noreferrer"
           target="_blank"
-          class="inline-block"
+          class="flex"
         >
-          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
+          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-4.5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
         </a>
       </.tooltip>
     </div>
@@ -550,7 +550,11 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <button
       id={"#{@id}-#{@id_suffix}"}
-      class={["h-6", if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")]}
+      class={[
+        "h-6",
+        if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer"),
+        if(@server_mode?, do: "phx-click-loading:cursor-default phx-click-loading:opacity-60")
+      ]}
       aria-labelledby={@id}
       role="switch"
       type="button"
@@ -642,74 +646,10 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  def settings_tiles(assigns) do
-    ~H"""
-    <div class="text-gray-900 leading-5 dark:text-gray-100">
-      {render_slot(@inner_block)}
-    </div>
-    """
-  end
-
-  attr :docs, :string, default: nil
-  slot :inner_block, required: true
-  slot :title, required: true
-  slot :subtitle, required: false
-  attr :feature_mod, :atom, default: nil
-  attr :feature_toggle?, :boolean, default: false
-  attr :current_team, :any, default: nil
-  attr :current_user, :any, default: nil
-  attr :site, :any, default: nil
-  attr :conn, :any, default: nil
-  attr :show_content?, :boolean, default: true
-
-  def tile(assigns) do
-    ~H"""
-    <div data-test-id="settings-tile" class="shadow-sm bg-white dark:bg-gray-900 rounded-md mb-6">
-      <header class="relative py-4 px-6">
-        <.title>
-          {render_slot(@title)}
-
-          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4 z-1" />
-        </.title>
-        <div :if={@subtitle != []} class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
-          {render_slot(@subtitle)}
-        </div>
-
-        <.live_component
-          :if={@feature_toggle?}
-          module={PlausibleWeb.Components.Site.Feature.ToggleLive}
-          id={"feature-toggle-#{@site.id}-#{@feature_mod}"}
-          site={@site}
-          feature_mod={@feature_mod}
-          current_user={@current_user}
-        />
-      </header>
-      <div class={["border-b dark:border-gray-700 mx-6", if(not @show_content?, do: "hidden")]}></div>
-      <div class={["relative", if(not @show_content?, do: "hidden")]}>
-        <%= if @feature_mod do %>
-          <PlausibleWeb.Components.Billing.feature_gate
-            locked?={@feature_mod.check_availability(@current_team) != :ok}
-            current_user={@current_user}
-            current_team={@current_team}
-            site={@site}
-          >
-            <div class="p-4 sm:p-6">
-              {render_slot(@inner_block)}
-            </div>
-          </PlausibleWeb.Components.Billing.feature_gate>
-        <% else %>
-          <div class="p-4 sm:p-6">
-            {render_slot(@inner_block)}
-          </div>
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
   attr(:sticky?, :boolean, default: true)
   attr(:enabled?, :boolean, default: true)
   attr(:centered?, :boolean, default: false)
+  attr(:interactive?, :boolean, default: true)
   attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
@@ -727,7 +667,8 @@ defmodule PlausibleWeb.Components.Generic do
       "-translate-y-full",
       "z-[1000]",
       "sm:max-w-64",
-      "w-max"
+      "w-max",
+      if(!assigns.interactive?, do: "pointer-events-none")
     ]
 
     tooltip_position_classes =
@@ -750,7 +691,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-data={@wrapper_data}
         x-on:mouseenter="hovered = true"
         x-on:mouseleave="hovered = false"
-        class={["w-max relative z-[1000]"]}
+        class="w-max relative"
       >
         <div
           x-cloak

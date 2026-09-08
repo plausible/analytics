@@ -5,6 +5,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
   use PlausibleWeb, :live_component
 
   import Ecto.Query, except: [update: 2, update: 3]
+  import PlausibleWeb.CustomerSupport.Live, only: [sort_arrow: 1]
   import PlausibleWeb.Live.Components.Pagination
 
   alias Plausible.Repo
@@ -221,25 +222,4 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
 
   defp flip_direction(:asc), do: :desc
   defp flip_direction(:desc), do: :asc
-
-  attr :active, :boolean, required: true
-  attr :direction, :atom, required: true
-
-  defp sort_arrow(%{active: false} = assigns) do
-    ~H"""
-    <span class="opacity-30">↕</span>
-    """
-  end
-
-  defp sort_arrow(%{direction: :asc} = assigns) do
-    ~H"""
-    <span>↑</span>
-    """
-  end
-
-  defp sort_arrow(assigns) do
-    ~H"""
-    <span>↓</span>
-    """
-  end
 end

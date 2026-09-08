@@ -41,9 +41,13 @@ All notable changes to this project will be documented in this file.
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 - Removed limitation that blocked users without owned sites from starting a subscription
 - Redesigned onboarding pages (add site, installation)
+- Moved tracking options (outbound links, file downloads, form submissions) from the installation page to the general site settings, where they can be toggled without going through the installation flow
+- Replaced HCaptcha with Friendly Captcha
+- Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
 
 ### Fixed
 
+- Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
@@ -56,6 +60,8 @@ All notable changes to this project will be documented in this file.
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
 - Fixed issue with users with billing role not being able to create personal segments
 - Fixed period arrow keys hijacking custom-range calendar
+- Fixed dashboard CSV export failing when the dashboard is filtered by entry page or exit page
+- Fixed entry page hostname breakdown crashing when revenue metrics are queried
 
 ## v3.2.0 - 2026-01-16
 

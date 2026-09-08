@@ -748,6 +748,29 @@ defmodule Plausible.GoalsTest do
 
       assert_matches [%{id: ^g3.id}, %{id: ^g2.id}] = Goals.for_site(site)
     end
+
+    test "deleting special goal (e.g. via tracker script sync) also triggers funnel reduction" do
+      site = new_site()
+      {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
+      :ok = Goals.create_404(site)
+      [g404] = Repo.all(from g in Plausible.Goal, where: g.event_name == "404")
+
+      {:ok, f1} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel with special goal",
+          [
+            %{"goal_id" => g1.id},
+            %{"goal_id" => g404.id}
+          ]
+        )
+
+      assert Plausible.Funnels.get(site.id, f1.id)
+
+      :ok = Goals.delete_404(site)
+
+      refute Plausible.Funnels.get(site.id, f1.id)
+    end
   end
 
   test "must be either page_path or event_name" do

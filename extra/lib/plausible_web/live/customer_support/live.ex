@@ -4,7 +4,7 @@ defmodule PlausibleWeb.CustomerSupport.Live do
 
   Provides:
   - Standard mount/3 and handle_info/2 implementations
-  - Tab navigation components and routing utilities  
+  - Tab navigation components and routing utilities
   - Common aliases and imports for Customer Support LiveViews
   - Convenience API for flashes and redirects
   """
@@ -89,6 +89,27 @@ defmodule PlausibleWeb.CustomerSupport.Live do
     >
       {render_slot(@inner_block)}
     </.link>
+    """
+  end
+
+  attr :active, :boolean, required: true
+  attr :direction, :atom, required: true
+
+  def sort_arrow(%{active: false} = assigns) do
+    ~H"""
+    <span class="opacity-30">↕</span>
+    """
+  end
+
+  def sort_arrow(%{direction: :asc} = assigns) do
+    ~H"""
+    <span>↑</span>
+    """
+  end
+
+  def sort_arrow(assigns) do
+    ~H"""
+    <span>↓</span>
     """
   end
 

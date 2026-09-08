@@ -1,0 +1,20 @@
+<%= if @category == :expired_trial do %>
+  Your Plausible trial ended a while ago and your account has remained inactive since then.
+<% else %>
+  Your Plausible subscription lapsed a while ago and your account has remained inactive since then.
+<% end %>
+<br /><br />
+We don't believe analytics companies should keep website analytics data indefinitely after an account becomes inactive. That's why we'll permanently delete the Plausible dashboards and stats for your
+<strong>{@team.name}</strong>
+team on {date_format(@deletion_date)}. This cannot be undone.
+<%= if @sites_summary.domains != [] do %>
+  <br /><br /> This covers {domains_list(@sites_summary.domains, @sites_summary.more_count)}.
+<% end %>
+<br /><br />
+Plausible is still the simple, privacy-first alternative to Google Analytics you signed up for. No cookies. No personal data. One clear dashboard. Independent and EU-hosted.
+<br /><br />
+<a href={choose_plan_url(@team)}>Subscribe</a>
+before {date_format(@deletion_date)} to keep your dashboards and historical stats. <br /><br />
+If you don't plan to subscribe,
+<a href="https://plausible.io/docs/export-stats">export your stats</a>
+before then. <br /><br /> If you have any questions, just reply to this email and we'll help.

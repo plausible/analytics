@@ -25,16 +25,24 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "Add a website"
     end
 
-    test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
+    test "default flow is 'register', shows onboarding steps regardless of sites provisioned", %{
+      conn: conn1,
+      user: user
+    } do
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
 
       new_site(owner: user, domain: "test-site.com")
 
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
+    end
+
+    test "does not show onboarding steps when ?flow=provisioning", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=provisioning")
+      refute html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
     test "does not display limit notice when user is on an enterprise plan", %{
@@ -675,13 +683,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       assert resp =~ "Settings for #{site.domain}"
+      assert resp =~ "Site details"
       assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
 
-      assert resp =~ "Site timezone"
+      assert resp =~ "Reporting timezone"
 
-      assert resp =~ "Site installation"
+      assert resp =~ "Tracking"
+
+      assert resp =~
+               Routes.site_path(conn, :installation, site.domain,
+                 flow: PlausibleWeb.Flows.review()
+               )
     end
 
     on_ee do
@@ -693,7 +706,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         resp = html_response(conn, 200)
 
         assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
-        assert text(tile_element) =~ "Site timezone"
+        assert text(tile_element) =~ "Reporting timezone"
+        refute text(tile_element) =~ "Site domain"
       end
     end
 
@@ -1354,14 +1368,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "renders looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      assert resp =~ "Google Looker Studio Connector"
+      assert resp =~ "Google Data Studio Connector"
     end
 
     @tag :ce_build_only
     test "does not render looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      refute resp =~ "Google Looker Studio Connector"
+      refute resp =~ "Google Data Studio Connector"
     end
   end
 

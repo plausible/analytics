@@ -188,6 +188,82 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"utm_terms.csv" in zip
     end
 
+    test "exports custom props with an entry_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/blog")
+      ])
+
+      custom_props =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "day",
+            filters: [["is", "visit:entry_page", ["/blog"]]]
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
+
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
+    end
+
+    test "exports custom props with an exit_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/another")
+      ])
+
+      custom_props =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "day",
+            filters: [["is", "visit:exit_page", ["/another"]]]
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
+
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
+    end
+
     test "limits pages.csv and exit_pages.csv to 100 rows", %{conn: conn, site: site} do
       events = for i <- 1..101, do: build(:pageview, pathname: "/page-#{i}")
       populate_stats(site, events)

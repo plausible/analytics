@@ -25,6 +25,49 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
+  describe "/team/setup - suggested team name" do
+    test "shortens a long user name to fit the limit", %{conn: conn} do
+      user = new_user(name: String.duplicate("a", 55))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      expected = String.duplicate("a", 43) <> "'s team"
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               expected
+
+      assert Repo.reload!(team).name == expected
+    end
+
+    test "falls back to a generic name when the user name carries a URL scheme", %{conn: conn} do
+      user = new_user(name: "Cheap meds https://spam.example.com")
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+
+      assert Repo.reload!(team).name == "My team"
+    end
+
+    test "falls back to a generic name when shortening overflows the column", %{conn: conn} do
+      user = new_user(name: String.duplicate("👨‍👩‍👧‍👦", 36))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+
+      assert Repo.reload!(team).name == "My team"
+    end
+  end
+
   describe "/team/setup - main differences from team management" do
     setup [:create_user, :log_in, :create_team]
 
@@ -58,7 +101,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     test "changing team name, updates team name in db", %{conn: conn, team: team} do
-      {:ok, lv, _html} = live(conn, @url)
+      lv = get_child_lv(conn)
       type_into_input(lv, "team[name]", "New Team Name")
       assert Repo.reload!(team).name == "New Team Name"
 
@@ -70,7 +113,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       team: team,
       user: user
     } do
-      {:ok, lv, html} = live(conn, @url)
+      {lv, html} = get_child_lv(conn, with_html?: true)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
                "#{user.name}'s team"
@@ -80,6 +123,78 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       type_into_input(lv, "team[name]", "My personal sites")
       _ = render(lv)
       assert Repo.reload!(team).name == "Team Name 1"
+    end
+
+    test "reserved name is rejected on the very first edit", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "My personal sites")
+
+      assert render(lv) =~ "is reserved"
+      assert Repo.reload!(team).name == "#{user.name}'s team"
+    end
+
+    test "setting team name containing a URL is rejected", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+
+      type_into_input(lv, "team[name]", "Cheap meds at https://spam.example.com")
+
+      assert render(lv) =~ "cannot contain a URL"
+      assert element_exists?(render(lv), "button#save-layout[disabled]")
+      assert Repo.reload!(team).name == "Team Name 1"
+    end
+
+    test "setting team name longer than the limit is rejected", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+
+      type_into_input(lv, "team[name]", String.duplicate("a", 51))
+
+      assert render(lv) =~ "should be at most 50 character(s)"
+      assert element_exists?(render(lv), "button#save-layout[disabled]")
+      assert Repo.reload!(team).name == "Team Name 1"
+    end
+
+    test "creating the team is blocked while the name is rejected", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      refute element_exists?(render(lv), "button#save-layout[disabled]")
+
+      type_into_input(lv, "team[name]", "My personal sites")
+
+      assert render(lv) =~ "is reserved"
+      assert element_exists?(render(lv), "button#save-layout[disabled]")
+
+      # the server refuses as well, not just the disabled button
+      assert render_click(lv, "save-team-layout", %{}) =~ "Please fix the team name first"
+
+      refute Repo.reload!(team).setup_complete
+    end
+
+    test "creating the team goes through once the name is accepted", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "My personal sites")
+      _ = render(lv)
+      type_into_input(lv, "team[name]", "Fixed Team Name")
+      _ = render(lv)
+
+      save_layout(lv)
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      team = Repo.reload!(team)
+      assert team.setup_complete
+      assert team.name == "Fixed Team Name"
     end
 
     @tag :ee_only
@@ -184,10 +299,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       site = new_site(owner: user)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
-      {:ok, main_lv, _html} = live(conn, @url)
       lv = get_child_lv(conn)
 
-      type_into_input(main_lv, "team[name]", "A-Team!")
+      type_into_input(lv, "team[name]", "A-Team!")
 
       assert Repo.reload!(team).name == "A-Team!"
 
@@ -314,7 +428,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       refute html =~ "Invitation pending"
       refute html =~ "Invitation sent"
-      refute html =~ "Team member"
+      refute text_of_element(render(lv), "#member-list") =~ "Team member"
       refute html =~ "Guest"
 
       save_layout(lv)

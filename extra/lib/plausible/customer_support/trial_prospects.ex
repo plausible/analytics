@@ -1,8 +1,14 @@
 defmodule Plausible.CustomerSupport.TrialProspects do
   @moduledoc """
-  Pure scoring logic for ranking trial teams by revenue potential. Turns a
-  team's partial traffic sample and premium-feature usage into an estimated MRR.
+  Scoring logic for ranking trial teams by revenue potential. Turns a team's
+  partial traffic sample and premium-feature usage into an estimated MRR, and
+  serves the ranked listing back to the customer support UI.
   """
+
+  import Ecto.Query
+
+  alias Plausible.CustomerSupport.TrialProspect
+  alias Plausible.Repo
 
   # Static reference pricing (EUR/mo) + pageview ladder. Hand-maintained; keep in sync when public pricing changes.
   @pricing_path Application.app_dir(:plausible, ["priv", "trial_prospect_pricing.json"])
@@ -36,6 +42,82 @@ defmodule Plausible.CustomerSupport.TrialProspects do
   @growth_member_limit 3
 
   @kind_rank %{starter: 0, growth: 1, business: 2}
+
+  @page_size 100
+  @sortable_columns ~w(mrr trial_start)
+  @max_expired_days 30
+
+  @spec sortable_columns() :: [String.t()]
+  def sortable_columns, do: @sortable_columns
+
+  @doc """
+  Teams worth scoring and showing: on a trial (or expired within the last
+  #{@max_expired_days} days) and not yet subscribed.
+  """
+  @spec population_query() :: Ecto.Query.t()
+  def population_query do
+    cutoff = Date.add(Date.utc_today(), -@max_expired_days)
+
+    from(t in Plausible.Teams.Team,
+      as: :team,
+      left_join: s in assoc(t, :subscription),
+      where: not is_nil(t.trial_expiry_date),
+      where: is_nil(s.id),
+      where: t.trial_expiry_date >= ^cutoff
+    )
+  end
+
+  @spec list(String.t(), :asc | :desc, pos_integer()) :: %{
+          prospects: [TrialProspect.t()],
+          page_number: pos_integer(),
+          total_pages: pos_integer(),
+          total_entries: non_neg_integer()
+        }
+  def list(sort_by, sort_direction, page) do
+    base = listing_query()
+
+    total_entries = Repo.aggregate(base, :count)
+    total_pages = max(1, ceil(total_entries / @page_size))
+    page_number = min(page, total_pages)
+
+    prospects =
+      base
+      |> preload_team()
+      |> order_prospects(sort_by, sort_direction)
+      |> limit(^@page_size)
+      |> offset(^((page_number - 1) * @page_size))
+      |> Repo.all()
+
+    %{
+      prospects: prospects,
+      page_number: page_number,
+      total_pages: total_pages,
+      total_entries: total_entries
+    }
+  end
+
+  defp listing_query do
+    from(p in TrialProspect,
+      join: t in subquery(population_query()),
+      as: :team,
+      on: t.id == p.team_id
+    )
+  end
+
+  defp preload_team(q) do
+    owners = from(u in Plausible.Auth.User, select: struct(u, [:id, :email]))
+
+    from([team: t] in q, preload: [team: {t, owners: ^owners}])
+  end
+
+  defp order_prospects(q, "trial_start", direction) do
+    order_by(q, [team: t], [{^direction, t.inserted_at}])
+  end
+
+  # Over-the-top-tier (Custom/Enterprise) prospects rank first
+  defp order_prospects(q, "mrr", direction) do
+    order_by(q, [p], [{^direction, p.over_top_tier}, {^direction, p.estimated_mrr}])
+  end
 
   @doc """
   Combines feature usage, site/member counts + a monthly estimate into the
