@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout master for comparison
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: master
           path: master-branch
@@ -71,7 +71,7 @@ jobs:
           fi
 
       - name: Commit and push changes
-        uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321
+        uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8
         if: steps.increment.outputs.changed == 'true'
         with:
           message: 'chore: Bump tracker_script_version to ${{ steps.increment.outputs.version }}'
