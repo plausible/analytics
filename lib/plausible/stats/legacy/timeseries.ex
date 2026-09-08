@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Legacy.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryRunner, Metrics, Time, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, Metrics, QueryOptimizer}
 
   def timeseries(site, query, metrics) do
     [time_dimension] = query.dimensions
@@ -17,6 +17,8 @@ defmodule Plausible.Stats.Legacy.Timeseries do
         order_by: [{time_dimension, :asc}]
       )
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
+      |> Query.set_include(:time_labels, true)
+      |> Query.set_include(:time_label_result_indices, true)
       |> QueryOptimizer.optimize()
 
     query_result = QueryRunner.run(site, query)
@@ -30,29 +32,15 @@ defmodule Plausible.Stats.Legacy.Timeseries do
   # Given a query result, build a legacy timeseries result
   # Format is %{ date => %{ date: date_string, [metric] => value } } with a bunch of special cases for the UI
   defp build_result(query_result, %Query{} = query) do
-    query_result.results
-    |> Enum.map(fn
-      %{dimensions: [time_dimension_value], metrics: metrics} ->
-        metrics_map = Enum.zip(query.metrics, metrics) |> Map.new()
+    indexed_results =
+      query_result.results |> Enum.with_index() |> Map.new(fn {row, i} -> {i, row} end)
 
-        {
-          time_dimension_value,
-          Map.put(metrics_map, :date, time_dimension_value)
-        }
-    end)
-    |> Map.new()
-    |> add_labels(query)
-  end
-
-  defp add_labels(results_map, query) do
-    query
-    |> Time.time_labels()
-    |> Enum.map(fn key ->
-      Map.get(
-        results_map,
-        key,
-        empty_row(key, query.metrics, query)
-      )
+    Enum.zip(query_result.meta[:time_labels], query_result.meta[:time_label_result_indices])
+    |> Enum.map(fn {label, index} ->
+      case Map.get(indexed_results, index) do
+        nil -> empty_row(label, query.metrics, query)
+        row -> Enum.zip(query.metrics, row.metrics) |> Map.new() |> Map.put(:date, label)
+      end
     end)
     |> transform_realtime_labels(query)
     |> transform_keys(%{group_conversion_rate: :conversion_rate})

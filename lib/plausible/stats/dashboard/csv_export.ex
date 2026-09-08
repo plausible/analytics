@@ -105,6 +105,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
       query
       |> Query.set(order_by: [{Time.time_dimension(query), :asc}])
       |> Query.set_include(:time_labels, true)
+      |> Query.set_include(:time_label_result_indices, true)
       |> Query.set_include(:empty_metrics, true)
 
     QueryRunner.run(site, query) |> timeseries_query_result_to_csv()
@@ -134,21 +135,17 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
   end
 
   defp timeseries_query_result_to_csv(%QueryResult{results: results, query: query, meta: meta}) do
-    meta[:time_labels]
-    |> Enum.reduce([csv_first_row(query)], fn timelabel, acc ->
-      if result_item = find_result_item_by_timelabel(results, timelabel) do
+    indexed_results = results |> Enum.with_index() |> Map.new(fn {row, i} -> {i, row} end)
+
+    Enum.zip(meta[:time_labels], meta[:time_label_result_indices])
+    |> Enum.reduce([csv_first_row(query)], fn {timelabel, index}, acc ->
+      if result_item = Map.get(indexed_results, index) do
         acc ++ [[timelabel | result_item.metrics]]
       else
         acc ++ [[timelabel | meta[:empty_metrics]]]
       end
     end)
     |> NimbleCSV.RFC4180.dump_to_iodata()
-  end
-
-  defp find_result_item_by_timelabel(results, timelabel) do
-    results
-    |> Map.new(fn entry -> {Enum.at(entry.dimensions, 0), entry} end)
-    |> Map.get(timelabel)
   end
 
   defp get_order_by(["event:goal"]), do: [{:visitors, :desc}]
