@@ -75,16 +75,6 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "My personal sites"
     end
 
-    test "typing in the name field does not persist it", %{conn: conn, team: team} do
-      {:ok, lv, _html} = live(conn, @url)
-
-      lv
-      |> element("#create-team-form")
-      |> render_change(%{"team" => %{"name" => "Some Other Name"}})
-
-      assert Repo.reload!(team).name == "My personal sites"
-    end
-
     test "renders form", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
       assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"]|)
@@ -95,14 +85,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "rejects a blank name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      assert finish_setup(lv, "") =~ "blank"
+      assert finish_setup(lv, name: "") =~ "blank"
       refute Repo.reload!(team).setup_complete
     end
 
     test "setting team name containing a URL is rejected", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      assert finish_setup(lv, "Cheap meds at https://spam.example.com") =~
+      assert finish_setup(lv, name: "Cheap meds at https://spam.example.com") =~
                "cannot contain a URL"
 
       refute Repo.reload!(team).setup_complete
@@ -112,7 +102,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "setting team name longer than the limit is rejected", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      assert finish_setup(lv, String.duplicate("a", 51)) =~
+      assert finish_setup(lv, name: String.duplicate("a", 51)) =~
                "should be at most 50 character(s)"
 
       refute Repo.reload!(team).setup_complete
@@ -122,7 +112,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "rejects the reserved default team name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      assert finish_setup(lv, "My personal sites") =~ "is reserved"
+      assert finish_setup(lv, name: "My personal sites") =~ "is reserved"
       refute Repo.reload!(team).setup_complete
       assert Repo.reload!(team).name == "My personal sites"
     end
@@ -133,7 +123,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     } do
       {:ok, lv, _html} = live(conn, @url)
 
-      finish_setup(lv, "Fixed Team Name")
+      finish_setup(lv, name: "Fixed Team Name")
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -157,37 +147,27 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
+  # Adding/removing rows and picking a role all happen entirely client-side
+  # (see assets/js/liveview/member-rows.js) - the server only ever sees the
+  # final "rows" form data once, on submit. These tests exercise that submit
+  # handling directly with the payload a real form submission would produce,
+  # since ExUnit's LiveViewTest can't drive the client-side JS itself.
   describe "/team/setup - adding members" do
     setup [:create_user, :log_in, :create_team]
 
-    test "starts out with a single empty row", %{conn: conn} do
+    test "starts out with a single empty row defaulting to viewer", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
       assert elem_count(html, row_el()) == 1
+      assert text_of_attr(html, ~s|#member-rows input[type="hidden"]|, "value") == "viewer"
     end
 
-    test "add-row appends a row, remove-row removes it", %{conn: conn} do
-      {:ok, lv, html} = live(conn, @url)
-      assert elem_count(html, row_el()) == 1
-
-      html = add_row(lv)
-      assert elem_count(html, row_el()) == 2
-
-      [row_id, _] = row_ids(html)
-      html = remove_row(lv, row_id)
-      assert elem_count(html, row_el()) == 1
-    end
-
-    test "creating the team sends out an invitation for a filled row with the selected role", %{
+    test "creating the team sends out an invitation for a filled row with the given role", %{
       conn: conn,
       team: team
     } do
-      {:ok, lv, html} = live(conn, @url)
-      [row_id] = row_ids(html)
+      {:ok, lv, _html} = live(conn, @url)
 
-      fill_row(lv, row_id, "new@example.com")
-      select_role(lv, row_id, "admin")
-
-      finish_setup(lv)
+      finish_setup(lv, rows: %{"1" => %{"email" => "new@example.com", "role" => "admin"}})
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -205,14 +185,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     test "blank rows are ignored on submit", %{conn: conn, team: team} do
-      {:ok, lv, html} = live(conn, @url)
-      [empty_row_id] = row_ids(html)
+      {:ok, lv, _html} = live(conn, @url)
 
-      html = add_row(lv)
-      [^empty_row_id, filled_row_id] = row_ids(html)
-      fill_row(lv, filled_row_id, "second@example.com")
-
-      finish_setup(lv)
+      finish_setup(lv,
+        rows: %{
+          "1" => %{"email" => "", "role" => "viewer"},
+          "2" => %{"email" => "second@example.com", "role" => "viewer"}
+        }
+      )
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -222,25 +202,23 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     test "rejects invalid e-mails", %{conn: conn, team: team} do
-      {:ok, lv, html} = live(conn, @url)
-      [row_id] = row_ids(html)
+      {:ok, lv, _html} = live(conn, @url)
 
-      fill_row(lv, row_id, "not-an-email")
+      assert finish_setup(lv, rows: %{"1" => %{"email" => "not-an-email", "role" => "viewer"}}) =~
+               "Make sure all e-mails are valid"
 
-      assert finish_setup(lv) =~ "Make sure all e-mails are valid"
       refute Repo.reload!(team).setup_complete
     end
 
     test "rejects duplicate e-mails across rows", %{conn: conn, team: team} do
-      {:ok, lv, html} = live(conn, @url)
-      [row_id] = row_ids(html)
-      html = add_row(lv)
-      [^row_id, row_id2] = row_ids(html)
+      {:ok, lv, _html} = live(conn, @url)
 
-      fill_row(lv, row_id, "dup@example.com")
-      fill_row(lv, row_id2, "dup@example.com")
+      rows = %{
+        "1" => %{"email" => "dup@example.com", "role" => "viewer"},
+        "2" => %{"email" => "dup@example.com", "role" => "admin"}
+      }
 
-      assert finish_setup(lv) =~ "Make sure e-mails are unique"
+      assert finish_setup(lv, rows: rows) =~ "Make sure e-mails are unique"
       refute Repo.reload!(team).setup_complete
     end
 
@@ -250,24 +228,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       team: team
     } do
       insert(:growth_subscription, team: team)
+      {:ok, lv, _html} = live(conn, @url)
 
-      {:ok, lv, html} = live(conn, @url)
-      [row_id] = row_ids(html)
-      fill_row(lv, row_id, "new1@example.com")
+      rows =
+        for n <- 1..4, into: %{} do
+          {to_string(n), %{"email" => "new#{n}@example.com", "role" => "viewer"}}
+        end
 
-      html = add_row(lv)
-      [_, row_id2] = row_ids(html)
-      fill_row(lv, row_id2, "new2@example.com")
-
-      html = add_row(lv)
-      [_, _, row_id3] = row_ids(html)
-      fill_row(lv, row_id3, "new3@example.com")
-
-      html = add_row(lv)
-      [_, _, _, row_id4] = row_ids(html)
-      fill_row(lv, row_id4, "new4@example.com")
-
-      assert finish_setup(lv) =~ "Your account is limited to 3 team members"
+      assert finish_setup(lv, rows: rows) =~ "Your account is limited to 3 team members"
       refute Repo.reload!(team).setup_complete
       assert_no_emails_delivered()
     end
@@ -275,39 +243,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
   defp row_el(), do: ~s|#member-rows > div|
 
-  defp row_ids(html) do
-    html
-    |> find(~s|button[phx-click="remove-row"]|)
-    |> Enum.map(&text_of_attr(&1, "phx-value-row-id"))
-  end
+  defp finish_setup(lv, opts) do
+    name = Keyword.get(opts, :name, "Jane Smith's team")
+    rows = Keyword.get(opts, :rows, %{"1" => %{"email" => "", "role" => "viewer"}})
 
-  defp add_row(lv) do
-    lv
-    |> element(~s|button[phx-click="add-row"]|)
-    |> render_click()
-  end
-
-  defp remove_row(lv, row_id) do
-    lv
-    |> element(~s|button[phx-click="remove-row"][phx-value-row-id="#{row_id}"]|)
-    |> render_click()
-  end
-
-  defp fill_row(lv, row_id, email) do
     lv
     |> element("#create-team-form")
-    |> render_change(%{"rows" => %{row_id => %{"email" => email}}})
-  end
-
-  defp select_role(lv, row_id, role) do
-    lv
-    |> element(~s|#role-picker-#{row_id} a[phx-value-role="#{role}"]|)
-    |> render_click()
-  end
-
-  defp finish_setup(lv, name \\ "Jane Smith's team") do
-    lv
-    |> element("#create-team-form")
-    |> render_submit(%{"team" => %{"name" => name}})
+    |> render_submit(%{"team" => %{"name" => name}, "rows" => rows})
   end
 end

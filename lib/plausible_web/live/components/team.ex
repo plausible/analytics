@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.Components.Team do
     viewer: "View all sites under your team"
   ]
 
-  defp role_descriptions, do: @role_descriptions
+  def role_descriptions, do: @role_descriptions
 
   @roles_cast_map Enum.into(@role_descriptions, %{}, fn {role, _} -> {to_string(role), role} end)
 

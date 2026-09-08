@@ -32,18 +32,12 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   defp setup(socket, team) do
     suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
-
     name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
-
-    {:ok, my_role} = Teams.Memberships.team_role(team, socket.assigns.current_user)
 
     assign(socket,
       current_team: team,
       team_name_form: to_form(name_changeset),
-      locked?: Plausible.Teams.Billing.solo?(team),
-      my_role: my_role,
-      rows: [%{id: 1, email: "", role: :viewer}],
-      next_row_id: 2
+      locked?: Plausible.Teams.Billing.solo?(team)
     )
   end
 
@@ -72,13 +66,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         >
           <.flash_messages flash={@flash} />
 
-          <.form
-            :let={f}
-            for={@team_name_form}
-            id="create-team-form"
-            phx-change="update-rows"
-            phx-submit="create-team"
-          >
+          <.form :let={f} for={@team_name_form} id="create-team-form" phx-submit="create-team">
             <.input
               type="text"
               placeholder={"#{@current_user.name}'s team"}
@@ -88,56 +76,29 @@ defmodule PlausibleWeb.Live.TeamSetup do
               width="w-full"
             />
 
-            <div class="flex items-center justify-between mb-2 mt-4">
-              <.label>
-                Team members
-              </.label>
-
-              <button
-                type="button"
-                aria-label="Add member"
-                phx-click="add-row"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <Heroicons.plus class="size-4" />
-              </button>
-            </div>
-
-            <div id="member-rows">
-              <div
-                :for={row <- @rows}
-                id={"member-row-#{row.id}"}
-                class="flex items-center gap-x-3 mt-3"
-              >
-                <div class="flex-1">
-                  <.input
-                    type="email"
-                    name={"rows[#{row.id}][email]"}
-                    value={row.email}
-                    placeholder="Enter e-mail"
-                    phx-debounce={200}
-                    mt?={false}
-                  />
-                </div>
-
-                <PlausibleWeb.Live.Components.Team.role_picker
-                  id={"role-picker-#{row.id}"}
-                  role={row.role}
-                  my_role={@my_role}
-                  phx-click="select-row-role"
-                  phx-value-row-id={row.id}
-                />
+            <div id="member-rows-container" phx-hook="MemberRows">
+              <div class="flex items-center justify-between mb-2 mt-4">
+                <.label>
+                  Team members
+                </.label>
 
                 <button
                   type="button"
-                  aria-label="Remove row"
-                  phx-click="remove-row"
-                  phx-value-row-id={row.id}
+                  aria-label="Add member"
+                  data-add-row
                   class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  <Heroicons.minus class="size-4" />
+                  <Heroicons.plus class="size-4" />
                 </button>
               </div>
+
+              <div id="member-rows" data-row-list>
+                <.member_row row={%{id: "1", email: "", role: :viewer}} />
+              </div>
+
+              <template data-row-template>
+                <.member_row row={%{id: "__ROW_ID__", email: "", role: :viewer}} />
+              </template>
             </div>
 
             <.button id="create-team-submit" type="submit" class="mt-8 w-full">
@@ -150,43 +111,56 @@ defmodule PlausibleWeb.Live.TeamSetup do
     """
   end
 
-  def handle_event("add-row", _params, socket) do
-    id = socket.assigns.next_row_id
-    rows = socket.assigns.rows ++ [%{id: id, email: "", role: :viewer}]
-    {:noreply, assign(socket, rows: rows, next_row_id: id + 1)}
-  end
+  attr(:row, :map, required: true)
 
-  def handle_event("remove-row", %{"row-id" => row_id}, socket) do
-    row_id = String.to_integer(row_id)
-    rows = Enum.reject(socket.assigns.rows, &(&1.id == row_id))
-    {:noreply, assign(socket, rows: rows)}
-  end
+  defp member_row(assigns) do
+    ~H"""
+    <div id={"member-row-#{@row.id}"} data-row class="flex items-center gap-x-3 mt-3">
+      <div class="flex-1">
+        <.input
+          type="email"
+          name={"rows[#{@row.id}][email]"}
+          value={@row.email}
+          placeholder="Enter e-mail"
+          mt?={false}
+        />
+      </div>
 
-  def handle_event("select-row-role", %{"row-id" => row_id, "role" => role}, socket) do
-    row_id = String.to_integer(row_id)
-    role = PlausibleWeb.Live.Components.Team.role_to_atom(role)
+      <details
+        name="role-picker-group"
+        data-role-picker
+        class="relative inline-block text-left"
+      >
+        <summary class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150">
+          <span data-role-label>{@row.role |> Atom.to_string() |> String.capitalize()}</span>
+          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        </summary>
 
-    rows =
-      Enum.map(socket.assigns.rows, fn
-        %{id: ^row_id} = row -> %{row | role: role}
-        row -> row
-      end)
+        <div class="absolute right-0 z-50 mt-2 w-max p-1.5 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5">
+          <button
+            :for={{role, description} <- PlausibleWeb.Live.Components.Team.role_descriptions()}
+            type="button"
+            data-role-item={role}
+            class="block w-full max-w-60 text-left rounded-md text-sm/6 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/80 px-3 py-1.5"
+          >
+            <div>{role |> Atom.to_string() |> String.capitalize()}</div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs/5">{description}</div>
+          </button>
+        </div>
+      </details>
 
-    {:noreply, assign(socket, rows: rows)}
-  end
+      <input type="hidden" name={"rows[#{@row.id}][role]"} value={@row.role} data-role-value />
 
-  def handle_event("update-rows", params, socket) do
-    rows_params = Map.get(params, "rows", %{})
-
-    rows =
-      Enum.map(socket.assigns.rows, fn row ->
-        case rows_params[to_string(row.id)] do
-          %{"email" => email} -> %{row | email: String.trim(email)}
-          _ -> row
-        end
-      end)
-
-    {:noreply, assign(socket, rows: rows)}
+      <button
+        type="button"
+        aria-label="Remove row"
+        data-remove-row
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        <Heroicons.minus class="size-4" />
+      </button>
+    </div>
+    """
   end
 
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
@@ -206,15 +180,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   defp create_team(socket, rows_params) do
     entries =
-      socket.assigns.rows
-      |> Enum.map(fn row ->
-        email =
-          rows_params
-          |> Map.get(to_string(row.id), %{})
-          |> Map.get("email", "")
-          |> String.trim()
+      rows_params
+      |> Map.values()
+      |> Enum.map(fn row_params ->
+        email = row_params |> Map.get("email", "") |> String.trim()
 
-        %{row | email: email}
+        role =
+          PlausibleWeb.Live.Components.Team.role_to_atom(Map.get(row_params, "role", "viewer"))
+
+        %{email: email, role: role}
       end)
       |> Enum.filter(&(&1.email != ""))
 
