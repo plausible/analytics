@@ -18,6 +18,10 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   defp role_descriptions, do: @role_descriptions
 
+  @roles_cast_map Enum.into(@role_descriptions, %{}, fn {role, _} -> {to_string(role), role} end)
+
+  def role_to_atom(role), do: Map.fetch!(@roles_cast_map, role)
+
   attr(:user, User, required: true)
   attr(:label, :string, default: nil)
   attr(:role, :atom, default: nil)
@@ -120,7 +124,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   def role_picker(assigns) do
     ~H"""
     <.dropdown id={@id}>
-      <:button class="role inline-flex items-center gap-x-2 font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+      <:button class="role w-[100px] inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
         {@role |> Atom.to_string() |> String.capitalize()}
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
       </:button>
