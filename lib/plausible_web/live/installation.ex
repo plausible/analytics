@@ -341,6 +341,7 @@ defmodule PlausibleWeb.Live.Installation do
       ~H"""
       <Layouts.app
         footer?={false}
+        global_notices?={false}
         current_user={@current_user}
         current_team={@current_team}
         current_team_role={@current_team_role}
