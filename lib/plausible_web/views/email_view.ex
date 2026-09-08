@@ -32,6 +32,17 @@ defmodule PlausibleWeb.EmailView do
     Calendar.strftime(date, "%-d %b %Y")
   end
 
+  def domains_list(domains, 0) do
+    Enum.join(domains, ", ")
+  end
+
+  def domains_list(domains, more_count) do
+    Enum.join(domains, ", ") <> " (and #{more_count} more #{pluralize_site(more_count)})"
+  end
+
+  defp pluralize_site(1), do: "site"
+  defp pluralize_site(_), do: "sites"
+
   def sentry_link(trace_id, dsn \\ Sentry.Config.dsn()) do
     search_query = URI.encode_query(%{query: trace_id})
     path = "/organizations/sentry/issues/"

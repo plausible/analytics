@@ -1656,6 +1656,78 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end
 
+    test "POST /settings/team/general/name - name longer than the limit", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => String.duplicate("a", 51)}
+        })
+
+      assert text(html_response(conn, 200)) =~ "should be at most 50 character(s)"
+      assert Repo.reload!(team).name == "My personal sites"
+    end
+
+    test "POST /settings/team/general/name - name containing a URL", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => "Cheap meds at https://spam.example.com"}
+        })
+
+      assert text(html_response(conn, 200)) =~ "cannot contain a URL"
+      assert Repo.reload!(team).name == "My personal sites"
+    end
+
+    test "GET /settings/team/general - team name already longer than the limit", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+
+      long_name = String.duplicate("a", 80)
+      team = team |> Ecto.Changeset.change(name: long_name) |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+
+      html = html_response(get(conn, Routes.settings_path(conn, :team_general)), 200)
+
+      assert text_of_attr(html, "input#team_name", "value") == long_name
+    end
+
+    test "POST /settings/team/general/name - renaming a team whose name is over the limit", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      team = team |> Ecto.Changeset.change(name: String.duplicate("a", 80)) |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => "Shorter name"}
+        })
+
+      assert redirected_to(conn, 302) ==
+               Routes.settings_path(conn, :team_general) <> "#update-name"
+
+      assert Repo.reload!(team).name == "Shorter name"
+    end
+
     test "POST /settings/team/leave", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
