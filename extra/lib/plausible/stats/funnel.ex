@@ -56,9 +56,7 @@ defmodule Plausible.Stats.Funnel do
 
   defp revenue_steps(site, funnel) do
     if Revenue.available?(site) do
-      Enum.filter(funnel.steps, fn step ->
-        match?(%Plausible.Goal{currency: currency} when not is_nil(currency), step.goal)
-      end)
+      Enum.reject(funnel.steps, &is_nil(&1.goal.currency))
     else
       []
     end
@@ -84,8 +82,9 @@ defmodule Plausible.Stats.Funnel do
 
     all_visitors = funnel_data |> Enum.map(& &1.visitors) |> Enum.sum()
 
-    steps =
-      backfill_steps(visitors_by_step, revenue_totals(funnel_data, revenue_steps), funnel)
+    revenue_totals_by_step = revenue_totals(funnel_data, revenue_steps)
+
+    steps = backfill_steps(visitors_by_step, revenue_totals_by_step, funnel)
 
     visitors_at_first_step = List.first(steps).visitors
 
@@ -117,6 +116,8 @@ defmodule Plausible.Stats.Funnel do
     |> select_revenue_totals(revenue_steps)
   end
 
+  defp select_user_revenue(db_query, []), do: db_query
+
   defp select_user_revenue(db_query, revenue_steps) do
     sums =
       Map.new(revenue_steps, fn step ->
@@ -126,8 +127,10 @@ defmodule Plausible.Stats.Funnel do
          dynamic([e], fragment("sumIf(?, ?)", e.revenue_reporting_amount, ^goal_condition))}
       end)
 
-    select_merge_dynamics(db_query, sums)
+    from(q in db_query, select_merge: ^sums)
   end
+
+  defp select_revenue_totals(db_query, []), do: db_query
 
   defp select_revenue_totals(db_query, revenue_steps) do
     totals =
@@ -141,13 +144,7 @@ defmodule Plausible.Stats.Funnel do
          )}
       end)
 
-    select_merge_dynamics(db_query, totals)
-  end
-
-  defp select_merge_dynamics(db_query, dynamics) when map_size(dynamics) == 0, do: db_query
-
-  defp select_merge_dynamics(db_query, dynamics) do
-    from(q in db_query, select_merge: ^dynamics)
+    from(q in db_query, select_merge: ^totals)
   end
 
   defp revenue_key(%{step_order: step_order}), do: :"revenue_#{step_order}"
