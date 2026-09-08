@@ -694,14 +694,23 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
             name: "Donation",
             user_id: @user_id,
             revenue_reporting_amount: Decimal.new("10"),
-            revenue_reporting_currency: "EUR"
+            revenue_reporting_currency: "EUR",
+            timestamp: ~N[2021-01-01 12:00:00]
           ),
-          purchase(@user_id, "50")
+          build(:event,
+            name: "Donation",
+            user_id: @other_user_id,
+            revenue_reporting_amount: Decimal.new("20"),
+            revenue_reporting_currency: "EUR",
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          purchase(@user_id, "50", timestamp: ~N[2021-01-01 12:01:00])
         ])
 
-        assert [donation_step, purchase_step] = funnel_steps(conn, site, funnel)
+        assert [donation_step, purchase_step] =
+                 funnel_steps(conn, site, funnel, "period=day&date=2021-01-01")
 
-        assert %{"revenue" => %{"long" => "€10.00", "currency" => "EUR"}} = donation_step
+        assert %{"revenue" => %{"long" => "€30.00", "currency" => "EUR"}} = donation_step
         assert %{"revenue" => %{"long" => "$50.00", "currency" => "USD"}} = purchase_step
       end
 
