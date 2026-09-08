@@ -147,11 +147,21 @@ defmodule Plausible.Teams.Team do
   end
 
   def name_changeset(team, attrs \\ %{}) do
-    team
-    |> cast(attrs, [:name])
-    |> validate_required(:name)
-    |> validate_name()
-    |> validate_exclusion(:name, [Plausible.Teams.default_name()])
+    changeset =
+      team
+      |> cast(attrs, [:name])
+      |> validate_name()
+      |> validate_required(:name)
+
+    # validate_exclusion/3 only runs its check when the field actually changed
+    # relative to the struct's current value, which would let a freshly
+    # auto-created team (whose name already equals the reserved default) keep
+    # that name simply by resubmitting it unchanged. Check unconditionally.
+    if get_field(changeset, :name) == Plausible.Teams.default_name() do
+      add_error(changeset, :name, "is reserved")
+    else
+      changeset
+    end
   end
 
   def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do

@@ -29,159 +29,111 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "shortens a long user name to fit the limit", %{conn: conn} do
       user = new_user(name: String.duplicate("a", 55))
       {:ok, conn: conn} = log_in(%{user: user, conn: conn})
-      {:ok, team} = Teams.get_or_create(user)
+      {:ok, _team} = Teams.get_or_create(user)
 
       {:ok, _lv, html} = live(conn, @url)
 
       expected = String.duplicate("a", 43) <> "'s team"
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
                expected
-
-      assert Repo.reload!(team).name == expected
     end
 
     test "falls back to a generic name when the user name carries a URL scheme", %{conn: conn} do
       user = new_user(name: "Cheap meds https://spam.example.com")
       {:ok, conn: conn} = log_in(%{user: user, conn: conn})
-      {:ok, team} = Teams.get_or_create(user)
+      {:ok, _team} = Teams.get_or_create(user)
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
                "My team"
-
-      assert Repo.reload!(team).name == "My team"
     end
 
     test "falls back to a generic name when shortening overflows the column", %{conn: conn} do
       user = new_user(name: String.duplicate("👨‍👩‍👧‍👦", 36))
       {:ok, conn: conn} = log_in(%{user: user, conn: conn})
-      {:ok, team} = Teams.get_or_create(user)
+      {:ok, _team} = Teams.get_or_create(user)
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
                "My team"
-
-      assert Repo.reload!(team).name == "My team"
     end
   end
 
   describe "/team/setup - team name" do
     setup [:create_user, :log_in, :create_team]
 
-    test "renames the team on first render", %{conn: conn, team: team} do
+    test "suggests a default name without persisting it", %{conn: conn, team: team} do
       assert team.name == "My personal sites"
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
                "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's team"
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
-    test "renames even if team already has non-default name", %{conn: conn, team: team} do
-      assert team.name == "My personal sites"
-      Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
-      {:ok, _lv, html} = live(conn, @url)
+    test "typing in the name field does not persist it", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's team"
+      lv
+      |> element("#create-team-form")
+      |> render_change(%{"team" => %{"name" => "Some Other Name"}})
 
-      assert Repo.reload!(team).name == "Jane Smith's team"
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     test "renders form", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
-      assert element_exists?(html, ~s|input#update-team-form_name[name="team[name]"]|)
+      assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"]|)
       assert element_exists?(html, "#create-team-submit")
       assert elem_count(html, row_el()) == 1
     end
 
-    test "changing team name, updates team name in db", %{conn: conn, team: team} do
-      {:ok, lv, _html} = live(conn, @url)
-      type_into_input(lv, "team[name]", "New Team Name")
-      assert Repo.reload!(team).name == "New Team Name"
-    end
-
-    test "setting team name to 'My personal sites' is reserved", %{
-      conn: conn,
-      team: team,
-      user: user
-    } do
-      {:ok, lv, html} = live(conn, @url)
-
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "#{user.name}'s team"
-
-      type_into_input(lv, "team[name]", "Team Name 1")
-      type_into_input(lv, "team[name]", "My personal sites")
-      assert Repo.reload!(team).name == "Team Name 1"
-    end
-
-    test "reserved name is rejected on the very first edit", %{
-      conn: conn,
-      team: team,
-      user: user
-    } do
+    test "rejects a blank name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      type_into_input(lv, "team[name]", "My personal sites")
-
-      assert render(lv) =~ "is reserved"
-      assert Repo.reload!(team).name == "#{user.name}'s team"
+      assert finish_setup(lv, "") =~ "blank"
+      refute Repo.reload!(team).setup_complete
     end
 
     test "setting team name containing a URL is rejected", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      type_into_input(lv, "team[name]", "Team Name 1")
-      _ = render(lv)
+      assert finish_setup(lv, "Cheap meds at https://spam.example.com") =~
+               "cannot contain a URL"
 
-      type_into_input(lv, "team[name]", "Cheap meds at https://spam.example.com")
-
-      assert render(lv) =~ "cannot contain a URL"
-      assert element_exists?(render(lv), "#create-team-submit[disabled]")
-      assert Repo.reload!(team).name == "Team Name 1"
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     test "setting team name longer than the limit is rejected", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      type_into_input(lv, "team[name]", "Team Name 1")
-      _ = render(lv)
-
-      type_into_input(lv, "team[name]", String.duplicate("a", 51))
-
-      assert render(lv) =~ "should be at most 50 character(s)"
-      assert element_exists?(render(lv), "#create-team-submit[disabled]")
-      assert Repo.reload!(team).name == "Team Name 1"
-    end
-
-    test "creating the team is blocked while the name is rejected", %{conn: conn, team: team} do
-      {:ok, lv, html} = live(conn, @url)
-
-      refute element_exists?(html, "#create-team-submit[disabled]")
-
-      type_into_input(lv, "team[name]", "My personal sites")
-
-      assert render(lv) =~ "is reserved"
-      assert element_exists?(render(lv), "#create-team-submit[disabled]")
-
-      # the server refuses as well, not just the disabled button
-      assert render_click(lv, "create-team", %{}) =~ "Please fix the team name first"
+      assert finish_setup(lv, String.duplicate("a", 51)) =~
+               "should be at most 50 character(s)"
 
       refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
-    test "creating the team goes through once the name is accepted", %{conn: conn, team: team} do
+    test "rejects the reserved default team name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
-      type_into_input(lv, "team[name]", "My personal sites")
-      type_into_input(lv, "team[name]", "Fixed Team Name")
+      assert finish_setup(lv, "My personal sites") =~ "is reserved"
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
 
-      submit_form(lv)
+    test "creating the team goes through once a valid name is submitted", %{
+      conn: conn,
+      team: team
+    } do
+      {:ok, lv, _html} = live(conn, @url)
+
+      finish_setup(lv, "Fixed Team Name")
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -235,7 +187,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       fill_row(lv, row_id, "new@example.com")
       select_role(lv, row_id, "admin")
 
-      submit_form(lv)
+      finish_setup(lv)
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -260,7 +212,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       [^empty_row_id, filled_row_id] = row_ids(html)
       fill_row(lv, filled_row_id, "second@example.com")
 
-      submit_form(lv)
+      finish_setup(lv)
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
@@ -275,7 +227,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       fill_row(lv, row_id, "not-an-email")
 
-      assert submit_form(lv) =~ "Make sure all e-mails are valid"
+      assert finish_setup(lv) =~ "Make sure all e-mails are valid"
       refute Repo.reload!(team).setup_complete
     end
 
@@ -288,7 +240,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       fill_row(lv, row_id, "dup@example.com")
       fill_row(lv, row_id2, "dup@example.com")
 
-      assert submit_form(lv) =~ "Make sure e-mails are unique"
+      assert finish_setup(lv) =~ "Make sure e-mails are unique"
       refute Repo.reload!(team).setup_complete
     end
 
@@ -315,16 +267,10 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       [_, _, _, row_id4] = row_ids(html)
       fill_row(lv, row_id4, "new4@example.com")
 
-      assert submit_form(lv) =~ "Your account is limited to 3 team members"
+      assert finish_setup(lv) =~ "Your account is limited to 3 team members"
       refute Repo.reload!(team).setup_complete
       assert_no_emails_delivered()
     end
-  end
-
-  defp type_into_input(lv, id, text) do
-    lv
-    |> element("form#update-team-form")
-    |> render_change(%{id => text})
   end
 
   defp row_el(), do: ~s|#member-rows > div|
@@ -349,7 +295,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
   defp fill_row(lv, row_id, email) do
     lv
-    |> element("#member-rows-form")
+    |> element("#create-team-form")
     |> render_change(%{"rows" => %{row_id => %{"email" => email}}})
   end
 
@@ -359,9 +305,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     |> render_click()
   end
 
-  defp submit_form(lv) do
+  defp finish_setup(lv, name \\ "Jane Smith's team") do
     lv
-    |> element("#member-rows-form")
-    |> render_submit()
+    |> element("#create-team-form")
+    |> render_submit(%{"team" => %{"name" => name}})
   end
 end

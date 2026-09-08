@@ -33,16 +33,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
   defp setup(socket, team) do
     suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
 
-    team =
-      team
-      |> Teams.Team.name_changeset(%{name: suggested_name})
-      |> Repo.update!()
+    name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
 
     {:ok, my_role} = Teams.Memberships.team_role(team, socket.assigns.current_user)
 
     assign(socket,
       current_team: team,
-      team_name_form: to_form(Teams.Team.name_changeset(team, %{})),
+      team_name_form: to_form(name_changeset),
       locked?: Plausible.Teams.Billing.solo?(team),
       my_role: my_role,
       rows: [%{id: 1, email: "", role: :viewer}],
@@ -78,12 +75,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
           <.form
             :let={f}
             for={@team_name_form}
-            method="post"
-            phx-change="update-team"
-            phx-submit="update-team"
-            phx-blur="update-team"
-            id="update-team-form"
-            class="mt-4 mb-8"
+            id="create-team-form"
+            phx-change="update-rows"
+            phx-submit="create-team"
           >
             <.input
               type="text"
@@ -92,26 +86,23 @@ defmodule PlausibleWeb.Live.TeamSetup do
               field={f[:name]}
               label="Name"
               width="w-full"
-              phx-debounce="500"
             />
-          </.form>
 
-          <div class="flex items-center justify-between mb-2">
-            <.label class="mb-0">
-              Team members
-            </.label>
+            <div class="flex items-center justify-between mb-2 mt-4">
+              <.label>
+                Team members
+              </.label>
 
-            <button
-              type="button"
-              aria-label="Add member"
-              phx-click="add-row"
-              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <Heroicons.plus class="size-4" />
-            </button>
-          </div>
+              <button
+                type="button"
+                aria-label="Add member"
+                phx-click="add-row"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <Heroicons.plus class="size-4" />
+              </button>
+            </div>
 
-          <.form id="member-rows-form" for={} phx-change="update-rows" phx-submit="create-team">
             <div id="member-rows">
               <div
                 :for={row <- @rows}
@@ -149,12 +140,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
               </div>
             </div>
 
-            <.button
-              id="create-team-submit"
-              type="submit"
-              disabled={not @team_name_form.source.valid?}
-              class="mt-8 w-full"
-            >
+            <.button id="create-team-submit" type="submit" class="mt-8 w-full">
               Create team
             </.button>
           </.form>
@@ -162,21 +148,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
       </div>
     </.focus_box>
     """
-  end
-
-  def handle_event("update-team", %{"team" => %{"name" => name}}, socket) do
-    changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
-
-    socket =
-      case Repo.update(changeset) do
-        {:ok, team} ->
-          assign(socket, team_name_form: to_form(changeset), current_team: team)
-
-        {:error, changeset} ->
-          assign(socket, team_name_form: to_form(changeset))
-      end
-
-    {:noreply, socket}
   end
 
   def handle_event("add-row", _params, socket) do
@@ -218,11 +189,18 @@ defmodule PlausibleWeb.Live.TeamSetup do
     {:noreply, assign(socket, rows: rows)}
   end
 
-  def handle_event("create-team", params, socket) do
-    if socket.assigns.team_name_form.source.valid? do
-      create_team(socket, Map.get(params, "rows", %{}))
-    else
-      {:noreply, put_live_flash(socket, :error, "Please fix the team name first")}
+  def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
+    changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
+
+    case Repo.update(changeset) do
+      {:ok, team} ->
+        create_team(
+          assign(socket, current_team: team),
+          Map.get(params, "rows", %{})
+        )
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, team_name_form: to_form(changeset))}
     end
   end
 
