@@ -848,20 +848,16 @@ cloud_cron = [
   {"0 0 * * *", Plausible.Workers.LockSites},
   # Daily at 6, ahead of ScanInactiveTeams - restarts the notice cycle for
   # any lapsed snoozes so they're immediately eligible again same-day
-  # TODO: enable
-  # {"0 6 * * *", Plausible.Workers.UnsnoozeTeamDeletions},
+  {"0 6 * * *", Plausible.Workers.UnsnoozeTeamDeletions},
   # Daily at 7, ahead of AcceptTrafficUntil/SendTrialNotifications
-  # TODO: enable
-  # {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
+  {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
   # Weekdays at 9, after AcceptTrafficUntil - no deletion notices go out on
   # weekends; anything due Sat/Sun is simply picked up on Monday instead
-  # TODO: enable
-  # {"0 9 * * 1-5", Plausible.Workers.SendDeletionNotifications},
+  {"0 9 * * 1-5", Plausible.Workers.SendDeletionNotifications},
   # Daily at 10, after SendDeletionNotifications
-  # TODO: enable
-  # {"0 10 * * *", Plausible.Workers.ExecuteTeamDeletions},
+  {"0 10 * * *", Plausible.Workers.ExecuteTeamDeletions},
   # Every Tuesday, 3:00 UTC
   {"0 3 * * TUE", Plausible.Workers.ClickhouseCleanSites},
   # Daily at 5:00 UTC
