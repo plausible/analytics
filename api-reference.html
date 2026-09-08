@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-4E6BD7AF.js"></script>
+    <script src="dist/sidebar_items-F0D7D8DF.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -2868,11 +2868,40 @@ and metrics, with the purpose of reducing the number of queries and JOINs needed
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.TeamDeletionSchedule.html" translate="no">Plausible.TeamDeletionSchedule</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Schema for tracking the notify-delete lifecycle of teams whose trial
+or subscription has expired, ahead of their stats being removed.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.TeamDeletionSchedules.html" translate="no">Plausible.TeamDeletionSchedules</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Context for scheduling inactive teams deletion (trial expired or subscription
+churned).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.Teams.html" translate="no">Plausible.Teams</a>
 
   </div>
 
     <div class="summary-synopsis"><p>Core context of teams.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Teams.DeletionSchedule.html" translate="no">Plausible.Teams.DeletionSchedule</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Inactive team deletion schedule</p></div>
 
 </div>
 <div class="summary-row">
@@ -3211,6 +3240,18 @@ deletes (except for ingest counters).</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.Workers.ExecuteTeamDeletions.html" translate="no">Plausible.Workers.ExecuteTeamDeletions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Executes deletions for schedules whose reminder has been sent and whose
+deletion_date has arrived: deletes the team's sites (and queues their
+stats for removal) - the team itself and its settings/subscription
+history are left intact. Marks the schedule completed.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.Workers.ExpireDomainChangeTransitions.html" translate="no">Plausible.Workers.ExpireDomainChangeTransitions</a>
 
   </div>
@@ -3282,6 +3323,18 @@ To avoid blocking the queue, a timeout of 15 minutes is enforced.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.Workers.ScanInactiveTeams.html" translate="no">Plausible.Workers.ScanInactiveTeams</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Finds teams whose trial or subscription has expired and schedules them
+for the stats deletion pipeline. Reactivation is handled
+separately and immediately, via <a href="Plausible.TeamDeletionSchedules.html#cancel_for_team/1"><code class="inline">Plausible.TeamDeletionSchedules.cancel_for_team/1</code></a>
+called from <a href="Plausible.Billing.html"><code class="inline">Plausible.Billing</code></a>'s webhook handlers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.Workers.ScheduleEmailReports.html" translate="no">Plausible.Workers.ScheduleEmailReports</a>
 
   </div>
@@ -3304,6 +3357,17 @@ a trial and caches the result in the <code class="inline">trial_prospects</code>
     <a href="Plausible.Workers.SendCheckStatsEmails.html" translate="no">Plausible.Workers.SendCheckStatsEmails</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Workers.SendDeletionNotifications.html" translate="no">Plausible.Workers.SendDeletionNotifications</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Sends the deletion pipeline reminder notices
+(backlog trials, and all churned subscriptions) - steady state
+teams get notified via AcceptTrafficUntil</p></div>
 
 </div>
 <div class="summary-row">
@@ -3348,6 +3412,16 @@ sent us engagement data in the past.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Oban service sending out traffic drop/spike notifications</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Workers.UnsnoozeTeamDeletions.html" translate="no">Plausible.Workers.UnsnoozeTeamDeletions</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Restarts the notice cycle for schedules whose snooze has lapsed: still
+<code class="inline">:snoozed</code>, past their <code class="inline">snoozed_until</code> date.</p></div>
 
 </div>
 <div class="summary-row">

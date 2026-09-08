@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-4E6BD7AF.js"></script>
+    <script src="dist/sidebar_items-F0D7D8DF.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -139,7 +139,7 @@ Pages
 
     <section id="moduledoc">
 <p>A worker meant to be run once a day that sends out e-mail notifications to site
-owners assuming:</p><ul><li>their sites still receive traffic (i.e. have stats for yesterday)</li><li><code class="inline">site.accept_traffic_until</code> is approaching either tomorrow or exactly in 7 days</li></ul><p>Users having no sites or sites that receive no traffic, won't be notified.
+owners assuming:</p><ul><li>their sites still receive traffic (i.e. have stats for yesterday)</li><li><code class="inline">site.accept_traffic_until</code> is approaching either tomorrow or exactly in 7 days</li></ul><p>If there's steady state team deletion pending, a notice is included.</p><p>Users having no sites or sites that receive no traffic, won't be notified.
 We make a tiny effort here to make sure we send the same notification at most once a day.</p>
     </section>
 
@@ -186,7 +186,7 @@ We make a tiny effort here to make sure we send the same notification at most on
     </a>
     <h1 class="signature" translate="no">dry_run(date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/accept_traffic_until_notification.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/accept_traffic_until_notification.ex#L20" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
