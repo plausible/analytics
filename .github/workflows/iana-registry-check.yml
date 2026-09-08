@@ -14,12 +14,12 @@ jobs:
     name: Check IANA IP registries  up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: marocchino/tool-versions-action@18a164fa2b0db1cc1edf7305fcb17ace36d1c306 # v1.2.0
+      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
         id: versions
 
-      - uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
@@ -40,7 +40,7 @@ jobs:
 
       - name: Notify team on success
         if: ${{ success() }}
-        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
+        uses: fjogeleit/http-request-action@f98bb26551cd1af7d3eb2674578a80754ece88db # v2.0.1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
@@ -49,7 +49,7 @@ jobs:
 
       - name: Notify team on failure
         if: ${{ failure() }}
-        uses: fjogeleit/http-request-action@551353b829c3646756b2ec2b3694f819d7957495 # v2.0.0
+        uses: fjogeleit/http-request-action@f98bb26551cd1af7d3eb2674578a80754ece88db # v2.0.1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
