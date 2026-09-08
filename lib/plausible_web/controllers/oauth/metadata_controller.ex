@@ -23,6 +23,9 @@ defmodule PlausibleWeb.OAuth.MetadataController do
     })
   end
 
+  @authorization_endpoint "/login/oauth/authorize"
+  @token_endpoint "/login/oauth/token"
+
   @doc """
   Serves the [RFC 8414 Authorization Server Metadata](https://www.rfc-editor.org/rfc/rfc8414.html#section-2)
   advertising the authorize and token endpoints and the grants they accept.
@@ -30,8 +33,8 @@ defmodule PlausibleWeb.OAuth.MetadataController do
   def authorization_server(conn, _params) do
     json(conn, %{
       issuer: Endpoint.url(),
-      authorization_endpoint: Endpoint.url() <> authorization_endpoint(),
-      token_endpoint: Endpoint.url() <> token_endpoint(),
+      authorization_endpoint: Endpoint.url() <> @authorization_endpoint,
+      token_endpoint: Endpoint.url() <> @token_endpoint,
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
       code_challenge_methods_supported: ["S256"],
@@ -40,7 +43,4 @@ defmodule PlausibleWeb.OAuth.MetadataController do
       client_id_metadata_document_supported: true
     })
   end
-
-  defp authorization_endpoint(), do: "/login/oauth/authorize"
-  defp token_endpoint(), do: "/login/oauth/token"
 end
