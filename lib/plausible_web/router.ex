@@ -113,8 +113,7 @@ defmodule PlausibleWeb.Router do
   scope "/.well-known", PlausibleWeb do
     pipe_through :external_api
 
-    get "/oauth-protected-resource", OAuth.MetadataController, :protected_resource
-    get "/oauth-protected-resource/mcp", OAuth.MetadataController, :protected_resource
+    get "/oauth-protected-resource/mcp", OAuth.MetadataController, :mcp_protected_resource
 
     get "/oauth-authorization-server", OAuth.MetadataController, :authorization_server
   end
