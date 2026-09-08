@@ -25,6 +25,49 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
+  describe "/team/setup - suggested team name" do
+    test "shortens a long user name to fit the limit", %{conn: conn} do
+      user = new_user(name: String.duplicate("a", 55))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      expected = String.duplicate("a", 43) <> "'s team"
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               expected
+
+      assert Repo.reload!(team).name == expected
+    end
+
+    test "falls back to a generic name when the user name carries a URL scheme", %{conn: conn} do
+      user = new_user(name: "Cheap meds https://spam.example.com")
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+
+      assert Repo.reload!(team).name == "My team"
+    end
+
+    test "falls back to a generic name when shortening overflows the column", %{conn: conn} do
+      user = new_user(name: String.duplicate("👨‍👩‍👧‍👦", 36))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, team} = Teams.get_or_create(user)
+
+      {_lv, html} = get_child_lv(conn, with_html?: true)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+
+      assert Repo.reload!(team).name == "My team"
+    end
+  end
+
   describe "/team/setup - main differences from team management" do
     setup [:create_user, :log_in, :create_team]
 
@@ -93,6 +136,32 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert render(lv) =~ "is reserved"
       assert Repo.reload!(team).name == "#{user.name}'s team"
+    end
+
+    test "setting team name containing a URL is rejected", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+
+      type_into_input(lv, "team[name]", "Cheap meds at https://spam.example.com")
+
+      assert render(lv) =~ "cannot contain a URL"
+      assert element_exists?(render(lv), "button#save-layout[disabled]")
+      assert Repo.reload!(team).name == "Team Name 1"
+    end
+
+    test "setting team name longer than the limit is rejected", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+
+      type_into_input(lv, "team[name]", String.duplicate("a", 51))
+
+      assert render(lv) =~ "should be at most 50 character(s)"
+      assert element_exists?(render(lv), "button#save-layout[disabled]")
+      assert Repo.reload!(team).name == "Team Name 1"
     end
 
     test "creating the team is blocked while the name is rejected", %{conn: conn, team: team} do

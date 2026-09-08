@@ -33,13 +33,16 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp setup_team_name(
          %{assigns: %{current_user: current_user, current_team: current_team}} = socket
        ) do
+    suggested_name = Teams.Team.suggested_name(current_user.name)
+
     current_team =
       current_team
-      |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s team"})
+      |> Teams.Team.name_changeset(%{name: suggested_name})
       |> Plausible.Repo.update!()
 
     assign(socket,
       current_team: current_team,
+      suggested_name: suggested_name,
       team_name_form: to_form(Teams.Team.name_changeset(current_team, %{})),
       locked?: Plausible.Teams.Billing.solo?(current_team)
     )
@@ -76,7 +79,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     >
       <.input
         type="text"
-        placeholder={"#{@current_user.name}'s team"}
+        placeholder={@suggested_name}
         autofocus={not @locked?}
         field={f[:name]}
         label="Name"
