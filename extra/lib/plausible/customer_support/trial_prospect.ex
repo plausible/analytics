@@ -20,6 +20,7 @@ defmodule Plausible.CustomerSupport.TrialProspect do
     field :over_top_tier, :boolean, default: false
     field :estimated_mrr, :integer
     field :computed_at, :utc_datetime
+    field :reviewed_at, :utc_datetime
 
     timestamps()
   end

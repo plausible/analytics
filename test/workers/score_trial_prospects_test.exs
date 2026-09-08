@@ -305,6 +305,21 @@ defmodule Plausible.Workers.ScoreTrialProspectsTest do
                  Repo.all(from p in TrialProspect, where: p.team_id == ^team_of(user).id)
       end
 
+      test "preserves reviewed state when rescoring" do
+        user = new_user(trial_expiry_date: Date.add(Date.utc_today(), 7))
+        site = new_site(owner: user)
+        populate_stats(site, pageviews_on(Date.add(Date.utc_today(), -10), 10))
+
+        assert :ok = perform_job(ScoreTrialProspects, %{})
+
+        prospect = Repo.get_by!(TrialProspect, team_id: team_of(user).id)
+        reviewed_at = ~U[2026-08-24 12:00:00Z]
+        Repo.update!(Ecto.Changeset.change(prospect, reviewed_at: reviewed_at))
+
+        assert :ok = perform_job(ScoreTrialProspects, %{})
+        assert Repo.reload!(prospect).reviewed_at == reviewed_at
+      end
+
       test "scores a recently expired trial that still has in-window traffic" do
         # trial ended 2 days ago -> within the 60-day population window (spec §2)
         user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -2))

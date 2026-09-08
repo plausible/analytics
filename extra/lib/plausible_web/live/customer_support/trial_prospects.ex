@@ -24,12 +24,30 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
         _ -> :desc
       end
 
+    trial_status = if params["trial_status"] == "all", do: "all", else: "active"
+    reviewed_status = if params["reviewed_status"] == "all", do: "all", else: "unreviewed"
+    page = parse_page(params["page"])
+
     socket =
       socket
-      |> assign(sort_by: sort_by, sort_direction: sort_direction)
-      |> assign(TrialProspects.list(sort_by, sort_direction, parse_page(params["page"])))
+      |> assign(
+        sort_by: sort_by,
+        sort_direction: sort_direction,
+        trial_status: trial_status,
+        reviewed_status: reviewed_status,
+        page_number: page
+      )
+      |> load_prospects()
 
     {:noreply, socket}
+  end
+
+  def handle_event("set-reviewed", %{"id" => id, "reviewed" => reviewed}, socket) do
+    with {id, ""} <- Integer.parse(id) do
+      TrialProspects.mark_reviewed(id, reviewed == "true")
+    end
+
+    {:noreply, load_prospects(socket)}
   end
 
   def render(assigns) do
@@ -42,8 +60,39 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
         </p>
       </div>
 
+      <div class="mt-4 flex flex-wrap gap-3">
+        <div class="inline-flex rounded-md shadow-sm" role="group" aria-label="Trial status">
+          <.filter_link
+            active={@trial_status == "active"}
+            patch={index_path(assigns, trial_status: "active", page: 1)}
+          >
+            Active trials
+          </.filter_link>
+          <.filter_link
+            active={@trial_status == "all"}
+            patch={index_path(assigns, trial_status: "all", page: 1)}
+          >
+            Include recently expired
+          </.filter_link>
+        </div>
+        <div class="inline-flex rounded-md shadow-sm" role="group" aria-label="Review status">
+          <.filter_link
+            active={@reviewed_status == "unreviewed"}
+            patch={index_path(assigns, reviewed_status: "unreviewed", page: 1)}
+          >
+            Unreviewed only
+          </.filter_link>
+          <.filter_link
+            active={@reviewed_status == "all"}
+            patch={index_path(assigns, reviewed_status: "all", page: 1)}
+          >
+            Include reviewed
+          </.filter_link>
+        </div>
+      </div>
+
       <div class="mt-4">
-        <.table rows={@prospects}>
+        <.table rows={@prospects} row_attrs={&row_attrs/1}>
           <:thead>
             <.th>Team</.th>
             <.sort_th
@@ -51,17 +100,29 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
               by="mrr"
               sort_by={@sort_by}
               sort_direction={@sort_direction}
+              trial_status={@trial_status}
+              reviewed_status={@reviewed_status}
             />
             <.th>Feature tier</.th>
             <.th>Forced by</.th>
-            <.th>Traffic estimate</.th>
+            <.sort_th
+              label="Traffic estimate"
+              by="traffic"
+              sort_by={@sort_by}
+              sort_direction={@sort_direction}
+              trial_status={@trial_status}
+              reviewed_status={@reviewed_status}
+            />
             <.sort_th
               label="Trial start"
               by="trial_start"
               sort_by={@sort_by}
               sort_direction={@sort_direction}
+              trial_status={@trial_status}
+              reviewed_status={@reviewed_status}
             />
             <.th>Trial expiry</.th>
+            <.th>Review</.th>
           </:thead>
           <:tbody :let={p}>
             <.td>
@@ -89,6 +150,25 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
             <.td>{StatsView.large_number_format(p.estimated_monthly)}</.td>
             <.td>{format_date(trial_start(p.team))}</.td>
             <.td>{format_date(p.team.trial_expiry_date)}</.td>
+            <.td>
+              <button
+                type="button"
+                phx-click="set-reviewed"
+                phx-value-id={p.id}
+                phx-value-reviewed={if is_nil(p.reviewed_at), do: "true", else: "false"}
+                class={[
+                  "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium",
+                  if(p.reviewed_at,
+                    do:
+                      "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300",
+                    else:
+                      "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/50 dark:text-indigo-300"
+                  )
+                ]}
+              >
+                {if p.reviewed_at, do: "Reviewed", else: "Mark reviewed"}
+              </button>
+            </.td>
           </:tbody>
         </.table>
 
@@ -100,6 +180,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
               Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index,
                 sort_by: @sort_by,
                 sort_direction: @sort_direction,
+                trial_status: @trial_status,
+                reviewed_status: @reviewed_status,
                 page: @page_number
               )
             )
@@ -123,6 +205,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
   attr :by, :string, required: true
   attr :sort_by, :string, required: true
   attr :sort_direction, :atom, required: true
+  attr :trial_status, :string, required: true
+  attr :reviewed_status, :string, required: true
 
   defp sort_th(assigns) do
     active = assigns.sort_by == assigns.by
@@ -131,12 +215,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
     ~H"""
     <.th>
       <.link
-        patch={
-          Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index,
-            sort_by: @by,
-            sort_direction: @next_direction
-          )
-        }
+        patch={index_path(assigns, sort_by: @by, sort_direction: @next_direction, page: 1)}
         class="cursor-pointer select-none inline-flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400"
       >
         {@label}
@@ -145,6 +224,58 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
     </.th>
     """
   end
+
+  attr :active, :boolean, required: true
+  attr :patch, :string, required: true
+  slot :inner_block, required: true
+
+  defp filter_link(assigns) do
+    ~H"""
+    <.link
+      patch={@patch}
+      class={[
+        "border border-gray-200 px-3 py-2 text-sm first:rounded-l-md last:rounded-r-md dark:border-gray-700",
+        if(@active,
+          do: "bg-indigo-600 text-white dark:bg-indigo-500",
+          else:
+            "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+        )
+      ]}
+    >
+      {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
+  defp load_prospects(socket) do
+    assign(
+      socket,
+      TrialProspects.list(
+        socket.assigns.sort_by,
+        socket.assigns.sort_direction,
+        socket.assigns.page_number,
+        socket.assigns.trial_status,
+        socket.assigns.reviewed_status
+      )
+    )
+  end
+
+  defp index_path(assigns, overrides) do
+    params =
+      [
+        sort_by: assigns.sort_by,
+        sort_direction: assigns.sort_direction,
+        trial_status: assigns.trial_status,
+        reviewed_status: assigns.reviewed_status,
+        page: Map.get(assigns, :page_number, 1)
+      ]
+      |> Keyword.merge(overrides)
+
+    Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index, params)
+  end
+
+  defp row_attrs(%{reviewed_at: nil}), do: %{}
+  defp row_attrs(_reviewed), do: %{class: "opacity-60"}
 
   defp next_direction(%{sort_direction: :desc}, true), do: :asc
   defp next_direction(_assigns, _active), do: :desc
