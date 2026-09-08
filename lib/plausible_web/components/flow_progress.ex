@@ -1,44 +1,39 @@
 defmodule PlausibleWeb.Components.FlowProgress do
   @moduledoc """
-  Dotted progress indicator shown during the registration flow.
-  One small dot per step in `PlausibleWeb.Flows.steps/1`, with completed
-  and current steps highlighted.
+  Dotted progress indicator shown in the onboarding layout.
+  One small dot per step, with completed and current steps highlighted.
   """
   use Phoenix.Component
 
-  attr :flow, :string, required: true, values: PlausibleWeb.Flows.valid_keys()
-  attr :current_step, :string, required: true, values: PlausibleWeb.Flows.valid_values()
+  attr :steps, :list, required: true
+  attr :current_step, :string, required: true
 
   def render(assigns) do
-    steps = PlausibleWeb.Flows.steps(assigns.flow)
-    current_step_idx = Enum.find_index(steps, &(&1 == assigns.current_step))
+    current_step_idx = Enum.find_index(assigns.steps, &(&1 == assigns.current_step))
 
-    assigns =
-      assign(assigns,
-        steps: steps,
-        current_step_idx: current_step_idx
-      )
+    assigns = assign(assigns, :current_step_idx, current_step_idx)
 
     ~H"""
-    <div
-      :if={not Enum.empty?(@steps)}
-      id="flow-progress"
-      class="flex items-center gap-2"
-      aria-label="Progress"
-    >
+    <div id="flow-progress" class="flex items-center gap-2" aria-label="Progress">
       <span
         :for={{step, idx} <- Enum.with_index(@steps)}
-        class={
-          cond do
-            idx == @current_step_idx -> "h-2 w-5 rounded-full bg-indigo-600 dark:bg-gray-100"
-            idx < @current_step_idx -> "size-2 rounded-full bg-indigo-600 dark:bg-gray-100"
-            true -> "size-2 rounded-full bg-gray-300 dark:bg-gray-600"
-          end
-        }
+        class={dot_class(dot_state(idx, @current_step_idx))}
         aria-current={idx == @current_step_idx && "step"}
         aria-label={step}
       />
     </div>
     """
   end
+
+  @doc """
+  The classnames for a progress dot in the given state. Exposed so tests can
+  assert on rendered dots without duplicating the Tailwind classnames.
+  """
+  def dot_class(:completed), do: "size-2 rounded-full bg-indigo-600 dark:bg-gray-100"
+  def dot_class(:current), do: "h-2 w-5 rounded-full bg-indigo-600 dark:bg-gray-100"
+  def dot_class(:upcoming), do: "size-2 rounded-full bg-gray-300 dark:bg-gray-600"
+
+  defp dot_state(idx, current_idx) when idx < current_idx, do: :completed
+  defp dot_state(idx, current_idx) when idx == current_idx, do: :current
+  defp dot_state(_idx, _current_idx), do: :upcoming
 end
