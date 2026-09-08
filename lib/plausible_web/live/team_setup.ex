@@ -131,15 +131,28 @@ defmodule PlausibleWeb.Live.TeamSetup do
         data-role-picker
         class="relative inline-block text-left"
       >
-        <summary class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150">
+        <summary
+          id={"role-picker-#{@row.id}-trigger"}
+          role="button"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150"
+        >
           <span data-role-label>{@row.role |> Atom.to_string() |> String.capitalize()}</span>
           <Heroicons.chevron_down mini class="size-4 mt-0.5" />
         </summary>
 
-        <div class="absolute right-0 z-50 mt-2 w-max p-1.5 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5">
+        <div
+          role="listbox"
+          aria-labelledby={"role-picker-#{@row.id}-trigger"}
+          class="absolute right-0 z-50 mt-2 w-max p-1.5 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5"
+        >
           <button
             :for={{role, description} <- PlausibleWeb.Live.Components.Team.role_descriptions()}
             type="button"
+            role="option"
+            aria-selected={to_string(role == @row.role)}
+            tabindex="-1"
             data-role-item={role}
             class="block w-full max-w-60 text-left rounded-md text-sm/6 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/80 px-3 py-1.5"
           >
