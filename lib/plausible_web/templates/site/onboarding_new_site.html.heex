@@ -1,0 +1,16 @@
+<Layouts.onboarding
+  current_step={PlausibleWeb.Flows.add_site_step()}
+  current_user={@current_user}
+  flash={@flash}
+>
+  <NewSiteForm.new_site_form
+    changeset={@changeset}
+    form_submit_url={@form_submit_url}
+    site_limit_exceeded?={@site_limit_exceeded?}
+    site_limit={@site_limit}
+    current_user={@current_user}
+    current_team={@current_team}
+    back_button_text="Skip"
+    back_button_href={Routes.site_path(@conn, :index)}
+  />
+</Layouts.onboarding>

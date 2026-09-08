@@ -40,6 +40,15 @@ defmodule Plausible.Site.SiteRemovalTest do
     assert Repo.get_by(PendingStatsDeletion, site_id: site.id)
   end
 
+  test "site deletion accepts an explicit reason for the pending stats deletion" do
+    site = new_site()
+
+    assert {:ok, context} = Removal.run(site, reason: :expired_trial)
+
+    assert context.pending_stats_deletion.reason == :expired_trial
+    assert Repo.get_by(PendingStatsDeletion, site_id: site.id, reason: :expired_trial)
+  end
+
   test "site deletion prunes team guest memberships" do
     owner = new_user()
     site = new_site(owner: owner)
@@ -126,8 +135,15 @@ defmodule Plausible.Site.SiteRemovalTest do
 
     assert {:ok, _} = Removal.run(site, cache_name: test)
 
-    refute Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
-    refute Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+    assert eventually(fn ->
+             current_domain =
+               Plausible.Site.Cache.get(site.domain, cache_name: test, force?: true)
+
+             previous_domain =
+               Plausible.Site.Cache.get(site.domain_changed_from, cache_name: test, force?: true)
+
+             {is_nil(current_domain) and is_nil(previous_domain), :ok}
+           end)
   end
 
   defp start_test_cache(cache_name) do

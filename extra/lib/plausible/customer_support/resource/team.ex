@@ -24,7 +24,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
         left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
         on: true,
         order_by: [desc: :id],
-        preload: [owners: o, subscription: s]
+        preload: [:team_deletion_schedule, owners: o, subscription: s]
       )
 
     Plausible.Repo.all(q)
@@ -39,7 +39,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
           as: :team,
           inner_join: o in assoc(t, :owners),
           where: t.identifier == ^input,
-          preload: [owners: o]
+          preload: [:team_deletion_schedule, owners: o]
         )
       else
         from(t in Plausible.Teams.Team,
@@ -56,7 +56,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
             desc: fragment("?.email = ?", o, ^input),
             asc: t.name
           ],
-          preload: [owners: o]
+          preload: [:team_deletion_schedule, owners: o]
         )
       end
 
