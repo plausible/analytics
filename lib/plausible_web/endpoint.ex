@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Endpoint do
 
   plug(:runtime_session)
 
-  plug(CORSPlug)
+  plug(:cors)
   plug(PlausibleWeb.Router)
 
   def secure_cookie?, do: config!(:secure_cookie)
@@ -93,6 +93,13 @@ defmodule PlausibleWeb.Endpoint do
   def websocket_url() do
     config!(:websocket_url)
   end
+
+  @authorization_endpoint_path "/login/oauth/authorize"
+  @cors_opts CORSPlug.init([])
+
+  # As per OAuth 2.1, section 3.1, CORS must not be supported at the authorization endpoint
+  def cors(%Plug.Conn{request_path: @authorization_endpoint_path} = conn, _opts), do: conn
+  def cors(conn, _opts), do: CORSPlug.call(conn, @cors_opts)
 
   def runtime_session(conn, _opts) do
     Plug.run(conn, [{Plug.Session, runtime_session_opts()}])
