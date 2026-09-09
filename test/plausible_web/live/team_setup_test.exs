@@ -256,6 +256,39 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
+  # The client-side row cap itself (assets/js/liveview/member-rows.js) can't
+  # be exercised here since ExUnit's LiveViewTest can't drive that JS - these
+  # tests cover the server-computed limit it's seeded from via `data-max-rows`.
+  describe "/team/setup - member row limit" do
+    setup [:create_user, :log_in, :create_team]
+
+    @tag :ee_only
+    test "defaults to the trial team member limit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "10"
+    end
+
+    @tag :ee_only
+    test "is not reduced by an existing guest member", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      add_guest(site, role: :viewer, user: new_user())
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "10"
+    end
+
+    @tag :ee_only
+    test "is capped at 20 for an unlimited plan", %{conn: conn, user: user} do
+      subscribe_to_enterprise_plan(user, team_member_limit: :unlimited)
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "20"
+    end
+  end
+
   defp row_el(), do: ~s|#member-rows > div|
 
   defp finish_setup(lv, opts) do

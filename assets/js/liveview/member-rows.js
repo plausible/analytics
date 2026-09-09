@@ -6,11 +6,13 @@
 // Expects a `template[data-row-template]` (the row blueprint, with the
 // literal placeholder `__ROW_ID__` standing in for the row id in its
 // attributes), a `[data-row-list]` container to append/remove rows from, a
-// `[data-add-row]` button, `[data-remove-row]` buttons, and role pickers
-// built from a `details[data-role-picker]` (listbox-button pattern: a
-// `<summary>` trigger, a `[role=listbox]` container, and `[data-role-item]`
+// `[data-add-row]` button, `[data-remove-row]` buttons, role pickers built
+// from a `details[data-role-picker]` (listbox-button pattern: a `<summary>`
+// trigger, a `[role=listbox]` container, and `[data-role-item]`
 // `[role=option]` buttons) containing a `[data-role-label]` span and a
-// `[data-role-value]` hidden input.
+// `[data-role-value]` hidden input, and a `data-max-rows` attribute capping
+// how many rows can exist (computed server-side from the plan's team member
+// limit) - the add button shows a not-allowed cursor once that cap is hit.
 
 const ROW_ID_PLACEHOLDER = '__ROW_ID__'
 
@@ -20,10 +22,10 @@ export default {
   mounted() {
     this.template = this.el.querySelector('template[data-row-template]')
     this.list = this.el.querySelector('[data-row-list]')
+    this.maxRows = parseInt(this.el.dataset.maxRows, 10)
+    this.addButton = this.el.querySelector('[data-add-row]')
 
-    this.el
-      .querySelector('[data-add-row]')
-      .addEventListener('click', () => this.addRow())
+    this.addButton.addEventListener('click', () => this.addRow())
 
     this.list.addEventListener('click', (e) => {
       const removeButton = e.target.closest('[data-remove-row]')
@@ -47,6 +49,8 @@ export default {
     this.list
       .querySelectorAll('[data-role-picker]')
       .forEach((details) => this.wireRolePicker(details))
+
+    this.updateAddButtonState()
   },
 
   destroyed() {
@@ -54,6 +58,8 @@ export default {
   },
 
   addRow() {
+    if (this.list.children.length >= this.maxRows) return
+
     const rowId =
       window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
 
@@ -64,10 +70,19 @@ export default {
 
     this.list.appendChild(row)
     this.wireRolePicker(row.querySelector('[data-role-picker]'))
+    this.updateAddButtonState()
+  },
+
+  updateAddButtonState() {
+    this.addButton.classList.toggle(
+      'cursor-not-allowed',
+      this.list.children.length >= this.maxRows
+    )
   },
 
   removeRow(button) {
     button.closest('[data-row]').remove()
+    this.updateAddButtonState()
   },
 
   selectRole(item) {
