@@ -70,6 +70,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
               field={f[:name]}
               label="Name"
               width="w-full"
+              required
             />
 
             <div id="member-rows-container" phx-hook="MemberRows">

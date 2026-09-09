@@ -82,6 +82,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert elem_count(html, row_el()) == 1
     end
 
+    test "marks the name input as required so the browser blocks a blank submit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"][required]|)
+    end
+
     test "rejects a blank name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 
