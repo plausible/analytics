@@ -86,7 +86,7 @@
     </span>
     <span class="flex space-betwee rounded-md shadow-xs">
       <.button_link
-        href={Routes.billing_path(@conn, :change_plan, @preview_info["plan_id"])}
+        href={~p"/billing/change-plan/#{@preview_info["plan_id"]}"}
         method="post"
       >
         Confirm plan change

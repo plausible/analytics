@@ -22,8 +22,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in]
 
     test "redirects to subscription settings", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :redirect_invoices))
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :subscription)
+      conn = get(conn, ~p"/settings/billing/invoices")
+      assert redirected_to(conn, 302) == ~p"/settings/billing/subscription"
     end
   end
 
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     @tag :ee_only
     test "shows subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018")
-      conn = get(conn, Routes.settings_path(conn, :subscription))
+      conn = get(conn, ~p"/settings/billing/subscription")
       assert html_response(conn, 200) =~ "10k monthly pageviews"
       assert html_response(conn, 200) =~ "/ month"
     end
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     @tag :ee_only
     test "shows yearly subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "590752")
-      conn = get(conn, Routes.settings_path(conn, :subscription))
+      conn = get(conn, ~p"/settings/billing/subscription")
       assert html_response(conn, 200) =~ "100k monthly pageviews"
       assert html_response(conn, 200) =~ "/ year"
     end
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     @tag :ee_only
     test "shows free subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "free_10k")
-      conn = get(conn, Routes.settings_path(conn, :subscription))
+      conn = get(conn, ~p"/settings/billing/subscription")
       assert html_response(conn, 200) =~ "10k monthly pageviews"
       assert html_response(conn, 200) =~ "N/A"
     end
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       configure_enterprise_plan(user)
 
-      conn = get(conn, Routes.settings_path(conn, :subscription))
+      conn = get(conn, ~p"/settings/billing/subscription")
       assert html_response(conn, 200) =~ "20M monthly pageviews"
       assert html_response(conn, 200) =~ "/ year"
     end
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         subscription?: false
       )
 
-      conn = get(conn, Routes.settings_path(conn, :subscription))
+      conn = get(conn, ~p"/settings/billing/subscription")
       assert html_response(conn, 200) =~ "20M monthly pageviews"
       assert html_response(conn, 200) =~ "/ year"
     end
@@ -86,13 +86,13 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "shows trial state without days-left pill when user has no team yet", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       upgrade_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(upgrade_link) =~ "Choose a plan"
-      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert text_of_attr(upgrade_link, "href") == ~p"/billing/choose-plan"
       assert doc =~ "Your 30-day trial will start when you add your first site"
       refute doc =~ "days left"
     end
@@ -107,13 +107,13 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       upgrade_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(upgrade_link) =~ "Choose a plan"
-      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert text_of_attr(upgrade_link, "href") == ~p"/billing/choose-plan"
       assert doc =~ "days left"
       refute doc =~ "Your 30-day trial will start when you add your first site"
     end
@@ -127,7 +127,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert doc =~ "Cancel plan"
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       change_plan_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(change_plan_link) == "Change plan"
-      assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert text_of_attr(change_plan_link, "href") == ~p"/billing/choose-plan"
     end
 
     @tag :ee_only
@@ -147,7 +147,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
@@ -180,13 +180,13 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       upgrade_link = find(doc, "#upgrade-or-change-plan-link")
 
       assert text(upgrade_link) == "Upgrade"
-      assert text_of_attr(upgrade_link, "href") == Routes.billing_path(conn, :choose_plan)
+      assert text_of_attr(upgrade_link, "href") == ~p"/billing/choose-plan"
     end
 
     @tag :ee_only
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert doc =~ "Cancel plan"
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert text(change_plan_link) == "Change plan"
 
       assert text_of_attr(change_plan_link, "href") ==
-               Routes.billing_path(conn, :choose_plan)
+               ~p"/billing/choose-plan"
     end
 
     @tag :ee_only
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       notice_text =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
         |> text_of_element("#global-subscription-cancelled-notice")
 
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       notice_text =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
         |> text_of_element("#global-subscription-cancelled-notice")
 
@@ -262,7 +262,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       notice_text =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
         |> text_of_element("#global-subscription-cancelled-notice")
 
@@ -277,7 +277,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       refute element_exists?(html, "#invoices")
@@ -309,7 +309,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert html =~
@@ -345,7 +345,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Plausible.Teams.with_subscription()
         |> Map.fetch!(:subscription)
 
-      get(conn, Routes.settings_path(conn, :subscription))
+      get(conn, ~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_cycles_rendered.()
 
@@ -356,7 +356,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn
-      |> get(Routes.settings_path(conn, :subscription))
+      |> get(~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_cycles_rendered.()
 
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> Repo.update!()
 
       conn
-      |> get(Routes.settings_path(conn, :subscription))
+      |> get(~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_cycles_rendered.()
     end
@@ -403,7 +403,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a trial user
       trial_html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert_usage.(trial_html)
@@ -422,7 +422,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Map.fetch!(:subscription)
 
       conn
-      |> get(Routes.settings_path(conn, :subscription))
+      |> get(~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_usage.()
 
@@ -433,7 +433,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn
-      |> get(Routes.settings_path(conn, :subscription))
+      |> get(~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_usage.()
 
@@ -446,7 +446,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> Repo.insert!()
 
       conn
-      |> get(Routes.settings_path(conn, :subscription))
+      |> get(~p"/settings/billing/subscription")
       |> html_response(200)
       |> assert_usage.()
     end
@@ -458,7 +458,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       sites_usage_text = text_of_element(html, "[data-test-id='sites-usage']")
@@ -471,7 +471,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
@@ -484,7 +484,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       team_member_usage_text = text_of_element(html, "[data-test-id='team-member-usage']")
@@ -501,7 +501,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert html =~ "You don't have any invoices yet."
@@ -513,7 +513,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert html =~ "Dec 24, 2020"
@@ -528,7 +528,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert html =~ "Invoices"
@@ -544,7 +544,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
@@ -560,7 +560,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       html =
         conn
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
         |> html_response(200)
 
       refute element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
@@ -579,7 +579,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         html =
           conn
           |> set_current_team(team)
-          |> get(Routes.settings_path(conn, :subscription))
+          |> get(~p"/settings/billing/subscription")
           |> html_response(200)
 
         assert element_exists?(html, "[data-test-id='total-pageviews-dashboard-link']")
@@ -594,7 +594,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
       assert html_response(conn, 200)
     end
@@ -608,7 +608,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
       assert html_response(conn, 200)
     end
@@ -622,9 +622,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
 
     @tag :ee_only
@@ -636,9 +636,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
 
     @tag :ee_only
@@ -650,9 +650,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
 
     test "allows any role on a non-setup (personal) team to access the page", %{
@@ -666,7 +666,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn =
         conn
         |> set_current_team(team)
-        |> get(Routes.settings_path(conn, :subscription))
+        |> get(~p"/settings/billing/subscription")
 
       assert html_response(conn, 200)
     end
@@ -676,7 +676,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in]
 
     test "renders 2FA section in disabled state", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :security))
+      conn = get(conn, ~p"/settings/security")
 
       assert html_response(conn, 200) =~ "Enable 2FA"
     end
@@ -685,7 +685,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = get(conn, Routes.settings_path(conn, :security))
+      conn = get(conn, ~p"/settings/security")
 
       assert html_response(conn, 200) =~ "Disable 2FA"
     end
@@ -699,7 +699,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Auth.UserSession.new_session("Some Device", now: seventy_minutes_ago)
         |> Repo.insert!()
 
-      conn = get(conn, Routes.settings_path(conn, :security))
+      conn = get(conn, ~p"/settings/security")
 
       assert html = html_response(conn, 200)
 
@@ -708,7 +708,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Just recently"
       assert html =~ "Some Device"
       assert html =~ "1 hour ago"
-      assert html =~ Routes.settings_path(conn, :delete_session, another_session.id)
+      assert html =~ ~p"/settings/security/user-sessions/#{another_session.id}"
     end
   end
 
@@ -721,12 +721,12 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Auth.UserSession.new_session("Some Device")
         |> Repo.insert!()
 
-      conn = delete(conn, Routes.settings_path(conn, :delete_session, another_session.id))
+      conn = delete(conn, ~p"/settings/security/user-sessions/#{another_session.id}")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :security) <> "#user-sessions"
+               ~p"/settings/security" <> "#user-sessions"
 
       refute Repo.reload(another_session)
     end
@@ -738,9 +738,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.insert!()
 
       conn = build_conn()
-      conn = delete(conn, Routes.settings_path(conn, :delete_session, another_session.id))
+      conn = delete(conn, ~p"/settings/security/user-sessions/#{another_session.id}")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
       assert Repo.reload(another_session)
     end
   end
@@ -750,17 +750,17 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "updates user's name", %{conn: conn, user: user} do
       conn =
-        post(conn, Routes.settings_path(conn, :update_name), %{"user" => %{"name" => "New name"}})
+        post(conn, ~p"/settings/preferences/name", %{"user" => %{"name" => "New name"}})
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :preferences) <> "#update-name"
+               ~p"/settings/preferences" <> "#update-name"
 
       user = Plausible.Repo.get(Plausible.Auth.User, user.id)
       assert user.name == "New name"
     end
 
     test "renders form with error if form validations fail", %{conn: conn} do
-      conn = post(conn, Routes.settings_path(conn, :update_name), %{"user" => %{"name" => ""}})
+      conn = post(conn, ~p"/settings/preferences/name", %{"user" => %{"name" => ""}})
 
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end
@@ -772,11 +772,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       test "refuses to update for SSO user", %{conn: conn, user: user} do
         conn =
-          post(conn, Routes.settings_path(conn, :update_name), %{
+          post(conn, ~p"/settings/preferences/name", %{
             "user" => %{"name" => "New name"}
           })
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         assert Repo.reload!(user).name == user.name
       end
@@ -801,7 +801,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -810,7 +810,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :security) <> "#update-password"
+               ~p"/settings/security" <> "#update-password"
 
       current_hash = Repo.reload!(user).password_hash
       assert current_hash != original.password_hash
@@ -825,7 +825,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       new_password = "weak"
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -842,7 +842,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       new_password = "super-long-super-secret-999"
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -869,7 +869,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       code = NimbleTOTP.verification_code(user.totp_secret)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -879,7 +879,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :security) <> "#update-password"
+               ~p"/settings/security" <> "#update-password"
 
       current_hash = Repo.reload!(user).password_hash
       assert current_hash != original.password_hash
@@ -900,7 +900,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -927,7 +927,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => new_password,
             "old_password" => password,
@@ -941,7 +941,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "fails to update with no input", %{conn: conn} do
       conn =
-        post(conn, Routes.settings_path(conn, :update_password), %{
+        post(conn, ~p"/settings/security/password", %{
           "user" => %{
             "password" => "",
             "old_password" => "",
@@ -968,7 +968,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           |> Repo.update!()
 
         conn =
-          post(conn, Routes.settings_path(conn, :update_password), %{
+          post(conn, ~p"/settings/security/password", %{
             "user" => %{
               "password" => new_password,
               "old_password" => password,
@@ -976,7 +976,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
             }
           })
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         current_hash = Repo.reload!(user).password_hash
         assert current_hash == original.password_hash
@@ -998,11 +998,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert user.email_verified
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_email), %{
+        post(conn, ~p"/settings/security/email", %{
           "user" => %{"email" => "new" <> user.email, "password" => password}
         })
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate)
+      assert redirected_to(conn, 302) == ~p"/activate"
 
       updated_user = Repo.reload!(user)
 
@@ -1021,33 +1021,33 @@ defmodule PlausibleWeb.SettingsControllerTest do
       }
 
       resp1 =
-        conn |> post(Routes.settings_path(conn, :update_email), payload) |> html_response(200)
+        conn |> post(~p"/settings/security/email", payload) |> html_response(200)
 
       assert resp1 =~ "is invalid"
       refute resp1 =~ "too many requests, try again in an hour"
 
       resp2 =
-        conn |> post(Routes.settings_path(conn, :update_email), payload) |> html_response(200)
+        conn |> post(~p"/settings/security/email", payload) |> html_response(200)
 
       assert resp2 =~ "is invalid"
       refute resp2 =~ "too many requests, try again in an hour"
 
       resp3 =
-        conn |> post(Routes.settings_path(conn, :update_email), payload) |> html_response(200)
+        conn |> post(~p"/settings/security/email", payload) |> html_response(200)
 
       assert resp3 =~ "is invalid"
       assert resp3 =~ "too many requests, try again in an hour"
     end
 
     test "renders form with error on no fields filled", %{conn: conn} do
-      conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{"email" => ""}})
+      conn = post(conn, ~p"/settings/security/email", %{"user" => %{"email" => ""}})
 
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end
 
     test "renders form with error on invalid password", %{conn: conn, user: user} do
       conn =
-        post(conn, Routes.settings_path(conn, :update_email), %{
+        post(conn, ~p"/settings/security/email", %{
           "user" => %{"password" => "invalid", "email" => "new" <> user.email}
         })
 
@@ -1064,7 +1064,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> Repo.update!()
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_email), %{
+        post(conn, ~p"/settings/security/email", %{
           "user" => %{"password" => password, "email" => other_user.email}
         })
 
@@ -1082,7 +1082,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> Repo.update!()
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_email), %{
+        post(conn, ~p"/settings/security/email", %{
           "user" => %{"password" => password, "email" => user.email}
         })
 
@@ -1104,11 +1104,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert user.email_verified
 
         conn =
-          post(conn, Routes.settings_path(conn, :update_email), %{
+          post(conn, ~p"/settings/security/email", %{
             "user" => %{"email" => "new" <> user.email, "password" => password}
           })
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         updated_user = Repo.reload!(user)
 
@@ -1131,10 +1131,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
         )
         |> Repo.update!()
 
-      conn = post(conn, Routes.settings_path(conn, :cancel_update_email))
+      conn = post(conn, ~p"/settings/security/email/cancel")
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :security) <> "#update-email"
+               ~p"/settings/security" <> "#update-email"
 
       updated_user = Repo.reload!(user)
 
@@ -1159,9 +1159,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       _other_user = insert(:user, email: user.previous_email)
 
       conn =
-        post(conn, Routes.settings_path(conn, :cancel_update_email))
+        post(conn, ~p"/settings/security/email/cancel")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate_form)
+      assert redirected_to(conn, 302) == ~p"/activate"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Could not cancel email update"
@@ -1180,7 +1180,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> Repo.update!()
 
       assert_raise RuntimeError, ~r/Previous email is empty for user/, fn ->
-        post(conn, Routes.settings_path(conn, :cancel_update_email))
+        post(conn, ~p"/settings/security/email/cancel")
       end
     end
   end
@@ -1189,7 +1189,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in]
 
     test "handles user without a team gracefully", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :api_keys))
+      conn = get(conn, ~p"/settings/api-keys")
 
       assert html_response(conn, 200)
     end
@@ -1204,7 +1204,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       insert(:api_key, user: user)
       insert(:api_key, user: user, scopes: ["sites:provision:*"])
 
-      conn = get(conn, Routes.settings_path(conn, :api_keys))
+      conn = get(conn, ~p"/settings/api-keys")
 
       assert html = html_response(conn, 200)
 
@@ -1222,7 +1222,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = team_of(user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1251,7 +1251,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = team_of(user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1273,7 +1273,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       new_site(owner: user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1282,7 +1282,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           }
         })
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :new_api_key)
+      assert redirected_to(conn, 302) == ~p"/settings/api-keys/new"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "Your current subscription plan does not include Sites API access"
@@ -1298,7 +1298,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1317,7 +1317,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       new_site(owner: user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1327,7 +1327,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       conn2 =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
@@ -1345,7 +1345,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       _other_site = new_site(owner: other_user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :api_keys), %{
+        post(conn, ~p"/settings/api-keys", %{
           "api_key" => %{
             "user_id" => other_user.id,
             "name" => "all your code are belong to us",
@@ -1374,7 +1374,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
                |> ApiKey.changeset(team, %{"name" => "other user's key"})
                |> Repo.insert()
 
-      conn = delete(conn, Routes.settings_path(conn, :delete_api_key, api_key.id))
+      conn = delete(conn, ~p"/settings/api-keys/#{api_key.id}")
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
       assert Repo.get(ApiKey, api_key.id)
     end
@@ -1384,7 +1384,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in, :create_team]
 
     test "without active subscription", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+      conn = get(conn, ~p"/settings/danger-zone")
 
       assert html = html_response(conn, 200)
 
@@ -1396,7 +1396,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "with active subscription", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
-      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+      conn = get(conn, ~p"/settings/danger-zone")
 
       assert html = html_response(conn, 200)
 
@@ -1414,7 +1414,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> team_of()
         |> Plausible.Teams.complete_setup()
 
-      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+      conn = get(conn, ~p"/settings/danger-zone")
 
       assert html = html_response(conn, 200)
 
@@ -1439,7 +1439,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
 
       test "shows only expected menu items", %{conn: conn} do
-        conn = get(conn, Routes.settings_path(conn, :preferences))
+        conn = get(conn, ~p"/settings/preferences")
         assert html = html_response(conn, 200)
 
         expected_account_menu = [:preferences, :security, :subscription, :api_keys]
@@ -1457,19 +1457,19 @@ defmodule PlausibleWeb.SettingsControllerTest do
       end
 
       test "does not allow to update name in preferences", %{conn: conn} do
-        conn = get(conn, Routes.settings_path(conn, :preferences))
+        conn = get(conn, ~p"/settings/preferences")
         assert html = html_response(conn, 200)
         refute html =~ "Change name"
       end
 
       test "does not allow to update email in security settings", %{conn: conn} do
-        conn = get(conn, Routes.settings_path(conn, :security))
+        conn = get(conn, ~p"/settings/security")
         assert html = html_response(conn, 200)
         refute html =~ "Change email"
       end
 
       test "does not allow to change password in security settings", %{conn: conn} do
-        conn = get(conn, Routes.settings_path(conn, :security))
+        conn = get(conn, ~p"/settings/security")
         assert html = html_response(conn, 200)
         refute html =~ "Change password"
       end
@@ -1478,7 +1478,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        conn = get(conn, Routes.settings_path(conn, :security))
+        conn = get(conn, ~p"/settings/security")
         assert html = html_response(conn, 200)
         assert text_of_element(html, "button[disabled]") =~ "Disable 2FA"
       end
@@ -1490,7 +1490,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "when no team is assigned & the user doesn't have a subscription, limited account menu is present",
          %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       refute html =~ "Team"
 
@@ -1519,7 +1519,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
          } do
       subscribe_to_growth_plan(user)
 
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
 
       expected_account_menu =
@@ -1548,7 +1548,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
       conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       assert html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       assert html =~ team.name
@@ -1581,7 +1581,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = Plausible.Teams.complete_setup(team)
       conn = set_current_team(conn, team)
 
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       assert html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       assert html =~ team.name
@@ -1612,7 +1612,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "does not render team settings, when team not set up", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       refute html =~ ~r/Team.*#{Regex.escape(team.name)}/s
       refute html =~ team.name
@@ -1622,7 +1622,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
       conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :team_general))
+      conn = get(conn, ~p"/settings/team/general")
       html = html_response(conn, 200)
       assert html =~ "Team name"
       assert html =~ "Change the name of your team"
@@ -1633,12 +1633,12 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_team_name), %{
+        post(conn, ~p"/settings/team/general/name", %{
           "team" => %{"name" => "New name"}
         })
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :team_general) <> "#update-name"
+               ~p"/settings/team/general" <> "#update-name"
 
       assert Repo.reload!(team).name == "New name"
     end
@@ -1649,7 +1649,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_team_name), %{
+        post(conn, ~p"/settings/team/general/name", %{
           "team" => %{"name" => ""}
         })
 
@@ -1665,7 +1665,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_team_name), %{
+        post(conn, ~p"/settings/team/general/name", %{
           "team" => %{"name" => String.duplicate("a", 51)}
         })
 
@@ -1682,7 +1682,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_team_name), %{
+        post(conn, ~p"/settings/team/general/name", %{
           "team" => %{"name" => "Cheap meds at https://spam.example.com"}
         })
 
@@ -1702,7 +1702,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       conn = set_current_team(conn, team)
 
-      html = html_response(get(conn, Routes.settings_path(conn, :team_general)), 200)
+      html = html_response(get(conn, ~p"/settings/team/general"), 200)
 
       assert text_of_attr(html, "input#team_name", "value") == long_name
     end
@@ -1718,12 +1718,12 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :update_team_name), %{
+        post(conn, ~p"/settings/team/general/name", %{
           "team" => %{"name" => "Shorter name"}
         })
 
       assert redirected_to(conn, 302) ==
-               Routes.settings_path(conn, :team_general) <> "#update-name"
+               ~p"/settings/team/general" <> "#update-name"
 
       assert Repo.reload!(team).name == "Shorter name"
     end
@@ -1734,9 +1734,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
       add_member(team, role: :owner)
 
-      conn = post(conn, Routes.settings_path(conn, :leave_team))
+      conn = post(conn, ~p"/settings/team/leave")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: "none")
+      assert redirected_to(conn, 302) == ~p|/sites?#{[__team: "none"]}|
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You have left"
     end
 
@@ -1745,9 +1745,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = Plausible.Teams.complete_setup(team)
       conn = set_current_team(conn, team)
 
-      conn = post(conn, Routes.settings_path(conn, :leave_team))
+      conn = post(conn, ~p"/settings/team/leave")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "You can't leave"
     end
 
@@ -1761,7 +1761,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+      conn = get(conn, ~p"/settings/team/delete")
 
       assert html = html_response(conn, 200)
 
@@ -1780,7 +1780,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+      conn = get(conn, ~p"/settings/team/delete")
 
       assert html = html_response(conn, 200)
 
@@ -1793,9 +1793,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = team_of(another_user)
       add_member(team, user: user, role: :admin)
       conn = set_current_team(conn, team)
-      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+      conn = get(conn, ~p"/settings/team/delete")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
 
     test "DELETE /settings/team/delete - deletes a team", %{conn: conn, user: user} do
@@ -1808,9 +1808,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn = set_current_team(conn, team)
-      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+      conn = delete(conn, ~p"/settings/team/delete")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: "none")
+      assert redirected_to(conn, 302) == ~p|/sites?#{[__team: "none"]}|
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Team \"Foo Crew\" deleted"
     end
@@ -1829,9 +1829,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Repo.update!()
 
       conn = set_current_team(conn, team)
-      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+      conn = delete(conn, ~p"/settings/team/delete")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_danger_zone)
+      assert redirected_to(conn, 302) == ~p"/settings/team/delete"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Team has an active subscription"
     end
@@ -1841,9 +1841,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       team = team_of(another_user)
       add_member(team, user: user, role: :admin)
       conn = set_current_team(conn, team)
-      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+      conn = delete(conn, ~p"/settings/team/delete")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
   end
 
@@ -1853,9 +1853,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "enables enforcing 2FA", %{conn: conn, team: team} do
       refute team.policy.force_2fa
 
-      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+      conn = post(conn, ~p"/settings/team/force_2fa/enable")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "2FA is now required for all team members"
@@ -1865,9 +1865,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     on_ee do
       test "adds entry to audit log", %{conn: conn, team: team, user: user} do
-        conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+        conn = post(conn, ~p"/settings/team/force_2fa/enable")
 
-        assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+        assert redirected_to(conn, 302) == ~p"/settings/team/general"
 
         assert_matches [
                          %{
@@ -1903,9 +1903,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       guest = add_guest(site, role: :viewer)
 
-      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+      conn = post(conn, ~p"/settings/team/force_2fa/enable")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
 
       # The email come in order in which they are sent.
       # As the logic sending them does not force any order,
@@ -1943,9 +1943,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "is idempotent", %{conn: conn, user: user, team: team} do
       {:ok, team} = Plausible.Teams.disable_force_2fa(team, user, "password")
 
-      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+      conn = post(conn, ~p"/settings/team/force_2fa/enable")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
       assert Repo.reload!(team).policy.force_2fa
     end
 
@@ -1958,9 +1958,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Keyword.fetch!(:conn)
         |> set_current_team(team)
 
-      conn = post(conn, Routes.settings_path(conn, :enable_team_force_2fa))
+      conn = post(conn, ~p"/settings/team/force_2fa/enable")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
       refute Repo.reload!(team).policy.force_2fa
     end
   end
@@ -1981,11 +1981,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.enable_force_2fa(team, user)
 
       conn =
-        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+        post(conn, ~p"/settings/team/force_2fa/disable", %{
           "password" => "password"
         })
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "2FA is no longer enforced for team members"
@@ -1998,11 +1998,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
         {:ok, team} = Plausible.Teams.enable_force_2fa(team, user)
 
         conn =
-          post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+          post(conn, ~p"/settings/team/force_2fa/disable", %{
             "password" => "password"
           })
 
-        assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+        assert redirected_to(conn, 302) == ~p"/settings/team/general"
 
         assert_matches [
                          %{
@@ -2026,19 +2026,19 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "is idempotent", %{conn: conn, team: team} do
       conn =
-        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+        post(conn, ~p"/settings/team/force_2fa/disable", %{
           "password" => "password"
         })
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
       refute Repo.reload!(team).policy.force_2fa
     end
 
     test "returns error on invalid password", %{conn: conn} do
       conn =
-        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{"password" => "invalid"})
+        post(conn, ~p"/settings/team/force_2fa/disable", %{"password" => "invalid"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+      assert redirected_to(conn, 302) == ~p"/settings/team/general"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
 
@@ -2060,11 +2060,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> set_current_team(team)
 
       conn =
-        post(conn, Routes.settings_path(conn, :disable_team_force_2fa), %{
+        post(conn, ~p"/settings/team/force_2fa/disable", %{
           "password" => "password"
         })
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
       assert Repo.reload!(team).policy.force_2fa
     end
   end
@@ -2073,7 +2073,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in, :create_team, :setup_team]
 
     test "is visible to owner", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :team_general))
+      conn = get(conn, ~p"/settings/team/general")
       html = html_response(conn, 200)
 
       assert element_exists?(html, "div#enable-force-2fa")
@@ -2089,7 +2089,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Keyword.fetch!(:conn)
         |> set_current_team(team)
 
-      conn = get(conn, Routes.settings_path(conn, :team_general))
+      conn = get(conn, ~p"/settings/team/general")
       html = html_response(conn, 200)
 
       refute element_exists?(html, "div#force-2fa")
@@ -2113,7 +2113,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "is visible to owner", %{conn: conn} do
-      conn = get(conn, Routes.settings_path(conn, :team_general))
+      conn = get(conn, ~p"/settings/team/general")
       html = html_response(conn, 200)
 
       refute element_exists?(html, "div#enable-force-2fa")
@@ -2135,7 +2135,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> Keyword.fetch!(:conn)
         |> set_current_team(team)
 
-      conn = get(conn, Routes.settings_path(conn, :team_general))
+      conn = get(conn, ~p"/settings/team/general")
       html = html_response(conn, 200)
 
       refute element_exists?(html, "div#force-2fa")
@@ -2149,7 +2149,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "renders the 'Create a team' option", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a team"
     end
@@ -2160,7 +2160,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     } do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       Plausible.Teams.complete_setup(team)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
+      conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
       refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
     end

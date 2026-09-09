@@ -372,22 +372,20 @@ defmodule PlausibleWeb.Live.TeamManagement do
       {{:ok, _}, :team_setup} ->
         socket
         |> put_flash(:success, "Your team is now created")
-        |> redirect(
-          to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
-        )
+        |> redirect(to: ~p"/settings/team/general?#{[__team: current_team.identifier]}")
 
       {{:ok, _}, :team_management} ->
         case Teams.Memberships.team_role(current_team, current_user) do
           {:ok, role} when role in [:viewer, :billing, :editor] ->
             redirect(socket,
-              to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
+              to: ~p"/settings/team/general?#{[__team: current_team.identifier]}"
             )
 
           {:ok, _} ->
             reset(socket)
 
           {:error, :not_a_member} ->
-            redirect(socket, to: Routes.site_path(socket, :index, __team: "none"))
+            redirect(socket, to: ~p|/sites?#{[__team: "none"]}|)
         end
 
       {{:error, :permission_denied}, _} ->

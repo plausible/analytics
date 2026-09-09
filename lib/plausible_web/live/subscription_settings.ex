@@ -10,14 +10,13 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
   import PlausibleWeb.Components.Billing.Helpers
 
   alias Plausible.Teams
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, _session, socket) do
     team = socket.assigns.current_team
 
     if Teams.setup?(team) &&
          socket.assigns.current_team_role not in Plausible.Billing.allowed_roles() do
-      {:ok, redirect(socket, to: Routes.site_path(socket, :index))}
+      {:ok, redirect(socket, to: ~p"/sites")}
     else
       subscription = Teams.Billing.get_subscription(team)
       invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
@@ -80,7 +79,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
               </p>
             </div>
             <.button_link
-              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+              href={~p"/billing/choose-plan"}
               mt?={false}
               id="upgrade-or-change-plan-link"
             >
@@ -136,7 +135,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                       not (Plausible.Teams.Billing.enterprise_configured?(@current_team) &&
                              Plausible.Billing.Subscriptions.halted?(@subscription))
                     }
-                    href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                    href={~p"/billing/choose-plan"}
                     mt?={false}
                     id="upgrade-or-change-plan-link"
                   >

@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         >
           To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
-            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+            href={~p"/billing/choose-plan"}
             class="whitespace-nowrap font-semibold"
           >
             Upgrade now <span aria-hidden="true"> &rarr;</span>
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         >
           To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
-            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+            href={~p"/billing/choose-plan"}
             class="whitespace-nowrap font-semibold"
           >
             Upgrade now <span aria-hidden="true"> &rarr;</span>
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       >
         Since you’ve outgrown your current subscription tier, it’s time to upgrade to match your growing usage.
         <.link
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          href={~p"/billing/choose-plan"}
           class="whitespace-nowrap font-semibold"
         >
           Upgrade now <span aria-hidden="true"> &rarr;</span>
@@ -267,7 +267,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, and we'll keep tracking your stats as usual. Upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -290,7 +290,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading lets you add more as your team grows.
         </p>
-        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
           Upgrade
         </.button_link>
       </div>
@@ -305,7 +305,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading lets you add more sites as you grow.
         </p>
-        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
           Upgrade
         </.button_link>
       </div>
@@ -324,7 +324,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading gives you room to grow.
         </p>
-        <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
           Upgrade
         </.button_link>
       </div>
@@ -340,7 +340,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -364,7 +364,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -388,7 +388,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -432,7 +432,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage {@deadline_text}.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -456,7 +456,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           Your stats are still being tracked, but dashboard access is temporarily locked because your site exceeded your plan's pageview limit for two consecutive billing cycles. Upgrade to restore access.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
             Upgrade
           </.button_link>
           <.button_link
@@ -481,7 +481,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         </p>
         <.button_link
           id="upgrade-or-change-plan-link"
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          href={~p"/billing/choose-plan"}
           mt?={false}
         >
           Choose a plan
@@ -499,7 +499,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
       <.link
         class="underline inline-block"
-        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        href={~p"/billing/choose-plan"}
       >
         Upgrade your subscription
       </.link>

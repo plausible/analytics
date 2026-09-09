@@ -14,7 +14,7 @@ defmodule Plausible.Plugs.SSOTeamAccess do
     import Phoenix.Controller, only: [redirect: 2]
     import Plug.Conn
 
-    alias PlausibleWeb.Router.Helpers, as: Routes
+    use PlausibleWeb.VerifiedRoutes
 
     def call(conn, _opts) do
       current_user = conn.assigns[:current_user]
@@ -37,10 +37,10 @@ defmodule Plausible.Plugs.SSOTeamAccess do
       conn =
         case Plausible.Auth.SSO.check_ready_to_provision(user, team) do
           :ok ->
-            redirect(conn, to: Routes.sso_path(conn, :provision_notice))
+            redirect(conn, to: ~p"/sso/notice")
 
           {:error, issue} ->
-            redirect(conn, to: Routes.sso_path(conn, :provision_issue, issue: issue))
+            redirect(conn, to: ~p"/sso/issue?#{[issue: issue]}")
         end
 
       halt(conn)

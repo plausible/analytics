@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
   @moduletag :ee_only
 
   on_ee do
-    @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
+    @cs_index "/cs"
 
     import Phoenix.LiveViewTest
 

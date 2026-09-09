@@ -23,7 +23,7 @@ defmodule PlausibleWeb.BillingController do
     team = conn.assigns.current_team
 
     if Plausible.Teams.Billing.enterprise_configured?(team) do
-      redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+      redirect(conn, to: ~p"/billing/upgrade-to-enterprise-plan")
     else
       render(conn, "choose_plan.html",
         live_module: PlausibleWeb.Live.ChoosePlan,
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.BillingController do
         Subscription.Status.past_due(),
         Subscription.Status.paused()
       ]) ->
-        redirect(conn, to: Routes.settings_path(conn, :subscription))
+        redirect(conn, to: ~p"/settings/billing/subscription")
 
       subscribed_to_latest? ->
         render(conn, "change_enterprise_plan_contact_us.html", skip_plausible_tracking: true)
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.BillingController do
     case preview_subscription(subscription, new_plan_id) do
       {:ok, {subscription, preview_info}} ->
         render(conn, "change_plan_preview.html",
-          back_link: Routes.billing_path(conn, :choose_plan),
+          back_link: ~p"/billing/choose-plan",
           skip_plausible_tracking: true,
           subscription: subscription,
           preview_info: preview_info
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: Routes.billing_path(conn, :choose_plan))
+        |> redirect(to: ~p"/billing/choose-plan")
     end
   end
 
@@ -117,7 +117,7 @@ defmodule PlausibleWeb.BillingController do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
-        |> redirect(to: Routes.settings_path(conn, :subscription))
+        |> redirect(to: ~p"/settings/billing/subscription")
 
       {:error, e} ->
         msg =
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: Routes.settings_path(conn, :subscription))
+        |> redirect(to: ~p"/settings/billing/subscription")
     end
   end
 

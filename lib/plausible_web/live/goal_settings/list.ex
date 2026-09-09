@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                   </:tooltip_content>
                   <.styled_link
                     class="w-max flex items-center text-sm"
-                    href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                    href={~p"/billing/choose-plan"}
                     data-test-id="feature-unavailable-cta"
                   >
                     <Heroicons.lock_closed class="size-3.5 mr-1 stroke-2" /> Upgrade

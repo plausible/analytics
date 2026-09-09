@@ -8,7 +8,7 @@
         <.settings_row label="Site domain" docs="change-domain-name">
           <span class="text-gray-800 dark:text-gray-200">{@site.domain}</span>
           <.styled_link
-            href={Routes.site_path(@conn, :change_domain, @site.domain)}
+            href={~p"/#{@site.domain}/change-domain"}
             aria-label="Change domain"
             class="text-sm"
           >

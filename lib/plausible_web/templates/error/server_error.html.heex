@@ -47,7 +47,7 @@
             :let={f}
             for={%{}}
             as={:error}
-            action={Routes.error_report_path(PlausibleWeb.Endpoint, :submit_error_report)}
+            action={~p"/error_report"}
           >
             <.input type="hidden" field={f[:trace_id]} value={@trace_id} />
             <PlausibleWeb.Live.Components.Form.label for="user_feedback">

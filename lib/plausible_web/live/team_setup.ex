@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
   use PlausibleWeb, :live_view
 
   alias Plausible.Teams
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, _session, socket) do
     socket =
@@ -14,7 +13,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         %Teams.Team{setup_complete: true} ->
           socket
           |> put_flash(:success, "Your team is now created")
-          |> redirect(to: Routes.settings_path(socket, :team_general))
+          |> redirect(to: ~p"/settings/team/general")
 
         %Teams.Team{} ->
           socket
@@ -22,7 +21,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         _ ->
           socket
           |> put_flash(:error, "You cannot create any team just yet")
-          |> redirect(to: Routes.site_path(socket, :index))
+          |> redirect(to: ~p"/sites")
       end
 
     {:ok, socket}

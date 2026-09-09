@@ -8,7 +8,7 @@
     </:subtitle>
     <.form
       :let={f}
-      action={Routes.settings_path(@conn, :update_email)}
+      action={~p"/settings/security/email"}
       for={@email_changeset}
       method="post"
     >
@@ -61,7 +61,7 @@
     </:subtitle>
     <.form
       :let={f}
-      action={Routes.settings_path(@conn, :update_password)}
+      action={~p"/settings/security/password"}
       for={@password_changeset}
       method="post"
     >
@@ -142,7 +142,7 @@
 
       <div :if={not @totp_enabled?}>
         <.form
-          action={Routes.auth_path(@conn, :initiate_2fa_setup)}
+          action={~p"/2fa/setup/initiate"}
           for={@conn.params}
           method="post"
         >
@@ -156,7 +156,7 @@
         id="disable-2fa-modal"
         state_param="disable2FAOpen"
         form_data={@conn.params}
-        form_target={Routes.auth_path(@conn, :disable_2fa)}
+        form_target={~p"/2fa/disable"}
         title="Disable Two-Factor Authentication?"
       >
         <:icon>
@@ -192,7 +192,7 @@
         id="regenerate-2fa-modal"
         state_param="regenerate2FAOpen"
         form_data={@conn.params}
-        form_target={Routes.auth_path(@conn, :generate_2fa_recovery_codes)}
+        form_target={~p"/2fa/recovery_codes"}
         onsubmit="document.getElementById('generate-2fa-recovery-button').disabled = true"
         title="Generate New Recovery Codes?"
       >
@@ -259,7 +259,7 @@
         <.td :if={@current_user_session.id == session.id} actions>Current session</.td>
         <.td :if={@current_user_session.id != session.id} actions>
           <.delete_button
-            href={Routes.settings_path(@conn, :delete_session, session.id)}
+            href={~p"/settings/security/user-sessions/#{session.id}"}
             method="delete"
             data-confirm="Are you sure you want to log out this session?"
           />

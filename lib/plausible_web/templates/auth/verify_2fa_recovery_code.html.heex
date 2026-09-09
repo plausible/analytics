@@ -6,7 +6,7 @@
     <.form
       :let={f}
       for={@conn.params}
-      action={Routes.auth_path(@conn, :verify_2fa_recovery_code)}
+      action={~p"/2fa/use_recovery_code"}
       class="flex flex-col gap-y-6"
       onsubmit="document.getElementById('use-code-button').disabled = true"
     >
@@ -45,7 +45,7 @@
 
     <div class="mt-6 flex flex-col gap-y-2 text-sm text-gray-500 dark:text-gray-400 text-center">
       <p>
-        <.styled_link href={Routes.auth_path(@conn, :verify_2fa)}>
+        <.styled_link href={~p"/2fa/verify"}>
           Use authenticator app instead
         </.styled_link>
       </p>

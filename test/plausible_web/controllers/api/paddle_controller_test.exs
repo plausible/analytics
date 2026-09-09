@@ -35,13 +35,13 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
 
       # NOTE: signature check happens sooner
       assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
-        post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
+        post(conn, ~p"/api/paddle/webhook", @webhook_body)
       end
     end
 
     test "not verified when signature is corrupted", %{conn: conn} do
       corrupted = Map.put(@webhook_body, "p_signature", Base.encode64("123 fake signature"))
-      conn = post(conn, Routes.paddle_path(conn, :webhook), corrupted)
+      conn = post(conn, ~p"/api/paddle/webhook", corrupted)
       assert conn.status == 400
     end
   end
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
     test "retrieves successfully", %{conn: conn} do
       expect_get_prices_response(get_prices_body("USD"))
 
-      conn = get(conn, Routes.paddle_path(conn, :currency))
+      conn = get(conn, ~p"/api/paddle/currency")
       assert_receive :paddle_queried
       assert json_response(conn, 200) == %{"currency" => "$"}
     end
@@ -58,20 +58,20 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
     test "caches per ip", %{conn: initial_conn} do
       expect_get_prices_response(get_prices_body("USD"))
 
-      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      conn = get(initial_conn, ~p"/api/paddle/currency")
       assert json_response(conn, 200) == %{"currency" => "$"}
       assert_receive :paddle_queried
 
       expect_get_prices_response(get_prices_body("GBP"))
 
-      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      conn = get(initial_conn, ~p"/api/paddle/currency")
       assert json_response(conn, 200) == %{"currency" => "$"}
       refute_receive :paddle_queried
 
       new_ip =
         Plug.Conn.put_req_header(initial_conn, "x-forwarded-for", random_ip())
 
-      conn = get(new_ip, Routes.paddle_path(initial_conn, :currency))
+      conn = get(new_ip, ~p"/api/paddle/currency")
       assert json_response(conn, 200) == %{"currency" => "£"}
       assert_receive :paddle_queried
     end
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
     test "falls back to EUR when paddle fails to respond", %{conn: conn} do
       expect_get_prices_response(%{"response" => %{}})
 
-      conn = get(conn, Routes.paddle_path(conn, :currency))
+      conn = get(conn, ~p"/api/paddle/currency")
       assert_receive :paddle_queried
       assert json_response(conn, 200) == %{"currency" => "€"}
     end
@@ -87,12 +87,12 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
     test "does not cache failed fetches", %{conn: initial_conn} do
       expect_get_prices_response(%{"response" => %{}})
 
-      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      conn = get(initial_conn, ~p"/api/paddle/currency")
       assert json_response(conn, 200) == %{"currency" => "€"}
 
       expect_get_prices_response(get_prices_body("USD"))
 
-      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      conn = get(initial_conn, ~p"/api/paddle/currency")
       assert json_response(conn, 200) == %{"currency" => "$"}
     end
 

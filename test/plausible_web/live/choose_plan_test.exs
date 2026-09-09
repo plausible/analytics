@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                  "email" => user.email,
                  "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
                  "product" => @v5_growth_200k_yearly_plan_id,
-                 "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+                 "success" => ~p"/billing/upgrade-success",
                  "theme" => "none"
                } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
 
@@ -684,7 +684,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         growth_checkout_button = find(doc, @growth_checkout_button)
 
         assert text_of_attr(growth_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_growth_10k_yearly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_growth_10k_yearly_plan_id}"}'}"
 
         set_slider(lv, "5M")
         doc = element(lv, @monthly_interval_button) |> render_click()
@@ -692,12 +692,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         starter_checkout_button = find(doc, @starter_checkout_button)
 
         assert text_of_attr(starter_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_starter_5m_monthly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_starter_5m_monthly_plan_id}"}'}"
 
         business_checkout_button = find(doc, @business_checkout_button)
 
         assert text_of_attr(business_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_business_5m_monthly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_business_5m_monthly_plan_id}"}'}"
       end
     end
 
@@ -1256,7 +1256,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                  "email" => user.email,
                  "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
                  "product" => @v5_growth_200k_yearly_plan_id,
-                 "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+                 "success" => ~p"/billing/upgrade-success",
                  "theme" => "none"
                } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
       end
@@ -1355,7 +1355,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     defp get_liveview(conn) do
       conn = assign(conn, :live_module, PlausibleWeb.Live.ChoosePlan)
-      {:ok, _lv, _doc} = live(conn, Routes.billing_path(conn, :choose_plan))
+      {:ok, _lv, _doc} = live(conn, ~p"/billing/choose-plan")
     end
 
     defp get_paddle_checkout_params(element) do

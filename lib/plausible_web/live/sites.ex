@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Live.Sites do
         <.unstyled_link
           :if={Teams.setup?(@current_team)}
           data-test-id="team-settings-link"
-          href={Routes.settings_path(@socket, :team_general)}
+          href={~p"/settings/team/general"}
           class="shrink-0"
         >
           <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
@@ -150,7 +150,7 @@ defmodule PlausibleWeb.Live.Sites do
               <PrimaDropdown.dropdown_item
                 as={&link/1}
                 id="add-site-dropdown-menuitem-1"
-                href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+                href={~p"/sites/new?#{[flow: PlausibleWeb.Flows.provisioning()]}"}
               >
                 <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
               </PrimaDropdown.dropdown_item>
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Live.Sites do
 
           <.button_link
             :if={!@consolidated_view_cta_dismissed?}
-            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            href={~p"/sites/new?#{[flow: PlausibleWeb.Flows.provisioning()]}"}
             mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Live.Sites do
           </.button_link>
           <.button_link
             :if={not Teams.setup?(@current_team) and @has_sites? and length(@teams) == 1}
-            href={Routes.site_path(@socket, :index, __team: hd(@teams).identifier)}
+            href={~p"/sites?#{[__team: hd(@teams).identifier]}"}
             theme="secondary"
             mt?={false}
           >
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Live.Sites do
                   :for={team <- @teams}
                   as={&link/1}
                   id={"go-to-team-dropdown-menuitem-#{team.identifier}"}
-                  href={Routes.site_path(@socket, :index, __team: team.identifier)}
+                  href={~p"/sites?#{[__team: team.identifier]}"}
                 >
                   {Teams.name(team)}
                 </PrimaDropdown.dropdown_item>
@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Live.Sites do
         <.pagination
           :if={@sites.total_pages > 1}
           id="sites-pagination"
-          uri={URI.new!(Routes.site_path(@socket, :index, @uri_params))}
+          uri={URI.new!(~p"/sites")}
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
@@ -310,7 +310,7 @@ defmodule PlausibleWeb.Live.Sites do
           <div class="mt-1 text-sm text-gray-900/80 dark:text-gray-100/60">
             <p>
               To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
-              <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
+              <.styled_link href={~p"/settings/billing/subscription"}>
                 Upgrade now →
               </.styled_link>
             </p>
@@ -345,7 +345,7 @@ defmodule PlausibleWeb.Live.Sites do
         </p>
         <div class="flex gap-x-2">
           <.button_link
-            href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+            href={~p"/team/setup"}
             mt?={false}
           >
             Create team
@@ -437,7 +437,7 @@ defmodule PlausibleWeb.Live.Sites do
       class="relative row-span-2"
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @consolidated_view.domain, [])}
+        href={~p"/#{@consolidated_view.domain}"}
         class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
@@ -638,7 +638,7 @@ defmodule PlausibleWeb.Live.Sites do
             :if={@can_manage?}
             id={"#{@dropdown_id}-item-1"}
             as={&link/1}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain)}
+            href={~p"/#{@site.domain}/settings/general"}
           >
             <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
           </PrimaDropdown.dropdown_item>
@@ -1026,7 +1026,7 @@ defmodule PlausibleWeb.Live.Sites do
     socket
     |> assign(:uri_params, uri_params)
     |> assign(:filter_text, trimmed)
-    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
+    |> push_patch(to: ~p"/sites", replace: true)
   end
 
   defp reset_pagination(socket) do
@@ -1050,7 +1050,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     socket
     |> assign(:uri_params, uri_params)
-    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
+    |> push_patch(to: ~p"/sites", replace: true)
   end
 
   defp hash_domain(domain) do

@@ -3,9 +3,9 @@ defmodule Plausible.Plugs.RestrictUserType do
   Plug for restricting user access by type.
   """
 
-  import Plug.Conn
+  use PlausibleWeb.VerifiedRoutes
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
+  import Plug.Conn
 
   def init(opts) do
     Keyword.fetch!(opts, :deny)
@@ -16,7 +16,7 @@ defmodule Plausible.Plugs.RestrictUserType do
 
     if user && Plausible.Users.type(user) == deny_type do
       conn
-      |> Phoenix.Controller.redirect(to: Routes.site_path(conn, :index))
+      |> Phoenix.Controller.redirect(to: ~p"/sites")
       |> halt()
     else
       conn
