@@ -222,6 +222,15 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       refute Repo.reload!(team).setup_complete
     end
 
+    test "rejects inviting yourself", %{conn: conn, team: team, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, rows: %{"1" => %{"email" => user.email, "role" => "admin"}}) =~
+               "You cannot invite yourself"
+
+      refute Repo.reload!(team).setup_complete
+    end
+
     @tag :ee_only
     test "fails to create the team when the plan's member limit is breached", %{
       conn: conn,

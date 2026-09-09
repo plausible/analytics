@@ -15,11 +15,18 @@ defmodule PlausibleWeb.Live.TeamSetup do
       case socket.assigns.current_team do
         %Teams.Team{setup_complete: true} ->
           socket
-          |> put_flash(:success, "Your team is now created")
+          |> put_flash(:success, "Your team has already been created")
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         %Teams.Team{} = team ->
-          setup(socket, team)
+          suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
+          name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
+
+          assign(socket,
+            current_team: team,
+            team_name_form: to_form(name_changeset),
+            locked?: Plausible.Teams.Billing.solo?(team)
+          )
 
         _ ->
           socket
@@ -28,17 +35,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
       end
 
     {:ok, socket}
-  end
-
-  defp setup(socket, team) do
-    suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
-    name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
-
-    assign(socket,
-      current_team: team,
-      team_name_form: to_form(name_changeset),
-      locked?: Plausible.Teams.Billing.solo?(team)
-    )
   end
 
   def render(assigns) do
@@ -214,6 +210,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
       Enum.uniq(emails) != emails ->
         {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
 
+      socket.assigns.current_user.email in emails ->
+        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
+
       true ->
         layout =
           Enum.reduce(entries, %{}, fn %{email: email, role: role}, layout ->
@@ -240,16 +239,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
              )
          )}
 
-      {:error, :permission_denied} ->
-        {:noreply, put_live_flash(socket, :error, "Permission denied")}
-
-      {:error, :only_one_owner} ->
-        {:noreply, put_live_flash(socket, :error, "The team has to have at least one owner")}
-
-      {:error, :disabled_2fa} ->
-        {:noreply,
-         put_live_flash(socket, :error, "User must have 2FA enabled to become an owner")}
-
       {:error, {:over_limit, limit}} ->
         {:noreply,
          put_live_flash(
@@ -257,6 +246,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
            :error,
            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
          )}
+
+      {:error, other} ->
+        # Team setup only ever sends brand-new invitations (never updates or
+        # removes existing memberships), so none of Layout.persist/2's other
+        # known error reasons (permission checks, last-owner protection, 2FA
+        # enforcement) are reachable from here. Anything else is unexpected.
+        Sentry.capture_message("Unexpected error while creating team via team setup",
+          extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
+        )
+
+        {:noreply, put_live_flash(socket, :error, "Something went wrong. Please try again")}
     end
   end
 
