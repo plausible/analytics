@@ -26,7 +26,7 @@ defmodule PlausibleWeb.UserAuthTest do
       assert NaiveDateTime.compare(session.last_used_at, now) in [:eq, :gt]
       assert NaiveDateTime.compare(session.timeout_at, session.last_used_at) == :gt
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age > 0
       assert get_session(conn, :user_token) == session.token
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.UserAuthTest do
         assert session.user_id == user.id
         assert NaiveDateTime.compare(session.timeout_at, identity.expires_at) == :eq
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
         assert conn.private[:plug_session_info] == :renew
         assert conn.resp_cookies["logged_in"].max_age > 0
         assert get_session(conn, :current_team_id) == team.identifier
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.UserAuthTest do
         assert session.user_id == user.id
         assert session.token == get_session(conn, :user_token)
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
       end
 
       test "invalidates any existing sessions of user logging in when converting", %{
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: ""]}|
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "")
+        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: ""]}|
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Team can't accept more members. Please contact the owner."
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships_noforce")
+                 ~p|/sso/issue?#{[issue: "multiple_memberships_noforce"]}|
 
         refute get_session(conn, :user_token)
       end
@@ -240,7 +240,7 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :provision_issue, issue: "active_personal_team_noforce")
+                 ~p|/sso/issue?#{[issue: "active_personal_team_noforce"]}|
 
         refute get_session(conn, :user_token)
       end

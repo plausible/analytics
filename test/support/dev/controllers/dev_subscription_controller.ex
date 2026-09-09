@@ -17,7 +17,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
 
     def create_form(conn, %{"plan_id" => plan_id}) do
       render(conn, "create_dev_subscription.html",
-        back_link: Routes.billing_path(conn, :choose_plan),
+        back_link: ~p"/billing/choose-plan",
         plan_id: plan_id
       )
     end
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
         do: raise("Can't render subscription update form without subscription")
 
       render(conn, "update_dev_subscription.html",
-        back_link: Routes.settings_path(conn, :subscription),
+        back_link: ~p"/settings/billing/subscription",
         current_status: team.subscription.status
       )
     end
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
         do: raise("Can't render subscription cancel form without subscription")
 
       render(conn, "cancel_dev_subscription.html",
-        back_link: Routes.settings_path(conn, :subscription),
+        back_link: ~p"/settings/billing/subscription",
         enterprise_plan?: Teams.Billing.enterprise_configured?(team)
       )
     end
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
         end
 
       DevSubscriptions.create_after_1s(for_team.id, plan_id)
-      redirect(conn, to: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success))
+      redirect(conn, to: ~p"/billing/upgrade-success")
     end
 
     def update(conn, %{"status" => status}) do
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
 
       conn
       |> put_flash(:success, "Subscription status set to '#{status}'")
-      |> redirect(to: Routes.settings_path(conn, :subscription))
+      |> redirect(to: ~p"/settings/billing/subscription")
     end
 
     def cancel(conn, %{"action" => action}) do
@@ -91,7 +91,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
 
       conn
       |> put_flash(:success, flash_msg)
-      |> redirect(to: Routes.settings_path(conn, :subscription))
+      |> redirect(to: ~p"/settings/billing/subscription")
     end
   end
 end

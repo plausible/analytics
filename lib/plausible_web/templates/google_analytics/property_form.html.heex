@@ -10,7 +10,7 @@
     :let={f}
     for={@conn}
     onsubmit="continueButton.disabled = true; return true;"
-    action={Routes.google_analytics_path(@conn, :property, @site.domain)}
+    action={~p"/#{@site.domain}/import/google-analytics/property"}
   >
     <.input type="hidden" field={f[:access_token]} />
     <.input type="hidden" field={f[:refresh_token]} />
@@ -34,7 +34,7 @@
     <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">
       <p class="mt-4 sm:mt-0 dark:text-gray-100">
         <a
-          href={Routes.site_path(@conn, :settings_imports_exports, @site.domain)}
+          href={~p"/#{@site.domain}/settings/imports-exports"}
           class="underline text-indigo-600"
         >
           Go back

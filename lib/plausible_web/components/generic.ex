@@ -4,9 +4,9 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
 
-  import PlausibleWeb.Components.Icons
+  use PlausibleWeb.VerifiedRoutes
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
+  import PlausibleWeb.Components.Icons
 
   @notice_themes %{
     gray: %{
@@ -1314,7 +1314,7 @@ defmodule PlausibleWeb.Components.Generic do
   def upgrade_pill(assigns) do
     ~H"""
     <.link
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      href={~p"/billing/choose-plan"}
       class="inline-block"
       {@rest}
     >

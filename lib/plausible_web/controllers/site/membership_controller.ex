@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Site.MembershipController do
           :success,
           "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
         )
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: ~p"/#{site.domain}/settings/people")
 
       {:error, :already_a_member} ->
         render(conn, "invite_member_form.html",
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
         conn
         |> put_flash(:error, error_msg)
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: ~p"/#{site.domain}/settings/people")
     end
   end
 
@@ -114,9 +114,9 @@ defmodule PlausibleWeb.Site.MembershipController do
         redirect_target =
           if guest_membership.team_membership.user_id == current_user.id and
                guest_membership.role == :viewer do
-            Routes.stats_path(conn, :stats, site.domain, [])
+            ~p"/#{site.domain}"
           else
-            Routes.site_path(conn, :settings_people, site.domain)
+            ~p"/#{site.domain}/settings/people"
           end
 
         conn
@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       {:error, _} ->
         conn
         |> put_flash(:error, "You are not allowed to grant the #{new_role_str} role")
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: ~p"/#{site.domain}/settings/people")
     end
   end
 
@@ -141,9 +141,9 @@ defmodule PlausibleWeb.Site.MembershipController do
 
       redirect_target =
         if user_id == conn.assigns[:current_user].id do
-          Routes.site_path(conn, :index)
+          ~p"/sites"
         else
-          Routes.site_path(conn, :settings_people, site.domain)
+          ~p"/#{site.domain}/settings/people"
         end
 
       conn
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         :success,
         "User has been removed from #{site.domain}"
       )
-      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+      |> redirect(to: ~p"/#{site.domain}/settings/people")
     end
   end
 end

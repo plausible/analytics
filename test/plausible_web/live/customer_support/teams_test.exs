@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
+      ~p"/cs/teams/team/#{id}"
     end
 
     setup [:create_user, :log_in, :create_site]
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|button[phx-click="delete-team"]|)
         |> render_click()
 
-        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, ~p"/cs")
 
         refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
       end
@@ -1122,7 +1122,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
+        assert to == ~p"/cs/teams/team/#{team.id}"
       end
     end
 
