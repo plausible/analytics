@@ -233,7 +233,7 @@ defmodule Plausible.Teams.Billing do
     Teams.owned_sites_count(team)
   end
 
-  @spec team_member_limit(Teams.Team.t() | nil) :: pos_integer() | :unlimited
+  @spec team_member_limit(Teams.Team.t() | nil) :: non_neg_integer() | :unlimited
   on_ee do
     @team_member_limit_for_trials 10
 
