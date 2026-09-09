@@ -12,7 +12,7 @@
     <:title>Reset stats</:title>
     <:subtitle>Reset all stats but keep the site configuration intact.</:subtitle>
     <.button_link
-      href={Routes.site_path(@conn, :reset_stats, @site.domain)}
+      href={~p"/#{@site.domain}/stats"}
       method="delete"
       data-confirm="Resetting the stats cannot be reversed. Are you sure?"
       theme="danger"
@@ -26,7 +26,7 @@
     <:title>Delete site</:title>
     <:subtitle>Permanently delete all stats and site settings.</:subtitle>
     <.button_link
-      href={Routes.site_path(@conn, :delete_site, @site.domain)}
+      href={~p"/#{@site.domain}"}
       theme="danger"
       method="delete"
       data-confirm="Deleting the site data cannot be reversed. Are you sure?"

@@ -370,14 +370,13 @@ defmodule PlausibleWeb.Live.Installation do
            )}
 
         assigns.flow == Flows.review() ->
-          {"Back to settings",
-           Routes.site_path(PlausibleWeb.Endpoint, :settings_general, assigns.domain)}
+          {"Back to settings", ~p"/#{assigns.domain}/settings/general"}
 
         assigns.flow == Flows.provisioning() ->
-          {"Back to sites", Routes.site_path(PlausibleWeb.Endpoint, :index)}
+          {"Back to sites", ~p"/sites"}
 
         true ->
-          {"Skip", Routes.site_path(PlausibleWeb.Endpoint, :index)}
+          {"Skip", ~p"/sites"}
       end
 
     assigns = assign(assigns, label: label, href: href)
@@ -425,7 +424,7 @@ defmodule PlausibleWeb.Live.Installation do
           flow: socket.assigns.flow
         )
       else
-        Routes.stats_path(socket, :stats, domain, [])
+        ~p"/#{domain}"
       end
 
     {:noreply, redirect(socket, to: destination)}

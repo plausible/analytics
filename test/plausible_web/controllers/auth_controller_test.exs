@@ -232,7 +232,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
     end
 
     test "logs the user in, accepts team invite and redirects to team sites index", %{
@@ -261,7 +261,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+      assert redirected_to(conn, 302) == ~p"/sites?#{[__team: team.identifier]}"
 
       assert_team_membership(user, team, :viewer)
     end
@@ -293,7 +293,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+      assert redirected_to(conn, 302) == ~p"/sites?#{[__team: team.identifier]}"
     end
   end
 
@@ -450,7 +450,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :index, __team: team.identifier, flow: "")
+               ~p|/sites?#{[__team: team.identifier, flow: ""]}|
 
       assert_team_membership(user, team, :viewer)
     end
@@ -471,7 +471,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :index, __team: team.identifier, flow: "")
+               ~p|/sites?#{[__team: team.identifier, flow: ""]}|
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do
@@ -575,10 +575,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         post(conn, "/login",
           email: user.email,
           password: "password",
-          return_to: Routes.settings_path(conn, :index)
+          return_to: ~p"/settings"
         )
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/settings"
     end
 
     test "valid email and password with 2FA enabled - sets 2FA session and redirects", %{
@@ -592,7 +592,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
+      assert redirected_to(conn, 302) == ~p"/2fa/verify"
 
       assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
       refute get_session(conn)["user_token"]
@@ -610,7 +610,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert conn.resp_cookies["session_2fa"].max_age == 0
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
@@ -630,7 +630,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
+      assert redirected_to(conn, 302) == ~p"/2fa/verify"
 
       assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
       refute get_session(conn, :user_token)
@@ -653,7 +653,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
         conn = post(conn, "/login", email: owner.email, password: "password")
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         assert conn.resp_cookies["session_2fa"].max_age == 0
         assert %{sessions: [%{token: token}]} = owner |> Repo.reload!() |> Repo.preload(:sessions)
@@ -914,7 +914,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       test "refuses to delete SSO user", %{conn: conn, user: user} do
         conn = delete(conn, "/me")
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         assert Repo.reload(user)
       end
@@ -984,7 +984,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = delete(conn, "/me")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
+      assert redirected_to(conn, 302) == ~p"/settings/danger-zone"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "You have an active subscription which must be canceled first"
@@ -1011,7 +1011,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = delete(conn, "/me")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
+      assert redirected_to(conn, 302) == ~p"/settings/danger-zone"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "You can't delete your account when you are the only owner on a team"
@@ -1033,7 +1033,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = delete(conn, "/me")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
+      assert redirected_to(conn, 302) == ~p"/settings/danger-zone"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "You can't delete your account when you are the only owner on a team"
@@ -1168,10 +1168,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"error" => "access_denied", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_imports_exports, site.domain)
+               ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "unable to authenticate your Google Analytics"
@@ -1188,10 +1188,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"error" => "access_denied", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "unable to authenticate your Google Analytics"
@@ -1207,10 +1207,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"error" => "server_error", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_imports_exports, site.domain)
+               ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google's authentication service is temporarily unavailable"
@@ -1229,10 +1229,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"error" => "temporarily_unavailable", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google's authentication service is temporarily unavailable"
@@ -1248,10 +1248,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"error" => "unknown", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_imports_exports, site.domain)
+               ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "unable to authenticate your Google Analytics"
@@ -1270,10 +1270,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"error" => "unknown", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "unable to authenticate your Google Analytics"
@@ -1286,9 +1286,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"error" => "access_denied", "state" => state <> "gibberish"}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "rejects error  callback with signed state containing non-existent site", %{conn: conn} do
@@ -1299,9 +1299,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"error" => "access_denied", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "rejects success callback with tampered state", %{conn: conn} do
@@ -1311,9 +1311,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"code" => "CodeForToken", "state" => state <> "gibberish"}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "rejects success callback with signed state containing non-existent site", %{conn: conn} do
@@ -1324,9 +1324,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"code" => "CodeForToken", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "success callback rejects state pointing to a site the current user does not own",
@@ -1346,9 +1346,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       callback_params = %{"code" => "CodeForToken", "state" => state}
 
       attacker_conn =
-        get(attacker_conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+        get(attacker_conn, ~p"/auth/google/callback", callback_params)
 
-      assert redirected_to(attacker_conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(attacker_conn, 302) == ~p"/login"
 
       # confirm no GoogleAuth record was created for the victim's site
       refute Repo.exists?(
@@ -1365,7 +1365,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         Phoenix.Token.sign(PlausibleWeb.Endpoint, "google-oauth-state", [site.id, "import"])
 
       callback_params = %{"code" => "CodeForToken", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirect_url = redirected_to(conn, 302)
 
@@ -1388,10 +1388,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"code" => "CodeForToken", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert_matches %{
                        access_token: "SomeAccessToken",
@@ -1419,10 +1419,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"code" => "CodeForToken", "state" => state}
-      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert_matches %{
                        access_token: "SomeAccessToken",
@@ -1451,10 +1451,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         ])
 
       callback_params = %{"code" => "CodeForToken", "state" => state}
-      conn_first = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn_first = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn_first, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert_matches %{
                        access_token: "SomeAccessToken",
@@ -1467,10 +1467,10 @@ defmodule PlausibleWeb.AuthControllerTest do
                          from ga in Plausible.Site.GoogleAuth, where: ga.site_id == ^site.id
                        )
 
-      conn_second = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+      conn_second = get(conn, ~p"/auth/google/callback", callback_params)
 
       assert redirected_to(conn_second, 302) ==
-               Routes.site_path(conn, :settings_integrations, site.domain)
+               ~p"/#{site.domain}/settings/integrations"
 
       assert_matches %{
                        access_token: "SomeAccessToken",
@@ -1492,7 +1492,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
+      conn = post(conn, ~p"/2fa/setup/initiate")
 
       secret = Base.encode32(Repo.reload!(user).totp_secret)
 
@@ -1504,7 +1504,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "shows additional notice when `force` parameter set", %{conn: conn} do
-      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup, force: "true"))
+      conn = post(conn, ~p|/2fa/setup/initiate?#{[force: "true"]}|)
 
       assert html = html_response(conn, 200)
       assert html =~ "You've been redirected here because your team enforces 2FA."
@@ -1514,9 +1514,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
+      conn = post(conn, ~p"/2fa/setup/initiate")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Two-Factor Authentication is already setup"
@@ -1529,25 +1529,25 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "renders form when 2FA setup is initiated", %{conn: conn, user: user} do
       {:ok, _, _} = Auth.TOTP.initiate(user)
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_setup))
+      conn = get(conn, ~p"/2fa/setup/verify")
 
       assert html = html_response(conn, 200)
 
       assert text_of_attr(html, "form#verify-2fa-form", "action") ==
-               Routes.auth_path(conn, :verify_2fa_setup)
+               ~p"/2fa/setup/verify"
 
       assert element_exists?(html, "input[name=code]")
 
       assert element_exists?(
                html,
-               ~s|a[data-method="post"][data-to="#{Routes.auth_path(conn, :initiate_2fa_setup)}"]|
+               ~s|a[data-method="post"][data-to="#{~p"/2fa/setup/initiate"}"]|
              )
     end
 
     test "redirects back to settings if 2FA not initiated", %{conn: conn} do
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_setup))
+      conn = get(conn, ~p"/2fa/setup/verify")
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
     end
   end
 
@@ -1561,7 +1561,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: code})
+      conn = post(conn, ~p"/2fa/setup/verify", %{code: code})
 
       assert html = html_response(conn, 200)
 
@@ -1574,7 +1574,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "renders error on invalid code provided", %{conn: conn, user: user} do
       {:ok, _, _} = Auth.TOTP.initiate(user)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: "invalid"})
+      conn = post(conn, ~p"/2fa/setup/verify", %{code: "invalid"})
 
       assert html_response(conn, 200)
 
@@ -1583,9 +1583,9 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to settings when 2FA is not initiated", %{conn: conn} do
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: "123123"})
+      conn = post(conn, ~p"/2fa/setup/verify", %{code: "123123"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
@@ -1599,9 +1599,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
+      conn = post(conn, ~p"/2fa/disable", %{password: "password"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "Two-Factor Authentication is disabled"
@@ -1613,9 +1613,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "invalid"})
+      conn = post(conn, ~p"/2fa/disable", %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
@@ -1629,9 +1629,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         {:ok, user, _} = Auth.TOTP.initiate(user)
         {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-        conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
+        conn = post(conn, ~p"/2fa/disable", %{password: "password"})
 
-        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert redirected_to(conn, 302) == ~p"/sites"
 
         assert user |> Repo.reload!() |> Auth.TOTP.enabled?()
       end
@@ -1646,7 +1646,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
-        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
+        post(conn, ~p"/2fa/recovery_codes", %{password: "password"})
 
       assert html = html_response(conn, 200)
 
@@ -1659,18 +1659,18 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
-        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "invalid"})
+        post(conn, ~p"/2fa/recovery_codes", %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
 
     test "renders error when 2FA is not enabled", %{conn: conn} do
       conn =
-        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
+        post(conn, ~p"/2fa/recovery_codes", %{password: "password"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
@@ -1690,24 +1690,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         get(
           conn,
-          Routes.auth_path(conn, :verify_2fa_form, return_to: Routes.settings_path(conn, :index))
+          ~p|/2fa/verify?#{[return_to: ~p"/settings"]}|
         )
 
       assert html = html_response(conn, 200)
 
-      assert text_of_attr(html, "form", "action") ==
-               Routes.auth_path(conn, :verify_2fa, return_to: Routes.settings_path(conn, :index))
+      assert text_of_attr(html, "form", "action") == ~p|/2fa/verify?#{[return_to: ~p"/settings"]}|
 
       assert element_exists?(html, "input[name=code]")
 
       assert element_exists?(html, "input[name=remember_2fa]")
 
       assert text_of_attr(html, "input[name=return_to]", "value") ==
-               Routes.settings_path(conn, :index)
+               ~p"/settings"
 
       assert element_exists?(
                html,
-               "a[href='#{Routes.auth_path(conn, :verify_2fa_recovery_code_form)}']"
+               "a[href='#{~p"/2fa/use_recovery_code"}']"
              )
     end
 
@@ -1718,9 +1717,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+      conn = get(conn, ~p"/2fa/verify")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
@@ -1734,9 +1733,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       {:ok, _} = Auth.TOTP.disable(user, "password")
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+      conn = get(conn, ~p"/2fa/verify")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
   end
 
@@ -1752,9 +1751,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+      conn = post(conn, ~p"/2fa/verify", %{code: code})
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -1776,7 +1775,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       code = NimbleTOTP.verification_code(user.totp_secret)
 
       conn =
-        post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, return_to: "/dummy.site"})
+        post(conn, ~p"/2fa/verify", %{code: code, return_to: "/dummy.site"})
 
       assert redirected_to(conn, 302) == "/dummy.site"
     end
@@ -1792,9 +1791,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, remember_2fa: "true"})
+      conn = post(conn, ~p"/2fa/verify", %{code: code, remember_2fa: "true"})
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -1818,9 +1817,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, remember_2fa: "true"})
+      conn = post(conn, ~p"/2fa/verify", %{code: code, remember_2fa: "true"})
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -1845,9 +1844,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+      conn = post(conn, ~p"/2fa/verify", %{code: code})
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
@@ -1866,7 +1865,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = login_with_cookie(conn, user.email, "password")
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+      conn = post(conn, ~p"/2fa/verify", %{code: "invalid"})
 
       assert html_response(conn, 200) =~ "The provided code is invalid"
     end
@@ -1880,9 +1879,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa, %{code: code}))
+      conn = post(conn, ~p"/2fa/verify?#{[%{code: code}]}")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "passes through when 2FA is disabled", %{conn: conn} do
@@ -1898,9 +1897,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       {:ok, _} = Auth.TOTP.disable(user, "password")
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+      conn = post(conn, ~p"/2fa/verify", %{code: code})
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -1924,10 +1923,10 @@ defmodule PlausibleWeb.AuthControllerTest do
         eventually(
           fn ->
             Enum.each(1..5, fn _ ->
-              post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+              post(conn, ~p"/2fa/verify", %{code: "invalid"})
             end)
 
-            conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+            conn = post(conn, ~p"/2fa/verify", %{code: "invalid"})
 
             {conn.status == 429, conn}
           end,
@@ -1951,16 +1950,16 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = login_with_cookie(conn, user.email, "password")
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+      conn = get(conn, ~p"/2fa/use_recovery_code")
 
       assert html = html_response(conn, 200)
 
       assert text_of_attr(html, "form", "action") ==
-               Routes.auth_path(conn, :verify_2fa_recovery_code)
+               ~p"/2fa/use_recovery_code"
 
       assert element_exists?(html, "input[name=recovery_code]")
 
-      assert element_exists?(html, "a[href='#{Routes.auth_path(conn, :verify_2fa_form)}']")
+      assert element_exists?(html, "a[href='#{~p"/2fa/verify"}']")
     end
 
     test "redirects to login when cookie not found", %{conn: conn} do
@@ -1970,9 +1969,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+      conn = get(conn, ~p"/2fa/use_recovery_code")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
@@ -1986,9 +1985,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       {:ok, _} = Auth.TOTP.disable(user, "password")
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+      conn = get(conn, ~p"/2fa/use_recovery_code")
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
   end
 
@@ -2003,11 +2002,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = login_with_cookie(conn, user.email, "password")
 
       conn =
-        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+        post(conn, ~p"/2fa/use_recovery_code", %{
           recovery_code: recovery_code
         })
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -2025,7 +2024,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = login_with_cookie(conn, user.email, "password")
 
       conn =
-        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+        post(conn, ~p"/2fa/use_recovery_code", %{recovery_code: "invalid"})
 
       assert html_response(conn, 200) =~ "The provided recovery code is invalid"
     end
@@ -2040,10 +2039,10 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(
           conn,
-          Routes.auth_path(conn, :verify_2fa_recovery_code, %{recovery_code: recovery_code})
+          ~p"/2fa/use_recovery_code?#{[%{recovery_code: recovery_code}]}"
         )
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert redirected_to(conn, 302) == ~p"/login"
     end
 
     test "passes through when 2FA is disabled", %{conn: conn} do
@@ -2058,11 +2057,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, _} = Auth.TOTP.disable(user, "password")
 
       conn =
-        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+        post(conn, ~p"/2fa/use_recovery_code", %{
           recovery_code: recovery_code
         })
 
-      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      assert redirected_to(conn, 302) == ~p"/sites"
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn)["user_token"] == token
@@ -2086,13 +2085,13 @@ defmodule PlausibleWeb.AuthControllerTest do
         eventually(
           fn ->
             Enum.each(1..5, fn _ ->
-              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+              post(conn, ~p"/2fa/use_recovery_code", %{
                 recovery_code: "invalid"
               })
             end)
 
             conn =
-              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+              post(conn, ~p"/2fa/use_recovery_code", %{
                 recovery_code: "invalid"
               })
 
@@ -2110,7 +2109,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   defp login_with_cookie(conn, email, password) do
     conn
-    |> post(Routes.auth_path(conn, :login), %{
+    |> post(~p"/login", %{
       email: email,
       password: password
     })

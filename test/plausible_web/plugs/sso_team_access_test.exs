@@ -109,7 +109,7 @@ defmodule Plausible.Plugs.SSOTeamAccessTest do
           |> SSOTeamAccess.call([])
 
         assert conn.halted
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :provision_notice)
+        assert redirected_to(conn, 302) == ~p"/sso/notice"
       end
 
       test "redirects to issue notice for SSO team with force SSO and user in invalid state", %{
@@ -136,7 +136,7 @@ defmodule Plausible.Plugs.SSOTeamAccessTest do
         assert conn.halted
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships")
+                 ~p|/sso/issue?#{[issue: "multiple_memberships"]}|
       end
     end
   end

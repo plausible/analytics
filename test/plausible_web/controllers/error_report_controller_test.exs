@@ -29,7 +29,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
     for error <- ["500", "502", "503", "504"] do
       test "renders the form when sentry metadata present: #{error}", %{user: user} do
         Sentry.put_last_event_id_and_source("some-event-id", :plug)
-        action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+        action_path = ~p"/error_report"
 
         assert html =
                  render_to_string(ErrorView, unquote(error) <> ".html", %{
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
     end
 
     test "submitting the feedback form for authenticated user", %{conn: conn, user: user} do
-      action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+      action_path = ~p"/error_report"
 
       conn =
         post(conn, action_path, %{
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
     end
 
     test "short feedback is not sent", %{conn: conn} do
-      action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+      action_path = ~p"/error_report"
 
       conn =
         post(conn, action_path, %{
@@ -87,7 +87,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
     end
 
     test "submitting no feedback for authenticated user", %{conn: conn} do
-      action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+      action_path = ~p"/error_report"
 
       conn =
         post(conn, action_path, %{
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
 
   describe "Not logged in" do
     test "submitting the feedback form for unauthenticated user", %{conn: conn} do
-      action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+      action_path = ~p"/error_report"
 
       conn =
         post(conn, action_path, %{
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
         assert text =~ "There has been a server error"
         assert text =~ "But don't worry, we're on it!"
 
-        action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+        action_path = ~p"/error_report"
         refute form_exists?(html, action_path)
       end
     end

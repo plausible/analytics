@@ -79,7 +79,7 @@ defmodule PlausibleWeb.StatsController do
 
     cond do
       consolidated_view? and not consolidated_view_available? and site_role != :super_admin ->
-        redirect(conn, to: Routes.site_path(conn, :index))
+        redirect(conn, to: ~p"/sites")
 
       not can_see_stats? ->
         site = Plausible.Repo.preload(site, :owners)
@@ -194,7 +194,7 @@ defmodule PlausibleWeb.StatsController do
 
     if shared_link do
       new_link_format =
-        Routes.stats_path(conn, :shared_link, shared_link.site.domain, [], auth: slug)
+        ~p"/share/#{shared_link.site.domain}/*path?#{[auth: slug]}"
 
       redirect(conn, to: new_link_format)
     else

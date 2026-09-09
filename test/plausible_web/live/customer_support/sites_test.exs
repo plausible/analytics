@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Phoenix.LiveViewTest
 
     defp open_site(id, opts \\ []) do
-      Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id, opts)
+      ~p"/cs/sites/site/#{id}"
     end
 
     describe "overview" do
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href="#{Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)}"]|
+                 ~s|a[href="#{~p"/#{site.domain}"}"]|
                )
       end
 
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
         |> element(~s|button[phx-click="delete-site"]|)
         |> render_click()
 
-        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, ~p"/cs")
 
         refute Plausible.Sites.get_by_domain(site.domain)
       end

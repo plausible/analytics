@@ -25,7 +25,7 @@ defmodule PlausibleWeb.SettingsController do
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
 
   def index(conn, _params) do
-    redirect(conn, to: Routes.settings_path(conn, :preferences))
+    redirect(conn, to: ~p"/settings/preferences")
   end
 
   def team_general(conn, _params) do
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Team name changed")
-        |> redirect(to: Routes.settings_path(conn, :team_general) <> "#update-name")
+        |> redirect(to: ~p"/settings/team/general" <> "#update-name")
 
       {:error, changeset} ->
         render_team_general(conn, team_name_changeset: changeset)
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.SettingsController do
       )
     else
       conn
-      |> redirect(to: Routes.site_path(conn, :index))
+      |> redirect(to: ~p"/sites")
     end
   end
 
@@ -75,12 +75,12 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "2FA is now required for all team members.")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, _} ->
         conn
         |> put_flash(:error, "Failed to enforce 2FA for all team members.")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
     end
   end
 
@@ -92,17 +92,17 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "2FA is no longer enforced for team members.")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided.")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, _} ->
         conn
         |> put_flash(:error, "Failed to disable enforcing 2FA for all team members.")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
     end
   end
 
@@ -111,15 +111,15 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "You have left \"#{Teams.name(conn.assigns.current_team)}\"")
-        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+        |> redirect(to: ~p|/sites?#{[__team: "none"]}|)
 
       {:error, :only_one_owner} ->
         conn
         |> put_flash(:error, "You can't leave as you are the only Owner on the team")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, :membership_not_found} ->
-        redirect(conn, to: Routes.site_path(conn, :index, __team: "none"))
+        redirect(conn, to: ~p|/sites?#{[__team: "none"]}|)
     end
   end
 
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def redirect_invoices(conn, _params) do
-    redirect(conn, to: Routes.settings_path(conn, :subscription))
+    redirect(conn, to: ~p"/settings/billing/subscription")
   end
 
   def api_keys(conn, _params) do
@@ -173,12 +173,12 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
-        |> redirect(to: Routes.settings_path(conn, :api_keys) <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
 
       {:error, :upgrade_required} ->
         conn
         |> put_flash(:error, "Your current subscription plan does not include Sites API access")
-        |> redirect(to: Routes.settings_path(conn, :new_api_key))
+        |> redirect(to: ~p"/settings/api-keys/new")
 
       {:error, changeset} ->
         render(conn, "new_api_key.html",
@@ -193,12 +193,12 @@ defmodule PlausibleWeb.SettingsController do
       :ok ->
         conn
         |> put_flash(:success, "API key revoked successfully")
-        |> redirect(to: Routes.settings_path(conn, :api_keys) <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
 
       {:error, :not_found} ->
         conn
         |> put_flash(:error, "Could not find API Key to delete")
-        |> redirect(to: Routes.settings_path(conn, :api_keys) <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
     end
   end
 
@@ -228,7 +228,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, :deleted} ->
         conn
         |> put_flash(:success, ~s|Team "#{Plausible.Teams.name(team)}" deleted|)
-        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+        |> redirect(to: ~p|/sites?#{[__team: "none"]}|)
 
       {:error, :active_subscription} ->
         conn
@@ -236,7 +236,7 @@ defmodule PlausibleWeb.SettingsController do
           :error,
           "Team has an active subscription. You must cancel it first."
         )
-        |> redirect(to: Routes.settings_path(conn, :team_danger_zone))
+        |> redirect(to: ~p"/settings/team/delete")
     end
   end
 
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Name changed")
-        |> redirect(to: Routes.settings_path(conn, :preferences) <> "#update-name")
+        |> redirect(to: ~p"/settings/preferences" <> "#update-name")
 
       {:error, changeset} ->
         render_preferences(conn, name_changeset: changeset)
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Theme changed")
-        |> redirect(to: Routes.settings_path(conn, :preferences) <> "#update-theme")
+        |> redirect(to: ~p"/settings/preferences" <> "#update-theme")
 
       {:error, changeset} ->
         render_preferences(conn, theme_changeset: changeset)
@@ -296,7 +296,7 @@ defmodule PlausibleWeb.SettingsController do
         handle_email_updated(conn)
       else
         Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+        redirect(conn, to: ~p"/activate")
       end
     else
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -320,7 +320,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, user} ->
         conn
         |> put_flash(:success, "Email changed back to #{user.email}")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-email")
+        |> redirect(to: ~p"/settings/security" <> "#update-email")
 
       {:error, _} ->
         conn
@@ -328,7 +328,7 @@ defmodule PlausibleWeb.SettingsController do
           :error,
           "Could not cancel email update because previous email has already been taken"
         )
-        |> redirect(to: Routes.auth_path(conn, :activate_form))
+        |> redirect(to: ~p"/activate")
     end
   end
 
@@ -342,7 +342,7 @@ defmodule PlausibleWeb.SettingsController do
 
       conn
       |> put_flash(:success, "Your password is now changed")
-      |> redirect(to: Routes.settings_path(conn, :security) <> "#update-password")
+      |> redirect(to: ~p"/settings/security" <> "#update-password")
     else
       {:error, %Ecto.Changeset{} = changeset} ->
         render_security(conn, password_changeset: changeset)
@@ -391,7 +391,7 @@ defmodule PlausibleWeb.SettingsController do
 
     conn
     |> put_flash(:success, "Session logged out successfully")
-    |> redirect(to: Routes.settings_path(conn, :security) <> "#user-sessions")
+    |> redirect(to: ~p"/settings/security" <> "#user-sessions")
   end
 
   defp do_update_password(user, params) do
@@ -429,6 +429,6 @@ defmodule PlausibleWeb.SettingsController do
   defp handle_email_updated(conn) do
     conn
     |> put_flash(:success, "Email updated")
-    |> redirect(to: Routes.settings_path(conn, :security) <> "#update-email")
+    |> redirect(to: ~p"/settings/security" <> "#update-email")
   end
 end

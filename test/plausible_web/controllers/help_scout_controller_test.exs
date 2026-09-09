@@ -50,7 +50,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         assert [] = Plug.Conn.get_resp_header(conn, "content-security-policy")
 
         html = html_response(conn, 200)
-        assert html =~ Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
+        assert html =~ ~p"/cs/users/user/#{user.id}"
         assert text_of_attr("input[name=token]", "value") != ""
       end
 
@@ -133,7 +133,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
           )
 
         assert html = html_response(conn, 200)
-        assert html =~ Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
+        assert html =~ ~p"/cs/users/user/#{user.id}"
         assert html =~ "Some note<br>\nwith new line"
       end
 
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
           )
 
         assert html = html_response(conn, 200)
-        assert html =~ Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, user.id)
+        assert html =~ ~p"/cs/users/user/#{user.id}"
         assert html =~ "Some user notes"
         assert html =~ "My personal sites"
         assert html =~ "HS Integration Test Team"

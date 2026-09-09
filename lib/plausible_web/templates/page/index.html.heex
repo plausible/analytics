@@ -16,12 +16,12 @@
   <:footer>
     <.focus_list>
       <:item>
-        <.styled_link href={Routes.auth_path(@conn, :login)}>
+        <.styled_link href={~p"/login"}>
           Login
         </.styled_link>
       </:item>
       <:item :if={Plausible.Auth.check_registration_enabled() == :ok}>
-        <.styled_link href={Routes.auth_path(@conn, :register_form)}>
+        <.styled_link href={~p"/register"}>
           Register
         </.styled_link>
       </:item>

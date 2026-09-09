@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Components.Billing do
   defp dashboard_url(nil, _date_range), do: nil
 
   defp dashboard_url(domain, date_range) do
-    base = Routes.stats_path(PlausibleWeb.Endpoint, :stats, domain, [])
+    base = ~p"/#{domain}"
 
     base <>
       "?period=custom&from=#{Date.to_iso8601(date_range.first)}&to=#{Date.to_iso8601(date_range.last)}"
@@ -350,7 +350,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   if Mix.env() == :dev do
     def start_paddle_checkout_expr(paddle_product_id, _team, _user) do
-      "window.location = '#{Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create_form, paddle_product_id)}'"
+      "window.location = '#{~p"/dev/billing/create-subscription-form/#{paddle_product_id}"}'"
     end
 
     def paddle_script(assigns), do: ~H""
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Components.Billing do
           email: user.email,
           disableLogout: true,
           passthrough: passthrough,
-          success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+          success: ~p"/billing/upgrade-success",
           theme: "none"
         })
 
@@ -441,7 +441,7 @@ defmodule PlausibleWeb.Components.Billing do
         ~H"""
         <.styled_link
           class={"inline-block font-medium " <> @link_class}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          href={~p"/billing/choose-plan"}
         >
           upgrade your subscription.
         </.styled_link>
