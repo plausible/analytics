@@ -39,7 +39,7 @@ defmodule Plausible.PendingStatsDeletionsTest do
     end
   end
 
-  describe "list/1" do
+  describe "list/0" do
     test "returns an empty list when there are no pending stats deletions" do
       assert PendingStatsDeletions.list() == []
     end
@@ -52,21 +52,24 @@ defmodule Plausible.PendingStatsDeletionsTest do
       assert PendingStatsDeletions.list() == [1, 2]
     end
 
-    test "only considers records with the given reason" do
+    test "returns site_ids regardless of reason" do
       insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
+      insert(:pending_stats_deletion, site_id: 2, reason: :expired_trial)
+      insert(:pending_stats_deletion, site_id: 3, reason: :churned_subscription)
 
-      assert PendingStatsDeletions.list(:user_request) == [1]
+      assert PendingStatsDeletions.list() == [1, 2, 3]
     end
   end
 
-  describe "clear/2" do
-    test "removes records for the given site_ids and reason" do
+  describe "clear/1" do
+    test "removes records for the given site_ids, regardless of reason" do
       insert(:pending_stats_deletion, site_id: 1, reason: :user_request)
-      insert(:pending_stats_deletion, site_id: 2, reason: :user_request)
+      insert(:pending_stats_deletion, site_id: 2, reason: :expired_trial)
+      insert(:pending_stats_deletion, site_id: 3, reason: :churned_subscription)
 
-      assert {1, nil} = PendingStatsDeletions.clear([1])
+      assert {2, nil} = PendingStatsDeletions.clear([1, 2])
 
-      assert PendingStatsDeletions.list() == [2]
+      assert PendingStatsDeletions.list() == [3]
     end
 
     test "removes all matching records regardless of how many accumulated for a site" do

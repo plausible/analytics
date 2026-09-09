@@ -60,6 +60,30 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   end
 
   @tag :slow
+  test "deletes data for sites pending deletion for a reason other than :user_request" do
+    expired_trial_site = new_site()
+    churned_subscription_site = new_site()
+
+    populate_stats(expired_trial_site, [build(:pageview)])
+    populate_stats(churned_subscription_site, [build(:pageview)])
+
+    assert {:ok, _} = Plausible.Site.Removal.run(expired_trial_site, reason: :expired_trial)
+
+    assert {:ok, _} =
+             Plausible.Site.Removal.run(churned_subscription_site,
+               reason: :churned_subscription
+             )
+
+    ClickhouseCleanSites.perform(nil)
+
+    assert_count(expired_trial_site, "events_v2", 0)
+    assert_count(churned_subscription_site, "events_v2", 0)
+
+    refute Repo.get_by(PendingStatsDeletion, site_id: expired_trial_site.id)
+    refute Repo.get_by(PendingStatsDeletion, site_id: churned_subscription_site.id)
+  end
+
+  @tag :slow
   test "deletes data spanning multiple monthly partitions" do
     deleted_site = new_site()
 
