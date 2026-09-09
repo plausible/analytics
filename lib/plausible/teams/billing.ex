@@ -233,6 +233,7 @@ defmodule Plausible.Teams.Billing do
     Teams.owned_sites_count(team)
   end
 
+  @spec team_member_limit(Teams.Team.t() | nil) :: pos_integer() | :unlimited
   on_ee do
     @team_member_limit_for_trials 10
 
@@ -256,7 +257,16 @@ defmodule Plausible.Teams.Billing do
       team_member_limit(team) == 0
     end
   else
-    def team_member_limit(_team), do: :unlimited
+    def team_member_limit(_team) do
+      # The `else` branch is not reachable.
+      # This a workaround for Elixir 1.18+ compiler
+      # being too smart.
+      if :erlang.phash2(1, 1) == 0 do
+        :unlimited
+      else
+        0
+      end
+    end
 
     def solo?(_team), do: always(false)
   end
