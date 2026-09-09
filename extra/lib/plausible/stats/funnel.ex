@@ -32,20 +32,27 @@ defmodule Plausible.Stats.Funnel do
   def funnel(site, query, %Funnel{} = funnel) do
     revenue_steps = revenue_steps(site, funnel)
 
-    comparison =
+    comparison_funnel =
       if query.comparison_utc_time_range do
-        query
-        |> Comparisons.get_comparison_query()
+        comparison_query = Comparisons.get_comparison_query(query)
+
+        comparison_query
         |> compute(funnel, revenue_steps)
+        |> recompute_first_and_last(comparison_query, funnel, revenue_steps)
       end
 
+    final_funnel =
+      query
+      |> compute(funnel, revenue_steps)
+      |> recompute_first_and_last(query, funnel, revenue_steps)
+
     {:ok,
-     query
-     |> compute(funnel, revenue_steps)
+     final_funnel
      |> Map.merge(%{
        name: funnel.name,
        strict_order: funnel.strict_order,
-       comparison: comparison,
+       first_and_last: funnel.first_and_last,
+       comparison: comparison_funnel,
        date_range: tz_date_range(query.utc_time_range, query.timezone),
        comparison_date_range:
          if(query.comparison_utc_time_range,
@@ -60,6 +67,37 @@ defmodule Plausible.Stats.Funnel do
     else
       []
     end
+  end
+
+  defp recompute_first_and_last(final_funnel, _query, %{first_and_last: false}, _revenue_steps),
+    do: final_funnel
+
+  defp recompute_first_and_last(final_funnel, query, funnel, revenue_steps) do
+    if length(funnel.steps) > 2 do
+      short_funnel = convert_to_first_and_last(funnel)
+
+      [_, last_step] =
+        query
+        |> compute(short_funnel, revenue_steps)
+        |> Map.fetch!(:steps)
+
+      steps = List.replace_at(final_funnel.steps, -1, last_step)
+
+      %{final_funnel | steps: steps}
+    else
+      final_funnel
+    end
+  end
+
+  defp convert_to_first_and_last(funnel) do
+    last_step = List.last(funnel.steps)
+
+    steps =
+      [List.first(funnel.steps), last_step]
+      |> Enum.with_index(1)
+      |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
+
+    %{funnel | strict_order: false, steps: steps}
   end
 
   defp compute(query, funnel, revenue_steps) do
