@@ -742,7 +742,7 @@ defmodule PlausibleWeb.Router do
       put "/:domain/settings", SiteController, :update_settings
 
       get "/:domain", StatsController, :stats
-      get "/:domain/*path", StatsController, :stats
+      get "/:domain/*path", StatsController, :stats, warn_on_verify: true
     end
   end
 end
