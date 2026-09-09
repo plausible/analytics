@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.6] - 2026-08-10
+
 - Fix issue with package resolution by adding "exports" field
 - Fix issue with accessing location object when not needed
 
