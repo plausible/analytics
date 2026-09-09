@@ -6,18 +6,18 @@ $config = [
     ],
     'example-userpass' => [
         'exampleauth:UserPass',
-        'user@plausible.test:plausible' => [
-            'email' => 'user@plausible.test',
+        'user@example.com:plausible' => [
+            'email' => 'user@example.com',
             'first_name' => 'Jane',
             'last_name' => 'Smith'
         ],
-        'user1@plausible.test:plausible' => [
-            'email' => 'user1@plausible.test',
+        'user1@example.com:plausible' => [
+            'email' => 'user1@example.com',
             'first_name' => 'Lenny',
             'last_name' => 'Carr'
         ],
-        'user2@plausible.test:plausible' => [
-            'email' => 'user2@plausible.test',
+        'user2@example.com:plausible' => [
+            'email' => 'user2@example.com',
             'first_name' => 'Jane',
             'last_name' => 'Doorwell'
         ],
