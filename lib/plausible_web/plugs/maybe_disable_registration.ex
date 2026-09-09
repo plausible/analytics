@@ -3,10 +3,10 @@ defmodule PlausibleWeb.Plugs.MaybeDisableRegistration do
   Plug toggling registration according to selfhosted state.
   """
 
+  use PlausibleWeb.VerifiedRoutes
+
   import Phoenix.Controller
   import Plug.Conn
-
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def init(opts) do
     opts
@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Plugs.MaybeDisableRegistration do
       {:error, _, message} ->
         conn
         |> put_flash(:error, message)
-        |> redirect(to: Routes.auth_path(conn, :login_form))
+        |> redirect(to: ~p"/login")
         |> halt()
     end
   end

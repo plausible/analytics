@@ -14,7 +14,7 @@
     <% else %>
       <.button_link
         data-confirm="Deleting the team will also delete all the associated sites and data. This action cannot be reversed. Are you sure?"
-        href={Routes.settings_path(@conn, :delete_team)}
+        href={~p"/settings/team/delete"}
         method="delete"
         theme="danger"
         mt?={false}

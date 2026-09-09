@@ -2,7 +2,7 @@
   <:title>Create new API key</:title>
 
   <div x-data="{ submitDisabled: false }">
-    <.form :let={f} for={@changeset} action={Routes.settings_path(@conn, :api_keys)}>
+    <.form :let={f} for={@changeset} action={~p"/settings/api-keys"}>
       <.input type="text" field={f[:name]} label="Name" placeholder="Development" />
 
       <input :if={ce?()} type="hidden" name={f[:type].name} value={f[:type].value} />

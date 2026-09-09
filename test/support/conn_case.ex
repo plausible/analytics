@@ -21,6 +21,8 @@ defmodule PlausibleWeb.ConnCase do
       use Plausible
       use Plausible.Teams.Test
 
+      use PlausibleWeb.VerifiedRoutes
+
       import Plausible.Test.Support.HTML
       import Plug.Conn
       import Phoenix.ConnTest

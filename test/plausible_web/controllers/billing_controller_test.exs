@@ -14,8 +14,8 @@ defmodule PlausibleWeb.BillingControllerTest do
          %{conn: conn, user: user} do
       subscribe_to_enterprise_plan(user, paddle_plan_id: "123")
 
-      conn = get(conn, Routes.billing_path(conn, :choose_plan))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+      conn = get(conn, ~p"/billing/choose-plan")
+      assert redirected_to(conn) == ~p"/billing/upgrade-to-enterprise-plan"
     end
   end
 
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.BillingControllerTest do
         add_guest(site, role: :viewer)
       end
 
-      conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+      conn = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Unable to subscribe to this plan because the following limits are exceeded: team member limit"
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       for _ <- 1..11, do: new_site(owner: user)
 
-      conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+      conn = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -5))
       generate_usage_for(site, 11_000, NaiveDateTime.shift(now, day: -35))
 
-      conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+      conn1 = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       |> Ecto.Changeset.change(allow_next_upgrade_override: true)
       |> Plausible.Repo.update!()
 
-      conn2 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+      conn2 = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
 
       subscription = Plausible.Repo.reload!(subscription)
 
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       subscribe_to_plan(user, "321321")
       team = team_of(user)
 
-      post(conn, Routes.billing_path(conn, :change_plan, "123123"))
+      post(conn, ~p"/billing/change-plan/#{"123123"}")
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       assert subscription.paddle_plan_id == "123123"
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :create_team, :log_in]
 
     test "shows success page after user subscribes", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :upgrade_success))
+      conn = get(conn, ~p"/billing/upgrade-success")
 
       assert html_response(conn, 200) =~ "Your account is being upgraded"
     end
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "displays basic page content", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ "Upgrade to Enterprise"
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "displays info about the enterprise plan to upgrade to", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
@@ -155,7 +155,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert %{
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.BillingControllerTest do
                "email" => user.email,
                "passthrough" => "ee:#{ee?()};user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
-               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "success" => ~p"/billing/upgrade-success",
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, "#paddle-button"))
     end
@@ -175,7 +175,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "displays basic page content", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ "Change subscription plan"
@@ -190,7 +190,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "displays info about the enterprise plan to upgrade to", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "preview changes links to :change_plan_preview action", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       preview_changes_link = find(doc, "#preview-changes")
@@ -226,7 +226,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       html_response =
         conn
-        |> get(Routes.billing_path(conn, :change_plan_preview, @v4_business_plan))
+        |> get(~p"/billing/change-plan/preview/#{@v4_business_plan}")
         |> html_response(200)
 
       assert html_response =~
@@ -240,12 +240,12 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "flashes error and redirects to choose-plan page", %{conn: conn, user: user} do
       # choose-plan enforces at least 1 site, which implies team created, before allowing the user to upgrade
       new_site(owner: user)
-      conn = get(conn, Routes.billing_path(conn, :change_plan_preview, @v4_business_plan))
+      conn = get(conn, ~p"/billing/change-plan/preview/#{@v4_business_plan}")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
 
-      assert redirected_to(conn) == Routes.billing_path(conn, :choose_plan)
+      assert redirected_to(conn) == ~p"/billing/choose-plan"
     end
   end
 
@@ -259,7 +259,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "renders contact note", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ "Looking to adjust your plan?"
@@ -275,14 +275,14 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "redirects to /settings when past_due", %{conn: conn} = context do
       subscribe_enterprise(context, status: Subscription.Status.past_due())
-      conn = get(conn, Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-      assert redirected_to(conn) == Routes.settings_path(conn, :subscription)
+      conn = get(conn, ~p"/billing/upgrade-to-enterprise-plan")
+      assert redirected_to(conn) == ~p"/settings/billing/subscription"
     end
 
     test "redirects to /settings when paused", %{conn: conn} = context do
       subscribe_enterprise(context, status: Subscription.Status.paused())
-      conn = get(conn, Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-      assert redirected_to(conn) == Routes.settings_path(conn, :subscription)
+      conn = get(conn, ~p"/billing/upgrade-to-enterprise-plan")
+      assert redirected_to(conn) == ~p"/settings/billing/subscription"
     end
   end
 
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "displays the same content as for a user without a subscription", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ "Upgrade to Enterprise"
@@ -316,7 +316,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "still allows to subscribe back to the same plan", %{conn: conn} do
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
@@ -332,7 +332,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       doc =
         conn
-        |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
         |> html_response(200)
 
       assert %{
@@ -340,7 +340,7 @@ defmodule PlausibleWeb.BillingControllerTest do
                "email" => user.email,
                "passthrough" => "ee:#{ee?()};user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
-               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "success" => ~p"/billing/upgrade-success",
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, "#paddle-button"))
     end

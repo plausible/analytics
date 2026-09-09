@@ -38,11 +38,11 @@ defmodule PlausibleWeb.InvitationController do
         if site do
           conn
           |> put_flash(:success, "You now have access to #{site.domain}")
-          |> redirect(to: Routes.stats_path(conn, :stats, site.domain, []))
+          |> redirect(to: ~p"/#{site.domain}")
         else
           conn
           |> put_flash(:success, "You now have access to \"#{team.name}\" team")
-          |> redirect(to: Routes.site_path(conn, :index, __team: team.identifier))
+          |> redirect(to: ~p"/sites?#{[__team: team.identifier]}")
         end
 
       {:error, :invitation_not_found} ->
@@ -108,12 +108,12 @@ defmodule PlausibleWeb.InvitationController do
 
         conn
         |> put_flash(:success, "You have removed the invitation for #{email}")
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: ~p"/#{site.domain}/settings/people")
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(to: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
+        |> redirect(to: ~p"/#{conn.assigns.site.domain}/settings/people")
     end
   end
 
@@ -124,17 +124,17 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, invitation} ->
         conn
         |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
 
       {:error, :permission_denied} ->
         conn
         |> put_flash(:error, "You are not allowed to remove invitations")
-        |> redirect(to: Routes.settings_path(conn, :team_general))
+        |> redirect(to: ~p"/settings/team/general")
     end
   end
 end

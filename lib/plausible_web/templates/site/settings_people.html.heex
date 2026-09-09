@@ -18,7 +18,7 @@
     <.filter_bar :if={@site_role in [:owner, :admin]} filtering_enabled?={false}>
       <.button_link
         mt?={false}
-        href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
+        href={~p"/sites/#{@site.domain}/memberships/invite"}
       >
         Invite new guest
       </.button_link>

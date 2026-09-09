@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   import Phoenix.LiveViewTest
 
-  def team_general_path(), do: Routes.settings_path(PlausibleWeb.Endpoint, :team_general)
+  def team_general_path(), do: ~p"/settings/team/general"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "/settings/team/general" do
