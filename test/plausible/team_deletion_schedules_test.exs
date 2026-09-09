@@ -243,6 +243,35 @@ defmodule Plausible.TeamDeletionSchedulesTest do
       end
     end
 
+    describe "sync_eligible/2 - chunked inserts" do
+      test "inserts all candidates across multiple chunks" do
+        teams =
+          for _ <- 1..5 do
+            team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+            new_site(team: team)
+            team
+          end
+
+        assert TeamDeletionSchedules.sync_eligible(@today, 2) == 5
+
+        assert Repo.aggregate(TeamDeletionSchedule, :count) == 5
+
+        for team <- teams do
+          assert Repo.get_by!(TeamDeletionSchedule, team_id: team.id)
+        end
+      end
+
+      test "remains idempotent when chunked" do
+        team = insert(:team, trial_expiry_date: Date.shift(@today, day: -1))
+        new_site(team: team)
+
+        assert TeamDeletionSchedules.sync_eligible(@today, 2) == 1
+        assert TeamDeletionSchedules.sync_eligible(@today, 2) == 0
+
+        assert Repo.aggregate(TeamDeletionSchedule, :count) == 1
+      end
+    end
+
     describe "cancel_for_team/1" do
       test "cancels an active schedule when the team has an active subscription" do
         team = insert(:team)
