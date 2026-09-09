@@ -23,6 +23,7 @@ type FunnelPeriod = {
 export type FunnelResponse = FunnelPeriod & {
   name: string
   strict_order: boolean
+  first_and_last: boolean
   comparison?: FunnelPeriod | null
   date_range?: [string, string]
   comparison_date_range?: [string, string] | null
