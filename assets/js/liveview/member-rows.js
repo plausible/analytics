@@ -36,9 +36,11 @@ export default {
     // Native <details> only closes on a second click on <summary> - close it
     // on an outside click too, like any other dropdown.
     this.handleOutsideClick = (e) => {
-      this.list.querySelectorAll('[data-role-picker][open]').forEach((details) => {
-        if (!details.contains(e.target)) this.closeRolePicker(details)
-      })
+      this.list
+        .querySelectorAll('[data-role-picker][open]')
+        .forEach((details) => {
+          if (!details.contains(e.target)) this.closeRolePicker(details)
+        })
     }
     document.addEventListener('click', this.handleOutsideClick)
 
@@ -150,7 +152,9 @@ export default {
   },
 
   setRovingIndex(items, index) {
-    items.forEach((item, i) => item.setAttribute('tabindex', i === index ? '0' : '-1'))
+    items.forEach((item, i) =>
+      item.setAttribute('tabindex', i === index ? '0' : '-1')
+    )
   },
 
   closeRolePicker(details) {
