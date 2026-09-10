@@ -438,6 +438,27 @@ function FunnelHeader({
               |
             </span>
 
+            <div className="flex items-center gap-1">
+              {funnel.first_and_last ? 'Open' : 'Closed'}
+              <Tooltip
+                className="flex"
+                containerRef={{ current: document.body }}
+                info={
+                  <span>
+                    {funnel.first_and_last
+                      ? 'Only the first and last steps are mandatory.'
+                      : 'All the steps are mandatory.'}
+                  </span>
+                }
+              >
+                <InformationCircleIcon className="size-3.5" />
+              </Tooltip>
+            </div>
+
+            <span className="text-gray-300 dark:text-gray-600 select-none">
+              |
+            </span>
+
             <ConversionRateSummary
               current={lastStep.conversionRate}
               previous={lastStep.comparison?.conversionRate ?? null}
