@@ -138,6 +138,6 @@ To stay up to date with all the latest news and product updates, make sure to fo
 
 Plausible CE is open source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
 
-To avoid issues with AGPL virality, we've released the JavaScript tracker which gets included on your website under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md).
+To avoid issues with AGPL virality, we've released the JavaScript tracker which gets included on your website under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/npm_package/LICENSE.md).
 
 Copyright (c) 2018-present Plausible Insights OÜ. Plausible Analytics name and logo are trademarks of Plausible Insights OÜ. Please see our [trademark guidelines](https://plausible.io/trademark) for info on acceptable usage.
