@@ -19,6 +19,18 @@ defmodule Plausible.Funnel do
 
   alias Plausible.Funnel.Step
 
+  @funnel_types [:sequential, :flexible, :strict]
+
+  @default_funnel_type :sequential
+
+  @type funnel_type() :: unquote(Enum.reduce(@funnel_types, &{:|, [], [&1, &2]}))
+
+  @spec funnel_types() :: [funnel_type()]
+  def funnel_types(), do: @funnel_types
+
+  @spec default_funnel_type() :: funnel_type()
+  def default_funnel_type(), do: @default_funnel_type
+
   defmacro min_steps() do
     quote do
       unquote(@min_steps)
@@ -44,6 +56,11 @@ defmodule Plausible.Funnel do
     field :strict_order, :boolean, default: false
     field :first_and_last, :boolean, default: false
     belongs_to :site, Plausible.Site
+
+    field :funnel_type, Ecto.Enum,
+      virtual: true,
+      default: @default_funnel_type,
+      values: @funnel_types
 
     has_many :steps, Step,
       preload_order: [
