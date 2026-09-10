@@ -6,8 +6,7 @@ defmodule Plausible.OpenTelemetry do
   @doc """
   Current trace ID as a 32-character lowercase hex string, or nil outside a span.
 
-  Reads the SDK's precomputed fixed-width field. `Integer.to_string(id, 16)`
-  drops leading zero nibbles, yielding a short ID for 1 in 16 traces.
+  Reads the SDK's precomputed fixed-width field.
   """
   def current_trace_id do
     case Tracer.current_span_ctx() do
