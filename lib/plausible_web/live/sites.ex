@@ -115,8 +115,8 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
-        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
+      <div class="group py-4 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl min-w-0 truncate">
           {Teams.name(@current_team)}
         </h2>
         <.unstyled_link
@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
 
-      <div class="flex flex-col gap-y-4 my-4">
+      <div class="flex flex-col gap-y-4 has-[*]:my-4">
         <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
         <PlausibleWeb.Team.Notice.site_ownership_invitations
           site_ownership_invitations={@site_ownership_invitations}
@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Live.Sites do
       </div>
 
       <div :if={@has_sites?}>
-        <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
               not @searching? and
@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card-cta"
-      class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
+      class="relative col-span-1 flex flex-col justify-between bg-white p-5 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
     >
       <div class="flex flex-col">
         <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -438,7 +438,7 @@ defmodule PlausibleWeb.Live.Sites do
     >
       <.unstyled_link
         href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @consolidated_view.domain, [])}
-        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
+        class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
@@ -573,7 +573,7 @@ defmodule PlausibleWeb.Live.Sites do
         }
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
-        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-5 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
