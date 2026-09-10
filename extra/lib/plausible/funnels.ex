@@ -151,7 +151,16 @@ defmodule Plausible.Funnels do
       order_by: steps.step_order,
       preload: [
         steps: {steps, goal: goal}
-      ]
+      ],
+      select: %{
+        f
+        | funnel_type:
+            fragment(
+              "case when ? = true then 'strict' when ? = true then 'flexible' else 'sequential' end",
+              f.strict_order,
+              f.first_and_last
+            )
+      }
     )
   end
 end
