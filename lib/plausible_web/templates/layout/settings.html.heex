@@ -1,14 +1,14 @@
 <% options = account_settings_sidebar(assigns) %>
 <div class="container pt-6">
-  <.styled_link class="font-semibold text-sm" href="/sites">
+  <.styled_link class="font-medium text-sm" href="/sites">
     ← Back to sites
   </.styled_link>
-  <div class="pb-5 border-b border-gray-200 dark:border-gray-750">
-    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
+  <div class="pt-0.5 pb-4 border-b border-gray-200 dark:border-gray-750">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl sm:truncate">
       Settings
     </h2>
   </div>
-  <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
+  <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-1.5">
     <div class="lg:col-span-3">
       <.mobile_nav_dropdown
         name="settings"
@@ -20,7 +20,7 @@
       <div class="hidden lg:flex flex-col gap-8 py-4 top-0 sticky">
         <div class="flex flex-col gap-4">
           <div>
-            <h3 class="text-gray-900 dark:text-gray-100 font-bold">Account</h3>
+            <h3 class="text-gray-900 dark:text-gray-100 font-semibold">Account</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
               {@current_user.email}
             </p>
@@ -33,7 +33,7 @@
 
         <div :if={Plausible.Teams.setup?(@current_team)} class="flex flex-col gap-4">
           <div>
-            <h3 class="text-gray-900 dark:text-gray-100 font-bold">Team</h3>
+            <h3 class="text-gray-900 dark:text-gray-100 font-semibold">Team</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
               {Plausible.Teams.name(@current_team)}
             </p>
