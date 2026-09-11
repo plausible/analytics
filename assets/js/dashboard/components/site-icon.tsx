@@ -3,28 +3,35 @@
  */
 import React from 'react'
 import classNames from 'classnames'
+import { UIMode, useTheme } from '../theme-context'
 
 const siteIconClassName = 'shrink-0 size-5.5 rounded-md'
 
 /**
  * A site is drawn as its favicon, proxied through PlausibleWeb.Favicon. Sites
  * without a favicon get priv/site_favicon_placeholder.svg from that plug, in
- * answer to `placeholder=site`.
+ * answer to `placeholder=site`. The plug must be told the theme, because an
+ * image cannot see the `dark` class on the page.
  */
-export const Favicon = ({ domain }: { domain: string }) => (
-  <img
-    aria-hidden="true"
-    alt=""
-    src={`/favicon/sources/${encodeURIComponent(domain)}?placeholder=site`}
-    onError={(e) => {
-      const target = e.target as HTMLImageElement
-      target.onerror = null
-      target.src = '/favicon/sources/placeholder?placeholder=site'
-    }}
-    referrerPolicy="no-referrer"
-    className={siteIconClassName}
-  />
-)
+export const Favicon = ({ domain }: { domain: string }) => {
+  const { mode } = useTheme()
+  const placeholder = mode === UIMode.dark ? 'site_dark' : 'site'
+
+  return (
+    <img
+      aria-hidden="true"
+      alt=""
+      src={`/favicon/sources/${encodeURIComponent(domain)}?placeholder=${placeholder}`}
+      onError={(e) => {
+        const target = e.target as HTMLImageElement
+        target.onerror = null
+        target.src = `/favicon/sources/placeholder?placeholder=${placeholder}`
+      }}
+      referrerPolicy="no-referrer"
+      className={siteIconClassName}
+    />
+  )
+}
 
 /**
  * The same drawing as priv/site_favicon_placeholder.svg in indigo, so the
