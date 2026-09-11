@@ -26,8 +26,8 @@
     name: 'CloudFlare'
     url: 'https://www.cloudflare.com/'
 
-- regex: '360Spider'
-  name: '360Spider'
+- regex: '(360Spider(?:-Image|-Video)?)'
+  name: '$1'
   category: 'Search bot'
   url: 'https://www.so.com/help/help_3_2.html'
   producer:
@@ -797,7 +797,7 @@
   name: 'Gobuster'
   url: 'https://github.com/OJ/gobuster'
 
-- regex: 'ichiro/mobile goo'
+- regex: 'ichiro'
   name: 'Goo'
   category: 'Search bot'
   url: 'http://search.goo.ne.jp/option/use/sub4/sub4-1'
@@ -843,7 +843,7 @@
   url: 'https://cloud.google.com/scheduler'
   producer:
     name: 'Google Inc.'
-    url: 'https://www.google.com'
+    url: 'https://www.google.com/'
 
 - regex: 'Google-Structured-Data-Testing-Tool'
   name: 'Google Structured Data Testing Tool'
@@ -856,10 +856,10 @@
 - regex: 'GoogleStackdriverMonitoring'
   name: 'Google Stackdriver Monitoring'
   category: 'Site Monitor'
-  url: 'https://cloud.google.com/monitoring'
+  url: 'https://docs.cloud.google.com/monitoring/uptime-checks/using-uptime-checks'
   producer:
     name: 'Google Inc.'
-    url: 'https://www.google.com'
+    url: 'https://www.google.com/'
 
 - regex: 'Google-Transparency-Report'
   name: 'Google Transparency Report'
@@ -973,6 +973,14 @@
     name: 'Lumar'
     url: 'https://www.lumar.io/'
 
+- regex: 'SentiBot'
+  name: 'SentiBot'
+  category: 'AI Data Scraper'
+  url: 'https://sites.google.com/senti1.com/sentibot-eu/home/'
+  producer:
+    name: 'SentiOne S.A.'
+    url: 'https://sentione.com/'
+
 - regex: 'Googlebot-News'
   name: 'Googlebot News'
   category: 'Search bot'
@@ -981,7 +989,23 @@
     name: 'Google Inc.'
     url: 'https://www.google.com/'
 
-- regex: 'Adwords-(?:DisplayAds|Express|Instant)|Google Web Preview|Google[ -]Publisher[ -]Plugin|Google-(?:adstxt|Ads-Conversions|Ads-Qualify|Adwords|AMPHTML|Assess|HotelAdsVerifier|InspectionTool|Lens|PageRenderer|Read-Aloud|Shopping-Quality|Site-Verification|Sites-Thumbnails|speakr|Stale-Content-Probe|Test|Youtube-Links)|(?:AdsBot|APIs|Feedfetcher|Mediapartners)-Google(?:-Mobile)?|Google(?:AdSenseInfeed|AssociationService|bot|Other|Prober|Producer|Sites)|Google.*/\+/web/snippet'
+- regex: 'Google-Site-Verification'
+  name: 'Google-Site-Verification'
+  category: 'Validator'
+  url: 'https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers#google_site_verifier'
+  producer:
+    name: 'Google Inc.'
+    url: 'https://www.google.com/'
+
+- regex: 'Google-Read-Aloud'
+  name: 'Google-Read-Aloud'
+  category: 'Crawler'
+  url: 'https://developers.google.com/crawling/docs/crawlers-fetchers/read-aloud-user-agent'
+  producer:
+    name: 'Google Inc.'
+    url: 'https://www.google.com/'
+
+- regex: 'Adwords-(?:DisplayAds|Express|Instant)|Google Web Preview|Google[ -]Publisher[ -]Plugin|Google-(?:adstxt|Ads-Conversions|Ads-Qualify|Adwords|AMPHTML|Assess|BusinessLinkVerification|HotelAdsVerifier|InspectionTool|Lens|PageRenderer|Shopping-Quality|Sites-Thumbnails|speakr|Stale-Content-Probe|Test|Youtube-Links)|(?:AdsBot|APIs|Feedfetcher|Mediapartners)-Google(?:-Mobile)?|Google(?:AdSenseInfeed|AssociationService|bot|Other|Prober|Producer|Sites)|Google.*/\+/web/snippet'
   name: 'Googlebot'
   category: 'Search bot'
   url: 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers'
@@ -989,8 +1013,16 @@
     name: 'Google Inc.'
     url: 'https://www.google.com/'
 
-- regex: 'Google-NotebookLM'
-  name: 'Google-NotebookLM'
+- regex: 'PlayStore-Google'
+  name: 'PlayStore-Google'
+  category: 'Crawler'
+  url: 'https://play.google.com/'
+  producer:
+    name: 'Google Inc.'
+    url: 'https://www.google.com/'
+
+- regex: '(Google-(?:GeminiNotebook|NotebookLM))'
+  name: '$1'
   category: 'AI Assistant'
   url: 'https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers'
   producer:
@@ -1434,10 +1466,10 @@
 - regex: 'OpenindexSpider'
   name: 'Openindex Spider'
   category: 'Search bot'
-  url: 'http://www.openindex.io/en/webmasters/spider.html'
+  url: 'https://www.openindex.io/about-our-spider/'
   producer:
     name: 'Openindex B.V.'
-    url: 'http://www.openindex.io'
+    url: 'https://www.openindex.io/'
 
 - regex: 'spbot'
   name: 'OpenLinkProfiler'
@@ -2214,31 +2246,15 @@
     name: 'Yahoo! Inc.'
     url: 'http://www.yahoo.com'
 
-- regex: 'Y!J-BRW'
-  name: 'Yahoo! Japan BRW'
+- regex: 'Y!J-(ASR|BR[IJOWY]|[BPW]SC)'
+  name: 'Yahoo! Japan $1'
   category: 'Crawler'
   url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
   producer:
     name: 'Yahoo! Japan Corp.'
     url: 'https://www.yahoo.co.jp/'
 
-- regex: 'Y!J-WSC'
-  name: 'Yahoo! Japan WSC'
-  category: 'Crawler'
-  url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
-  producer:
-    name: 'Yahoo! Japan Corp.'
-    url: 'https://www.yahoo.co.jp/'
-
-- regex: 'Y!J-ASR'
-  name: 'Yahoo! Japan ASR'
-  category: 'Crawler'
-  url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
-  producer:
-    name: 'Yahoo! Japan Corp.'
-    url: 'https://www.yahoo.co.jp/'
-
-- regex: '^Y!J'
+- regex: 'Y!J'
   name: 'Yahoo! Japan'
   category: 'Crawler'
   url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
@@ -2246,8 +2262,16 @@
     name: 'Yahoo! Japan Corp.'
     url: 'https://www.yahoo.co.jp/'
 
-- regex: 'Yandex(?:(?:\.Gazeta |Accessibility|Com|Mobile|MobileScreenShot|RenderResources|Screenshot|Sprav)?Bot|(?:AdNet|Antivirus|Blogs|Calendar|Catalog|Dialogs|Direct|Favicons|ForDomain|ImageResizer|Images|Market|Media|Metrika|News|OntoDB(?:API)?|Pagechecker|Partner|RCA|SearchShop|(?:News|Site)links|Tracker|Turbo|Userproxy|Verticals|Vertis|Video|Webmaster))|YaDirectFetcher'
-  name: 'Yandex Bot'
+- regex: 'YandexBot.+MirrorDetector'
+  name: 'YandexBot-MirrorDetector'
+  category: 'Crawler'
+  url: 'https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.html'
+  producer:
+    name: 'Yandex LLC'
+    url: 'https://yandex.com/company/'
+
+- regex: '(Yandex(?:(?:\.Gazeta |Accessibility|Com|Mobile|MobileScreenShot|RenderResources|Screenshot|Sprav)?Bot|(?:AdNet|Antivirus|Blogs|Calendar|Catalog|Dialogs|Direct(?:Dyn)?|Favicons|ForDomain|ImageResizer|Images|Market|Media(?:naBot)?|Metrika|News(?:links)?|OntoDB(?:API)?|Pagechecker|Partner|RCA|SearchShop|(?:News|Site)links|Tracker|Turbo|Userproxy|Verticals|Vertis|Video(?:Parser)?|Webmaster))|YaDirectFetcher)'
+  name: '$1'
   category: 'Search bot'
   url: 'https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.html'
   producer:
@@ -2442,13 +2466,10 @@
 - regex: 'Slurp'
   name: 'Inktomi Slurp'
 
-- regex: 'Speedy Spider'
+- regex: 'Speedy ?Spider'
   name: 'Speedy'
 
-- regex: 'ScoutJet'
-  name: 'ScoutJet'
-
-- regex: 'nrsbot|netresearch'
+- regex: 'nrsbot|NetResearchServer'
   name: 'NetResearchServer'
 
 - regex: 'scooter'
@@ -2459,12 +2480,19 @@
 
 - regex: 'charlotte'
   name: 'Charlotte'
+  category: 'Crawler'
+  url: 'https://web.archive.org/web/20070225121634/http://www.searchme.com/support/pages/spider.php'
+  producer:
+    name: 'Searchme, Inc.'
+    url: 'https://web.archive.org/web/20070217233037/http://www.searchme.com/'
 
 - regex: 'Pompos'
   name: 'Pompos'
-
-- regex: 'ichiro'
-  name: 'ichiro'
+  category: 'Crawler'
+  url: 'https://web.archive.org/web/20090124084536/http://dir.com/pompos.html'
+  producer:
+    name: 'ILIAD SA'
+    url: 'https://www.iliad.fr/'
 
 - regex: 'PagePeeker'
   name: 'PagePeeker'
@@ -2479,6 +2507,11 @@
 
 - regex: 'Willow Internet Crawler'
   name: 'Willow Internet Crawler'
+  category: 'Crawler'
+  url: 'https://twotrees.com/company/indexing-web-crawlers/'
+  producer:
+    name: 'Twotrees Technologies, LLC'
+    url: 'https://twotrees.com/'
 
 - regex: 'EmailWolf'
   name: 'EmailWolf'
@@ -2506,10 +2539,6 @@
   producer:
     name: 'Spotify'
     url: 'https://www.spotify.com'
-
-- regex: 'The Knowledge AI'
-  name: 'The Knowledge AI'
-  category: 'Crawler'
 
 - regex: 'Embedly'
   name: 'Embedly'
@@ -2711,6 +2740,22 @@
     name: 'Find.tf'
     url: 'https://find.tf/'
 
+- regex: 'OI-Crawler'
+  name: 'OI-Crawler'
+  category: 'Crawler'
+  url: 'https://openintel.nl/webcrawl/'
+  producer:
+    name: 'OpenINTEL'
+    url: 'https://openintel.nl/'
+
+- regex: 'presearch[._]com'
+  name: 'Presearch'
+  category: 'Search bot'
+  url: 'https://presearch.com/'
+  producer:
+    name: 'Presearch.com Inc.'
+    url: 'https://presearch.com/'
+
 - regex: 'Nutch'
   name: 'Nutch-based Bot'
   category: 'Crawler'
@@ -2733,10 +2778,6 @@
   name: 'Grammarly'
   category: 'Service bot'
   url: 'https://www.grammarly.com'
-
-- regex: 'Robozilla'
-  name: 'Robozilla'
-  category: 'Crawler'
 
 - regex: 'Domains Project'
   name: 'Domains Project'
@@ -3221,14 +3262,6 @@
   category: 'Site Monitor'
   url: 'https://www.dotcom-monitor.com'
 
-- regex: 'ThinkChaos/'
-  name: 'ThinkChaos'
-  category: 'Crawler'
-
-- regex: 'Thinkbot/'
-  name: 'Thinkbot'
-  category: 'Crawler'
-
 - regex: 'DataForSeoBot'
   name: 'DataForSeoBot'
   category: 'Crawler'
@@ -3454,14 +3487,6 @@
   category: 'Crawler'
   url: 'https://domaincrawler.com/about-us/'
 
-- regex: 'DNSResearchBot'
-  name: 'DNSResearchBot'
-  category: 'Crawler'
-
-- regex: 'GitCrawlerBot'
-  name: 'GitCrawlerBot'
-  category: 'Crawler'
-
 - regex: 'AdAuth'
   name: 'AdAuth'
   category: 'Crawler'
@@ -3510,6 +3535,14 @@
   name: 'EFF Do Not Track Verifier'
   category: 'Crawler'
   url: 'https://www.eff.org/issues/do-not-track'
+  producer:
+    name: 'Electronic Frontier Foundation'
+    url: 'https://www.eff.org/'
+
+- regex: 'EFF DNT policy checker'
+  name: 'EFF Do Not Track Policy Checker'
+  category: 'Crawler'
+  url: 'https://www.eff.org/dnt-policy'
   producer:
     name: 'Electronic Frontier Foundation'
     url: 'https://www.eff.org/'
@@ -4105,10 +4138,10 @@
   category: 'Crawler'
   url: 'https://geedo.com/bot/'
 
-- regex: 'GeedoProductSearch'
-  name: 'GeedoProductSearch'
+- regex: 'GeedoProductSearch|GeedoShopProductFinder'
+  name: 'GeedoShopProductFinder'
   category: 'Crawler'
-  url: 'https://geedo.com/product-search/'
+  url: 'https://geedo.com/product-finder/'
 
 - regex: 'BackupLand'
   name: 'BackupLand'
@@ -4674,10 +4707,6 @@
 - regex: 'WebMon/'
   name: 'WebMon'
   category: 'Site Monitor'
-
-- regex: 'AdsTxtCrawlerTP'
-  name: 'AdsTxtCrawlerTP'
-  category: 'Crawler'
 
 - regex: 'fragFINN'
   name: 'fragFINN'
@@ -5624,6 +5653,14 @@
     name: 'Hangzhou Deep Search Artificiell Intelligens Basic Technology Research Co., Ltd.'
     url: 'https://www.deepseek.com/'
 
+- regex: 'MistralAI-Index'
+  name: 'MistralAI-Index'
+  category: 'AI Search Crawler'
+  url: 'https://docs.mistral.ai/robots'
+  producer:
+    name: 'Mistral AI'
+    url: 'https://mistral.ai/'
+
 - regex: 'MistralAI-User'
   name: 'MistralAI-User'
   category: 'AI Assistant'
@@ -5836,14 +5873,232 @@
     name: 'Semantic Visions, s.r.o.'
     url: 'https://www.semantic-visions.com/'
 
+- regex: 'CopyvioDetector'
+  name: 'CopyvioDetector'
+  category: 'Crawler'
+  url: 'https://copyvios.toolforge.org/'
+  producer:
+    name: 'Ben Kurtovic'
+    url: 'https://github.com/earwig'
+
+- regex: 'Eyeotabot'
+  name: 'Eyeotabot'
+  category: 'Crawler'
+  url: 'https://www.eyeota.com/'
+  producer:
+    name: 'Eyeota Pte Ltd'
+    url: 'https://www.eyeota.com/'
+
+- regex: 'YioopBot'
+  name: 'YioopBot'
+  category: 'Search bot'
+  url: 'https://www.yioop.com/bot'
+  producer:
+    name: 'Chris Pollett'
+    url: 'https://www.pollett.org/'
+
+- regex: 'yoozBot'
+  name: 'yoozBot'
+  category: 'Search bot'
+  url: 'https://www.yooz.ir/'
+  producer:
+    name: 'yooz'
+    url: 'https://www.yooz.ir/'
+
+- regex: 'ProxyChecker'
+  name: 'ProxyChecker'
+  category: 'Security Checker'
+  url: 'https://iplark.com/'
+  producer:
+    name: 'IPLark'
+    url: 'https://iplark.com/'
+
+- regex: 'StackScopeBot'
+  name: 'StackScopeBot'
+  category: 'Crawler'
+  url: 'https://stackscope.dev/bot'
+  producer:
+    name: 'StackScope'
+    url: 'https://stackscope.dev/'
+
+- regex: 'AffiliateSpyBot'
+  name: 'AffiliateSpyBot'
+  category: 'Crawler'
+  url: 'https://www.affiliatespy.io/'
+  producer:
+    name: 'Wayfinity Ltd'
+    url: 'https://www.wayfinity.io/'
+
+- regex: 'visionheight\.com'
+  name: 'VisionHeight'
+  category: 'Security Checker'
+  url: 'https://www.visionheight.com/scan'
+  producer:
+    name: 'Vision Height Ltd'
+    url: 'https://www.visionheight.com/'
+
+- regex: 'AccessibleWebBot'
+  name: 'AccessibleWebBot'
+  category: 'Crawler'
+  url: 'https://accessibleweb.com/bot/'
+  producer:
+    name: 'Accessible Web Inc.'
+    url: 'https://accessibleweb.com/'
+
+- regex: 'MarketGoo'
+  name: 'MarketGoo'
+  category: 'Crawler'
+  url: 'https://www.marketgoo.com/'
+  producer:
+    name: 'MARKETGOO INTERNET, S.L.'
+    url: 'https://www.marketgoo.com/'
+
+- regex: 'RootEvidence'
+  name: 'RootEvidence'
+  category: 'Security Checker'
+  url: 'https://www.rootevidence.com/'
+  producer:
+    name: 'Root Evidence, Inc.'
+    url: 'https://www.rootevidence.com/'
+
+- regex: 'UdV-AI-Research'
+  name: 'UdV-AI-Research'
+  category: 'AI Data Scraper'
+
+- regex: 'TrustBot'
+  name: 'TrustBot'
+  category: 'Crawler'
+  url: 'https://truster.info/en/'
+
+- regex: 'Centurybot'
+  name: 'Centurybot'
+  category: 'Search bot'
+  url: 'https://rightdao.com/bot.html'
+
+- regex: 'KimiBot'
+  name: 'KimiBot'
+  category: 'AI Data Scraper'
+  url: 'https://www.kimi.com/policies/kimi-crawlers'
+  producer:
+    name: 'Moonshot AI Pte. Ltd.'
+    url: 'https://www.moonshot.ai/'
+
+- regex: 'Kimi-SearchBot'
+  name: 'Kimi-SearchBot'
+  category: 'AI Search Crawler'
+  url: 'https://www.kimi.com/policies/kimi-crawlers'
+  producer:
+    name: 'Moonshot AI Pte. Ltd.'
+    url: 'https://www.moonshot.ai/'
+
+- regex: 'Kimi-User'
+  name: 'Kimi-User'
+  category: 'AI Assistant'
+  url: 'https://www.kimi.com/policies/kimi-crawlers'
+  producer:
+    name: 'Moonshot AI Pte. Ltd.'
+    url: 'https://www.moonshot.ai/'
+
+- regex: 'AffsignalCrawler'
+  name: 'AffsignalCrawler'
+  category: 'Crawler'
+  url: 'https://affsignal.com/bot'
+
+- regex: '(GoGuides(?:Crawler|DiscoveryBot))'
+  name: '$1'
+  category: 'AI Search Crawler'
+  url: 'https://www.goguides.com/crawler'
+  producer:
+    name: 'GoGuides, LLC'
+    url: 'https://www.goguides.com/'
+
+- regex: 'crawlora-research'
+  name: 'crawlora-research'
+  category: 'Security Checker'
+  url: 'https://crawlora.net/anti-bot-index'
+
+- regex: 'RankPulseBot'
+  name: 'RankPulseBot'
+  category: 'Crawler'
+  url: 'https://rankpulse.app/'
+
+- regex: 'PipericBot'
+  name: 'PipericBot'
+  category: 'Crawler'
+  url: 'https://piperic.com/bot'
+
+- regex: 'OrlightBot'
+  name: 'OrlightBot'
+  category: 'Search bot'
+  url: 'https://orlight.net/'
+
+- regex: 'urlsuma'
+  name: 'urlsuma'
+  category: 'Search bot'
+  url: 'https://urlsuma.de/bot.html'
+
+- regex: 'SocialPushBot'
+  name: 'SocialPushBot'
+  category: 'Crawler'
+  url: 'https://socialpush.com/'
+  producer:
+    name: 'RP NET MEDIA SRL'
+
+- regex: 'PriEcoBot'
+  name: 'PriEcoBot'
+  category: 'Search bot'
+  url: 'https://prieco.net'
+
+- regex: 'DnesAkceBot'
+  name: 'DnesAkceBot'
+  category: 'Crawler'
+  url: 'https://dnesakce.cz/'
+  producer:
+    name: 'Easy Call 09, s.r.o.'
+
+- regex: 'cl0q-crawler'
+  name: 'cl0q-crawler'
+  category: 'Search bot'
+  url: 'https://cl0q.com/bot/'
+
+- regex: 'InfoGuardDisclosureResearch'
+  name: 'InfoGuardDisclosureResearch'
+  category: 'Security Checker'
+  url: 'https://www.infoguard.ch/'
+  producer:
+    name: 'InfoGuard AG'
+    url: 'https://www.infoguard.ch/'
+
+- regex: 'FindiseBot'
+  name: 'FindiseBot'
+  category: 'Search bot'
+  url: 'https://findise.net/'
+
+- regex: '(GreenWebChecker|gwf-carbon-txt-crawler)'
+  name: '$1'
+  category: 'Crawler'
+  url: 'https://www.thegreenwebfoundation.org/green-web-checker-faq/'
+  producer:
+    name: 'Green Web Foundation'
+    url: 'https://www.thegreenwebfoundation.org/'
+
+- regex: 'WebatlaBot'
+  name: 'WebatlaBot'
+  category: 'Crawler'
+  url: 'https://bot.webatla.com/'
+
 # Generic bots
-- regex: '(ABEvalBot|HanaleiBot|PrivacyPolicyBot|SeoCherryBot)'
+- regex: '(ABEvalBot|AdsTxtCrawlerTP|ArtelLeadRadar|DNSResearchBot|Dormouse|FinderGo|FormFinder|GitCrawlerBot|HanaleiBot|HubSeedsBot|ImportDomains|KenyaDomainScorer|LetrixLabs|PhishBucketRust|PostitLeadDiscovery|PrivacyPolicyBot|ProductLookoutBot|Robozilla|Secweb-Sectxt|SeoCherryBot|ShopifyChecker|SitemapCrawler\.de|SleepBot|StudyBot|The Knowledge AI|Thinkbot|ThinkChaos|TprAdsTxtCrawler|WATCrawler)'
   name: '$1'
   category: 'Crawler'
 
-- regex: 'nuhk|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr\.com|teoma|oegp|http%20client|htdig|mogimogi|larbin|scrubby|searchsight|semanticdiscovery|snappy|zeal(?!ot)|dataparksearch|findlinks|BrowserMob|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|7Siters|centuryb\.o\.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|cortex|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|Test Certificate Info|iplabel|Magellan|TheSafex?Internetx?Search|Searcherx?web|kirkland-signature|LinkChain|survey-security-dot-txt|infrawatch|Time/|r00ts3c-owned-you|nvdorz|Root Slut|NiggaBalls|BotPoke|GlobalWebSearch|xx032_bo9vs83_2a|sslshed|geckotrail|Wordup|Keydrop|\(compatible\)|John Recon|SPARK COMMIT|masjesu|Komaru_The_Cat|Jesus Christ of Nazareth is LORD|Kowai|Hakai|LoliSec|LMAO|^xenu|^(?:chrome|firefox|Abcd|Dark|KvshClient|node|Node.js|Report Runner|url|Zeus|ZmEu)$|OnlyScans|TheInternetSearchx|Laravel Reaver|bang2013|libredtail|Mozilliqa|Tiberius|Secweb-Sectxt|honeygain|AW-WB-Filter|SaferSoftwashLeadGen'
+- regex: '(CheckerProxy|CMSLookup|CSE-Scanner|DomainProbe|FreePBX-Scanner|Goosee-Audit|NetScope-DomainScanner|SecurityScanner|Shodan-Pull|TLM-Audit-Scanner)'
+  name: '$1'
+  category: 'Security Checker'
+
+- regex: 'nuhk|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr\.com|teoma|oegp|http%20client|htdig|mogimogi|larbin|scrubby|searchsight|semanticdiscovery|snappy|zeal(?!ot)|dataparksearch|findlinks|BrowserMob|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|7Siters|centuryb\.o\.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|cortex|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|Test Certificate Info|iplabel|Magellan|TheSafex?Internetx?Search|Searcherx?web|kirkland-signature|LinkChain|survey-security-dot-txt|infrawatch|Time/|r00ts3c-owned-you|nvdorz|Root Slut|NiggaBalls|BotPoke|GlobalWebSearch|xx032_bo9vs83_2a|sslshed|geckotrail|Wordup|Keydrop|\(compatible\)|John Recon|SPARK COMMIT|masjesu|Komaru_The_Cat|Jesus Christ of Nazareth is LORD|Kowai|Hakai|LoliSec|LMAO|^xenu|^(?:chrome|desktop|firefox|Abcd|Dark|KvshClient|node|Node\.js|Report Runner|url|Zeus|ZmEu)$|OnlyScans|TheInternetSearchx|Laravel Reaver|bang2013|libredtail|Mozilliqa|Tiberius|honeygain|AW-WB-Filter|SaferSoftwashLeadGen|YourUserAgentHere|phpneuralnetwork|Crusader/|multi-country-domains|platform-fingerprint|greedyhand|DomainExtractor|nsfw-go-placeholder-filter|Intently\.co|KarnoProspectingStudio|recon-(?:crawler|engine)'
   name: 'Generic Bot'
 
 # Generic detections
-- regex: '[a-z0-9_-]*(?:(?<!cu|Hu|power[ _]|m[ _])bot(?![ _]TAB|[ _]?5[0-9]|[ _]Senior|[ _]Junior)|analyzer|appengine|archiver?|checker|collector|crawl|crawler|(?<!node-|uclient-|Mikrotik/\d\.[x\d] |electron-)fetch(?:er)?|(?<!url)grabber|indexer|inspector|monitor|^parser|(?<!Microsoft |banshee-)project(?!or)|(?<!Google Wap |Blue |SpeedMode; )proxy|(?<!P)research|resolver|robots|(?<!Cam)scanner|scraper|script|searcher|(?<!-)security|spider(?! 8)|study|transcoder|uptime|user[ _]?agent|validator|-(?:AI|Extended|User)/)(?:[^a-z]|$)'
+- regex: '[a-z0-9_-]*(?:(?<!cu|Hu|power[ _]|m[ _])bot(?![ _]TAB|[ _]?5[0-9]|[ _]Senior|[ _]Junior)|analyzer|appengine|archiver?|checker|collector|crawl|crawler|(?<!node-|uclient-|Mikrotik/\d\.[x\d] |electron-)fetch(?:er)?|(?<!url)grabber|indexer|inspector|lookup|monitor|^parser|probe|(?<!Microsoft |banshee-)project(?!or)|(?<!Google Wap |Blue |SpeedMode; )proxy|(?<!P)research|resolver|robots|(?<!Cam)scanner|scraper|script|searcher|(?<!-)security|spider(?! 8)|study|transcoder|uptime|user[ _]?agent|validator|-(?:AI|Extended|User)/)(?:[^a-z]|$)'
   name: 'Generic Bot'

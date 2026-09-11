@@ -5,6 +5,33 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# GO Browser
+- regex: '[\d\s]+Lite Browser/(\d+\.\d+)$'
+  name: 'GO Browser'
+  version: '$1'
+
+# Startpage (https://app.startpage.com/)
+- regex: 'Startpage(?:/(\d+[.\d]+))?'
+  name: 'Startpage'
+  version: '$1'
+
+# Lightpanda (https://lightpanda.io/ | https://github.com/lightpanda-io/browser)
+- regex: 'Lightpanda/([\d.]+)'
+  name: 'Lightpanda'
+  version: '$1'
+
+# Quiche Browser (https://quiche.industries/browser/)
+- regex: 'Quiche%20Browser'
+  name: 'Quiche Browser'
+  version: ''
+  engine:
+    default: 'WebKit'
+
+# MySudo Browser (https://anonyome.com/individuals/mysudo/)
+- regex: 'MySudo Browser'
+  name: 'MySudo'
+  version: ''
+
 # FireSend Browser (https://firesend.download/)
 - regex: 'FireSendBrowser/([\d.]+)'
   name: 'FireSend Browser'
@@ -624,9 +651,9 @@
   version: '$1'
 
 # Vast Browser (https://play.google.com/store/apps/details?id=com.vast.vpn.proxy.unblock)
-- regex: '(.*)Vast Browser/(\d+\.[.\d]+)'
+- regex: '.+Vast Browser/(\d+\.[.\d]+)'
   name: 'Vast Browser'
-  version: '$2'
+  version: '$1'
   engine:
     default: 'Blink'
 
@@ -638,9 +665,9 @@
     default: 'Blink'
 
 # U Browser (https://play.google.com/store/apps/details?id=com.u_browser)
-- regex: '(.*)U Browser(\d+\.[.\d]+)'
+- regex: '.+U Browser(\d+\.[.\d]+)'
   name: 'U Browser'
-  version: '$2'
+  version: '$1'
   engine:
     default: 'Blink'
 
@@ -1663,7 +1690,36 @@
   engine:
     default: 'Blink'
 
+# Harmony 360 Browser (only for HarmonyOS or OpenHarmonyOS)
+- regex: 'Browser/harmony360Browser/(\d+[.\d]+)$'
+  name: 'Harmony 360 Browser'
+  version: '$1'
+  engine:
+    default: 'ArkWeb'
+
+# Huawei Browser
+- regex: 'HBPC/(\d+[.\d]+)'
+  name: 'Huawei Browser'
+  version: '$1'
+  engine:
+    default: 'Blink'
+- regex: 'PC;.+ArkWeb/.+HuaweiBrowser(?:/(\d+[.\d]+))?'
+  name: 'Huawei Browser'
+  version: '$1'
+  engine:
+    default: 'ArkWeb'
+- regex: 'PC;.+ArkWeb'
+  name: 'Huawei Browser'
+  version: ''
+  engine:
+    default: 'ArkWeb'
+
 # Huawei Browser Mobile
+- regex: 'ArkWeb/.+HuaweiBrowser(?:/(\d+[.\d]+))?'
+  name: 'Huawei Browser Mobile'
+  version: '$1'
+  engine:
+    default: 'ArkWeb'
 - regex: 'HuaweiBrowser(?:/(\d+[.\d]+))?'
   name: 'Huawei Browser Mobile'
   version: '$1'
@@ -1676,6 +1732,11 @@
   version: '$1'
   engine:
     default: 'Blink'
+- regex: 'com\.huawei\.hmos\.browser'
+  name: 'Huawei Browser'
+  version: ''
+  engine:
+    default: 'ArkWeb'
 
 # ZTE Browser
 - regex: 'ZTE ?Browser/'
@@ -1770,19 +1831,19 @@
   engine:
     default: 'Blink'
 
+# Microsoft Headless Edge
+- regex: 'HeadlessChrome/.*(?:Headless)?Edg(?:/(\d+[.\d]+))?'
+  name: 'Headless Edge'
+  version: '$1'
+  engine:
+    default: 'Blink'
+
 # Microsoft Edge (Anaheim Edge)
 - regex: 'Edg[ /](\d+[.\d]+)'
   name: 'Microsoft Edge'
   version: '$1'
   engine:
     default: 'Blink'
-
-# Harmony 360 Browser (only for HarmonyOS or OpenHarmonyOS)
-- regex: 'Browser/harmony360Browser/(\d+[.\d]+)$'
-  name: 'Harmony 360 Browser'
-  version: '$1'
-  engine:
-    default: 'ArkWeb'
 
 # 360 Secure Browser
 - regex: 'QIHU 360[ES]E|QihooBrowserHD/(\d+[.\d]+)'
@@ -1865,12 +1926,12 @@
     default: 'WebKit'
 
 # Avast Secure Browser | Avast SafeZone Browser (https://www.avast.com/)
-- regex: 'Chrome.+(?:Avast(?:SecureBrowser)?|ASW|Safer)(?:/(\d+[.\d]+))?'
+- regex: 'Chrome.+(?:Avast(?:SecureBrowser)?|ASW|Safer(?!Surf))(?:/(\d+[.\d]+))?'
   name: 'Avast Secure Browser'
   version: '$1'
   engine:
     default: 'Blink'
-- regex: '(?:Avast(?:SecureBrowser)?|ASW|Safer)(?:/(\d+[.\d]+))?'
+- regex: '(?:Avast(?:SecureBrowser)?|ASW|Safer(?!Surf))(?:/(\d+[.\d]+))?'
   name: 'Avast Secure Browser'
   version: '$1'
   engine:
@@ -2127,12 +2188,17 @@
   version: ''
 
 # UC Browser
+- regex: 'UCPC/(\d+[.\d]+)'
+  name: 'UC Browser'
+  version: '$1'
+  engine:
+    default: 'Blink'
 - regex: 'ArkWeb/(?:\d+[.\d]+) (?:Mobile )?UC[ ]?Browser(?:[ /]?(\d+[.\d]+))?$'
   name: 'UC Browser'
   version: '$1'
   engine:
     default: ArkWeb
-- regex: 'UC[ ]?Browser(?:[ /]?(\d+[.\d]+))?'
+- regex: 'UC ?(?:Browser|Mobile)(?:[ /]?(\d+[.\d]+))?'
   name: 'UC Browser'
   version: '$1'
 - regex: 'UCWEB(?:[ /]?(\d+[.\d]+))?'
@@ -2418,7 +2484,7 @@
       4: '' # multiple (KHTML or WebKit)
 
 # HONOR Browser
-- regex: 'bdhonorbrowser/(\d+[.\d]+)'
+- regex: '(?:bd)?honorbrowser/(\d+[.\d]+)'
   name: 'HONOR Browser'
   version: '$1'
 
@@ -2461,11 +2527,9 @@
   engine:
     default: 'Blink'
 # Yandex Browser + voice assistant alisa
-- regex: 'Ya(?:ndex)?SearchBrowser(?:/(\d+[.\d]*))'
+- regex: 'Ya(?:ndex)?Search(?:App|Browser)?(?:/(\d+[.\d]*))'
   name: 'Yandex Browser'
   version: '$1'
-  engine:
-    default: 'Blink'
 
 #Vivaldi
 - regex: 'Viv(?:aldi)?/(\d+[.\d]+)'
@@ -2473,6 +2537,11 @@
   version: '$1'
   engine:
     default: 'Blink'
+- regex: 'VivaiOS/(\d+[.\d]+)'
+  name: 'Vivaldi Mobile iOS'
+  version: '$1'
+  engine:
+    default: 'WebKit'
 
 #TweakStyle
 - regex: 'TweakStyle(?:/(\d+[.\d]+))?'
@@ -2905,6 +2974,18 @@
   engine:
     default: '' # multi engine -- WebKit or Blink
 
+# iTop Private Browser (https://www.itopvpn.com/)
+- regex: 'iTop$'
+  name: 'iTop Private Browser'
+  version: ''
+
+# SafeBrowser (https://apps.apple.com/us/app/private-browser-incognito-vpn/id6444025089)
+- regex: 'SafeBrowser/(\d+[.\d]+)'
+  name: 'SafeBrowser'
+  version: '$1'
+  engine:
+    default: 'WebKit'
+
 # Chrome Mobile IOS
 - regex: '(?:iPad|iPhone);.* like Mac OS X.* Chrome(?:/(\d+[.\d]+))? Mobile/\w{5,7} Safari/'
   name: 'Chrome Mobile iOS'
@@ -2965,6 +3046,11 @@
   version: '$1'
   engine:
     default: 'Blink'
+- regex: 'Chrome(?!book)(?:/(\d+[.\d]+))?.+ArkWeb/'
+  name: 'Chrome'
+  version: '$1'
+  engine:
+    default: 'ArkWeb'
 - regex: 'Chrome(?!book)(?:/(\d+[.\d]+))?'
   name: 'Chrome'
   version: '$1'
@@ -3441,7 +3527,7 @@
   version: '$1'
   engine:
     default: 'WebKit'
-- regex: '(?:com\.apple\.WebKit\.Networking|NetworkingExtension)/(\d+[.\d]+).+ CFNetwork'
+- regex: '(?:com\.apple\.WebKit\.Networking|com\.apple\.AuthenticationServicesCore\.AuthenticationServicesAgent|NetworkingExtension)/(\d+[.\d]+).+ (?:CF)?Network'
   name: 'Safari'
   version: '$1'
   engine:
