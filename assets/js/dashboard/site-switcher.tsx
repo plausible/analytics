@@ -161,7 +161,7 @@ export const SiteSwitcher = () => {
             className={classNames(
               popover.toggleButton.classNames.rounded,
               popover.toggleButton.classNames.ghost,
-              '!pl-1.5'
+              '!px-1.5 sm:!pl-1.5 sm:!pr-2.5'
             )}
             title={currentSite.domain}
           >
