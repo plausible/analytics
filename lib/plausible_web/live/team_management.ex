@@ -10,42 +10,8 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   alias Plausible.Teams.Management.Layout
 
-  def mount(_params, session, socket) do
-    mode =
-      if session["mode"] == "team-setup" do
-        :team_setup
-      else
-        :team_management
-      end
-
-    socket =
-      if mode == :team_setup do
-        setup_team_name(socket)
-      else
-        socket
-      end
-
-    {:ok, socket |> assign(mode: mode) |> reset()}
-  end
-
-  # In team setup the name is part of this form, so that creating the team can
-  # only ever happen with a name this LiveView has accepted.
-  defp setup_team_name(
-         %{assigns: %{current_user: current_user, current_team: current_team}} = socket
-       ) do
-    suggested_name = Teams.Team.suggested_name(current_user.name)
-
-    current_team =
-      current_team
-      |> Teams.Team.name_changeset(%{name: suggested_name})
-      |> Plausible.Repo.update!()
-
-    assign(socket,
-      current_team: current_team,
-      suggested_name: suggested_name,
-      team_name_form: to_form(Teams.Team.name_changeset(current_team, %{})),
-      locked?: Plausible.Teams.Billing.solo?(current_team)
-    )
+  def mount(_params, _session, socket) do
+    {:ok, reset(socket)}
   end
 
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
@@ -66,32 +32,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   def render(assigns) do
     ~H"""
-    <.form
-      :let={f}
-      :if={@mode == :team_setup}
-      for={@team_name_form}
-      method="post"
-      phx-change="update-team"
-      phx-submit="update-team"
-      phx-blur="update-team"
-      id="update-team-form"
-      class="mt-4 mb-8"
-    >
-      <.input
-        type="text"
-        placeholder={@suggested_name}
-        autofocus={not @locked?}
-        field={f[:name]}
-        label="Name"
-        width="w-full"
-        phx-debounce="500"
-      />
-    </.form>
-
-    <.label :if={@mode == :team_setup} class="mb-2">
-      Team members
-    </.label>
-
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
@@ -117,45 +57,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
             />
           </div>
 
-          <.dropdown id="input-role-picker">
-            <:button class="role inline-flex items-center gap-x-2 font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              {@input_role |> Atom.to_string() |> String.capitalize()}
-              <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-            </:button>
-            <:menu class="dropdown-items max-w-60">
-              <.role_item role={:owner} disabled={@my_role != :owner} phx-click="switch-role">
-                Manage the team without restrictions
-              </.role_item>
-              <.role_item
-                role={:admin}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Manage all team settings
-              </.role_item>
-              <.role_item
-                role={:editor}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Create and view new sites
-              </.role_item>
-              <.role_item
-                role={:billing}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                Manage subscription
-              </.role_item>
-              <.role_item
-                role={:viewer}
-                disabled={@my_role not in [:owner, :admin]}
-                phx-click="switch-role"
-              >
-                View all sites under your team
-              </.role_item>
-            </:menu>
-          </.dropdown>
+          <.role_picker
+            id="input-role-picker"
+            role={@input_role}
+            my_role={@my_role}
+            phx-click="switch-role"
+          />
 
           <.button
             id="invite-member"
@@ -205,30 +112,16 @@ defmodule PlausibleWeb.Live.TeamManagement do
           disabled={@my_role not in [:owner, :admin]}
         />
       </div>
-
-      <.button
-        :if={@mode == :team_setup}
-        id="save-layout"
-        type="submit"
-        phx-click="save-team-layout"
-        disabled={not @team_name_form.source.valid?}
-        class="mt-8 w-full"
-      >
-        Create Team
-      </.button>
     </div>
     """
   end
-
-  @roles Plausible.Teams.Membership.roles() -- [:guest]
-  @roles_cast_map Enum.into(@roles, %{}, fn role -> {to_string(role), role} end)
 
   def handle_event("form-changed", params, socket) do
     {:noreply, assign(socket, input_email: params["input-email"])}
   end
 
   def handle_event("switch-role", %{"role" => role}, socket) do
-    socket = assign(socket, input_role: Map.fetch!(@roles_cast_map, role))
+    socket = assign(socket, input_role: role_to_atom(role))
     {:noreply, socket}
   end
 
@@ -275,33 +168,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, socket}
   end
 
-  def handle_event("update-team", %{"team" => %{"name" => name}}, socket) do
-    changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
-
-    socket =
-      case Plausible.Repo.update(changeset) do
-        {:ok, team} ->
-          assign(socket, team_name_form: to_form(changeset), current_team: team)
-
-        {:error, changeset} ->
-          assign(socket, team_name_form: to_form(changeset))
-      end
-
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "save-team-layout",
-        _params,
-        socket
-      ) do
-    if team_name_accepted?(socket) do
-      {:noreply, save_team_layout(socket)}
-    else
-      {:noreply, put_live_flash(socket, :error, "Please fix the team name first")}
-    end
-  end
-
   def handle_event("remove-member", %{"email" => email}, %{assigns: %{layout: layout}} = socket) do
     socket =
       case Layout.verify_removable(layout, email) do
@@ -325,7 +191,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         %{assigns: %{layout: layout}} = socket
       ) do
     socket =
-      update_layout(socket, Layout.update_role(layout, email, Map.fetch!(@roles_cast_map, role)))
+      update_layout(socket, Layout.update_role(layout, email, role_to_atom(role)))
       |> push_event("js-exec", %{
         to: "#member-row-#{:erlang.phash2(email)}",
         attr: "data-role-changed"
@@ -334,28 +200,14 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, socket}
   end
 
-  defp team_name_accepted?(%{assigns: %{mode: :team_setup}} = socket) do
-    socket.assigns.team_name_form.source.valid?
-  end
-
-  defp team_name_accepted?(_socket), do: true
-
   defp valid_email?(email) do
     String.contains?(email, "@") and String.contains?(email, ".")
   end
 
   defp update_layout(socket, layout) do
-    socket =
-      assign(socket,
-        layout: layout,
-        team_layout_changed?: true
-      )
-
-    if socket.assigns.mode == :team_management do
-      save_team_layout(socket)
-    else
-      socket
-    end
+    socket
+    |> assign(layout: layout, team_layout_changed?: true)
+    |> save_team_layout()
   end
 
   defp save_team_layout(
@@ -368,15 +220,8 @@ defmodule PlausibleWeb.Live.TeamManagement do
         current_team: Plausible.Repo.reload!(current_team)
       })
 
-    case {result, socket.assigns.mode} do
-      {{:ok, _}, :team_setup} ->
-        socket
-        |> put_flash(:success, "Your team is now created")
-        |> redirect(
-          to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
-        )
-
-      {{:ok, _}, :team_management} ->
+    case result do
+      {:ok, _} ->
         case Teams.Memberships.team_role(current_team, current_user) do
           {:ok, role} when role in [:viewer, :billing, :editor] ->
             redirect(socket,
@@ -390,28 +235,28 @@ defmodule PlausibleWeb.Live.TeamManagement do
             redirect(socket, to: Routes.site_path(socket, :index, __team: "none"))
         end
 
-      {{:error, :permission_denied}, _} ->
+      {:error, :permission_denied} ->
         socket
         |> put_live_flash(
           :error,
           "Permission denied"
         )
 
-      {{:error, :only_one_owner}, _} ->
+      {:error, :only_one_owner} ->
         socket
         |> put_live_flash(
           :error,
           "The team has to have at least one owner"
         )
 
-      {{:error, :disabled_2fa}, _} ->
+      {:error, :disabled_2fa} ->
         socket
         |> put_live_flash(
           :error,
           "User must have 2FA enabled to become an owner"
         )
 
-      {{:error, {:over_limit, limit}}, _} ->
+      {:error, {:over_limit, limit}} ->
         socket
         |> put_live_flash(
           :error,

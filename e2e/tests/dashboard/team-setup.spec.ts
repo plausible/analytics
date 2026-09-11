@@ -11,19 +11,15 @@ test('submitting team name via Enter key does not crash', async ({
 
   await expectLiveViewConnected(page)
 
-  await expect(page.getByRole('button', { name: 'Create Team' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create team' })).toBeVisible()
 
   const nameInput = page.locator('input[name="team[name]"]')
 
   await nameInput.clear()
   await nameInput.fill('My New Team')
 
+  // Enter submits the whole form directly (single phx-submit handler)
   await nameInput.press('Enter')
-
-  await expect(nameInput).toHaveValue('My New Team')
-
-  // the form had no phx-submit handler and plain HTTP POST fallback was made
-  await page.getByRole('button', { name: 'Create Team' }).click()
 
   await expect(page).toHaveURL(/\/settings\/team\/general/)
 
@@ -34,7 +30,7 @@ test('submitting team name via Enter key does not crash', async ({
   await expect(nameInput2).toHaveValue('My New Team')
 })
 
-test('create team is blocked while the name is rejected', async ({
+test('create team is blocked when the name is rejected on submit', async ({
   page,
   request
 }) => {
@@ -43,25 +39,23 @@ test('create team is blocked while the name is rejected', async ({
 
   await expectLiveViewConnected(page)
 
-  const createTeam = page.getByRole('button', { name: 'Create Team' })
+  const createTeam = page.getByRole('button', { name: 'Create team' })
   const nameInput = page.locator('input[name="team[name]"]')
 
   await expect(createTeam).toBeEnabled()
 
   await nameInput.fill('My personal sites')
+  await createTeam.click()
 
-  await expect(page.locator('#update-team-form')).toContainText('is reserved')
-  await expect(createTeam).toBeDisabled()
+  await expect(page.getByText('is reserved')).toBeVisible()
+  await expect(page).toHaveURL(/\/team\/setup/)
 
   await test.step('recovers once the name is fixed', async () => {
     await nameInput.fill('Fixed Team Name')
+    await createTeam.click()
 
-    await expect(createTeam).toBeEnabled()
+    await expect(page).toHaveURL(/\/settings\/team\/general/)
   })
-
-  await createTeam.click()
-
-  await expect(page).toHaveURL(/\/settings\/team\/general/)
 
   await expectLiveViewConnected(page)
 
@@ -95,37 +89,34 @@ test('creating a team when the user name is long', async ({
   await expectLiveViewConnected(page)
 
   // the page mounts instead of crashing on the over-long suggested name
-  await expect(page.getByRole('button', { name: 'Create Team' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create team' })).toBeVisible()
 
   const nameInput = page.locator('input[name="team[name]"]')
+  const createTeam = page.getByRole('button', { name: 'Create team' })
 
   await expect(nameInput).toHaveValue(expectedTeamName)
 
-  await test.step('a name over the limit is rejected', async () => {
+  await test.step('a name over the limit is rejected on submit', async () => {
     await nameInput.fill('b'.repeat(51))
+    await createTeam.click()
 
-    await expect(page.locator('#update-team-form')).toContainText(
-      'should be at most 50 character(s)'
-    )
     await expect(
-      page.getByRole('button', { name: 'Create Team' })
-    ).toBeDisabled()
+      page.getByText('should be at most 50 character(s)')
+    ).toBeVisible()
+    await expect(page).toHaveURL(/\/team\/setup/)
   })
 
-  await test.step('a name carrying a URL scheme is rejected', async () => {
+  await test.step('a name carrying a URL scheme is rejected on submit', async () => {
     await nameInput.fill('Cheap meds at https://spam.example.com')
+    await createTeam.click()
 
-    await expect(page.locator('#update-team-form')).toContainText(
-      'cannot contain a URL'
-    )
-    await expect(
-      page.getByRole('button', { name: 'Create Team' })
-    ).toBeDisabled()
+    await expect(page.getByText('cannot contain a URL')).toBeVisible()
+    await expect(page).toHaveURL(/\/team\/setup/)
   })
 
   await nameInput.fill('Chosen Team Name')
 
-  await page.getByRole('button', { name: 'Create Team' }).click()
+  await createTeam.click()
 
   await expect(page).toHaveURL(/\/settings\/team\/general/)
 
