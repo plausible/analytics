@@ -8,7 +8,7 @@ import { Cog8ToothIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import { isModifierPressed, isTyping, Keybind, KeybindHint } from './keybinding'
 import { popover, BlurMenuButtonOnEscape } from './components/popover'
-import { GlobeIcon } from './components/icons'
+import { ConsolidatedViewIcon, Favicon } from './components/site-icon'
 import { useQuery } from '@tanstack/react-query'
 import { Role, useUserContext } from './user-context'
 import { PlausibleSite, useSiteContext } from './site-context'
@@ -19,31 +19,11 @@ import { get } from './api'
 import { ErrorPanel } from './components/error-panel'
 import { useRoutelessModalsContext } from './navigation/routeless-modals-context'
 
-const Favicon = ({
-  domain,
-  className
-}: {
-  domain: string
-  className?: string
-}) => (
-  <img
-    aria-hidden="true"
-    alt=""
-    src={`/favicon/sources/${encodeURIComponent(domain)}`}
-    onError={(e) => {
-      const target = e.target as HTMLImageElement
-      target.onerror = null
-      target.src = '/favicon/sources/placeholder'
-    }}
-    referrerPolicy="no-referrer"
-    className={className}
-  />
-)
-
 const menuItemClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
-  popover.items.classNames.hoverLink
+  popover.items.classNames.hoverLink,
+  'gap-x-2'
 )
 
 const buttonLinkClassName = classNames(
@@ -83,7 +63,7 @@ const SiteSwitcherStatic = () => {
       )}
       title={currentSite.domain}
     >
-      <Favicon domain={currentSite.domain} className="block size-4" />
+      <Favicon domain={currentSite.domain} />
       <span className="truncate hidden sm:block sm:mr-1 lg:mr-0 font-semibold">
         {currentSite.domain}
       </span>
@@ -186,9 +166,9 @@ export const SiteSwitcher = () => {
             title={currentSite.domain}
           >
             {currentSite.isConsolidatedView ? (
-              <GlobeIcon className="size-4 block mx-1 h-4 w-4 text-indigo-600 dark:text-white" />
+              <ConsolidatedViewIcon />
             ) : (
-              <Favicon domain={currentSite.domain} className="block size-4" />
+              <Favicon domain={currentSite.domain} />
             )}
             <span
               data-testid="site-switcher-current-site"
@@ -258,7 +238,7 @@ export const SiteSwitcher = () => {
                   }
                   onClick={() => closePopover()}
                 >
-                  <GlobeIcon className="size-4 block mr-2 text-indigo-600 dark:text-white" />
+                  <ConsolidatedViewIcon />
                   <span className="truncate mr-auto">All sites</span>
                   <KeybindHint>0</KeybindHint>
                 </a>
@@ -281,7 +261,7 @@ export const SiteSwitcher = () => {
                         : () => {}
                     }
                   >
-                    <Favicon domain={domain} className="h-4 w-4 block mr-2" />
+                    <Favicon domain={domain} />
                     <span className="truncate mr-auto">{domain}</span>
                     {sitesInDropdown.length > 1 && (
                       <KeybindHint>{index + 1}</KeybindHint>
