@@ -50,7 +50,8 @@ defmodule Plausible.Funnels do
       :ok ->
         funnel
         |> edit_changeset(name, steps,
-          strict_order?: Keyword.get(opts, :strict_order?, !!funnel.strict_order)
+          strict_order?: Keyword.get(opts, :strict_order?, !!funnel.strict_order),
+          first_and_last?: Keyword.get(opts, :first_and_last?, !!funnel.first_and_last)
         )
         |> Repo.update()
     end
@@ -62,7 +63,8 @@ defmodule Plausible.Funnels do
     Funnel.changeset(%Funnel{site_id: site.id}, %{
       name: name,
       steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
+      strict_order: Keyword.get(opts, :strict_order?, false),
+      first_and_last: Keyword.get(opts, :first_and_last?, false)
     })
   end
 
@@ -72,7 +74,8 @@ defmodule Plausible.Funnels do
     Funnel.changeset(funnel, %{
       name: name,
       steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
+      strict_order: Keyword.get(opts, :strict_order?, false),
+      first_and_last: Keyword.get(opts, :first_and_last?, false)
     })
   end
 

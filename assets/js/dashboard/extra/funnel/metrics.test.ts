@@ -3,6 +3,7 @@ import { FunnelResponse, conversionRateChange, stepMetrics } from './metrics'
 const funnel: FunnelResponse = {
   name: 'Checkout',
   strict_order: false,
+  first_and_last: false,
   all_visitors: 250,
   entering_visitors: 100,
   entering_visitors_percentage: '40',

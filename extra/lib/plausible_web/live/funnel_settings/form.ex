@@ -94,6 +94,20 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               </div>
             </div>
 
+            <div class="mt-6 flex items-center justify-between gap-4">
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Make the steps optional except the first and last
+              </span>
+              <div class="flex items-center gap-3">
+                <.toggle_switch
+                  id="toggle-first-and-last"
+                  id_suffix="switch"
+                  checked={@first_and_last?}
+                  phx-click="toggle-first-and-last"
+                />
+              </div>
+            </div>
+
             <div id="steps-builder" class="mt-6">
               <.label>
                 Funnel steps
@@ -253,8 +267,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, assign(socket, strict_order?: strict_order?)}
   end
 
+  def handle_event("toggle-first-and-last", _params, socket) do
+    first_and_last? = !socket.assigns.first_and_last?
+    send(self(), :evaluate_funnel)
+
+    {:noreply, assign(socket, first_and_last?: first_and_last?)}
+  end
+
   def handle_event("validate", %{"funnel" => params}, socket) do
     strict_order? = socket.assigns.strict_order?
+    first_and_last? = socket.assigns.first_and_last?
 
     steps_from_assigns =
       socket.assigns.step_ids
@@ -269,7 +291,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Funnels.create_changeset(
         params["name"],
         steps_from_assigns,
-        strict_order?: strict_order?
+        strict_order?: strict_order?,
+        first_and_last?: first_and_last?
       )
       |> Map.put(:action, :validate)
 
@@ -279,17 +302,34 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event(
         "save",
         %{"funnel" => params},
-        %{assigns: %{site: site, funnel: funnel, strict_order?: strict_order?}} = socket
+        %{
+          assigns: %{
+            site: site,
+            funnel: funnel,
+            strict_order?: strict_order?,
+            first_and_last?: first_and_last?
+          }
+        } = socket
       ) do
     steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
 
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
-          fn -> Funnels.update(funnel, params["name"], steps, strict_order?: strict_order?) end
+          fn ->
+            Funnels.update(funnel, params["name"], steps,
+              strict_order?: strict_order?,
+              first_and_last?: first_and_last?
+            )
+          end
 
         nil ->
-          fn -> Funnels.create(site, params["name"], steps, strict_order?: strict_order?) end
+          fn ->
+            Funnels.create(site, params["name"], steps,
+              strict_order?: strict_order?,
+              first_and_last?: first_and_last?
+            )
+          end
       end
 
     case save_fn.() do
@@ -339,12 +379,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
            assigns: %{
              site: site,
              selections_made: selections_made,
-             strict_order?: strict_order?
+             strict_order?: strict_order?,
+             first_and_last?: first_and_last?
            }
          } = socket
        ) do
     with {:ok, {definition, query}} <-
-           build_ephemeral_funnel(site, selections_made, strict_order?: strict_order?),
+           build_ephemeral_funnel(site, selections_made,
+             strict_order?: strict_order?,
+             first_and_last?: first_and_last?
+           ),
          {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
       assign(socket, evaluation_result: funnel)
     else
@@ -445,7 +489,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Funnels.edit_changeset(
         funnel.name,
         Enum.map(funnel.steps, &%{goal_id: &1.goal.id}),
-        strict_order?: funnel.strict_order
+        strict_order?: funnel.strict_order,
+        first_and_last?: funnel.first_and_last
       )
       |> to_form()
 
@@ -460,6 +505,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         form: form,
         funnel: funnel,
         strict_order?: funnel.strict_order,
+        first_and_last?: funnel.first_and_last,
         funnel_modified?: false,
         selections_made: selections_made,
         step_ids: Enum.to_list(1..Enum.count(funnel.steps))
@@ -476,6 +522,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       form: form,
       funnel: nil,
       strict_order?: false,
+      first_and_last?: false,
       funnel_modified?: false,
       selections_made: Map.new(),
       step_ids: Enum.to_list(1..Funnel.min_steps())
