@@ -91,8 +91,8 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
 
   defp header(assigns) do
     ~H"""
-    <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
-      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
+    <div class="group py-4 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl sm:truncate flex-shrink-0">
         <.link
           replace
           patch={

@@ -131,7 +131,7 @@
                   </:menu>
                 </.dropdown>
               </li>
-              <li :if={ee?()} id="changelog-notification" class="relative py-2"></li>
+              <li :if={ee?()} id="changelog-notification" class="relative py-2 empty:hidden"></li>
             </ul>
           <% Plausible.Auth.check_registration_enabled() != :ok -> %>
             <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">

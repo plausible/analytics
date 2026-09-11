@@ -15,31 +15,29 @@ defmodule Plausible.PendingStatsDeletions do
     Repo.insert(%PendingStatsDeletion{site_id: site.id, reason: reason})
   end
 
-  @spec list(atom()) :: [pos_integer()]
-  def list(reason \\ :user_request) do
-    from(p in PendingStatsDeletion,
-      where: p.reason == ^reason,
-      distinct: true,
-      order_by: p.site_id,
-      select: p.site_id
-    )
+  @doc """
+  All pending deletions
+  """
+  @spec list() :: [pos_integer()]
+  def list() do
+    from(p in PendingStatsDeletion, distinct: true, order_by: p.site_id, select: p.site_id)
     |> Repo.all()
   end
 
-  @spec clear([pos_integer()], atom()) :: {non_neg_integer(), nil}
-  def clear(site_ids, reason \\ :user_request)
-  def clear([], _reason), do: {0, nil}
+  @doc """
+  Clears pending deletion records for the given site_ids
+  """
+  @spec clear([pos_integer()]) :: {non_neg_integer(), nil}
+  def clear([]), do: {0, nil}
 
-  def clear(site_ids, reason) do
-    Repo.delete_all(
-      from(p in PendingStatsDeletion, where: p.site_id in ^site_ids and p.reason == ^reason)
-    )
+  def clear(site_ids) do
+    Repo.delete_all(from(p in PendingStatsDeletion, where: p.site_id in ^site_ids))
   end
 
   # Temporary. Bridges sites deleted before pending stats deletion tracking
   # existed. Finds sites with orphaned ClickHouse data (no matching Postgres
   # site) and records a pending deletion for each, so `ClickhouseCleanSites`
-  # picks them up via `list/1`. Safe to run more than once. Remove
+  # picks them up via `list/0`. Safe to run more than once. Remove
   # once it's been run in every environment.
   @spec backfill_orphaned_sites() :: {:ok, non_neg_integer()}
   def backfill_orphaned_sites() do

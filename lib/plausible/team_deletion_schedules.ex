@@ -16,13 +16,18 @@ defmodule Plausible.TeamDeletionSchedules do
   alias Plausible.Teams
   alias Plausible.Teams.DeletionSchedule
 
+  # Postgres protocol caps a single statement at 65535 bind
+  # parameters. build_schedule_row/3 produces 9 fields per row, so a single
+  # insert_all could only ever fit ~7k rows
+  @insert_chunk_size 1_000
+
   @doc """
   Finds newly eligible teams (expired trial/churned subscription) and
   schedules each for the deletion pipeline. Reactivation is handled
   via billing (Paddle) handlers.
   """
-  @spec sync_eligible(Date.t()) :: non_neg_integer()
-  def sync_eligible(today \\ Date.utc_today()) do
+  @spec sync_eligible(Date.t(), pos_integer()) :: non_neg_integer()
+  def sync_eligible(today \\ Date.utc_today(), insert_chunk_size \\ @insert_chunk_size) do
     candidates =
       Repo.all(
         from(t in Teams.Team,
@@ -50,15 +55,19 @@ defmodule Plausible.TeamDeletionSchedules do
       )
 
     now = NaiveDateTime.utc_now(:second)
-    rows = Enum.map(candidates, &build_schedule_row(&1, today, now))
 
-    {count, _} =
-      Repo.insert_all(TeamDeletionSchedule, rows,
-        on_conflict: :nothing,
-        conflict_target: {:unsafe_fragment, terminal_statuses_index_predicate()}
-      )
+    candidates
+    |> Enum.map(&build_schedule_row(&1, today, now))
+    |> Enum.chunk_every(insert_chunk_size)
+    |> Enum.reduce(0, fn chunk, total ->
+      {count, _} =
+        Repo.insert_all(TeamDeletionSchedule, chunk,
+          on_conflict: :nothing,
+          conflict_target: {:unsafe_fragment, terminal_statuses_index_predicate()}
+        )
 
-    count
+      total + count
+    end)
   end
 
   @doc """

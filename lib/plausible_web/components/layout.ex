@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Components.Layout do
 
   use Phoenix.Component
 
-  attr :class, :string, default: "w-24 sm:w-30"
+  attr :class, :string, default: "w-24 sm:w-28"
 
   def logo(assigns) do
     ~H"""
