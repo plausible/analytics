@@ -9,6 +9,7 @@ import { useImportsIncludedContext } from '../stats/graph/imports-included-conte
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { DashboardPeriod } from '../dashboard-time-periods'
 import { IntervalPicker } from '../stats/graph/interval-picker'
+import { SmoothingPicker } from '../stats/graph/smoothing-picker'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Notice } from '../components/notice'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
@@ -43,8 +44,13 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
 
 function DashboardOptionsMenuItems() {
   const { dashboardState } = useDashboardStateContext()
-  const { selectedInterval, onIntervalClick, availableIntervals } =
-    useGraphIntervalContext()
+  const {
+    selectedInterval,
+    onIntervalClick,
+    availableIntervals,
+    selectedSmoothing,
+    onSmoothingClick
+  } = useGraphIntervalContext()
   const imports = useImportsIncludedContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [exportStatus, setExportStatus] = useState<ExportStatus>(
@@ -107,6 +113,10 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
+          <SmoothingPicker
+            selectedSmoothing={selectedSmoothing}
+            onSmoothingClick={onSmoothingClick}
+          />
           <CsvExport
             exportStatus={exportStatus}
             setExportStatus={setExportStatus}
