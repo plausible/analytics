@@ -442,7 +442,7 @@ defmodule PlausibleWeb.Live.Sites do
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
-            <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+            <span class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
               <.globe_icon />
             </span>
             <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
@@ -811,11 +811,15 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def favicon(assigns) do
-    src = "/favicon/sources/#{assigns.domain}"
-    assigns = assign(assigns, :src, src)
+    assigns =
+      assign(assigns,
+        light_src: "/favicon/sources/#{assigns.domain}?placeholder=site",
+        dark_src: "/favicon/sources/#{assigns.domain}?placeholder=site_dark"
+      )
 
     ~H"""
-    <img src={@src} class="size-[18px] shrink-0" />
+    <img src={@light_src} alt="" class="shrink-0 size-6 rounded-md dark:hidden" />
+    <img src={@dark_src} alt="" class="shrink-0 size-6 rounded-md hidden dark:block" />
     """
   end
 

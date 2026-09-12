@@ -173,6 +173,8 @@ defmodule PlausibleWeb.FaviconTest do
 
   describe "Fallback to placeholder icon" do
     @placeholder_icon File.read!("priv/link_favicon.svg")
+    @site_placeholder_icon File.read!("priv/site_favicon_placeholder.svg")
+    @site_dark_placeholder_icon File.read!("priv/site_favicon_placeholder_dark.svg")
 
     test "falls back to placeholder when DDG returns a non-2xx response", %{plug_opts: plug_opts} do
       expect(
@@ -224,6 +226,64 @@ defmodule PlausibleWeb.FaviconTest do
 
       conn =
         conn(:get, "/favicon/sources/plausible.io")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @placeholder_icon
+    end
+
+    test "falls back to the site placeholder when requested", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          {:error, %Finch.TransportError{reason: :closed}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io?placeholder=site")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @site_placeholder_icon
+    end
+
+    test "falls back to the dark site placeholder when requested", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          {:error, %Finch.TransportError{reason: :closed}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io?placeholder=site_dark")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @site_dark_placeholder_icon
+    end
+
+    test "serves the site placeholder on the placeholder URL", %{plug_opts: plug_opts} do
+      conn =
+        conn(:get, "/favicon/sources/placeholder?placeholder=site")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @site_placeholder_icon
+    end
+
+    test "serves the plain placeholder on the placeholder URL by default", %{
+      plug_opts: plug_opts
+    } do
+      conn =
+        conn(:get, "/favicon/sources/placeholder")
         |> Favicon.call(plug_opts)
 
       assert conn.halted
