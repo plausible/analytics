@@ -3,11 +3,15 @@ import { useStoredInterval } from './interval-picker'
 import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { Interval } from './intervals'
+import { useStoredSmoothing } from './smoothing-picker'
+import { GraphSmoothing } from './smoothing'
 
 type GraphIntervalContextValue = {
   selectedInterval: Interval
   onIntervalClick: (interval: Interval) => void
   availableIntervals: Interval[]
+  selectedSmoothing: GraphSmoothing
+  onSmoothingClick: (smoothing: GraphSmoothing) => void
 }
 
 const GraphIntervalContext = createContext<GraphIntervalContextValue | null>(
@@ -21,6 +25,9 @@ export function GraphIntervalProvider({
 }) {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
+  const { selectedSmoothing, onSmoothingClick } = useStoredSmoothing(
+    site.domain
+  )
 
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useStoredInterval({
@@ -37,7 +44,13 @@ export function GraphIntervalProvider({
 
   return (
     <GraphIntervalContext.Provider
-      value={{ selectedInterval, onIntervalClick, availableIntervals }}
+      value={{
+        selectedInterval,
+        onIntervalClick,
+        availableIntervals,
+        selectedSmoothing,
+        onSmoothingClick
+      }}
     >
       {children}
     </GraphIntervalContext.Provider>

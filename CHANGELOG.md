@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
+- Add optional 7-period and 30-period moving average smoothing to the main graph, selectable alongside the graph interval in the dashboard options menu
 
 ### Removed
 

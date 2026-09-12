@@ -25,7 +25,7 @@ export default function VisitorGraph({
   const site = useSiteContext()
   const getAnnotationsQuery = useGetAnnotations()
 
-  const { selectedInterval } = useGraphIntervalContext()
+  const { selectedInterval, selectedSmoothing } = useGraphIntervalContext()
 
   const [selectedMetric, setSelectedMetric] = useState<Metric>(
     getStoredMetric(site) || DEFAULT_GRAPH_METRIC
@@ -145,6 +145,7 @@ export default function VisitorGraph({
                     width={width}
                     data={mainGraphApiState.data}
                     annotations={getAnnotationsQuery.data ?? []}
+                    smoothing={selectedSmoothing}
                   />
                 )}
                 {showGraphLoader && <Loader />}
