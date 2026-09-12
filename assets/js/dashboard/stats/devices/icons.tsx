@@ -1,5 +1,22 @@
 import React, { ReactNode } from 'react'
 
+const ICON_CLASS = 'inline-block w-4 h-4 mr-2'
+
+const SVG_ICON_COLOR_CLASS = 'text-gray-600 dark:text-gray-300'
+
+// The fallback icons are inlined so that they follow the current text color,
+// supporting light and dark mode.
+const SHARED_FALLBACK_SVG_PROPS = {
+  xmlns: 'http://www.w3.org/2000/svg',
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  className: `${ICON_CLASS} ${SVG_ICON_COLOR_CLASS}`
+} as const
+
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS: Record<string, string> = {
   Chrome: 'chrome.svg',
@@ -22,13 +39,26 @@ const BROWSER_ICONS: Record<string, string> = {
   'vivo Browser': 'vivo.png'
 }
 
+const BrowserFallbackIconSvg = () => (
+  <svg {...SHARED_FALLBACK_SVG_PROPS}>
+    <path d="M12 23c2.43 0 4.4-4.925 4.4-11S14.43 1 12 1 7.6 5.925 7.6 12 9.57 23 12 23Z" />
+    <path d="M1 12h22" />
+    <path d="M12 23c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11Z" />
+  </svg>
+)
+
 export const BrowserIcon = ({ dimensionValue }: { dimensionValue: string }) => {
-  const filename = BROWSER_ICONS[dimensionValue] ?? 'fallback.svg'
+  const filename = BROWSER_ICONS[dimensionValue]
+
+  if (!filename) {
+    return <BrowserFallbackIconSvg />
+  }
+
   return (
     <img
       alt=""
       src={`/images/icon/browser/${filename}`}
-      className="inline-block w-4 h-4 mr-2"
+      className={ICON_CLASS}
     />
   )
 }
@@ -53,14 +83,22 @@ const OS_ICONS: Record<string, string> = {
   FreeBSD: 'freebsd.png'
 }
 
+const OsFallbackIconSvg = () => (
+  <svg {...SHARED_FALLBACK_SVG_PROPS}>
+    <path d="M3.2 21.8h17.6a2.2 2.2 0 0 0 2.2-2.2v-5.204q0-.195-.035-.39l-2.62-9.996a2.2 2.2 0 0 0-2.164-1.81H5.819a2.2 2.2 0 0 0-2.165 1.81l-2.62 9.997a2 2 0 0 0-.034.39V19.6a2.2 2.2 0 0 0 2.2 2.2M23 14.2H1" />
+    <path strokeWidth={3} d="M5.5 17.961v-.011M10 17.961v-.011" />
+  </svg>
+)
+
 export const OsIcon = ({ dimensionValue }: { dimensionValue: string }) => {
-  const filename = OS_ICONS[dimensionValue] ?? 'fallback.svg'
+  const filename = OS_ICONS[dimensionValue]
+
+  if (!filename) {
+    return <OsFallbackIconSvg />
+  }
+
   return (
-    <img
-      alt=""
-      src={`/images/icon/os/${filename}`}
-      className="inline-block w-4 h-4 mr-2"
-    />
+    <img alt="" src={`/images/icon/os/${filename}`} className={ICON_CLASS} />
   )
 }
 
@@ -74,17 +112,17 @@ const SHARED_SCREEN_SIZE_SVG_PROPS = {
   strokeWidth: 2,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
-  className: '-mt-px feather inline-block'
+  className: `-mt-px feather inline-block ${SVG_ICON_COLOR_CLASS}`
 } as const
 
-export const MobileScreenIconSvg = () => (
+const MobileScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
     <line x1="12" y1="18" x2="12" y2="18" />
   </svg>
 )
 
-export const TabletScreenIconSvg = () => (
+const TabletScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
     <rect
       x="4"
@@ -99,14 +137,14 @@ export const TabletScreenIconSvg = () => (
   </svg>
 )
 
-export const LaptopScreenIconSvg = () => (
+const LaptopScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
     <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
     <line x1="2" y1="20" x2="22" y2="20" />
   </svg>
 )
 
-export const DesktopScreenIconSvg = () => (
+const DesktopScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
     <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
     <line x1="8" y1="21" x2="16" y2="21" />
@@ -114,7 +152,7 @@ export const DesktopScreenIconSvg = () => (
   </svg>
 )
 
-export const UltraWideScreenIconSvg = () => (
+const UltraWideScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
     <rect x="1" y="4" width="22" height="12" rx="2" ry="2" />
     <line x1="6" y1="20" x2="18" y2="20" />
@@ -122,11 +160,11 @@ export const UltraWideScreenIconSvg = () => (
   </svg>
 )
 
-export const NotSetScreenIconSvg = () => (
+const NotSetScreenIconSvg = () => (
   <svg {...SHARED_SCREEN_SIZE_SVG_PROPS}>
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="17.25" r="1.25" />
-    <path d="M9.244 8.369c.422-1.608 1.733-2.44 3.201-2.364 1.45.075 2.799.872 2.737 2.722-.089 2.63-2.884 2.273-3.197 4.773h.011" />
+    <path d="M12 23c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11Z" />
+    <path d="M8.7 9.8a3.3 3.3 0 1 1 6.6 0c0 1.44-.923 2.322-2.21 2.628-.59.14-1.09.614-1.09 1.222" />
+    <path strokeWidth={3} d="M12 17.511V17.5" />
   </svg>
 )
 

@@ -33,6 +33,10 @@ defmodule PlausibleWeb.Favicon do
   @placeholder_icon File.read!(@placeholder_icon_location)
   @external_resource @placeholder_icon_location
 
+  @dark_placeholder_icon_location "priv/link_favicon_dark.svg"
+  @dark_placeholder_icon File.read!(@dark_placeholder_icon_location)
+  @external_resource @dark_placeholder_icon_location
+
   @site_placeholder_icon_location "priv/site_favicon_placeholder.svg"
   @site_placeholder_icon File.read!(@site_placeholder_icon_location)
   @external_resource @site_placeholder_icon_location
@@ -89,11 +93,14 @@ defmodule PlausibleWeb.Favicon do
   but we filter that out.  When the icon request fails, we show a placeholder
   favicon instead. The placeholder is an svg from [https://heroicons.com/](https://heroicons.com/).
 
-  Requests with `?placeholder=site` get `#{@site_placeholder_icon_location}`
-  instead, which draws a globe on a rounded grey background, and
-  `?placeholder=site_dark` gets the dark variant of that drawing. An SVG served
-  as an image cannot see the `dark` class on the page, so the caller must say
-  which variant it needs.
+  An SVG served as an image cannot see the `dark` class on the page, so the
+  caller must say which variant it needs:
+
+  - `?placeholder=link_dark` gets `#{@dark_placeholder_icon_location}`, the dark
+    variant of the default link icon
+  - `?placeholder=site` gets `#{@site_placeholder_icon_location}`, which draws a
+    globe on a rounded grey background
+  - `?placeholder=site_dark` gets the dark variant of that globe drawing
 
   DuckDuckGo favicon service has some issues with [SVG favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
   For some reason, they return them with `content-type=image/x-icon` whereas SVG
@@ -155,6 +162,7 @@ defmodule PlausibleWeb.Favicon do
       case conn.query_params["placeholder"] do
         "site" -> @site_placeholder_icon
         "site_dark" -> @site_dark_placeholder_icon
+        "link_dark" -> @dark_placeholder_icon
         _ -> @placeholder_icon
       end
 

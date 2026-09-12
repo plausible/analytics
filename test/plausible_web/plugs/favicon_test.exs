@@ -173,6 +173,7 @@ defmodule PlausibleWeb.FaviconTest do
 
   describe "Fallback to placeholder icon" do
     @placeholder_icon File.read!("priv/link_favicon.svg")
+    @dark_placeholder_icon File.read!("priv/link_favicon_dark.svg")
     @site_placeholder_icon File.read!("priv/site_favicon_placeholder.svg")
     @site_dark_placeholder_icon File.read!("priv/site_favicon_placeholder_dark.svg")
 
@@ -231,6 +232,24 @@ defmodule PlausibleWeb.FaviconTest do
       assert conn.halted
       assert conn.status == 200
       assert conn.resp_body == @placeholder_icon
+    end
+
+    test "falls back to the dark placeholder when requested", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          {:error, %Finch.TransportError{reason: :closed}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io?placeholder=link_dark")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @dark_placeholder_icon
     end
 
     test "falls back to the site placeholder when requested", %{plug_opts: plug_opts} do
