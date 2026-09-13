@@ -44,7 +44,7 @@ defmodule Plausible.CustomerSupport.TrialProspects do
   @kind_rank %{starter: 0, growth: 1, business: 2}
 
   @page_size 100
-  @sortable_columns ~w(mrr trial_start)
+  @sortable_columns ~w(mrr traffic trial_start)
   @max_expired_days 30
 
   @spec sortable_columns() :: [String.t()]
@@ -67,14 +67,14 @@ defmodule Plausible.CustomerSupport.TrialProspects do
     )
   end
 
-  @spec list(String.t(), :asc | :desc, pos_integer()) :: %{
+  @spec list(String.t(), :asc | :desc, pos_integer(), String.t(), String.t()) :: %{
           prospects: [TrialProspect.t()],
           page_number: pos_integer(),
           total_pages: pos_integer(),
           total_entries: non_neg_integer()
         }
-  def list(sort_by, sort_direction, page) do
-    base = listing_query()
+  def list(sort_by, sort_direction, page, trial_status, reviewed_status) do
+    base = listing_query(trial_status, reviewed_status)
 
     total_entries = Repo.aggregate(base, :count)
     total_pages = max(1, ceil(total_entries / @page_size))
@@ -96,12 +96,32 @@ defmodule Plausible.CustomerSupport.TrialProspects do
     }
   end
 
-  defp listing_query do
-    from(p in TrialProspect,
-      join: t in subquery(population_query()),
-      as: :team,
-      on: t.id == p.team_id
-    )
+  defp listing_query(trial_status, reviewed_status) do
+    TrialProspect
+    |> join(:inner, [p], t in subquery(population_query()), as: :team, on: t.id == p.team_id)
+    |> filter_trial_status(trial_status)
+    |> filter_reviewed_status(reviewed_status)
+  end
+
+  defp filter_trial_status(query, "all"), do: query
+
+  defp filter_trial_status(query, _active) do
+    today = Date.utc_today()
+    from([team: t] in query, where: t.trial_expiry_date >= ^today)
+  end
+
+  defp filter_reviewed_status(query, "all"), do: query
+
+  defp filter_reviewed_status(query, _unreviewed) do
+    from([p] in query, where: is_nil(p.reviewed_at))
+  end
+
+  @spec mark_reviewed(pos_integer(), boolean()) :: {non_neg_integer(), nil}
+  def mark_reviewed(id, reviewed?) do
+    reviewed_at = if reviewed?, do: DateTime.utc_now(:second), else: nil
+
+    from(p in TrialProspect, where: p.id == ^id)
+    |> Repo.update_all(set: [reviewed_at: reviewed_at])
   end
 
   defp preload_team(q) do
@@ -112,6 +132,10 @@ defmodule Plausible.CustomerSupport.TrialProspects do
 
   defp order_prospects(q, "trial_start", direction) do
     order_by(q, [team: t], [{^direction, t.inserted_at}])
+  end
+
+  defp order_prospects(q, "traffic", direction) do
+    order_by(q, [p], [{^direction, p.estimated_monthly}, {^direction, p.id}])
   end
 
   # Over-the-top-tier (Custom/Enterprise) prospects rank first

@@ -127,6 +127,70 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
       assert text_of_element(html, "tbody tr:first-child") =~ "Older Co"
     end
 
+    test "can order by traffic estimate", %{conn: conn} do
+      low_traffic = insert(:team, name: "Low Traffic Co")
+      high_traffic = insert(:team, name: "High Traffic Co")
+
+      prospect(low_traffic, estimated_monthly: 10_000)
+      prospect(high_traffic, estimated_monthly: 1_000_000)
+
+      {:ok, _lv, html} =
+        live(conn, open_prospects(sort_by: "traffic", sort_direction: "desc"))
+
+      assert text_of_element(html, "tbody tr:first-child") =~ "High Traffic Co"
+    end
+
+    test "shows active trials by default and can include recently expired trials", %{conn: conn} do
+      active =
+        insert(:team,
+          name: "Active Co",
+          trial_expiry_date: Date.add(Date.utc_today(), 1)
+        )
+
+      expired =
+        insert(:team,
+          name: "Recently Expired Co",
+          trial_expiry_date: Date.add(Date.utc_today(), -1)
+        )
+
+      prospect(active, estimated_mrr: 19)
+      prospect(expired, estimated_mrr: 99)
+
+      {:ok, _lv, active_html} = live(conn, open_prospects())
+      assert text(active_html) =~ "Active Co"
+      refute text(active_html) =~ "Recently Expired Co"
+
+      {:ok, _lv, all_html} = live(conn, open_prospects(trial_status: "all"))
+      assert text(all_html) =~ "Active Co"
+      assert text(all_html) =~ "Recently Expired Co"
+    end
+
+    test "marks prospects reviewed and hides them from the default list", %{conn: conn} do
+      team = insert(:team, name: "Reviewed Co")
+      prospect = prospect(team, estimated_mrr: 99)
+
+      {:ok, lv, _html} = live(conn, open_prospects())
+
+      lv
+      |> element(~s|button[phx-click="set-reviewed"][phx-value-id="#{prospect.id}"]|)
+      |> render_click()
+
+      assert Repo.reload!(prospect).reviewed_at
+      refute has_element?(lv, "tbody", "Reviewed Co")
+
+      {:ok, reviewed_lv, reviewed_html} =
+        live(conn, open_prospects(reviewed_status: "all"))
+
+      assert text(reviewed_html) =~ "Reviewed Co"
+      assert text_of_element(reviewed_html, "tbody tr:first-child") =~ "Reviewed"
+
+      reviewed_lv
+      |> element(~s|button[phx-click="set-reviewed"][phx-value-id="#{prospect.id}"]|)
+      |> render_click()
+
+      refute Repo.reload!(prospect).reviewed_at
+    end
+
     test "excludes rows left behind for teams no longer on a trial", %{conn: conn} do
       live_team = insert(:team, name: "Live Co")
       prospect(live_team, estimated_mrr: 19)
