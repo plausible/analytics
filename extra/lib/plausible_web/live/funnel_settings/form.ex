@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     >
     </div>
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
-      <div class="md:w-2/3 max-w-lg h-full">
+      <div class="md:w-2/3 max-w-xl h-full">
         <div id="funnel-form">
           <.form
             :let={f}
@@ -80,58 +80,63 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               label="Funnel name"
             />
 
-            <div class="mt-6 flex items-center justify-between gap-4">
-              <.input
-                type="radio"
-                class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                id={f[:funnel_type].id <> "_sequential"}
-                name={f[:funnel_type].name}
-                value="sequential"
-                checked={@funnel_type == :sequential}
-                phx-click="switch-type"
-                phx-value-type="sequential"
-                label="Sequential"
-              >
-                <:help_content>
-                  Visitors must complete every step in order. Other activity can happen between steps.
-                </:help_content>
-              </.input>
-            </div>
+            <div class="flex flex-col gap-y-1 mt-8">
+              <.label>
+                Funnel type
+              </.label>
+              <div class="flex items-center justify-between gap-4 mt-2">
+                <.input
+                  type="radio"
+                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  id={f[:funnel_type].id <> "_sequential"}
+                  name={f[:funnel_type].name}
+                  value="sequential"
+                  checked={@funnel_type == :sequential}
+                  phx-click="switch-type"
+                  phx-value-type="sequential"
+                  label="Sequential"
+                >
+                  <:help_content>
+                    All steps are required. Other activity is allowed between steps.
+                  </:help_content>
+                </.input>
+              </div>
 
-            <div class="mt-6 flex items-center justify-between gap-4">
-              <.input
-                type="radio"
-                class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                id={f[:funnel_type].id <> "_flexible"}
-                name={f[:funnel_type].name}
-                value="flexible"
-                checked={@funnel_type == :flexible}
-                phx-click="switch-type"
-                phx-value-type="flexible"
-                label="Flexible"
-              >
-                <:help_content>
-                  Visitors must complete the first and last steps. Middle steps can be skipped, and other activity can happen between steps.
-                </:help_content>
-              </.input>
-            </div>
+              <div class="flex items-center justify-between gap-4">
+                <.input
+                  type="radio"
+                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  id={f[:funnel_type].id <> "_flexible"}
+                  name={f[:funnel_type].name}
+                  value="flexible"
+                  checked={@funnel_type == :flexible}
+                  phx-click="switch-type"
+                  phx-value-type="flexible"
+                  label="Flexible"
+                >
+                  <:help_content>
+                    Only the first and last steps are required. Middle steps can be skipped.
+                  </:help_content>
+                </.input>
+              </div>
 
-            <div class="mt-6 flex items-center justify-between gap-4">
-              <.input
-                type="radio"
-                class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                id={f[:funnel_type].id <> "_strict"}
-                name={f[:funnel_type].name}
-                value="strict"
-                checked={@funnel_type == :strict}
-                phx-click="switch-type"
-                phx-value-type="strict"
-                label="Strict"
-              >
-                <:help_content>
-                  Visitors must complete every step in order, with no other activity between steps.
-                </:help_content>
-              </.input>
+              <div class="flex items-center justify-between gap-4">
+                <.input
+                  type="radio"
+                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  id={f[:funnel_type].id <> "_strict"}
+                  name={f[:funnel_type].name}
+                  value="strict"
+                  checked={@funnel_type == :strict}
+                  phx-click="switch-type"
+                  phx-value-type="strict"
+                  label="Strict"
+                >
+                  <:help_content>
+                    All steps are required. No other activity is allowed between steps.
+                  </:help_content>
+                </.input>
+              </div>
             </div>
 
             <div id="steps-builder" class="mt-6">
@@ -139,7 +144,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 Funnel steps
               </.label>
 
-              <div :for={step_idx <- @step_ids} class="flex my-3">
+              <div :for={step_idx <- @step_ids} class="flex items-center my-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
                     selected={find_preselected(@funnel, @funnel_modified?, step_idx)}
@@ -163,7 +168,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   />
                 </div>
 
-                <div class="w-4/12 mt-1 ml-4 text-gray-500 dark:text-gray-400">
+                <div class="w-4/12 ml-4 text-gray-500 dark:text-gray-400">
                   <.evaluation
                     :if={@evaluation_result}
                     result={@evaluation_result}
@@ -172,7 +177,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 </div>
               </div>
 
-              <div class="flex flex-col gap-y-4 mt-6">
+              <div class="flex flex-col gap-y-2 mt-2">
                 <.add_step_button :if={
                   length(@step_ids) < Funnel.max_steps() and
                     map_size(@selections_made) < length(@goals)

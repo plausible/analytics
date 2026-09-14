@@ -388,11 +388,11 @@ const funnelTypeLabels: { [t: string]: string } = {
 
 const funnelTypeDescriptions: { [t: string]: string } = {
   [FunnelType.sequential]:
-    'Visitors must complete every step in order. Other activity can happen between steps.',
+    'All steps are required. Other activity is allowed between steps.',
   [FunnelType.flexible]:
-    'Visitors must complete the first and last steps. Middle steps can be skipped, and other activity can happen between steps.',
+    'Only the first and last steps are required. Middle steps can be skipped.',
   [FunnelType.strict]:
-    'Visitors must complete every step in order, with no other activity between steps.'
+    'All steps are required. No other activity is allowed between steps.'
 }
 
 function FunnelHeader({

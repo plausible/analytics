@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
         <span
           :if={@help_text || @help_content != []}
-          class="text-gray-500 dark:text-gray-400 mb-2 text-sm text-pretty"
+          class="font-normal text-gray-500 dark:text-gray-400 mb-2 text-sm text-pretty"
         >
           {@help_text}
           {render_slot(@help_content)}
