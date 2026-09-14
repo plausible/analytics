@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(site, query, %Funnel{} = funnel) do
-    revenue_steps = revenue_steps(site, funnel)
+    revenue_steps = revenue_steps(site, funnel.steps)
 
     comparison_funnel =
       if query.comparison_utc_time_range do
@@ -38,13 +38,13 @@ defmodule Plausible.Stats.Funnel do
 
         comparison_query
         |> compute(funnel, revenue_steps)
-        |> recompute_flexible(comparison_query, funnel, revenue_steps)
+        |> recompute_flexible(comparison_query, site, funnel)
       end
 
     final_funnel =
       query
       |> compute(funnel, revenue_steps)
-      |> recompute_flexible(query, funnel, revenue_steps)
+      |> recompute_flexible(query, site, funnel)
 
     {:ok,
      final_funnel
@@ -60,17 +60,10 @@ defmodule Plausible.Stats.Funnel do
      })}
   end
 
-  defp revenue_steps(site, funnel) do
-    if Revenue.available?(site) do
-      Enum.reject(funnel.steps, &is_nil(&1.goal.currency))
-    else
-      []
-    end
-  end
-
-  defp recompute_flexible(final_funnel, query, %{funnel_type: :flexible} = funnel, revenue_steps) do
+  defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do
     if length(funnel.steps) > 2 do
       short_funnel = convert_to_first_and_last(funnel)
+      revenue_steps = revenue_steps(site, short_funnel.steps)
 
       [_, last_step] =
         query
@@ -85,7 +78,7 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
-  defp recompute_flexible(final_funnel, _query, _funnel, _revenue_steps),
+  defp recompute_flexible(final_funnel, _query, _site, _funnel),
     do: final_funnel
 
   defp convert_to_first_and_last(funnel) do
@@ -97,6 +90,14 @@ defmodule Plausible.Stats.Funnel do
       |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
 
     %{funnel | funnel_type: :sequential, steps: steps}
+  end
+
+  defp revenue_steps(site, steps) do
+    if Revenue.available?(site) do
+      Enum.reject(steps, &is_nil(&1.goal.currency))
+    else
+      []
+    end
   end
 
   defp compute(query, funnel, revenue_steps) do
