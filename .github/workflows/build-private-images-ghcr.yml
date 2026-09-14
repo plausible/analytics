@@ -27,7 +27,7 @@ jobs:
         env:
           DOCKER_METADATA_PR_HEAD_SHA: true
         with:
-          images: ghcr.io/plausible/analytics/ee
+          images: ghcr.io/tsubery/analytics/ee
           tags: |
             type=ref,event=pr
             type=ref,event=branch

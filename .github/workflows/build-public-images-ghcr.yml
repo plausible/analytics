@@ -4,12 +4,16 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  GHCR_REPO: ghcr.io/plausible/community-edition
+  GHCR_REPO: ghcr.io/tsubery/analytics
 
 jobs:
   build:
