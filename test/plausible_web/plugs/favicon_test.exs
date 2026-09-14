@@ -172,7 +172,7 @@ defmodule PlausibleWeb.FaviconTest do
   end
 
   describe "Fallback to placeholder icon" do
-    @placeholder_icon File.read!("priv/link_favicon.svg")
+    @source_placeholder_icon File.read!("priv/link_favicon.svg")
     @site_placeholder_icon File.read!("priv/site_favicon_placeholder.svg")
     @site_dark_placeholder_icon File.read!("priv/site_favicon_placeholder_dark.svg")
 
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.FaviconTest do
 
       assert conn.halted
       assert conn.status == 200
-      assert conn.resp_body == @placeholder_icon
+      assert conn.resp_body == @source_placeholder_icon
     end
 
     test "falls back to placeholder in case of a network error", %{plug_opts: plug_opts} do
@@ -210,7 +210,7 @@ defmodule PlausibleWeb.FaviconTest do
 
       assert conn.halted
       assert conn.status == 200
-      assert conn.resp_body == @placeholder_icon
+      assert conn.resp_body == @source_placeholder_icon
     end
 
     test "falls back to placeholder when DDG returns a broken image response", %{
@@ -230,7 +230,7 @@ defmodule PlausibleWeb.FaviconTest do
 
       assert conn.halted
       assert conn.status == 200
-      assert conn.resp_body == @placeholder_icon
+      assert conn.resp_body == @source_placeholder_icon
     end
 
     test "falls back to the site placeholder when requested", %{plug_opts: plug_opts} do
@@ -261,7 +261,7 @@ defmodule PlausibleWeb.FaviconTest do
       )
 
       conn =
-        conn(:get, "/favicon/sources/plausible.io?placeholder=site_dark")
+        conn(:get, "/favicon/sources/plausible.io?placeholder=site&ui-mode=dark")
         |> Favicon.call(plug_opts)
 
       assert conn.halted
@@ -269,9 +269,9 @@ defmodule PlausibleWeb.FaviconTest do
       assert conn.resp_body == @site_dark_placeholder_icon
     end
 
-    test "serves the site placeholder on the placeholder URL", %{plug_opts: plug_opts} do
+    test "serves the site placeholder on its own URL", %{plug_opts: plug_opts} do
       conn =
-        conn(:get, "/favicon/sources/placeholder?placeholder=site")
+        conn(:get, "/favicon/placeholders/site")
         |> Favicon.call(plug_opts)
 
       assert conn.halted
@@ -279,16 +279,42 @@ defmodule PlausibleWeb.FaviconTest do
       assert conn.resp_body == @site_placeholder_icon
     end
 
-    test "serves the plain placeholder on the placeholder URL by default", %{
-      plug_opts: plug_opts
-    } do
+    test "serves the dark site placeholder on its own URL", %{plug_opts: plug_opts} do
+      conn =
+        conn(:get, "/favicon/placeholders/site?ui-mode=dark")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @site_dark_placeholder_icon
+    end
+
+    test "serves the source placeholder on its own URL", %{plug_opts: plug_opts} do
+      conn =
+        conn(:get, "/favicon/placeholders/source")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @source_placeholder_icon
+    end
+
+    test "serves a favicon for a source named placeholder", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/placeholder.ico" ->
+          {:ok, %Finch.Response{status: 200, body: "favicon", headers: []}}
+        end
+      )
+
       conn =
         conn(:get, "/favicon/sources/placeholder")
         |> Favicon.call(plug_opts)
 
       assert conn.halted
       assert conn.status == 200
-      assert conn.resp_body == @placeholder_icon
+      assert conn.resp_body == "favicon"
     end
   end
 end
