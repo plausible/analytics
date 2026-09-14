@@ -813,8 +813,8 @@ defmodule PlausibleWeb.Live.Sites do
   def favicon(assigns) do
     assigns =
       assign(assigns,
-        light_src: "/favicon/sources/#{assigns.domain}?placeholder=site",
-        dark_src: "/favicon/sources/#{assigns.domain}?placeholder=site_dark"
+        light_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=light",
+        dark_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=dark"
       )
 
     ~H"""

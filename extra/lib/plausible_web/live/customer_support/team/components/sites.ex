@@ -123,8 +123,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
             <div class="flex items-center">
               <img
                 src="/favicon/sources/{site.domain}"
-                onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
-                class="w-4 h-4 flex-shrink-0 mt-px mr-2"
+                onerror="this.onerror=null; this.src='/favicon/placeholders/source';"
+                class="size-4 flex-shrink-0 mt-px mr-2"
               />
               <.styled_link
                 patch={Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)}

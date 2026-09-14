@@ -29,13 +29,13 @@ defmodule PlausibleWeb.Favicon do
   import Plug.Conn
   alias Plausible.HTTPClient
 
-  @placeholder_icon_location "priv/link_favicon.svg"
-  @placeholder_icon File.read!(@placeholder_icon_location)
-  @external_resource @placeholder_icon_location
+  @source_placeholder_icon_location "priv/link_favicon.svg"
+  @source_placeholder_icon File.read!(@source_placeholder_icon_location)
+  @external_resource @source_placeholder_icon_location
 
-  @dark_placeholder_icon_location "priv/link_favicon_dark.svg"
-  @dark_placeholder_icon File.read!(@dark_placeholder_icon_location)
-  @external_resource @dark_placeholder_icon_location
+  @source_dark_placeholder_icon_location "priv/link_favicon_dark.svg"
+  @source_dark_placeholder_icon File.read!(@source_dark_placeholder_icon_location)
+  @external_resource @source_dark_placeholder_icon_location
 
   @site_placeholder_icon_location "priv/site_favicon_placeholder.svg"
   @site_placeholder_icon File.read!(@site_placeholder_icon_location)
@@ -93,14 +93,18 @@ defmodule PlausibleWeb.Favicon do
   but we filter that out.  When the icon request fails, we show a placeholder
   favicon instead. The placeholder is an svg from [https://heroicons.com/](https://heroicons.com/).
 
-  An SVG served as an image cannot see the `dark` class on the page, so the
-  caller must say which variant it needs:
+  There are two placeholders, and `?placeholder=` picks one:
 
-  - `?placeholder=link_dark` gets `#{@dark_placeholder_icon_location}`, the dark
-    variant of the default link icon
-  - `?placeholder=site` gets `#{@site_placeholder_icon_location}`, which draws a
-    globe on a rounded grey background
-  - `?placeholder=site_dark` gets the dark variant of that globe drawing
+  - `source` is `#{@source_placeholder_icon_location}`, a plain
+    link icon for the referrer rows in the reports.
+  - `site` is `#{@site_placeholder_icon_location}`, a globe on a rounded grey
+    background, for the rows that list sites.
+
+  `?ui-mode=light|dark` picks the colours and defaults to `light`. Each
+  placeholder has its own dark drawing, `#{@source_dark_placeholder_icon_location}`
+  and `#{@site_dark_placeholder_icon_location}`. An SVG served as an image
+  cannot see the `dark` class on the page, so the caller must say which mode it
+  needs.
 
   DuckDuckGo favicon service has some issues with [SVG favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
   For some reason, they return them with `content-type=image/x-icon` whereas SVG
@@ -125,8 +129,8 @@ defmodule PlausibleWeb.Favicon do
   """
   def call(conn, favicon_domains: favicon_domains) do
     case conn.request_path do
-      "/favicon/sources/placeholder" ->
-        send_placeholder(conn)
+      "/favicon/placeholders/" <> name ->
+        send_placeholder(conn, name)
 
       "/favicon/sources/" <> domain ->
         domain = URI.decode_www_form(domain)
@@ -155,23 +159,21 @@ defmodule PlausibleWeb.Favicon do
     end
   end
 
-  defp send_placeholder(conn) do
+  defp send_placeholder(conn, name \\ nil) do
     conn = fetch_query_params(conn)
-
-    icon =
-      case conn.query_params["placeholder"] do
-        "site" -> @site_placeholder_icon
-        "site_dark" -> @site_dark_placeholder_icon
-        "link_dark" -> @dark_placeholder_icon
-        _ -> @placeholder_icon
-      end
+    name = name || conn.query_params["placeholder"]
 
     conn
     |> put_resp_content_type("image/svg+xml")
     |> put_resp_header("cache-control", "public, max-age=2592000")
-    |> send_resp(200, icon)
+    |> send_resp(200, placeholder_icon(name, conn.query_params["ui-mode"]))
     |> halt
   end
+
+  defp placeholder_icon("site", "dark"), do: @site_dark_placeholder_icon
+  defp placeholder_icon("site", _ui_mode), do: @site_placeholder_icon
+  defp placeholder_icon(_source, "dark"), do: @source_dark_placeholder_icon
+  defp placeholder_icon(_source, _ui_mode), do: @source_placeholder_icon
 
   @forwarded_headers ["content-type", "cache-control", "expires"]
   defp forward_headers(%Plug.Conn{} = conn, headers) do
