@@ -126,3 +126,33 @@ test('creating a team when the user name is long', async ({
     'Chosen Team Name'
   )
 })
+
+test('add another button moves focus to the new row and hides once the row limit is reached', async ({
+  page,
+  request
+}) => {
+  await setupSite({ page, request })
+  await page.goto('/team/setup', { waitUntil: 'commit' })
+
+  await expectLiveViewConnected(page)
+
+  const addAnother = page.getByRole('button', { name: 'Add another' })
+  // 10 is the team member limit for a trial account
+  const maxRows = 10
+
+  await expect(addAnother).toBeVisible()
+
+  await addAnother.click()
+
+  await expect(
+    page.locator('#member-rows > div:last-child input[type="email"]')
+  ).toBeFocused()
+
+  // one row already exists by default, one more was just added above
+  for (let i = 2; i < maxRows; i++) {
+    await addAnother.click()
+  }
+
+  await expect(page.locator('#member-rows > div')).toHaveCount(maxRows)
+  await expect(addAnother).toBeHidden()
+})

@@ -1,18 +1,7 @@
-// Instantly adds/removes rows, and selects a role, in the "create team"
-// form's member list - entirely client-side, no server round trip. Row and
-// role state is plain form data (an email input and a hidden role input per
-// row), read once when the form is submitted.
-//
-// Expects a `template[data-row-template]` (the row blueprint, with the
-// literal placeholder `__ROW_ID__` standing in for the row id in its
-// attributes), a `[data-row-list]` container to append/remove rows from, a
-// `[data-add-row]` button, `[data-remove-row]` buttons, role pickers built
-// from a `details[data-role-picker]` (listbox-button pattern: a `<summary>`
-// trigger, a `[role=listbox]` container, and `[data-role-item]`
-// `[role=option]` buttons) containing a `[data-role-label]` span and a
-// `[data-role-value]` hidden input, and a `data-max-rows` attribute capping
-// how many rows can exist (computed server-side from the plan's team member
-// limit) - the add button shows a not-allowed cursor once that cap is hit.
+// Lets people add/remove member rows and pick a role instantly, without
+// waiting on a server round trip - this is a JS hook rather than plain
+// LiveView because that latency would be noticeable for something the
+// server doesn't need to know about until the form is actually submitted.
 
 const ROW_ID_PLACEHOLDER = '__ROW_ID__'
 
@@ -71,13 +60,14 @@ export default {
     this.list.appendChild(row)
     this.wireRolePicker(row.querySelector('[data-role-picker]'))
     this.updateAddButtonState()
+    row.querySelector('input[type="email"]').focus()
   },
 
   updateAddButtonState() {
-    this.addButton.classList.toggle(
-      'cursor-not-allowed',
-      this.list.children.length >= this.maxRows
-    )
+    const atLimit = this.list.children.length >= this.maxRows
+
+    this.addButton.classList.toggle('hidden', atLimit)
+    this.addButton.classList.toggle('inline-flex', !atLimit)
   },
 
   removeRow(button) {

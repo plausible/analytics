@@ -75,24 +75,21 @@ defmodule PlausibleWeb.Live.TeamSetup do
             />
 
             <div id="member-rows-container" phx-hook="MemberRows" data-max-rows={@max_new_members}>
-              <div class="flex items-center justify-between mb-2 mt-4">
-                <.label>
-                  Team members
-                </.label>
-
-                <button
-                  type="button"
-                  aria-label="Add member"
-                  data-add-row
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <Heroicons.plus class="size-4" />
-                </button>
-              </div>
+              <.label class="mb-2 mt-4">
+                Team members
+              </.label>
 
               <div id="member-rows" data-row-list>
                 <.member_row row={%{id: "1", email: "", role: :viewer}} />
               </div>
+
+              <button
+                type="button"
+                data-add-row
+                class="mt-3 inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+              >
+                <Heroicons.plus class="size-4" /> Add another
+              </button>
 
               <template data-row-template>
                 <.member_row row={%{id: "__ROW_ID__", email: "", role: :viewer}} />
