@@ -153,14 +153,20 @@ defmodule Plausible.Teams.Team do
       |> validate_name()
       |> validate_required(:name)
 
-    # validate_exclusion/3 only runs its check when the field actually changed
-    # relative to the struct's current value, which would let a freshly
-    # auto-created team (whose name already equals the reserved default) keep
-    # that name simply by resubmitting it unchanged. Check unconditionally.
-    if get_field(changeset, :name) == Plausible.Teams.default_name() do
-      add_error(changeset, :name, "is reserved")
+    # Do not allow an actual team keep Plausible.Teams.default_name()
+    # as its name. This is just to avoid confusion in the UI and keep
+    # the auto-created team distinguishable from a real one.
+
+    # Hence we use `force_change` here -- even if the value didn't
+    # change, check that name is not `Plausible.Teams.default_name()`.
+    # Only do that when the name field doesn't have any prior errors
+    # on it to avoid double-flagging (blank + reserved).
+    if Keyword.has_key?(changeset.errors, :name) do
+      changeset
     else
       changeset
+      |> force_change(:name, get_field(changeset, :name))
+      |> validate_exclusion(:name, [Plausible.Teams.default_name()])
     end
   end
 
