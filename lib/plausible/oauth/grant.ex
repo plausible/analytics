@@ -20,13 +20,13 @@ defmodule Plausible.OAuth.Grant do
     :access_token_hint,
     :access_token_expires_at,
     :resource,
+    :scopes,
     :refresh_token_hash,
     :refresh_token_hint,
     :refresh_token_expires_at
   ]
   @optional [
     :client_name,
-    :scopes,
     :previous_refresh_token_hash,
     :rotated_at,
     :revoked_at,
@@ -87,6 +87,7 @@ defmodule Plausible.OAuth.Grant do
     |> validate_required(@required)
     |> validate_length(:client_name, max: 255)
     |> validate_length(:client_id, max: 2048, count: :bytes)
+    |> validate_length(:resource, max: 2048, count: :bytes)
     |> unique_constraint(:access_token_hash)
     |> unique_constraint(:refresh_token_hash)
   end

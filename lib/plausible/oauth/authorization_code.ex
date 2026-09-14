@@ -9,6 +9,7 @@ defmodule Plausible.OAuth.AuthorizationCode do
   @type t() :: %__MODULE__{}
 
   @code_challenge_methods ["S256"]
+  @code_challenge_length 43
 
   @required [
     :code_hash,
@@ -17,11 +18,12 @@ defmodule Plausible.OAuth.AuthorizationCode do
     :code_challenge,
     :code_challenge_method,
     :resource,
+    :scopes,
     :expires_at,
     :user_id,
     :team_id
   ]
-  @optional [:scopes, :client_name]
+  @optional [:client_name]
 
   schema "oauth_authorization_codes" do
     field :code_hash, :string
@@ -47,8 +49,11 @@ defmodule Plausible.OAuth.AuthorizationCode do
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> validate_inclusion(:code_challenge_method, @code_challenge_methods)
+    |> validate_length(:code_challenge, is: @code_challenge_length, count: :bytes)
     |> validate_length(:client_name, max: 255)
     |> validate_length(:client_id, max: 2048, count: :bytes)
+    |> validate_length(:redirect_uri, max: 2048, count: :bytes)
+    |> validate_length(:resource, max: 2048, count: :bytes)
     |> unique_constraint(:code_hash)
   end
 end
