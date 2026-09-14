@@ -379,6 +379,55 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
                  Plausible.Funnels.get(site, "Strict funnel")
       end
 
+      test "save button saves flexible setting", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, [g1, g2]} = setup_goals(site)
+
+        {:ok, %Plausible.Funnel{funnel_type: :sequential} = funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Flexible funnel",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
+            funnel_type: :sequential
+          )
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        assert element_exists?(
+                 render(lv),
+                 ~s/input#funnel_funnel_type_sequential[checked]/
+               )
+
+        lv
+        |> element(~s/input#funnel_funnel_type_flexible[phx-click="switch-type"]/)
+        |> render_click()
+
+        refute element_exists?(
+                 render(lv),
+                 ~s/input#funnel_funnel_type_sequential[checked]/
+               )
+
+        assert element_exists?(
+                 render(lv),
+                 ~s/input#funnel_funnel_type_flexible[checked]/
+               )
+
+        lv
+        |> element(~s/form/)
+        |> render_submit()
+
+        assert %Plausible.Funnel{funnel_type: :flexible} =
+                 Plausible.Funnels.get(site, "Flexible funnel")
+      end
+
       test "editing a funnel pre-renders it", %{
         conn: conn,
         site: site
@@ -444,6 +493,49 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert text_of_element(render(lv), ~s/#step-eval-1/) =~ "Dropoff: 100%"
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
+      end
+
+      test "funnel is re-evaluated when flexible is set", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/go/to/blog/**"})
+        {:ok, g2} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+        {:ok, g3} = Plausible.Goals.create(site, %{"event_name" => "Purchase"})
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Flexible switch",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}, %{"goal_id" => g3.id}]
+          )
+
+        ts = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123, timestamp: ts),
+          build(:event,
+            name: "Purchase",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 2, :second)
+          )
+        ])
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
+
+        lv
+        |> element(~s/input#funnel_funnel_type_flexible[phx-click="switch-type"]/)
+        |> render_click()
+
+        assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 100%"
       end
 
       test "clicking save after editing the funnel, updates it", %{
@@ -517,6 +609,40 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert %Plausible.Funnel{funnel_type: :strict} =
                  Plausible.Funnels.get(site, "Editable strict funnel")
+      end
+
+      test "clicking save after editing the funnel, updates flexible setting", %{
+        conn: conn,
+        site: site
+      } do
+        {:ok, [g1, g2]} = setup_goals(site)
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Editable flexible funnel",
+            [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}],
+            funnel_type: :sequential
+          )
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        lv
+        |> element(~s/input#funnel_funnel_type_flexible[phx-click="switch-type"]/)
+        |> render_click()
+
+        lv
+        |> element(~s/form/)
+        |> render_submit()
+
+        assert %Plausible.Funnel{funnel_type: :flexible} =
+                 Plausible.Funnels.get(site, "Editable flexible funnel")
       end
 
       test "funnel gets evaluated on every select, assuming a second has passed between selections",
