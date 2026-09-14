@@ -11,7 +11,7 @@ const SHARED_SVG_PROPS = {
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 2,
+  strokeWidth: 1.5,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
   className: `${ICON_CLASS} ${SVG_ICON_COLOR_CLASS}`
@@ -86,7 +86,7 @@ const OS_ICONS: Record<string, string> = {
 const OsFallbackIconSvg = () => (
   <svg {...SHARED_SVG_PROPS}>
     <path d="M4 20.818h16a2 2 0 0 0 2-2v-4.73q0-.18-.032-.355l-2.38-9.087A2 2 0 0 0 17.617 3H6.382a2 2 0 0 0-1.968 1.646l-2.381 9.087a2 2 0 0 0-.032.355v4.73a2 2 0 0 0 2 2M22 13.91H2" />
-    <path strokeWidth={3} d="M6.092 17.328v-.01M10.182 17.328v-.01" />
+    <path strokeWidth={2.5} d="M6.092 17.328v-.01M10.182 17.328v-.01" />
   </svg>
 )
 
@@ -105,7 +105,7 @@ export const OsIcon = ({ dimensionValue }: { dimensionValue: string }) => {
 const MobileScreenIconSvg = () => (
   <svg {...SHARED_SVG_PROPS}>
     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-    <line x1="12" y1="18" x2="12" y2="18" />
+    <line strokeWidth={2.5} x1="12" y1="18" x2="12" y2="18" />
   </svg>
 )
 
@@ -120,7 +120,7 @@ const TabletScreenIconSvg = () => (
       ry="2"
       transform="rotate(180 12 12)"
     />
-    <line x1="12" y1="18" x2="12" y2="18" />
+    <line strokeWidth={2.5} x1="12" y1="18" x2="12" y2="18" />
   </svg>
 )
 
@@ -151,7 +151,7 @@ const NotSetScreenIconSvg = () => (
   <svg {...SHARED_SVG_PROPS}>
     <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" />
     <path d="M9 10a3 3 0 1 1 6 0c0 1.31-.839 2.11-2.008 2.389-.538.128-.992.559-.992 1.111" />
-    <path strokeWidth={3} d="M12 17.01V17" />
+    <path strokeWidth={2.5} d="M12 17.01V17" />
   </svg>
 )
 
