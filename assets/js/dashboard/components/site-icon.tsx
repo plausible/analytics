@@ -51,7 +51,7 @@ export const ConsolidatedViewIcon = () => (
       height="19"
       rx="4.5"
       fill="none"
-      strokeWidth="1.8"
+      strokeWidth="1.5"
       className="stroke-white/15"
     />
     <g
@@ -60,7 +60,7 @@ export const ConsolidatedViewIcon = () => (
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="1.8"
+      strokeWidth="1.5"
     >
       <path d="M22 12H2M12 22c5.714-5.442 5.714-14.558 0-20M12 22C6.286 16.558 6.286 7.442 12 2" />
       <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" />

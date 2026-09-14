@@ -33,6 +33,10 @@ defmodule PlausibleWeb.Favicon do
   @source_placeholder_icon File.read!(@source_placeholder_icon_location)
   @external_resource @source_placeholder_icon_location
 
+  @source_dark_placeholder_icon_location "priv/link_favicon_dark.svg"
+  @source_dark_placeholder_icon File.read!(@source_dark_placeholder_icon_location)
+  @external_resource @source_dark_placeholder_icon_location
+
   @site_placeholder_icon_location "priv/site_favicon_placeholder.svg"
   @site_placeholder_icon File.read!(@site_placeholder_icon_location)
   @external_resource @site_placeholder_icon_location
@@ -96,9 +100,11 @@ defmodule PlausibleWeb.Favicon do
   - `site` is `#{@site_placeholder_icon_location}`, a globe on a rounded grey
     background, for the rows that list sites.
 
-  `?ui-mode=light|dark` picks the colours and defaults to `light`. An SVG served
-  as an image cannot see the `dark` class on the page, so the caller must say
-  which mode it needs.
+  `?ui-mode=light|dark` picks the colours and defaults to `light`. Each
+  placeholder has its own dark drawing, `#{@source_dark_placeholder_icon_location}`
+  and `#{@site_dark_placeholder_icon_location}`. An SVG served as an image
+  cannot see the `dark` class on the page, so the caller must say which mode it
+  needs.
 
   DuckDuckGo favicon service has some issues with [SVG favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
   For some reason, they return them with `content-type=image/x-icon` whereas SVG
@@ -166,6 +172,7 @@ defmodule PlausibleWeb.Favicon do
 
   defp placeholder_icon("site", "dark"), do: @site_dark_placeholder_icon
   defp placeholder_icon("site", _ui_mode), do: @site_placeholder_icon
+  defp placeholder_icon(_source, "dark"), do: @source_dark_placeholder_icon
   defp placeholder_icon(_source, _ui_mode), do: @source_placeholder_icon
 
   @forwarded_headers ["content-type", "cache-control", "expires"]
