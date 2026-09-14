@@ -74,8 +74,9 @@ defmodule Plausible.Funnel do
 
   def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
     funnel
-    |> cast(attrs, [:name, :strict_order, :first_and_last])
+    |> cast(attrs, [:name, :funnel_type])
     |> validate_required([:name])
+    |> set_funnel_type()
     |> put_steps(attrs[:steps] || attrs["steps"])
     |> validate_length(:steps, min: @min_steps, max: @max_steps)
     |> unique_constraint(:name,
@@ -91,4 +92,19 @@ defmodule Plausible.Funnel do
     end)
     |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
   end
+
+  defp set_funnel_type(%{valid?: true} = changeset) do
+    {strict_order?, first_and_last?} =
+      case get_field(changeset, :funnel_type) do
+        :strict -> {true, false}
+        :flexible -> {false, true}
+        _ -> {false, false}
+      end
+
+    changeset
+    |> put_change(:strict_order, strict_order?)
+    |> put_change(:first_and_last, first_and_last?)
+  end
+
+  defp set_funnel_type(changeset), do: changeset
 end

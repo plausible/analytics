@@ -23,6 +23,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   FunnelResponse,
+  FunnelType,
   StepMetrics,
   StepValues,
   conversionRateChange,
@@ -379,6 +380,21 @@ function ConversionRateSummary({
   )
 }
 
+const funnelTypeLabels: { [t: string]: string } = {
+  [FunnelType.sequential]: 'Sequential',
+  [FunnelType.flexible]: 'Flexible',
+  [FunnelType.strict]: 'Strict'
+}
+
+const funnelTypeDescriptions: { [t: string]: string } = {
+  [FunnelType.sequential]:
+    'Visitors must complete every step in order. Other activity can happen between steps.',
+  [FunnelType.flexible]:
+    'Visitors must complete the first and last steps. Middle steps can be skipped, and other activity can happen between steps.',
+  [FunnelType.strict]:
+    'Visitors must complete every step in order, with no other activity between steps.'
+}
+
 function FunnelHeader({
   funnelName,
   funnel,
@@ -418,37 +434,12 @@ function FunnelHeader({
             </span>
 
             <div className="flex items-center gap-1">
-              {funnel.strict_order ? 'Strict' : 'Sequential'}
+              {funnelTypeLabels[funnel.funnel_type]}
               <Tooltip
                 className="flex"
                 containerRef={{ current: document.body }}
                 info={
-                  <span>
-                    {funnel.strict_order
-                      ? 'No other activity is allowed between steps.'
-                      : 'Other activity is allowed between steps.'}
-                  </span>
-                }
-              >
-                <InformationCircleIcon className="size-3.5" />
-              </Tooltip>
-            </div>
-
-            <span className="text-gray-300 dark:text-gray-600 select-none">
-              |
-            </span>
-
-            <div className="flex items-center gap-1">
-              {funnel.first_and_last ? 'Open' : 'Closed'}
-              <Tooltip
-                className="flex"
-                containerRef={{ current: document.body }}
-                info={
-                  <span>
-                    {funnel.first_and_last
-                      ? 'Only the first and last steps are mandatory.'
-                      : 'All the steps are mandatory.'}
-                  </span>
+                  <span> {funnelTypeDescriptions[funnel.funnel_type]} </span>
                 }
               >
                 <InformationCircleIcon className="size-3.5" />

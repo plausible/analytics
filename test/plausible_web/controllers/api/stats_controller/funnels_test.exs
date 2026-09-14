@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert %{
                  "name" => "Test funnel",
-                 "strict_order" => false,
+                 "funnel_type" => "sequential",
                  "comparison" => nil,
                  "all_visitors" => 3,
                  "entering_visitors" => 2,
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
 
       test "computes a strict-order funnel for a day", %{conn: conn, site: site} do
-        {:ok, funnel} = setup_funnel(site, @build_funnel_with, strict_order?: true)
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with, funnel_type: :strict)
 
         populate_stats(site, [
           build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert %{
                  "name" => "Test funnel",
-                 "strict_order" => true,
+                 "funnel_type" => "strict",
                  "all_visitors" => 1,
                  "entering_visitors" => 1
                } = resp
@@ -761,7 +761,9 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           setup_goals(site, [{"page_path", "/checkout"}, {"event_name", "Signup"}])
 
         purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        {:ok, funnel} = funnel_with_goals(site, [checkout, signup, purchase], strict_order?: true)
+
+        {:ok, funnel} =
+          funnel_with_goals(site, [checkout, signup, purchase], funnel_type: :strict)
 
         populate_stats(site, [
           build(:pageview,

@@ -38,20 +38,19 @@ defmodule Plausible.Stats.Funnel do
 
         comparison_query
         |> compute(funnel, revenue_steps)
-        |> recompute_first_and_last(comparison_query, funnel, revenue_steps)
+        |> recompute_flexible(comparison_query, funnel, revenue_steps)
       end
 
     final_funnel =
       query
       |> compute(funnel, revenue_steps)
-      |> recompute_first_and_last(query, funnel, revenue_steps)
+      |> recompute_flexible(query, funnel, revenue_steps)
 
     {:ok,
      final_funnel
      |> Map.merge(%{
        name: funnel.name,
-       strict_order: funnel.strict_order,
-       first_and_last: funnel.first_and_last,
+       funnel_type: funnel.funnel_type,
        comparison: comparison_funnel,
        date_range: tz_date_range(query.utc_time_range, query.timezone),
        comparison_date_range:
@@ -69,10 +68,7 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
-  defp recompute_first_and_last(final_funnel, _query, %{first_and_last: false}, _revenue_steps),
-    do: final_funnel
-
-  defp recompute_first_and_last(final_funnel, query, funnel, revenue_steps) do
+  defp recompute_flexible(final_funnel, query, %{funnel_type: :flexible} = funnel, revenue_steps) do
     if length(funnel.steps) > 2 do
       short_funnel = convert_to_first_and_last(funnel)
 
@@ -89,6 +85,9 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
+  defp recompute_flexible(final_funnel, _query, _funnel, _revenue_steps),
+    do: final_funnel
+
   defp convert_to_first_and_last(funnel) do
     last_step = List.last(funnel.steps)
 
@@ -97,7 +96,7 @@ defmodule Plausible.Stats.Funnel do
       |> Enum.with_index(1)
       |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
 
-    %{funnel | strict_order: false, steps: steps}
+    %{funnel | funnel_type: :sequential, steps: steps}
   end
 
   defp compute(query, funnel, revenue_steps) do
@@ -218,7 +217,7 @@ defmodule Plausible.Stats.Funnel do
       end)
 
     dynamic_window_funnel =
-      if funnel_definition.strict_order do
+      if funnel_definition.funnel_type == :strict do
         dynamic(
           [q],
           fragment(

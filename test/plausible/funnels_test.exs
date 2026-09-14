@@ -43,7 +43,9 @@ defmodule Plausible.FunnelsTest do
 
         assert funnel.inserted_at
         assert funnel.name == "From blog to signup and purchase"
+        assert funnel.funnel_type == :sequential
         assert funnel.strict_order == false
+        assert funnel.first_and_last == false
         assert [fg1, fg2, fg3] = funnel.steps
 
         assert fg1.goal_id == g1["goal_id"]
@@ -85,17 +87,21 @@ defmodule Plausible.FunnelsTest do
             [g1, g2]
           )
 
+        assert funnel.funnel_type == :sequential
         assert funnel.strict_order == false
+        assert funnel.first_and_last == false
 
         {:ok, strict_funnel} =
           Funnels.update(
             funnel,
             "Sample funnel",
             [g1, g2, g3],
-            strict_order?: true
+            funnel_type: :strict
           )
 
+        assert strict_funnel.funnel_type == :strict
         assert strict_funnel.strict_order == true
+        assert strict_funnel.first_and_last == false
 
         {:ok, preserved_funnel} =
           Funnels.update(
@@ -104,7 +110,9 @@ defmodule Plausible.FunnelsTest do
             [g1, g2]
           )
 
+        assert preserved_funnel.funnel_type == :strict
         assert preserved_funnel.strict_order == true
+        assert preserved_funnel.first_and_last == false
       end
 
       test "retrieve a funnel by id and site, get steps in order", %{
@@ -346,7 +354,7 @@ defmodule Plausible.FunnelsTest do
             site,
             "Strict from blog to signup and purchase",
             [g1, g2, g3],
-            strict_order?: true
+            funnel_type: :strict
           )
 
         populate_stats(site, [
@@ -380,8 +388,8 @@ defmodule Plausible.FunnelsTest do
         assert Enum.at(non_strict_funnel_data.steps, 2).visitors == 1
         assert Enum.at(strict_funnel_data.steps, 2).visitors == 0
 
-        assert non_strict_funnel_data.strict_order == false
-        assert strict_funnel_data.strict_order == true
+        assert non_strict_funnel_data.funnel_type == :sequential
+        assert strict_funnel_data.funnel_type == :strict
       end
 
       test "funnels can be evaluated even where there are no visits yet", %{
