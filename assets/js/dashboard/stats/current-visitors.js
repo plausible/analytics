@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Tooltip } from '../util/tooltip'
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load'
@@ -10,10 +10,12 @@ import { popover } from '../components/popover'
 export default function CurrentVisitors({ className = '', compact = false }) {
   const lastLoadTimestamp = useLastLoadContext()
   const currentVisitors = useCurrentVisitorsContext()
+  const portalRef = useRef(document.body)
 
   if (currentVisitors !== null) {
     return (
       <Tooltip
+        containerRef={portalRef}
         info={
           <div>
             <p className="whitespace-nowrap text-small">
