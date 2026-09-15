@@ -584,7 +584,7 @@ PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
 PlausibleWeb.UserAuth.html
 api-reference.html
-assets/logo.png
+assets/logo.svg
 contributing.html
 dist/handlebars.runtime-NWIB6V2M.js
 dist/handlebars.templates-K7URE6B4.js
