@@ -383,7 +383,7 @@ defmodule PlausibleWeb.Live.Installation do
     assigns = assign(assigns, label: label, href: href)
 
     ~H"""
-    <.button_link theme="ghost" href={@href} mt?={false}>
+    <.button_link theme="ghost" href={@href} mt?={false} data-test="secondary-action">
       {@label}
     </.button_link>
     """

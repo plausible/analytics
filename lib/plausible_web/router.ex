@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Router do
     on_ee(do: plug(Plausible.Plugs.HandleExpiredSession))
     on_ee(do: plug(Plausible.Plugs.SSOTeamAccess))
     plug PlausibleWeb.Plugs.UserSessionTouch
+    plug PlausibleWeb.Plugs.NavContext
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
