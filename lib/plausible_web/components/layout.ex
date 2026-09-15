@@ -34,15 +34,13 @@ defmodule PlausibleWeb.Components.Layout do
     />
     <link
       rel="icon"
-      type="image/png"
       sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-32x32.png"))}
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.ico"))}
     />
     <link
       rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-16x16.png"))}
+      type="image/svg+xml"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.svg"))}
     />
     """
   end
