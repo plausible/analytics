@@ -69,7 +69,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Add your first personal site"
       assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
-      refute resp =~ "Go to team sites"
     end
 
     test "shows team sites empty state when team is setup and there are no sites at all", %{
@@ -85,7 +84,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Add your first team site"
       assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
-      refute resp =~ "Go to team sites"
     end
 
     test "shows team sites empty state when team is setup but has no team sites, and user has personal sites",
@@ -103,7 +101,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Add your first team site"
       assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
-      refute resp =~ "Go to team sites"
     end
 
     test "shows personal sites empty state when there are team sites but no personal sites", %{
@@ -119,7 +116,8 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Add your first personal site"
       assert resp =~ "Collect simple, privacy-friendly stats to better understand your audience."
-      assert resp =~ "Go to team sites"
+
+      assert element_exists?(resp, ~s|#nav-team a[href="/sites?__team=#{team.identifier}"]|)
     end
 
     test "shows empty search state when filter returns no results but there are sites", %{
@@ -133,7 +131,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "No sites found. Try a different search term."
       refute resp =~ "Add your first"
-      refute resp =~ "Go to team sites"
     end
 
     test "lists all of your sites with last 24h visitors (defaulting to 0 on first mount)", %{
@@ -682,7 +679,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Settings for #{site.domain}"
+      assert text_of_element(resp, "#nav-site a[title]") == site.domain
+      assert resp =~ "Site settings"
       assert resp =~ "Site details"
       assert resp =~ "Site domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
@@ -792,7 +790,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           |> find("[data-testid=site_settings_sidebar] a")
           |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
 
-        assert resp =~ "Settings for consolidated view"
+        assert text_of_element(resp, "#nav-site a[title]") == "consolidated view"
 
         assert items == [
                  {"General", "/#{site.domain}/settings/general"},

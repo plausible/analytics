@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Api.InternalController do
   use Plausible
   use PlausibleWeb, :controller
   use Plausible.Repo
-  import Ecto.Query
   alias Plausible.{Sites, Auth}
   alias Plausible.Auth.User
   alias Plausible.Teams
@@ -12,7 +11,10 @@ defmodule PlausibleWeb.Api.InternalController do
     current_team = conn.assigns[:current_team]
 
     if current_user do
-      sites = sites_for(current_user, current_team)
+      sites =
+        current_user
+        |> Teams.Sites.list_for_switcher(current_team)
+        |> Enum.map(&Map.take(&1, [:domain, :needs_verification]))
 
       json(conn, %{data: sites})
     else
@@ -74,29 +76,5 @@ defmodule PlausibleWeb.Api.InternalController do
           "You need to be logged in as the owner, admin, or editor of this site"
         )
     end
-  end
-
-  defp sites_for(user, team) do
-    from(u in subquery(Teams.Sites.accessible_by(user, team)),
-      inner_join: s in ^Plausible.Site.regular(),
-      on: u.site_id == s.id,
-      left_join: up in Plausible.Site.UserPreference,
-      on: up.site_id == s.id and up.user_id == ^user.id,
-      select: %{
-        domain: s.domain,
-        needs_verification: ^ee?() and s.onboarding_status == :new_site
-      },
-      order_by: [
-        asc:
-          fragment(
-            "CASE WHEN ? IS NOT NULL THEN 'pinned_site' ELSE 'site' END",
-            up.pinned_at
-          ),
-        desc: up.pinned_at,
-        asc: s.domain
-      ],
-      limit: 9
-    )
-    |> Repo.all()
   end
 end

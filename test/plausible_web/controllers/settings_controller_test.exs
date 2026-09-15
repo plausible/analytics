@@ -1615,7 +1615,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
       refute html =~ ~r/Team.*#{Regex.escape(team.name)}/s
-      refute html =~ team.name
+
+      refute element_exists?(
+               html,
+               ~s|[data-testid="settings-sidebar"] a[href="/settings/team/general"]|
+             )
     end
 
     test "GET /settings/team/general", %{conn: conn, user: user} do
@@ -2144,17 +2148,21 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
-  describe "account dropdown menu (_header.html)" do
+  describe "breadcrumb team menu (header.html)" do
     setup [:create_user, :log_in]
 
-    test "renders the 'Create a team' option", %{conn: conn, user: user} do
+    test "renders the 'Create new team' option", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a team"
+
+      assert text_of_element(
+               html,
+               ~s|#nav-team a[href="#{Routes.team_setup_path(conn, :setup)}"]|
+             ) == "Create new team"
     end
 
-    test "does not render the 'Create a team' option if a team is already set up", %{
+    test "renders the 'Create new team' option even once a team is set up", %{
       conn: conn,
       user: user
     } do
@@ -2162,7 +2170,42 @@ defmodule PlausibleWeb.SettingsControllerTest do
       Plausible.Teams.complete_setup(team)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+
+      assert element_exists?(
+               html,
+               ~s|#nav-team a[href="#{Routes.team_setup_path(conn, :setup)}"]|
+             )
+    end
+  end
+
+  describe "breadcrumb page label (header.html)" do
+    setup [:create_user, :log_in]
+
+    test "names the settings area on account-only pages", %{conn: conn} do
+      for path <- ["/settings/preferences", "/settings/security", "/settings/danger-zone"] do
+        html = conn |> get(path) |> html_response(200)
+        assert text_of_element(html, "#nav-page") == "Settings", "wrong label on #{path}"
+        assert text_of_element(html, "#page-title") == "Settings", "wrong title on #{path}"
+      end
+    end
+
+    test "names the settings area on every team page once the team is set up", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_business_plan(user)
+      team = Plausible.Teams.complete_setup(team_of(user))
+      conn = set_current_team(conn, team)
+
+      team_paths =
+        ["/settings/team/general", "/settings/api-keys", "/settings/team/delete"] ++
+          on_ee(do: ["/settings/billing/subscription"], else: [])
+
+      for path <- team_paths do
+        html = conn |> get(path) |> html_response(200)
+        assert text_of_element(html, "#nav-page") == "Settings", "wrong label on #{path}"
+        assert text_of_element(html, "#page-title") == "Settings", "wrong title on #{path}"
+      end
     end
   end
 

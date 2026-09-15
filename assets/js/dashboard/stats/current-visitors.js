@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Tooltip } from '../util/tooltip'
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load'
@@ -7,13 +7,15 @@ import { useCurrentVisitorsContext } from '../current-visitors-context'
 import classNames from 'classnames'
 import { popover } from '../components/popover'
 
-export default function CurrentVisitors({ className = '' }) {
+export default function CurrentVisitors({ className = '', compact = false }) {
   const lastLoadTimestamp = useLastLoadContext()
   const currentVisitors = useCurrentVisitorsContext()
+  const portalRef = useRef(document.body)
 
   if (currentVisitors !== null) {
     return (
       <Tooltip
+        containerRef={portalRef}
         info={
           <div>
             <p className="whitespace-nowrap text-small">
@@ -45,7 +47,7 @@ export default function CurrentVisitors({ className = '' }) {
           </svg>
           <div className="inline-block text-gray-500 dark:text-gray-400">
             {currentVisitors}
-            <span className="hidden lg:inline">
+            <span className={compact ? 'sr-only' : 'hidden lg:inline'}>
               {' '}
               current visitor{currentVisitors === 1 ? '' : 's'}
             </span>

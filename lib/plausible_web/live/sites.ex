@@ -115,18 +115,8 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group py-4 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl min-w-0 truncate">
-          {Teams.name(@current_team)}
-        </h2>
-        <.unstyled_link
-          :if={Teams.setup?(@current_team)}
-          data-test-id="team-settings-link"
-          href={Routes.settings_path(@socket, :team_general)}
-          class="shrink-0"
-        >
-          <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
-        </.unstyled_link>
+      <div class="py-4 border-b border-gray-200 dark:border-gray-750">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl">Sites</h2>
       </div>
 
       <div
@@ -204,36 +194,6 @@ defmodule PlausibleWeb.Live.Sites do
           >
             <Heroicons.plus class="size-4" /> Add website
           </.button_link>
-          <.button_link
-            :if={not Teams.setup?(@current_team) and @has_sites? and length(@teams) == 1}
-            href={Routes.site_path(@socket, :index, __team: hd(@teams).identifier)}
-            theme="secondary"
-            mt?={false}
-          >
-            Go to team sites
-          </.button_link>
-
-          <PrimaDropdown.dropdown
-            :if={not Teams.setup?(@current_team) and @has_sites? and length(@teams) > 1}
-            id="go-to-team-dropdown"
-          >
-            <PrimaDropdown.dropdown_trigger id="go-to-team-dropdown-trigger" theme="secondary">
-              Go to team sites <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-            </PrimaDropdown.dropdown_trigger>
-
-            <PrimaDropdown.dropdown_menu id="go-to-team-dropdown-menu">
-              <div class="max-h-[200px] overflow-y-auto">
-                <PrimaDropdown.dropdown_item
-                  :for={team <- @teams}
-                  as={&link/1}
-                  id={"go-to-team-dropdown-menuitem-#{team.identifier}"}
-                  href={Routes.site_path(@socket, :index, __team: team.identifier)}
-                >
-                  {Teams.name(team)}
-                </PrimaDropdown.dropdown_item>
-              </div>
-            </PrimaDropdown.dropdown_menu>
-          </PrimaDropdown.dropdown>
         </div>
       </div>
 
