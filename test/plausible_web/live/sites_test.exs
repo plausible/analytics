@@ -15,7 +15,6 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text =~ "My personal sites"
       assert text =~ "Add your first personal site"
-      refute text =~ "Go to team sites"
     end
 
     test "renders team switcher link, if on personal sites with other teams available", %{
@@ -32,18 +31,17 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text =~ "My personal sites"
       refute text =~ "You don't have any sites yet"
       assert text =~ "Add your first personal site"
-      assert text =~ "Go to team sites"
 
       assert element_exists?(
                html,
-               ~s|a[href="/sites?__team=#{team2.identifier}"]|
+               ~s|#nav-team a[href="/sites?__team=#{team2.identifier}"]|
              )
     end
 
     test "renders settings link when current team is set", %{user: user, conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 
-      refute element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
+      refute element_exists?(html, ~s|#nav-team a[href="/settings/team/general"]|)
 
       new_site(owner: user)
       team = team_of(user)
@@ -53,7 +51,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, _lv, html} = live(conn, "/sites")
 
-      assert element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
+      assert element_exists?(html, ~s|#nav-team a[href="/settings/team/general"]|)
     end
 
     @tag :ee_only

@@ -92,7 +92,8 @@ function showChangelogNotification(el) {
     link.addEventListener('click', function () {
       localStorage.lastChangelogClick = Date.now()
       setTimeout(() => {
-        link.remove()
+        // Clear the container, not just the link, so `empty:hidden` applies.
+        el.replaceChildren()
       }, 100)
     })
   }

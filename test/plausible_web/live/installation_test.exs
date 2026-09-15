@@ -532,7 +532,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       html = render_async(lv, 500)
 
-      assert text_of_element(html, ~s|a[href="/sites"]|) == "Skip"
+      assert text_of_element(html, ~s|a[data-test="secondary-action"][href="/sites"]|) == "Skip"
     end
 
     @tag :ee_only
@@ -544,7 +544,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       html = render_async(lv, 500)
 
-      assert text_of_element(html, ~s|a[href="/sites"]|) == "Back to sites"
+      assert text_of_element(html, ~s|a[data-test="secondary-action"][href="/sites"]|) ==
+               "Back to sites"
     end
 
     @tag :ee_only
@@ -558,7 +559,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       href = ~p"/#{site.domain}/settings/general"
 
-      assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to settings"
+      assert text_of_element(html, ~s|a[data-test="secondary-action"][href="#{href}"]|) ==
+               "Back to settings"
     end
 
     @tag :ee_only
@@ -576,7 +578,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
       href =
         stats_path(site.domain, verify_installation: true, flow: "provisioning")
 
-      assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to dashboard"
+      assert text_of_element(html, ~s|a[data-test="secondary-action"][href="#{href}"]|) ==
+               "Back to dashboard"
     end
 
     @tag :ee_only
@@ -588,7 +591,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       html = render_async(lv, 500)
 
-      assert text_of_element(html, ~s|a[href="/sites"]|) == "Skip"
+      assert text_of_element(html, ~s|a[data-test="secondary-action"][href="/sites"]|) == "Skip"
     end
   end
 

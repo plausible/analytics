@@ -320,6 +320,49 @@ defmodule Plausible.Teams do
     )
   end
 
+  @doc """
+  Plan label and member count for each team, as shown under the team name in the
+  breadcrumb team switcher. Queries once per concern rather than once per team.
+  """
+  @spec nav_meta([Teams.Team.t()]) :: %{
+          pos_integer() => %{plan: String.t() | nil, members: pos_integer()}
+        }
+  def nav_meta([]), do: %{}
+
+  def nav_meta(teams) do
+    team_ids = Enum.map(teams, & &1.id)
+
+    member_counts =
+      from(tm in Teams.Membership,
+        where: tm.team_id in ^team_ids,
+        where: tm.role != :guest,
+        group_by: tm.team_id,
+        select: {tm.team_id, count(tm.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    teams
+    |> Repo.preload(subscription: last_subscription_query())
+    |> Map.new(fn team ->
+      {team.id,
+       %{plan: plan_label(team.subscription), members: Map.get(member_counts, team.id, 1)}}
+    end)
+  end
+
+  on_ee do
+    defp plan_label(subscription) do
+      case Billing.Plans.get_subscription_plan(subscription) do
+        %Billing.Plan{kind: kind} -> kind |> Atom.to_string() |> String.capitalize()
+        %Billing.EnterprisePlan{} -> "Enterprise"
+        :free_10k -> "Free"
+        nil -> "Trial"
+      end
+    end
+  else
+    defp plan_label(_subscription), do: nil
+  end
+
   @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()
   def force_2fa_enabled?(nil), do: false
 

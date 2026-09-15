@@ -255,4 +255,36 @@ defmodule PlausibleWeb.Components.Icons do
     </svg>
     """
   end
+
+  attr :class, :any, default: []
+
+  def lightbulb_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M9 17.667h6M18.666 9a6.675 6.675 0 0 0-8.104-6.516C7.986 3.021 5.93 5.141 5.45 7.728A6.67 6.67 0 0 0 9 14.948V19a2.666 2.666 0 0 0 2.666 2.667h.667A2.666 2.666 0 0 0 14.999 19v-4.052A6.66 6.66 0 0 0 18.666 9Z"
+      />
+    </svg>
+    """
+  end
+
+  attr :class, :any, default: []
+
+  def logout_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class={@class}>
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M11 3.667H6.333a2.666 2.666 0 0 0-2.666 2.666v11.334a2.666 2.666 0 0 0 2.666 2.666H11M15.667 7.334 20.334 12l-4.667 4.667M20.334 12h-10"
+      />
+    </svg>
+    """
+  end
 end
