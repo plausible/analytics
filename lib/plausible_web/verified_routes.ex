@@ -20,6 +20,25 @@ defmodule PlausibleWeb.VerifiedRoutes do
         router: PlausibleWeb.Router,
         endpoint: PlausibleWeb.Endpoint,
         statics: unquote(static_paths)
+
+      import unquote(__MODULE__)
     end
+  end
+
+  def stats_path(domain, params \\ []) when is_binary(domain) and byte_size(domain) > 0 do
+    Phoenix.VerifiedRoutes.unverified_path(
+      PlausibleWeb.Endpoint,
+      PlausibleWeb.Router,
+      "/#{URI.encode_www_form(domain)}",
+      params
+    )
+  end
+
+  def stats_url(domain, params \\ []) when is_binary(domain) and byte_size(domain) > 0 do
+    Phoenix.VerifiedRoutes.unverified_url(
+      PlausibleWeb.Endpoint,
+      "/#{URI.encode_www_form(domain)}",
+      params
+    )
   end
 end
