@@ -4,7 +4,6 @@ defmodule PlausibleWeb.RequireAccountPlugTest do
   import Plug.Conn
 
   alias PlausibleWeb.RequireAccountPlug
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   describe "enforcing 2FA" do
     test "passes when 2FA enforcement is disabled" do

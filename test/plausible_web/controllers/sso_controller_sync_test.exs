@@ -133,7 +133,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            ~p|/sso/saml/signin/#{Ecto.UUID.generate()}?#{[email: email, return_to: "sites"]}|
+            ~p|/sso/saml/signin/#{Ecto.UUID.generate()}?#{[email: email, return_to: "/sites"]}|
           )
 
         assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      ~p"/cs/teams/team/#{id}"
+      ~p"/cs/teams/team/#{id}?#{qs}"
     end
 
     setup [:create_user, :log_in, :create_site]

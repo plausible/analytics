@@ -8,8 +8,6 @@ defmodule PlausibleWeb.UserAuthTest do
     alias Plausible.Auth.SSO
   end
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
-
   describe "log_in_user/2,3" do
     setup [:create_user]
 

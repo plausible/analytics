@@ -6,7 +6,6 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
 
   import Phoenix.View
 
-  alias PlausibleWeb.Endpoint
   alias PlausibleWeb.ErrorView
   alias PlausibleWeb.EmailView
 

@@ -1879,7 +1879,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, ~p"/2fa/verify?#{[%{code: code}]}")
+      conn = post(conn, ~p"/2fa/verify?#{[code: code]}")
 
       assert redirected_to(conn, 302) == ~p"/login"
     end
@@ -2039,7 +2039,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(
           conn,
-          ~p"/2fa/use_recovery_code?#{[%{recovery_code: recovery_code}]}"
+          ~p"/2fa/use_recovery_code?#{[recovery_code: recovery_code]}"
         )
 
       assert redirected_to(conn, 302) == ~p"/login"

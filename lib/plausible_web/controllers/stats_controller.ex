@@ -194,7 +194,7 @@ defmodule PlausibleWeb.StatsController do
 
     if shared_link do
       new_link_format =
-        ~p"/share/#{shared_link.site.domain}/*path?#{[auth: slug]}"
+        ~p"/share/#{shared_link.site.domain}/?#{[auth: slug]}"
 
       redirect(conn, to: new_link_format)
     else
