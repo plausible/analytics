@@ -83,8 +83,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   defp send_spike_notification(recipient_email, site, stats) do
     dashboard_link =
       if site_member?(site, recipient_email) do
-        url(~p"/#{site.domain}") <>
-          "?__team=#{site.team.identifier}"
+        stats_url(site.domain, __team: site.team.identifier)
       end
 
     template =
@@ -103,8 +102,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
     dashboard_link =
       if site_member? do
-        url(~p"/#{site.domain}") <>
-          "?__team=#{site.team.identifier}"
+        stats_url(site.domain, __team: site.team.identifier)
       end
 
     installation_link =

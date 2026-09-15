@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         redirect_target =
           if guest_membership.team_membership.user_id == current_user.id and
                guest_membership.role == :viewer do
-            ~p"/#{site.domain}"
+            stats_path(site.domain)
           else
             ~p"/#{site.domain}/settings/people"
           end

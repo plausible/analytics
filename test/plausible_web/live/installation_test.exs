@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         }
       })
 
-      assert_redirect(lv, ~p"/#{site.domain}")
+      assert_redirect(lv, stats_path(site.domain))
     end
 
     test "submitting form with review flow redirects to the dashboard with the flow param preserved",
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       end
 
       on_ce do
-        assert_redirect(lv, ~p"/#{site.domain}")
+        assert_redirect(lv, stats_path(site.domain))
       end
     end
 

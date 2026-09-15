@@ -424,7 +424,7 @@ defmodule PlausibleWeb.Live.Installation do
           flow: socket.assigns.flow
         )
       else
-        ~p"/#{domain}"
+        stats_path(domain)
       end
 
     {:noreply, redirect(socket, to: destination)}

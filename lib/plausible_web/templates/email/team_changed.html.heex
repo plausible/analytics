@@ -1,5 +1,5 @@
 {@user.email} has transferred {@site.domain} to the "{@team.name}" team on Plausible Analytics.
-<a href={url(~p"/#{@site.domain}") <> "?__team=#{@team.identifier}"}>
+<a href={stats_url(@site.domain, __team: @team.identifier)}>
   Click here
 </a>
 to view the stats.
