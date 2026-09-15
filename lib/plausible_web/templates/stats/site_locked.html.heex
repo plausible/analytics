@@ -37,14 +37,14 @@
             </p>
             <p class="mt-4 text-sm text-gray-600 dark:text-gray-300">
               You can configure your
-              <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
+              <.styled_link href={~p"/#{@site.domain}/settings/general"}>
                 site settings
               </.styled_link>
               but your access to the dashboard is restricted.
             </p>
           </div>
           <div class="w-full text-center">
-            <.button_link href={Routes.settings_path(@conn, :subscription)}>
+            <.button_link href={~p"/settings/billing/subscription"}>
               Manage my subscription
             </.button_link>
           </div>
@@ -55,7 +55,7 @@
             </p>
           </div>
           <div class="mt-6 w-full text-center">
-            <.button_link href={Routes.site_path(@conn, :index)}>Back to my sites</.button_link>
+            <.button_link href={~p"/sites"}>Back to my sites</.button_link>
           </div>
         <% _ -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
@@ -66,7 +66,7 @@
           </div>
           <%= if @conn.assigns[:current_user] do %>
             <div class="mt-6 w-full text-center">
-              <.button_link href={Routes.site_path(@conn, :index)}>Back to my sites</.button_link>
+              <.button_link href={~p"/sites"}>Back to my sites</.button_link>
             </div>
           <% end %>
       <% end %>

@@ -37,7 +37,7 @@
           <.styled_link href="/activate/request-code" method="post">Resend code</.styled_link>
           or
           <%= if @has_any_memberships? do %>
-            <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
+            <.styled_link method="post" href={~p"/settings/security/email/cancel"}>
               use my previous email
             </.styled_link>
           <% else %>
@@ -75,7 +75,7 @@
       <p class="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
         Wrong email?
         <%= if @has_any_memberships? do %>
-          <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
+          <.styled_link method="post" href={~p"/settings/security/email/cancel"}>
             use my previous email
           </.styled_link>
         <% else %>

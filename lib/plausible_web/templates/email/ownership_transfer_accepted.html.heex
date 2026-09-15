@@ -1,12 +1,12 @@
 {@new_owner_email} has accepted the ownership transfer of {@site.domain}. They will be responsible for billing of it going
 forward<%= if @initiator_as_guest_editor? do %>
   and your role has been changed to <b>guest editor</b>.
-  <a href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @site.domain) <> "?__team=none"}>
+  <a href={url(~p"/#{@site.domain}/settings/general") <> "?__team=none"}>
     Click here
   </a>
   to view site settings.
 <% else %>
-  <a href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @site.domain) <> "?__team=#{@team.identifier}"}>
+  <a href={url(~p"/#{@site.domain}/settings/general") <> "?__team=#{@team.identifier}"}>
     Click here
   </a>
   to view site settings.

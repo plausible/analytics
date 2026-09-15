@@ -392,7 +392,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     ~H"""
     <button
       id={"#{@kind}-checkout"}
-      onclick={"if (#{@confirmed}) {window.location = '#{Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}'}"}
+      onclick={"if (#{@confirmed}) {window.location = '#{~p"/billing/change-plan/preview/#{@paddle_product_id}"}'}"}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",

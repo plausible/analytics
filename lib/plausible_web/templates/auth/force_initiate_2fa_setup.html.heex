@@ -18,7 +18,7 @@
   <div class="w-full">
     <.form
       id="initiate-2fa-form"
-      action={Routes.auth_path(@conn, :initiate_2fa_setup, force: "true")}
+      action={~p|/2fa/setup/initiate?#{[force: "true"]}|}
       for={@conn.params}
       method="post"
     >

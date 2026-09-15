@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         doc = conn |> html_response(200)
         assert text(doc) =~ "Set up a few goals"
 
-        add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
+        add_goals_path = ~p"/#{site.domain}/settings/goals"
         assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
 
         refute element_exists?(doc, ~s/input[type="text"]#filter-text/)

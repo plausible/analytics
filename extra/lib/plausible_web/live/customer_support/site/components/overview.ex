@@ -20,14 +20,14 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
 
           <.styled_link
             new_tab={true}
-            href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+            href={stats_path(@site.domain)}
           >
             Dashboard
           </.styled_link>
 
           <.styled_link
             new_tab={true}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain, [])}
+            href={~p"/#{@site.domain}/settings/general"}
           >
             Settings
           </.styled_link>

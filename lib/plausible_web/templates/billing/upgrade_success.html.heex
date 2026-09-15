@@ -19,8 +19,8 @@
   </div>
 
   <script>
-    const PING_SUBSCRIPTION_API = "<%= Routes.billing_path(@conn, :ping_subscription) %>"
-    const REDIRECT_TO = "<%= Routes.settings_path(@conn, :subscription) %>"
+    const PING_SUBSCRIPTION_API = "<%= ~p"/billing/subscription/ping" %>"
+    const REDIRECT_TO = "<%= ~p"/settings/billing/subscription" %>"
     const PING_EVERY_MS = 2000
     const TIMEOUT_AFTER_MS = 15000
 

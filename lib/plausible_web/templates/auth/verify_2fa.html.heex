@@ -5,7 +5,7 @@
   <.auth_container>
     <.form
       :let={f}
-      action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
+      action={~p|/2fa/verify?#{[return_to: @conn.query_params["return_to"]]}|}
       for={@conn.params}
       class="flex flex-col gap-y-6"
       onsubmit="document.getElementById('verify-button').disabled = true"
@@ -35,7 +35,7 @@
     <div class="mt-6 flex flex-col gap-y-2 text-sm text-gray-500 dark:text-gray-400 text-center">
       <p>
         Can't access your authenticator app?
-        <.styled_link href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}>
+        <.styled_link href={~p"/2fa/use_recovery_code"}>
           Use a recovery code
         </.styled_link>
       </p>

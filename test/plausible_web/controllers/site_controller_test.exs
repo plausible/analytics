@@ -232,12 +232,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
 
       assert text_of_element(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              ) =~ "Choose a plan"
     end
 
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
     end
 
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
     end
 
@@ -294,7 +294,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         refute element_exists?(
                  resp,
-                 ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+                 ~s|a[href="#{~p"/settings/billing/subscription"}"]|
                ),
                "expected no upgrade link for role #{role}"
       end
@@ -679,13 +679,13 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      conn = get(conn, ~p"/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
       assert resp =~ "Settings for #{site.domain}"
       assert resp =~ "Site details"
       assert resp =~ "Site domain"
-      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+      assert resp =~ ~p"/#{site.domain}/change-domain"
 
       assert resp =~ "Reporting timezone"
 
@@ -1935,7 +1935,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       Plausible.Site.set_stats_start_date(site, ~D[2023-01-01])
       |> Repo.update!()
 
-      delete(conn, Routes.site_path(conn, :reset_stats, site.domain))
+      delete(conn, ~p"/#{site.domain}/stats")
 
       assert Repo.reload(site).stats_start_date == nil
     end
@@ -1945,7 +1945,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "renders the transfer tile", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      conn = get(conn, ~p"/#{site.domain}/settings/danger-zone")
       html = html_response(conn, 200)
       assert html =~ "Danger zone"
       assert html =~ "Transfer site"

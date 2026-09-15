@@ -668,7 +668,7 @@ defmodule PlausibleWeb.Router do
     put "/:domain/settings/google", SiteController, :update_google_auth
     delete "/:domain/settings/google-search", SiteController, :delete_google_auth
     delete "/:domain/settings/google-import", SiteController, :delete_google_auth
-    delete "/:domain", SiteController, :delete_site
+    delete "/:domain", SiteController, :delete_site, warn_on_verify: true
     delete "/:domain/stats", SiteController, :reset_stats
 
     get "/:domain/import/google-analytics/property",
@@ -741,8 +741,8 @@ defmodule PlausibleWeb.Router do
 
       put "/:domain/settings", SiteController, :update_settings
 
-      get "/:domain", StatsController, :stats
-      get "/:domain/*path", StatsController, :stats
+      get "/:domain", StatsController, :stats, warn_on_verify: true
+      get "/:domain/*path", StatsController, :stats, warn_on_verify: true
     end
   end
 end
