@@ -60,7 +60,7 @@ defmodule PlausibleWeb.SiteController do
       {:error, _, changeset, _} ->
         case check_can_already_access(changeset, user) do
           {:ok, domain} ->
-            redirect(conn, to: ~p"/#{domain}")
+            redirect(conn, to: stats_path(domain))
 
           {:error, :no_access} ->
             render_new_site_form(conn, flow, changeset: changeset)

@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Components.Billing do
   defp dashboard_url(nil, _date_range), do: nil
 
   defp dashboard_url(domain, date_range) do
-    base = ~p"/#{domain}"
+    base = stats_path(domain)
 
     base <>
       "?period=custom&from=#{Date.to_iso8601(date_range.first)}&to=#{Date.to_iso8601(date_range.last)}"

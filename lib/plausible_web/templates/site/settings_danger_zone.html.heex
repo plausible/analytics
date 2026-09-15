@@ -26,7 +26,7 @@
     <:title>Delete site</:title>
     <:subtitle>Permanently delete all stats and site settings.</:subtitle>
     <.button_link
-      href={~p"/#{@site.domain}"}
+      href={stats_path(@site.domain)}
       theme="danger"
       method="delete"
       data-confirm="Deleting the site data cannot be reversed. Are you sure?"

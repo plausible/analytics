@@ -38,7 +38,7 @@ defmodule PlausibleWeb.InvitationController do
         if site do
           conn
           |> put_flash(:success, "You now have access to #{site.domain}")
-          |> redirect(to: ~p"/#{site.domain}")
+          |> redirect(to: stats_path(site.domain))
         else
           conn
           |> put_flash(:success, "You now have access to \"#{team.name}\" team")

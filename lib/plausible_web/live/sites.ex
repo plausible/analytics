@@ -437,7 +437,7 @@ defmodule PlausibleWeb.Live.Sites do
       class="relative row-span-2"
     >
       <.unstyled_link
-        href={~p"/#{@consolidated_view.domain}"}
+        href={stats_path(@consolidated_view.domain)}
         class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">

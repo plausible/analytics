@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href="#{~p"/#{site.domain}"}"]|
+                 ~s|a[href="#{stats_path(site.domain)}"]|
                )
       end
 
