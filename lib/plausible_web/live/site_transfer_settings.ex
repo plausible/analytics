@@ -38,12 +38,10 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           {"The site is already in your personal sites.", nil}
 
         is_nil(my_team) ->
-          {"You don't have an active subscription.", ~p"/billing/choose-plan" <> "?__team=none"}
+          {"You don't have an active subscription.", ~p"/billing/choose-plan?#{[__team: "none"]}"}
 
         true ->
-          {nil,
-           ~p"/billing/choose-plan" <>
-             "?__team=#{my_team.identifier}"}
+          {nil, ~p"/billing/choose-plan?#{[__team: my_team.identifier]}"}
       end
 
     initial_destination =
