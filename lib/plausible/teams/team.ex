@@ -147,11 +147,27 @@ defmodule Plausible.Teams.Team do
   end
 
   def name_changeset(team, attrs \\ %{}) do
-    team
-    |> cast(attrs, [:name])
-    |> validate_required(:name)
-    |> validate_name()
-    |> validate_exclusion(:name, [Plausible.Teams.default_name()])
+    changeset =
+      team
+      |> cast(attrs, [:name])
+      |> validate_name()
+      |> validate_required(:name)
+
+    # Do not allow an actual team keep Plausible.Teams.default_name()
+    # as its name. This is just to avoid confusion in the UI and keep
+    # the auto-created team distinguishable from a real one.
+
+    # Hence we use `force_change` here -- even if the value didn't
+    # change, check that name is not `Plausible.Teams.default_name()`.
+    # Only do that when the name field doesn't have any prior errors
+    # on it to avoid double-flagging (blank + reserved).
+    if Keyword.has_key?(changeset.errors, :name) do
+      changeset
+    else
+      changeset
+      |> force_change(:name, get_field(changeset, :name))
+      |> validate_exclusion(:name, [Plausible.Teams.default_name()])
+    end
   end
 
   def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do
