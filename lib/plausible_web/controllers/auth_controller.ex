@@ -407,7 +407,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :already_setup} ->
         conn
         |> put_flash(:error, "Two-Factor Authentication is already setup for this account.")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -415,7 +415,7 @@ defmodule PlausibleWeb.AuthController do
     if Auth.TOTP.initiated?(conn.assigns.current_user) do
       render(conn, "verify_2fa_setup.html")
     else
-      redirect(conn, to: ~p"/settings/security" <> "#update-2fa")
+      redirect(conn, to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -444,7 +444,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :not_initiated} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -454,12 +454,12 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> TwoFactor.Session.clear_remember_2fa()
         |> put_flash(:success, "Two-Factor Authentication is disabled")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
 
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -473,12 +473,12 @@ defmodule PlausibleWeb.AuthController do
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
 
       {:error, :not_enabled} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: ~p"/settings/security" <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -579,7 +579,7 @@ defmodule PlausibleWeb.AuthController do
   defp handle_email_updated(conn) do
     conn
     |> put_flash(:success, "Email updated successfully")
-    |> redirect(to: ~p"/settings/security" <> "#update-email")
+    |> redirect(to: ~p"/settings/security#update-email")
   end
 
   def delete_me(conn, params) do

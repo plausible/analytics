@@ -39,7 +39,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Team name changed")
-        |> redirect(to: ~p"/settings/team/general" <> "#update-name")
+        |> redirect(to: ~p"/settings/team/general#update-name")
 
       {:error, changeset} ->
         render_team_general(conn, team_name_changeset: changeset)
@@ -173,7 +173,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
-        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys#api-keys")
 
       {:error, :upgrade_required} ->
         conn
@@ -193,12 +193,12 @@ defmodule PlausibleWeb.SettingsController do
       :ok ->
         conn
         |> put_flash(:success, "API key revoked successfully")
-        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys#api-keys")
 
       {:error, :not_found} ->
         conn
         |> put_flash(:error, "Could not find API Key to delete")
-        |> redirect(to: ~p"/settings/api-keys" <> "#api-keys")
+        |> redirect(to: ~p"/settings/api-keys#api-keys")
     end
   end
 
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Name changed")
-        |> redirect(to: ~p"/settings/preferences" <> "#update-name")
+        |> redirect(to: ~p"/settings/preferences#update-name")
 
       {:error, changeset} ->
         render_preferences(conn, name_changeset: changeset)
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Theme changed")
-        |> redirect(to: ~p"/settings/preferences" <> "#update-theme")
+        |> redirect(to: ~p"/settings/preferences#update-theme")
 
       {:error, changeset} ->
         render_preferences(conn, theme_changeset: changeset)
@@ -320,7 +320,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, user} ->
         conn
         |> put_flash(:success, "Email changed back to #{user.email}")
-        |> redirect(to: ~p"/settings/security" <> "#update-email")
+        |> redirect(to: ~p"/settings/security#update-email")
 
       {:error, _} ->
         conn
@@ -342,7 +342,7 @@ defmodule PlausibleWeb.SettingsController do
 
       conn
       |> put_flash(:success, "Your password is now changed")
-      |> redirect(to: ~p"/settings/security" <> "#update-password")
+      |> redirect(to: ~p"/settings/security#update-password")
     else
       {:error, %Ecto.Changeset{} = changeset} ->
         render_security(conn, password_changeset: changeset)
@@ -391,7 +391,7 @@ defmodule PlausibleWeb.SettingsController do
 
     conn
     |> put_flash(:success, "Session logged out successfully")
-    |> redirect(to: ~p"/settings/security" <> "#user-sessions")
+    |> redirect(to: ~p"/settings/security#user-sessions")
   end
 
   defp do_update_password(user, params) do
@@ -429,6 +429,6 @@ defmodule PlausibleWeb.SettingsController do
   defp handle_email_updated(conn) do
     conn
     |> put_flash(:success, "Email updated")
-    |> redirect(to: ~p"/settings/security" <> "#update-email")
+    |> redirect(to: ~p"/settings/security#update-email")
   end
 end

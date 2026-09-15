@@ -1054,7 +1054,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     socket
     |> assign(:uri_params, uri_params)
-    |> push_patch(to: ~p"/sites", replace: true)
+    |> push_patch(to: ~p"/sites?#{uri_params}", replace: true)
   end
 
   defp hash_domain(domain) do
