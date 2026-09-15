@@ -107,17 +107,30 @@ defmodule Plausible.Teams.Management.Layout do
     end)
   end
 
-  @spec persist(t(), %{current_user: User.t(), current_team: Teams.Team.t()}) ::
-          {:ok, integer()} | {:error, any()}
+  @spec persist(t(), %{
+          required(:current_user) => User.t(),
+          required(:current_team) => Teams.Team.t(),
+          optional(:name_changeset) => Ecto.Changeset.t()
+        }) :: {:ok, integer()} | {:error, any()}
   def persist(layout, context) do
     result =
       Repo.transaction(fn ->
-        Teams.complete_setup(context.current_team)
+        # An optional :name_changeset commits the team's own rename together
+        # with its membership/invitation changes, in the same transaction -
+        # so a name change can never persist on its own if anything below it
+        # fails (e.g. team_setup.ex renaming a team as part of its creation).
+        team =
+          case Map.get(context, :name_changeset) do
+            nil -> context.current_team
+            name_changeset -> Repo.update!(name_changeset)
+          end
+
+        Teams.complete_setup(team)
 
         layout
         |> sorted_for_persistence()
         |> Enum.reduce([], fn {_, entry}, acc ->
-          persist_entry(entry, context, acc)
+          persist_entry(entry, %{context | current_team: team}, acc)
         end)
       end)
 

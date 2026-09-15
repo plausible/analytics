@@ -214,6 +214,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
                "Make sure all e-mails are valid"
 
       refute Repo.reload!(team).setup_complete
+      # the (valid) name submitted alongside the invalid row must not persist
+      # on its own - team creation is all-or-nothing
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     test "rejects duplicate e-mails across rows", %{conn: conn, team: team} do
@@ -226,6 +229,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert finish_setup(lv, rows: rows) =~ "Make sure e-mails are unique"
       refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     test "rejects inviting yourself", %{conn: conn, team: team, user: user} do
@@ -235,6 +239,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
                "You cannot invite yourself"
 
       refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     @tag :ee_only
@@ -252,6 +257,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert finish_setup(lv, rows: rows) =~ "Your account is limited to 3 team members"
       refute Repo.reload!(team).setup_complete
+      # the transaction rolls back entirely, so the rename never lands either
+      assert Repo.reload!(team).name == "My personal sites"
       assert_no_emails_delivered()
     end
   end

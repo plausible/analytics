@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   use PlausibleWeb, :live_view
 
-  alias Plausible.Repo
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -172,21 +171,20 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
-    changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
+    name_changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
 
-    case Repo.update(changeset) do
-      {:ok, team} ->
-        create_team(
-          assign(socket, current_team: team),
-          Map.get(params, "rows", %{})
-        )
+    # Only validated here, not persisted yet - the rename is committed
+    # together with the rest of team creation (including invitations).
+    case Ecto.Changeset.apply_action(name_changeset, :update) do
+      {:ok, _team} ->
+        create_team(socket, name_changeset, Map.get(params, "rows", %{}))
 
       {:error, changeset} ->
         {:noreply, assign(socket, team_name_form: to_form(changeset))}
     end
   end
 
-  defp create_team(socket, rows_params) do
+  defp create_team(socket, name_changeset, rows_params) do
     entries =
       rows_params
       |> Map.values()
@@ -218,14 +216,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
             Layout.schedule_send(layout, email, role)
           end)
 
-        persist_layout(socket, layout)
+        persist_layout(socket, layout, name_changeset)
     end
   end
 
-  defp persist_layout(socket, layout) do
+  defp persist_layout(socket, layout, name_changeset) do
     case Layout.persist(layout, %{
            current_user: socket.assigns.current_user,
-           current_team: socket.assigns.current_team
+           current_team: socket.assigns.current_team,
+           name_changeset: name_changeset
          }) do
       {:ok, _} ->
         {:noreply,
