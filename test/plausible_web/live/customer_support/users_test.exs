@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
 
     defp open_user(id, qs \\ []) do
-      ~p"/cs/users/user/#{id}"
+      ~p"/cs/users/user/#{id}?#{qs}"
     end
 
     describe "overview" do

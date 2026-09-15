@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Live.Sites do
         <.pagination
           :if={@sites.total_pages > 1}
           id="sites-pagination"
-          uri={URI.new!(~p"/sites")}
+          uri={URI.new!(~p"/sites?#{@uri_params}")}
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
@@ -1030,7 +1030,7 @@ defmodule PlausibleWeb.Live.Sites do
     socket
     |> assign(:uri_params, uri_params)
     |> assign(:filter_text, trimmed)
-    |> push_patch(to: ~p"/sites", replace: true)
+    |> push_patch(to: ~p"/sites?#{uri_params}", replace: true)
   end
 
   defp reset_pagination(socket) do

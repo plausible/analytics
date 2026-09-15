@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
     import Phoenix.LiveViewTest
 
     defp open_site(id, opts \\ []) do
-      ~p"/cs/sites/site/#{id}"
+      ~p"/cs/sites/site/#{id}?#{opts}"
     end
 
     describe "overview" do

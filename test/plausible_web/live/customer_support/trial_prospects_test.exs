@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
     alias Plausible.CustomerSupport.TrialProspect
 
     defp open_prospects(qs \\ []) do
-      ~p"/cs"
+      ~p"/cs/trial-prospects?#{qs}"
     end
 
     setup [:create_user, :log_in]
