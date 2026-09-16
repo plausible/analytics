@@ -5,6 +5,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
   use PlausibleWeb, :live_component
 
   import Ecto.Query, except: [update: 2, update: 3]
+  import PlausibleWeb.CustomerSupport.Live, only: [sort_arrow: 1]
   import PlausibleWeb.Live.Components.Pagination
 
   alias Plausible.Repo
@@ -122,8 +123,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
             <div class="flex items-center">
               <img
                 src="/favicon/sources/{site.domain}"
-                onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
-                class="w-4 h-4 flex-shrink-0 mt-px mr-2"
+                onerror="this.onerror=null; this.src='/favicon/placeholders/source';"
+                class="size-4 flex-shrink-0 mt-px mr-2"
               />
               <.styled_link
                 patch={Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)}
@@ -221,25 +222,4 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
 
   defp flip_direction(:asc), do: :desc
   defp flip_direction(:desc), do: :asc
-
-  attr :active, :boolean, required: true
-  attr :direction, :atom, required: true
-
-  defp sort_arrow(%{active: false} = assigns) do
-    ~H"""
-    <span class="opacity-30">↕</span>
-    """
-  end
-
-  defp sort_arrow(%{direction: :asc} = assigns) do
-    ~H"""
-    <span>↑</span>
-    """
-  end
-
-  defp sort_arrow(assigns) do
-    ~H"""
-    <span>↓</span>
-    """
-  end
 end

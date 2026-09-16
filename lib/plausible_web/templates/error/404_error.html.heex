@@ -13,7 +13,10 @@
     >
       Log in
     </.button_link>
-    <.button_link theme="secondary" href={PlausibleWeb.LayoutView.home_dest(@conn)}>
+    <.button_link
+      theme="secondary"
+      href={PlausibleWeb.LayoutView.home_dest(@conn.assigns[:current_user])}
+    >
       Go to homepage
     </.button_link>
   </div>

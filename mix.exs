@@ -105,27 +105,26 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.1.0"},
       {:nimble_csv, "~> 1.3"},
       {:nimble_totp, "~> 1.0"},
-      {:oban, "~> 2.20.1"},
+      {:oban, "~> 2.24.1"},
       {:observer_cli, "~> 1.7"},
       {:opentelemetry, "~> 1.7"},
       {:opentelemetry_api, "~> 1.5"},
       {:opentelemetry_api_experimental,
        git: "https://github.com/open-telemetry/opentelemetry-erlang.git",
-       ref: "b241ebf4feb7558738d009583bae8602b3c49fd0",
+       ref: "e67f5e30a4cc96411800c48ba960153a9223a71d",
        sparse: "apps/opentelemetry_api_experimental",
        override: true},
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_exporter, "~> 1.10"},
       {:opentelemetry_experimental,
        git: "https://github.com/open-telemetry/opentelemetry-erlang.git",
-       ref: "b241ebf4feb7558738d009583bae8602b3c49fd0",
+       ref: "e67f5e30a4cc96411800c48ba960153a9223a71d",
        sparse: "apps/opentelemetry_experimental",
        override: true},
       {:opentelemetry_phoenix, "~> 2.0.1"},
-      {:opentelemetry_oban, "~> 1.1"},
+      {:opentelemetry_oban, "~> 1.2"},
       {:opentelemetry_cowboy, "~> 1.0"},
-      # # https://github.com/open-telemetry/opentelemetry-erlang-contrib/issues/428
-      {:opentelemetry_semantic_conventions, "~> 1.27", override: true},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:phoenix, "~> 1.8.2"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.5"},
@@ -198,7 +197,9 @@ defmodule Plausible.MixProject do
       # mix test.e2e --ui
       # mix test.e2e --debug segments.spec.ts
       "test.e2e": [
+        "tailwind default",
         "esbuild default",
+        "esbuild friendly_captcha",
         "ecto.create --quiet",
         "ecto.migrate",
         "clean_postgres",
@@ -209,11 +210,14 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "esbuild default"
+        "esbuild default",
+        "esbuild friendly_captcha"
       ],
       "assets.deploy": [
         "tailwind default --minify",
         "esbuild default --minify",
+        # already minified upstream, so no --minify here
+        "esbuild friendly_captcha",
         "phx.digest"
       ]
     ]
@@ -222,7 +226,7 @@ defmodule Plausible.MixProject do
   defp docs do
     [
       main: "readme",
-      logo: "priv/static/images/ee/favicon-32x32.png",
+      logo: "priv/static/images/ee/favicon.svg",
       extras:
         Path.wildcard("guides/**/*.md") ++
           [

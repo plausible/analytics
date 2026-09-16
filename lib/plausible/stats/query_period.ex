@@ -61,7 +61,7 @@ defmodule Plausible.Stats.QueryPeriod do
   from a timezone alone. Other shapes pass through unchanged.
   """
   def resolve_input_date_range(:all, %Plausible.Site{} = site, relative_date) do
-    start_date = Plausible.Sites.stats_start_date(site) || relative_date
+    start_date = Plausible.Sites.ensure_stats_start_date(site).stats_start_date || relative_date
     {:date_range, start_date, relative_date}
   end
 

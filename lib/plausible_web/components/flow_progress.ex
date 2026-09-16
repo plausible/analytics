@@ -1,65 +1,39 @@
 defmodule PlausibleWeb.Components.FlowProgress do
   @moduledoc """
-  Component for provisioning/registration flows displaying
-  progress status. See `PlausibleWeb.Flows` for the list of
-  flow definitions.
+  Dotted progress indicator shown in the onboarding layout.
+  One small dot per step, with completed and current steps highlighted.
   """
   use Phoenix.Component
 
-  attr :flow, :string, required: true, values: PlausibleWeb.Flows.valid_keys()
-  attr :current_step, :string, required: true, values: PlausibleWeb.Flows.valid_values()
+  attr :steps, :list, required: true
+  attr :current_step, :string, required: true
 
   def render(assigns) do
-    steps = PlausibleWeb.Flows.steps(assigns.flow)
-    current_step_idx = Enum.find_index(steps, &(&1 == assigns.current_step))
+    current_step_idx = Enum.find_index(assigns.steps, &(&1 == assigns.current_step))
 
-    assigns =
-      assign(assigns,
-        steps: steps,
-        current_step_idx: current_step_idx
-      )
+    assigns = assign(assigns, :current_step_idx, current_step_idx)
 
     ~H"""
-    <div :if={not Enum.empty?(@steps)} class="mt-6 hidden md:block" id="flow-progress">
-      <div class="flex items-center justify-between max-w-4xl mx-auto my-8">
-        <%= for {step, idx} <- Enum.with_index(@steps) do %>
-          <div class="flex items-center text-base">
-            <div
-              :if={idx < @current_step_idx}
-              class="size-6 bg-green-500 dark:bg-green-600 text-white rounded-full flex items-center justify-center"
-            >
-              <Heroicons.check class="size-4" />
-            </div>
-            <div
-              :if={idx == @current_step_idx}
-              class="size-6 bg-indigo-600 text-xs text-white font-bold rounded-full flex items-center justify-center"
-            >
-              {idx + 1}
-            </div>
-            <div
-              :if={idx > @current_step_idx}
-              class="size-6 bg-gray-300 text-xs text-white font-bold dark:bg-gray-800 rounded-full flex items-center justify-center"
-            >
-              {idx + 1}
-            </div>
-            <span :if={idx < @current_step_idx} class="ml-2 text-gray-500">
-              {step}
-            </span>
-            <span
-              :if={idx == @current_step_idx}
-              class="ml-2 font-semibold text-black dark:text-gray-300"
-            >
-              {step}
-            </span>
-            <span :if={idx > @current_step_idx} class="ml-2 text-gray-500">
-              {step}
-            </span>
-          </div>
-          <div :if={idx + 1 != length(@steps)} class="flex-1 h-px bg-gray-300 mx-4 dark:bg-gray-800 ">
-          </div>
-        <% end %>
-      </div>
+    <div id="flow-progress" class="flex items-center gap-2" aria-label="Progress">
+      <span
+        :for={{step, idx} <- Enum.with_index(@steps)}
+        class={dot_class(dot_state(idx, @current_step_idx))}
+        aria-current={idx == @current_step_idx && "step"}
+        aria-label={step}
+      />
     </div>
     """
   end
+
+  @doc """
+  The classnames for a progress dot in the given state. Exposed so tests can
+  assert on rendered dots without duplicating the Tailwind classnames.
+  """
+  def dot_class(:completed), do: "size-2 rounded-full bg-indigo-600 dark:bg-gray-100"
+  def dot_class(:current), do: "h-2 w-5 rounded-full bg-indigo-600 dark:bg-gray-100"
+  def dot_class(:upcoming), do: "size-2 rounded-full bg-gray-300 dark:bg-gray-600"
+
+  defp dot_state(idx, current_idx) when idx < current_idx, do: :completed
+  defp dot_state(idx, current_idx) when idx == current_idx, do: :current
+  defp dot_state(_idx, _current_idx), do: :upcoming
 end

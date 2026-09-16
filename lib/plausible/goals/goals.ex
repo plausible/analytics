@@ -228,13 +228,16 @@ defmodule Plausible.Goals do
   end
 
   def delete(id, site_id) do
-    goal_query =
+    delete_matching(
       from(g in Goal,
         where: g.id == ^id,
         where: g.site_id == ^site_id
       )
+    )
+  end
 
-    goal_query = on_ee(do: preload(goal_query, funnels: :steps), else: goal_query)
+  defp delete_matching(base_query) do
+    goal_query = on_ee(do: preload(base_query, funnels: :steps), else: base_query)
 
     result =
       Multi.new()
@@ -252,7 +255,7 @@ defmodule Plausible.Goals do
         _, %{goal: %{funnels: funnels}} ->
           funnels_to_wipe =
             funnels
-            |> Enum.filter(&(Enum.count(&1.steps) == Funnel.Const.min_steps()))
+            |> Enum.filter(&(Enum.count(&1.steps) <= Funnel.Const.min_steps()))
             |> Enum.map(& &1.id)
 
           {:ok, funnels_to_wipe}
@@ -270,14 +273,7 @@ defmodule Plausible.Goals do
             )
           )
       end)
-      |> Multi.delete_all(
-        :delete_goals,
-        fn _ ->
-          from g in Goal,
-            where: g.id == ^id,
-            where: g.site_id == ^site_id
-        end
-      )
+      |> Multi.delete_all(:delete_goals, fn _ -> base_query end)
       |> Repo.transaction()
 
     case result do
@@ -323,45 +319,32 @@ defmodule Plausible.Goals do
 
   @spec delete_outbound_links(Plausible.Site.t()) :: :ok
   def delete_outbound_links(%Plausible.Site{} = site) do
-    q =
-      from g in Goal,
-        where: g.site_id == ^site.id,
-        where: g.event_name == "Outbound Link: Click"
-
-    Repo.delete_all(q)
-    :ok
+    delete_by_event_name(site, "Outbound Link: Click")
   end
 
   @spec delete_file_downloads(Plausible.Site.t()) :: :ok
   def delete_file_downloads(%Plausible.Site{} = site) do
-    q =
-      from g in Goal,
-        where: g.site_id == ^site.id,
-        where: g.event_name == "File Download"
-
-    Repo.delete_all(q)
-    :ok
+    delete_by_event_name(site, "File Download")
   end
 
   @spec delete_404(Plausible.Site.t()) :: :ok
   def delete_404(%Plausible.Site{} = site) do
-    q =
-      from g in Goal,
-        where: g.site_id == ^site.id,
-        where: g.event_name == "404"
-
-    Repo.delete_all(q)
-    :ok
+    delete_by_event_name(site, "404")
   end
 
   @spec delete_form_submissions(Plausible.Site.t()) :: :ok
   def delete_form_submissions(%Plausible.Site{} = site) do
-    q =
-      from g in Goal,
-        where: g.site_id == ^site.id,
-        where: g.event_name == "Form: Submission"
+    delete_by_event_name(site, "Form: Submission")
+  end
 
-    Repo.delete_all(q)
+  defp delete_by_event_name(site, event_name) do
+    delete_matching(
+      from(g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == ^event_name
+      )
+    )
+
     :ok
   end
 

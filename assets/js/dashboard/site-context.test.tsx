@@ -62,7 +62,8 @@ describe('parseSiteFromDataset', () => {
     isDbip: false,
     flags: {},
     shared: false,
-    isConsolidatedView: false
+    isConsolidatedView: false,
+    showEmailReportsCta: false
   }
 
   it('parses from dom string map correctly', () => {

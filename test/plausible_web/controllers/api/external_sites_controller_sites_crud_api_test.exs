@@ -288,7 +288,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         conn = post(conn, "/api/v1/sites", %{})
 
         assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
+                 "error" => "domain: Please enter a domain or subdomain"
                }
       end
 

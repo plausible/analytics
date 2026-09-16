@@ -27,12 +27,8 @@ defmodule PlausibleWeb.SiteController do
     flow = params["flow"] || PlausibleWeb.Flows.register()
     team = conn.assigns.current_team
 
-    render(conn, "new.html",
-      changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Plausible.Teams.Billing.site_limit(team),
-      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(team) != :ok,
-      form_submit_url: "/sites?flow=#{flow}",
-      flow: flow
+    render_new_site_form(conn, flow,
+      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(team) != :ok
     )
   end
 
@@ -50,34 +46,16 @@ defmodule PlausibleWeb.SiteController do
         end
 
         redirect(conn,
-          to:
-            Routes.site_path(conn, :installation, site.domain,
-              site_created: true,
-              flow: flow
-            )
+          to: Routes.site_path(conn, :installation, site.domain, flow: flow)
         )
 
       {:error, _, :permission_denied, _} ->
         conn
         |> put_flash(:error, "You are not permitted to add sites in the current team")
-        |> render("new.html",
-          changeset: Plausible.Site.changeset(%Plausible.Site{}),
-          first_site?: first_site?,
-          site_limit: Plausible.Teams.Billing.site_limit(team),
-          site_limit_exceeded?: false,
-          flow: flow,
-          form_submit_url: "/sites?flow=#{flow}"
-        )
+        |> render_new_site_form(flow)
 
       {:error, _, {:over_limit, limit}, _} ->
-        render(conn, "new.html",
-          changeset: Plausible.Site.changeset(%Plausible.Site{}),
-          first_site?: first_site?,
-          site_limit: limit,
-          site_limit_exceeded?: true,
-          flow: flow,
-          form_submit_url: "/sites?flow=#{flow}"
-        )
+        render_new_site_form(conn, flow, site_limit: limit, site_limit_exceeded?: true)
 
       {:error, _, changeset, _} ->
         case check_can_already_access(changeset, user) do
@@ -85,15 +63,31 @@ defmodule PlausibleWeb.SiteController do
             redirect(conn, to: Routes.stats_path(PlausibleWeb.Endpoint, :stats, domain, []))
 
           {:error, :no_access} ->
-            render(conn, "new.html",
-              changeset: changeset,
-              first_site?: first_site?,
-              site_limit: Plausible.Teams.Billing.site_limit(team),
-              site_limit_exceeded?: false,
-              flow: flow,
-              form_submit_url: "/sites?flow=#{flow}"
-            )
+            render_new_site_form(conn, flow, changeset: changeset)
         end
+    end
+  end
+
+  defp render_new_site_form(conn, flow, opts \\ []) do
+    defaults = [
+      changeset: Plausible.Site.changeset(%Plausible.Site{}),
+      site_limit_exceeded?: false,
+      form_submit_url: "/sites?flow=#{flow}",
+      bg_class: "bg-white dark:bg-gray-950",
+      legacy_layout?: false
+    ]
+
+    assigns =
+      defaults
+      |> Keyword.merge(opts)
+      |> Keyword.put_new_lazy(:site_limit, fn ->
+        Plausible.Teams.Billing.site_limit(conn.assigns.current_team)
+      end)
+
+    if flow == PlausibleWeb.Flows.register() do
+      render(conn, "onboarding_new_site.html", assigns)
+    else
+      render(conn, "provisioning_new_site.html", assigns)
     end
   end
 
@@ -169,8 +163,14 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_email_reports(conn, _params) do
+  def settings_email_reports(conn, params) do
     site = conn.assigns[:site]
+
+    if params["cta_clicked"] == "true" do
+      site
+      |> Plausible.Site.put_onboarding_status_advance(:completed)
+      |> Repo.update!()
+    end
 
     conn
     |> render("settings_email_reports.html",
@@ -290,6 +290,7 @@ defmodule PlausibleWeb.SiteController do
         |> render("settings_general.html",
           site: site,
           changeset: changeset,
+          connect_live_socket: true,
           layout: {PlausibleWeb.LayoutView, "site_settings.html"}
         )
     end

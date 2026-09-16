@@ -35,6 +35,14 @@ export class MockAPI {
     return this.register('post', urlWithoutQueryString, responseHandler)
   }
 
+  // sets put handler
+  public put(
+    urlWithoutQueryString: string,
+    responseHandler: typeof fetch | Record<string, unknown>
+  ): jest.Mock {
+    return this.register('put', urlWithoutQueryString, responseHandler)
+  }
+
   private register(
     method: string,
     urlWithoutQueryString: string,

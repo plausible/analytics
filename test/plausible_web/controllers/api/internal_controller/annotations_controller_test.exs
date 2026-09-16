@@ -495,26 +495,28 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsControllerTest do
       assert response["datetime"] == "2026-01-04T14:32:00"
     end
 
-    test "converts naive local time to UTC and returns it back as local time",
-         %{conn: conn, user: user} do
-      # America/New_York is UTC-5 in January; input and output should be the same
-      # local time (round-trip), while the DB stores the UTC equivalent.
-      site = new_site(owner: user, timezone: "America/New_York")
+    for dt <- ["2026-01-04T14:30:00", "2026-01-04 14:30:00"] do
+      test "converts naive local time #{dt} to UTC and returns it back as local time",
+           %{conn: conn, user: user} do
+        # America/New_York is UTC-5 in January; input and output should be the same
+        # local time (round-trip), while the DB stores the UTC equivalent.
+        site = new_site(owner: user, timezone: "America/New_York")
 
-      response =
-        post(conn, "/api/#{site.domain}/annotations", %{
-          "note" => "feature released",
-          "type" => "personal",
-          "granularity" => "minute",
-          "datetime" => "2026-01-04T14:30:00"
-        })
-        |> json_response(200)
+        response =
+          post(conn, "/api/#{site.domain}/annotations", %{
+            "note" => "feature released",
+            "type" => "personal",
+            "granularity" => "minute",
+            "datetime" => unquote(dt)
+          })
+          |> json_response(200)
 
-      assert response["datetime"] == "2026-01-04T14:30:00"
+        assert response["datetime"] == "2026-01-04T14:30:00"
 
-      reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, response["id"])
-      assert reloaded.granularity == :minute
-      assert reloaded.datetime == ~U[2026-01-04 19:30:00Z]
+        reloaded = Plausible.Repo.get!(Plausible.Annotations.Annotation, response["id"])
+        assert reloaded.granularity == :minute
+        assert reloaded.datetime == ~U[2026-01-04 19:30:00Z]
+      end
     end
 
     test "UTC datetime string is stored as UTC and returned as site local time",

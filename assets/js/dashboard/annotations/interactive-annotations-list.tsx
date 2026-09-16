@@ -1,5 +1,9 @@
 import React, { ReactNode } from 'react'
-import { Annotation, canEditAnnotation } from './annotations'
+import {
+  Annotation,
+  allAnnotationsAreFromThisExactDatetime,
+  canEditAnnotation
+} from './annotations'
 import {
   AnnotationAuthorshipLine,
   AnnotationItemRow,
@@ -17,10 +21,12 @@ const ScrollableArea = (props: { children: ReactNode }) => (
 )
 
 export const InteractiveAnnotationsList = ({
+  annotationDatetime,
   annotations,
   isTouchDevice,
   closeTooltip
 }: {
+  annotationDatetime: string
   annotations: Annotation[]
   isTouchDevice: boolean
   closeTooltip: () => void
@@ -31,6 +37,10 @@ export const InteractiveAnnotationsList = ({
     closeTooltip()
     setModal({ type: 'update-annotation', annotation })
   }
+  const showDateLabel = !allAnnotationsAreFromThisExactDatetime(
+    annotations,
+    annotationDatetime
+  )
 
   return (
     <ScrollableArea>
@@ -39,7 +49,10 @@ export const InteractiveAnnotationsList = ({
           const editable = canEditAnnotation({ type: annotation.type, user })
           const content = (
             <>
-              <AnnotationAuthorshipLine annotation={annotation} />
+              <AnnotationAuthorshipLine
+                annotation={annotation}
+                showDateLabel={showDateLabel}
+              />
               <AnnotationNote note={annotation.note} />
               {editable && !isTouchDevice && (
                 <button
@@ -56,13 +69,13 @@ export const InteractiveAnnotationsList = ({
             <AnnotationItemRow key={annotation.id}>
               {editable && isTouchDevice ? (
                 <button
-                  className="relative flex flex-col gap-y-px w-full max-w-64 text-left focus:outline-none"
+                  className="flex flex-col gap-y-px w-full max-w-64 text-left focus:outline-none"
                   onClick={() => openEdit(annotation)}
                 >
                   {content}
                 </button>
               ) : (
-                <div className="relative flex flex-col gap-y-px w-full max-w-64">
+                <div className="flex flex-col gap-y-px w-full max-w-64">
                   {content}
                 </div>
               )}

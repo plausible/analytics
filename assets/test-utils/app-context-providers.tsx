@@ -50,7 +50,8 @@ export const DEFAULT_SITE: PlausibleSite = {
   isDbip: false,
   flags: {},
   shared: false,
-  isConsolidatedView: false
+  isConsolidatedView: false,
+  showEmailReportsCta: false
 }
 
 export const TestContextProviders = ({

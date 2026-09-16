@@ -10,7 +10,7 @@
   </head>
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
     <div class="w-full my-8 text-center">
-      <a href={home_dest(@conn)}>
+      <a href={home_dest(@conn.assigns[:current_user])}>
         <Layout.logo />
       </a>
     </div>

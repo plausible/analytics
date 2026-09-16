@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500 rounded-md disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:border-gray-200 disabled:dark:border-gray-800 disabled:text-gray-900/40 disabled:dark:text-white/30 disabled:cursor-not-allowed"
+  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500 rounded-md selection:bg-gray-200 dark:selection:bg-gray-700 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:border-gray-200 disabled:dark:border-gray-800 disabled:text-gray-900/40 disabled:dark:text-white/30 disabled:cursor-not-allowed [&[readonly]]:bg-gray-100 [&[readonly]]:border-transparent [&[readonly]]:dark:border-transparent [&[readonly]]:dark:bg-gray-750 [&[readonly]]:focus:ring-0 [&[readonly]]:focus:border-transparent [&[readonly]]:dark:focus:border-transparent [&[readonly]]:cursor-default"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -53,6 +53,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
+  attr(:resizable, :boolean, default: true)
   slot(:help_content)
   slot(:inner_block)
   slot(:trailing)
@@ -77,22 +78,20 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div class={@mt? && "mt-6"}>
-      <.label
-        :if={@label != nil and @label != ""}
-        for={@id}
-        class={if @help_text, do: "mb-0.5", else: "mb-1.5"}
-      >
+      <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
-
-      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-        {@help_text}
-      </p>
       <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
       <.error :for={msg <- @errors}>{msg}</.error>
+      <p
+        :if={@help_text && @errors == []}
+        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+      >
+        {@help_text}
+      </p>
     </div>
     """
   end
@@ -159,12 +158,12 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div class={@mt? && "mt-6"}>
-      <.label class="mb-1.5" for={@id}>{@label}</.label>
+      <.label :if={@label != nil and @label != ""} class="mb-1.5" for={@id}>{@label}</.label>
       <textarea
         id={@id}
         rows={@rest[:rows] || "6"}
         name={@name}
-        class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+        class={[@class, @width, !@resizable && "resize-none"]}
         {@rest}
       >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -185,16 +184,9 @@ defmodule PlausibleWeb.Live.Components.Form do
 
     ~H"""
     <div class={@mt? && "mt-6"}>
-      <.label
-        :if={@label != nil and @label != ""}
-        for={@id}
-        class={if @help_text, do: "mb-0.5", else: "mb-1.5"}
-      >
+      <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
-      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-        {@help_text}
-      </p>
       <div class="relative">
         <input
           type={@type}
@@ -206,10 +198,16 @@ defmodule PlausibleWeb.Live.Components.Form do
         />
         {render_slot(@trailing)}
       </div>
-      {render_slot(@inner_block)}
       <.error :for={msg <- @errors}>
         {msg}
       </.error>
+      <p
+        :if={@help_text && @errors == []}
+        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+      >
+        {@help_text}
+      </p>
+      {render_slot(@inner_block)}
     </div>
     """
   end

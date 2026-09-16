@@ -177,7 +177,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       on: true,
       group_by: meta.key
     )
-    |> select_merge_as([_e, meta], %{shortname(query, dimension) => meta.key})
+    |> select_merge_as([..., meta], %{shortname(query, dimension) => meta.key})
   end
 
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do

@@ -24,9 +24,9 @@ defmodule PlausibleWeb.SSOController do
         redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
-        render_auth_page(conn, "login_form.html",
-          autosubmit: params["autosubmit"] != nil,
-          heading: "Sign in with SSO"
+        render(conn, "login_form.html",
+          legacy_layout?: false,
+          autosubmit: params["autosubmit"] != nil
         )
     end
   end
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SSOController do
   end
 
   def provision_notice(conn, _params) do
-    render_auth_page(conn, "provision_notice.html", heading: "Single Sign-On required")
+    render(conn, "provision_notice.html", legacy_layout?: false)
   end
 
   def provision_issue(conn, params) do
@@ -79,10 +79,7 @@ defmodule PlausibleWeb.SSOController do
         _ -> :unknown
       end
 
-    render_auth_page(conn, "provision_issue.html",
-      heading: "Single Sign-On required",
-      issue: issue
-    )
+    render(conn, "provision_issue.html", legacy_layout?: false, issue: issue)
   end
 
   def saml_signin(conn, params) do

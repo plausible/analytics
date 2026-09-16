@@ -312,8 +312,8 @@ if disable_registration not in [true, false, :invite_only] do
   raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/wiki/configuration#disable_registration"
 end
 
-hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
-hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
+friendly_captcha_sitekey = get_var_from_path_or_env(config_dir, "FRIENDLY_CAPTCHA_SITEKEY")
+friendly_captcha_api_key = get_var_from_path_or_env(config_dir, "FRIENDLY_CAPTCHA_API_KEY")
 
 custom_script_name =
   config_dir
@@ -647,23 +647,36 @@ ch_transport_opts =
     ch_transport_opts
   end
 
+# Workaround for a ClickHouse bug where sampled queries poison the query
+# condition cache, causing subsequent unsampled queries to return invalid
+# results. Sampling is EE only, so this is scoped to EE builds.
+# Fixed upstream in ClickHouse/ClickHouse#108488; remove once ClickHouse
+# updated.
+ch_query_condition_cache_settings =
+  if config_env() in [:ce, :ce_dev, :ce_test] do
+    []
+  else
+    [use_query_condition_cache: 0]
+  end
+
 config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
   timeout: 15_000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
-  settings: [
-    readonly: 1,
-    join_algorithm: "direct,parallel_hash,hash",
-    # stops queries when :timeout ClickhouseRepo connection :timeout value reached
-    cancel_http_readonly_queries_on_client_close: 1,
-    # stops queries when they will likely take over 20s
-    # NB! when :timeout is overridden to be over 20s,
-    # for it to have meaningful effect,
-    # this must be overridden as well
-    max_execution_time: 20
-  ]
+  settings:
+    [
+      readonly: 1,
+      join_algorithm: "direct,parallel_hash,hash",
+      # stops queries when ClickhouseRepo connection :timeout value reached
+      cancel_http_readonly_queries_on_client_close: 1,
+      # stops queries when they will likely take over 20s
+      # NB! when :timeout is overridden to be over 20s,
+      # for it to have meaningful effect,
+      # this must be overridden as well
+      max_execution_time: 20
+    ] ++ ch_query_condition_cache_settings
 
 config :plausible, Plausible.IngestRepo,
   queue_target: 500,
@@ -692,12 +705,12 @@ config :plausible, Plausible.AsyncInsertRepo,
     materialized_views_ignore_errors: 1
   ]
 
-config :plausible, Plausible.ImportDeletionRepo,
+config :plausible, Plausible.DeletionRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
-  pool_size: 1
+  pool_size: 2
 
 config :plausible, Plausible.Ingestion.Persistor,
   backend: persistor_backend,
@@ -833,12 +846,22 @@ cloud_cron = [
   {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
   # Every midnight
   {"0 0 * * *", Plausible.Workers.LockSites},
+  # Daily at 6, ahead of ScanInactiveTeams - restarts the notice cycle for
+  # any lapsed snoozes so they're immediately eligible again same-day
+  {"0 6 * * *", Plausible.Workers.UnsnoozeTeamDeletions},
+  # Daily at 7, ahead of AcceptTrafficUntil/SendTrialNotifications
+  {"0 7 * * *", Plausible.Workers.ScanInactiveTeams},
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
-  # First sunday of the month, 4:00 UTC
-  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
-  # Daily at 4:00 UTC
-  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
+  # Weekdays at 9, after AcceptTrafficUntil - no deletion notices go out on
+  # weekends; anything due Sat/Sun is simply picked up on Monday instead
+  {"0 9 * * 1-5", Plausible.Workers.SendDeletionNotifications},
+  # Daily at 10, after SendDeletionNotifications
+  {"0 10 * * *", Plausible.Workers.ExecuteTeamDeletions},
+  # Every Tuesday, 3:00 UTC
+  {"0 3 * * TUE", Plausible.Workers.ClickhouseCleanSites},
+  # Daily at 5:00 UTC
+  {"0 5 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
   # Daily at 2:00 UTC
   {"0 2 * * *", Plausible.Workers.ScoreTrialProspects}
 ]
@@ -868,6 +891,10 @@ cloud_queues = [
   check_usage: 1,
   notify_annual_renewal: 1,
   lock_sites: 1,
+  scan_inactive_teams: 1,
+  unsnooze_team_deletions: 1,
+  deletion_notification_emails: 1,
+  execute_team_deletions: 1,
   legacy_time_on_page_cutoff: 1,
   purge_cdn_cache: 1,
   sso_domain_ownership_verification: 32,
@@ -892,16 +919,16 @@ if config_env() in [:prod, :ce, :load] do
       {Oban.Plugins.Reindexer, schedule: "0 1 * * *"}
     ],
     queues: if(cron_enabled, do: queues, else: []),
-    peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
+    peer: if(cron_enabled, do: Oban.Peers.Database, else: false)
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
     queues: queues
 end
 
-config :plausible, :hcaptcha,
-  sitekey: hcaptcha_sitekey,
-  secret: hcaptcha_secret
+config :plausible, :friendly_captcha,
+  sitekey: friendly_captcha_sitekey,
+  api_key: friendly_captcha_api_key
 
 nolt_sso_secret = get_var_from_path_or_env(config_dir, "NOLT_SSO_SECRET")
 config :joken, default_signer: nolt_sso_secret

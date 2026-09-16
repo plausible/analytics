@@ -28,7 +28,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
     shared: !!dataset.sharedLinkAuth,
-    isConsolidatedView: dataset.isConsolidatedView === 'true'
+    isConsolidatedView: dataset.isConsolidatedView === 'true',
+    showEmailReportsCta: dataset.showEmailReportsCta === 'true'
   }
 }
 
@@ -62,7 +63,8 @@ export const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   shared: false,
-  isConsolidatedView: false
+  isConsolidatedView: false,
+  showEmailReportsCta: false
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue

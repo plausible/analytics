@@ -49,7 +49,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
   return (
     <div className="flex min-w-0 flex-nowrap items-center gap-x-1 md:gap-x-2.5 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0">
       <div
-        className="flex shrink-0 items-center gap-x-1 md:gap-x-2.5"
+        className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5"
         ref={leftActionsRef}
       >
         <SiteSwitcher />

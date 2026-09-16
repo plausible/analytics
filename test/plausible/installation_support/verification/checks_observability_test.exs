@@ -136,7 +136,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksObservabilityTest do
           verify_installation_check_timeout: 100,
           report_to: nil,
           async?: false,
-          slowdown: 0
+          slowdown: 0,
+          launch_delay: 0
         )
 
       log = capture_log(fn -> Checks.interpret_diagnostics(state) end)
@@ -167,7 +168,8 @@ defmodule Plausible.InstallationSupport.Verification.ChecksObservabilityTest do
       Checks.run(@url_to_verify, @expected_domain, "manual",
         report_to: nil,
         async?: false,
-        slowdown: 0
+        slowdown: 0,
+        launch_delay: 0
       )
     end
 

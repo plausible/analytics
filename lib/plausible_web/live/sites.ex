@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Sites do
   import PlausibleWeb.Live.Components.Pagination
   import PlausibleWeb.StatsView, only: [large_number_format: 1]
 
+  alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Sites.Index
   alias Plausible.Teams
@@ -114,8 +115,8 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
-        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
+      <div class="group py-4 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl min-w-0 truncate">
           {Teams.name(@current_team)}
         </h2>
         <.unstyled_link
@@ -173,7 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
 
-      <div class="flex flex-col gap-y-4 my-4">
+      <div class="flex flex-col gap-y-4 has-[*]:my-4">
         <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
         <PlausibleWeb.Team.Notice.site_ownership_invitations
           site_ownership_invitations={@site_ownership_invitations}
@@ -237,7 +238,7 @@ defmodule PlausibleWeb.Live.Sites do
       </div>
 
       <div :if={@has_sites?}>
-        <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
               not @searching? and
@@ -324,7 +325,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card-cta"
-      class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
+      class="relative col-span-1 flex flex-col justify-between bg-white p-5 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
     >
       <div class="flex flex-col">
         <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -437,11 +438,11 @@ defmodule PlausibleWeb.Live.Sites do
     >
       <.unstyled_link
         href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @consolidated_view.domain, [])}
-        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
+        class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
-            <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+            <span class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
               <.globe_icon />
             </span>
             <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
@@ -533,6 +534,13 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sparkline, :map, required: true)
 
   def site(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :needs_verification?,
+        ee?() and assigns.site.onboarding_status == :new_site
+      )
+
     ~H"""
     <li
       class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
@@ -552,10 +560,20 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+        href={
+          Routes.stats_path(
+            PlausibleWeb.Endpoint,
+            :stats,
+            @site.domain,
+            if(@needs_verification?,
+              do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
+              else: []
+            )
+          )
+        }
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
-        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-5 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
@@ -567,7 +585,7 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <.site_stats sparkline={@sparkline} />
+          <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
         </div>
       </.unstyled_link>
 
@@ -657,6 +675,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:sparkline, :any, required: true)
+  attr(:needs_verification?, :boolean, default: false)
 
   def site_stats(assigns) do
     ~H"""
@@ -685,7 +704,10 @@ defmodule PlausibleWeb.Live.Sites do
             </p>
           </div>
 
-          <.percentage_change change={@sparkline.visitors_change} />
+          <.pill :if={@needs_verification?} color={:yellow}>
+            Setup pending
+          </.pill>
+          <.percentage_change :if={not @needs_verification?} change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
@@ -789,11 +811,15 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def favicon(assigns) do
-    src = "/favicon/sources/#{assigns.domain}"
-    assigns = assign(assigns, :src, src)
+    assigns =
+      assign(assigns,
+        light_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=light",
+        dark_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=dark"
+      )
 
     ~H"""
-    <img src={@src} class="size-[18px] shrink-0" />
+    <img src={@light_src} alt="" class="shrink-0 size-6 rounded-md dark:hidden" />
+    <img src={@dark_src} alt="" class="shrink-0 size-6 rounded-md hidden dark:block" />
     """
   end
 
@@ -946,14 +972,16 @@ defmodule PlausibleWeb.Live.Sites do
     site_entries =
       Sites.get_for_user_by_ids(assigns.current_user, page.entries, team: assigns.current_team)
 
-    sites = %{page | entries: site_entries}
-
     sparklines =
       if connected?(socket) do
         Plausible.Stats.Sparkline.parallel_overview(site_entries)
       else
         %{}
       end
+
+    site_entries = Enum.map(site_entries, &advance_onboarding_status_if_needed(&1, sparklines))
+
+    sites = %{page | entries: site_entries}
 
     consolidated_sparkline =
       if connected?(socket),
@@ -967,6 +995,23 @@ defmodule PlausibleWeb.Live.Sites do
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
+
+  defp advance_onboarding_status_if_needed(
+         %Plausible.Site{onboarding_status: :new_site} = site,
+         sparklines
+       ) do
+    case Map.get(sparklines, site.domain) do
+      %{visitors: visitors} when visitors > 0 ->
+        site
+        |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
+        |> Repo.update!()
+
+      _ ->
+        site
+    end
+  end
+
+  defp advance_onboarding_status_if_needed(site, _sparklines), do: site
 
   defp refresh_index_pins(socket) do
     assign(socket, :index_state, Index.refresh_pins(socket.assigns.index_state))

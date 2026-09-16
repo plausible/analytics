@@ -614,6 +614,7 @@ test('pages breakdown', async ({ page, request }) => {
 
   await test.step('exit pages modal with an event filter applied', async () => {
     await page.goto('/' + domain + '?f=is,page,/page1', { waitUntil: 'commit' })
+    await report.getByTestId('report-end').scrollIntoViewIfNeeded()
     await detailsLink(report).click()
 
     await expect(

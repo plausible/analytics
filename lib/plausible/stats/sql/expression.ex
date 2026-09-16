@@ -283,7 +283,7 @@ defmodule Plausible.Stats.SQL.Expression do
     do: select_merge_as(q, [..., t], %{key => t.entry_page})
 
   def select_dimension_from_join(q, key, "visit:entry_page_hostname"),
-    do: select_merge_as(q, [..., t], %{key => t.entry_page_hostaname})
+    do: select_merge_as(q, [..., t], %{key => t.entry_page_hostname})
 
   def select_dimension_from_join(q, key, "visit:exit_page"),
     do: select_merge_as(q, [..., t], %{key => t.exit_page})

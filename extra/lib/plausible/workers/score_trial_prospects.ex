@@ -14,12 +14,10 @@ defmodule Plausible.Workers.ScoreTrialProspects do
   alias Plausible.Teams
   alias Plausible.CustomerSupport.{TrialProspect, TrialProspects}
 
-  @max_expired_days 30
-
   @impl Oban.Worker
   def perform(_job) do
-    Date.utc_today()
-    |> trial_population()
+    TrialProspects.population_query()
+    |> Repo.all()
     |> Enum.each(&score_and_persist/1)
 
     :ok
@@ -37,18 +35,6 @@ defmodule Plausible.Workers.ScoreTrialProspects do
             Exception.format(:error, error, __STACKTRACE__)
         )
     end
-  end
-
-  defp trial_population(today) do
-    cutoff = Date.add(today, -@max_expired_days)
-
-    Repo.all(
-      from t in Teams.Team,
-        left_join: s in assoc(t, :subscription),
-        where: not is_nil(t.trial_expiry_date),
-        where: is_nil(s.id),
-        where: t.trial_expiry_date >= ^cutoff
-    )
   end
 
   defp score_team(team) do

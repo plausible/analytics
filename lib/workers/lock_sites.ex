@@ -1,7 +1,10 @@
 defmodule Plausible.Workers.LockSites do
+  @moduledoc false
+
   use Plausible.Repo
   use Oban.Worker, queue: :lock_sites
 
+  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Teams
 
   @impl Oban.Worker
@@ -12,7 +15,9 @@ defmodule Plausible.Workers.LockSites do
           as: :team,
           left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
           on: true,
-          preload: [subscription: s]
+          left_join: ep in EnterprisePlan,
+          on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
+          preload: [subscription: s, enterprise_plan: ep]
       )
 
     for team <- teams do

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Components.Layout do
 
   use Phoenix.Component
 
-  attr :class, :string, default: "w-24 sm:w-30"
+  attr :class, :string, default: "w-24 sm:w-28"
 
   def logo(assigns) do
     ~H"""
@@ -34,15 +34,13 @@ defmodule PlausibleWeb.Components.Layout do
     />
     <link
       rel="icon"
-      type="image/png"
       sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-32x32.png"))}
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.ico"))}
     />
     <link
       rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-16x16.png"))}
+      type="image/svg+xml"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.svg"))}
     />
     """
   end
@@ -55,16 +53,13 @@ defmodule PlausibleWeb.Components.Layout do
         function reapplyTheme() {
           var darkMediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
           var htmlRef = document.querySelector('html');
-          var hcaptchaRefs = Array.from(document.getElementsByClassName('h-captcha'));
 
           var isDark = themePref === 'dark' || (themePref === 'system' && darkMediaPref);
 
           if (isDark) {
               htmlRef.classList.add('dark')
-              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "dark"; });
           } else {
               htmlRef.classList.remove('dark');
-              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "light"; });
           }
         }
 

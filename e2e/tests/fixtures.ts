@@ -115,9 +115,7 @@ export async function register({
 
   await page.getByRole('button', { name: 'Activate' }).click()
 
-  await expect(
-    page.getByRole('button', { name: 'Install Plausible' })
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add site' })).toBeVisible()
 }
 
 export async function login({ page, user }: { page: Page; user: User }) {
@@ -149,19 +147,16 @@ export async function addSite({
 }) {
   await page.goto('/sites/new', { waitUntil: 'commit' })
 
-  await expect(
-    page.getByRole('button', { name: 'Install Plausible' })
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add site' })).toBeVisible()
 
   await page.getByLabel('Domain').fill(domain)
-  await page.getByLabel('Reporting timezone').selectOption('Etc/UTC')
 
-  await page.getByRole('button', { name: 'Install Plausible' }).click()
+  await page.getByRole('button', { name: 'Add site' }).click()
 
   await expect(page).toHaveURL(/\/installation/)
 
   await expect(
-    page.getByRole('button', { name: /Verify .* installation/ })
+    page.getByRole('button', { name: "I've installed it" })
   ).toBeVisible()
 }
 
@@ -236,6 +231,28 @@ export async function populateStats({
       Accept: 'application/json'
     },
     data: { domain: domain, events: events }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
+export async function setVerificationScenario({
+  request,
+  domain,
+  scenario,
+  options
+}: {
+  request: APIRequestContext
+  domain: string
+  scenario: string
+  options?: { slowdown?: number; launch_delay?: number }
+}) {
+  const response = await request.put('/e2e-tests/verification', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, scenario: scenario, options: options }
   })
 
   expect(response.ok()).toBeTruthy()

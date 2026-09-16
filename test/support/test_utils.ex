@@ -267,6 +267,18 @@ defmodule Plausible.TestUtils do
     )
   end
 
+  def get_entries_from_query_log(site_domain) do
+    Plausible.IngestRepo.query!("SYSTEM FLUSH LOGS")
+
+    %{rows: rows} =
+      Plausible.ClickhouseRepo.query!(
+        "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
+        [site_domain]
+      )
+
+    rows
+  end
+
   def random_ip() do
     Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
   end
