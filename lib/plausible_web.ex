@@ -115,7 +115,6 @@ defmodule PlausibleWeb do
       use PlausibleWeb.VerifiedRoutes
 
       import Plug.Conn
-      import PlausibleWeb.Router.Helpers
 
       alias PlausibleWeb.Plugins.API.Schemas
       alias PlausibleWeb.Plugins.API.Views
