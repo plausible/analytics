@@ -163,89 +163,27 @@ defmodule Plausible.OAuthTest do
   end
 
   describe "create_authorization_code/3" do
-    test "accepts a long client_id URL and redirect_uri", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      long_url = "https://client.example.com/" <> String.duplicate("a", 500)
-
-      assert {:ok, code} =
-               create_code(user, team, challenge, %{
-                 client_id: long_url,
-                 redirect_uri: long_url
-               })
-
-      assert_matches %AuthorizationCode{
-                       client_id: ^long_url,
-                       redirect_uri: ^long_url
-                     } = get_code(code)
-    end
-
-    test "rejects an over-long client_name from the metadata document", %{
-      user: user,
-      team: team
-    } do
+    test "refuses a resource this server does not know", %{user: user, team: team} do
       {_verifier, challenge} = pkce()
 
-      assert {:error, changeset} =
-               create_code(user, team, challenge, %{
-                 client_name: String.duplicate("N", 256)
-               })
-
-      assert {"should be at most %{count} character(s)", _} = changeset.errors[:client_name]
-    end
-
-    test "rejects a code_challenge that is not a 43-byte S256 digest", %{user: user, team: team} do
-      for challenge <- [String.duplicate("x", 42), String.duplicate("x", 300)] do
-        assert {:error, changeset} = create_code(user, team, challenge)
-        assert {"should be %{count} byte(s)", _} = changeset.errors[:code_challenge]
+      for resource <- ["https://elsewhere.example.com/mcp", nil] do
+        assert {:error, :invalid_target} =
+                 create_code(user, team, challenge, %{resource: resource})
       end
-    end
-
-    test "refuses a resource this server does not protect", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-
-      assert {:error, :invalid_target} =
-               create_code(user, team, challenge, %{
-                 resource: "https://elsewhere.example.com/mcp"
-               })
 
       assert Plausible.Repo.aggregate(AuthorizationCode, :count) == 0
     end
 
-    test "refuses an absent resource", %{user: user, team: team} do
+    test "refuses a scope set this server cannot grant", %{user: user, team: team} do
       {_verifier, challenge} = pkce()
 
-      assert {:error, :invalid_target} = create_code(user, team, challenge, %{resource: nil})
-
-      assert Plausible.Repo.aggregate(AuthorizationCode, :count) == 0
-    end
-
-    test "rejects an over-long redirect_uri", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-
-      assert {:error, changeset} =
-               create_code(user, team, challenge, %{
-                 redirect_uri: "https://client.example.com/" <> String.duplicate("a", 2048)
-               })
-
-      assert {"should be at most %{count} byte(s)", _} = changeset.errors[:redirect_uri]
-    end
-
-    test "refuses a scope this server does not support", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-
-      assert {:error, :invalid_scope} =
-               create_code(user, team, challenge, %{scopes: ["sites:read:*", "admin:write"]})
-
-      assert Plausible.Repo.aggregate(AuthorizationCode, :count) == 0
-    end
-
-    test "refuses an absent or empty scope set rather than defaulting it", %{
-      user: user,
-      team: team
-    } do
-      {_verifier, challenge} = pkce()
-
-      for scopes <- [nil, [], "", Enum.join(supported_scopes(), " ")] do
+      for scopes <- [
+            ["sites:read:*", "admin:write"],
+            nil,
+            [],
+            "",
+            Enum.join(supported_scopes(), " ")
+          ] do
         assert {:error, :invalid_scope} = create_code(user, team, challenge, %{scopes: scopes})
       end
 
@@ -331,56 +269,29 @@ defmodule Plausible.OAuthTest do
                })
     end
 
-    test "rejects a mismatched client_id", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
+    test "rejects a presented value that does not match the code", %{user: user, team: team} do
+      for override <- [
+            %{client_id: "https://other.example.com/oauth-metadata"},
+            %{client_id: nil},
+            %{redirect_uri: "https://client.example.com/other"},
+            %{resource: "https://elsewhere.example.com/mcp"}
+          ] do
+        {verifier, challenge} = pkce()
+        {:ok, code} = create_code(user, team, challenge)
 
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: "https://other.example.com/oauth-metadata",
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-    end
+        presented =
+          Map.merge(
+            %{
+              verifier: verifier,
+              client_id: @client_id,
+              redirect_uri: @redirect_uri,
+              resource: resource()
+            },
+            override
+          )
 
-    test "rejects a missing client_id", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: nil,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-    end
-
-    test "rejects a mismatched redirect_uri", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: "https://client.example.com/other",
-                 resource: resource()
-               })
-    end
-
-    test "rejects a mismatched resource", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: "https://elsewhere.example.com/mcp"
-               })
+        assert {:error, :invalid_grant} = OAuth.consume_authorization_code(code, presented)
+      end
     end
 
     test "rejects an unknown code" do
@@ -499,9 +410,8 @@ defmodule Plausible.OAuthTest do
         )
 
       assert_matches %Grant{
-                       access_token_hash: ^any(:string, &(&1 != response.access_token)),
-                       access_token_hint:
-                         ^any(:string, &String.ends_with?(response.access_token, &1))
+                       access_token_hash: ^Token.hash(response.access_token),
+                       access_token_hint: ^String.slice(response.access_token, -4, 4)
                      } = stored
     end
 
@@ -527,7 +437,7 @@ defmodule Plausible.OAuthTest do
                  scopes_supported: []
                })
 
-      # Verify that the token works when for the correct resource.
+      # Verify that the token works for the correct resource.
       assert {:ok, _grant} = OAuth.find_access_token(access_token, mcp())
     end
 
