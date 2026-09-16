@@ -692,9 +692,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Tracking"
 
       assert resp =~
-               Routes.site_path(conn, :installation, site.domain,
-                 flow: PlausibleWeb.Flows.review()
-               )
+               ~p"/#{site.domain}/installation?#{[flow: PlausibleWeb.Flows.review()]}"
     end
 
     on_ee do

@@ -7,8 +7,6 @@ defmodule PlausibleWeb.SSOController do
   alias Plausible.Auth.SSO
   alias PlausibleWeb.LoginPreference
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
-
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner] when action in [:sso_settings]
 
@@ -36,13 +34,7 @@ defmodule PlausibleWeb.SSOController do
          {:ok, %{sso_integration: integration}} <- SSO.Domains.lookup(email) do
       redirect(conn,
         to:
-          Routes.sso_path(
-            conn,
-            :saml_signin,
-            integration.identifier,
-            email: email,
-            return_to: params["return_to"]
-          )
+          ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: params["return_to"]]}"
       )
     else
       {:error, :not_found} ->

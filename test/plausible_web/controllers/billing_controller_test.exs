@@ -210,11 +210,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert text(preview_changes_link) == "Preview changes"
 
       assert text_of_attr(preview_changes_link, "href") ==
-               Routes.billing_path(
-                 PlausibleWeb.Endpoint,
-                 :change_plan_preview,
-                 @configured_enterprise_plan_paddle_plan_id
-               )
+               ~p"/billing/change-plan/preview/#{@configured_enterprise_plan_paddle_plan_id}"
     end
   end
 

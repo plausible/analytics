@@ -5,6 +5,8 @@ defmodule Plausible.Plugs.HandleExpiredSession do
 
   use Plausible
 
+  use PlausibleWeb.VerifiedRoutes
+
   import Plug.Conn
 
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -39,12 +41,7 @@ defmodule Plausible.Plugs.HandleExpiredSession do
     conn
     |> Phoenix.Controller.redirect(
       to:
-        Routes.sso_path(conn, :login_form,
-          prefer: "manual",
-          email: email,
-          autosubmit: true,
-          return_to: return_to
-        )
+        ~p"/sso/login?#{[prefer: "manual", email: email, autosubmit: true, return_to: return_to]}"
     )
     |> halt()
   end

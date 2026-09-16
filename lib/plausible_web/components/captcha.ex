@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Components.Captcha do
   Friendly Captcha widget shared between the registration and password-reset forms.
   """
   use Phoenix.Component, global_prefixes: ~w(x-)
+  use PlausibleWeb.VerifiedRoutes
 
   @reset_event "reset-frc-captcha"
 
@@ -39,12 +40,7 @@ defmodule PlausibleWeb.Components.Captcha do
       <script
         id="frc-captcha-script"
         type="module"
-        src={
-          PlausibleWeb.Router.Helpers.static_path(
-            PlausibleWeb.Endpoint,
-            "/js/friendly-captcha/site.min.js"
-          )
-        }
+        src={~p"/js/friendly-captcha/site.min.js"}
         async
         defer
       >
@@ -52,12 +48,7 @@ defmodule PlausibleWeb.Components.Captcha do
       <script
         id="frc-captcha-script-compat"
         nomodule
-        src={
-          PlausibleWeb.Router.Helpers.static_path(
-            PlausibleWeb.Endpoint,
-            "/js/friendly-captcha/site.compat.min.js"
-          )
-        }
+        src={~p"/js/friendly-captcha/site.compat.min.js"}
         async
         defer
       >
