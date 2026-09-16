@@ -54,9 +54,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
           :login_error,
           "We couldn't find a Single Sign-On account for that email."
         )
-        |> Phoenix.Controller.redirect(
-          to: ~p"/sso/login?#{[return_to: return_to]}"
-        )
+        |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: return_to]}")
     end
   end
 
@@ -237,8 +235,6 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   defp login_error(conn, cookie, login_error) do
     conn
     |> Phoenix.Controller.put_flash(:login_error, login_error)
-    |> Phoenix.Controller.redirect(
-      to: ~p"/sso/login?#{[return_to: cookie.return_to]}"
-    )
+    |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: cookie.return_to]}")
   end
 end

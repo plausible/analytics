@@ -65,9 +65,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
           </:thead>
           <:tbody :let={p}>
             <.td>
-              <.styled_link patch={
-                ~p"/cs/teams/team/#{p.team.id}"
-              }>
+              <.styled_link patch={~p"/cs/teams/team/#{p.team.id}"}>
                 {p.team.name}
               </.styled_link>
               <div :if={owner_email(p.team)} class="text-xs text-gray-500 dark:text-gray-400">

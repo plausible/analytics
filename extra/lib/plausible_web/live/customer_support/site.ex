@@ -82,9 +82,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
         </p>
         <p class="text-sm font-medium">
           Team:
-          <.styled_link patch={
-            ~p"/cs/teams/team/#{@site.team.id}"
-          }>
+          <.styled_link patch={~p"/cs/teams/team/#{@site.team.id}"}>
             {@site.team.name}
           </.styled_link>
         </p>

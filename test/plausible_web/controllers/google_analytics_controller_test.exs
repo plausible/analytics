@@ -528,7 +528,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         })
         |> html_response(200)
 
-      action_url = PlausibleWeb.Router.Helpers.google_analytics_path(conn, :import, site.domain)
+      action_url = ~p"/#{site.domain}/settings/google-import"
 
       assert text_of_attr(response, "form", "action") == action_url
 
@@ -743,7 +743,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(conn, :settings_imports_exports, site.domain)
+               ~p"/#{site.domain}/settings/imports-exports"
 
       [site_import] = Plausible.Imported.list_all_imports(site)
 

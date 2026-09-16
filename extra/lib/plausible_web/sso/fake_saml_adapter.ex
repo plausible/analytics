@@ -60,9 +60,7 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
           :login_error,
           "We couldn't find a Single Sign-On account for that email."
         )
-        |> Phoenix.Controller.redirect(
-          to: ~p"/sso/login?#{[return_to: params["return_to"]]}"
-        )
+        |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: params["return_to"]]}")
     end
   end
 

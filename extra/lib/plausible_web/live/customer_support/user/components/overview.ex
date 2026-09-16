@@ -38,9 +38,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
         </:thead>
         <:tbody :let={membership}>
           <.td>
-            <.styled_link patch={
-              ~p"/cs/teams/team/#{membership.team.id}"
-            }>
+            <.styled_link patch={~p"/cs/teams/team/#{membership.team.id}"}>
               {membership.team.name}
             </.styled_link>
           </.td>

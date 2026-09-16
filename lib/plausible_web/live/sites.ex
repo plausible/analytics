@@ -381,7 +381,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="flex gap-x-2">
           <.button_link
             :if={@can_manage_consolidated_view?}
-            href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)}
+            href={url(~p"/billing/choose-plan")}
             mt?={false}
           >
             Upgrade
