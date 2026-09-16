@@ -9,88 +9,6 @@ defmodule Plausible.OAuthTest do
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 
-  defp pkce do
-    verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
-    challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
-    {verifier, challenge}
-  end
-
-  defp resource(), do: ProtectedResources.get_resource_url(mcp())
-
-  defp mcp(), do: ProtectedResources.mcp()
-
-  defp supported_scopes(), do: mcp().scopes_supported
-
-  defp create_code(user, team, challenge, overrides \\ %{}) do
-    attrs =
-      Map.merge(
-        %{
-          client_id: @client_id,
-          redirect_uri: @redirect_uri,
-          code_challenge: challenge,
-          code_challenge_method: "S256",
-          scopes: supported_scopes(),
-          resource: resource()
-        },
-        overrides
-      )
-
-    OAuth.create_authorization_code(user, team, attrs)
-  end
-
-  defp past, do: NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :second)
-
-  defp get_code(raw_code) do
-    Plausible.Repo.get_by!(AuthorizationCode, code_hash: Token.hash(raw_code))
-  end
-
-  defp expire_code(raw_code, at) do
-    Plausible.Repo.update_all(
-      from(c in AuthorizationCode, where: c.code_hash == ^Token.hash(raw_code)),
-      set: [expires_at: at]
-    )
-  end
-
-  defp expire_grant(raw_token, at) do
-    Plausible.Repo.update_all(
-      from(g in Grant, where: g.access_token_hash == ^Token.hash(raw_token)),
-      set: [access_token_expires_at: at, refresh_token_expires_at: at]
-    )
-  end
-
-  defp set_code_scopes(raw_code, scopes) do
-    Plausible.Repo.update_all(
-      from(c in AuthorizationCode, where: c.code_hash == ^Token.hash(raw_code)),
-      set: [scopes: scopes]
-    )
-  end
-
-  defp remove_from_team(user, team) do
-    Plausible.Repo.delete_all(
-      from(tm in Plausible.Teams.Membership,
-        where: tm.user_id == ^user.id and tm.team_id == ^team.id
-      )
-    )
-  end
-
-  defp issue_grant(user, team, overrides \\ %{}) do
-    {verifier, challenge} = pkce()
-    {:ok, code} = create_code(user, team, challenge, overrides)
-
-    {:ok, consumed_code} =
-      OAuth.consume_authorization_code(code, %{
-        verifier: verifier,
-        client_id: @client_id,
-        redirect_uri: @redirect_uri,
-        resource: resource()
-      })
-
-    {:ok, response} = OAuth.issue_token(consumed_code)
-    {:ok, grant} = OAuth.find_access_token(response.access_token, mcp())
-
-    {grant, response.access_token}
-  end
-
   setup do
     user = new_user()
     {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -308,7 +226,10 @@ defmodule Plausible.OAuthTest do
       {verifier, challenge} = pkce()
       {:ok, code} = create_code(user, team, challenge)
 
-      expire_code(code, past())
+      Plausible.Repo.update_all(
+        from(c in AuthorizationCode, where: c.code_hash == ^Token.hash(code)),
+        set: [expires_at: past()]
+      )
 
       assert {:error, :invalid_grant} =
                OAuth.consume_authorization_code(code, %{
@@ -455,7 +376,10 @@ defmodule Plausible.OAuthTest do
 
       {:ok, response} = OAuth.issue_token(consumed_code)
 
-      expire_grant(response.access_token, past())
+      Plausible.Repo.update_all(
+        from(g in Grant, where: g.access_token_hash == ^Token.hash(response.access_token)),
+        set: [access_token_expires_at: past(), refresh_token_expires_at: past()]
+      )
 
       assert {:error, :invalid_token} = OAuth.find_access_token(response.access_token, mcp())
     end
@@ -486,5 +410,73 @@ defmodule Plausible.OAuthTest do
 
       assert_matches %Grant{revoked_at: ^revoked_at} = Plausible.Repo.get!(Grant, grant.id)
     end
+  end
+
+  defp pkce do
+    verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
+    {verifier, challenge}
+  end
+
+  defp resource(), do: ProtectedResources.get_resource_url(mcp())
+
+  defp mcp(), do: ProtectedResources.mcp()
+
+  defp supported_scopes(), do: mcp().scopes_supported
+
+  defp create_code(user, team, challenge, overrides \\ %{}) do
+    attrs =
+      Map.merge(
+        %{
+          client_id: @client_id,
+          redirect_uri: @redirect_uri,
+          code_challenge: challenge,
+          code_challenge_method: "S256",
+          scopes: supported_scopes(),
+          resource: resource()
+        },
+        overrides
+      )
+
+    OAuth.create_authorization_code(user, team, attrs)
+  end
+
+  defp past, do: NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :second)
+
+  defp get_code(raw_code) do
+    Plausible.Repo.get_by!(AuthorizationCode, code_hash: Token.hash(raw_code))
+  end
+
+  defp set_code_scopes(raw_code, scopes) do
+    Plausible.Repo.update_all(
+      from(c in AuthorizationCode, where: c.code_hash == ^Token.hash(raw_code)),
+      set: [scopes: scopes]
+    )
+  end
+
+  defp remove_from_team(user, team) do
+    Plausible.Repo.delete_all(
+      from(tm in Plausible.Teams.Membership,
+        where: tm.user_id == ^user.id and tm.team_id == ^team.id
+      )
+    )
+  end
+
+  defp issue_grant(user, team, overrides \\ %{}) do
+    {verifier, challenge} = pkce()
+    {:ok, code} = create_code(user, team, challenge, overrides)
+
+    {:ok, consumed_code} =
+      OAuth.consume_authorization_code(code, %{
+        verifier: verifier,
+        client_id: @client_id,
+        redirect_uri: @redirect_uri,
+        resource: resource()
+      })
+
+    {:ok, response} = OAuth.issue_token(consumed_code)
+    {:ok, grant} = OAuth.find_access_token(response.access_token, mcp())
+
+    {grant, response.access_token}
   end
 end
