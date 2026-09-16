@@ -1,4 +1,19 @@
 defmodule Plausible.OAuthTest do
+  @moduledoc """
+  Covers `Plausible.OAuth` in the order a grant moves through it, which is the
+  order the describe blocks follow:
+
+  1. `create_authorization_code/3` issues a single-use code bound to a user,
+     team, scopes and resource
+  2. `consume_authorization_code/2` redeems that code, exactly once
+  3. `issue_token/1` opens a grant from the redeemed code and returns the token
+     pair; `find_access_token/2` resolves an access token back to its grant
+  4. `revoke_grant/1` invalidates both tokens
+
+  `effective_scopes/1` re-checks a stored authorization against
+  live team membership and the resource's current scopes (which may have changed).
+  """
+
   use Plausible.DataCase, async: true
   use Plausible.Test.Support.DNS
 
@@ -15,7 +30,7 @@ defmodule Plausible.OAuthTest do
     {:ok, user: user, team: team}
   end
 
-  describe "create_authorization_code/3" do
+  describe "Step 1: create_authorization_code/3" do
     test "refuses a resource this server does not know", %{user: user, team: team} do
       {_verifier, challenge} = pkce()
 
@@ -44,7 +59,7 @@ defmodule Plausible.OAuthTest do
     end
   end
 
-  describe "consume_authorization_code/2" do
+  describe "Step 2: consume_authorization_code/2" do
     # `:crypto.hash/2` takes iodata, so without a guard a repeated `?code[]=`
     # param, which Plug decodes into a list, would hash as if its parts were
     # concatenated.
@@ -208,7 +223,7 @@ defmodule Plausible.OAuthTest do
     end
   end
 
-  describe "issue_token/1 and find_access_token/2" do
+  describe "Step 3: issue_token/1 and find_access_token/2" do
     test "issues a bearer token resolving to the code's user, team and scopes", %{
       user: user,
       team: team
@@ -320,7 +335,7 @@ defmodule Plausible.OAuthTest do
     end
   end
 
-  describe "revoke_grant/1" do
+  describe "Step 4: revoke_grant/1" do
     test "invalidates the grant's access token", %{user: user, team: team} do
       {grant, access_token} = issue_grant(user, team)
 
