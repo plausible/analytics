@@ -15,71 +15,6 @@ defmodule Plausible.OAuthTest do
     {:ok, user: user, team: team}
   end
 
-  describe "effective_scopes/1" do
-    test "returns the granted scopes while nothing has changed", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "narrows to the scopes the resource still supports", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [Scopes.stats_read() | supported_scopes()])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "refuses once every granted scope has been withdrawn", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [Scopes.stats_read()])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "refuses a zero-scope authorization rather than defaulting it", %{
-      user: user,
-      team: team
-    } do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "refuses once the user is no longer a member of the team", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      remove_from_team(user, team)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "counts a guest as a member of the team", %{team: team} do
-      site = new_site(team: team)
-      guest = add_guest(site, role: :viewer)
-
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(guest, team, challenge)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "resolves a grant the same way as a code", %{user: user, team: team} do
-      {grant, _access_token} = issue_grant(user, team)
-
-      assert OAuth.effective_scopes(grant) == {:ok, supported_scopes()}
-
-      remove_from_team(user, team)
-
-      assert OAuth.effective_scopes(grant) == {:error, :stale_authorization}
-    end
-  end
-
   describe "create_authorization_code/3" do
     test "refuses a resource this server does not know", %{user: user, team: team} do
       {_verifier, challenge} = pkce()
@@ -409,6 +344,71 @@ defmodule Plausible.OAuthTest do
       assert :ok = OAuth.revoke_grant(grant)
 
       assert_matches %Grant{revoked_at: ^revoked_at} = Plausible.Repo.get!(Grant, grant.id)
+    end
+  end
+
+  describe "effective_scopes/1" do
+    test "returns the granted scopes while nothing has changed", %{user: user, team: team} do
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
+    end
+
+    test "narrows to the scopes the resource still supports", %{user: user, team: team} do
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+      set_code_scopes(code, [Scopes.stats_read() | supported_scopes()])
+
+      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
+    end
+
+    test "refuses once every granted scope has been withdrawn", %{user: user, team: team} do
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+      set_code_scopes(code, [Scopes.stats_read()])
+
+      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
+    end
+
+    test "refuses a zero-scope authorization rather than defaulting it", %{
+      user: user,
+      team: team
+    } do
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+      set_code_scopes(code, [])
+
+      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
+    end
+
+    test "refuses once the user is no longer a member of the team", %{user: user, team: team} do
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      remove_from_team(user, team)
+
+      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
+    end
+
+    test "counts a guest as a member of the team", %{team: team} do
+      site = new_site(team: team)
+      guest = add_guest(site, role: :viewer)
+
+      {_verifier, challenge} = pkce()
+      {:ok, code} = create_code(guest, team, challenge)
+
+      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
+    end
+
+    test "resolves a grant the same way as a code", %{user: user, team: team} do
+      {grant, _access_token} = issue_grant(user, team)
+
+      assert OAuth.effective_scopes(grant) == {:ok, supported_scopes()}
+
+      remove_from_team(user, team)
+
+      assert OAuth.effective_scopes(grant) == {:error, :stale_authorization}
     end
   end
 
