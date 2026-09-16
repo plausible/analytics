@@ -150,9 +150,8 @@ defmodule Plausible.OAuth do
 
   def consume_authorization_code(_code, _presented), do: {:error, :invalid_grant}
 
-  # Narrowing to the remaining scopes would be defensible (RFC 6749 section 3.3),
-  # but withdrawing a scope is meant to stop existing grants, so we reject and
-  # require re-consent.
+  # Needed because there's a (low) chance that the resource's supported scopes may change
+  # in the time between the authorization code being issued and it being redeemed
   defp check_still_grantable(auth_code) do
     case effective_scopes(auth_code) do
       {:ok, scopes} -> match(scopes, auth_code.scopes)
@@ -213,15 +212,10 @@ defmodule Plausible.OAuth do
 
   @doc """
   Looks up the grant a raw access token belongs to, preloading the bound user
-  and team. Mirrors `Plausible.Auth.find_api_key/1`.
-
-  Expired and revoked grants are refused here rather than left to the cleanup
-  worker, so revocation takes effect on the next request.
+  and team.
 
   `resource` is the protected resource the token is presented to. A token issued
-  for a different resource is not found, and taking `resource` as an argument
-  means there is no way to look a token up without checking it
-  ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707.html)).
+  for a different resource is not found.
 
   Expired, revoked and wrong-resource tokens all return `{:error, :invalid_token}`
   ([RFC 6750 section 3.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1)).
