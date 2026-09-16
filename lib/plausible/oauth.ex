@@ -3,25 +3,10 @@ defmodule Plausible.OAuth do
   Minimal OAuth 2.1 authorization server used to authenticate remote MCP
   connectors (e.g. Claude) against Plausible.
 
-  This module is the grant lifecycle: it opens an authorization code, redeems it
-  once, and issues, resolves and revokes the tokens that follow. The rules a
-  request is held to before any of that happens live next to the specification
-  they come from:
-
-    * `Plausible.OAuth.PKCE` - proof of possession of the code verifier.
-    * `Plausible.OAuth.CIMD` - who the client is, and where it may be redirected.
-    * `Plausible.OAuth.ProtectedResources` - which resource and scopes a request
-      may name.
-
-  Security invariants enforced here:
-
-    * Authorization codes are single-use and short-lived.
-    * The `resource` ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707.html)) is
-      threaded authorize -> code -> token so access tokens are audience-bound.
-    * Only hashes of codes and tokens are persisted, never the raw values.
-    * The scopes and team recorded on a code or grant are a ceiling taken from
-      the consent decision, re-checked against live team membership every time
-      they are used - see `effective_scopes/1`.
+  This module is the grant lifecycle: issuing an authorization code, redeeming it
+  once, and issuing, resolving and revoking the tokens that follow. Validation
+  lives in `Plausible.OAuth.PKCE`, `Plausible.OAuth.CIMD` and
+  `Plausible.OAuth.ProtectedResources`.
 
   Only the `authorization_code` grant is implemented at the token endpoint;
   redeeming a refresh token is not wired up yet.
@@ -51,29 +36,16 @@ defmodule Plausible.OAuth do
   def refresh_token_ttl(), do: @refresh_token_ttl
 
   @doc """
-  Resolves what a stored authorization is worth *now*, as opposed to what it was
-  worth when the user approved it.
+  Resolves the scopes a stored authorization is worth now.
 
-  The `scopes`, `team_id` and `resource` recorded on an authorization code or a
-  grant are a ceiling taken from the consent decision, not a statement of
-  authority. Either half can go stale while the authorization is outstanding: the
-  user can be removed from the team it is bound to, and a scope can be withdrawn
-  from the resource's `:scopes_supported` in a deploy.
+  The scopes, team and resource recorded on a code or grant are a ceiling taken
+  from the consent decision, and either half can go stale: the user can be
+  removed from the team, and a scope can be withdrawn from the resource.
 
-  Returns the scopes that survive intersecting that ceiling with what may
-  currently be granted to this user for this resource. Narrowing, not validating:
-  a grant that already exists has to be read for whatever is left of it.
-
-  `{:error, :stale_authorization}` means nothing is left under the ceiling: the
-  resource no longer exists, every granted scope has been withdrawn, or the user
-  is no longer a member of the team. The empty scope list is refused rather than
-  returned, because a credential that authenticates while authorizing nothing
-  invites downstream code to read the presence of a grant as permission.
-
-  Team membership is the only live entitlement checked here, and every role
-  counts as membership, guests included. Scopes are deliberately coarse and
-  resource-wide, which leaves *which sites* a member may read to the site-level
-  authorization that already answers it from live state on every query.
+  Returns what survives intersecting that ceiling with live state, or
+  `{:error, :stale_authorization}` when nothing does. An empty scope list is
+  refused rather than returned. Every team role counts as membership, guests
+  included.
   """
   @spec effective_scopes(AuthorizationCode.t() | Grant.t()) ::
           {:ok, [String.t()]} | {:error, :stale_authorization}
@@ -104,13 +76,11 @@ defmodule Plausible.OAuth do
   `:code_challenge_method`, `:resource` and a non-empty `:scopes` list, and may
   carry `:client_name`.
 
-  `:resource` and `:scopes` are resolved here rather than trusted from the
-  caller: the authorize form answered the same two questions to render the
-  consent screen, but this is a separate request carrying separate parameters.
-  The grant opened by `issue_token/1` inherits both from the code.
+  `:resource` and `:scopes` are re-resolved here rather than trusted from the
+  caller, since the consent screen was rendered by a separate request.
 
-  Returns the raw code to hand to the client - only its hash is stored, so this
-  is the only point where the raw value exists.
+  Returns the raw code - only its hash is stored, so this is the only point
+  where the raw value exists.
   """
   @spec create_authorization_code(Plausible.Auth.User.t(), Plausible.Teams.Team.t(), map()) ::
           {:ok, String.t()} | {:error, Ecto.Changeset.t() | :invalid_scope | :invalid_target}
@@ -144,16 +114,15 @@ defmodule Plausible.OAuth do
   and `:resource`. Every one of those must equal the value bound to the code at
   authorize-time.
 
-  `:client_id` matters even though PKCE already proves possession of the
-  verifier - [OAuth 2.1 §4.1.3](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension)
-  requires the server to confirm the code was issued to the client redeeming it.
+  `:client_id` is checked even though PKCE already proves possession of the
+  verifier, as required by
+  [OAuth 2.1 §4.1.3](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension).
 
-  The row is deleted on lookup regardless of whether the subsequent checks pass,
-  so a code can only ever be redeemed once - a replay finds nothing.
+  The row is deleted on lookup whether or not the later checks pass, so a code
+  can only ever be redeemed once.
 
-  Beyond the presented values, `effective_scopes/1` must still return exactly the
-  scopes the user approved, so a code outlives neither the user's membership of
-  the bound team nor the scopes it names.
+  `effective_scopes/1` must still return exactly the scopes the user approved,
+  so a code outlives neither the team membership nor the scopes it names.
   """
   @type presented_grant() :: %{
           required(:verifier) => String.t(),
@@ -185,7 +154,7 @@ defmodule Plausible.OAuth do
 
   # Narrowing to the surviving scopes would be defensible (RFC 6749 section 3.3),
   # but a withdrawn scope is a deliberate kill switch, so re-consent is the
-  # honest outcome: the grant is what is no longer valid, not the request.
+  # honest outcome.
   defp check_still_grantable(auth_code) do
     case effective_scopes(auth_code) do
       {:ok, scopes} -> match(scopes, auth_code.scopes)
@@ -206,8 +175,8 @@ defmodule Plausible.OAuth do
   Opens a grant from a consumed authorization code, inheriting its client,
   scopes, resource, user and team.
 
-  Issues an access token and a refresh token together; both raw values are
-  returned once here and only their hashes are kept.
+  Issues an access and a refresh token together. Both raw values are returned
+  once here and only their hashes are kept.
   """
   @spec issue_token(AuthorizationCode.t()) ::
           {:ok, token_response()} | {:error, Ecto.Changeset.t()}
@@ -251,17 +220,13 @@ defmodule Plausible.OAuth do
   Expired and revoked grants are refused here rather than left to the cleanup
   worker, so revocation takes effect on the next request.
 
-  `resource` is the protected resource the token is being presented to, and a
-  grant minted for a different one is not found. Taking it as an argument rather
-  than leaving the check to the caller is what makes the binding unskippable
-  ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707.html)): there is no arity
-  that answers "is this token live?" without also answering "was it issued for
-  here?".
+  `resource` is the protected resource the token is presented to; a grant minted
+  for a different one is not found ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707.html)).
+  Taking it as an argument leaves no arity that answers "is this token live?"
+  without also answering "was it issued for here?".
 
-  The audience sits in the query alongside expiry and revocation because it is
-  the same class of condition - the token exists but is not usable here - and,
-  per [RFC 6750 section 3.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1),
-  all three are answered with the same `invalid_token`.
+  Audience, expiry and revocation all answer with `invalid_token`, per
+  [RFC 6750 section 3.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1).
   """
   @spec find_access_token(String.t(), ProtectedResources.t()) ::
           {:ok, Grant.t()} | {:error, :invalid_token}
@@ -290,12 +255,8 @@ defmodule Plausible.OAuth do
   Revokes a grant, invalidating both of its tokens from the next use on.
 
   Recorded on the row rather than deleted, so a revoked connection can still be
-  displayed as revoked and its `previous_refresh_token_hash` still recognised on
+  displayed as revoked and its `previous_refresh_token_hash` recognised on
   replay. Idempotent: an already-revoked grant keeps its original `revoked_at`.
-
-  This is the reaction a refresh request owes a stale authorization once the
-  refresh grant is wired up, and the hook for revoking on the change itself - a
-  membership removed, a role downgraded, a team deleted.
   """
   @spec revoke_grant(Grant.t()) :: :ok
   def revoke_grant(%Grant{} = grant) do
@@ -315,7 +276,6 @@ defmodule Plausible.OAuth do
       {:error, :not_found} -> {:error, :invalid_target}
     end
   end
-
 
   defp check_not_expired(expires_at) do
     if NaiveDateTime.compare(expires_at, now()) == :gt do

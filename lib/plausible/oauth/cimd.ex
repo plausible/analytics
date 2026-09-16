@@ -194,24 +194,14 @@ defmodule Plausible.OAuth.CIMD do
   `redirect_uris`.
 
   Non-loopback URIs must match exactly. For loopback URIs (`localhost`,
-  `127.0.0.1`, `[::1]`) the port - and *only* the port - is allowed to differ,
-  per [OAuth 2.1 §2.3.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-registration-requirements)
-  and [RFC 8252 §7.3](https://www.rfc-editor.org/rfc/rfc8252.html#section-7.3).
-  a native client binds an ephemeral port it cannot know ahead of time, so the
-  port cannot appear verbatim in the metadata document. Every other component
-  still has to match exactly, so a registered loopback URI cannot be turned into
-  a different endpoint by appending a query string.
+  `127.0.0.1`, `[::1]`) the port - and only the port - may differ, per
+  [OAuth 2.1 §2.3.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-registration-requirements)
+  and [RFC 8252 §7.3](https://www.rfc-editor.org/rfc/rfc8252.html#section-7.3):
+  a native client binds an ephemeral port it cannot know ahead of time.
 
-  For a loopback URI the port, and only the port, may differ.
-
-  A registered query string still has to be reproduced identically.
-
-  The relaxation is per host, not across the loopback addresses - and it holds
-  for IPv6 too.
-
-  Scheme and host are case-insensitive ([RFC 3986 sections 3.1 and
-  3.2.2](https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1)); nothing else
-  is, and the port relaxation is loopback-only.
+  Every other component must match exactly, so a registered loopback URI cannot
+  be turned into a different endpoint by appending a query string. Scheme and
+  host are case-insensitive (RFC 3986 sections 3.1 and 3.2.2), nothing else is.
   """
   @spec redirect_uri_registered?(String.t() | nil, [String.t()]) :: boolean()
   def redirect_uri_registered?(redirect_uri, registered) when is_binary(redirect_uri) do
