@@ -19,7 +19,6 @@ defmodule PlausibleWeb do
         use Plausible.Audit.LiveContext
       end
 
-      alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS
 
       import PlausibleWeb.Components.Generic
@@ -36,7 +35,6 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -48,7 +46,6 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -59,7 +56,6 @@ defmodule PlausibleWeb do
 
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -77,7 +73,6 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -96,7 +91,6 @@ defmodule PlausibleWeb do
         import PlausibleWeb.Components.Generic
         import PlausibleWeb.Components.Settings
         import PlausibleWeb.Live.Components.Form
-        alias PlausibleWeb.Router.Helpers, as: Routes
       end
     end
   end
@@ -139,8 +133,7 @@ defmodule PlausibleWeb do
       use Phoenix.View, root: ""
       use PlausibleWeb.VerifiedRoutes
 
-      alias PlausibleWeb.Router.Helpers
-      import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]
+      import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 3]
     end
   end
 

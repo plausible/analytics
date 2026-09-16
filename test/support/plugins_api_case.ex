@@ -22,7 +22,6 @@ defmodule PlausibleWeb.PluginsAPICase do
 
       import OpenApiSpex.TestAssertions
 
-      alias PlausibleWeb.Router.Helpers, as: Routes
       alias PlausibleWeb.Plugins.API.Schemas
 
       def authenticate(conn, domain, raw_token) do

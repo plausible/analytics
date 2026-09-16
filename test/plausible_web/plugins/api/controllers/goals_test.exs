@@ -138,11 +138,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 List.first(schema.goals).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{List.first(schema.goals).goal.id}")
 
       [goal] = Plausible.Goals.for_site(site)
       assert goal.event_name == "Signup"
@@ -296,11 +292,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 List.first(schema.goals).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{List.first(schema.goals).goal.id}")
 
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
     end
@@ -334,11 +326,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 List.first(schema.goals).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{List.first(schema.goals).goal.id}")
 
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
@@ -420,11 +408,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 List.first(schema.goals).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{List.first(schema.goals).goal.id}")
 
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
     end
@@ -520,25 +504,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [l1, l2, l3] = get_resp_header(conn, "location")
 
       assert l1 ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 Enum.at(resp.goals, 0).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{Enum.at(resp.goals, 0).goal.id}")
 
       assert l2 ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 Enum.at(resp.goals, 1).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{Enum.at(resp.goals, 1).goal.id}")
 
       assert l3 ==
-               Routes.plugins_api_goals_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 Enum.at(resp.goals, 2).goal.id
-               )
+               url(~p"/api/plugins/v1/goals/#{Enum.at(resp.goals, 2).goal.id}")
 
       assert Enum.count(resp.goals) == 3
 

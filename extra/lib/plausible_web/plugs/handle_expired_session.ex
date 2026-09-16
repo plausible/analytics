@@ -9,8 +9,6 @@ defmodule Plausible.Plugs.HandleExpiredSession do
 
   import Plug.Conn
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
-
   def init(_) do
     []
   end
@@ -49,12 +47,7 @@ defmodule Plausible.Plugs.HandleExpiredSession do
   defp trigger_sso_login(conn, email) do
     conn
     |> Phoenix.Controller.redirect(
-      to:
-        Routes.sso_path(conn, :login_form,
-          prefer: "manual",
-          email: email,
-          autosubmit: true
-        )
+      to: ~p"/sso/login?#{[prefer: "manual", email: email, autosubmit: true]}"
     )
     |> halt()
   end

@@ -27,7 +27,6 @@ defmodule PlausibleWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
 
-      alias PlausibleWeb.Router.Helpers, as: Routes
       import Plausible.Factory
       import Plausible.AssertMatches
 

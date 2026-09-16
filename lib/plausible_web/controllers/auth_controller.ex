@@ -295,10 +295,7 @@ defmodule PlausibleWeb.AuthController do
                 PlausibleWeb.Flows.invitation()
               end
 
-            Routes.auth_path(conn, :activate_form,
-              flow: flow,
-              team_identifier: params["team_identifier"]
-            )
+            ~p"/activate?#{[flow: flow, team_identifier: params["team_identifier"]]}"
 
           params["register_action"] == "register_from_invitation_form" ->
             accept_team_invitation(conn, params["team_identifier"], user)
@@ -681,11 +678,7 @@ defmodule PlausibleWeb.AuthController do
   defp google_import_callback(conn, site, token_data, expires_at) do
     redirect(conn,
       to:
-        Routes.google_analytics_path(conn, :property_form, site.domain,
-          access_token: Map.fetch!(token_data, "access_token"),
-          refresh_token: Map.fetch!(token_data, "refresh_token"),
-          expires_at: NaiveDateTime.to_iso8601(expires_at)
-        )
+        ~p"/#{site.domain}/import/google-analytics/property?#{[access_token: Map.fetch!(token_data, "access_token"), refresh_token: Map.fetch!(token_data, "refresh_token"), expires_at: NaiveDateTime.to_iso8601(expires_at)]}"
     )
   end
 

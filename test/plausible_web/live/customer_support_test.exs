@@ -230,12 +230,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     defp assert_search_result(doc, type, id) do
       assert link = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
-      assert text_of_attr(link, "href") ==
-               apply(Routes, :"customer_support_#{type}_path", [
-                 PlausibleWeb.Endpoint,
-                 :show,
-                 id
-               ])
+      expected_href =
+        case type do
+          "site" -> ~p"/cs/sites/site/#{id}"
+          "team" -> ~p"/cs/teams/team/#{id}"
+          "user" -> ~p"/cs/users/user/#{id}"
+        end
+
+      assert text_of_attr(link, "href") == expected_href
     end
 
     defp refute_search_result(doc, type, id) do

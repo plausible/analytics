@@ -13,8 +13,6 @@ defmodule Plausible.HelpScout do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
-
   require Plausible.Billing.Subscription.Status
 
   @base_api_url "https://api.helpscout.net"
@@ -136,17 +134,9 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.customer_support_team_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              team.id
-            )
+            url(~p"/cs/teams/team/#{team.id}")
           else
-            Routes.customer_support_user_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              user.id
-            )
+            url(~p"/cs/users/user/#{user.id}")
           end
 
         {:ok,

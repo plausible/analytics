@@ -561,9 +561,7 @@ defmodule PlausibleWeb.Live.Sites do
     >
       <.unstyled_link
         href={
-          Routes.stats_path(
-            PlausibleWeb.Endpoint,
-            :stats,
+          stats_path(
             @site.domain,
             if(@needs_verification?,
               do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],

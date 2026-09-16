@@ -95,11 +95,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
           id="trial-prospects-pagination"
           uri={
             URI.new!(
-              Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index,
-                sort_by: @sort_by,
-                sort_direction: @sort_direction,
-                page: @page_number
-              )
+              ~p"/cs/trial-prospects?#{[sort_by: @sort_by, sort_direction: @sort_direction, page: @page_number]}"
             )
           }
           page_number={@page_number}
@@ -129,12 +125,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
     ~H"""
     <.th>
       <.link
-        patch={
-          Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index,
-            sort_by: @by,
-            sort_direction: @next_direction
-          )
-        }
+        patch={~p"/cs/trial-prospects?#{[sort_by: @by, sort_direction: @next_direction]}"}
         class="cursor-pointer select-none inline-flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400"
       >
         {@label}
