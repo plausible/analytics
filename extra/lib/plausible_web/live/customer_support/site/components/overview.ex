@@ -98,7 +98,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     site = socket.assigns.site
 
     {:ok, _} = Plausible.Site.Removal.run(site)
-    navigate_with_success(Routes.customer_support_path(socket, :index), "Site deleted")
+    navigate_with_success(~p"/cs", "Site deleted")
     {:noreply, socket}
   end
 end

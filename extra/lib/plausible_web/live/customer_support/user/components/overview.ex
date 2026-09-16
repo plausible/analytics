@@ -39,7 +39,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
         <:tbody :let={membership}>
           <.td>
             <.styled_link patch={
-              Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, membership.team.id)
+              ~p"/cs/teams/team/#{membership.team.id}"
             }>
               {membership.team.name}
             </.styled_link>
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
 
     case Plausible.Auth.delete_user(user) do
       {:ok, _} ->
-        navigate_with_success(Routes.customer_support_path(socket, :index), "User deleted")
+        navigate_with_success(~p"/cs", "User deleted")
         {:noreply, socket}
 
       {:error, :active_subscription} ->

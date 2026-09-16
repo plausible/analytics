@@ -24,7 +24,7 @@
         :let={f}
         id="sso-req-form"
         for={@conn}
-        action={Routes.sso_path(@conn, :saml_consume, @integration_id)}
+        action={~p"/sso/saml/consume/#{@integration_id}"}
       >
         <.input type="hidden" field={f[:email]} />
         <.input type="hidden" field={f[:return_to]} />

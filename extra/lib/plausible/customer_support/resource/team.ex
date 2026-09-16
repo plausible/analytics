@@ -6,7 +6,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
 
   @impl true
   def path(id) do
-    Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id)
+    ~p"/cs/teams/team/#{id}"
   end
 
   @impl true

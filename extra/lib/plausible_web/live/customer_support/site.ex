@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
 
       {:noreply, go_to_tab(socket, tab, params, :site, tab_component(tab))}
     else
-      {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
+      {:noreply, redirect(socket, to: ~p"/cs")}
     end
   end
 
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
         <p class="text-sm font-medium">
           Team:
           <.styled_link patch={
-            Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, @site.team.id)
+            ~p"/cs/teams/team/#{@site.team.id}"
           }>
             {@site.team.name}
           </.styled_link>

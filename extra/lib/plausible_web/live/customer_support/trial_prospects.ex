@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
           <:tbody :let={p}>
             <.td>
               <.styled_link patch={
-                Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, p.team.id)
+                ~p"/cs/teams/team/#{p.team.id}"
               }>
                 {p.team.name}
               </.styled_link>
