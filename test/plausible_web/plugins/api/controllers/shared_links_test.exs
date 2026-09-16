@@ -11,20 +11,20 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
   end
 
-  # describe "unauthorized calls" do
-  #   for {method, url} <- [
-  #         {:get, url(~p"/api/plugins/v1/shared_links/#{1}")},
-  #         {:put, url(~p"/api/plugins/v1/shared_links")},
-  #         {:get, url(~p"/api/plugins/v1/shared_links")}
-  #       ] do
-  #     test "unauthorized call: #{method} #{url}", %{conn: conn} do
-  #       conn
-  #       |> unquote(method)(unquote(url))
-  #       |> json_response(401)
-  #       |> assert_schema("UnauthorizedError", spec())
-  #     end
-  #   end
-  # end
+  describe "unauthorized calls" do
+    for {method, url} <- [
+          {:get, "/api/plugins/v1/shared_links/1"},
+          {:put, "/api/plugins/v1/shared_links"},
+          {:get, "/api/plugins/v1/shared_links"}
+        ] do
+      test "unauthorized call: #{method} #{url}", %{conn: conn} do
+        conn
+        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+        |> json_response(401)
+        |> assert_schema("UnauthorizedError", spec())
+      end
+    end
+  end
 
   describe "get /shared_links/:id" do
     test "validates input out of the box", %{conn: conn, token: token, site: site} do

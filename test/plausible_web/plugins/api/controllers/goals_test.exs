@@ -28,22 +28,22 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
   end
 
-  # describe "unauthorized calls" do
-  #   for {method, url} <- [
-  #         {:get, url(~p"/api/plugins/v1/goals")},
-  #         {:get, url(~p"/api/plugins/v1/goals/#{1}")},
-  #         {:put, url(~p"/api/plugins/v1/goals")},
-  #         {:delete, url(~p"/api/plugins/v1/goals/#{1}")},
-  #         {:delete, url(~p"/api/plugins/v1/goals")}
-  #       ] do
-  #     test "unauthorized call: #{method} #{url}", %{conn: conn} do
-  #       conn
-  #       |> unquote(method)(unquote(url))
-  #       |> json_response(401)
-  #       |> assert_schema("UnauthorizedError", spec())
-  #     end
-  #   end
-  # end
+  describe "unauthorized calls" do
+    for {method, url} <- [
+          {:get, "/api/plugins/v1/goals"},
+          {:get, "/api/plugins/v1/goals/1"},
+          {:put, "/api/plugins/v1/goals"},
+          {:delete, "/api/plugins/v1/goals/1"},
+          {:delete, "/api/plugins/v1/goals"}
+        ] do
+      test "unauthorized call: #{method} #{url}", %{conn: conn} do
+        conn
+        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+        |> json_response(401)
+        |> assert_schema("UnauthorizedError", spec())
+      end
+    end
+  end
 
   describe "business tier" do
     @tag :ee_only

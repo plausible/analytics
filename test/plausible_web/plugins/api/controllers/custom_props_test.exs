@@ -20,19 +20,19 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
     end
   end
 
-  # describe "unauthorized calls" do
-  #   for {method, url} <- [
-  #         {:put, url(~p"/api/plugins/v1/custom_props")},
-  #         {:delete, url(~p"/api/plugins/v1/custom_props")}
-  #       ] do
-  #     test "unauthorized call: #{method} #{url}", %{conn: conn} do
-  #       conn
-  #       |> unquote(method)(unquote(url))
-  #       |> json_response(401)
-  #       |> assert_schema("UnauthorizedError", spec())
-  #     end
-  #   end
-  # end
+  describe "unauthorized calls" do
+    for {method, url} <- [
+          {:put, "/api/plugins/v1/custom_props"},
+          {:delete, "/api/plugins/v1/custom_props"}
+        ] do
+      test "unauthorized call: #{method} #{url}", %{conn: conn} do
+        conn
+        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+        |> json_response(401)
+        |> assert_schema("UnauthorizedError", spec())
+      end
+    end
+  end
 
   describe "business tier" do
     @describetag :ee_only

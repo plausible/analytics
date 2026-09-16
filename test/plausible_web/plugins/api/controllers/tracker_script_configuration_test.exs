@@ -21,25 +21,19 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
     end
   end
 
-  # describe "unauthorized calls" do
-  #   for {method, url} <- [
-  #         {:get,
-  #          url(~p"/api/plugins/v1/tracker_script_configuration")},
-  #         {:put,
-  #          Routes.plugins_api_tracker_script_configuration_url(
-  #            PlausibleWeb.Endpoint,
-  #            :update,
-  #            %{}
-  #          )}
-  #       ] do
-  #     test "unauthorized call: #{method} #{url}", %{conn: conn} do
-  #       conn
-  #       |> unquote(method)(unquote(url))
-  #       |> json_response(401)
-  #       |> assert_schema("UnauthorizedError", spec())
-  #     end
-  #   end
-  # end
+  describe "unauthorized calls" do
+    for {method, url} <- [
+          {:get, "/api/plugins/v1/tracker_script_configuration"},
+          {:put, "/api/plugins/v1/tracker_script_configuration"}
+        ] do
+      test "unauthorized call: #{method} #{url}", %{conn: conn} do
+        conn
+        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+        |> json_response(401)
+        |> assert_schema("UnauthorizedError", spec())
+      end
+    end
+  end
 
   describe "get/put /tracker_script_configuration" do
     test "inserts a new tracker script configuration if one doesn't exist and returns it consistently",
