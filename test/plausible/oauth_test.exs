@@ -1,17 +1,15 @@
 defmodule Plausible.OAuthTest do
   @moduledoc """
-  Covers `Plausible.OAuth` in the order a grant moves through it, which is the
-  order the describe blocks follow:
+  Covers OAuth grant lifecycle.
 
-  1. `create_authorization_code/3` issues a single-use code bound to a user,
+  - `Step 1: create_authorization_code/3` issues a single-use code bound to a user,
      team, scopes and resource
-  2. `consume_authorization_code/2` redeems that code, exactly once
-  3. `issue_token/1` opens a grant from the redeemed code and returns the token
-     pair; `find_access_token/2` resolves an access token back to its grant
-  4. `revoke_grant/1` invalidates both tokens
+  - `Step 2: consume_authorization_code/2` redeems that code, exactly once
+  - `Step 3: issue_token/1 and find_access_token/2`: opens a grant from the redeemed code, returns token AND resolves an access token back to its grant
+  - `Step 4: revoke_grant/1` invalidates both tokens
   """
 
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase
   use Plausible.Test.Support.DNS
 
   alias Plausible.OAuth
