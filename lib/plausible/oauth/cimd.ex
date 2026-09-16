@@ -55,7 +55,7 @@ defmodule Plausible.OAuth.CIMD do
 
   def validate_client_id(_), do: {:error, :client_id_not_https}
 
-  # Detects `.` and `..` path segments, including when they're encoded with `%2e` and `%2E`.
+  # Detects `.` and `..` path segments, including when they're encoded as `%2e` and `%2E`.
   defp dot_segments?(path) do
     path
     |> String.split("/")
@@ -122,7 +122,10 @@ defmodule Plausible.OAuth.CIMD do
   - `http://` URL on a loopback host
   - custom scheme when it contains a dot (e.g. `io.plausible://...`)
 
-  The URI must not have a fragment.
+  The URI must
+  - use one of the supported schemes
+  - not have a fragment
+  - not include userinfo
 
   All redirect_uris entries must be valid.
   """
