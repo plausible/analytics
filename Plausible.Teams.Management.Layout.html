@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D8C6FCF4.js"></script>
+    <script src="dist/sidebar_items-6BE4B6F9.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -468,7 +468,7 @@ To be used in UIs allowing team memberships adjustments.</p>
     </a>
     <h1 class="signature" translate="no">persist(layout, context)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L112" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L115" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -480,10 +480,10 @@ To be used in UIs allowing team memberships adjustments.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> persist(<a href="#t:t/0">t</a>(), %{
-  current_user: <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
-  current_team: <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()
-}) ::
-  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+  :current_user =&gt; <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
+  :current_team =&gt; <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(),
+  optional(:name_changeset) =&gt; <a href="https://hexdocs.pm/ecto/3.13.6/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+}) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -498,7 +498,7 @@ To be used in UIs allowing team memberships adjustments.</p>
     </a>
     <h1 class="signature" translate="no">persist_entry(entry, context, acc)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L167" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L180" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
