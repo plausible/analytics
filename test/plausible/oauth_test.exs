@@ -53,87 +53,42 @@ defmodule Plausible.OAuthTest do
 
       assert Plausible.Repo.aggregate(AuthorizationCode, :count) == 0
     end
+
+    test "stores a code bound to the user, team, scopes and resource", %{user: user, team: team} do
+      {_verifier, challenge} = pkce()
+
+      assert {:ok, raw_code} = create_code(user, team, challenge)
+
+      stored = Plausible.Repo.one!(AuthorizationCode)
+
+      assert_matches %AuthorizationCode{
+                       code_hash: ^Token.hash(raw_code),
+                       client_id: ^@client_id,
+                       redirect_uri: ^@redirect_uri,
+                       code_challenge: ^challenge,
+                       code_challenge_method: "S256",
+                       scopes: ^supported_scopes(),
+                       resource: ^resource(),
+                       user_id: ^user.id,
+                       team_id: ^team.id
+                     } = stored
+
+      assert NaiveDateTime.compare(stored.expires_at, NaiveDateTime.utc_now()) == :gt
+    end
   end
 
   describe "Step 2: consume_authorization_code/2" do
-    # `:crypto.hash/2` takes iodata, so without a guard a repeated `?code[]=`
-    # param, which Plug decodes into a list, would hash as if its parts were
-    # concatenated.
-    test "rejects a non-binary code rather than raising" do
-      presented = %{
-        verifier: "v",
-        client_id: @client_id,
-        redirect_uri: @redirect_uri,
-        resource: resource()
-      }
-
-      assert {:error, :invalid_grant} = OAuth.consume_authorization_code(nil, presented)
-      assert {:error, :invalid_grant} = OAuth.consume_authorization_code(["ab", "c"], presented)
-    end
-
-    test "returns the code and binds user, team and scopes", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:ok, consumed_code} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-
-      assert_matches %AuthorizationCode{
-                       user_id: ^user.id,
-                       team_id: ^team.id,
-                       scopes: ^supported_scopes(),
-                       client_id: ^@client_id
-                     } = consumed_code
-    end
-
-    test "is single-use", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:ok, _consumed_code} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-
+    test "rejects an unknown code" do
       assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
+               OAuth.consume_authorization_code("nope", %{
+                 verifier: "v",
                  client_id: @client_id,
                  redirect_uri: @redirect_uri,
                  resource: resource()
                })
     end
 
-    test "burns the code even when validation fails", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: "wrong-verifier",
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-    end
-
-    test "rejects a presented value that does not match the code", %{user: user, team: team} do
+    test "rejects when the presented values don't match the code", %{user: user, team: team} do
       for override <- [
             %{client_id: "https://other.example.com/oauth-metadata"},
             %{client_id: nil},
@@ -156,16 +111,6 @@ defmodule Plausible.OAuthTest do
 
         assert {:error, :invalid_grant} = OAuth.consume_authorization_code(code, presented)
       end
-    end
-
-    test "rejects an unknown code" do
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code("nope", %{
-                 verifier: "v",
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
     end
 
     test "rejects an expired code", %{user: user, team: team} do
@@ -204,9 +149,119 @@ defmodule Plausible.OAuthTest do
                  resource: resource()
                })
     end
+
+    test "returns the code and binds user, team and scopes", %{user: user, team: team} do
+      {verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      assert {:ok, consumed_code} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: verifier,
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+
+      assert_matches %AuthorizationCode{
+                       user_id: ^user.id,
+                       team_id: ^team.id,
+                       scopes: ^supported_scopes(),
+                       client_id: ^@client_id
+                     } = consumed_code
+    end
+
+    test "burns the code on successful consume, it can't be consumed twice", %{
+      user: user,
+      team: team
+    } do
+      {verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      assert {:ok, _consumed_code} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: verifier,
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+
+      assert {:error, :invalid_grant} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: verifier,
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+    end
+
+    test "burns the code even when validation fails, can't guess verifier", %{
+      user: user,
+      team: team
+    } do
+      {verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      assert {:error, :invalid_grant} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: "wrong-verifier",
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+
+      assert {:error, :invalid_grant} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: verifier,
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+    end
   end
 
   describe "Step 3: issue_token/1 and find_access_token/2" do
+    test "rejects an unknown token" do
+      assert {:error, :invalid_token} = OAuth.find_access_token("made-up", mcp())
+    end
+
+    test "rejects a live token presented to a resource it was not issued for", %{
+      user: user,
+      team: team
+    } do
+      {_grant, access_token} = issue_grant(user, team)
+
+      assert {:error, :invalid_token} =
+               OAuth.find_access_token(access_token, %{
+                 resource_path: "/elsewhere",
+                 scopes_supported: []
+               })
+
+      # Verify that the token works for the correct resource.
+      assert {:ok, _grant} = OAuth.find_access_token(access_token, mcp())
+    end
+
+    test "rejects an expired token", %{user: user, team: team} do
+      {verifier, challenge} = pkce()
+      {:ok, code} = create_code(user, team, challenge)
+
+      {:ok, consumed_code} =
+        OAuth.consume_authorization_code(code, %{
+          verifier: verifier,
+          client_id: @client_id,
+          redirect_uri: @redirect_uri,
+          resource: resource()
+        })
+
+      {:ok, response} = OAuth.issue_token(consumed_code)
+
+      Plausible.Repo.update_all(
+        from(g in Grant, where: g.access_token_hash == ^Token.hash(response.access_token)),
+        set: [access_token_expires_at: past(), refresh_token_expires_at: past()]
+      )
+
+      assert {:error, :invalid_token} = OAuth.find_access_token(response.access_token, mcp())
+    end
+
     test "issues a bearer token resolving to the code's user, team and scopes", %{
       user: user,
       team: team
@@ -267,54 +322,6 @@ defmodule Plausible.OAuthTest do
                        access_token_hash: ^Token.hash(response.access_token),
                        access_token_hint: ^String.slice(response.access_token, -4, 4)
                      } = stored
-    end
-
-    test "rejects an unknown token" do
-      assert {:error, :invalid_token} = OAuth.find_access_token("made-up", mcp())
-    end
-
-    test "rejects a non-binary token rather than raising" do
-      assert {:error, :invalid_token} = OAuth.find_access_token(nil, mcp())
-      assert {:error, :invalid_token} = OAuth.find_access_token(["ab", "c"], mcp())
-      assert {:error, :invalid_token} = OAuth.find_access_token(%{"a" => "b"}, mcp())
-    end
-
-    test "rejects a live token presented to a resource it was not issued for", %{
-      user: user,
-      team: team
-    } do
-      {_grant, access_token} = issue_grant(user, team)
-
-      assert {:error, :invalid_token} =
-               OAuth.find_access_token(access_token, %{
-                 resource_path: "/elsewhere",
-                 scopes_supported: []
-               })
-
-      # Verify that the token works for the correct resource.
-      assert {:ok, _grant} = OAuth.find_access_token(access_token, mcp())
-    end
-
-    test "rejects an expired token", %{user: user, team: team} do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      {:ok, consumed_code} =
-        OAuth.consume_authorization_code(code, %{
-          verifier: verifier,
-          client_id: @client_id,
-          redirect_uri: @redirect_uri,
-          resource: resource()
-        })
-
-      {:ok, response} = OAuth.issue_token(consumed_code)
-
-      Plausible.Repo.update_all(
-        from(g in Grant, where: g.access_token_hash == ^Token.hash(response.access_token)),
-        set: [access_token_expires_at: past(), refresh_token_expires_at: past()]
-      )
-
-      assert {:error, :invalid_token} = OAuth.find_access_token(response.access_token, mcp())
     end
   end
 

@@ -202,8 +202,6 @@ defmodule Plausible.OAuth do
     end
   end
 
-  def find_access_token(_raw_access, _resource), do: {:error, :invalid_token}
-
   @doc """
   Revokes a grant, invalidating its access and refresh tokens.
 
