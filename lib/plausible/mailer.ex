@@ -35,14 +35,25 @@ defmodule Plausible.Mailer do
   end
 
   defp suppressed_recipients(email) do
-    # to, cc/bcc can hold a raw string, a {name, address} tuple, or any
-    # struct implementing `Bamboo.Formatter` (e.g. `Plausible.Auth.User`),
-    # each possibly wrapped in a list.
-    normalized = Bamboo.Mailer.normalize_addresses(email)
+    if priority_stream?(email) do
+      # Priority-stream mail (password resets, 2FA, e-mail verification) has
+      # to go through even to an address we'd otherwise suppress - refusing
+      # it could lock someone out of their own account.
+      []
+    else
+      # to, cc/bcc can hold a raw string, a {name, address} tuple, or any
+      # struct implementing `Bamboo.Formatter` (e.g. `Plausible.Auth.User`),
+      # each possibly wrapped in a list.
+      normalized = Bamboo.Mailer.normalize_addresses(email)
 
-    [normalized.to, normalized.cc, normalized.bcc]
-    |> List.flatten()
-    |> Enum.map(fn {_name, address} -> address end)
-    |> Enum.filter(&Plausible.EmailSuppressions.suppressed?/1)
+      [normalized.to, normalized.cc, normalized.bcc]
+      |> List.flatten()
+      |> Enum.map(fn {_name, address} -> address end)
+      |> Enum.filter(&Plausible.EmailSuppressions.suppressed?/1)
+    end
+  end
+
+  defp priority_stream?(email) do
+    get_in(email.private, [:message_params, "MessageStream"]) == "priority"
   end
 end
