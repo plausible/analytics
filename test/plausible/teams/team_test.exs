@@ -8,6 +8,9 @@ defmodule Plausible.Teams.TeamTest do
   @too_many_bytes_error {"should be at most %{count} byte(s)",
                          [count: 255, validation: :length, kind: :max, type: :binary]}
   @url_error {"cannot contain a URL", []}
+  @reserved_name Plausible.Teams.default_name()
+  @reserved_error {"is reserved", [validation: :exclusion, enum: [@reserved_name]]}
+  @blank_error {"can't be blank", [validation: :required]}
 
   describe "name_changeset/2" do
     test "accepts a name at exactly the limit" do
@@ -56,6 +59,32 @@ defmodule Plausible.Teams.TeamTest do
         assert Team.name_changeset(%Team{}, %{name: name}).errors == [],
                "expected #{inspect(name)} to be accepted"
       end
+    end
+
+    test "rejects the reserved default name" do
+      assert Team.name_changeset(%Team{}, %{name: @reserved_name}).errors == [
+               name: @reserved_error
+             ]
+    end
+
+    test "rejects the reserved default name even when resubmitted unchanged" do
+      team = %Team{name: @reserved_name}
+
+      assert Team.name_changeset(team, %{name: @reserved_name}).errors == [
+               name: @reserved_error
+             ]
+    end
+
+    test "does not double-flag a blank submission as both blank and reserved" do
+      team = %Team{name: @reserved_name}
+
+      assert Team.name_changeset(team, %{name: ""}).errors == [name: @blank_error]
+    end
+
+    test "accepts renaming away from the reserved default name" do
+      team = %Team{name: @reserved_name}
+
+      assert Team.name_changeset(team, %{name: "Real Team"}).errors == []
     end
   end
 
