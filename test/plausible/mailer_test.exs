@@ -32,6 +32,8 @@ defmodule Plausible.MailerTest do
   end
 
   describe "suppression" do
+    @describetag :ee_only
+
     test "refuses to send to a suppressed address" do
       user = insert(:user, email: "bounced@example.com")
 
