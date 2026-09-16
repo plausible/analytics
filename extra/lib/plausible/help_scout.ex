@@ -3,6 +3,8 @@ defmodule Plausible.HelpScout do
   HelpScout callback API logic.
   """
 
+  use PlausibleWeb.VerifiedRoutes
+
   import Ecto.Query
 
   alias Plausible.Billing
@@ -110,12 +112,7 @@ defmodule Plausible.HelpScout do
             }
           end)
 
-        user_link =
-          Routes.customer_support_user_url(
-            PlausibleWeb.Endpoint,
-            :show,
-            user.id
-          )
+        user_link = url(~p"/cs/users/user/#{user.id}")
 
         {:ok,
          %{
