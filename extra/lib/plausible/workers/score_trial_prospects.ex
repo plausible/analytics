@@ -80,7 +80,7 @@ defmodule Plausible.Workers.ScoreTrialProspects do
 
   defp upsert(row) do
     Repo.insert_all(TrialProspect, [row],
-      on_conflict: {:replace_all_except, [:id, :team_id, :inserted_at]},
+      on_conflict: {:replace_all_except, [:id, :team_id, :inserted_at, :reviewed_at]},
       conflict_target: :team_id
     )
   end
