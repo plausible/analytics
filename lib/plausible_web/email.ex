@@ -510,7 +510,7 @@ defmodule PlausibleWeb.Email do
       end
 
     download_url =
-      ~p"/#{site.domain}/download/export?#{[__team: site.team.identifier]}"
+      url(~p"/#{site.domain}/download/export?#{[__team: site.team.identifier]}")
 
     priority_email()
     |> to(user)
