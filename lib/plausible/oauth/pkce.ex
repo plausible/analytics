@@ -4,8 +4,6 @@ defmodule Plausible.OAuth.PKCE do
   the authorization code flow.
   """
 
-  # RFC 7636 section 4.1. The floor matters as much as the ceiling: the digest of
-  # a short or empty verifier is guessable, which reduces PKCE to a no-op.
   @code_verifier_min_length 43
   @code_verifier_max_length 128
 

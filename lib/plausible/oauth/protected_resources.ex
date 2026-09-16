@@ -51,9 +51,9 @@ defmodule Plausible.OAuth.ProtectedResources do
   def normalize_requested_scopes(_scope, _resource), do: {:error, :invalid_scope}
 
   @doc """
-  Normalizes a scopes list to match the order specified by resource.
-  Handles `resource.scopes_supported` changing over time by rejecting
-  if list contains unsupported scopes.
+  Normalizes a scopes list to the order the resource specifies.
+  Rejects the whole list if it names a scope the resource does not support,
+  which can happen when a scope is withdrawn (or refactored) after the list was stored.
   """
   @spec normalize_granted_scopes([String.t()], t()) ::
           {:ok, [String.t()]} | {:error, :invalid_scope}

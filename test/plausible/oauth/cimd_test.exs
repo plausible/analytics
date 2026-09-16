@@ -149,8 +149,6 @@ defmodule Plausible.OAuth.CIMDTest do
       end
     end
 
-    # Control characters truncate the consent screen's identity line, bidi
-    # overrides and isolates reorder the glyphs around them.
     test "rejects a name carrying control or bidi characters" do
       for name <- [
             "Claude\u0000 Code",

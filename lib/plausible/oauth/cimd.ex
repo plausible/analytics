@@ -10,7 +10,9 @@ defmodule Plausible.OAuth.CIMD do
   @max_redirect_uri_length 2048
 
   @doc """
-  Fetches and validates a Client ID Metadata Document.
+  Fetches the document at `client_id` and validates it.
+
+  The `client_id` is validated first, so an invalid one costs no DNS lookup.
   """
   @spec fetch(String.t()) :: {:ok, map()} | {:error, atom() | Exception.t()}
   def fetch(client_id) do
@@ -90,10 +92,6 @@ defmodule Plausible.OAuth.CIMD do
     end
   end
 
-  @doc """
-  Validates a fetched Client ID Metadata Document against the `client_id` it was
-  fetched from.
-  """
   @spec validate_document(map(), String.t()) ::
           :ok
           | {:error,
@@ -109,12 +107,7 @@ defmodule Plausible.OAuth.CIMD do
   end
 
   @doc """
-  Checks that a metadata document is self-referential: its own `client_id` is
-  the URL it was fetched from.
-
-  A document that names a different `client_id` describes someone else, and the
-  `client_id` is what is stored on every code and grant and shown on the consent
-  screen - so a document is only allowed to speak for the URL it lives at.
+  Checks that the document's own `client_id` is the URL it was fetched from.
   """
   @spec validate_self_reference(map(), String.t()) :: :ok | {:error, :client_id_mismatch}
   def validate_self_reference(doc, client_id) do
@@ -176,10 +169,9 @@ defmodule Plausible.OAuth.CIMD do
 
   def validate_client_name(_name), do: {:error, :invalid_client_name}
 
-  # Forbids certain names.
-  # Control characters (C0, DEL, C1) truncate or garble the identity line.
+  # Control characters (C0, DEL, C1) truncate or garble the name when its displayed.
   # Bidi overrides `U+202A`-`U+202E` and isolates `U+2066`-`U+2069`
-  # reorder the glyphs around them, so a name can be made to render as a different one.
+  # reorder the glyphs around them. Therefore, names containing such characters are unreadable and forbidden.
   defp unreadable?(name) do
     name
     |> String.to_charlist()
@@ -196,12 +188,12 @@ defmodule Plausible.OAuth.CIMD do
   Non-loopback URIs must match exactly. For loopback URIs (`localhost`,
   `127.0.0.1`, `[::1]`) the port - and only the port - may differ, per
   [OAuth 2.1 §2.3.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-registration-requirements)
-  and [RFC 8252 §7.3](https://www.rfc-editor.org/rfc/rfc8252.html#section-7.3):
-  a native client binds an ephemeral port it cannot know ahead of time.
+  and [RFC 8252 §7.3](https://www.rfc-editor.org/rfc/rfc8252.html#section-7.3),
+  because a native client binds a random port it cannot know in advance.
 
-  Every other component must match exactly, so a registered loopback URI cannot
-  be turned into a different endpoint by appending a query string. Scheme and
-  host are case-insensitive (RFC 3986 sections 3.1 and 3.2.2), nothing else is.
+  Every other component must match exactly, so adding a query string to a
+  registered loopback URI does not match it. Scheme and host are compared
+  case-insensitively (RFC 3986 sections 3.1 and 3.2.2), nothing else is.
   """
   @spec redirect_uri_registered?(String.t() | nil, [String.t()]) :: boolean()
   def redirect_uri_registered?(redirect_uri, registered) when is_binary(redirect_uri) do
@@ -221,8 +213,6 @@ defmodule Plausible.OAuth.CIMD do
       end)
   end
 
-  # Case-folded because RFC 3986 section 3.2.2 makes the host case-insensitive,
-  # so `LOCALHOST` names the same interface as `localhost`.
   defp loopback_host?(host), do: downcase(host) in ["localhost", "127.0.0.1", "::1"]
 
   defp equal_but_for_port?(%URI{} = a, %URI{} = b) do

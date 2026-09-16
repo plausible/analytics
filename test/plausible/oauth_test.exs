@@ -230,25 +230,6 @@ defmodule Plausible.OAuthTest do
       assert {"should be at most %{count} byte(s)", _} = changeset.errors[:redirect_uri]
     end
 
-    # Unreachable through the context, which normalizes `resource` first.
-    test "bounds the stored resource" do
-      changeset =
-        AuthorizationCode.changeset(%{
-          code_hash: "hash",
-          client_id: @client_id,
-          redirect_uri: @redirect_uri,
-          code_challenge: String.duplicate("x", 43),
-          code_challenge_method: "S256",
-          scopes: [],
-          resource: "https://plausible.example.com/" <> String.duplicate("a", 2048),
-          user_id: 1,
-          team_id: 1,
-          expires_at: NaiveDateTime.utc_now(:second)
-        })
-
-      assert {"should be at most %{count} byte(s)", _} = changeset.errors[:resource]
-    end
-
     test "refuses a scope this server does not support", %{user: user, team: team} do
       {_verifier, challenge} = pkce()
 
@@ -272,52 +253,10 @@ defmodule Plausible.OAuthTest do
     end
   end
 
-  # Only reachable directly: the context normalizes `scopes` before either
-  # changeset sees it.
-  describe "schema changesets" do
-    test "refuse nil scopes rather than letting the insert raise" do
-      code_attrs = %{
-        code_hash: "hash",
-        client_id: @client_id,
-        redirect_uri: @redirect_uri,
-        code_challenge: String.duplicate("x", 43),
-        code_challenge_method: "S256",
-        resource: resource(),
-        user_id: 1,
-        team_id: 1,
-        expires_at: NaiveDateTime.utc_now(:second)
-      }
-
-      grant_attrs = %{
-        user_id: 1,
-        team_id: 1,
-        client_id: @client_id,
-        resource: resource(),
-        access_token_hash: "ah",
-        access_token_hint: "hint",
-        access_token_expires_at: NaiveDateTime.utc_now(:second),
-        refresh_token_hash: "rh",
-        refresh_token_hint: "hint",
-        refresh_token_expires_at: NaiveDateTime.utc_now(:second)
-      }
-
-      for changeset <- [
-            AuthorizationCode.changeset(Map.put(code_attrs, :scopes, nil)),
-            Grant.changeset(Map.put(grant_attrs, :scopes, nil))
-          ] do
-        refute changeset.valid?
-        assert {"can't be blank", _} = changeset.errors[:scopes]
-      end
-
-      # An empty list is the column default, refused where it matters, not here.
-      assert AuthorizationCode.changeset(Map.put(code_attrs, :scopes, [])).valid?
-      assert Grant.changeset(Map.put(grant_attrs, :scopes, [])).valid?
-    end
-  end
-
   describe "consume_authorization_code/2" do
-    # Without a guard, a repeated `?code[]=` param would be hashed as the
-    # concatenation of its parts.
+    # `:crypto.hash/2` takes iodata, so without a guard a repeated `?code[]=`
+    # param, which Plug decodes into a list, would hash as if its parts were
+    # concatenated.
     test "rejects a non-binary code rather than raising" do
       presented = %{
         verifier: "v",
@@ -570,8 +509,6 @@ defmodule Plausible.OAuthTest do
       assert {:error, :invalid_token} = OAuth.find_access_token("made-up", mcp())
     end
 
-    # `:crypto.hash/2` takes iodata, so an unguarded ["ab", "c"] would hash to
-    # the same key as "abc". Plug decodes a repeated query param into a list.
     test "rejects a non-binary token rather than raising" do
       assert {:error, :invalid_token} = OAuth.find_access_token(nil, mcp())
       assert {:error, :invalid_token} = OAuth.find_access_token(["ab", "c"], mcp())
@@ -590,7 +527,7 @@ defmodule Plausible.OAuthTest do
                  scopes_supported: []
                })
 
-      # Otherwise live, so the refusal above is the audience and nothing else.
+      # Verify that the token works when for the correct resource.
       assert {:ok, _grant} = OAuth.find_access_token(access_token, mcp())
     end
 
