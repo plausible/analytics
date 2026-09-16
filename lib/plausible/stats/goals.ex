@@ -98,11 +98,20 @@ defmodule Plausible.Stats.Goals do
         goal_type = Plausible.Goal.type(goal)
         {prop_keys, prop_values} = Enum.unzip(goal.custom_props)
 
+        # `types` and `event_names_imports` are only used for matching goals
+        # against imported data. Imported tables are aggregated without custom
+        # properties, so goals with custom props must never match - "" ensures
+        # that.
+        queryable_from_imports? = not Plausible.Goal.has_custom_props?(goal)
+
         %{
           indices: [idx | acc.indices],
-          types: [to_string(goal_type) | acc.types],
+          types: [if(queryable_from_imports?, do: to_string(goal_type), else: "") | acc.types],
           # This will contain "" for non-event goals
-          event_names_imports: [to_string(goal.event_name) | acc.event_names_imports],
+          event_names_imports: [
+            if(queryable_from_imports?, do: to_string(goal.event_name), else: "")
+            | acc.event_names_imports
+          ],
           event_names_by_type: [event_name_by_type(goal_type, goal) | acc.event_names_by_type],
           # Event goals are considered to match everything for the sake of efficient queries in query_builder.ex
           # See also Plausible.Stats.SQL.Expression.event_goal_join/1
