@@ -9,15 +9,11 @@ defmodule Plausible.OAuthTest do
   3. `issue_token/1` opens a grant from the redeemed code and returns the token
      pair; `find_access_token/2` resolves an access token back to its grant
   4. `revoke_grant/1` invalidates both tokens
-
-  `effective_scopes/1` re-checks a stored authorization against
-  live team membership and the resource's current scopes (which may have changed).
   """
 
   use Plausible.DataCase, async: true
   use Plausible.Test.Support.DNS
 
-  alias Plausible.Auth.Scopes
   alias Plausible.OAuth
   alias Plausible.OAuth.{AuthorizationCode, Grant, ProtectedResources, Token}
 
@@ -194,24 +190,11 @@ defmodule Plausible.OAuthTest do
       {verifier, challenge} = pkce()
       {:ok, code} = create_code(user, team, challenge)
 
-      remove_from_team(user, team)
-
-      assert {:error, :invalid_grant} =
-               OAuth.consume_authorization_code(code, %{
-                 verifier: verifier,
-                 client_id: @client_id,
-                 redirect_uri: @redirect_uri,
-                 resource: resource()
-               })
-    end
-
-    test "rejects rather than narrows a code naming a withdrawn scope", %{
-      user: user,
-      team: team
-    } do
-      {verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [Scopes.stats_read() | supported_scopes()])
+      Plausible.Repo.delete_all(
+        from(tm in Plausible.Teams.Membership,
+          where: tm.user_id == ^user.id and tm.team_id == ^team.id
+        )
+      )
 
       assert {:error, :invalid_grant} =
                OAuth.consume_authorization_code(code, %{
@@ -362,71 +345,6 @@ defmodule Plausible.OAuthTest do
     end
   end
 
-  describe "effective_scopes/1" do
-    test "returns the granted scopes while nothing has changed", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "narrows to the scopes the resource still supports", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [Scopes.stats_read() | supported_scopes()])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "refuses once every granted scope has been withdrawn", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [Scopes.stats_read()])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "refuses a zero-scope authorization rather than defaulting it", %{
-      user: user,
-      team: team
-    } do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-      set_code_scopes(code, [])
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "refuses once the user is no longer a member of the team", %{user: user, team: team} do
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(user, team, challenge)
-
-      remove_from_team(user, team)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:error, :stale_authorization}
-    end
-
-    test "counts a guest as a member of the team", %{team: team} do
-      site = new_site(team: team)
-      guest = add_guest(site, role: :viewer)
-
-      {_verifier, challenge} = pkce()
-      {:ok, code} = create_code(guest, team, challenge)
-
-      assert OAuth.effective_scopes(get_code(code)) == {:ok, supported_scopes()}
-    end
-
-    test "resolves a grant the same way as a code", %{user: user, team: team} do
-      {grant, _access_token} = issue_grant(user, team)
-
-      assert OAuth.effective_scopes(grant) == {:ok, supported_scopes()}
-
-      remove_from_team(user, team)
-
-      assert OAuth.effective_scopes(grant) == {:error, :stale_authorization}
-    end
-  end
-
   defp pkce do
     verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
     challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
@@ -457,25 +375,6 @@ defmodule Plausible.OAuthTest do
   end
 
   defp past, do: NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :second)
-
-  defp get_code(raw_code) do
-    Plausible.Repo.get_by!(AuthorizationCode, code_hash: Token.hash(raw_code))
-  end
-
-  defp set_code_scopes(raw_code, scopes) do
-    Plausible.Repo.update_all(
-      from(c in AuthorizationCode, where: c.code_hash == ^Token.hash(raw_code)),
-      set: [scopes: scopes]
-    )
-  end
-
-  defp remove_from_team(user, team) do
-    Plausible.Repo.delete_all(
-      from(tm in Plausible.Teams.Membership,
-        where: tm.user_id == ^user.id and tm.team_id == ^team.id
-      )
-    )
-  end
 
   defp issue_grant(user, team, overrides \\ %{}) do
     {verifier, challenge} = pkce()

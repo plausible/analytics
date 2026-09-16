@@ -15,6 +15,7 @@ defmodule Plausible.OAuth do
   use Plausible.Repo
 
   alias Plausible.OAuth.{AuthorizationCode, Grant, PKCE, ProtectedResources, Token}
+  alias Plausible.Teams.Memberships
 
   @authorization_code_ttl_seconds 600
   @access_token_ttl_seconds 3600
@@ -33,39 +34,6 @@ defmodule Plausible.OAuth do
 
   @spec refresh_token_ttl_seconds() :: pos_integer()
   def refresh_token_ttl_seconds(), do: @refresh_token_ttl_seconds
-
-  @doc """
-  Returns the scopes a stored authorization still grants.
-
-  The scopes, team and resource recorded on a code or grant are the most it can
-  ever grant, and both can go stale: the user can be removed from the team, and
-  a scope can be withdrawn from the resource.
-
-  Returns the recorded scopes the resource still supports, or
-  `{:error, :stale_authorization}` if the user has left the team or none of the
-  scopes are left. Every team role counts as membership, guests included.
-  """
-  @spec effective_scopes(AuthorizationCode.t() | Grant.t()) ::
-          {:ok, [String.t()]} | {:error, :stale_authorization}
-  def effective_scopes(%struct{} = authorization) when struct in [AuthorizationCode, Grant] do
-    with {:ok, resource} <- normalize_resource(authorization.resource),
-         :ok <- check_membership(authorization.user_id, authorization.team_id),
-         [_ | _] = scopes <-
-           Enum.filter(resource.scopes_supported, &(&1 in authorization.scopes)) do
-      {:ok, scopes}
-    else
-      _ -> {:error, :stale_authorization}
-    end
-  end
-
-  defp check_membership(user_id, team_id) do
-    query =
-      from(tm in Plausible.Teams.Membership,
-        where: tm.user_id == ^user_id and tm.team_id == ^team_id
-      )
-
-    if Repo.exists?(query), do: :ok, else: {:error, :not_a_member}
-  end
 
   @doc """
   Creates a single-use authorization code bound to the given user and team.
@@ -119,8 +87,7 @@ defmodule Plausible.OAuth do
   The row is deleted on lookup whether or not the later checks pass, so a code
   can only ever be redeemed once.
 
-  `effective_scopes/1` must still return exactly the scopes the user approved, so
-  the code is rejected once the user leaves the team or a scope is withdrawn.
+  To redeem the code, the user must still have a role in the team.
   """
   @type presented_grant() :: %{
           required(:verifier) => String.t(),
@@ -143,21 +110,15 @@ defmodule Plausible.OAuth do
          :ok <- match(auth_code.client_id, presented.client_id),
          :ok <- match(auth_code.redirect_uri, presented.redirect_uri),
          :ok <- match(auth_code.resource, presented.resource),
-         :ok <- check_still_grantable(auth_code) do
+         {:ok, _role} <-
+           Memberships.team_role(team_id: auth_code.team_id, user_id: auth_code.user_id) do
       {:ok, auth_code}
+    else
+      _ -> {:error, :invalid_grant}
     end
   end
 
   def consume_authorization_code(_code, _presented), do: {:error, :invalid_grant}
-
-  # Needed because there's a (low) chance that the resource's supported scopes may change
-  # in the time between the authorization code being issued and it being redeemed
-  defp check_still_grantable(auth_code) do
-    case effective_scopes(auth_code) do
-      {:ok, scopes} -> match(scopes, auth_code.scopes)
-      {:error, :stale_authorization} -> {:error, :invalid_grant}
-    end
-  end
 
   defp delete_and_fetch_code(code_hash) do
     query = from(c in AuthorizationCode, where: c.code_hash == ^code_hash, select: c)
