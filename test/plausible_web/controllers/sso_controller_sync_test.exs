@@ -90,10 +90,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         session = fetch_cookies(conn, encrypted: ["session_saml"]).cookies["session_saml"]
@@ -178,10 +175,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         saml_session = fetch_cookies(conn, encrypted: ["session_saml"]).cookies["session_saml"]

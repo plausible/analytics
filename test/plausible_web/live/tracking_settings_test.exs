@@ -77,9 +77,7 @@ defmodule PlausibleWeb.Live.TrackingSettingsTest do
       html = conn |> get_liveview(site) |> render()
 
       assert html =~
-               Routes.site_path(PlausibleWeb.Endpoint, :installation, site.domain,
-                 flow: PlausibleWeb.Flows.review()
-               )
+               ~p"/#{site.domain}/installation?#{[flow: PlausibleWeb.Flows.review()]}"
     end
 
     @tag :ee_only

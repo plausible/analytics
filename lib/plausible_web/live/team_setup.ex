@@ -230,10 +230,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
          socket
          |> put_flash(:success, "Your team is now created")
          |> redirect(
-           to:
-             Routes.settings_path(socket, :team_general,
-               __team: socket.assigns.current_team.identifier
-             )
+           to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
          )}
 
       {:error, {:over_limit, limit}} ->

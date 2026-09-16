@@ -287,13 +287,7 @@ defmodule PlausibleWeb.StatsController do
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(
           to:
-            Routes.stats_path(
-              conn,
-              :shared_link,
-              shared_link.site.domain,
-              star_path,
-              auth: slug
-            ) <>
+            ~p"/share/#{shared_link.site.domain}/#{star_path}?#{[auth: slug]}" <>
               query_string_fragment
         )
       else

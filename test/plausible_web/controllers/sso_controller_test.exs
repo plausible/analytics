@@ -68,11 +68,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :login_form,
-              prefer: "sso",
-              email: "user@example.com",
-              autosubmit: true
-            )
+            ~p"/sso/login?#{[prefer: "sso", email: "user@example.com", autosubmit: true]}"
           )
 
         assert html = html_response(conn, 200)
@@ -119,10 +115,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn = post(conn, ~p"/sso/login", %{"email" => email})
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :saml_signin, integration.identifier,
-                   email: email,
-                   return_to: ""
-                 )
+                 ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: ""]}"
       end
 
       test "passes redirect path if provided", %{
@@ -136,10 +129,7 @@ defmodule PlausibleWeb.SSOControllerTest do
           post(conn, ~p"/sso/login", %{"email" => email, "return_to" => "/sites"})
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :saml_signin, integration.identifier,
-                   email: email,
-                   return_to: "/sites"
-                 )
+                 ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
       end
 
       test "renders login form with error on no matching integration", %{conn: conn} do
@@ -184,10 +174,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         assert html = html_response(conn, 200)

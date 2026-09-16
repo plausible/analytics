@@ -109,14 +109,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
          {:ok, start_date, end_date} <- Imported.clamp_dates(site, api_start_date, api_end_date) do
       redirect(conn,
         to:
-          Routes.google_analytics_path(conn, :confirm, site.domain,
-            property: property,
-            access_token: access_token,
-            refresh_token: refresh_token,
-            expires_at: expires_at,
-            start_date: Date.to_iso8601(start_date),
-            end_date: Date.to_iso8601(end_date)
-          )
+          ~p"/#{site.domain}/import/google-analytics/confirm?#{[property: property, access_token: access_token, refresh_token: refresh_token, expires_at: expires_at, start_date: Date.to_iso8601(start_date), end_date: Date.to_iso8601(end_date)]}"
       )
     else
       {:error, error} when error in [:no_data, :no_time_window] ->

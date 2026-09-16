@@ -202,9 +202,7 @@ defmodule PlausibleWeb.Live.TrackingSettings do
   end
 
   defp review_installation_path(site) do
-    Routes.site_path(PlausibleWeb.Endpoint, :installation, site.domain,
-      flow: PlausibleWeb.Flows.review()
-    )
+    ~p"/#{site.domain}/installation?#{[flow: PlausibleWeb.Flows.review()]}"
   end
 
   on_ee do

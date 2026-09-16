@@ -161,13 +161,7 @@ defmodule PlausibleWeb.Team.Notice do
       <:actions>
         <.button_link
           method="post"
-          href={
-            Routes.invitation_path(
-              PlausibleWeb.Endpoint,
-              :reject_invitation,
-              @invitation.transfer_id
-            )
-          }
+          href={~p"/settings/team/invitations/#{@invitation.transfer_id}/reject"}
           theme="ghost"
           size="sm"
           class="order-3 md:order-1"
@@ -178,13 +172,7 @@ defmodule PlausibleWeb.Team.Notice do
         <.button_link
           :if={@can_accept?}
           method="post"
-          href={
-            Routes.invitation_path(
-              PlausibleWeb.Endpoint,
-              :accept_invitation,
-              @invitation.transfer_id
-            )
-          }
+          href={~p"/settings/team/invitations/#{@invitation.transfer_id}/accept"}
           theme="secondary"
           size="sm"
           class="order-1 md:order-2"
@@ -216,12 +204,7 @@ defmodule PlausibleWeb.Team.Notice do
               as={fn a -> link(Map.put(a, :method, "post")) end}
               id={"ownership-accept-item-members-#{@invitation.transfer_id}"}
               href={
-                Routes.invitation_path(
-                  PlausibleWeb.Endpoint,
-                  :accept_invitation,
-                  @invitation.transfer_id,
-                  skip_site_members_transfer: "true"
-                )
+                ~p"/settings/team/invitations/#{@invitation.transfer_id}/accept?#{[skip_site_members_transfer: "true"]}"
               }
             >
               Accept without members

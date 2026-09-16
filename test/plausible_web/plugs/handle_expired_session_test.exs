@@ -6,8 +6,6 @@ defmodule Plausible.Plugs.HandleExpiredSessionTest do
     alias Plausible.Plugs.HandleExpiredSession
     alias Plausible.Repo
 
-    alias PlausibleWeb.Router.Helpers, as: Routes
-
     test "passes through when there's no expired_session" do
       conn = HandleExpiredSession.call(build_conn(), [])
       refute conn.halted
@@ -40,12 +38,7 @@ defmodule Plausible.Plugs.HandleExpiredSessionTest do
       assert conn.halted
 
       assert redirected_to(conn, 302) ==
-               Routes.sso_path(conn, :login_form,
-                 prefer: "manual",
-                 email: user.email,
-                 autosubmit: true,
-                 return_to: "/some/url?with=param"
-               )
+               ~p"/sso/login?#{[prefer: "manual", email: user.email, autosubmit: true, return_to: "/some/url?with=param"]}"
 
       refute Repo.reload(session)
     end
@@ -63,11 +56,7 @@ defmodule Plausible.Plugs.HandleExpiredSessionTest do
       assert conn.halted
 
       assert redirected_to(conn, 302) ==
-               Routes.sso_path(conn, :login_form,
-                 prefer: "manual",
-                 email: user.email,
-                 autosubmit: true
-               )
+               ~p"/sso/login?#{[prefer: "manual", email: user.email, autosubmit: true]}"
 
       refute Repo.reload(session)
     end

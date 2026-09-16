@@ -114,11 +114,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_shared_links_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 resp.shared_link.id
-               )
+               url(~p"/api/plugins/v1/shared_links/#{resp.shared_link.id}")
 
       assert ^resp =
                initial_conn

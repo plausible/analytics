@@ -320,12 +320,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         invite_guest(other_site, "jane@example.com", role: :editor, inviter: other_user)
 
       remove_invitation_path =
-        Routes.invitation_path(
-          my_conn,
-          :remove_invitation,
-          other_site.domain,
-          invitation.invitation_id
-        )
+        ~p"/sites/#{other_site.domain}/invitations/#{invitation.invitation_id}"
 
       delete(my_conn, remove_invitation_path)
 
@@ -338,12 +333,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       add_member(team, user: user, role: :admin)
 
       remove_invitation_path =
-        Routes.invitation_path(
-          conn,
-          :remove_invitation,
-          site.domain,
-          "does_not_exist"
-        )
+        ~p"/sites/#{site.domain}/invitations/does_not_exist"
 
       conn = delete(conn, remove_invitation_path)
 
@@ -413,11 +403,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         invite_member(other_team, "jane@example.com", role: :editor, inviter: other_user)
 
       remove_invitation_path =
-        Routes.invitation_path(
-          my_conn,
-          :remove_team_invitation,
-          invitation.invitation_id
-        )
+        ~p"/settings/team/invitations/#{invitation.invitation_id}"
 
       my_conn = delete(my_conn, remove_invitation_path)
 
@@ -435,11 +421,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       conn = set_current_team(conn, team)
 
       remove_invitation_path =
-        Routes.invitation_path(
-          conn,
-          :remove_team_invitation,
-          "does_not_exist"
-        )
+        ~p"/settings/team/invitations/does_not_exist"
 
       conn = delete(conn, remove_invitation_path)
 

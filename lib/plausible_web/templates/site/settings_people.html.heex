@@ -67,13 +67,7 @@
                   <% else %>
                     <.dropdown_item
                       href={
-                        Routes.membership_path(
-                          @conn,
-                          :update_role_by_user,
-                          @site.domain,
-                          membership.user.id,
-                          "editor"
-                        )
+                        ~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}/role/editor"
                       }
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "editor"}
@@ -85,13 +79,7 @@
                     </.dropdown_item>
                     <.dropdown_item
                       href={
-                        Routes.membership_path(
-                          @conn,
-                          :update_role_by_user,
-                          @site.domain,
-                          membership.user.id,
-                          "viewer"
-                        )
+                        ~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}/role/viewer"
                       }
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "viewer"}
@@ -103,14 +91,7 @@
                     </.dropdown_item>
                     <.dropdown_divider />
                     <.dropdown_item
-                      href={
-                        Routes.membership_path(
-                          @conn,
-                          :remove_member_by_user,
-                          @site.domain,
-                          membership.user.id
-                        )
-                      }
+                      href={~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}"}
                       class="!text-red-600 hover:text-red-600 dark:!text-red-500 dark:hover:!text-red-400"
                       method="delete"
                       disabled={@site_role not in [:owner, :admin]}
@@ -146,14 +127,7 @@
         <.td actions>
           <.delete_button
             :if={@site_role in [:owner, :admin]}
-            href={
-              Routes.invitation_path(
-                @conn,
-                :remove_invitation,
-                @site.domain,
-                invitation.invitation_id
-              )
-            }
+            href={~p"/sites/#{@site.domain}/invitations/#{invitation.invitation_id}"}
             method="delete"
           />
         </.td>

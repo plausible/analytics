@@ -226,10 +226,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
           assert_redirect(
             lv,
-            Routes.stats_path(conn, :stats, site.domain,
-              verify_installation: true,
-              flow: "provisioning"
-            )
+            stats_path(site.domain, verify_installation: true, flow: "provisioning")
           )
         end
       end
@@ -279,10 +276,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       on_ee do
         assert_redirect(
           lv,
-          Routes.stats_path(conn, :stats, site.domain,
-            verify_installation: true,
-            flow: "review"
-          )
+          stats_path(site.domain, verify_installation: true, flow: "review")
         )
       end
 
@@ -580,10 +574,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = render_async(lv, 500)
 
       href =
-        Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain,
-          verify_installation: true,
-          flow: "provisioning"
-        )
+        stats_path(site.domain, verify_installation: true, flow: "provisioning")
 
       assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to dashboard"
     end
