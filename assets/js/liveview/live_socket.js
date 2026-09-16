@@ -14,11 +14,12 @@ import topbar from 'topbar'
 import Alpine from 'alpinejs'
 
 import CopySnippet from './copy-snippet'
+import MemberRows from './member-rows'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
-  let Hooks = { Modal, Dropdown, CopySnippet }
+  let Hooks = { Modal, Dropdown, CopySnippet, MemberRows }
 
   Hooks.VerificationLifecycle = {
     mounted() {
