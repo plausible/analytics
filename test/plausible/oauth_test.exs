@@ -463,7 +463,7 @@ defmodule Plausible.OAuthTest do
                        access_token: ^any(:string),
                        refresh_token: ^any(:string),
                        token_type: "Bearer",
-                       expires_in: ^OAuth.access_token_ttl(),
+                       expires_in: ^OAuth.access_token_ttl_seconds(),
                        scope: "sites:read:*"
                      }) = response
 

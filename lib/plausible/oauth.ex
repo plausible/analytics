@@ -16,10 +16,9 @@ defmodule Plausible.OAuth do
 
   alias Plausible.OAuth.{AuthorizationCode, Grant, PKCE, ProtectedResources, Token}
 
-  # TTLs (in seconds)
-  @authorization_code_ttl 600
-  @access_token_ttl 3600
-  @refresh_token_ttl 30 * 24 * 3600
+  @authorization_code_ttl_seconds 600
+  @access_token_ttl_seconds 3600
+  @refresh_token_ttl_seconds 30 * 24 * 3600
 
   @type token_response() :: %{
           access_token: String.t(),
@@ -29,11 +28,11 @@ defmodule Plausible.OAuth do
           scope: String.t()
         }
 
-  @spec access_token_ttl() :: pos_integer()
-  def access_token_ttl(), do: @access_token_ttl
+  @spec access_token_ttl_seconds() :: pos_integer()
+  def access_token_ttl_seconds(), do: @access_token_ttl_seconds
 
-  @spec refresh_token_ttl() :: pos_integer()
-  def refresh_token_ttl(), do: @refresh_token_ttl
+  @spec refresh_token_ttl_seconds() :: pos_integer()
+  def refresh_token_ttl_seconds(), do: @refresh_token_ttl_seconds
 
   @doc """
   Returns the scopes a stored authorization still grants.
@@ -100,7 +99,7 @@ defmodule Plausible.OAuth do
           resource: ProtectedResources.get_resource_url(resource),
           user_id: user.id,
           team_id: team.id,
-          expires_at: NaiveDateTime.add(now(), @authorization_code_ttl, :second)
+          expires_at: NaiveDateTime.add(now(), @authorization_code_ttl_seconds, :second)
         })
 
       with {:ok, _auth_code} <- Repo.insert(changeset), do: {:ok, code.raw}
@@ -194,10 +193,10 @@ defmodule Plausible.OAuth do
         team_id: auth_code.team_id,
         access_token_hash: access.hash,
         access_token_hint: access.hint,
-        access_token_expires_at: NaiveDateTime.add(now, @access_token_ttl, :second),
+        access_token_expires_at: NaiveDateTime.add(now, @access_token_ttl_seconds, :second),
         refresh_token_hash: refresh.hash,
         refresh_token_hint: refresh.hint,
-        refresh_token_expires_at: NaiveDateTime.add(now, @refresh_token_ttl, :second)
+        refresh_token_expires_at: NaiveDateTime.add(now, @refresh_token_ttl_seconds, :second)
       })
 
     with {:ok, _grant} <- Repo.insert(changeset) do
@@ -206,7 +205,7 @@ defmodule Plausible.OAuth do
          access_token: access.raw,
          refresh_token: refresh.raw,
          token_type: "Bearer",
-         expires_in: @access_token_ttl,
+         expires_in: @access_token_ttl_seconds,
          scope: Enum.join(auth_code.scopes, " ")
        }}
     end
