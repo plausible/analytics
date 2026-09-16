@@ -34,4 +34,38 @@ defmodule Plausible.OAuth.ProtectedResources do
   end
 
   def get_by_url(_resource_url), do: {:error, :not_found}
+
+  @doc """
+  Normalizes a space-delimited `scope` request parameter.
+  Defaults to all scopes that the resource supports.
+  """
+  @spec normalize_requested_scopes(String.t() | nil, t()) ::
+          {:ok, [String.t()]} | {:error, :invalid_scope}
+  def normalize_requested_scopes(scope, resource) when is_nil(scope) or is_binary(scope) do
+    case String.split(scope || "", " ", trim: true) do
+      [] -> {:ok, resource.scopes_supported}
+      requested -> normalize_granted_scopes(requested, resource)
+    end
+  end
+
+  def normalize_requested_scopes(_scope, _resource), do: {:error, :invalid_scope}
+
+  @doc """
+  Normalizes a scopes list to match the order specified by resource.
+  Handles `resource.scopes_supported` changing over time by rejecting
+  if list contains unsupported scopes.
+  """
+  @spec normalize_granted_scopes([String.t()], t()) ::
+          {:ok, [String.t()]} | {:error, :invalid_scope}
+  def normalize_granted_scopes(scopes, resource) when is_list(scopes) and scopes != [] do
+    supported = resource.scopes_supported
+
+    if Enum.all?(scopes, &(&1 in supported)) do
+      {:ok, Enum.filter(supported, &(&1 in scopes))}
+    else
+      {:error, :invalid_scope}
+    end
+  end
+
+  def normalize_granted_scopes(_scopes, _resource), do: {:error, :invalid_scope}
 end

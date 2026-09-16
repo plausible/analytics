@@ -62,9 +62,9 @@ config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
     plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
   ]
 
-config :plausible, Plausible.OAuth,
+config :plausible, Plausible.OAuth.CIMD,
   req_opts: [
-    plug: {Req.Test, Plausible.OAuth}
+    plug: {Req.Test, Plausible.OAuth.CIMD}
   ]
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
