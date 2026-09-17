@@ -193,8 +193,7 @@ defmodule PlausibleWeb.StatsController do
       )
 
     if shared_link do
-      new_link_format =
-        ~p"/share/#{shared_link.site.domain}/?#{[auth: slug]}"
+      new_link_format = shared_stats_path(shared_link.site.domain, auth: slug)
 
       redirect(conn, to: new_link_format)
     else
@@ -287,7 +286,7 @@ defmodule PlausibleWeb.StatsController do
         |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(
           to:
-            ~p"/share/#{shared_link.site.domain}/#{star_path}?#{[auth: slug]}" <>
+            shared_stats_path(shared_link.site.domain, [auth: slug], star_path) <>
               query_string_fragment
         )
       else
