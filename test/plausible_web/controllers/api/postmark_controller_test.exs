@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.Api.PostmarkControllerTest do
   use PlausibleWeb.ConnCase, async: true
 
-  import ExUnit.CaptureLog
-
   alias Plausible.EmailSuppressions
 
   # see config/.env.test
@@ -136,20 +134,24 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
   end
 
   describe "other webhook types" do
-    test "acknowledges but ignores unhandled record types, logging a notice", %{conn: conn} do
-      {conn, log} =
-        with_log(fn ->
-          post(conn, Routes.postmark_path(conn, :webhook), %{
-            "RecordType" => "Delivery",
-            "Email" => "delivered@example.com"
-          })
-        end)
+    setup %{test_pid: test_pid} do
+      Plausible.Test.Support.Sentry.setup(test_pid)
+    end
+
+    test "acknowledges but ignores unhandled record types, reporting to Sentry", %{conn: conn} do
+      conn =
+        post(conn, Routes.postmark_path(conn, :webhook), %{
+          "RecordType" => "Delivery",
+          "Email" => "delivered@example.com"
+        })
 
       assert json_response(conn, 200) == %{}
       refute EmailSuppressions.suppressed?("delivered@example.com")
 
-      assert log =~ "[warning]"
-      assert log =~ ~s(Ignoring Postmark webhook of type "Delivery")
+      assert [report] = Sentry.Test.pop_sentry_reports()
+      assert report.message.formatted == "Received unexpected Postmark webhook record type"
+      assert report.extra.record_type == "Delivery"
+      assert report.extra.params["Email"] == "delivered@example.com"
     end
   end
 end

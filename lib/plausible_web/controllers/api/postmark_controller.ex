@@ -8,8 +8,6 @@ defmodule PlausibleWeb.Api.PostmarkController do
 
   use PlausibleWeb, :controller
 
-  require Logger
-
   plug :verify_basic_auth
 
   # https://postmarkapp.com/developer/api/bounce-api#bounce-types
@@ -45,7 +43,10 @@ defmodule PlausibleWeb.Api.PostmarkController do
   end
 
   def webhook(conn, params) do
-    Logger.warning("Ignoring Postmark webhook of type #{inspect(params["RecordType"])}")
+    Sentry.capture_message("Received unexpected Postmark webhook record type",
+      extra: %{record_type: params["RecordType"], params: params}
+    )
+
     ok(conn)
   end
 
