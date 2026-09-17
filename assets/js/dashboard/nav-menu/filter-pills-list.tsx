@@ -1,11 +1,7 @@
 import React, { DetailedHTMLProps, HTMLAttributes } from 'react'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { FilterPill, FilterPillProps } from './filter-pill'
-import {
-  cleanLabels,
-  EVENT_PROPS_PREFIX,
-  FILTER_GROUP_TO_MODAL_TYPE
-} from '../util/filters'
+import { cleanLabels, EVENT_PROPS_PREFIX } from '../util/filters'
 import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
@@ -79,10 +75,9 @@ export const AppliedFilterPillsList = React.forwardRef<
             path: filterRoute.path,
             search: (s) => s,
             params: {
-              field:
-                FILTER_GROUP_TO_MODAL_TYPE[
-                  filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
-                ]
+              field: filter[1].startsWith(EVENT_PROPS_PREFIX)
+                ? 'props'
+                : filter[1]
             }
           },
           onRemoveClick: canRemoveFilter(filter, limitedToSegment)

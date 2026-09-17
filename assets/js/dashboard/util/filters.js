@@ -1,33 +1,24 @@
 import { formatSegmentIdAsLabelKey } from '../filtering/segments'
 
-export const FILTER_MODAL_TO_FILTER_GROUP = {
+export const FILTER_GROUP_TO_DIMENSIONS = {
+  segment: ['segment'],
   page: ['page', 'entry_page', 'exit_page'],
+  hostname: ['hostname'],
   source: ['source', 'channel', 'referrer'],
+  utm: ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   location: ['country', 'region', 'city'],
   screen: ['screen'],
   browser: ['browser', 'browser_version'],
   os: ['os', 'os_version'],
-  utm: ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   goal: ['goal'],
-  props: ['props'],
-  hostname: ['hostname'],
-  segment: ['segment']
+  props: ['props']
 }
 
-export function getAvailableFilterModals(site) {
-  const { props, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
-  return {
-    ...rest,
-    ...(site.propsAvailable && { props })
-  }
+export function getAvailableFilterDimensions(site) {
+  return Object.entries(FILTER_GROUP_TO_DIMENSIONS)
+    .filter(([group]) => group !== 'props' || site.propsAvailable)
+    .flatMap(([, dimensions]) => dimensions)
 }
-
-export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
-  Object.entries(FILTER_MODAL_TO_FILTER_GROUP).flatMap(
-    ([modalName, filterGroups]) =>
-      filterGroups.map((filterGroup) => [filterGroup, modalName])
-  )
-)
 
 export const EVENT_PROPS_PREFIX = 'props:'
 
@@ -55,7 +46,7 @@ export function supportsIsNot(filterName) {
 
 export function supportsContains(filterName) {
   return !['screen']
-    .concat(FILTER_MODAL_TO_FILTER_GROUP['location'])
+    .concat(FILTER_GROUP_TO_DIMENSIONS['location'])
     .includes(filterName)
 }
 
@@ -144,18 +135,6 @@ export function isRealTimeDashboard(dashboardState) {
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(dashboardState) {
   return getFiltersByKeyPrefix(dashboardState, 'goal')[0] || null
-}
-
-export function formatFilterGroup(filterGroup) {
-  if (filterGroup === 'utm') {
-    return 'UTM tags'
-  } else if (filterGroup === 'location') {
-    return 'Location'
-  } else if (filterGroup === 'props') {
-    return 'Property'
-  } else {
-    return formattedFilters[filterGroup]
-  }
 }
 
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
@@ -278,7 +257,7 @@ function remapToApiFilter([operation, filterKey, clauses, ...modifiers]) {
   }
 }
 
-export function getFilterGroup([_operation, filterKey, _clauses]) {
+export function getFilterDimension([_operation, filterKey, _clauses]) {
   return filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
 }
 
