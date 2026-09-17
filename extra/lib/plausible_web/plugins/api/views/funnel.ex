@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
       meta:
         render_metadata_links(
           metadata,
-          fn params -> ~p"/api/plugins/v1/funnels?#{params}" end,
+          fn params -> url(~p"/api/plugins/v1/funnels?#{params}") end,
           conn.query_params
         )
     }
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
       meta:
         render_metadata_links(
           %{},
-          fn params -> ~p"/api/plugins/v1/funnels?#{params}" end,
+          fn params -> url(~p"/api/plugins/v1/funnels?#{params}") end,
           conn.query_params
         )
     }

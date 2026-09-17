@@ -730,6 +730,6 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   defp saml_acs_url(integration) do
-    ~p"/sso/saml/consume/#{integration.identifier}"
+    url(~p"/sso/saml/consume/#{integration.identifier}")
   end
 end

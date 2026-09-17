@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Goal do
       meta:
         render_metadata_links(
           metadata,
-          fn params -> ~p"/api/plugins/v1/goals?#{params}" end,
+          fn params -> url(~p"/api/plugins/v1/goals?#{params}") end,
           conn.query_params
         )
     }
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Goal do
       meta:
         render_metadata_links(
           %{},
-          fn params -> ~p"/api/plugins/v1/goals?#{params}" end,
+          fn params -> url(~p"/api/plugins/v1/goals?#{params}") end,
           conn.query_params
         )
     }

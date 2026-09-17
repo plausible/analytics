@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
       meta:
         render_metadata_links(
           metadata,
-          fn params -> ~p"/api/plugins/v1/shared_links?#{params}" end,
+          fn params -> url(~p"/api/plugins/v1/shared_links?#{params}") end,
           conn.query_params
         )
     }
