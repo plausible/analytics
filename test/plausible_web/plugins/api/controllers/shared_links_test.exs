@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
 
     test "fails to retrieve non-existing link", %{conn: conn, site: site, token: token} do
-      url = url(~p"/api/plugins/v1/shared_links/#{666}")
+      url = url(~p"/api/plugins/v1/shared_links/666")
 
       conn
       |> authenticate(site.domain, token)

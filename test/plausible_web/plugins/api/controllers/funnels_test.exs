@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
       end
 
       test "retrieves no funnel on non-existing ID", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels/#{9999}")
+        url = url(~p"/api/plugins/v1/funnels/9999")
 
         resp =
           conn

@@ -837,7 +837,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     test "is idempotent", %{conn: conn, site: site, token: token} do
-      url = url(~p"/api/plugins/v1/goals/#{666}")
+      url = url(~p"/api/plugins/v1/goals/666")
 
       conn
       |> authenticate(site.domain, token)
