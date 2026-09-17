@@ -726,7 +726,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/security" <> "#user-sessions"
+               ~p"/settings/security#user-sessions"
 
       refute Repo.reload(another_session)
     end
@@ -753,7 +753,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         post(conn, ~p"/settings/preferences/name", %{"user" => %{"name" => "New name"}})
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/preferences" <> "#update-name"
+               ~p"/settings/preferences#update-name"
 
       user = Plausible.Repo.get(Plausible.Auth.User, user.id)
       assert user.name == "New name"
@@ -810,7 +810,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/security" <> "#update-password"
+               ~p"/settings/security#update-password"
 
       current_hash = Repo.reload!(user).password_hash
       assert current_hash != original.password_hash
@@ -879,7 +879,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/security" <> "#update-password"
+               ~p"/settings/security#update-password"
 
       current_hash = Repo.reload!(user).password_hash
       assert current_hash != original.password_hash
@@ -1134,7 +1134,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = post(conn, ~p"/settings/security/email/cancel")
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/security" <> "#update-email"
+               ~p"/settings/security#update-email"
 
       updated_user = Repo.reload!(user)
 
@@ -1638,7 +1638,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/team/general" <> "#update-name"
+               ~p"/settings/team/general#update-name"
 
       assert Repo.reload!(team).name == "New name"
     end
@@ -1723,7 +1723,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/team/general" <> "#update-name"
+               ~p"/settings/team/general#update-name"
 
       assert Repo.reload!(team).name == "Shorter name"
     end

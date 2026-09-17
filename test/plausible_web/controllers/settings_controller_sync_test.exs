@@ -29,7 +29,7 @@ defmodule PlausibleWeb.SettingsControllerSyncTest do
         })
 
       assert redirected_to(conn, 302) ==
-               ~p"/settings/security" <> "#update-email"
+               ~p"/settings/security#update-email"
 
       updated_user = Repo.reload!(user)
 

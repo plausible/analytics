@@ -1516,7 +1516,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, ~p"/2fa/setup/initiate")
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Two-Factor Authentication is already setup"
@@ -1547,7 +1547,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "redirects back to settings if 2FA not initiated", %{conn: conn} do
       conn = get(conn, ~p"/2fa/setup/verify")
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
     end
   end
 
@@ -1585,7 +1585,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "redirects to settings when 2FA is not initiated", %{conn: conn} do
       conn = post(conn, ~p"/2fa/setup/verify", %{code: "123123"})
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
@@ -1601,7 +1601,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, ~p"/2fa/disable", %{password: "password"})
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "Two-Factor Authentication is disabled"
@@ -1615,7 +1615,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, ~p"/2fa/disable", %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
@@ -1661,7 +1661,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(conn, ~p"/2fa/recovery_codes", %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
@@ -1670,7 +1670,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(conn, ~p"/2fa/recovery_codes", %{password: "password"})
 
-      assert redirected_to(conn, 302) == ~p"/settings/security" <> "#update-2fa"
+      assert redirected_to(conn, 302) == ~p"/settings/security#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
