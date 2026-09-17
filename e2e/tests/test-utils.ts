@@ -116,6 +116,13 @@ export const openFilterSubmenuItem = async (
 export const openSegmentsSubmenu = (page: Page) =>
   filterSubmenuButton(page, 'Segment').click()
 
+// Waits for the panel to unmount. Reopening the menu during its closing
+// animation leaves the panel unmounted.
+export const closeFilterMenu = async (page: Page) => {
+  await filterButton(page).click()
+  await expect(filterMenu(page)).toBeHidden()
+}
+
 export const applyFilterButton = (page: Page, { disabled = false } = {}) =>
   page.getByRole('button', {
     name: 'Apply filter',
