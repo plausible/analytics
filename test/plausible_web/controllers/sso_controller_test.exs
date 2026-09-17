@@ -55,7 +55,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
     describe "login_form/2" do
       test "renders login view", %{conn: conn} do
-        conn = get(conn, ~p|/sso/login?#{[prefer: "sso"]}|)
+        conn = get(conn, ~p"/sso/login?#{[prefer: "sso"]}")
 
         assert html = html_response(conn, 200)
 
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       end
 
       test "passes return_to parameter to form", %{conn: conn} do
-        conn = get(conn, ~p|/sso/login?#{[return_to: ~p"/sites", prefer: "sso"]}|)
+        conn = get(conn, ~p"/sso/login?#{[return_to: ~p"/sites", prefer: "sso"]}")
 
         assert html = html_response(conn, 200)
 
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.SSOControllerTest do
           |> fetch_flash()
           |> put_flash(:login_error, "We couldn't find a Single Sign-On account for that email.")
 
-        conn = get(conn, ~p|/sso/login?#{[return_to: "/sites"]}|)
+        conn = get(conn, ~p"/sso/login?#{[return_to: "/sites"]}")
 
         assert html = html_response(conn, 200)
 
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.SSOControllerTest do
             "return_to" => "/sites"
           })
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -303,7 +303,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
     describe "provision_issue/2" do
       test "renders issue for not_a_member", %{conn: conn} do
-        conn = get(conn, ~p|/sso/issue?#{[issue: "not_a_member"]}|)
+        conn = get(conn, ~p"/sso/issue?#{[issue: "not_a_member"]}")
 
         assert html = html_response(conn, 200)
 
@@ -312,7 +312,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       end
 
       test "renders issue for multiple_memberships", %{conn: conn} do
-        conn = get(conn, ~p|/sso/issue?#{[issue: "multiple_memberships"]}|)
+        conn = get(conn, ~p"/sso/issue?#{[issue: "multiple_memberships"]}")
 
         assert html = html_response(conn, 200)
 
@@ -324,7 +324,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            ~p|/sso/issue?#{[issue: "multiple_memberships_noforce"]}|
+            ~p"/sso/issue?#{[issue: "multiple_memberships_noforce"]}"
           )
 
         assert html = html_response(conn, 200)
@@ -337,7 +337,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       end
 
       test "renders issue for active_personal_team", %{conn: conn} do
-        conn = get(conn, ~p|/sso/issue?#{[issue: "active_personal_team"]}|)
+        conn = get(conn, ~p"/sso/issue?#{[issue: "active_personal_team"]}")
 
         assert html = html_response(conn, 200)
 
@@ -351,7 +351,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            ~p|/sso/issue?#{[issue: "active_personal_team_noforce"]}|
+            ~p"/sso/issue?#{[issue: "active_personal_team_noforce"]}"
           )
 
         assert html = html_response(conn, 200)

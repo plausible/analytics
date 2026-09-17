@@ -450,7 +450,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
 
       assert redirected_to(conn) ==
-               ~p|/sites?#{[__team: team.identifier, flow: ""]}|
+               ~p"/sites?#{[__team: team.identifier, flow: ""]}"
 
       assert_team_membership(user, team, :viewer)
     end
@@ -471,7 +471,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
 
       assert redirected_to(conn) ==
-               ~p|/sites?#{[__team: team.identifier, flow: ""]}|
+               ~p"/sites?#{[__team: team.identifier, flow: ""]}"
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do
@@ -1504,7 +1504,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "shows additional notice when `force` parameter set", %{conn: conn} do
-      conn = post(conn, ~p|/2fa/setup/initiate?#{[force: "true"]}|)
+      conn = post(conn, ~p"/2fa/setup/initiate?#{[force: "true"]}")
 
       assert html = html_response(conn, 200)
       assert html =~ "You've been redirected here because your team enforces 2FA."
@@ -1690,12 +1690,12 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         get(
           conn,
-          ~p|/2fa/verify?#{[return_to: ~p"/settings"]}|
+          ~p"/2fa/verify?#{[return_to: ~p"/settings"]}"
         )
 
       assert html = html_response(conn, 200)
 
-      assert text_of_attr(html, "form", "action") == ~p|/2fa/verify?#{[return_to: ~p"/settings"]}|
+      assert text_of_attr(html, "form", "action") == ~p"/2fa/verify?#{[return_to: ~p"/settings"]}"
 
       assert element_exists?(html, "input[name=code]")
 

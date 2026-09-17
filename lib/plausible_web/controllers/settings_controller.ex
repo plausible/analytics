@@ -111,7 +111,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "You have left \"#{Teams.name(conn.assigns.current_team)}\"")
-        |> redirect(to: ~p|/sites?#{[__team: "none"]}|)
+        |> redirect(to: ~p"/sites?#{[__team: "none"]}")
 
       {:error, :only_one_owner} ->
         conn
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.SettingsController do
         |> redirect(to: ~p"/settings/team/general")
 
       {:error, :membership_not_found} ->
-        redirect(conn, to: ~p|/sites?#{[__team: "none"]}|)
+        redirect(conn, to: ~p"/sites?#{[__team: "none"]}")
     end
   end
 
@@ -228,7 +228,7 @@ defmodule PlausibleWeb.SettingsController do
       {:ok, :deleted} ->
         conn
         |> put_flash(:success, ~s|Team "#{Plausible.Teams.name(team)}" deleted|)
-        |> redirect(to: ~p|/sites?#{[__team: "none"]}|)
+        |> redirect(to: ~p"/sites?#{[__team: "none"]}")
 
       {:error, :active_subscription} ->
         conn

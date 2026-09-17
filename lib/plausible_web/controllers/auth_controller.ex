@@ -250,7 +250,7 @@ defmodule PlausibleWeb.AuthController do
 
       case {login_preference, params["prefer"], error} do
         {"sso", nil, nil} ->
-          redirect(conn, to: ~p|/sso/login?#{[return_to: params["return_to"]]}|)
+          redirect(conn, to: ~p"/sso/login?#{[return_to: params["return_to"]]}")
 
         _ ->
           render_login_form(conn)

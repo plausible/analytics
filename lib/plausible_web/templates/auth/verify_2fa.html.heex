@@ -5,7 +5,7 @@
   <.auth_container>
     <.form
       :let={f}
-      action={~p|/2fa/verify?#{[return_to: @conn.query_params["return_to"]]}|}
+      action={~p"/2fa/verify?#{[return_to: @conn.query_params["return_to"]]}"}
       for={@conn.params}
       class="flex flex-col gap-y-6"
       onsubmit="document.getElementById('verify-button').disabled = true"

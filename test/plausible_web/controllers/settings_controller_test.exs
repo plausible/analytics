@@ -1736,7 +1736,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       conn = post(conn, ~p"/settings/team/leave")
 
-      assert redirected_to(conn, 302) == ~p|/sites?#{[__team: "none"]}|
+      assert redirected_to(conn, 302) == ~p"/sites?#{[__team: "none"]}"
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You have left"
     end
 
@@ -1810,7 +1810,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = set_current_team(conn, team)
       conn = delete(conn, ~p"/settings/team/delete")
 
-      assert redirected_to(conn, 302) == ~p|/sites?#{[__team: "none"]}|
+      assert redirected_to(conn, 302) == ~p"/sites?#{[__team: "none"]}"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Team \"Foo Crew\" deleted"
     end

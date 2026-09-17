@@ -136,7 +136,7 @@ defmodule Plausible.Plugs.SSOTeamAccessTest do
         assert conn.halted
 
         assert redirected_to(conn, 302) ==
-                 ~p|/sso/issue?#{[issue: "multiple_memberships"]}|
+                 ~p"/sso/issue?#{[issue: "multiple_memberships"]}"
       end
     end
   end

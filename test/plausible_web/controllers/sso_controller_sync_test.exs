@@ -130,10 +130,10 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            ~p|/sso/saml/signin/#{Ecto.UUID.generate()}?#{[email: email, return_to: "/sites"]}|
+            ~p"/sso/saml/signin/#{Ecto.UUID.generate()}?#{[email: email, return_to: "/sites"]}"
           )
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -255,7 +255,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{Ecto.UUID.generate()}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_relay_state)"
@@ -293,7 +293,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_relay_state)"
@@ -318,7 +318,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :base64_decoding_failed)"
@@ -351,7 +351,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :malformed_certificate)"
@@ -378,7 +378,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :digest_verification_failed)"
@@ -403,7 +403,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :missing_email_attribute)"
@@ -428,7 +428,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_email_attribute)"
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
 
         conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: "/sites"]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :missing_name_attributes)"

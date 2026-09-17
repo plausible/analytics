@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
             reset(socket)
 
           {:error, :not_a_member} ->
-            redirect(socket, to: ~p|/sites?#{[__team: "none"]}|)
+            redirect(socket, to: ~p"/sites?#{[__team: "none"]}")
         end
 
       {:error, :permission_denied} ->

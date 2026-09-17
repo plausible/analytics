@@ -142,7 +142,7 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: ""]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: ""]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
 
-        assert redirected_to(conn, 302) == ~p|/sso/login?#{[return_to: ""]}|
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: ""]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Team can't accept more members. Please contact the owner."
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert redirected_to(conn, 302) ==
-                 ~p|/sso/issue?#{[issue: "multiple_memberships_noforce"]}|
+                 ~p"/sso/issue?#{[issue: "multiple_memberships_noforce"]}"
 
         refute get_session(conn, :user_token)
       end
@@ -238,7 +238,7 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert redirected_to(conn, 302) ==
-                 ~p|/sso/issue?#{[issue: "active_personal_team_noforce"]}|
+                 ~p"/sso/issue?#{[issue: "active_personal_team_noforce"]}"
 
         refute get_session(conn, :user_token)
       end
