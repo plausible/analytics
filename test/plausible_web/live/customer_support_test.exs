@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
   @moduletag :ee_only
 
   on_ee do
-    @cs_index "/cs"
+    @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
 
     import Phoenix.LiveViewTest
 
@@ -230,14 +230,12 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     defp assert_search_result(doc, type, id) do
       assert link = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
-      expected_href =
-        case type do
-          "site" -> ~p"/cs/sites/site/#{id}"
-          "team" -> ~p"/cs/teams/team/#{id}"
-          "user" -> ~p"/cs/users/user/#{id}"
-        end
-
-      assert text_of_attr(link, "href") == expected_href
+      assert text_of_attr(link, "href") ==
+               apply(Routes, :"customer_support_#{type}_path", [
+                 PlausibleWeb.Endpoint,
+                 :show,
+                 id
+               ])
     end
 
     defp refute_search_result(doc, type, id) do

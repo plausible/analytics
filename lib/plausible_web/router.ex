@@ -505,8 +505,8 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:shared_link]
 
+    get "/share/:domain/*path", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
-    get "/share/:domain/*path", StatsController, :shared_link, warn_on_verify: true
   end
 
   scope "/settings", PlausibleWeb do
@@ -668,7 +668,7 @@ defmodule PlausibleWeb.Router do
     put "/:domain/settings/google", SiteController, :update_google_auth
     delete "/:domain/settings/google-search", SiteController, :delete_google_auth
     delete "/:domain/settings/google-import", SiteController, :delete_google_auth
-    delete "/:domain", SiteController, :delete_site, warn_on_verify: true
+    delete "/:domain", SiteController, :delete_site
     delete "/:domain/stats", SiteController, :reset_stats
 
     get "/:domain/import/google-analytics/property",
@@ -741,8 +741,8 @@ defmodule PlausibleWeb.Router do
 
       put "/:domain/settings", SiteController, :update_settings
 
-      get "/:domain", StatsController, :stats, warn_on_verify: true
-      get "/:domain/*path", StatsController, :stats, warn_on_verify: true
+      get "/:domain", StatsController, :stats
+      get "/:domain/*path", StatsController, :stats
     end
   end
 end

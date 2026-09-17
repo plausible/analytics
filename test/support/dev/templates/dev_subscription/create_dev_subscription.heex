@@ -32,7 +32,7 @@
       Back
     </a>
     <.button_link
-      href={~p"/dev/billing/create-subscription/#{@plan_id}"}
+      href={Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create, @plan_id)}
       method="post"
       mt?={false}
     >

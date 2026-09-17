@@ -26,13 +26,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
     describe "unauthorized calls" do
       for {method, url} <- [
-            {:get, "/api/plugins/v1/funnels"},
-            {:get, "/api/plugins/v1/funnels/1"},
-            {:put, "/api/plugins/v1/funnels"}
+            {:get, Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :index)},
+            {:get, Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, 1)},
+            {:put, Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create, %{})}
           ] do
         test "unauthorized call: #{method} #{url}", %{conn: conn} do
           conn
-          |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+          |> unquote(method)(unquote(url))
           |> json_response(401)
           |> assert_schema("UnauthorizedError", spec())
         end
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
     describe "get /funnels/:id" do
       test "validates input out of the box", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels/hello")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, "hello")
 
         resp =
           conn
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
       end
 
       test "retrieves no funnel on non-existing ID", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels/9999")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, 9999)
 
         resp =
           conn
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
             [g1, g2, g3]
           )
 
-        url = url(~p"/api/plugins/v1/funnels/#{funnel.id}")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, funnel.id)
 
         resp =
           conn
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         token: token,
         site: site
       } do
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :index)
 
         resp =
           conn
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
             )
         end
 
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :index)
 
         resp =
           conn
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
             )
         end
 
-        url = url(~p"/api/plugins/v1/funnels?#{[limit: 2]}")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :index, limit: 2)
         initial_conn = authenticate(conn, site.domain, token)
 
         page1 =
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
     describe "put /funnels - funnel creation" do
       test "creates a funnel including its goals", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
           funnel: %{
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         [location] = get_resp_header(conn, "location")
 
         assert location ==
-                 url(~p"/api/plugins/v1/funnels/#{resp.funnel.id}")
+                 Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, resp.funnel.id)
 
         funnel = Plausible.Funnels.get(site, resp.funnel.id)
 
@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         [owner | _] = Plausible.Repo.preload(site, :owners).owners
         subscribe_to_growth_plan(owner)
 
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
           funnel: %{
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         token: token,
         site: site
       } do
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
           funnel: %{
@@ -311,7 +311,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
       end
 
       test "is idempotent on full creation", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         {:ok, _g1} =
           Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
@@ -363,7 +363,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         token: token,
         site: site
       } do
-        url = url(~p"/api/plugins/v1/funnels")
+        url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         {:ok, _g1} =
           Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})

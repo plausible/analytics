@@ -213,7 +213,7 @@
     <%= if @site_member? do %>
       <mj-section>
         <mj-column>
-        <mj-button href="<%= url(~p"/login") %>">
+        <mj-button href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>">
             Login to view your dashboard
           </mj-button>
         </mj-column>

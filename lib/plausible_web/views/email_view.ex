@@ -7,12 +7,13 @@ defmodule PlausibleWeb.EmailView do
   end
 
   def choose_plan_url(team) do
-    url(~p"/billing/choose-plan?#{[__team: team.identifier]}")
+    PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+      "?__team=#{team.identifier}"
   end
 
   on_ee do
     def customer_support_team_url(team) do
-      url(~p"/cs/teams/team/#{team.id}")
+      PlausibleWeb.Router.Helpers.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
     end
   else
     def customer_support_team_url(_team), do: nil

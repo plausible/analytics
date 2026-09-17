@@ -23,7 +23,7 @@
 
         <.button_link
           theme="danger"
-          href={~p"/#{@site.domain}/settings/google-search"}
+          href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
           method="delete"
         >
           Unlink Google account

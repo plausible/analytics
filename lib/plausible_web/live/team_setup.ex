@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, _session, socket) do
     socket =
@@ -14,7 +15,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         %Teams.Team{setup_complete: true} ->
           socket
           |> put_flash(:success, "Your team has already been created")
-          |> redirect(to: ~p"/settings/team/general")
+          |> redirect(to: Routes.settings_path(socket, :team_general))
 
         %Teams.Team{} = team ->
           suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
@@ -30,7 +31,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         _ ->
           socket
           |> put_flash(:error, "You cannot create any team just yet")
-          |> redirect(to: ~p"/sites")
+          |> redirect(to: Routes.site_path(socket, :index))
       end
 
     {:ok, socket}
@@ -230,7 +231,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
          socket
          |> put_flash(:success, "Your team is now created")
          |> redirect(
-           to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
+           to:
+             Routes.settings_path(socket, :team_general,
+               __team: socket.assigns.current_team.identifier
+             )
          )}
 
       {:error, {:over_limit, limit}} ->

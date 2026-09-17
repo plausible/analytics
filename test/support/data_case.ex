@@ -20,7 +20,6 @@ defmodule Plausible.DataCase do
       use Plausible.TestUtils
       use Plausible
       use Plausible.Teams.Test
-      use PlausibleWeb.VerifiedRoutes
 
       import Plausible.Test.Support.HTML
 

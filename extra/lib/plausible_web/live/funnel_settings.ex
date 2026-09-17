@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           </p>
           <.button_link
             class="mt-4"
-            href={~p"/#{@domain}/settings/goals"}
+            href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
           >
             Set up goals →
           </.button_link>

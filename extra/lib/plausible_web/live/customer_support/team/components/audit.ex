@@ -163,14 +163,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
     pagination_params = get_pagination_params(params)
     team = socket.assigns.team
 
-    query_params =
-      %{"tab" => "audit"}
-      |> Map.merge(pagination_params)
-      |> Map.to_list()
+    query_params = %{"tab" => "audit"} |> Map.merge(pagination_params)
 
     {:noreply,
      push_patch(socket,
-       to: ~p"/cs/teams/team/#{team.id}?#{query_params}"
+       to: Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id, query_params)
      )}
   end
 
@@ -231,7 +228,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
       />
 
       <.styled_link
-        patch={~p"/cs/users/user/#{@user.id}"}
+        patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, @user.id)}
         class="cursor-pointer flex block items-center"
       >
         {@user.name}

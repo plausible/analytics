@@ -2,9 +2,9 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   @moduledoc """
   Real implementation of SAML authentication interface.
   """
-  use PlausibleWeb.VerifiedRoutes
-
   alias Plausible.Auth.SSO
+
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @deflate "urn:oasis:names:tc:SAML:2.0:bindings:URL-Encoding:DEFLATE"
 
@@ -54,7 +54,9 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
           :login_error,
           "We couldn't find a Single Sign-On account for that email."
         )
-        |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: return_to]}")
+        |> Phoenix.Controller.redirect(
+          to: Routes.sso_path(conn, :login_form, return_to: return_to)
+        )
     end
   end
 
@@ -72,7 +74,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       {:error, :session_expired} ->
         conn
         |> Phoenix.Controller.put_flash(:login_error, "Session expired.")
-        |> Phoenix.Controller.redirect(to: ~p"/sso/login")
+        |> Phoenix.Controller.redirect(to: Routes.sso_path(conn, :login_form))
     end
   end
 
@@ -235,6 +237,8 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   defp login_error(conn, cookie, login_error) do
     conn
     |> Phoenix.Controller.put_flash(:login_error, login_error)
-    |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: cookie.return_to]}")
+    |> Phoenix.Controller.redirect(
+      to: Routes.sso_path(conn, :login_form, return_to: cookie.return_to)
+    )
   end
 end

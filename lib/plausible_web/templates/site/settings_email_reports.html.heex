@@ -2,12 +2,10 @@
   <% email_reports = [
     weekly: %{
       report: @weekly_report,
-      disable_route: ~p"/sites/#{@site.domain}/weekly-report/disable",
-      enable_route: ~p"/sites/#{@site.domain}/weekly-report/enable",
-      remove_route_fn: fn recipient ->
-        ~p"/sites/#{@site.domain}/weekly-report/recipients/#{recipient}"
-      end,
-      add_route: ~p"/sites/#{@site.domain}/weekly-report/recipients",
+      disable_route: :disable_weekly_report,
+      enable_route: :enable_weekly_report,
+      remove_route: :remove_weekly_report_recipient,
+      add_route: :add_weekly_report_recipient,
       heading: "Weekly email reports",
       subtitle: "Send weekly analytics reports to as many addresses as you wish.",
       toggle: "Send a weekly email report every Monday",
@@ -15,12 +13,10 @@
     },
     monthly: %{
       report: @monthly_report,
-      disable_route: ~p"/sites/#{@site.domain}/monthly-report/disable",
-      enable_route: ~p"/sites/#{@site.domain}/monthly-report/enable",
-      remove_route_fn: fn recipient ->
-        ~p"/sites/#{@site.domain}/monthly-report/recipients/#{recipient}"
-      end,
-      add_route: ~p"/sites/#{@site.domain}/monthly-report/recipients",
+      disable_route: :disable_monthly_report,
+      enable_route: :enable_monthly_report,
+      remove_route: :remove_monthly_report_recipient,
+      add_route: :add_monthly_report_recipient,
       heading: "Monthly email reports",
       subtitle: "Send monthly analytics reports to as many addresses as you wish.",
       toggle: "Send a monthly email report on 1st of the month",
@@ -38,7 +34,10 @@
 
     <.form
       for={nil}
-      action={(meta.report && meta.disable_route) || meta.enable_route}
+      action={
+        (meta.report && Routes.site_path(@conn, meta.disable_route, @site.domain)) ||
+          Routes.site_path(@conn, meta.enable_route, @site.domain)
+      }
       method="post"
     >
       <div>
@@ -69,7 +68,14 @@
           <.td actions>
             <.delete_button
               method="delete"
-              href={meta.remove_route_fn.(recipient)}
+              href={
+                Routes.site_path(
+                  @conn,
+                  meta.remove_route,
+                  @site.domain,
+                  recipient
+                )
+              }
             />
           </.td>
         </:tbody>
@@ -79,7 +85,7 @@
         :let={f}
         class="mt-4"
         for={@conn}
-        action={meta.add_route}
+        action={Routes.site_path(@conn, meta.add_route, @site.domain)}
         method="post"
       >
         <div class="flex items-end gap-x-2">
@@ -128,8 +134,8 @@
       for={nil}
       action={
         (meta.notification &&
-           ~p"/sites/#{@site.domain}/traffic-change-notification/#{type}/disable") ||
-          ~p"/sites/#{@site.domain}/traffic-change-notification/#{type}/enable"
+           Routes.site_path(@conn, :disable_traffic_change_notification, @site.domain, type)) ||
+          Routes.site_path(@conn, :enable_traffic_change_notification, @site.domain, type)
       }
       method="post"
     >
@@ -143,7 +149,7 @@
       :if={meta.notification}
       class="mt-4"
       for={Plausible.Site.TrafficChangeNotification.changeset(meta.notification, %{})}
-      action={~p"/sites/#{@site.domain}/traffic-change-notification/#{type}"}
+      action={Routes.site_path(@conn, :update_traffic_change_notification, @site.domain, type)}
     >
       <div class="flex items-end gap-x-4">
         <PlausibleWeb.Live.Components.Form.input
@@ -180,7 +186,13 @@
             <.delete_button
               method="delete"
               href={
-                ~p"/sites/#{@site.domain}/traffic-change-notification/#{type}/recipients/#{recipient}"
+                Routes.site_path(
+                  @conn,
+                  :remove_traffic_change_notification_recipient,
+                  @site.domain,
+                  type,
+                  recipient
+                )
               }
             />
           </.td>
@@ -193,7 +205,14 @@
         :let={f}
         for={@conn}
         class="mt-4"
-        action={~p"/sites/#{@site.domain}/traffic-change-notification/#{type}/recipients"}
+        action={
+          Routes.site_path(
+            @conn,
+            :add_traffic_change_notification_recipient,
+            @site.domain,
+            type
+          )
+        }
       >
         <div class="flex items-end gap-x-4">
           <PlausibleWeb.Live.Components.Form.input

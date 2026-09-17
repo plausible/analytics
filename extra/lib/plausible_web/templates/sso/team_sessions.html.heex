@@ -25,7 +25,7 @@
         <.td :if={@current_user_session.id == session.id} actions>Current session</.td>
         <.td :if={@current_user_session.id != session.id} actions>
           <.delete_button
-            href={~p"/settings/sso/sessions/#{session.id}"}
+            href={Routes.sso_path(@conn, :delete_session, session.id)}
             method="delete"
             data-confirm="Are you sure you want to log out this session?"
           />

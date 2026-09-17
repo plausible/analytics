@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Email do
   """
 
   use Plausible
-  use PlausibleWeb.VerifiedRoutes
-
   import Bamboo.Email
   import Bamboo.PostmarkHelper
 
@@ -510,7 +508,11 @@ defmodule PlausibleWeb.Email do
       end
 
     download_url =
-      url(~p"/#{site.domain}/download/export?#{[__team: site.team.identifier]}")
+      PlausibleWeb.Router.Helpers.site_url(
+        PlausibleWeb.Endpoint,
+        :download_export,
+        site.domain
+      ) <> "?__team=#{site.team.identifier}"
 
     priority_email()
     |> to(user)

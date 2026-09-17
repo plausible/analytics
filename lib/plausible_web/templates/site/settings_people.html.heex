@@ -18,7 +18,7 @@
     <.filter_bar :if={@site_role in [:owner, :admin]} filtering_enabled?={false}>
       <.button_link
         mt?={false}
-        href={~p"/sites/#{@site.domain}/memberships/invite"}
+        href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
       >
         Invite new guest
       </.button_link>
@@ -67,7 +67,13 @@
                   <% else %>
                     <.dropdown_item
                       href={
-                        ~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}/role/editor"
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "editor"
+                        )
                       }
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "editor"}
@@ -79,7 +85,13 @@
                     </.dropdown_item>
                     <.dropdown_item
                       href={
-                        ~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}/role/viewer"
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "viewer"
+                        )
                       }
                       method="put"
                       disabled={@site_role not in [:owner, :admin] or membership.role == "viewer"}
@@ -91,7 +103,14 @@
                     </.dropdown_item>
                     <.dropdown_divider />
                     <.dropdown_item
-                      href={~p"/sites/#{@site.domain}/memberships/u/#{membership.user.id}"}
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :remove_member_by_user,
+                          @site.domain,
+                          membership.user.id
+                        )
+                      }
                       class="!text-red-600 hover:text-red-600 dark:!text-red-500 dark:hover:!text-red-400"
                       method="delete"
                       disabled={@site_role not in [:owner, :admin]}
@@ -127,7 +146,14 @@
         <.td actions>
           <.delete_button
             :if={@site_role in [:owner, :admin]}
-            href={~p"/sites/#{@site.domain}/invitations/#{invitation.invitation_id}"}
+            href={
+              Routes.invitation_path(
+                @conn,
+                :remove_invitation,
+                @site.domain,
+                invitation.invitation_id
+              )
+            }
             method="delete"
           />
         </.td>

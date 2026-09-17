@@ -3,6 +3,5 @@ defmodule PlausibleWeb.MJML.StatsReport do
   MJML rendered for the weekly or monthly report e-mail
   """
 
-  use PlausibleWeb.VerifiedRoutes
   use MjmlEEx, mjml_template: "templates/stats_report.mjml.eex"
 end

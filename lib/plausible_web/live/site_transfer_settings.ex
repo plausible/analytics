@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
 
   alias Plausible.Teams
   alias PlausibleWeb.Live.SiteTransferSettings.Form
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, %{"domain" => domain}, socket) do
     user = socket.assigns.current_user
@@ -38,10 +39,13 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           {"The site is already in your personal sites.", nil}
 
         is_nil(my_team) ->
-          {"You don't have an active subscription.", ~p"/billing/choose-plan?#{[__team: "none"]}"}
+          {"You don't have an active subscription.",
+           Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=none"}
 
         true ->
-          {nil, ~p"/billing/choose-plan?#{[__team: my_team.identifier]}"}
+          {nil,
+           Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan) <>
+             "?__team=#{my_team.identifier}"}
       end
 
     initial_destination =
@@ -240,7 +244,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
           {:noreply,
            socket
            |> put_flash(:success, "Site team was changed")
-           |> redirect(to: ~p"/sites?#{[__team: destination_team.identifier]}")}
+           |> redirect(to: Routes.site_path(socket, :index, __team: destination_team.identifier))}
 
         {:error, :no_plan} when my_team? ->
           {:noreply,
@@ -273,7 +277,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
         {:noreply,
          socket
          |> put_flash(:success, "Site transfer request has been sent to #{email}")
-         |> redirect(to: ~p"/#{site.domain}/settings/people")}
+         |> redirect(to: Routes.site_path(socket, :settings_people, site.domain))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         message =

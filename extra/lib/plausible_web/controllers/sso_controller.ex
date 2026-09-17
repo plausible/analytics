@@ -7,6 +7,8 @@ defmodule PlausibleWeb.SSOController do
   alias Plausible.Auth.SSO
   alias PlausibleWeb.LoginPreference
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner] when action in [:sso_settings]
 
@@ -19,7 +21,7 @@ defmodule PlausibleWeb.SSOController do
 
     case {login_preference, params["prefer"], error} do
       {nil, nil, nil} ->
-        redirect(conn, to: ~p"/login?#{[return_to: params["return_to"]]}")
+        redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: params["return_to"]))
 
       _ ->
         render(conn, "login_form.html",
@@ -34,7 +36,13 @@ defmodule PlausibleWeb.SSOController do
          {:ok, %{sso_integration: integration}} <- SSO.Domains.lookup(email) do
       redirect(conn,
         to:
-          ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: params["return_to"]]}"
+          Routes.sso_path(
+            conn,
+            :saml_signin,
+            integration.identifier,
+            email: email,
+            return_to: params["return_to"]
+          )
       )
     else
       {:error, :not_found} ->
@@ -43,7 +51,7 @@ defmodule PlausibleWeb.SSOController do
           :login_error,
           "We couldn't find a Single Sign-On account for that email."
         )
-        |> redirect(to: ~p"/sso/login")
+        |> redirect(to: Routes.sso_path(conn, :login_form))
 
       {:error, {:rate_limit, _}} ->
         Auth.log_failed_login_attempt("too many login attempts for #{email}")
@@ -101,7 +109,7 @@ defmodule PlausibleWeb.SSOController do
       )
     else
       conn
-      |> redirect(to: ~p"/sites")
+      |> redirect(to: Routes.site_path(conn, :index))
     end
   end
 
@@ -120,7 +128,7 @@ defmodule PlausibleWeb.SSOController do
 
     conn
     |> put_flash(:success, "Session logged out successfully")
-    |> redirect(to: ~p"/settings/sso/sessions")
+    |> redirect(to: Routes.sso_path(conn, :team_sessions))
   end
 
   defp saml_adapter() do

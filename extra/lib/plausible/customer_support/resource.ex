@@ -21,9 +21,8 @@ defmodule Plausible.CustomerSupport.Resource do
   defmacro __using__(type: type) do
     quote do
       @behaviour Plausible.CustomerSupport.Resource
-      use PlausibleWeb.VerifiedRoutes
-
       alias Plausible.CustomerSupport.Resource
+      alias PlausibleWeb.Router.Helpers, as: Routes
 
       import Ecto.Query
       alias Plausible.Repo

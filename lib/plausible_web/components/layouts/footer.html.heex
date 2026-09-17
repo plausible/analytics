@@ -4,7 +4,12 @@
       <div class="my-8 xl:my-0">
         <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
           <img
-            src={PlausibleWeb.LayoutView.logo_path("logo_dark.svg")}
+            src={
+              PlausibleWeb.Router.Helpers.static_path(
+                PlausibleWeb.Endpoint,
+                PlausibleWeb.LayoutView.logo_path("logo_dark.svg")
+              )
+            }
             class="inline-block w-32 mr-1"
             alt="Plausible logo"
             loading="lazy"

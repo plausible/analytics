@@ -7,7 +7,7 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
   so that existing notices can be displayed still.
   """
 
-  use PlausibleWeb.VerifiedRoutes
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   import Plug.Conn
 
@@ -30,7 +30,7 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
         conn
       else
         conn
-        |> Phoenix.Controller.redirect(to: ~p"/sites")
+        |> Phoenix.Controller.redirect(to: Routes.site_path(conn, :index))
         |> halt()
       end
     else

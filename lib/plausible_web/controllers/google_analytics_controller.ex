@@ -19,7 +19,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       ) do
     site = conn.assigns.site
 
-    redirect_route = ~p"/#{site.domain}/settings/imports-exports"
+    redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
     result = Google.API.list_properties(access_token)
 
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       ) do
     site = conn.assigns.site
 
-    redirect_route = ~p"/#{site.domain}/settings/imports-exports"
+    redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
     with {:ok, api_start_date} <- Google.API.get_analytics_start_date(access_token, property),
          {:ok, api_end_date} <- Google.API.get_analytics_end_date(access_token, property),
@@ -109,7 +109,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
          {:ok, start_date, end_date} <- Imported.clamp_dates(site, api_start_date, api_end_date) do
       redirect(conn,
         to:
-          ~p"/#{site.domain}/import/google-analytics/confirm?#{[property: property, access_token: access_token, refresh_token: refresh_token, expires_at: expires_at, start_date: Date.to_iso8601(start_date), end_date: Date.to_iso8601(end_date)]}"
+          Routes.google_analytics_path(conn, :confirm, site.domain,
+            property: property,
+            access_token: access_token,
+            refresh_token: refresh_token,
+            expires_at: expires_at,
+            start_date: Date.to_iso8601(start_date),
+            end_date: Date.to_iso8601(end_date)
+          )
       )
     else
       {:error, error} when error in [:no_data, :no_time_window] ->
@@ -175,7 +182,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     start_date = Date.from_iso8601!(start_date)
     end_date = Date.from_iso8601!(end_date)
 
-    redirect_route = ~p"/#{site.domain}/settings/imports-exports"
+    redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
     case Google.API.get_property(access_token, property) do
       {:ok, %{name: property_name, id: property}} ->
@@ -256,7 +263,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     start_date = Date.from_iso8601!(start_date)
     end_date = Date.from_iso8601!(end_date)
 
-    redirect_route = ~p"/#{site.domain}/settings/imports-exports"
+    redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
     import_opts = [
       label: property,

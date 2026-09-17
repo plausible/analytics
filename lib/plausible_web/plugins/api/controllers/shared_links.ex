@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
     conn
     |> put_view(Views.SharedLink)
     |> put_status(:created)
-    |> put_resp_header("location", url(~p"/api/plugins/v1/shared_links/#{shared_link.id}"))
+    |> put_resp_header("location", plugins_api_shared_links_url(conn, :get, shared_link.id))
     |> render("shared_link.json", shared_link: shared_link, authorized_site: site)
   end
 

@@ -364,16 +364,20 @@ defmodule PlausibleWeb.Live.Installation do
       cond do
         assigns.return_to == "dashboard" ->
           {"Back to dashboard",
-           stats_path(assigns.domain, verify_installation: true, flow: assigns.flow)}
+           Routes.stats_path(PlausibleWeb.Endpoint, :stats, assigns.domain,
+             verify_installation: true,
+             flow: assigns.flow
+           )}
 
         assigns.flow == Flows.review() ->
-          {"Back to settings", ~p"/#{assigns.domain}/settings/general"}
+          {"Back to settings",
+           Routes.site_path(PlausibleWeb.Endpoint, :settings_general, assigns.domain)}
 
         assigns.flow == Flows.provisioning() ->
-          {"Back to sites", ~p"/sites"}
+          {"Back to sites", Routes.site_path(PlausibleWeb.Endpoint, :index)}
 
         true ->
-          {"Skip", ~p"/sites"}
+          {"Skip", Routes.site_path(PlausibleWeb.Endpoint, :index)}
       end
 
     assigns = assign(assigns, label: label, href: href)
@@ -416,9 +420,12 @@ defmodule PlausibleWeb.Live.Installation do
 
     destination =
       on_ee do
-        stats_path(domain, verify_installation: true, flow: socket.assigns.flow)
+        Routes.stats_path(socket, :stats, domain,
+          verify_installation: true,
+          flow: socket.assigns.flow
+        )
       else
-        stats_path(domain)
+        Routes.stats_path(socket, :stats, domain, [])
       end
 
     {:noreply, redirect(socket, to: destination)}

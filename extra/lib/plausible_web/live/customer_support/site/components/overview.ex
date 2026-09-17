@@ -20,14 +20,14 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
 
           <.styled_link
             new_tab={true}
-            href={stats_path(@site.domain)}
+            href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
           >
             Dashboard
           </.styled_link>
 
           <.styled_link
             new_tab={true}
-            href={~p"/#{@site.domain}/settings/general"}
+            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain, [])}
           >
             Settings
           </.styled_link>
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     site = socket.assigns.site
 
     {:ok, _} = Plausible.Site.Removal.run(site)
-    navigate_with_success(~p"/cs", "Site deleted")
+    navigate_with_success(Routes.customer_support_path(socket, :index), "Site deleted")
     {:noreply, socket}
   end
 end

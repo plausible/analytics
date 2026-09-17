@@ -31,7 +31,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
     hourly_stats = build_hourly_stats(sites, socket)
 
     uri =
-      ~p"/cs/teams/team/#{team.id}?#{[tab: "sites"]}"
+      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id, tab: "sites")
       |> URI.parse()
 
     {:ok,
@@ -127,7 +127,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
                 class="size-4 flex-shrink-0 mt-px mr-2"
               />
               <.styled_link
-                patch={~p"/cs/sites/site/#{site.id}"}
+                patch={Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)}
                 class="cursor-pointer flex block items-center"
               >
                 {site.domain}
@@ -143,7 +143,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.td>
             <.styled_link
               new_tab={true}
-              href={stats_path(site.domain)}
+              href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain, [])}
             >
               Dashboard
             </.styled_link>
@@ -151,7 +151,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
           <.td>
             <.styled_link
               new_tab={true}
-              href={~p"/#{site.domain}/settings/general"}
+              href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain, [])}
             >
               Settings
             </.styled_link>

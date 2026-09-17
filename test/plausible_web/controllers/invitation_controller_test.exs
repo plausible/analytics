@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
 
-      assert redirected_to(conn) == stats_path(site.domain)
+      assert redirected_to(conn) == Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       refute Repo.exists?(from(i in Plausible.Teams.Invitation, where: i.email == ^user.email))
 
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       invitation = invite_guest(site, user.email, role: :editor, inviter: owner)
 
       c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
-      assert redirected_to(c1) == stats_path(site.domain)
+      assert redirected_to(c1) == Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       assert Phoenix.Flash.get(c1.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
@@ -78,7 +78,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == stats_path(site.domain)
+      assert redirected_to(conn, 302) ==
+               Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
@@ -140,7 +141,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == stats_path(site.domain)
+      assert redirected_to(conn, 302) ==
+               Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
@@ -161,7 +163,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == ~p"/sites"
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "No existing subscription"
@@ -181,7 +183,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == ~p"/sites"
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Plan limits exceeded: site limit."
@@ -208,7 +210,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           "/sites/invitations/#{transfer.transfer_id}/accept?skip_site_members_transfer=true"
         )
 
-      assert redirected_to(conn, 302) == stats_path(site.domain)
+      assert redirected_to(conn, 302) ==
+               Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
@@ -268,7 +271,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       conn =
         delete(
           conn,
-          ~p"/sites/#{site.domain}/invitations/#{invitation.invitation_id}"
+          Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
         )
 
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
@@ -286,7 +289,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       conn =
         delete(
           conn,
-          ~p"/sites/#{site.domain}/invitations/#{transfer.transfer_id}"
+          Routes.invitation_path(conn, :remove_invitation, site.domain, transfer.transfer_id)
         )
 
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
@@ -303,7 +306,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       delete(
         conn,
-        ~p"/sites/#{site.domain}/invitations/#{invitation.invitation_id}"
+        Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
       )
 
       assert Repo.reload(invitation)
@@ -320,7 +323,12 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         invite_guest(other_site, "jane@example.com", role: :editor, inviter: other_user)
 
       remove_invitation_path =
-        ~p"/sites/#{other_site.domain}/invitations/#{invitation.invitation_id}"
+        Routes.invitation_path(
+          my_conn,
+          :remove_invitation,
+          other_site.domain,
+          invitation.invitation_id
+        )
 
       delete(my_conn, remove_invitation_path)
 
@@ -333,7 +341,12 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       add_member(team, user: user, role: :admin)
 
       remove_invitation_path =
-        ~p"/sites/#{site.domain}/invitations/does_not_exist"
+        Routes.invitation_path(
+          conn,
+          :remove_invitation,
+          site.domain,
+          "does_not_exist"
+        )
 
       conn = delete(conn, remove_invitation_path)
 
@@ -359,7 +372,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         conn =
           delete(
             conn,
-            ~p"/settings/team/invitations/#{invitation.invitation_id}"
+            Routes.invitation_path(conn, :remove_team_invitation, invitation.invitation_id)
           )
 
         assert redirected_to(conn, 302) == "/settings/team/general"
@@ -381,7 +394,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         conn =
           delete(
             conn,
-            ~p"/settings/team/invitations/#{invitation.invitation_id}"
+            Routes.invitation_path(conn, :remove_team_invitation, invitation.invitation_id)
           )
 
         assert redirected_to(conn, 302) == "/settings/team/general"
@@ -403,7 +416,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         invite_member(other_team, "jane@example.com", role: :editor, inviter: other_user)
 
       remove_invitation_path =
-        ~p"/settings/team/invitations/#{invitation.invitation_id}"
+        Routes.invitation_path(
+          my_conn,
+          :remove_team_invitation,
+          invitation.invitation_id
+        )
 
       my_conn = delete(my_conn, remove_invitation_path)
 
@@ -421,7 +438,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       conn = set_current_team(conn, team)
 
       remove_invitation_path =
-        ~p"/settings/team/invitations/does_not_exist"
+        Routes.invitation_path(
+          conn,
+          :remove_team_invitation,
+          "does_not_exist"
+        )
 
       conn = delete(conn, remove_invitation_path)
 

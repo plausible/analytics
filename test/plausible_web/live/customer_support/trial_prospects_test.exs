@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
     alias Plausible.CustomerSupport.TrialProspect
 
     defp open_prospects(qs \\ []) do
-      ~p"/cs/trial-prospects?#{qs}"
+      Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index, qs)
     end
 
     setup [:create_user, :log_in]
@@ -165,7 +165,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
       {:ok, lv, _html} = live(conn, open_prospects())
 
       assert lv
-             |> element(~s|a[href="#{~p"/cs/teams/team/#{team.id}"}"]|)
+             |> element(
+               ~s|a[href="#{Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)}"]|
+             )
              |> has_element?()
     end
   end

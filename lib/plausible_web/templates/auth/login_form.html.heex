@@ -60,7 +60,10 @@
               <span>
                 Continue with
                 <.styled_link href={
-                  ~p"/sso/login?#{[return_to: @conn.params["return_to"], prefer: "manual"]}"
+                  Routes.sso_path(@conn, :login_form,
+                    return_to: @conn.params["return_to"],
+                    prefer: "manual"
+                  )
                 }>
                   SSO
                 </.styled_link>

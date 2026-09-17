@@ -23,12 +23,18 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
 
   describe "unauthorized calls" do
     for {method, url} <- [
-          {:get, "/api/plugins/v1/tracker_script_configuration"},
-          {:put, "/api/plugins/v1/tracker_script_configuration"}
+          {:get,
+           Routes.plugins_api_tracker_script_configuration_url(PlausibleWeb.Endpoint, :get)},
+          {:put,
+           Routes.plugins_api_tracker_script_configuration_url(
+             PlausibleWeb.Endpoint,
+             :update,
+             %{}
+           )}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
-        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
+        |> unquote(method)(unquote(url))
         |> json_response(401)
         |> assert_schema("UnauthorizedError", spec())
       end
@@ -144,7 +150,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
     end
 
     test "installation_type parameter is required", %{conn: conn, token: token, site: site} do
-      url = url(~p"/api/plugins/v1/tracker_script_configuration")
+      url = Routes.plugins_api_tracker_script_configuration_url(PlausibleWeb.Endpoint, :update)
 
       payload = %{tracker_script_configuration: %{hash_based_routing: true}}
 
@@ -164,7 +170,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       token: token,
       site: site
     } do
-      url = url(~p"/api/plugins/v1/tracker_script_configuration")
+      url = Routes.plugins_api_tracker_script_configuration_url(PlausibleWeb.Endpoint, :update)
 
       payload = %{
         tracker_script_configuration: %{installation_type: "unknown", hash_based_routing: "1234"}
@@ -188,7 +194,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
   end
 
   defp get_tracker_script_configuration(conn, site, token) do
-    url = url(~p"/api/plugins/v1/tracker_script_configuration")
+    url = Routes.plugins_api_tracker_script_configuration_url(PlausibleWeb.Endpoint, :get)
 
     conn
     |> authenticate(site.domain, token)
@@ -198,7 +204,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
   end
 
   defp update_tracker_script_configuration(conn, site, token, payload) do
-    url = url(~p"/api/plugins/v1/tracker_script_configuration")
+    url = Routes.plugins_api_tracker_script_configuration_url(PlausibleWeb.Endpoint, :update)
 
     conn
     |> authenticate(site.domain, token)

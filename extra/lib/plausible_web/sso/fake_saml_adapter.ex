@@ -3,11 +3,11 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
   Fake implementation of SAML authentication interface.
   """
 
-  use PlausibleWeb.VerifiedRoutes
-
   alias Plausible.Auth
   alias Plausible.Auth.SSO
   alias Plausible.Repo
+
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def signin(conn, params) do
     conn
@@ -60,7 +60,9 @@ defmodule PlausibleWeb.SSO.FakeSAMLAdapter do
           :login_error,
           "We couldn't find a Single Sign-On account for that email."
         )
-        |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: params["return_to"]]}")
+        |> Phoenix.Controller.redirect(
+          to: Routes.sso_path(conn, :login_form, return_to: params["return_to"])
+        )
     end
   end
 

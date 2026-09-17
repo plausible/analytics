@@ -159,7 +159,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   def handle_event("delete-team", _params, socket) do
     case Plausible.Teams.delete(socket.assigns.team) do
       {:ok, :deleted} ->
-        navigate_with_success(~p"/cs", "Team deleted")
+        navigate_with_success(Routes.customer_support_path(socket, :index), "Team deleted")
         {:noreply, socket}
 
       {:error, :active_subscription} ->

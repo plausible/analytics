@@ -1,8 +1,7 @@
 defmodule PlausibleWeb.RequireAccountPlug do
   @moduledoc false
 
-  use PlausibleWeb.VerifiedRoutes
-
+  alias PlausibleWeb.Router.Helpers, as: Routes
   import Plug.Conn
 
   @unverified_email_exceptions [
@@ -56,7 +55,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
 
     if conn.path_info not in @force_2fa_exceptions and must_enable_2fa?(user, team) do
       conn
-      |> Phoenix.Controller.redirect(to: ~p"/2fa/setup/force-initiate")
+      |> Phoenix.Controller.redirect(to: Routes.auth_path(conn, :force_initiate_2fa_setup))
       |> halt()
     else
       conn
@@ -71,10 +70,10 @@ defmodule PlausibleWeb.RequireAccountPlug do
         conn.request_path
       end
 
-    ~p"/login?#{[return_to: return_to]}"
+    Routes.auth_path(conn, :login_form, return_to: return_to)
   end
 
-  defp redirect_to(_conn), do: ~p"/login"
+  defp redirect_to(conn), do: Routes.auth_path(conn, :login_form)
 
   defp must_enable_2fa?(user, team) when is_nil(user) or is_nil(team), do: false
 

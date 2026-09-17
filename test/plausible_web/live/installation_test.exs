@@ -226,7 +226,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
           assert_redirect(
             lv,
-            stats_path(site.domain, verify_installation: true, flow: "provisioning")
+            Routes.stats_path(conn, :stats, site.domain,
+              verify_installation: true,
+              flow: "provisioning"
+            )
           )
         end
       end
@@ -247,7 +250,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         }
       })
 
-      assert_redirect(lv, stats_path(site.domain))
+      assert_redirect(lv, Routes.stats_path(conn, :stats, site.domain))
     end
 
     test "submitting form with review flow redirects to the dashboard with the flow param preserved",
@@ -276,12 +279,15 @@ defmodule PlausibleWeb.Live.InstallationTest do
       on_ee do
         assert_redirect(
           lv,
-          stats_path(site.domain, verify_installation: true, flow: "review")
+          Routes.stats_path(conn, :stats, site.domain,
+            verify_installation: true,
+            flow: "review"
+          )
         )
       end
 
       on_ce do
-        assert_redirect(lv, stats_path(site.domain))
+        assert_redirect(lv, Routes.stats_path(conn, :stats, site.domain))
       end
     end
 
@@ -556,7 +562,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       html = render_async(lv, 500)
 
-      href = ~p"/#{site.domain}/settings/general"
+      href = Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain)
 
       assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to settings"
     end
@@ -574,7 +580,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = render_async(lv, 500)
 
       href =
-        stats_path(site.domain, verify_installation: true, flow: "provisioning")
+        Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain,
+          verify_installation: true,
+          flow: "provisioning"
+        )
 
       assert text_of_element(html, ~s|a[href="#{href}"]|) == "Back to dashboard"
     end

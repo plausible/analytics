@@ -24,7 +24,7 @@
       {assigns[:title] ||
         "Plausible · Simple, privacy-friendly alternative to Google Analytics"}
     </title>
-    <link rel="stylesheet" href={~p"/css/app.css"} />
+    <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
     <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
     {render("_tracking.html", assigns)}
   </head>

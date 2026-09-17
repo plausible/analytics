@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
 
     defp open_user(id, qs \\ []) do
-      ~p"/cs/users/user/#{id}?#{qs}"
+      Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id, qs)
     end
 
     describe "overview" do
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href="#{~p"/cs/teams/team/#{team.id}"}"]|
+                 ~s|a[href="#{Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)}"]|
                )
       end
 
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         |> element(~s|button[phx-click="delete-user"]|)
         |> render_click()
 
-        assert_redirect(lv, ~p"/cs")
+        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
 
         refute Plausible.Repo.get(Plausible.Auth.User, user.id)
       end

@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           for={@form}
           id="register-form"
           class="flex flex-col gap-y-6"
-          action={~p"/login"}
+          action={Routes.auth_path(@socket, :login)}
           onsubmit={form_submit_event(@invitation, @signup_previous_error)}
           phx-change="validate"
           phx-submit="register"
@@ -255,7 +255,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         socket =
           socket
           |> put_flash(:error, message)
-          |> redirect(to: ~p"/login")
+          |> redirect(to: Routes.auth_path(socket, :login_form))
 
         {:noreply, socket}
     end
@@ -276,7 +276,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         socket =
           socket
           |> put_flash(:error, message)
-          |> redirect(to: ~p"/login")
+          |> redirect(to: Routes.auth_path(socket, :login_form))
 
         {:noreply, socket}
     end

@@ -30,7 +30,7 @@
       </p>
 
       <p :if={!@conn.assigns[:current_user]}>
-        <.styled_link href={~p"/login?#{[prefer: "manual"]}"}>
+        <.styled_link href={Routes.auth_path(@conn, :login_form, prefer: "manual")}>
           Sign in with email and password
         </.styled_link>
         to resolve the issue.

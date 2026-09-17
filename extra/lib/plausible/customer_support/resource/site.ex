@@ -5,7 +5,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
 
   @impl true
   def path(id) do
-    ~p"/cs/sites/site/#{id}"
+    Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, id)
   end
 
   @impl true

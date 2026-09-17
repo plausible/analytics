@@ -178,7 +178,9 @@ defmodule PlausibleWeb.EmailTest do
              ) ==
                "account settings"
 
-      assert html_body =~ url(~p"/billing/choose-plan?#{[__team: team.identifier]}")
+      assert html_body =~
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+                 "?__team=#{team.identifier}"
     end
 
     test "asks enterprise level usage to contact us" do
@@ -237,7 +239,9 @@ defmodule PlausibleWeb.EmailTest do
              ) ==
                "account settings"
 
-      assert html_body =~ url(~p"/billing/choose-plan?#{[__team: team.identifier]}")
+      assert html_body =~
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+                 "?__team=#{team.identifier}"
     end
 
     test "asks enterprise level usage to contact us" do

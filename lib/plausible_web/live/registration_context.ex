@@ -3,9 +3,9 @@ defmodule PlausibleWeb.Live.RegistrationContext do
   Live context toggling registration according to selfhosted state.
   """
 
-  use PlausibleWeb.VerifiedRoutes
-
   import Phoenix.LiveView
+
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def on_mount(context, _params, _session, socket) do
     case Plausible.Auth.check_registration_enabled(context) do
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.RegistrationContext do
         socket =
           socket
           |> put_flash(:error, message)
-          |> redirect(to: ~p"/login")
+          |> redirect(to: Routes.auth_path(socket, :login_form))
 
         {:halt, socket}
     end

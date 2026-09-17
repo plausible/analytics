@@ -41,7 +41,13 @@
         <span class="inline-flex w-full rounded-md shadow-xs">
           <.link
             id="preview-changes"
-            href={~p"/billing/change-plan/preview/#{@latest_enterprise_plan.paddle_plan_id}"}
+            href={
+              Routes.billing_path(
+                @conn,
+                :change_plan_preview,
+                @latest_enterprise_plan.paddle_plan_id
+              )
+            }
             class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
           >
             <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2">

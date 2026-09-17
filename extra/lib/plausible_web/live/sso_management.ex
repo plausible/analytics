@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
   alias Plausible.Auth.SSO
   alias Plausible.Teams
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
   use Plausible.Auth.SSO.Domain.Status
 
   @refresh_integration_interval :timer.seconds(5)
@@ -730,6 +731,10 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   defp saml_acs_url(integration) do
-    url(~p"/sso/saml/consume/#{integration.identifier}")
+    Routes.sso_url(
+      PlausibleWeb.Endpoint,
+      :saml_consume,
+      integration.identifier
+    )
   end
 end

@@ -1,7 +1,7 @@
 Your Plausible trial has expired and your dashboard is now locked.<br /><br />
 We’re still recording visitor stats in the background, so nothing is lost while you decide.<br /><br />
 When you’re ready, upgrade your account to unlock your dashboard and continue without interruption.<br /><br />
-<a href={url(~p"/billing/choose-plan?#{[__team: @team.identifier]}")}>
+<a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <> "?__team=#{@team.identifier}"}>
   Upgrade your account
 </a>
 <br /><br />
