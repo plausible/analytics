@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth.User
+  alias PlausibleWeb.Components.PrimaListbox
 
   @role_descriptions [
     owner: "Manage the team without restrictions",
@@ -21,6 +22,10 @@ defmodule PlausibleWeb.Live.Components.Team do
   @roles_cast_map Enum.into(@role_descriptions, %{}, fn {role, _} -> {to_string(role), role} end)
 
   def role_to_atom(role), do: Map.fetch!(@roles_cast_map, role)
+
+  defp role_to_capitalized_string(role) when is_atom(role) do
+    role |> Atom.to_string() |> String.capitalize()
+  end
 
   attr(:user, User, required: true)
   attr(:label, :string, default: nil)
@@ -123,22 +128,29 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   def role_picker(assigns) do
     ~H"""
-    <.dropdown id={@id}>
-      <:button class="role w-[100px] inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-        {@role |> Atom.to_string() |> String.capitalize()}
+    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role}>
+      <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} aria-label="Role" class="w-[100px]">
+        <PrimaListbox.listbox_value>
+          {role_to_capitalized_string(@role)}
+        </PrimaListbox.listbox_value>
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-      </:button>
-      <:menu class="dropdown-items max-w-60">
-        <.role_item
+      </PrimaListbox.listbox_trigger>
+
+      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
+        <PrimaListbox.listbox_option
           :for={{role, description} <- role_descriptions()}
-          role={role}
+          id={"#{@id}-option-#{role}"}
+          value={role}
+          display={role_to_capitalized_string(role)}
           disabled={role_change_disabled?(@my_role, role)}
+          phx-value-role={role}
           {@rest}
         >
-          {description}
-        </.role_item>
-      </:menu>
-    </.dropdown>
+          <div>{role_to_capitalized_string(role)}</div>
+          <div class="text-gray-500 dark:text-gray-400 text-xs/5">{description}</div>
+        </PrimaListbox.listbox_option>
+      </PrimaListbox.listbox_options>
+    </PrimaListbox.listbox>
     """
   end
 
