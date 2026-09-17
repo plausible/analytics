@@ -97,7 +97,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       subscribe_to_plan(user, "321321")
       team = team_of(user)
 
-      post(conn, ~p"/billing/change-plan/#{"123123"}")
+      post(conn, ~p"/billing/change-plan/123123")
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       assert subscription.paddle_plan_id == "123123"

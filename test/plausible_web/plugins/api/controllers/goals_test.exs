@@ -616,7 +616,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
   describe "get /goals/:id" do
     test "validates input out of the box", %{conn: conn, token: token, site: site} do
-      url = url(~p"/api/plugins/v1/goals/#{"hello"}")
+      url = url(~p"/api/plugins/v1/goals/hello")
 
       resp =
         conn

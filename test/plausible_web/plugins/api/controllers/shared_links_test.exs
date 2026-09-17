@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
 
   describe "get /shared_links/:id" do
     test "validates input out of the box", %{conn: conn, token: token, site: site} do
-      url = url(~p"/api/plugins/v1/shared_links/#{"hello"}")
+      url = url(~p"/api/plugins/v1/shared_links/hello")
 
       resp =
         conn

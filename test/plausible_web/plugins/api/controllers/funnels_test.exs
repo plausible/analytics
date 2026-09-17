@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
     describe "get /funnels/:id" do
       test "validates input out of the box", %{conn: conn, token: token, site: site} do
-        url = url(~p"/api/plugins/v1/funnels/#{"hello"}")
+        url = url(~p"/api/plugins/v1/funnels/hello")
 
         resp =
           conn
