@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.PullSandboxSubscription do
   @moduledoc """
-  Mix task for creating subsriptions in dev environment via Paddle API.
+  Mix task for creating subscriptions in dev environment via Paddle API.
   """
 
   use Mix.Task
