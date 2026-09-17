@@ -1,4 +1,8 @@
 defmodule Plausible.Workers.NotifyAnnualRenewal do
+  @moduledoc """
+  Worker sending emails about upcoming renewal of annual subscriptions.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :notify_annual_renewal
 

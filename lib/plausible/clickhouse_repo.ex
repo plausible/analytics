@@ -1,4 +1,8 @@
 defmodule Plausible.ClickhouseRepo do
+  @moduledoc """
+  Repository for querying Clickhouse database.
+  """
+
   use Plausible
 
   use Ecto.Repo,

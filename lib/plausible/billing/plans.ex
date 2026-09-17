@@ -1,4 +1,12 @@
 defmodule Plausible.Billing.Plans do
+  @moduledoc """
+  Functions for retrieving subscription plans and their pricing.
+
+  Plan details are loaded from locally stored static JSON files.
+
+  Pricing is fetched from Paddle API.
+  """
+
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
