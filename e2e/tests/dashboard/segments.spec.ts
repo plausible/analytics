@@ -5,6 +5,7 @@ import {
   filterSubmenuSegmentItem,
   openFilterSubmenuItem,
   openSegmentsSubmenu,
+  closeFilterMenu,
   filterSubmenuButton,
   applyFilterButton,
   filterRow,
@@ -132,7 +133,7 @@ test('saving a segment', async ({ page, request }) => {
 
     await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
-    await filterButton(page).click()
+    await closeFilterMenu(page)
   })
 
   await test.step('creating a personal segment with a custom name', async () => {
@@ -172,7 +173,7 @@ test('saving a segment', async ({ page, request }) => {
     await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
     await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
-    await filterButton(page).click()
+    await closeFilterMenu(page)
   })
 
   await test.step('creating a site segment from more than one filter', async () => {
@@ -222,7 +223,7 @@ test('saving a segment', async ({ page, request }) => {
     await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
     await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
-    await filterButton(page).click()
+    await closeFilterMenu(page)
   })
 })
 
@@ -238,8 +239,8 @@ test('creating a segment from a combination of segment and a filter is not allow
   await createPersonalSegment(page, 'Traffic from Google')
   await addUtmSourceFilter(page, 'Adwords')
 
-  // Add UTM medium and campaign filters so Segment ends up as the 4th pill.
-  // This ensures it overflows into "See more" regardless of viewport width
+  // Add UTM medium and campaign filters. Every new filter is prepended, so
+  // Segment ends up as the last pill and overflows into "See more".
   const utmMediumFilterRow = filterRow(page, 'utm_medium')
   const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
 
@@ -256,10 +257,13 @@ test('creating a segment from a combination of segment and a filter is not allow
   await applyFilterButton(page).click()
 
   await expect(
-    page.getByRole('link', { name: 'UTM source is Adwords' })
+    page.getByRole('link', { name: 'UTM campaign is promo' })
   ).toBeVisible()
 
   await page.getByRole('button', { name: /See.*more/ }).click()
+  await expect(
+    page.getByRole('link', { name: 'UTM source is Adwords' })
+  ).toBeVisible()
   await expect(
     page.getByRole('link', { name: 'Segment is Traffic from Google' })
   ).toBeVisible()
