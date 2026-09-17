@@ -29,14 +29,14 @@ defmodule PlausibleWeb.VerifiedRoutes do
     Phoenix.VerifiedRoutes.unverified_path(
       PlausibleWeb.Endpoint,
       PlausibleWeb.Router,
-      "/#{URI.encode_www_form(domain)}",
+      "/#{encode_segment(domain)}",
       params
     )
   end
 
   def shared_stats_path(domain, params \\ [], star_path \\ nil)
       when is_binary(domain) and byte_size(domain) > 0 do
-    path = "/share/#{URI.encode_www_form(domain)}/"
+    path = "/share/#{encode_segment(domain)}/"
 
     path =
       if is_list(star_path) and star_path != [] do
