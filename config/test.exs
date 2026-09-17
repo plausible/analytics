@@ -62,6 +62,11 @@ config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
     plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
   ]
 
+config :plausible, Plausible.OAuth.CIMD,
+  req_opts: [
+    plug: {Req.Test, Plausible.OAuth.CIMD}
+  ]
+
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
 
 config :plausible, max_goals_per_site: 10

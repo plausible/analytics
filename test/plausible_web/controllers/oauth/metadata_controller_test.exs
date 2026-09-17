@@ -15,7 +15,6 @@ defmodule PlausibleWeb.OAuth.MetadataControllerTest do
                        "grant_types_supported" => ["authorization_code"],
                        "code_challenge_methods_supported" => ["S256"],
                        "token_endpoint_auth_methods_supported" => ["none"],
-                       "scopes_supported" => ["sites:read:*"],
                        "client_id_metadata_document_supported" => true
                      }) = resp
     end
