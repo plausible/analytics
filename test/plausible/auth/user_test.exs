@@ -78,7 +78,7 @@ defmodule Plausible.Auth.UserTest do
 
       assert score < 3
       assert warning != ""
-      assert length(suggestions) > 0
+      assert suggestions != []
     end
 
     test "checks for existing phrases using name and email from changes" do

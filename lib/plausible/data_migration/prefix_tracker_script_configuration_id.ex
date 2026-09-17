@@ -33,7 +33,7 @@ defmodule Plausible.DataMigration.PrefixTrackerScriptConfigurationId do
   defp process_batch(last_id, total_configs, batch_size, processed_count) do
     configs = get_configurations_batch(last_id, batch_size)
 
-    if length(configs) > 0 do
+    if configs != [] do
       batch_num = div(processed_count, batch_size) + 1
       start_pos = processed_count + 1
       end_pos = processed_count + length(configs)

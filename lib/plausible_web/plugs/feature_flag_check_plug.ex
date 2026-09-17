@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Plugs.FeatureFlagCheckPlug do
   to halt any API connections with 404 where conn.assigns.current_user or conn.assigns.site
   don't have both feature flags true.
   """
-  def init(feature_flags) when is_list(feature_flags) and length(feature_flags) > 0 do
+  def init(feature_flags) when is_list(feature_flags) and feature_flags != [] do
     feature_flags
   end
 

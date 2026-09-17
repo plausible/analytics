@@ -194,6 +194,6 @@ defmodule Plausible.Props do
   Returns whether the site has configured custom props or not.
   """
   def configured?(%Plausible.Site{allowed_event_props: allowed_event_props}) do
-    is_list(allowed_event_props) && length(allowed_event_props) > 0
+    is_list(allowed_event_props) && allowed_event_props != []
   end
 end
