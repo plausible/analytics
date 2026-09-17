@@ -3,6 +3,8 @@ defmodule Plausible.HelpScout do
   HelpScout callback API logic.
   """
 
+  use PlausibleWeb.VerifiedRoutes
+
   import Ecto.Query
 
   alias Plausible.Billing
@@ -10,8 +12,6 @@ defmodule Plausible.HelpScout do
   alias Plausible.HelpScout.Vault
   alias Plausible.Repo
   alias Plausible.Teams
-
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   require Plausible.Billing.Subscription.Status
 
@@ -110,12 +110,7 @@ defmodule Plausible.HelpScout do
             }
           end)
 
-        user_link =
-          Routes.customer_support_user_url(
-            PlausibleWeb.Endpoint,
-            :show,
-            user.id
-          )
+        user_link = url(~p"/cs/users/user/#{user.id}")
 
         {:ok,
          %{
@@ -139,17 +134,9 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.customer_support_team_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              team.id
-            )
+            url(~p"/cs/teams/team/#{team.id}")
           else
-            Routes.customer_support_user_url(
-              PlausibleWeb.Endpoint,
-              :show,
-              user.id
-            )
+            url(~p"/cs/users/user/#{user.id}")
           end
 
         {:ok,

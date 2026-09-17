@@ -95,16 +95,14 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
       <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl sm:truncate flex-shrink-0">
         <.link
           replace
-          patch={
-            Routes.customer_support_path(PlausibleWeb.Endpoint, :index, %{filter_text: @filter_text})
-          }
+          patch={~p"/cs?#{[filter_text: @filter_text]}"}
         >
           💬 Customer Support
         </.link>
       </h2>
       <.styled_link
         class="text-sm flex-shrink-0"
-        patch={Routes.customer_support_trial_prospects_path(PlausibleWeb.Endpoint, :index)}
+        patch={~p"/cs/trial-prospects"}
       >
         🔥 Trial prospects
       </.styled_link>

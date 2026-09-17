@@ -13,7 +13,12 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
     %{
       funnels:
         render_many(funnels, __MODULE__, "funnel.json", authorized_site: site, as: :funnel),
-      meta: render_metadata_links(metadata, :plugins_api_funnels_url, :index, conn.query_params)
+      meta:
+        render_metadata_links(
+          metadata,
+          fn params -> url(~p"/api/plugins/v1/funnels?#{params}") end,
+          conn.query_params
+        )
     }
   end
 
@@ -25,7 +30,12 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
     %{
       funnels:
         render_many(funnels, __MODULE__, "funnel.json", authorized_site: site, as: :funnel),
-      meta: render_metadata_links(%{}, :plugins_api_funnels_url, :index, conn.query_params)
+      meta:
+        render_metadata_links(
+          %{},
+          fn params -> url(~p"/api/plugins/v1/funnels?#{params}") end,
+          conn.query_params
+        )
     }
   end
 

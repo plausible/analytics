@@ -90,10 +90,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         session = fetch_cookies(conn, encrypted: ["session_saml"]).cookies["session_saml"]
@@ -133,13 +130,10 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, Ecto.UUID.generate(),
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{Ecto.UUID.generate()}?#{[email: email, return_to: "/sites"]}"
           )
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -181,10 +175,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         saml_session = fetch_cookies(conn, encrypted: ["session_saml"]).cookies["session_saml"]
@@ -219,7 +210,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
         assert redirected_to(conn, 302) == "/sites"
 
@@ -262,9 +253,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, Ecto.UUID.generate()), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{Ecto.UUID.generate()}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "We couldn't find a Single Sign-On account for that email."
@@ -279,9 +270,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => Ecto.UUID.generate()
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_relay_state)"
@@ -300,9 +291,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
       } do
         params = %{"SAMLResponse" => Base.encode64(@assertion)}
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_relay_state)"
@@ -325,9 +316,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :base64_decoding_failed)"
@@ -358,9 +349,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :malformed_certificate)"
@@ -385,9 +376,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :digest_verification_failed)"
@@ -410,9 +401,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :missing_email_attribute)"
@@ -435,9 +426,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :invalid_email_attribute)"
@@ -460,9 +451,9 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
           "RelayState" => relay_state
         }
 
-        conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
+        conn = post(conn, ~p"/sso/saml/consume/#{integration.identifier}", params)
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
                  "Authentication failed (reason: :missing_name_attributes)"

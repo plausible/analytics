@@ -43,9 +43,9 @@ defmodule PlausibleWeb.LayoutView do
 
   def logo_path(filename) do
     if ee?() do
-      Path.join("/images/ee/", filename)
+      ~p"/images/ee/#{filename}"
     else
-      Path.join("/images/ce/", filename)
+      ~p"/images/ce/#{filename}"
     end
   end
 
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.LayoutView do
       </.dropdown_item>
       <.dropdown_item
         :if={@pinned_team}
-        href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: @pinned_team.identifier)}
+        href={~p"/sites?#{[__team: @pinned_team.identifier]}"}
       >
         <div class="flex items-center justify-between gap-2" role="none">
           <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.LayoutView do
       <div class="max-h-[200px] overflow-y-auto">
         <.dropdown_item
           :for={team <- @other_teams}
-          href={Routes.site_path(PlausibleWeb.Endpoint, :index, __team: team.identifier)}
+          href={~p"/sites?#{[__team: team.identifier]}"}
         >
           <p
             class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"

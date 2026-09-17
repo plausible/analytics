@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Plugs.SecureSSO do
   Plug for securing SSO routes by setting proper policies in headers.
   """
 
-  alias PlausibleWeb.Router.Helpers, as: Routes
+  use PlausibleWeb.VerifiedRoutes
 
   @csp """
        default-src 'none';
@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Plugs.SecureSSO do
   @impl true
   def call(conn, _) do
     nonce = :crypto.strong_rand_bytes(18) |> Base.encode64()
-    csp_report_path = Routes.sso_path(conn, :csp_report)
+    csp_report_path = ~p"/sso/saml/csp-report"
 
     conn
     |> put_private(:sso_nonce, nonce)

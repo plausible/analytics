@@ -24,7 +24,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
           <.td truncate>
             <div :if={member.id != 0}>
               <.styled_link
-                patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, member.id)}
+                patch={~p"/cs/users/user/#{member.id}"}
                 class="cursor-pointer flex block items-center"
               >
                 <img

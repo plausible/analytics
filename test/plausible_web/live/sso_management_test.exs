@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
       test "renders", %{conn: conn} do
         resp =
           conn
-          |> get(Routes.sso_path(conn, :sso_settings))
+          |> get(~p"/settings/sso/general")
           |> html_response(200)
           |> text()
 
@@ -312,7 +312,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
       defp get_lv(conn) do
         conn = assign(conn, :live_module, PlausibleWeb.Live.SSOManagement)
-        {:ok, lv, html} = live(conn, Routes.sso_path(conn, :sso_settings))
+        {:ok, lv, html} = live(conn, ~p"/settings/sso/general")
         {lv, html}
       end
 

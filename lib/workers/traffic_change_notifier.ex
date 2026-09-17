@@ -4,10 +4,11 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   """
   use Plausible
   use Plausible.Repo
+
+  use PlausibleWeb.VerifiedRoutes
+
   alias Plausible.Stats.{Clickhouse, ParsedQueryParams, QueryBuilder}
   alias Plausible.Site.TrafficChangeNotification
-
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   use Oban.Worker, queue: :spike_notifications
   @min_interval_hours 12
@@ -80,8 +81,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   defp send_spike_notification(recipient_email, site, stats) do
     dashboard_link =
       if site_member?(site, recipient_email) do
-        Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
-          "?__team=#{site.team.identifier}"
+        stats_url(site.domain, __team: site.team.identifier)
       end
 
     template =
@@ -100,15 +100,14 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
     dashboard_link =
       if site_member? do
-        Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
-          "?__team=#{site.team.identifier}"
+        stats_url(site.domain, __team: site.team.identifier)
       end
 
     installation_link =
       if site_member? and Plausible.Sites.regular?(site) do
-        Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
-          flow: PlausibleWeb.Flows.review()
-        ) <> "&__team=#{site.team.identifier}"
+        url(
+          ~p"/#{site.domain}/installation?#{[flow: PlausibleWeb.Flows.review(), __team: site.team.identifier]}"
+        )
       end
 
     template =

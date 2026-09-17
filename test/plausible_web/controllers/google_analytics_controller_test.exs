@@ -62,12 +62,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics rate limit has been exceeded. Please try again later."
@@ -93,12 +88,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to authenticate your Google Analytics account"
@@ -126,12 +116,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                """
@@ -161,12 +146,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics API has timed out."
@@ -193,12 +173,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to list your Google Analytics properties"
@@ -354,12 +329,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to retrieve information from Google Analytics"
@@ -387,12 +357,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics rate limit has been exceeded. Please try again later."
@@ -420,12 +385,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics authentication seems to have expired."
@@ -454,12 +414,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                """
@@ -491,12 +446,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics API has timed out."
@@ -528,7 +478,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         })
         |> html_response(200)
 
-      action_url = PlausibleWeb.Router.Helpers.google_analytics_path(conn, :import, site.domain)
+      action_url = ~p"/#{site.domain}/settings/google-import"
 
       assert text_of_attr(response, "form", "action") == action_url
 
@@ -570,12 +520,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "end_date" => "2024-02-26"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to retrieve information from Google Analytics"
@@ -605,12 +550,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "end_date" => "2024-02-26"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics rate limit has been exceeded. Please try again later."
@@ -640,12 +580,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "end_date" => "2024-02-26"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics authentication seems to have expired."
@@ -677,12 +612,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "end_date" => "2024-02-26"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                """
@@ -716,12 +646,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "end_date" => "2024-02-26"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics API has timed out."
@@ -743,7 +668,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         })
 
       assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(conn, :settings_imports_exports, site.domain)
+               ~p"/#{site.domain}/settings/imports-exports"
 
       [site_import] = Plausible.Imported.list_all_imports(site)
 
@@ -841,12 +766,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "expires_at" => "2022-09-22T20:01:37.112777"
         })
 
-      assert redirected_to(conn, 302) ==
-               PlausibleWeb.Router.Helpers.site_path(
-                 conn,
-                 :settings_imports_exports,
-                 site.domain
-               )
+      assert redirected_to(conn, 302) == ~p"/#{site.domain}/settings/imports-exports"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Import failed. No data could be imported because date range overlaps with existing data."

@@ -8,7 +8,7 @@
     </:subtitle>
     <.form
       :let={f}
-      action={Routes.settings_path(@conn, :update_team_name)}
+      action={~p"/settings/team/general/name"}
       for={@team_name_changeset}
       method="post"
     >
@@ -57,7 +57,7 @@
       x-data="{disableTeamForce2FAOpen: false}"
     >
       <.form
-        action={Routes.settings_path(@conn, :disable_team_force_2fa)}
+        action={~p"/settings/team/force_2fa/disable"}
         for={@conn.params}
         method="post"
       >
@@ -73,7 +73,7 @@
           id="disable-force-2fa-modal"
           state_param="disableTeamForce2FAOpen"
           form_data={@conn.params}
-          form_target={Routes.settings_path(@conn, :disable_team_force_2fa)}
+          form_target={~p"/settings/team/force_2fa/disable"}
           title="Stop enforcing 2FA?"
         >
           <:icon>
@@ -109,7 +109,7 @@
 
     <div :if={not @force_2fa_enabled? and @current_team_role == :owner} id="enable-force-2fa">
       <.form
-        action={Routes.settings_path(@conn, :enable_team_force_2fa)}
+        action={~p"/settings/team/force_2fa/enable"}
         for={@conn.params}
         method="post"
       >
@@ -128,7 +128,7 @@
     <:subtitle>Remove yourself from this team as a member.</:subtitle>
     <.button_link
       data-confirm="Are you sure you want to leave this team?"
-      href={Routes.settings_path(@conn, :leave_team)}
+      href={~p"/settings/team/leave"}
       method="post"
       theme="danger"
       mt?={false}

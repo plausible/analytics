@@ -8,7 +8,7 @@ defmodule PlausibleWeb do
       use Plausible
       use Phoenix.LiveView, global_prefixes: ~w(x-)
       use PlausibleWeb.Live.Flash
-
+      use PlausibleWeb.VerifiedRoutes
       use PlausibleWeb.Live.AuthContext
 
       unless :no_sentry_context in unquote(opts) do
@@ -19,7 +19,6 @@ defmodule PlausibleWeb do
         use Plausible.Audit.LiveContext
       end
 
-      alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS
 
       import PlausibleWeb.Components.Generic
@@ -31,32 +30,32 @@ defmodule PlausibleWeb do
   def live_component do
     quote do
       use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+      use PlausibleWeb.VerifiedRoutes
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
   def component do
     quote do
       use Phoenix.Component, global_prefixes: ~w(x-)
+      use PlausibleWeb.VerifiedRoutes
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
       alias Phoenix.LiveView.JS
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
   def controller do
     quote do
       use Phoenix.Controller, formats: [html: "View", json: "View"]
+      use PlausibleWeb.VerifiedRoutes
 
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -69,11 +68,11 @@ defmodule PlausibleWeb do
       import Phoenix.Controller, only: [view_module: 1]
 
       use Phoenix.Component, global_prefixes: ~w(x-)
+      use PlausibleWeb.VerifiedRoutes
 
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Components.Settings
       import PlausibleWeb.Live.Components.Form
-      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -87,18 +86,18 @@ defmodule PlausibleWeb do
         import Phoenix.Controller, only: [view_module: 1]
 
         use Phoenix.Component
+        use PlausibleWeb.VerifiedRoutes
 
         import PlausibleWeb.Components.Generic
         import PlausibleWeb.Components.Settings
         import PlausibleWeb.Live.Components.Form
-        alias PlausibleWeb.Router.Helpers, as: Routes
       end
     end
   end
 
   def router do
     quote do
-      use Phoenix.Router
+      use Phoenix.Router, helpers: false
       import Plug.Conn
       import Phoenix.Controller
     end
@@ -113,8 +112,9 @@ defmodule PlausibleWeb do
   def plugins_api_controller do
     quote do
       use Phoenix.Controller, formats: [:json]
+      use PlausibleWeb.VerifiedRoutes
+
       import Plug.Conn
-      import PlausibleWeb.Router.Helpers
 
       alias PlausibleWeb.Plugins.API.Schemas
       alias PlausibleWeb.Plugins.API.Views
@@ -130,14 +130,16 @@ defmodule PlausibleWeb do
   def plugins_api_view do
     quote do
       use Phoenix.View, root: ""
+      use PlausibleWeb.VerifiedRoutes
 
-      alias PlausibleWeb.Router.Helpers
-      import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]
+      import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 3]
     end
   end
 
   def open_api_schema do
     quote do
+      use PlausibleWeb.VerifiedRoutes
+
       require OpenApiSpex
       alias OpenApiSpex.Schema
       alias PlausibleWeb.Plugins.API.Schemas

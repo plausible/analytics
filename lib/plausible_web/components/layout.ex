@@ -8,13 +8,13 @@ defmodule PlausibleWeb.Components.Layout do
   def logo(assigns) do
     ~H"""
     <img
-      src={logo_url("logo_dark.svg")}
+      src={logo_path("logo_dark.svg")}
       class={[@class, "hidden dark:inline"]}
       alt="Plausible logo"
       loading="lazy"
     />
     <img
-      src={logo_url("logo_light.svg")}
+      src={logo_path("logo_light.svg")}
       class={[@class, "inline dark:hidden"]}
       alt="Plausible logo"
       loading="lazy"
@@ -22,25 +22,22 @@ defmodule PlausibleWeb.Components.Layout do
     """
   end
 
-  defp logo_url(filename),
-    do: PlausibleWeb.Router.Helpers.static_path(PlausibleWeb.Endpoint, logo_path(filename))
-
   def favicon(assigns) do
     ~H"""
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("apple-touch-icon.png"))}
+      href={logo_path("apple-touch-icon.png")}
     />
     <link
       rel="icon"
       sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.ico"))}
+      href={logo_path("favicon.ico")}
     />
     <link
       rel="icon"
       type="image/svg+xml"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon.svg"))}
+      href={logo_path("favicon.svg")}
     />
     """
   end

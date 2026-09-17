@@ -128,7 +128,7 @@ defmodule PlausibleWeb.AuthController do
             redirect(conn, to: redirect_path)
 
           true ->
-            redirect(conn, to: Routes.site_path(conn, :new, flow: flow))
+            redirect(conn, to: ~p"/sites/new?#{[flow: flow]}")
         end
 
       {:error, :incorrect} ->
@@ -156,12 +156,12 @@ defmodule PlausibleWeb.AuthController do
 
       conn
       |> put_flash(:success, "Activation code was sent to #{user.email}")
-      |> redirect(to: Routes.auth_path(conn, :activate_form))
+      |> redirect(to: ~p"/activate")
     else
       {:error, {:rate_limit, _}} ->
         conn
         |> put_flash(:error, "Too many code requests. Please wait before requesting another.")
-        |> redirect(to: Routes.auth_path(conn, :activate_form))
+        |> redirect(to: ~p"/activate")
     end
   end
 
@@ -240,7 +240,7 @@ defmodule PlausibleWeb.AuthController do
     |> UserAuth.log_out_user()
     |> put_flash(:login_title, "Password updated successfully")
     |> put_flash(:login_instructions, "Please sign in with your new credentials")
-    |> redirect(to: Routes.auth_path(conn, :login_form))
+    |> redirect(to: ~p"/login")
   end
 
   on_ee do
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.AuthController do
 
       case {login_preference, params["prefer"], error} do
         {"sso", nil, nil} ->
-          redirect(conn, to: Routes.sso_path(conn, :login_form, return_to: params["return_to"]))
+          redirect(conn, to: ~p"/sso/login?#{[return_to: params["return_to"]]}")
 
         _ ->
           render_login_form(conn)
@@ -295,16 +295,13 @@ defmodule PlausibleWeb.AuthController do
                 PlausibleWeb.Flows.invitation()
               end
 
-            Routes.auth_path(conn, :activate_form,
-              flow: flow,
-              team_identifier: params["team_identifier"]
-            )
+            ~p"/activate?#{[flow: flow, team_identifier: params["team_identifier"]]}"
 
           params["register_action"] == "register_from_invitation_form" ->
             accept_team_invitation(conn, params["team_identifier"], user)
 
           params["register_action"] == "register_form" ->
-            Routes.site_path(conn, :new)
+            ~p"/sites/new"
 
           true ->
             params["return_to"]
@@ -344,7 +341,7 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> TwoFactor.Session.set_2fa_user(user)
-        |> redirect(to: Routes.auth_path(conn, :verify_2fa, query_params))
+        |> redirect(to: ~p"/2fa/verify?#{query_params}")
     end
   end
 
@@ -363,22 +360,22 @@ defmodule PlausibleWeb.AuthController do
 
   defp accept_team_invitation(conn, team_identifier, user, params \\ [])
 
-  defp accept_team_invitation(conn, no_identifier, _user, params)
+  defp accept_team_invitation(_conn, no_identifier, _user, params)
        when no_identifier in ["", nil] do
-    Routes.site_path(conn, :index, params)
+    ~p"/sites?#{params}"
   end
 
-  defp accept_team_invitation(conn, team_identifier, user, extra_params) do
+  defp accept_team_invitation(_conn, team_identifier, user, extra_params) do
     params = Keyword.merge([__team: team_identifier], extra_params)
 
     # We try switching to the team no matter the invitation presence or acceptance outcome.
     case Teams.Invitations.find_by_team_identifier(team_identifier, user) do
       {:ok, invitation} ->
         {_, _} = Teams.Invitations.accept_team_invitation(invitation, user)
-        Routes.site_path(conn, :index, params)
+        ~p"/sites?#{params}"
 
       {:error, :invitation_not_found} ->
-        Routes.site_path(conn, :index, params)
+        ~p"/sites?#{params}"
     end
   end
 
@@ -407,7 +404,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :already_setup} ->
         conn
         |> put_flash(:error, "Two-Factor Authentication is already setup for this account.")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -415,7 +412,7 @@ defmodule PlausibleWeb.AuthController do
     if Auth.TOTP.initiated?(conn.assigns.current_user) do
       render(conn, "verify_2fa_setup.html")
     else
-      redirect(conn, to: Routes.settings_path(conn, :security) <> "#update-2fa")
+      redirect(conn, to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -444,7 +441,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :not_initiated} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -454,12 +451,12 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> TwoFactor.Session.clear_remember_2fa()
         |> put_flash(:success, "Two-Factor Authentication is disabled")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
 
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -473,12 +470,12 @@ defmodule PlausibleWeb.AuthController do
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
 
       {:error, :not_enabled} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
+        |> redirect(to: ~p"/settings/security#update-2fa")
     end
   end
 
@@ -572,14 +569,14 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :not_found} ->
         conn
-        |> redirect(to: Routes.auth_path(conn, :login_form))
+        |> redirect(to: ~p"/login")
     end
   end
 
   defp handle_email_updated(conn) do
     conn
     |> put_flash(:success, "Email updated successfully")
-    |> redirect(to: Routes.settings_path(conn, :security) <> "#update-email")
+    |> redirect(to: ~p"/settings/security#update-email")
   end
 
   def delete_me(conn, params) do
@@ -593,7 +590,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "You have an active subscription which must be canceled first."
         )
-        |> redirect(to: Routes.settings_path(conn, :danger_zone))
+        |> redirect(to: ~p"/settings/danger-zone")
 
       {:error, :is_only_team_owner} ->
         conn
@@ -601,7 +598,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "You can't delete your account when you are the only owner on a team."
         )
-        |> redirect(to: Routes.settings_path(conn, :danger_zone))
+        |> redirect(to: ~p"/settings/danger-zone")
     end
   end
 
@@ -618,9 +615,9 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{site: site, context: context}} ->
         redirect_url =
           if context == "import" do
-            Routes.site_path(conn, :settings_imports_exports, site.domain)
+            ~p"/#{site.domain}/settings/imports-exports"
           else
-            Routes.site_path(conn, :settings_integrations, site.domain)
+            ~p"/#{site.domain}/settings/integrations"
           end
 
         cond do
@@ -681,11 +678,7 @@ defmodule PlausibleWeb.AuthController do
   defp google_import_callback(conn, site, token_data, expires_at) do
     redirect(conn,
       to:
-        Routes.google_analytics_path(conn, :property_form, site.domain,
-          access_token: Map.fetch!(token_data, "access_token"),
-          refresh_token: Map.fetch!(token_data, "refresh_token"),
-          expires_at: NaiveDateTime.to_iso8601(expires_at)
-        )
+        ~p"/#{site.domain}/import/google-analytics/property?#{[access_token: Map.fetch!(token_data, "access_token"), refresh_token: Map.fetch!(token_data, "refresh_token"), expires_at: NaiveDateTime.to_iso8601(expires_at)]}"
     )
   end
 
@@ -723,7 +716,7 @@ defmodule PlausibleWeb.AuthController do
       conflict_target: :site_id
     )
 
-    redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+    redirect(conn, to: ~p"/#{site.domain}/settings/integrations")
   end
 
   defp check_callback_site_permission(site, current_user) do
@@ -737,7 +730,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp generic_oauth_error_response(conn, redirect_url \\ nil) do
-    redirect_url = redirect_url || Routes.auth_path(conn, :login_form)
+    redirect_url = redirect_url || ~p"/login"
 
     conn
     |> put_flash(
@@ -748,6 +741,6 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp redirect_to_login(conn) do
-    redirect(conn, to: Routes.auth_path(conn, :login_form))
+    redirect(conn, to: ~p"/login")
   end
 end

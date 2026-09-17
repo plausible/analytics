@@ -8,8 +8,6 @@ defmodule Plausible.HelpScoutTest do
     alias Plausible.HelpScout
     alias Plausible.Repo
 
-    alias PlausibleWeb.Router.Helpers, as: Routes
-
     require Plausible.Billing.Subscription.Status
 
     @v4_business_monthly_plan_id "857105"
@@ -59,7 +57,7 @@ defmodule Plausible.HelpScoutTest do
         stub_help_scout_requests(email)
         team = team_of(user)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+        crm_url = url(~p"/cs/teams/team/#{team.id}")
 
         assert {:ok,
                 %{
@@ -442,7 +440,7 @@ defmodule Plausible.HelpScoutTest do
 
         team = team_of(user)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+        crm_url = url(~p"/cs/teams/team/#{team.id}")
 
         assert {:ok,
                 %{
@@ -480,7 +478,7 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user2)
         team2 = team_of(user2)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team2.id)
+        crm_url = url(~p"/cs/teams/team/#{team2.id}")
 
         assert {:ok,
                 %{
