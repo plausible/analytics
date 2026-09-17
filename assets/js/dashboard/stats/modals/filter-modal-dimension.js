@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react'
 import FilterModalRow from './filter-modal-row'
 import {
-  formattedFilters,
-  getFilterGroup,
+  getFilterDimension,
   getPropertyKeyFromFilterKey
 } from '../../util/filters'
 import FilterModalPropsRow from './filter-modal-props-row'
 
-export default function FilterModalGroup({
-  filterGroup,
+export default function FilterModalDimension({
+  dimension,
   filterState,
   labels,
   onUpdateRowValue,
@@ -18,33 +17,27 @@ export default function FilterModalGroup({
   const rows = useMemo(
     () =>
       Object.entries(filterState)
-        .filter(([_, filter]) => getFilterGroup(filter) == filterGroup)
+        .filter(([_, filter]) => getFilterDimension(filter) == dimension)
         .map(([id, filter]) => ({ id, filter })),
-    [filterGroup, filterState]
+    [dimension, filterState]
   )
   const disabledOptions = useMemo(
     () =>
-      filterGroup == 'props'
+      dimension == 'props'
         ? rows.map(({ filter }) => ({
             value: getPropertyKeyFromFilterKey(filter[1])
           }))
         : null,
-    [filterGroup, rows]
+    [dimension, rows]
   )
 
-  const showAddRow = ['props', 'goal'].includes(filterGroup)
-  const showTitle = filterGroup != 'props'
+  const showAddRow = ['props', 'goal'].includes(dimension)
 
   return (
     <>
       <div>
-        {showTitle && (
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-200">
-            {formattedFilters[filterGroup]}
-          </div>
-        )}
         {rows.map(({ id, filter }) =>
-          filterGroup === 'props' ? (
+          dimension === 'props' ? (
             <FilterModalPropsRow
               testId={id}
               key={id}
@@ -75,7 +68,7 @@ export default function FilterModalGroup({
           {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a
             className="underline text-indigo-500 text-sm cursor-pointer"
-            onClick={() => onAddRow(filterGroup)}
+            onClick={() => onAddRow(dimension)}
           >
             + Add another
           </a>

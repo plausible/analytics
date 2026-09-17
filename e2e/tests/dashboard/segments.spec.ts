@@ -2,7 +2,10 @@ import { test, expect, APIRequestContext, Page } from '@playwright/test'
 import { setupSite, populateStats } from '../fixtures'
 import {
   filterButton,
-  filterItemButton,
+  filterSubmenuSegmentItem,
+  openFilterSubmenuItem,
+  openSegmentsSubmenu,
+  filterSubmenuButton,
   applyFilterButton,
   filterRow,
   suggestedItem,
@@ -39,15 +42,15 @@ const setupSiteAndStats = async ({
 
 const segmentMenu = (page: Page) => page.getByTestId('segment-menu')
 
-const sourceFilterButton = (page: Page) => filterItemButton(page, 'Source')
-const utmTagsFilterButton = (page: Page) => filterItemButton(page, 'UTM tags')
+const segmentItemButton = (page: Page, name: string) =>
+  filterSubmenuSegmentItem(page, name)
 
 const addSourceFilter = async (page: Page, sourceLabel: string) => {
   const sourceFilterRow = filterRow(page, 'source')
   const sourceInput = page.getByPlaceholder('Select a Source')
 
   await filterButton(page).click()
-  await sourceFilterButton(page).click()
+  await openFilterSubmenuItem(page, 'Source', 'Source')
 
   await sourceInput.click()
   await suggestedItem(sourceFilterRow, sourceLabel).click()
@@ -63,7 +66,7 @@ const addUtmSourceFilter = async (page: Page, utmSource: string) => {
   const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
 
   await filterButton(page).click()
-  await utmTagsFilterButton(page).click()
+  await openFilterSubmenuItem(page, 'UTM tags', 'UTM source')
 
   await utmSourceInput.click()
   await suggestedItem(utmSourceFilterRow, utmSource).click()
@@ -125,8 +128,9 @@ test('saving a segment', async ({ page, request }) => {
       .click()
 
     await filterButton(page).click()
+    await openSegmentsSubmenu(page)
 
-    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
+    await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
     await filterButton(page).click()
   })
@@ -163,9 +167,10 @@ test('saving a segment', async ({ page, request }) => {
       .click()
 
     await filterButton(page).click()
+    await openSegmentsSubmenu(page)
 
-    await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
-    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
+    await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
+    await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
     await filterButton(page).click()
   })
@@ -211,10 +216,11 @@ test('saving a segment', async ({ page, request }) => {
       .click()
 
     await filterButton(page).click()
+    await openSegmentsSubmenu(page)
 
-    await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
-    await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
-    await expect(filterItemButton(page, 'Source is Facebook')).toBeVisible()
+    await expect(segmentItemButton(page, 'Ads from Google')).toBeVisible()
+    await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
+    await expect(segmentItemButton(page, 'Source is Facebook')).toBeVisible()
 
     await filterButton(page).click()
   })
@@ -238,13 +244,13 @@ test('creating a segment from a combination of segment and a filter is not allow
   const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
 
   await filterButton(page).click()
-  await utmTagsFilterButton(page).click()
+  await openFilterSubmenuItem(page, 'UTM tags', 'UTM medium')
   await page.getByPlaceholder('Select a UTM Medium').click()
   await suggestedItem(utmMediumFilterRow, 'email').click()
   await applyFilterButton(page).click()
 
   await filterButton(page).click()
-  await utmTagsFilterButton(page).click()
+  await openFilterSubmenuItem(page, 'UTM tags', 'UTM campaign')
   await page.getByPlaceholder('Select a UTM Campaign').click()
   await suggestedItem(utmCampaignFilterRow, 'promo').click()
   await applyFilterButton(page).click()
@@ -306,9 +312,10 @@ test('editing an existing segment', async ({ page, request }) => {
   await expect(page).not.toHaveURL(/f=is,segment,[0-9]+/)
 
   await filterButton(page).click()
+  await openSegmentsSubmenu(page)
 
-  await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
-  await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
+  await expect(segmentItemButton(page, 'Ads from Google')).toBeVisible()
+  await expect(segmentItemButton(page, 'Traffic from Google')).toBeHidden()
 })
 
 test('saving edited segment as new', async ({ page, request }) => {
@@ -351,11 +358,12 @@ test('saving edited segment as new', async ({ page, request }) => {
   await modal(page).getByRole('button', { name: 'Remove filter' }).click()
 
   await filterButton(page).click()
+  await openSegmentsSubmenu(page)
 
-  await expect(filterItemButton(page, 'Ads from Google')).toBeVisible()
-  await expect(filterItemButton(page, 'Traffic from Google')).toBeVisible()
+  await expect(segmentItemButton(page, 'Ads from Google')).toBeVisible()
+  await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
 
-  await filterItemButton(page, 'Traffic from Google').click()
+  await segmentItemButton(page, 'Traffic from Google').click()
 
   await page
     .getByRole('link', { name: 'Segment is Traffic from Google' })
@@ -391,7 +399,8 @@ test('deleting segment', async ({ page, request }) => {
 
   await filterButton(page).click()
 
-  await expect(filterItemButton(page, 'Traffic from Google')).toBeHidden()
+  // The only segment is gone, so the filter menu no longer offers segments at all.
+  await expect(filterSubmenuButton(page, 'Segment')).toBeHidden()
 })
 
 test('closing edited segment without saving', async ({ page, request }) => {
@@ -415,8 +424,9 @@ test('closing edited segment without saving', async ({ page, request }) => {
   await page.getByRole('link', { name: 'Close without saving' }).click()
 
   await filterButton(page).click()
+  await openSegmentsSubmenu(page)
 
-  await filterItemButton(page, 'Traffic from Google').click()
+  await segmentItemButton(page, 'Traffic from Google').click()
 
   await page
     .getByRole('link', { name: 'Segment is Traffic from Google' })

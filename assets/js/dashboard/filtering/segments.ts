@@ -4,6 +4,7 @@ import { plainFilterText } from '../util/filter-text'
 import { AppNavigationTarget } from '../navigation/use-app-navigate'
 import { PlausibleSite } from '../site-context'
 import { Role, UserContextValue } from '../user-context'
+import { formatDayShort, parseNaiveDate } from '../util/date'
 
 export enum SegmentType {
   personal = 'personal',
@@ -163,6 +164,30 @@ export const SEGMENT_TYPE_LABELS = {
   [SegmentType.personal]: 'Personal segment',
   [SegmentType.site]: 'Site segment'
 }
+
+export const getSegmentAuthorship = ({
+  segment,
+  showOnlyPublicData
+}: {
+  segment: Pick<SavedSegment | SavedSegmentPublic, 'type' | 'owner_name'>
+  showOnlyPublicData: boolean
+}): string => {
+  if (
+    segment.type === SegmentType.site &&
+    !showOnlyPublicData &&
+    segment.owner_name
+  ) {
+    return segment.owner_name
+  }
+  return SEGMENT_TYPE_LABELS[segment.type]
+}
+
+export const getAttributionDateLabel = (
+  segment: Pick<SavedSegment, 'inserted_at' | 'updated_at'>
+): string =>
+  segment.updated_at === segment.inserted_at
+    ? formatDayShort(parseNaiveDate(segment.inserted_at))
+    : `Edited ${formatDayShort(parseNaiveDate(segment.updated_at))}`
 
 export function resolveFilters(
   filters: Filter[],

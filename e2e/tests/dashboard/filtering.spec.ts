@@ -3,6 +3,7 @@ import { setupSite, populateStats, addPageviewGoal } from '../fixtures'
 import {
   filterButton,
   filterItemButton,
+  openFilterSubmenuItem,
   applyFilterButton,
   filterRow,
   suggestedItem,
@@ -11,7 +12,8 @@ import {
 } from '../test-utils'
 
 test.describe('page filtering tests', () => {
-  const pageFilterButton = (page: Page) => filterItemButton(page, 'Page')
+  const openPageFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'Page', item)
 
   test('filtering by page with detailed behavior test', async ({
     page,
@@ -36,7 +38,7 @@ test.describe('page filtering tests', () => {
     const pageInput = page.getByPlaceholder('Select a Page')
 
     await filterButton(page).click()
-    await pageFilterButton(page).click()
+    await openPageFilter(page, 'Page')
 
     await expect(
       page.getByRole('heading', { name: 'Filter by Page' })
@@ -91,7 +93,7 @@ test.describe('page filtering tests', () => {
 
     await test.step("'is not' operator", async () => {
       await filterButton(page).click()
-      await pageFilterButton(page).click()
+      await openPageFilter(page, 'Page')
 
       await filterOperator(pageFilterRow).click()
       await filterOperatorOption(pageFilterRow, 'is not').click()
@@ -115,7 +117,7 @@ test.describe('page filtering tests', () => {
 
     await test.step("'contains' operator", async () => {
       await filterButton(page).click()
-      await pageFilterButton(page).click()
+      await openPageFilter(page, 'Page')
 
       await filterOperator(pageFilterRow).click()
       await filterOperatorOption(pageFilterRow, 'contains').click()
@@ -139,7 +141,7 @@ test.describe('page filtering tests', () => {
 
     await test.step("'does not contain' operator", async () => {
       await filterButton(page).click()
-      await pageFilterButton(page).click()
+      await openPageFilter(page, 'Page')
 
       await filterOperator(pageFilterRow).click()
       await filterOperatorOption(pageFilterRow, 'does not contain').click()
@@ -165,7 +167,7 @@ test.describe('page filtering tests', () => {
 
     await test.step("'is' operator with multiple choices", async () => {
       await filterButton(page).click()
-      await pageFilterButton(page).click()
+      await openPageFilter(page, 'Page')
 
       await pageInput.fill('page')
       await suggestedItem(pageFilterRow, '/page2').click()
@@ -205,7 +207,7 @@ test.describe('page filtering tests', () => {
     const entryPageInput = page.getByPlaceholder('Select an Entry Page')
 
     await filterButton(page).click()
-    await pageFilterButton(page).click()
+    await openPageFilter(page, 'Entry page')
 
     await entryPageInput.fill('page')
     await suggestedItem(entryPageFilterRow, '/page1').click()
@@ -242,7 +244,7 @@ test.describe('page filtering tests', () => {
     const exitPageInput = page.getByPlaceholder('Select an Exit Page')
 
     await filterButton(page).click()
-    await pageFilterButton(page).click()
+    await openPageFilter(page, 'Exit page')
 
     await exitPageInput.fill('page')
     await suggestedItem(exitPageFilterRow, '/page3').click()
@@ -295,7 +297,8 @@ test.describe('hostname filtering tests', () => {
 })
 
 test.describe('acquisition filtering tests', () => {
-  const sourceFilterButton = (page: Page) => filterItemButton(page, 'Source')
+  const openSourceFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'Source', item)
 
   test('filtering by source information', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -317,7 +320,7 @@ test.describe('acquisition filtering tests', () => {
       const sourceInput = page.getByPlaceholder('Select a Source')
 
       await filterButton(page).click()
-      await sourceFilterButton(page).click()
+      await openSourceFilter(page, 'Source')
 
       await sourceInput.fill('goog')
       await suggestedItem(sourceFilterRow, 'Google').click()
@@ -344,7 +347,7 @@ test.describe('acquisition filtering tests', () => {
       const channelInput = page.getByPlaceholder('Select a Channel')
 
       await filterButton(page).click()
-      await sourceFilterButton(page).click()
+      await openSourceFilter(page, 'Channel')
 
       await channelInput.fill('paid')
       await suggestedItem(channelFilterRow, 'Paid Search').click()
@@ -371,7 +374,7 @@ test.describe('acquisition filtering tests', () => {
       const referrerInput = page.getByPlaceholder('Select a Referrer URL')
 
       await filterButton(page).click()
-      await sourceFilterButton(page).click()
+      await openSourceFilter(page, 'Referrer URL')
 
       await referrerInput.fill('guard')
       await suggestedItem(referrerFilterRow, 'https://theguardian.com').click()
@@ -398,7 +401,8 @@ test.describe('acquisition filtering tests', () => {
     })
   })
 
-  const utmTagsFilterButton = (page: Page) => filterItemButton(page, 'UTM tags')
+  const openUtmFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'UTM tags', item)
 
   test('filtering by UTM tags', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -422,7 +426,7 @@ test.describe('acquisition filtering tests', () => {
       const utmMediumInput = page.getByPlaceholder('Select a UTM Medium')
 
       await filterButton(page).click()
-      await utmTagsFilterButton(page).click()
+      await openUtmFilter(page, 'UTM medium')
 
       await utmMediumInput.fill('soc')
       await suggestedItem(utmMediumFilterRow, 'social').click()
@@ -449,7 +453,7 @@ test.describe('acquisition filtering tests', () => {
       const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
 
       await filterButton(page).click()
-      await utmTagsFilterButton(page).click()
+      await openUtmFilter(page, 'UTM source')
 
       await utmSourceInput.fill('hunt')
       await suggestedItem(utmSourceFilterRow, 'producthunt').click()
@@ -476,7 +480,7 @@ test.describe('acquisition filtering tests', () => {
       const utmCampaignInput = page.getByPlaceholder('Select a UTM Campaign')
 
       await filterButton(page).click()
-      await utmTagsFilterButton(page).click()
+      await openUtmFilter(page, 'UTM campaign')
 
       await utmCampaignInput.fill('ads')
       await suggestedItem(utmCampaignFilterRow, 'ads').click()
@@ -503,7 +507,7 @@ test.describe('acquisition filtering tests', () => {
       const utmTermInput = page.getByPlaceholder('Select a UTM Term')
 
       await filterButton(page).click()
-      await utmTagsFilterButton(page).click()
+      await openUtmFilter(page, 'UTM term')
 
       await utmTermInput.fill('pos')
       await suggestedItem(utmTermFilterRow, 'post').click()
@@ -530,7 +534,7 @@ test.describe('acquisition filtering tests', () => {
       const utmContentInput = page.getByPlaceholder('Select a UTM Content')
 
       await filterButton(page).click()
-      await utmTagsFilterButton(page).click()
+      await openUtmFilter(page, 'UTM content')
 
       await utmContentInput.fill('web')
       await suggestedItem(utmContentFilterRow, 'website').click()
@@ -555,8 +559,8 @@ test.describe('acquisition filtering tests', () => {
 })
 
 test.describe('location filtering tests', () => {
-  const locationFilterButton = (page: Page) =>
-    filterItemButton(page, 'Location')
+  const openLocationFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'Location', item)
 
   test('filtering by location', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -582,7 +586,7 @@ test.describe('location filtering tests', () => {
       const countryInput = page.getByPlaceholder('Select a Country')
 
       await filterButton(page).click()
-      await locationFilterButton(page).click()
+      await openLocationFilter(page, 'Country')
 
       await countryInput.fill('est')
       await suggestedItem(countryFilterRow, 'Estonia').click()
@@ -601,7 +605,7 @@ test.describe('location filtering tests', () => {
       const regionInput = page.getByPlaceholder('Select a Region')
 
       await filterButton(page).click()
-      await locationFilterButton(page).click()
+      await openLocationFilter(page, 'Region')
 
       await regionInput.fill('har')
       await suggestedItem(regionFilterRow, 'Harjumaa').click()
@@ -627,13 +631,13 @@ test.describe('location filtering tests', () => {
       // Add a browser filter so city ends up as the 4th pill. This ensures it overflows
       // into "See more" regardless of viewport width.
       await filterButton(page).click()
-      await filterItemButton(page, 'Browser').click()
+      await openFilterSubmenuItem(page, 'Browser', 'Browser')
       await browserInput.fill('chrom')
       await suggestedItem(browserFilterRow, 'Chrome').click()
       await applyFilterButton(page).click()
 
       await filterButton(page).click()
-      await locationFilterButton(page).click()
+      await openLocationFilter(page, 'City')
 
       await cityInput.click()
       await suggestedItem(cityFilterRow, 'Tallinn').click()
@@ -694,7 +698,8 @@ test.describe('screen size filtering tests', () => {
 })
 
 test.describe('browser filtering tests', () => {
-  const browserFilterButton = (page: Page) => filterItemButton(page, 'Browser')
+  const openBrowserFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'Browser', item)
 
   test('filtering by browser', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -717,7 +722,7 @@ test.describe('browser filtering tests', () => {
       })
 
       await filterButton(page).click()
-      await browserFilterButton(page).click()
+      await openBrowserFilter(page, 'Browser')
 
       await browserInput.fill('chrom')
       await suggestedItem(browserFilterRow, 'Chrome').click()
@@ -738,7 +743,7 @@ test.describe('browser filtering tests', () => {
       )
 
       await filterButton(page).click()
-      await browserFilterButton(page).click()
+      await openBrowserFilter(page, 'Browser version')
 
       await browserVersionInput.fill('14')
       await suggestedItem(browserVersionFilterRow, '14.0.7').click()
@@ -756,8 +761,8 @@ test.describe('browser filtering tests', () => {
 })
 
 test.describe('operating system filtering tests', () => {
-  const operatingSystemFilterButton = (page: Page) =>
-    filterItemButton(page, 'Operating system')
+  const openOperatingSystemFilter = (page: Page, item: string) =>
+    openFilterSubmenuItem(page, 'Operating system', item)
 
   test('filtering by operating system', async ({ page, request }) => {
     const { domain } = await setupSite({ page, request })
@@ -791,7 +796,7 @@ test.describe('operating system filtering tests', () => {
       )
 
       await filterButton(page).click()
-      await operatingSystemFilterButton(page).click()
+      await openOperatingSystemFilter(page, 'Operating system')
 
       // The same problem as in the case of screen size filter test.
       await operatingSystemInput.click()
@@ -823,19 +828,23 @@ test.describe('operating system filtering tests', () => {
       // Add browser and browser version filters so OS version ends up as the 4th pill.
       // This ensures it overflows into "See more" regardless of viewport width
       await filterButton(page).click()
-      await filterItemButton(page, 'Browser').click()
+      await openFilterSubmenuItem(page, 'Browser', 'Browser')
       await browserInput.fill('chrom')
       await suggestedItem(browserFilterRow, 'Chrome').click()
       await applyFilterButton(page).click()
 
       await filterButton(page).click()
-      await filterItemButton(page, 'Browser').click()
+      await openFilterSubmenuItem(page, 'Browser', 'Browser version')
       await browserVersionInput.fill('14')
       await suggestedItem(browserVersionFilterRow, '14.0.7').click()
       await applyFilterButton(page).click()
 
       await filterButton(page).click()
-      await operatingSystemFilterButton(page).click()
+      await openFilterSubmenuItem(
+        page,
+        'Operating system',
+        'Operating system version'
+      )
 
       await operatingSystemVersionInput.click()
       await suggestedItem(operatingSystemVersionFilterRow, '11').click()
