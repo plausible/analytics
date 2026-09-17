@@ -46,29 +46,36 @@ const toggleButton = {
   }
 }
 
+const navigationLink = classNames(
+  'flex items-center justify-between',
+  'px-4 py-2.5 text-sm leading-tight rounded-md',
+  'cursor-pointer'
+)
+
+const hoverLink = classNames(
+  'hover:bg-gray-100',
+  'hover:text-gray-900',
+  'dark:hover:bg-gray-700',
+  'dark:hover:text-gray-100',
+
+  'focus-within:bg-gray-100',
+  'focus-within:text-gray-900',
+  'dark:focus-within:bg-gray-700',
+  'dark:focus-within:text-gray-100'
+)
+
 const items = {
   classNames: {
-    navigationLink: classNames(
-      'flex items-center justify-between',
-      'px-4 py-2.5 text-sm leading-tight rounded-md',
-      'cursor-pointer'
-    ),
+    navigationLink,
+    hoverLink,
+    label: 'flex-1 min-w-0 truncate',
+    /** Full-width row that holds a leading icon and a `label` span. */
+    iconRow: classNames(navigationLink, hoverLink, 'gap-x-2 w-full text-left'),
     selectedOption: classNames(
       'data-[selected=true]:bg-gray-100',
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
       'data-[selected=true]:dark:text-gray-100'
-    ),
-    hoverLink: classNames(
-      'hover:bg-gray-100',
-      'hover:text-gray-900',
-      'dark:hover:bg-gray-700',
-      'dark:hover:text-gray-100',
-
-      'focus-within:bg-gray-100',
-      'focus-within:text-gray-900',
-      'dark:focus-within:bg-gray-700',
-      'dark:focus-within:text-gray-100'
     )
   }
 }
