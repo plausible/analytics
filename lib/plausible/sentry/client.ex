@@ -1,4 +1,8 @@
 defmodule Plausible.Sentry.Client do
+  @moduledoc """
+  Custom HTTP client configuration for Sentry integration using Finch.
+  """
+
   @behaviour Sentry.HTTPClient
 
   defguardp is_redirect(status) when is_integer(status) and status >= 300 and status < 400

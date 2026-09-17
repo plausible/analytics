@@ -116,7 +116,7 @@ defmodule Plausible.AssertMatches do
 
       assert unquote(var_pattern) = value
 
-      if unquote(length(pins) > 0) do
+      if unquote(pins != []) do
         {errors?, predicate_pattern} = unquote(predicate_pattern)
 
         if errors? do

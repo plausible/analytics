@@ -1,4 +1,8 @@
 defmodule Plausible.Billing.PaddleApi do
+  @moduledoc """
+  Paddle API HTTP client.
+  """
+
   alias Plausible.HTTPClient
 
   @headers [

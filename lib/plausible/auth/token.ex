@@ -1,4 +1,8 @@
 defmodule Plausible.Auth.Token do
+  @moduledoc """
+  Functions for signing and verifying single-use tokens.
+  """
+
   @one_hour_in_seconds 30 * 60
 
   def sign_shared_link(slug) do

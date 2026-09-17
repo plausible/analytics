@@ -133,7 +133,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       query.filters
       |> Enum.filter(fn [_operation, dimension | _rest] -> dimension == "event:hostname" end)
 
-    if length(hostname_filters) > 0 do
+    if hostname_filters != [] do
       extra_filters =
         query.dimensions
         |> Enum.flat_map(&hostname_filters_for_dimension(&1, hostname_filters))
