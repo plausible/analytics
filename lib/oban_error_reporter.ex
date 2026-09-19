@@ -41,6 +41,7 @@ defmodule ObanErrorReporter do
 
   defp on_job_exception(%Oban.Job{
          queue: "analytics_imports",
+         worker: "Plausible.Workers.ImportAnalytics",
          args: %{"import_id" => import_id},
          state: "executing",
          attempt: attempt,
@@ -56,6 +57,7 @@ defmodule ObanErrorReporter do
 
   defp on_job_exception(%Oban.Job{
          queue: "analytics_imports",
+         worker: "Plausible.Workers.ImportAnalytics",
          args: %{"import_id" => import_id},
          state: "executing"
        }) do
