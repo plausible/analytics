@@ -67,14 +67,15 @@ minio: ## Start a transient container with a recent version of minio (s3)
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
 
+sso: server_url ?= http://localhost:8000
 sso:
 	$(call require, integration_id)
-	@echo "Setting up local IdP service..."
+	@echo "Setting up local IdP service for Plausible running at $(server_url)..."
 	@docker run --name=idp \
   -p 8080:8080 \
-  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
-  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
-  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+  -e SIMPLESAMLPHP_SP_ENTITY_ID=$(server_url)/sso/$(integration_id) \
+  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=$(server_url)/sso/saml/consume/$(integration_id) \
+  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php:ro -d kenchan0130/simplesamlphp
 
 	@sleep 2
 
@@ -89,15 +90,15 @@ sso:
 	@echo ""
 	@echo ""
 	@echo "Following accounts are configured:"
-	@echo "- user@plausible.test / plausible"
-	@echo "- user1@plausible.test / plausible"
-	@echo "- user2@plausible.test / plausible"
+	@echo "- user@example.com / plausible"
+	@echo "- user1@example.com / plausible"
+	@echo "- user2@example.com / plausible"
 	@echo ""
-	@echo "Run plausible application server with ALLOW_RESERVED_IPS=true"
+	@echo "Add 'example.com' as the SSO domain, then verify it with:"
+	@echo "  make mock-dns domain_id=<identifier shown next to the domain>"
 	
 sso-stop:
-	docker stop idp
-	docker remove idp
+	docker stop idp && docker rm idp
 
 generate-corefile:
 	$(call require, domain_id)
