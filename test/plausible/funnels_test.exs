@@ -3,8 +3,9 @@ defmodule Plausible.FunnelsTest do
   @moduletag :ee_only
 
   on_ee do
-    alias Plausible.Goals
+    alias Plausible.Funnel
     alias Plausible.Funnels
+    alias Plausible.Goals
     alias Plausible.Stats
     alias Plausible.Stats.QueryBuilder
 
@@ -46,7 +47,7 @@ defmodule Plausible.FunnelsTest do
         assert funnel.funnel_type == :sequential
         assert funnel.strict_order == false
         assert funnel.first_and_last == false
-        assert [fg1, fg2, fg3] = funnel.steps
+        assert [fg1, fg2, fg3] = Funnel.steps(funnel)
 
         assert fg1.goal_id == g1["goal_id"]
         assert fg2.goal_id == g2["goal_id"]
@@ -68,7 +69,7 @@ defmodule Plausible.FunnelsTest do
         {:ok, funnel2} = Funnels.update(funnel1, "Updated funnel", [g4, g5])
 
         assert funnel2.name == "Updated funnel"
-        assert [fg1, fg2] = funnel2.steps
+        assert [fg1, fg2] = Funnel.steps(funnel2)
 
         assert fg1.goal_id == g4["goal_id"]
         assert fg2.goal_id == g5["goal_id"]
@@ -225,7 +226,7 @@ defmodule Plausible.FunnelsTest do
 
         assert funnel = Funnels.get(site, funnel.id)
         assert funnel.name == "Lorem ipsum"
-        assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
+        assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = Funnel.steps(funnel)
       end
 
       test "funnels can be deleted by id and a site", %{site: site, steps: [g1, g2 | _]} do

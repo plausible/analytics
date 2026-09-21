@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(site, query, %Funnel{} = funnel) do
-    revenue_steps = revenue_steps(site, funnel.steps)
+    revenue_steps = revenue_steps(site, Funnels.steps(funnel))
 
     comparison_funnel =
       if query.comparison_utc_time_range do
@@ -61,16 +61,16 @@ defmodule Plausible.Stats.Funnel do
   end
 
   defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do
-    if length(funnel.steps) > 2 do
+    if length(Funnel.steps(funnel)) > 2 do
       short_funnel = convert_to_first_and_last(funnel)
-      revenue_steps = revenue_steps(site, short_funnel.steps)
+      revenue_steps = revenue_steps(site, Funnel.steps(short_funnel))
 
       [_, last_step] =
         query
         |> compute(short_funnel, revenue_steps)
         |> Map.fetch!(:steps)
 
-      steps = List.replace_at(final_funnel.steps, -1, last_step)
+      steps = List.replace_at(Funnel.steps(final_funnel), -1, last_step)
 
       %{final_funnel | steps: steps}
     else
@@ -82,22 +82,23 @@ defmodule Plausible.Stats.Funnel do
     do: final_funnel
 
   defp convert_to_first_and_last(funnel) do
-    first = List.first(funnel.steps)
-    last = %{List.last(funnel.steps) | step_order: 2}
+    steps = Funnels.steps(funnel)
+    first = List.first(steps)
+    last = %{List.last(steps) | step_order: 2}
 
-    %{funnel | funnel_type: :sequential, steps: [first, last]}
+    %{funnel | funnel_type: :sequential, steps: [first, last], dynamic_steps: []}
   end
 
   defp revenue_steps(site, steps) do
     if Revenue.available?(site) do
-      Enum.reject(steps, &is_nil(&1.goal.currency))
+      Enum.reject(steps, &is_nil(Funnel.as_goal(&1).currency))
     else
       []
     end
   end
 
   defp compute(query, funnel, revenue_steps) do
-    goals = Enum.map(funnel.steps, & &1.goal)
+    goals = Funnel.goals(funnel)
 
     funnel_data =
       query
@@ -155,7 +156,7 @@ defmodule Plausible.Stats.Funnel do
   defp select_user_revenue(db_query, revenue_steps) do
     sums =
       Map.new(revenue_steps, fn step ->
-        goal_condition = Plausible.Stats.Goals.goal_condition(step.goal)
+        goal_condition = Plausible.Stats.Goals.goal_condition(Funnel.as_goal(goal))
 
         {revenue_key(step),
          dynamic([e], fragment("sumIf(?, ?)", e.revenue_reporting_amount, ^goal_condition))}
@@ -203,8 +204,11 @@ defmodule Plausible.Stats.Funnel do
 
   defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
-      Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
-        goal_condition = Plausible.Stats.Goals.goal_condition(step.goal)
+      Enum.reduce(Funnel.steps(funnel_definition), nil, fn step, acc ->
+        goal_condition =
+          step
+          |> Funnel.as_goal()
+          |> Plausible.Stats.Goals.goal_condition()
 
         if acc do
           dynamic([q], fragment("?, ?", ^acc, ^goal_condition))
@@ -246,7 +250,7 @@ defmodule Plausible.Stats.Funnel do
     # In case ClickHouse returns 0-index funnel result, we're going to ignore it
     # anyway, since we fold over steps as per definition, that are always
     # indexed starting from 1.
-    max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
+    max_step = Enum.max_by(Funnel.steps(funnel), & &1.step_order).step_order
 
     funnel
     |> Map.fetch!(:steps)
@@ -280,7 +284,7 @@ defmodule Plausible.Stats.Funnel do
           conversion_rate: conversion_rate,
           conversion_rate_step: conversion_rate_step,
           visitors: visitors_at_step,
-          label: to_string(step.goal)
+          label: to_string(Funnel.as_goal(step))
         }
         |> Map.merge(revenue_metrics(step, revenue_by_step, visitors_at_step))
 
@@ -293,7 +297,7 @@ defmodule Plausible.Stats.Funnel do
   defp revenue_metrics(step, revenue_by_step, visitors_at_step) do
     case Map.fetch(revenue_by_step, step.step_order) do
       {:ok, revenue} ->
-        currency = step.goal.currency
+        currency = Funnel.as_goal(step).currency
 
         %{
           revenue: Revenue.format_revenue_metric(revenue, currency),
