@@ -93,7 +93,7 @@ defmodule Plausible.EmailSuppressionsTest do
       {:ok, _} = EmailSuppressions.reactivate("bounced@example.com", user)
       refute EmailSuppressions.suppressed?("bounced@example.com")
 
-      {:ok, _} =
+      {:ok, suppression} =
         EmailSuppressions.create_from_bounce(%{
           email: "bounced@example.com",
           reason: :hard_bounce,
@@ -101,6 +101,33 @@ defmodule Plausible.EmailSuppressionsTest do
         })
 
       assert EmailSuppressions.suppressed?("bounced@example.com")
+      assert is_nil(suppression.reactivated_at)
+      assert is_nil(suppression.reactivated_by_user_id)
+    end
+
+    test "a bounce webhook clears a reactivation left by an earlier, different webhook" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_spam_complaint(%{
+          email: "flip-flop@example.com",
+          source: :webhook
+        })
+
+      {:ok, _} = EmailSuppressions.reactivate("flip-flop@example.com", user)
+      refute EmailSuppressions.suppressed?("flip-flop@example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "flip-flop@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      assert EmailSuppressions.suppressed?("flip-flop@example.com")
+      assert suppression.reason == :hard_bounce
+      assert is_nil(suppression.reactivated_at)
+      assert is_nil(suppression.reactivated_by_user_id)
     end
   end
 
@@ -114,6 +141,31 @@ defmodule Plausible.EmailSuppressionsTest do
 
       assert suppression.reason == :spam_complaint
       assert EmailSuppressions.suppressed?("complainer@example.com")
+    end
+
+    test "a spam complaint webhook clears a reactivation left by an earlier bounce" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "flip-flop@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      {:ok, _} = EmailSuppressions.reactivate("flip-flop@example.com", user)
+      refute EmailSuppressions.suppressed?("flip-flop@example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_spam_complaint(%{
+          email: "flip-flop@example.com",
+          source: :webhook
+        })
+
+      assert EmailSuppressions.suppressed?("flip-flop@example.com")
+      assert suppression.reason == :spam_complaint
+      assert is_nil(suppression.reactivated_at)
+      assert is_nil(suppression.reactivated_by_user_id)
     end
   end
 

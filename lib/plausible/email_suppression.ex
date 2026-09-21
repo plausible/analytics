@@ -50,6 +50,10 @@ defmodule Plausible.EmailSuppression do
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> unique_constraint(:email)
+    # A fresh bounce/complaint is evidence the address is still bad, so any
+    # earlier reactivation no longer holds
+    |> put_change(:reactivated_at, nil)
+    |> put_change(:reactivated_by_user_id, nil)
   end
 
   @spec reactivate_changeset(t(), pos_integer()) :: Ecto.Changeset.t()
