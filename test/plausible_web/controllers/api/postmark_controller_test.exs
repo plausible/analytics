@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
           "authorization",
           Plug.BasicAuth.encode_basic_auth("wrong", "creds")
         )
-        |> post(Routes.postmark_path(conn, :webhook), @bounce_payload)
+        |> post(~p"/api/postmark/webhook", @bounce_payload)
 
       assert conn.status == 401
       refute EmailSuppressions.suppressed?("bounced@example.com")
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
       conn =
         conn
         |> Plug.Conn.delete_req_header("authorization")
-        |> post(Routes.postmark_path(conn, :webhook), @bounce_payload)
+        |> post(~p"/api/postmark/webhook", @bounce_payload)
 
       assert conn.status == 401
     end
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
   describe "Bounce webhook" do
     test "suppresses on a hard bounce", %{conn: conn} do
-      conn = post(conn, Routes.postmark_path(conn, :webhook), @bounce_payload)
+      conn = post(conn, ~p"/api/postmark/webhook", @bounce_payload)
 
       assert json_response(conn, 200) == %{}
       assert EmailSuppressions.suppressed?("bounced@example.com")
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
     test "suppresses on a bad email address", %{conn: conn} do
       payload = %{@bounce_payload | "Type" => "BadEmailAddress"}
-      conn = post(conn, Routes.postmark_path(conn, :webhook), payload)
+      conn = post(conn, ~p"/api/postmark/webhook", payload)
 
       assert json_response(conn, 200) == %{}
       assert EmailSuppressions.suppressed?("bounced@example.com")
@@ -82,22 +82,35 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
     test "suppresses on an ISP block", %{conn: conn} do
       payload = %{@bounce_payload | "Type" => "Blocked"}
-      conn = post(conn, Routes.postmark_path(conn, :webhook), payload)
+      conn = post(conn, ~p"/api/postmark/webhook", payload)
 
       assert json_response(conn, 200) == %{}
       assert EmailSuppressions.suppressed?("bounced@example.com")
     end
 
+    test "suppresses on a gateway spam-filter rejection (SpamNotification)", %{conn: conn} do
+      payload = %{@bounce_payload | "Type" => "SpamNotification"}
+      conn = post(conn, ~p"/api/postmark/webhook", payload)
+
+      assert json_response(conn, 200) == %{}
+      assert EmailSuppressions.suppressed?("bounced@example.com")
+
+      suppression =
+        Plausible.Repo.get_by!(Plausible.EmailSuppression, email: "bounced@example.com")
+
+      assert suppression.reason == :spam_notification
+    end
+
     test "ignores a transient/soft bounce", %{conn: conn} do
       payload = %{@bounce_payload | "Type" => "Transient"}
-      conn = post(conn, Routes.postmark_path(conn, :webhook), payload)
+      conn = post(conn, ~p"/api/postmark/webhook", payload)
 
       assert json_response(conn, 200) == %{}
       refute EmailSuppressions.suppressed?("bounced@example.com")
     end
 
     test "records the Postmark bounce details", %{conn: conn} do
-      post(conn, Routes.postmark_path(conn, :webhook), @bounce_payload)
+      post(conn, ~p"/api/postmark/webhook", @bounce_payload)
 
       suppression =
         Plausible.Repo.get_by!(Plausible.EmailSuppression, email: "bounced@example.com")
@@ -112,7 +125,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
     test "still acknowledges the webhook when the payload can't be persisted", %{conn: conn} do
       payload = Map.delete(@bounce_payload, "Email")
-      conn = post(conn, Routes.postmark_path(conn, :webhook), payload)
+      conn = post(conn, ~p"/api/postmark/webhook", payload)
 
       assert json_response(conn, 200) == %{}
       assert Plausible.Repo.aggregate(Plausible.EmailSuppression, :count) == 0
@@ -121,7 +134,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
   describe "SpamComplaint webhook" do
     test "suppresses the complaining address", %{conn: conn} do
-      conn = post(conn, Routes.postmark_path(conn, :webhook), @spam_complaint_payload)
+      conn = post(conn, ~p"/api/postmark/webhook", @spam_complaint_payload)
 
       assert json_response(conn, 200) == %{}
       assert EmailSuppressions.suppressed?("complainer@example.com")
@@ -140,7 +153,7 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
     test "acknowledges but ignores unhandled record types, reporting to Sentry", %{conn: conn} do
       conn =
-        post(conn, Routes.postmark_path(conn, :webhook), %{
+        post(conn, ~p"/api/postmark/webhook", %{
           "RecordType" => "Delivery",
           "Email" => "delivered@example.com"
         })

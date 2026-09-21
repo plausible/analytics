@@ -14,7 +14,11 @@ defmodule PlausibleWeb.Api.PostmarkController do
   @suppressing_bounce_reasons %{
     "HardBounce" => :hard_bounce,
     "BadEmailAddress" => :bad_email_address,
-    "Blocked" => :blocked
+    "Blocked" => :blocked,
+    # SpamNotification is an automated rejection at delivery time
+    # Postmark classifies it as a Bounce (not a SpamComplaint), 
+    # confirmed with Postmark support
+    "SpamNotification" => :spam_notification
   }
 
   def webhook(conn, %{"RecordType" => "Bounce"} = params) do
