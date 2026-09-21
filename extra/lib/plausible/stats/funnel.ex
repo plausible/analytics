@@ -204,11 +204,8 @@ defmodule Plausible.Stats.Funnel do
 
   defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
-      Enum.reduce(Funnel.steps(funnel_definition), nil, fn step, acc ->
-        goal_condition =
-          step
-          |> Funnel.as_goal()
-          |> Plausible.Stats.Goals.goal_condition()
+      Enum.reduce(Funnel.goals(funnel_definition), nil, fn goal, acc ->
+        goal_condition = Plausible.Stats.Goals.goal_condition(goal)
 
         if acc do
           dynamic([q], fragment("?, ?", ^acc, ^goal_condition))
@@ -253,7 +250,7 @@ defmodule Plausible.Stats.Funnel do
     max_step = Enum.max_by(Funnel.steps(funnel), & &1.step_order).step_order
 
     funnel
-    |> Map.fetch!(:steps)
+    |> Funnel.steps()
     |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
       # first step contains the total number of all visitors qualifying for the funnel,
       # with each subsequent step needing to accumulate sum of the previous one(s)

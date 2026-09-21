@@ -13,7 +13,6 @@ defmodule Plausible.Funnel.DynamicStep do
     :event_name,
     :page_path,
     :scroll_threshold,
-    :display_name,
     :custom_props,
     :currency
   ]
