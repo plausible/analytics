@@ -15,14 +15,14 @@ defmodule Plausible.Funnel.Step do
     timestamps()
   end
 
-  def changeset(step, goal_or_attrs \\ %{})
+  def changeset(goal_or_attrs \\ %{})
 
-  def changeset(step, %Plausible.Goal{id: goal_id}) do
-    changeset(step, %{goal_id: goal_id})
+  def changeset(%Plausible.Goal{id: goal_id}) do
+    changeset(%{goal_id: goal_id})
   end
 
-  def changeset(step, attrs) do
-    step
+  def changeset(attrs) do
+    %__MODULE__{}
     |> cast(attrs, [:goal_id])
     |> cast_assoc(:goal)
     |> validate_required([:goal_id])

@@ -18,6 +18,7 @@ defmodule Plausible.Funnel do
   import Ecto.Changeset
 
   alias Plausible.Funnel.Step
+  alias Plausible.Funnel.DynamicStep
 
   @funnel_types [:sequential, :flexible, :strict]
 
@@ -62,6 +63,8 @@ defmodule Plausible.Funnel do
 
     belongs_to :site, Plausible.Site
 
+    embeds_many :dynamic_steps, DynamicStep, on_replace: :delete
+
     has_many :steps, Step,
       preload_order: [
         asc: :step_order
@@ -85,12 +88,33 @@ defmodule Plausible.Funnel do
   end
 
   def put_steps(changeset, steps) do
-    steps
-    |> Enum.map(&Step.changeset(%Step{}, &1))
-    |> Enum.with_index(fn step, step_order ->
-      Ecto.Changeset.put_change(step, :step_order, step_order + 1)
-    end)
-    |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
+    {static_steps, dynamic_steps} =
+      steps
+      |> Enum.with_index(1)
+      |> Enum.map(fn {input, idx} ->
+        input
+        |> schema_by_input()
+        |> build_step(input, idx)
+      end)
+      |> Enum.split_with(fn
+        %{data: %Step{}} -> true
+        _ -> false
+      end)
+
+    changeset
+    |> Ecto.Changeset.put_assoc(:steps, static_steps)
+    |> Ecto.Changeset.put_embed(:dynamic_steps, dynamic_steps)
+  end
+
+  defp schema_by_input(%Plausible.Goal{}), do: Step
+  defp schema_by_input(%{goal_id: _}), do: Step
+  defp schema_by_input(%{"goal_id" => _}), do: Step
+  defp schema_by_input(_), do: DynamicStep
+
+  defp build_step(step_schema, params, step_order) do
+    params
+    |> step_schema.changeset()
+    |> Ecto.Changeset.put_change(:step_order, step_order)
   end
 
   defp set_funnel_type(%{valid?: true} = changeset) do
