@@ -106,5 +106,25 @@ defmodule Plausible.MailerTest do
       refute_delivered_email(base_email)
       assert_delivered_email(priority_email)
     end
+
+    test "crashes rather than silently under-checking when `to` has more than one address" do
+      email =
+        Bamboo.Email.new_email(
+          from: "from@example.com",
+          to: ["one@example.com", "two@example.com"]
+        )
+
+      assert_raise RuntimeError, ~r/only supports a single `to` recipient/, fn ->
+        Plausible.Mailer.send(email)
+      end
+    end
+
+    test "crashes rather than silently under-checking when `to` is empty" do
+      email = Bamboo.Email.new_email(from: "from@example.com", to: [])
+
+      assert_raise RuntimeError, ~r/only supports a single `to` recipient/, fn ->
+        Plausible.Mailer.send(email)
+      end
+    end
   end
 end

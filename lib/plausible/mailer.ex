@@ -46,21 +46,31 @@ defmodule Plausible.Mailer do
 
   on_ee do
     defp suppressed_recipients(email) do
-      if priority_stream?(email) do
+      address = sole_recipient(email)
+
+      cond do
         # Priority-stream mail (password resets, 2FA, e-mail verification)
         # has to go through even to an address we'd otherwise suppress -
         # refusing it could lock someone out of their own account.
-        []
-      else
-        # to, cc/bcc can hold a raw string, a {name, address} tuple, or any
-        # struct implementing `Bamboo.Formatter` (e.g. `Plausible.Auth.User`),
-        # each possibly wrapped in a list.
-        normalized = Bamboo.Mailer.normalize_addresses(email)
+        priority_stream?(email) ->
+          []
 
-        [normalized.to, normalized.cc, normalized.bcc]
-        |> List.flatten()
-        |> Enum.map(fn {_name, address} -> address end)
-        |> Enum.filter(&Plausible.EmailSuppressions.suppressed?/1)
+        Plausible.EmailSuppressions.suppressed?(address) ->
+          [address]
+
+        true ->
+          []
+      end
+    end
+
+    defp sole_recipient(email) do
+      case Bamboo.Mailer.normalize_addresses(email).to do
+        [{_name, address}] ->
+          address
+
+        to ->
+          # this can be handled in the future, but currently isn't ever used
+          raise "Plausible.Mailer only supports a single `to` recipient, got: #{inspect(to)}"
       end
     end
 
