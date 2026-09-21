@@ -93,19 +93,23 @@ defmodule Plausible.Funnel do
     |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
   end
 
-  @doc false
-  def set_funnel_type(%{valid?: true} = changeset) do
-    {strict_order?, first_and_last?} =
-      case get_field(changeset, :funnel_type) do
-        :strict -> {true, false}
-        :flexible -> {false, true}
-        _ -> {false, false}
+  defp set_funnel_type(%{valid?: true} = changeset) do
+    {changed?, strict_order?, first_and_last?} =
+      case get_change(changeset, :funnel_type) do
+        :strict -> {true, true, false}
+        :flexible -> {true, false, true}
+        :sequential -> {true, false, false}
+        nil -> {false, nil, nil}
       end
 
-    changeset
-    |> put_change(:strict_order, strict_order?)
-    |> put_change(:first_and_last, first_and_last?)
+    if changed? do
+      changeset
+      |> put_change(:strict_order, strict_order?)
+      |> put_change(:first_and_last, first_and_last?)
+    else
+      changeset
+    end
   end
 
-  def set_funnel_type(changeset), do: changeset
+  defp set_funnel_type(changeset), do: changeset
 end

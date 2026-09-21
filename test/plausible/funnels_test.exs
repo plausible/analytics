@@ -79,6 +79,30 @@ defmodule Plausible.FunnelsTest do
         assert funnel1.id == funnel2.id
       end
 
+      test "updating strict funnel with out of sync funnel type does not alter the type", %{
+        site: site,
+        steps: [g1, g2, g3, g4, g5 | _]
+      } do
+        {:ok, funnel1} =
+          Funnels.create(
+            site,
+            "Sample funnel",
+            [g1, g2, g3],
+            funnel_type: :strict
+          )
+
+        funnel1 = funnel1 |> Ecto.Changeset.change(funnel_type: :sequential) |> Repo.update!()
+
+        {:ok, funnel2} = Funnels.update(funnel1, "Updated funnel", [g4, g5])
+
+        assert funnel2.name == "Updated funnel"
+        assert funnel1.id == funnel2.id
+
+        assert funnel2.strict_order == true
+        assert funnel2.first_and_last == false
+        assert funnel2.funnel_type == :sequential
+      end
+
       test "update funnel to strict", %{site: site, steps: [g1, g2, g3 | _]} do
         {:ok, funnel} =
           Funnels.create(
