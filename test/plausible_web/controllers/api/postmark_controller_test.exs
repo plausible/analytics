@@ -1,9 +1,9 @@
 defmodule PlausibleWeb.Api.PostmarkControllerTest do
   use PlausibleWeb.ConnCase, async: true
 
-  alias Plausible.EmailSuppressions
-
   on_ee do
+    alias Plausible.EmailSuppressions
+
     # see config/.env.test
     @webhook_username "fake_webhook_username"
     @webhook_password "fake_webhook_password"
