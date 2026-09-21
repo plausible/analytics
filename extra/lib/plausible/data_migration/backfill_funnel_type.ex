@@ -10,6 +10,9 @@ defmodule Plausible.DataMigration.BackfillFunnelType do
 
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
+
+    log("DRY RUN: #{dry_run?}")
+
     backfill(dry_run?)
   end
 
@@ -24,18 +27,31 @@ defmodule Plausible.DataMigration.BackfillFunnelType do
       )
       |> Repo.all()
 
-    log("Found #{length(out_of_sync_funnels)} with funnel_type out of sync...")
+    log("Found #{length(out_of_sync_funnels)} funnels with funnel_type out of sync...")
 
     if not dry_run? do
       Enum.each(out_of_sync_funnels, fn funnel ->
         funnel
-        |> Ecto.Changeset.change()
-        |> Funnel.set_funnel_type()
+        |> set_funnel_type()
         |> Repo.update!()
       end)
 
-      log("Finished syncing funnel type for  #{length(out_of_sync_funnels)} funnels...")
+      log("Finished syncing funnel type for #{length(out_of_sync_funnels)} funnels!")
     end
+
+    :ok
+  end
+
+  defp set_funnel_type(%{strict_order: false, first_and_last: false} = funnel) do
+    Ecto.Changeset.change(funnel, funnel_type: :sequential)
+  end
+
+  defp set_funnel_type(%{strict_order: true, first_and_last: false} = funnel) do
+    Ecto.Changeset.change(funnel, funnel_type: :strict)
+  end
+
+  defp set_funnel_type(%{strict_order: false, first_and_last: true} = funnel) do
+    Ecto.Changeset.change(funnel, funnel_type: :flexible)
   end
 
   defp log(msg) do
