@@ -1,7 +1,6 @@
 defmodule Plausible.Repo.Migrations.CreateEmailSuppressions do
   use Ecto.Migration
 
-
   import Plausible.MigrationUtils
 
   def change do
