@@ -86,6 +86,7 @@ defmodule Plausible.Funnels do
     site
     |> create_changeset(name, steps, opts)
     |> Ecto.Changeset.apply_changes()
+    |> Repo.preload(steps: :goal)
   end
 
   @spec list(Plausible.Site.t()) :: [
