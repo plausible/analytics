@@ -3,6 +3,8 @@ defmodule Plausible.EmailSuppressionsTest do
 
   alias Plausible.EmailSuppressions
 
+  @moduletag :ee_only
+
   describe "suppressed?/1" do
     test "false when no record exists" do
       refute EmailSuppressions.suppressed?("nobody@example.com")
