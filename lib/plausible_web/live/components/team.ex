@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:my_role, :atom, required: true)
   attr(:rest, :global)
 
-  def role_picker(assigns) do
+  def role_select_input(assigns) do
     ~H"""
     <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role}>
       <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} aria-label="Role" class="w-[100px]">

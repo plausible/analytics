@@ -57,11 +57,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
             />
           </div>
 
-          <.role_picker
+          <.role_select_input
             id="input-role-picker"
             role={@input_role}
             my_role={@my_role}
-            phx-click="switch-role"
+            phx-click="select-role"
           />
 
           <.button
@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, assign(socket, input_email: params["input-email"])}
   end
 
-  def handle_event("switch-role", %{"role" => role}, socket) do
+  def handle_event("select-role", %{"role" => role}, socket) do
     socket = assign(socket, input_role: role_to_atom(role))
     {:noreply, socket}
   end
