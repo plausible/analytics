@@ -75,6 +75,21 @@ defmodule Plausible.Funnel do
     timestamps()
   end
 
+  def goals(funnel) do
+    funnel
+    |> steps()
+    |> Enum.map(&as_goal/1)
+  end
+
+  def steps(funnel) do
+    funnel.steps
+    |> Enum.concat(funnel.dynamic_steps)
+    |> Enum.sort_by(& &1.step_order)
+  end
+
+  def as_goal(%Step{} = step), do: Step.as_goal(step)
+  def as_goal(%DynamicStep{} = step), do: DynamicStep.as_goal(step)
+
   def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
     funnel
     |> cast(attrs, [:name, :funnel_type])
