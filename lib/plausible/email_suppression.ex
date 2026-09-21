@@ -10,7 +10,14 @@ defmodule Plausible.EmailSuppression do
 
   @type t() :: %__MODULE__{}
 
-  @reasons [:hard_bounce, :bad_email_address, :blocked, :spam_complaint, :manual]
+  @reasons [
+    :hard_bounce,
+    :bad_email_address,
+    :blocked,
+    :spam_complaint,
+    :spam_notification,
+    :manual
+  ]
   @sources [:webhook, :backfill, :manual]
 
   schema "email_suppressions" do

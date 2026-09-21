@@ -257,6 +257,8 @@ paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
+postmark_webhook_username = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_USERNAME")
+postmark_webhook_password = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_PASSWORD")
 help_scout_app_id = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_ID")
 help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SECRET")
 help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
@@ -620,6 +622,11 @@ config :plausible, Plausible.HelpScout,
   app_secret: help_scout_app_secret,
   signature_key: help_scout_signature_key,
   vault_key: help_scout_vault_key
+
+config :plausible, Plausible.Postmark,
+  api_key: postmark_api_key,
+  webhook_username: postmark_webhook_username,
+  webhook_password: postmark_webhook_password
 
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)

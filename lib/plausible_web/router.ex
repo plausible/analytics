@@ -421,6 +421,11 @@ defmodule PlausibleWeb.Router do
 
     scope [] do
       pipe_through :api
+
+      on_ee do
+        post "/postmark/webhook", Api.PostmarkController, :webhook
+      end
+
       post "/paddle/webhook", Api.PaddleController, :webhook
       get "/paddle/currency", Api.PaddleController, :currency
 
