@@ -82,14 +82,10 @@ defmodule Plausible.Stats.Funnel do
     do: final_funnel
 
   defp convert_to_first_and_last(funnel) do
-    last_step = List.last(funnel.steps)
+    first = List.first(funnel.steps)
+    last = %{List.last(funnel.steps) | step_order: 2}
 
-    steps =
-      [List.first(funnel.steps), last_step]
-      |> Enum.with_index(1)
-      |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
-
-    %{funnel | funnel_type: :sequential, steps: steps}
+    %{funnel | funnel_type: :sequential, steps: [first, last]}
   end
 
   defp revenue_steps(site, steps) do
