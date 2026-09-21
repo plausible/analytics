@@ -217,22 +217,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Deletion scheduled"
         assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
 
+        future = Date.utc_today() |> Date.add(7)
+
         lv
         |> element(~s|form[phx-submit="snooze-schedule"]|)
         |> render_submit(%{
           "team_deletion_schedule" => %{
-            "snoozed_until" => "2026-09-20",
+            "snoozed_until" => "#{future}",
             "snooze_note" => "give them time"
           }
         })
 
         html = render(lv)
-        assert text(html) =~ "Snoozed until 2026-09-20"
+        assert text(html) =~ "Snoozed until #{future}"
         assert text(html) =~ "give them time"
 
         updated = Plausible.Repo.reload!(schedule)
         assert updated.status == :snoozed
-        assert updated.snoozed_until == ~D[2026-09-20]
+        assert updated.snoozed_until == future
         assert updated.snooze_note == "give them time"
       end
 
