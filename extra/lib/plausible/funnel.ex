@@ -96,13 +96,13 @@ defmodule Plausible.Funnel do
     |> validate_required([:name])
     |> set_funnel_type()
     |> put_steps(attrs[:steps] || attrs["steps"])
-    |> validate_length(:steps, min: @min_steps, max: @max_steps)
+    |> validate_steps_length()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
   end
 
-  def put_steps(changeset, steps) do
+  defp put_steps(changeset, steps) do
     {static_steps, dynamic_steps} =
       steps
       |> Enum.with_index(1)
@@ -119,6 +119,26 @@ defmodule Plausible.Funnel do
     changeset
     |> Ecto.Changeset.put_assoc(:steps, static_steps)
     |> Ecto.Changeset.put_embed(:dynamic_steps, dynamic_steps)
+  end
+
+  defp validate_steps_length(changeset) do
+    steps_count =
+      length(Ecto.Changeset.get_assoc(changeset, :steps)) +
+        length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
+
+    if steps_count < @min_steps or steps_count > @max_steps do
+    end
+
+    cond do
+      steps_count < @min_steps ->
+        add_error(changeset, :steps, "should have at least #{@min_steps} item(s)")
+
+      steps_count > @max_steps ->
+        add_error(changeset, :steps, "should have no more than #{@max_steps} item(s)")
+
+      true ->
+        changeset
+    end
   end
 
   defp schema_by_input(%Plausible.Goal{}), do: Step
