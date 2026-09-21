@@ -93,7 +93,8 @@ defmodule Plausible.Funnel do
     |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
   end
 
-  defp set_funnel_type(%{valid?: true} = changeset) do
+  @doc false
+  def set_funnel_type(%{valid?: true} = changeset) do
     {strict_order?, first_and_last?} =
       case get_field(changeset, :funnel_type) do
         :strict -> {true, false}
@@ -106,5 +107,5 @@ defmodule Plausible.Funnel do
     |> put_change(:first_and_last, first_and_last?)
   end
 
-  defp set_funnel_type(changeset), do: changeset
+  def set_funnel_type(changeset), do: changeset
 end
