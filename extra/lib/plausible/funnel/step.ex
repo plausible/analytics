@@ -15,6 +15,7 @@ defmodule Plausible.Funnel.Step do
     timestamps()
   end
 
+  @spec changeset(map() | Plausible.Goal.t()) :: Ecto.Changeset.t()
   def changeset(goal_or_attrs \\ %{})
 
   def changeset(%Plausible.Goal{id: goal_id}) do
@@ -29,5 +30,10 @@ defmodule Plausible.Funnel.Step do
     |> unique_constraint(:goal,
       name: :funnel_steps_goal_id_funnel_id_index
     )
+  end
+
+  @spec as_goal(t()) :: Plausible.Goal.t()
+  def as_goal(step) do
+    step.goal
   end
 end
