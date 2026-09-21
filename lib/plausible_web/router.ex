@@ -411,8 +411,6 @@ defmodule PlausibleWeb.Router do
       get "/error", Api.ExternalController, :error
       # Remove this once all external checks are migration to new /system/health/* checks
       get "/health", Api.SystemController, :readiness
-
-      post "/postmark/webhook", Api.PostmarkController, :webhook
     end
 
     scope "/system" do
@@ -423,6 +421,11 @@ defmodule PlausibleWeb.Router do
 
     scope [] do
       pipe_through :api
+
+      on_ee do
+        post "/postmark/webhook", Api.PostmarkController, :webhook
+      end
+
       post "/paddle/webhook", Api.PaddleController, :webhook
       get "/paddle/currency", Api.PaddleController, :currency
 
