@@ -55,12 +55,12 @@ defmodule Plausible.Funnel do
     field :name, :string
     field :strict_order, :boolean, default: false
     field :first_and_last, :boolean, default: false
-    belongs_to :site, Plausible.Site
 
     field :funnel_type, Ecto.Enum,
-      virtual: true,
       default: @default_funnel_type,
       values: @funnel_types
+
+    belongs_to :site, Plausible.Site
 
     has_many :steps, Step,
       preload_order: [
