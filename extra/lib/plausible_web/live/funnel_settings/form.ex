@@ -87,7 +87,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div class="flex items-center justify-between gap-4 mt-2">
                 <.input
                   type="radio"
-                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   id={f[:funnel_type].id <> "_sequential"}
                   name={f[:funnel_type].name}
                   value="sequential"
@@ -105,7 +104,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div class="flex items-center justify-between gap-4">
                 <.input
                   type="radio"
-                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   id={f[:funnel_type].id <> "_flexible"}
                   name={f[:funnel_type].name}
                   value="flexible"
@@ -123,7 +121,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div class="flex items-center justify-between gap-4">
                 <.input
                   type="radio"
-                  class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   id={f[:funnel_type].id <> "_strict"}
                   name={f[:funnel_type].name}
                   value="strict"
