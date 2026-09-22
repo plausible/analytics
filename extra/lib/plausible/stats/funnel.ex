@@ -30,22 +30,28 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(site, query, %Funnel{} = funnel) do
-    revenue_steps = revenue_steps(site, funnel)
+    revenue_steps = revenue_steps(site, funnel.steps)
 
-    comparison =
+    comparison_funnel =
       if query.comparison_utc_time_range do
-        query
-        |> Comparisons.get_comparison_query()
+        comparison_query = Comparisons.get_comparison_query(query)
+
+        comparison_query
         |> compute(funnel, revenue_steps)
+        |> recompute_flexible(comparison_query, site, funnel)
       end
 
+    final_funnel =
+      query
+      |> compute(funnel, revenue_steps)
+      |> recompute_flexible(query, site, funnel)
+
     {:ok,
-     query
-     |> compute(funnel, revenue_steps)
+     final_funnel
      |> Map.merge(%{
        name: funnel.name,
-       strict_order: funnel.strict_order,
-       comparison: comparison,
+       funnel_type: funnel.funnel_type,
+       comparison: comparison_funnel,
        date_range: tz_date_range(query.utc_time_range, query.timezone),
        comparison_date_range:
          if(query.comparison_utc_time_range,
@@ -54,9 +60,37 @@ defmodule Plausible.Stats.Funnel do
      })}
   end
 
-  defp revenue_steps(site, funnel) do
+  defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do
+    if length(funnel.steps) > 2 do
+      short_funnel = convert_to_first_and_last(funnel)
+      revenue_steps = revenue_steps(site, short_funnel.steps)
+
+      [_, last_step] =
+        query
+        |> compute(short_funnel, revenue_steps)
+        |> Map.fetch!(:steps)
+
+      steps = List.replace_at(final_funnel.steps, -1, last_step)
+
+      %{final_funnel | steps: steps}
+    else
+      final_funnel
+    end
+  end
+
+  defp recompute_flexible(final_funnel, _query, _site, _funnel),
+    do: final_funnel
+
+  defp convert_to_first_and_last(funnel) do
+    first = List.first(funnel.steps)
+    last = %{List.last(funnel.steps) | step_order: 2}
+
+    %{funnel | funnel_type: :sequential, steps: [first, last]}
+  end
+
+  defp revenue_steps(site, steps) do
     if Revenue.available?(site) do
-      Enum.reject(funnel.steps, &is_nil(&1.goal.currency))
+      Enum.reject(steps, &is_nil(&1.goal.currency))
     else
       []
     end
@@ -180,7 +214,7 @@ defmodule Plausible.Stats.Funnel do
       end)
 
     dynamic_window_funnel =
-      if funnel_definition.strict_order do
+      if funnel_definition.funnel_type == :strict do
         dynamic(
           [q],
           fragment(

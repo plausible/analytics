@@ -43,7 +43,9 @@ defmodule Plausible.FunnelsTest do
 
         assert funnel.inserted_at
         assert funnel.name == "From blog to signup and purchase"
+        assert funnel.funnel_type == :sequential
         assert funnel.strict_order == false
+        assert funnel.first_and_last == false
         assert [fg1, fg2, fg3] = funnel.steps
 
         assert fg1.goal_id == g1["goal_id"]
@@ -77,7 +79,31 @@ defmodule Plausible.FunnelsTest do
         assert funnel1.id == funnel2.id
       end
 
-      test "update funnel strict_order", %{site: site, steps: [g1, g2, g3 | _]} do
+      test "updating strict funnel with out of sync funnel type does not alter the type", %{
+        site: site,
+        steps: [g1, g2, g3, g4, g5 | _]
+      } do
+        {:ok, funnel1} =
+          Funnels.create(
+            site,
+            "Sample funnel",
+            [g1, g2, g3],
+            funnel_type: :strict
+          )
+
+        funnel1 = funnel1 |> Ecto.Changeset.change(funnel_type: :sequential) |> Repo.update!()
+
+        {:ok, funnel2} = Funnels.update(funnel1, "Updated funnel", [g4, g5])
+
+        assert funnel2.name == "Updated funnel"
+        assert funnel1.id == funnel2.id
+
+        assert funnel2.strict_order == true
+        assert funnel2.first_and_last == false
+        assert funnel2.funnel_type == :sequential
+      end
+
+      test "update funnel to strict", %{site: site, steps: [g1, g2, g3 | _]} do
         {:ok, funnel} =
           Funnels.create(
             site,
@@ -85,17 +111,21 @@ defmodule Plausible.FunnelsTest do
             [g1, g2]
           )
 
+        assert funnel.funnel_type == :sequential
         assert funnel.strict_order == false
+        assert funnel.first_and_last == false
 
         {:ok, strict_funnel} =
           Funnels.update(
             funnel,
             "Sample funnel",
             [g1, g2, g3],
-            strict_order?: true
+            funnel_type: :strict
           )
 
+        assert strict_funnel.funnel_type == :strict
         assert strict_funnel.strict_order == true
+        assert strict_funnel.first_and_last == false
 
         {:ok, preserved_funnel} =
           Funnels.update(
@@ -104,7 +134,82 @@ defmodule Plausible.FunnelsTest do
             [g1, g2]
           )
 
+        assert preserved_funnel.funnel_type == :strict
         assert preserved_funnel.strict_order == true
+        assert preserved_funnel.first_and_last == false
+      end
+
+      test "update funnel to flexible", %{site: site, steps: [g1, g2, g3 | _]} do
+        {:ok, funnel} =
+          Funnels.create(
+            site,
+            "Sample funnel",
+            [g1, g2]
+          )
+
+        assert funnel.funnel_type == :sequential
+        assert funnel.strict_order == false
+        assert funnel.first_and_last == false
+
+        {:ok, flexible_funnel} =
+          Funnels.update(
+            funnel,
+            "Sample funnel",
+            [g1, g2, g3],
+            funnel_type: :flexible
+          )
+
+        assert flexible_funnel.funnel_type == :flexible
+        assert flexible_funnel.strict_order == false
+        assert flexible_funnel.first_and_last == true
+
+        {:ok, preserved_funnel} =
+          Funnels.update(
+            flexible_funnel,
+            "Sample funnel",
+            [g1, g2]
+          )
+
+        assert preserved_funnel.funnel_type == :flexible
+        assert preserved_funnel.strict_order == false
+        assert preserved_funnel.first_and_last == true
+      end
+
+      test "update funnel to sequential", %{site: site, steps: [g1, g2, g3 | _]} do
+        {:ok, funnel} =
+          Funnels.create(
+            site,
+            "Sample funnel",
+            [g1, g2],
+            funnel_type: :strict
+          )
+
+        assert funnel.funnel_type == :strict
+        assert funnel.strict_order == true
+        assert funnel.first_and_last == false
+
+        {:ok, sequential_funnel} =
+          Funnels.update(
+            funnel,
+            "Sample funnel",
+            [g1, g2, g3],
+            funnel_type: :sequential
+          )
+
+        assert sequential_funnel.funnel_type == :sequential
+        assert sequential_funnel.strict_order == false
+        assert sequential_funnel.first_and_last == false
+
+        {:ok, preserved_funnel} =
+          Funnels.update(
+            sequential_funnel,
+            "Sample funnel",
+            [g1, g2]
+          )
+
+        assert preserved_funnel.funnel_type == :sequential
+        assert preserved_funnel.strict_order == false
+        assert preserved_funnel.first_and_last == false
       end
 
       test "retrieve a funnel by id and site, get steps in order", %{
@@ -346,7 +451,7 @@ defmodule Plausible.FunnelsTest do
             site,
             "Strict from blog to signup and purchase",
             [g1, g2, g3],
-            strict_order?: true
+            funnel_type: :strict
           )
 
         populate_stats(site, [
@@ -380,8 +485,56 @@ defmodule Plausible.FunnelsTest do
         assert Enum.at(non_strict_funnel_data.steps, 2).visitors == 1
         assert Enum.at(strict_funnel_data.steps, 2).visitors == 0
 
-        assert non_strict_funnel_data.strict_order == false
-        assert strict_funnel_data.strict_order == true
+        assert non_strict_funnel_data.funnel_type == :sequential
+        assert strict_funnel_data.funnel_type == :strict
+      end
+
+      test "flexible funnels count everyone who reaches first and last step in the last step", %{
+        site: site,
+        steps: [g1, g2, g3 | _]
+      } do
+        {:ok, non_flexible_funnel} =
+          Funnels.create(
+            site,
+            "From blog to signup and purchase",
+            [g1, g2, g3]
+          )
+
+        {:ok, flexible_funnel} =
+          Funnels.create(
+            site,
+            "Flexible from blog to signup and purchase",
+            [g1, g2, g3],
+            funnel_type: :flexible
+          )
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/go/to/blog/foo",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:03]
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        {:ok, non_flexible_funnel_data} = Stats.funnel(site, query, non_flexible_funnel.id)
+        {:ok, flexible_funnel_data} = Stats.funnel(site, query, flexible_funnel.id)
+
+        assert Enum.at(non_flexible_funnel_data.steps, 0).visitors == 1
+        assert Enum.at(non_flexible_funnel_data.steps, 1).visitors == 0
+        assert Enum.at(non_flexible_funnel_data.steps, 2).visitors == 0
+        assert Enum.at(flexible_funnel_data.steps, 0).visitors == 1
+        assert Enum.at(flexible_funnel_data.steps, 1).visitors == 0
+        assert Enum.at(flexible_funnel_data.steps, 2).visitors == 1
+
+        assert non_flexible_funnel_data.funnel_type == :sequential
+        assert flexible_funnel_data.funnel_type == :flexible
       end
 
       test "funnels can be evaluated even where there are no visits yet", %{
