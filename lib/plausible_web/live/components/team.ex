@@ -49,37 +49,35 @@ defmodule PlausibleWeb.Live.Components.Team do
         )
       }
     >
-      <div class="flex items-center gap-x-5">
+      <div class="flex items-center gap-x-3 sm:gap-x-5">
         <img
           :if={not @pending?}
           src={User.profile_img_url(@user)}
-          class="w-8 h-8 rounded-full bg-gray-300"
+          class="size-8 shrink-0 rounded-full bg-gray-300"
         />
         <div
           :if={@pending?}
-          class="w-8 h-8 rounded-full border border-gray-500 flex items-center justify-center"
+          class="size-8 shrink-0 flex items-center justify-center rounded-full bg-indigo-500"
         >
-          <Heroicons.envelope class="size-4 text-gray-500" />
+          <Heroicons.envelope class="size-4 text-white" />
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm font-medium">
-            <span :if={@pending?}>Pending invitation</span>
-            <span :if={not @pending?}>
-              {@user.name}
-              <span
-                :if={@label && @me?}
-                class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
-              >
-                {@label}
-              </span>
-              <.pill :if={@label && not @me?} color={:gray} class="ml-1">{@label}</.pill>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-center gap-x-1 text-sm font-medium">
+            <span :if={@pending?} class="truncate">Pending invitation</span>
+            <span :if={not @pending?} class="truncate">{@user.name}</span>
+            <span
+              :if={@label && @me?}
+              class="shrink-0 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
+            >
+              {@label}
             </span>
-          </span>
-          <span class="text-gray-500 text-xs">
+            <.pill :if={@label && not @me?} color={:gray} class="shrink-0">{@label}</.pill>
+          </div>
+          <span class="text-gray-500 text-xs truncate">
             {@user.email}
           </span>
         </div>
-        <div class="flex-1 flex items-center justify-end gap-x-3">
+        <div class="flex-1 shrink-0 flex items-center justify-end gap-x-2">
           <.role_switcher
             id={"role-dropdown-#{@user.email}"}
             user={@user}
