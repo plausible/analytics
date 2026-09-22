@@ -214,42 +214,6 @@ defmodule Plausible.OAuth do
     end
   end
 
-  @doc """
-  Revokes a grant, invalidating its access and refresh tokens.
-
-  Recorded on the row rather than deleted, so a revoked connection can still be
-  displayed and its `previous_refresh_token_hash` still recognised. Idempotent:
-  an already-revoked grant keeps its original `revoked_at`.
-  """
-  @spec revoke_grant(Grant.t()) :: :ok
-  def revoke_grant(%Grant{} = grant) do
-    now = now()
-
-    Repo.update_all(
-      from(g in Grant, where: g.id == ^grant.id and is_nil(g.revoked_at)),
-      set: [revoked_at: now, updated_at: now]
-    )
-
-    :ok
-  end
-
-  @doc """
-  Revokes every live grant a user holds against a team, when they stop being a member of it.
-  """
-  @spec after_user_removed_from_team(Plausible.Teams.Team.t(), Plausible.Auth.User.t()) :: :ok
-  def after_user_removed_from_team(team, user) do
-    now = now()
-
-    Repo.update_all(
-      from(g in Grant,
-        where: g.team_id == ^team.id and g.user_id == ^user.id and is_nil(g.revoked_at)
-      ),
-      set: [revoked_at: now, updated_at: now]
-    )
-
-    :ok
-  end
-
   defp normalize_resource(resource) do
     case ProtectedResources.get_by_url(resource) do
       {:ok, protected_resource} -> {:ok, protected_resource}

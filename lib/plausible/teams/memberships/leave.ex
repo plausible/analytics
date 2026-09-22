@@ -27,11 +27,6 @@ defmodule Plausible.Teams.Memberships.Leave do
             team_membership.team,
             team_membership.user
           )
-
-          Plausible.OAuth.after_user_removed_from_team(
-            team_membership.team,
-            team_membership.user
-          )
         end)
 
       if Keyword.get(opts, :send_email?, true) do
