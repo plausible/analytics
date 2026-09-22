@@ -78,6 +78,28 @@ defmodule Plausible.PostmarkTest do
     end
   end
 
+  describe "activate_bounce/1" do
+    test "PUTs to the activate endpoint for the given bounce ID" do
+      Req.Test.stub(Postmark, fn conn ->
+        assert conn.method == "PUT"
+        assert conn.request_path == "/bounces/123/activate"
+        Req.Test.json(conn, %{"Message" => "OK", "Bounce" => %{"ID" => 123, "Inactive" => false}})
+      end)
+
+      assert {:ok, %{"Message" => "OK"}} = Postmark.activate_bounce(123)
+    end
+
+    test "returns an error on a non-200 response" do
+      Req.Test.stub(Postmark, fn conn ->
+        conn
+        |> Plug.Conn.put_status(422)
+        |> Req.Test.json(%{"Message" => "Bounce cannot be activated"})
+      end)
+
+      assert {:error, {:unexpected_status, 422, _body}} = Postmark.activate_bounce(123)
+    end
+  end
+
   describe "backfill_suppressions/0" do
     test "upserts a suppression for every bounce and complaint found" do
       Req.Test.stub(Postmark, fn conn ->

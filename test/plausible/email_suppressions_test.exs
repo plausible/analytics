@@ -2,6 +2,7 @@ defmodule Plausible.EmailSuppressionsTest do
   use Plausible.DataCase
 
   alias Plausible.EmailSuppressions
+  alias Plausible.Postmark
 
   @moduletag :ee_only
 
@@ -240,6 +241,85 @@ defmodule Plausible.EmailSuppressionsTest do
       assert {:ok, suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
       assert suppression.reactivated_by_user_id == user.id
       assert suppression.reactivated_at
+    end
+
+    test "activates the bounce in Postmark when there is one" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :webhook,
+          postmark_bounce_id: 123,
+          can_activate: true
+        })
+
+      Req.Test.stub(Postmark, fn conn ->
+        assert conn.method == "PUT"
+        assert conn.request_path == "/bounces/123/activate"
+        Req.Test.json(conn, %{"Message" => "OK"})
+      end)
+
+      assert {:ok, _suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
+      refute EmailSuppressions.suppressed?("bounced@example.com")
+    end
+
+    test "does not call Postmark when the suppression has no bounce ID" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
+
+      assert {:ok, _suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
+    end
+
+    test "refuses when Postmark reports the bounce can't be activated, leaving it suppressed" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :webhook,
+          postmark_bounce_id: 123,
+          can_activate: false
+        })
+
+      Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
+
+      assert {:error, :cannot_activate_in_postmark} =
+               EmailSuppressions.reactivate("bounced@example.com", user)
+
+      assert EmailSuppressions.suppressed?("bounced@example.com")
+    end
+
+    test "leaves it suppressed when the Postmark activation call fails" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :webhook,
+          postmark_bounce_id: 123,
+          can_activate: true
+        })
+
+      Req.Test.stub(Postmark, fn conn ->
+        conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+      end)
+
+      assert {:error, {:postmark_error, _reason}} =
+               EmailSuppressions.reactivate("bounced@example.com", user)
+
+      assert EmailSuppressions.suppressed?("bounced@example.com")
     end
   end
 end

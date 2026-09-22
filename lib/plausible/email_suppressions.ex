@@ -111,19 +111,39 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
-  Lifts a suppression after manual review, recording who did it.
+  Lifts a suppression after manual review, recording who did it. Also
+  reactivates the underlying bounce in Postmark, when there is one, so
+  Postmark itself resumes accepting mail to the address. Refuses if Postmark
+  reports the bounce can't be reactivated (`can_activate: false`).
   """
   @spec reactivate(String.t(), Plausible.Auth.User.t()) ::
-          {:ok, EmailSuppression.t()} | {:error, :not_found | Ecto.Changeset.t()}
+          {:ok, EmailSuppression.t()}
+          | {:error,
+             :not_found
+             | :cannot_activate_in_postmark
+             | {:postmark_error, term()}
+             | Ecto.Changeset.t()}
   def reactivate(email, %Plausible.Auth.User{id: user_id}) do
     case Repo.get_by(EmailSuppression, email: email) do
       nil ->
         {:error, :not_found}
 
       suppression ->
-        suppression
-        |> EmailSuppression.reactivate_changeset(user_id)
-        |> Repo.update()
+        with :ok <- activate_in_postmark(suppression) do
+          suppression
+          |> EmailSuppression.reactivate_changeset(user_id)
+          |> Repo.update()
+        end
+    end
+  end
+
+  defp activate_in_postmark(%{postmark_bounce_id: nil}), do: :ok
+  defp activate_in_postmark(%{can_activate: false}), do: {:error, :cannot_activate_in_postmark}
+
+  defp activate_in_postmark(%{postmark_bounce_id: id}) do
+    case Plausible.Postmark.activate_bounce(id) do
+      {:ok, _bounce} -> :ok
+      {:error, reason} -> {:error, {:postmark_error, reason}}
     end
   end
 

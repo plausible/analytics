@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
     import Phoenix.LiveViewTest
 
     alias Plausible.EmailSuppressions
+    alias Plausible.Postmark
     alias Plausible.Repo
 
     defp open_suppressions(qs \\ []) do
@@ -123,6 +124,54 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       assert suppression.reactivated_at
       assert suppression.reactivated_by_user_id == user.id
       refute EmailSuppressions.suppressed?("reactivate-me@example.com")
+    end
+
+    test "also activates the bounce in Postmark when there is one", %{conn: conn} do
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "reactivate-me@example.com",
+          reason: :hard_bounce,
+          source: :webhook,
+          postmark_bounce_id: 123,
+          can_activate: true
+        })
+
+      Req.Test.stub(Postmark, fn conn ->
+        assert conn.request_path == "/bounces/123/activate"
+        Req.Test.json(conn, %{"Message" => "OK"})
+      end)
+
+      {:ok, lv, _html} = live(conn, open_suppressions())
+
+      html =
+        lv
+        |> element(~s|a[phx-value-email="reactivate-me@example.com"]|, "Reactivate")
+        |> render_click()
+
+      assert text(html) =~ "no longer suppressed"
+    end
+
+    test "refuses to reactivate when Postmark reports the bounce can't be activated", %{
+      conn: conn
+    } do
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "stuck@example.com",
+          reason: :hard_bounce,
+          source: :webhook,
+          postmark_bounce_id: 123,
+          can_activate: false
+        })
+
+      {:ok, lv, _html} = live(conn, open_suppressions())
+
+      html =
+        lv
+        |> element(~s|a[phx-value-email="stuck@example.com"]|, "Reactivate")
+        |> render_click()
+
+      assert text(html) =~ "Postmark won't allow stuck@example.com to be reactivated"
+      assert EmailSuppressions.suppressed?("stuck@example.com")
     end
 
     test "does not offer to reactivate an address that's already reactivated", %{

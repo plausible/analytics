@@ -36,6 +36,14 @@ defmodule Plausible.Postmark do
     list_bounces(params, 0, [])
   end
 
+  @doc """
+  https://postmarkapp.com/developer/api/bounce-api#activate-a-bounce
+  """
+  @spec activate_bounce(integer()) :: {:ok, map()} | {:error, term()}
+  def activate_bounce(bounce_id) do
+    put("/bounces/#{bounce_id}/activate")
+  end
+
   defp list_bounces(params, offset, acc) do
     query = Map.merge(params, %{count: @bounces_page_size, offset: offset})
 
@@ -166,16 +174,22 @@ defmodule Plausible.Postmark do
   end
 
   defp get(path, params) do
+    request(&Req.get/2, path, params: params)
+  end
+
+  defp put(path) do
+    request(&Req.put/2, path, [])
+  end
+
+  defp request(req_fun, path, opts) do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 
     opts =
-      [
-        params: params,
-        headers: [{"accept", "application/json"}, {"x-postmark-server-token", api_key()}]
-      ]
+      [headers: [{"accept", "application/json"}, {"x-postmark-server-token", api_key()}]]
+      |> Keyword.merge(opts)
       |> Keyword.merge(extra_opts)
 
-    case Req.get(@base_api_url <> path, opts) do
+    case req_fun.(@base_api_url <> path, opts) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, body}
 
