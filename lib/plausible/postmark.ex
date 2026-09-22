@@ -143,7 +143,8 @@ defmodule Plausible.Postmark do
   end
 
   defp put(path) do
-    request(&Req.put/2, path, [])
+    # explicit empty body, otherwise Postmark gives 411
+    request(&Req.put/2, path, body: "")
   end
 
   defp request(req_fun, path, opts) do
