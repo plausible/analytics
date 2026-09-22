@@ -52,6 +52,12 @@ config :plausible, Plausible.HelpScout,
     plug: {Req.Test, Plausible.HelpScout}
   ]
 
+config :plausible, Plausible.Postmark,
+  req_opts: [
+    plug: {Req.Test, Plausible.Postmark},
+    retry: false
+  ]
+
 config :plausible, Plausible.InstallationSupport.Checks.Detection,
   req_opts: [
     plug: {Req.Test, Plausible.InstallationSupport.Checks.Detection}

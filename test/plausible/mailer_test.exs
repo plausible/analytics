@@ -33,6 +33,7 @@ defmodule Plausible.MailerTest do
 
   describe "suppression" do
     @describetag :ee_only
+    @describetag :capture_log
 
     test "refuses to send to a suppressed address" do
       user = insert(:user, email: "bounced@example.com")
@@ -43,6 +44,22 @@ defmodule Plausible.MailerTest do
           reason: :hard_bounce,
           source: :webhook
         })
+
+      email = PlausibleWeb.Email.welcome_email(user)
+      assert {:error, :suppressed} = Plausible.Mailer.send(email)
+
+      refute_delivered_email(email)
+    end
+
+    test "refuses to send even when the outgoing address's case differs from how it's stored" do
+      {:ok, _} =
+        Plausible.EmailSuppressions.create_from_bounce(%{
+          email: "downcased@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      user = insert(:user, email: "Downcased@Example.com")
 
       email = PlausibleWeb.Email.welcome_email(user)
       assert {:error, :suppressed} = Plausible.Mailer.send(email)
