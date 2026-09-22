@@ -277,6 +277,15 @@ defmodule PlausibleWeb.OAuth.FlowTest do
 
       assert returned["error"] == "access_denied"
     end
+
+    test "a user with an unverified email cannot approve", %{conn: conn, user: user} do
+      user |> Ecto.Changeset.change(email_verified: false) |> Plausible.Repo.update!()
+
+      {_verifier, challenge} = pkce()
+      approve(conn, authorize_params(challenge))
+
+      assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+    end
   end
 
   describe "team selection" do

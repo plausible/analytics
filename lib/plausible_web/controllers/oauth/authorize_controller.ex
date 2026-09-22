@@ -18,14 +18,10 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   and renders the consent screen for the logged-in user.
   """
   def authorize_form(conn, params) do
-    if conn.assigns[:current_user] do
-      case build_context(params) do
-        {:ok, ctx} -> render_consent(conn, ctx)
-        {:redirect_error, request, error} -> redirect_error(conn, request, error)
-        {:render_error, message} -> render_error_page(conn, message)
-      end
-    else
-      redirect_to_login(conn)
+    case build_context(params) do
+      {:ok, ctx} -> render_consent(conn, ctx)
+      {:redirect_error, request, error} -> redirect_error(conn, request, error)
+      {:render_error, message} -> render_error_page(conn, message)
     end
   end
 
@@ -35,16 +31,10 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   redirecting back to the client with a code or an error.
   """
   def authorize(conn, %{"action" => action} = params) do
-    user = conn.assigns[:current_user]
-
-    if is_nil(user) do
-      redirect_to_login(conn)
-    else
-      case build_context(params) do
-        {:ok, ctx} -> handle_decision(conn, user, ctx, action)
-        {:redirect_error, request, error} -> redirect_error(conn, request, error)
-        {:render_error, message} -> render_error_page(conn, message)
-      end
+    case build_context(params) do
+      {:ok, ctx} -> handle_decision(conn, conn.assigns.current_user, ctx, action)
+      {:redirect_error, request, error} -> redirect_error(conn, request, error)
+      {:render_error, message} -> render_error_page(conn, message)
     end
   end
 
@@ -203,14 +193,6 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
     URI.to_string(%{uri | query: merged})
   end
-
-  defp redirect_to_login(conn) do
-    return_to = conn.request_path <> query_suffix(conn.query_string)
-    redirect(conn, to: Routes.auth_path(conn, :login_form, return_to: return_to))
-  end
-
-  defp query_suffix(""), do: ""
-  defp query_suffix(qs), do: "?" <> qs
 
   defp blank?(value), do: is_nil(value) or value == ""
 end

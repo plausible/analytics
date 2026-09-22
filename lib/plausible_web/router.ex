@@ -473,8 +473,12 @@ defmodule PlausibleWeb.Router do
 
     get "/invitation-expired", AuthController, :invitation_expired
 
-    get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
-    post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
+    scope "/" do
+      pipe_through PlausibleWeb.RequireAccountPlug
+
+      get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
+      post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
+    end
 
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
