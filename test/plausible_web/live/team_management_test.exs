@@ -119,8 +119,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
-      assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation sent"
+      assert member_row1 =~ "Pending invitation"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -236,8 +235,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation pending"
-      assert sent =~ "Invitation sent"
+      assert pending =~ "Pending invitation"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
@@ -251,8 +250,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation pending"
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)
@@ -305,7 +303,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert sent =~ "Invitation sent"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
@@ -318,7 +316,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)

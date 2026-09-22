@@ -109,6 +109,7 @@ defmodule PlausibleWeb.Components.PrimaListbox do
     """
   end
 
+  attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   slot(:inner_block, required: true)
 
@@ -119,7 +120,8 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       if(@disabled,
         do: "text-gray-300 dark:text-gray-600",
         else: "text-gray-500 dark:text-gray-400"
-      )
+      ),
+      @class
     ]}>
       {render_slot(@inner_block)}
     </div>

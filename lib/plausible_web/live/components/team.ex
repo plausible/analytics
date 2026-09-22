@@ -32,6 +32,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:role, :atom, default: nil)
   attr(:my_role, :atom, required: true)
   attr(:me?, :boolean, default: false)
+  attr(:pending?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:remove_disabled, :boolean, default: false)
 
@@ -49,15 +50,29 @@ defmodule PlausibleWeb.Live.Components.Team do
       }
     >
       <div class="flex items-center gap-x-5">
-        <img src={User.profile_img_url(@user)} class="w-8 rounded-full bg-gray-300" />
+        <img
+          :if={not @pending?}
+          src={User.profile_img_url(@user)}
+          class="w-8 h-8 rounded-full bg-gray-300"
+        />
+        <div
+          :if={@pending?}
+          class="w-8 h-8 rounded-full border border-gray-500 flex items-center justify-center"
+        >
+          <Heroicons.envelope class="size-4 text-gray-500" />
+        </div>
         <div class="flex flex-col">
           <span class="text-sm font-medium">
-            {@user.name}
-            <span
-              :if={@label}
-              class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
-            >
-              {@label}
+            <span :if={@pending?}>Pending invitation</span>
+            <span :if={not @pending?}>
+              {@user.name}
+              <span
+                :if={@label && @me?}
+                class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
+              >
+                {@label}
+              </span>
+              <.pill :if={@label && not @me?} color={:gray} class="ml-1">{@label}</.pill>
             </span>
           </span>
           <span class="text-gray-500 text-xs">
@@ -146,7 +161,7 @@ defmodule PlausibleWeb.Live.Components.Team do
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
       </PrimaListbox.listbox_trigger>
 
-      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
+      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-64">
         <PrimaListbox.listbox_option
           :for={{role, description} <- selectable_role_descriptions(@my_role)}
           id={"#{@id}-option-#{role}"}
@@ -156,7 +171,9 @@ defmodule PlausibleWeb.Live.Components.Team do
           {@rest}
         >
           <div>{role_to_capitalized_string(role)}</div>
-          <PrimaListbox.option_description>{description}</PrimaListbox.option_description>
+          <PrimaListbox.option_description class="whitespace-nowrap">
+            {description}
+          </PrimaListbox.option_description>
         </PrimaListbox.listbox_option>
       </PrimaListbox.listbox_options>
     </PrimaListbox.listbox>
