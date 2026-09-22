@@ -82,13 +82,19 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp resolve_team(conn, ctx) do
-    team =
-      case ctx.team do
-        nil -> conn.assigns[:current_team]
-        identifier -> Enum.find(conn.assigns[:teams] || [], &(&1.identifier == identifier))
-      end
+    teams = grantable_teams(conn)
 
-    team || conn.assigns[:current_team]
+    Enum.find(teams, &(&1.identifier == ctx.team)) || List.first(teams)
+  end
+
+  # The teams offered on the consent screen are the only ones a grant can bind
+  # to. `current_team` is deliberately not consulted: on this route the URL is
+  # authored by the client, so the ambient team is attacker-influenced.
+  defp grantable_teams(conn) do
+    case conn.assigns[:my_team] do
+      nil -> conn.assigns[:teams] || []
+      my_team -> [my_team | conn.assigns[:teams] || []]
+    end
   end
 
   defp rate_limit(conn) do
@@ -175,15 +181,17 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp render_consent(conn, ctx) do
-    if is_nil(resolve_team(conn, ctx)) do
-      render_error_page(conn, @no_team_message, 400)
-    else
-      render(conn, "oauth_authorize.html",
-        legacy_layout?: false,
-        ctx: ctx,
-        teams: conn.assigns[:teams] || [],
-        current_team: conn.assigns[:current_team]
-      )
+    case resolve_team(conn, ctx) do
+      nil ->
+        render_error_page(conn, @no_team_message, 400)
+
+      team ->
+        render(conn, "oauth_authorize.html",
+          legacy_layout?: false,
+          ctx: ctx,
+          teams: grantable_teams(conn),
+          selected_team: team
+        )
     end
   end
 

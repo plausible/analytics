@@ -473,13 +473,6 @@ defmodule PlausibleWeb.Router do
 
     get "/invitation-expired", AuthController, :invitation_expired
 
-    scope "/" do
-      pipe_through PlausibleWeb.RequireAccountPlug
-
-      get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
-      post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
-    end
-
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
     get "/2fa/setup/force-initiate", AuthController, :force_initiate_2fa_setup
@@ -496,6 +489,18 @@ defmodule PlausibleWeb.Router do
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
+  end
+
+  scope "/login/oauth", PlausibleWeb do
+    pipe_through [
+      PlausibleWeb.Plugs.IgnoreTeamParam,
+      :browser,
+      :csrf,
+      PlausibleWeb.RequireAccountPlug
+    ]
+
+    get "/authorize", OAuth.AuthorizeController, :authorize_form
+    post "/authorize", OAuth.AuthorizeController, :authorize
   end
 
   scope "/login/oauth", PlausibleWeb do

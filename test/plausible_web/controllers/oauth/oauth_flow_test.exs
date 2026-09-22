@@ -148,12 +148,32 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       assert html =~ "&lt;script&gt;"
     end
 
-    test "offers no team selector when the user has no set-up team", %{conn: conn} do
+    test "shows team name if user has one team", %{conn: conn, team: team} do
       {_verifier, challenge} = pkce()
 
       html = conn |> get_authorize(authorize_params(challenge)) |> html_response(200)
 
+      assert html =~ team.name
       refute element_exists?(html, "select#team")
+    end
+
+    test "__team=... in the authorize URL does not switch team", %{
+      conn: conn,
+      user: user
+    } do
+      other_owner = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other_owner)
+      add_member(other_team, user: user, role: :editor)
+
+      {_verifier, challenge} = pkce()
+      before = Plausible.Repo.reload!(user).last_team_identifier
+
+      get_authorize(
+        conn,
+        Map.put(authorize_params(challenge), "__team", other_team.identifier)
+      )
+
+      assert Plausible.Repo.reload!(user).last_team_identifier == before
     end
 
     test "redirects to login when unauthenticated, preserving the request" do
@@ -344,8 +364,9 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       {:ok, first: first, second: second}
     end
 
-    test "offers the user's set-up teams on the consent screen", %{
+    test "offers every team the user can grant, personal team included", %{
       conn: conn,
+      team: team,
       first: first,
       second: second
     } do
@@ -354,8 +375,24 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       html = conn |> get_authorize(authorize_params(challenge)) |> html_response(200)
       options = text_of_element(html, "select#team")
 
+      assert options =~ team.name
       assert options =~ first.name
       assert options =~ second.name
+    end
+
+    test "approving without touching the picker binds the team it preselected", %{
+      conn: conn,
+      team: team
+    } do
+      {_verifier, challenge} = pkce()
+      params = authorize_params(challenge)
+
+      html = conn |> get_authorize(params) |> html_response(200)
+      assert text_of_element(html, "select#team option[selected]") == team.name
+
+      assert %{"code" => _} = conn |> approve(params) |> params_from_redirect()
+
+      assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == team.id
     end
 
     test "binds the code to the selected team", %{conn: conn, second: second} do
@@ -367,18 +404,17 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == second.id
     end
 
-    test "falls back to the current team rather than binding one the user is not in", %{
-      conn: conn
+    test "ignores unknown team provided as param, binds to default instead", %{
+      conn: conn,
+      team: team
     } do
       {_verifier, challenge} = pkce()
       other_team = insert(:team, identifier: Ecto.UUID.generate())
       params = authorize_params(challenge, %{"team" => other_team.identifier})
 
-      approved = approve(conn, params)
-      assert %{"code" => _} = params_from_redirect(approved)
+      assert %{"code" => _} = conn |> approve(params) |> params_from_redirect()
 
-      assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id ==
-               approved.assigns.current_team.id
+      assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == team.id
     end
   end
 

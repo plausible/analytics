@@ -40,23 +40,36 @@
         <input type="hidden" name="state" value={@ctx.state} />
         <input type="hidden" name="resource" value={@ctx.resource} />
 
-        <div :if={@teams != []} class="flex flex-col gap-y-2">
-          <label for={f[:team].id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-            Grant access to team
-          </label>
-          <select
-            id="team"
-            name="team"
-            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm"
-          >
-            <option
-              :for={team <- @teams}
-              value={team.identifier}
-              selected={@current_team && team.identifier == @current_team.identifier}
+        <div class="flex flex-col gap-y-2" data-test-id="grant-team">
+          <%= if match?([_, _ | _], @teams) do %>
+            <label
+              for={f[:team].id}
+              class="text-sm font-semibold text-gray-800 dark:text-gray-200"
             >
-              {team.name}
-            </option>
-          </select>
+              Grant access to team
+            </label>
+            <select
+              id="team"
+              name="team"
+              class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm"
+            >
+              <option
+                :for={team <- @teams}
+                value={team.identifier}
+                selected={team.identifier == @selected_team.identifier}
+              >
+                {team.name}
+              </option>
+            </select>
+          <% else %>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Grant access to team
+            </p>
+            <input type="hidden" name="team" value={@selected_team.identifier} />
+            <p class="text-sm text-gray-600 dark:text-gray-400 break-all">
+              {@selected_team.name}
+            </p>
+          <% end %>
           <p class="text-xs text-gray-500 dark:text-gray-500">
             The connection will only be able to access the data of the selected team.
           </p>
