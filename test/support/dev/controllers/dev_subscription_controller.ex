@@ -53,8 +53,8 @@ defmodule PlausibleWeb.DevSubscriptionController do
           %{current_user: %User{} = user} -> Teams.force_create_my_team(user)
         end
 
-      DevSubscriptions.create_after_1s(for_team.id, plan_id)
-      redirect(conn, to: ~p"/billing/upgrade-success")
+      DevSubscriptions.create(for_team.id, plan_id)
+      redirect(conn, to: ~p"/settings/billing/subscription")
     end
 
     def update(conn, %{"status" => status}) do
