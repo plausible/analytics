@@ -49,11 +49,19 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
             )
           )
 
-        {:error, _reason} ->
-          put_live_flash(socket, :error, "Could not reactivate #{email}.")
+        {:error, reason} ->
+          put_live_flash(socket, :error, reactivate_error_message(email, reason))
       end
 
     {:noreply, socket}
+  end
+
+  defp reactivate_error_message(email, :cannot_activate_in_postmark) do
+    "Postmark won't allow #{email} to be reactivated automatically."
+  end
+
+  defp reactivate_error_message(email, _reason) do
+    "Could not reactivate #{email}."
   end
 
   defp list_suppressions(reason, search, pagination_params) do
