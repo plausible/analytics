@@ -64,60 +64,70 @@ defmodule PlausibleWeb.Live.Components.Team do
             {@user.email}
           </span>
         </div>
-        <div class="flex-1 text-right">
-          <.dropdown id={"role-dropdown-#{@user.email}"}>
-            <:button class="role bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              <span :if={@disabled} class="text-gray-400">
-                {@role |> to_string() |> String.capitalize()}
-              </span>
-              <span :if={not @disabled}>
-                {@role |> to_string() |> String.capitalize()}
-              </span>
-              <Heroicons.chevron_down :if={@disabled} mini class="text-gray-400 size-4 mt-0.5" />
-              <Heroicons.chevron_down :if={not @disabled} mini class="size-4 mt-0.5" />
-            </:button>
-            <:menu class="dropdown-items max-w-60">
-              <.role_item
-                :for={{role, description} <- role_descriptions()}
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={role}
-                disabled={@disabled or @role == role}
-                dispatch_animation?={@role == :guest}
-                data-confirm={
-                  if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
-                }
-              >
-                {description}
-              </.role_item>
-              <.dropdown_divider />
+        <div class="flex-1 flex items-center justify-end gap-x-3">
+          <.role_switcher
+            id={"role-dropdown-#{@user.email}"}
+            user={@user}
+            role={@role}
+            my_role={@my_role}
+            me?={@me?}
+            disabled={@disabled}
+          />
 
-              <.dropdown_item
-                id={"#{:erlang.phash2(@user.email)}-remove"}
-                href="#"
-                disabled={@disabled or @remove_disabled}
-                phx-click="remove-member"
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                data-confirm="Are you sure you want to remove this member from the team?"
-              >
-                <div class={
-                  not @remove_disabled &&
-                    "text-red-600 hover:text-red-600 dark:text-red-500 hover:dark:text-red-400"
-                }>
-                  Remove member
-                </div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Remove member from your team
-                </div>
-              </.dropdown_item>
-            </:menu>
-          </.dropdown>
+          <.delete_button
+            id={"#{:erlang.phash2(@user.email)}-remove"}
+            class="disabled:cursor-not-allowed"
+            disabled={@disabled or @remove_disabled}
+            aria-label="Remove member"
+            phx-click="remove-member"
+            phx-value-email={@user.email}
+            phx-value-name={@user.name}
+            data-confirm="Are you sure you want to remove this member from the team?"
+          />
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:user, User, required: true)
+  attr(:role, :atom, required: true)
+  attr(:my_role, :atom, required: true)
+  attr(:me?, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
+
+  def role_switcher(assigns) do
+    ~H"""
+    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role} disabled={@disabled}>
+      <PrimaListbox.listbox_trigger
+        id={"#{@id}-trigger"}
+        aria-label="Role"
+        disabled={@disabled}
+        class="role !border-none !shadow-none !bg-transparent dark:!bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-700"
+      >
+        <PrimaListbox.listbox_value>
+          {role_to_capitalized_string(@role)}
+        </PrimaListbox.listbox_value>
+        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+      </PrimaListbox.listbox_trigger>
+
+      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
+        <.role_item
+          :for={{role, description} <- selectable_role_descriptions(@my_role)}
+          user={@user}
+          id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
+          phx-value-email={@user.email}
+          phx-value-name={@user.name}
+          role={role}
+          disabled={@disabled or @role == role}
+          dispatch_animation?={@role == :guest}
+          data-confirm={if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()}
+        >
+          {description}
+        </.role_item>
+      </PrimaListbox.listbox_options>
+    </PrimaListbox.listbox>
     """
   end
 
@@ -138,16 +148,15 @@ defmodule PlausibleWeb.Live.Components.Team do
 
       <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
         <PrimaListbox.listbox_option
-          :for={{role, description} <- role_descriptions()}
+          :for={{role, description} <- selectable_role_descriptions(@my_role)}
           id={"#{@id}-option-#{role}"}
           value={role}
           display={role_to_capitalized_string(role)}
-          disabled={role_change_disabled?(@my_role, role)}
           phx-value-role={role}
           {@rest}
         >
           <div>{role_to_capitalized_string(role)}</div>
-          <div class="text-gray-500 dark:text-gray-400 text-xs/5">{description}</div>
+          <PrimaListbox.option_description>{description}</PrimaListbox.option_description>
         </PrimaListbox.listbox_option>
       </PrimaListbox.listbox_options>
     </PrimaListbox.listbox>
@@ -184,20 +193,33 @@ defmodule PlausibleWeb.Live.Components.Team do
     assigns = assign(assigns, :click, click)
 
     ~H"""
-    <.dropdown_item
+    <PrimaListbox.listbox_option
       id={@id}
-      href="#"
+      value={@role}
+      display={role_to_capitalized_string(@role)}
+      disabled={@disabled}
       phx-click={@click}
       phx-value-role={@role}
-      disabled={@disabled}
       {@rest}
     >
-      <div>{@role |> Atom.to_string() |> String.capitalize()}</div>
-      <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-        {render_slot(@inner_block)}
+      <div class="flex items-center justify-between gap-x-2">
+        <span>{role_to_capitalized_string(@role)}</span>
+        <Heroicons.check
+          mini
+          class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
+        />
       </div>
-    </.dropdown_item>
+      <PrimaListbox.option_description disabled={@disabled}>
+        {render_slot(@inner_block)}
+      </PrimaListbox.option_description>
+    </PrimaListbox.listbox_option>
     """
+  end
+
+  defp selectable_role_descriptions(my_role) do
+    Enum.reject(@role_descriptions, fn {role, _description} ->
+      role_change_disabled?(my_role, role)
+    end)
   end
 
   defp role_change_disabled?(my_role, :owner), do: my_role != :owner
