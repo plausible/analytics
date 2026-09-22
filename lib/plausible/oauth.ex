@@ -203,9 +203,14 @@ defmodule Plausible.OAuth do
         preload: [:user, :team]
       )
 
-    case Repo.one(query) do
-      nil -> {:error, :invalid_token}
-      grant -> {:ok, grant}
+    with %Grant{team_id: team_id, user_id: user_id} = grant <- Repo.one(query),
+         :ok <-
+           [team_id: team_id, user_id: user_id]
+           |> Memberships.team_role()
+           |> validate_role() do
+      {:ok, grant}
+    else
+      _ -> {:error, :invalid_token}
     end
   end
 
@@ -222,6 +227,23 @@ defmodule Plausible.OAuth do
 
     Repo.update_all(
       from(g in Grant, where: g.id == ^grant.id and is_nil(g.revoked_at)),
+      set: [revoked_at: now, updated_at: now]
+    )
+
+    :ok
+  end
+
+  @doc """
+  Revokes every live grant a user holds against a team, when they stop being a member of it.
+  """
+  @spec after_user_removed_from_team(Plausible.Teams.Team.t(), Plausible.Auth.User.t()) :: :ok
+  def after_user_removed_from_team(team, user) do
+    now = now()
+
+    Repo.update_all(
+      from(g in Grant,
+        where: g.team_id == ^team.id and g.user_id == ^user.id and is_nil(g.revoked_at)
+      ),
       set: [revoked_at: now, updated_at: now]
     )
 
