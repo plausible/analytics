@@ -2299,6 +2299,14 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> assert_acquisition_channel("AI Assistants")
     end
 
+    test "utm_source=gemini is Google Gemini and AI Assistants", %{site: site} do
+      site
+      |> event_with_utm_source("gemini")
+      |> assert_source("Google Gemini")
+      |> assert_utm_source("gemini")
+      |> assert_acquisition_channel("AI Assistants")
+    end
+
     test "chatgpt.com is ChatGPT and AI Assistants", %{site: site} do
       site
       |> event_with_referrer("https://chatgpt.com")
