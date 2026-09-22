@@ -148,6 +148,28 @@ defmodule Plausible.OAuthTest do
                })
     end
 
+    test "rejects a code whose user has since been downgraded to guest" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+
+      {verifier, challenge} = pkce()
+      {:ok, code} = create_code(member, team, challenge)
+
+      Plausible.Teams.Membership
+      |> Repo.get_by!(team_id: team.id, user_id: member.id)
+      |> Ecto.Changeset.change(role: :guest)
+      |> Repo.update!()
+
+      assert {:error, :invalid_grant} =
+               OAuth.consume_authorization_code(code, %{
+                 verifier: verifier,
+                 client_id: @client_id,
+                 redirect_uri: @redirect_uri,
+                 resource: resource()
+               })
+    end
+
     test "returns the code and binds user, team and scopes", %{user: user, team: team} do
       {verifier, challenge} = pkce()
       {:ok, code} = create_code(user, team, challenge)

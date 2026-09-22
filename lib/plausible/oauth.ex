@@ -21,6 +21,9 @@ defmodule Plausible.OAuth do
   @access_token_ttl_seconds 3600
   @refresh_token_ttl_seconds 30 * 24 * 3600
 
+  @roles_with_oauth [:owner, :admin, :editor, :billing, :viewer]
+  true = Enum.all?(@roles_with_oauth, &(&1 in Plausible.Teams.Membership.roles()))
+
   @type token_response() :: %{
           access_token: String.t(),
           refresh_token: String.t(),
@@ -49,9 +52,11 @@ defmodule Plausible.OAuth do
   where the raw value exists.
   """
   @spec create_authorization_code(Plausible.Auth.User.t(), Plausible.Teams.Team.t(), map()) ::
-          {:ok, String.t()} | {:error, Ecto.Changeset.t() | :invalid_scope | :invalid_target}
+          {:ok, String.t()}
+          | {:error, Ecto.Changeset.t() | :invalid_scope | :invalid_target | :not_a_member}
   def create_authorization_code(user, team, attrs) do
-    with {:ok, resource} <- normalize_resource(attrs[:resource]),
+    with :ok <- validate_role(Memberships.team_role(team, user)),
+         {:ok, resource} <- normalize_resource(attrs[:resource]),
          {:ok, scopes} <- ProtectedResources.normalize_granted_scopes(attrs[:scopes], resource) do
       code = Token.generate(:code)
 
@@ -110,8 +115,10 @@ defmodule Plausible.OAuth do
          :ok <- match(auth_code.client_id, presented.client_id),
          :ok <- match(auth_code.redirect_uri, presented.redirect_uri),
          :ok <- match(auth_code.resource, presented.resource),
-         {:ok, _role} <-
-           Memberships.team_role(team_id: auth_code.team_id, user_id: auth_code.user_id) do
+         :ok <-
+           validate_role(
+             Memberships.team_role(team_id: auth_code.team_id, user_id: auth_code.user_id)
+           ) do
       {:ok, auth_code}
     else
       _ -> {:error, :invalid_grant}
@@ -235,6 +242,9 @@ defmodule Plausible.OAuth do
       {:error, :invalid_grant}
     end
   end
+
+  defp validate_role({:ok, role}) when role in @roles_with_oauth, do: :ok
+  defp validate_role(_), do: {:error, :not_a_member}
 
   defp match(same, same), do: :ok
   defp match(_, _), do: {:error, :invalid_grant}
