@@ -82,6 +82,34 @@ defmodule Plausible.EmailSuppressions do
     |> upsert()
   end
 
+  @page_size 50
+
+  @doc """
+  List suppressions, most recent first - for manual review (CRM).
+  """
+  @spec list(keyword(), map()) :: Paginator.Page.t()
+  def list(filters \\ [], pagination_params \\ %{}) do
+    EmailSuppression
+    |> filter_reason(Keyword.get(filters, :reason))
+    |> filter_search(Keyword.get(filters, :search))
+    |> order_by([s], desc: s.inserted_at, desc: s.id)
+    |> preload(:reactivated_by)
+    |> Plausible.Pagination.paginate(
+      pagination_params,
+      cursor_fields: [inserted_at: :desc, id: :desc],
+      limit: @page_size
+    )
+  end
+
+  defp filter_reason(query, reason) when reason in [nil, ""], do: query
+  defp filter_reason(query, reason), do: where(query, [s], s.reason == ^reason)
+
+  defp filter_search(query, search) when search in [nil, ""], do: query
+
+  defp filter_search(query, search) do
+    where(query, [s], ilike(s.email, ^"%#{search}%"))
+  end
+
   @doc """
   Lifts a suppression after manual review, recording who did it.
   """
