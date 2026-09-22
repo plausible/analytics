@@ -16,6 +16,7 @@ defmodule Plausible.EmailSuppression do
     :blocked,
     :spam_complaint,
     :spam_notification,
+    :unsubscribe,
     :manual
   ]
   @sources [:webhook, :backfill, :manual]

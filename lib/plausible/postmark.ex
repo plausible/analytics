@@ -2,7 +2,8 @@ defmodule Plausible.Postmark do
   @moduledoc """
   Minimal client for the parts of Postmark's HTTP API
 
-  See: https://postmarkapp.com/developer/api/bounce-api
+  See: https://postmarkapp.com/developer/api/bounce-api and
+  https://postmarkapp.com/developer/api/suppressions-api
   """
 
   require Logger
@@ -22,49 +23,19 @@ defmodule Plausible.Postmark do
   @spec suppressing_reason(String.t()) :: {:ok, atom()} | :error
   def suppressing_reason(type), do: Map.fetch(@suppressing_bounce_types, type)
 
-  @spec suppressing_bounce_types() :: [String.t()]
-  def suppressing_bounce_types(), do: Map.keys(@suppressing_bounce_types)
+  @streams ["outbound", "priority"]
 
-  @bounces_page_size 500
-  @bounces_max_total 10_000
-
-  @doc """
-  https://postmarkapp.com/developer/api/bounce-api#get-bounces
-  """
-  @spec list_bounces(map()) :: {:ok, [map()]} | {:error, term()}
-  def list_bounces(params \\ %{}) do
-    list_bounces(params, 0, [])
-  end
-
-  defp list_bounces(params, offset, acc) do
-    query = Map.merge(params, %{count: @bounces_page_size, offset: offset})
-
-    case get("/bounces", query) do
-      {:ok, %{"Bounces" => bounces, "TotalCount" => total_count}} ->
-        acc = acc ++ bounces
-        next_offset = offset + @bounces_page_size
-
-        if bounces == [] or length(acc) >= total_count or next_offset >= @bounces_max_total do
-          {:ok, acc}
-        else
-          list_bounces(params, next_offset, acc)
-        end
-
-      {:error, _} = error ->
-        error
-    end
-  end
+  @suppression_reasons %{
+    "HardBounce" => :hard_bounce,
+    "SpamComplaint" => :spam_complaint
+  }
 
   @doc """
-  One-off backfill of e-mail suppressions from Postmark's Bounce API.
+  One-off backfill of e-mail suppressions from Postmark's Suppressions API,
+  across every message stream we send from.
 
-  Postmark returns one record per bounce *event*, not per address, so the
-  same address can show up more than once (e.g. hard-bounced once and blocked separately).
-  Reported `processed` (raw events fetched) and `distinct_addresses` (addresses
-  actually upserted, one row each) can therefore differ.
-
-  Postmark doesn't document a sort order for these, so we employ
-  our own winner picking mechanism (see `pick_winner/1`).
+  If an address suppressed on more than one stream is reported once,
+  we pick the winner ourselves - see: `pick_winner/1`
   """
   @spec backfill_suppressions() :: %{
           processed: non_neg_integer(),
@@ -73,65 +44,61 @@ defmodule Plausible.Postmark do
           fetch_errors: non_neg_integer()
         }
   def backfill_suppressions() do
-    types = suppressing_bounce_types() ++ ["SpamComplaint"]
-
-    {fetch_errors, events} =
-      Enum.reduce(types, {0, []}, fn type, {fetch_errors, events} ->
-        case fetch_type(type) do
-          {:error, _reason} -> {fetch_errors + 1, events}
-          {:ok, type_events} -> {fetch_errors, events ++ type_events}
+    {fetch_errors, suppressions} =
+      Enum.reduce(@streams, {0, []}, fn stream, {fetch_errors, suppressions} ->
+        case fetch_stream(stream) do
+          {:error, _reason} -> {fetch_errors + 1, suppressions}
+          {:ok, stream_suppressions} -> {fetch_errors, suppressions ++ stream_suppressions}
         end
       end)
 
     winners =
-      events
-      |> Enum.group_by(fn {_type, bounce} -> String.downcase(bounce["Email"]) end)
+      suppressions
+      |> Enum.group_by(&String.downcase(&1["EmailAddress"]))
       |> Map.values()
       |> Enum.map(&pick_winner/1)
 
     {:ok, upsert_results} =
       Plausible.Repo.transact(fn ->
-        {:ok, Enum.map(winners, fn {type, bounce} -> upsert_suppression(bounce, type) end)}
+        {:ok, Enum.map(winners, &upsert_suppression/1)}
       end)
 
     %{
-      processed: length(events),
+      processed: length(suppressions),
       distinct_addresses: length(winners),
       upsert_errors: Enum.count(upsert_results, &match?({:error, _}, &1)),
       fetch_errors: fetch_errors
     }
   end
 
-  defp fetch_type(type) do
-    case list_bounces(%{type: type}) do
-      {:ok, bounces} ->
-        {:ok, Enum.map(bounces, &{type, &1})}
+  defp fetch_stream(stream) do
+    case get("/message-streams/#{stream}/suppressions/dump", %{}) do
+      {:ok, %{"Suppressions" => suppressions}} ->
+        {:ok, suppressions}
 
       {:error, reason} ->
         Logger.error(
-          "Failed to fetch Postmark bounces for backfill, type=#{type}: #{inspect(reason)}"
+          "Failed to fetch Postmark suppressions for backfill, stream=#{stream}: #{inspect(reason)}"
         )
 
         {:error, reason}
     end
   end
 
-  # Spam complaint always wins regardless of timing.
-  # Otherwise, the most recent event wins, since it best reflects
-  # the address' current state (Postmark's `Inactive`/`CanActivate` flags
-  # can change between events for the same address).
-  defp pick_winner(events) do
-    {spam_complaints, bounces} =
-      Enum.split_with(events, fn {type, _bounce} -> type == "SpamComplaint" end)
+  # Spam complaint always wins regardless of timing. Otherwise, the most
+  # recent one wins, since it best reflects the address' current state.
+  defp pick_winner(entries) do
+    {spam_complaints, others} =
+      Enum.split_with(entries, &(&1["SuppressionReason"] == "SpamComplaint"))
 
-    candidates = if spam_complaints != [], do: spam_complaints, else: bounces
+    candidates = if spam_complaints != [], do: spam_complaints, else: others
 
-    Enum.max_by(candidates, fn {_type, bounce} -> bounced_at(bounce) end)
+    Enum.max_by(candidates, &created_at/1)
   end
 
-  defp bounced_at(bounce) do
-    with bounced_at when is_binary(bounced_at) <- bounce["BouncedAt"],
-         {:ok, datetime, _utc_offset} <- DateTime.from_iso8601(bounced_at) do
+  defp created_at(entry) do
+    with created_at when is_binary(created_at) <- entry["CreatedAt"],
+         {:ok, datetime, _utc_offset} <- DateTime.from_iso8601(created_at) do
       datetime
     else
       # missing/invalid = oldest
@@ -139,30 +106,28 @@ defmodule Plausible.Postmark do
     end
   end
 
-  defp upsert_suppression(bounce, "SpamComplaint") do
-    bounce
-    |> suppression_attrs()
-    |> EmailSuppressions.create_from_spam_complaint()
-  end
-
-  defp upsert_suppression(bounce, type) do
-    {:ok, reason} = suppressing_reason(type)
-
-    bounce
-    |> suppression_attrs()
-    |> Map.put(:reason, reason)
+  defp upsert_suppression(entry) do
+    %{
+      email: entry["EmailAddress"],
+      source: :backfill,
+      reason: suppression_reason(entry),
+      details: "Postmark suppression (origin: #{entry["Origin"]})"
+    }
     |> EmailSuppressions.create_from_bounce()
   end
 
-  defp suppression_attrs(bounce) do
-    %{
-      email: bounce["Email"],
-      source: :backfill,
-      postmark_bounce_id: bounce["ID"],
-      postmark_inactive: bounce["Inactive"] || false,
-      can_activate: bounce["CanActivate"] || false,
-      details: bounce["Details"]
-    }
+  # Postmark's API has no distinct "Unsubscribe" value - the dashboard shows
+  # that label for a ManualSuppression whose Origin is the recipient themself.
+  defp suppression_reason(%{"SuppressionReason" => "ManualSuppression", "Origin" => "Recipient"}) do
+    :unsubscribe
+  end
+
+  defp suppression_reason(%{"SuppressionReason" => "ManualSuppression"}), do: :manual
+
+  defp suppression_reason(%{"SuppressionReason" => reason}) do
+    # :manual as a fallback: Postmark only documents HardBounce/SpamComplaint/
+    # ManualSuppression, but an unrecognized reason shouldn't crash the backfill
+    Map.get(@suppression_reasons, reason, :manual)
   end
 
   defp get(path, params) do
