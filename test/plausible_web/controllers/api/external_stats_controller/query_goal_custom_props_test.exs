@@ -414,12 +414,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
       refute resp["meta"]["imports_included"]
     end
 
-    test "breakdown by event:goal does not attribute imported events to a goal with custom props",
+    test "breakdown by event:goal excludes custom prop goals from imported data",
          %{
            conn: conn,
            site: site,
            site_import: site_import
          } do
+      {:ok, _goal} = Goals.create(site, %{"event_name" => "Signup"})
+
       {:ok, _goal} =
         Goals.create(site, %{
           "event_name" => "Purchase",
@@ -438,6 +440,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
           visitors: 3,
           events: 5,
           date: ~D[2023-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "Signup",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
         )
       ])
 
@@ -452,9 +460,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
 
       resp = json_response(conn, 200)
 
-      # Imported events are aggregated by name only and cannot be checked
-      # against the goal's custom props, so they must not be counted.
-      assert resp["results"] == [%{"dimensions" => ["Purchase"], "metrics" => [1, 1]}]
+      assert resp["results"] == [
+               %{"dimensions" => ["Signup"], "metrics" => [3, 5]},
+               %{"dimensions" => ["Purchase"], "metrics" => [1, 1]}
+             ]
     end
 
     test "breakdown by event:goal filtered by a goal with custom props excludes imported data instead of crashing",
