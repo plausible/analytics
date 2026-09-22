@@ -91,6 +91,7 @@ Plausible.CustomerSupport.TrialProspect.html
 Plausible.CustomerSupport.TrialProspects.html
 Plausible.DataCase.html
 Plausible.DataMigration.AcquisitionChannel.html
+Plausible.DataMigration.BackfillFunnelType.html
 Plausible.DataMigration.BackfillTeams.html
 Plausible.DataMigration.BackfillTeamsHourlyRequestLimit.html
 Plausible.DataMigration.BackfillTotpSecretFallback.html
@@ -608,8 +609,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C2879B5F.js
-dist/sidebar_items-990913B4.js
+dist/search_data-D45C151B.js
+dist/sidebar_items-7239E8D1.js
 index.html
 readme.html
 search.html
