@@ -39,11 +39,13 @@ defmodule Plausible.Funnel.DynamicStep do
   @spec as_goal(t()) :: Plausible.Goal.t()
   def as_goal(step) do
     %Plausible.Goal{
+      id: 0,
       display_name: display_name(step),
       event_name: step.event_name,
       page_path: step.page_path,
       scroll_threshold: step.scroll_threshold,
-      custom_props: step.custom_props
+      custom_props: step.custom_props,
+      currency: step.currency
     }
   end
 
