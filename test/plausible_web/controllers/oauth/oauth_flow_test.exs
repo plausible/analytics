@@ -10,14 +10,16 @@ defmodule PlausibleWeb.OAuth.FlowTest do
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 
+  @metadata_doc %{
+    "client_id" => @client_id,
+    "redirect_uris" => [@redirect_uri],
+    "client_name" => "Test Client"
+  }
+
   setup %{conn: conn} do
     stub_dns()
 
-    stub_metadata(%{
-      "client_id" => @client_id,
-      "redirect_uris" => [@redirect_uri],
-      "client_name" => "Test Client"
-    })
+    stub_metadata(@metadata_doc)
 
     user = new_user()
     {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -30,6 +32,17 @@ defmodule PlausibleWeb.OAuth.FlowTest do
     Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
       Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
     end)
+  end
+
+  defp stub_metadata_with_counter(doc) do
+    counter = :atomics.new(1, [])
+
+    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+      :atomics.add_get(counter, 1, 1)
+      Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
+    end)
+
+    counter
   end
 
   defp resource do
@@ -242,6 +255,22 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       assert conn |> get_authorize(params) |> params_from_redirect() |> Map.fetch!("error") ==
                "invalid_scope"
     end
+
+    test "rate-limits the user, doesn't do a client metadata fetch when over limit", %{conn: conn} do
+      fetches = stub_metadata_with_counter(@metadata_doc)
+      {_verifier, challenge} = pkce()
+      params = authorize_params(challenge)
+
+      statuses = Enum.map(1..30, fn _ -> get_authorize(conn, params).status end)
+
+      # 30 requests fall into at most two one-minute windows of 10
+      limits = Enum.count(statuses, &(&1 == 429))
+      passes = Enum.count(statuses, &(&1 == 200))
+
+      assert limits >= 10
+      assert passes >= 10
+      assert :atomics.get(fetches, 1) == passes
+    end
   end
 
   describe "POST /login/oauth/authorize" do
@@ -285,6 +314,22 @@ defmodule PlausibleWeb.OAuth.FlowTest do
       approve(conn, authorize_params(challenge))
 
       assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+    end
+
+    test "rate-limits the user across repeated POST requests", %{conn: conn} do
+      fetches = stub_metadata_with_counter(@metadata_doc)
+      {_verifier, challenge} = pkce()
+      params = authorize_params(challenge)
+
+      statuses = Enum.map(1..30, fn _ -> approve(conn, params).status end)
+
+      # 30 requests fall into at most two one-minute windows of 10
+      limits = Enum.count(statuses, &(&1 == 429))
+      passes = Enum.count(statuses, &(&1 == 302))
+
+      assert limits >= 10
+      assert passes >= 10
+      assert :atomics.get(fetches, 1) == passes
     end
   end
 

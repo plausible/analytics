@@ -5,6 +5,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
   use PlausibleWeb, :controller
 
+  alias Plausible.Auth
   alias Plausible.OAuth
   alias Plausible.OAuth.CIMD
   alias Plausible.OAuth.ProtectedResources
@@ -13,15 +14,20 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
   @no_team_message "You need to belong to a team before authorizing an application. Please create or join a team and try again."
 
+  @rate_limited_message "Too many authorization requests. Wait a minute before trying again."
+
   @doc """
   Validates an incoming [authorization request](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-request)
   and renders the consent screen for the logged-in user.
   """
   def authorize_form(conn, params) do
-    case build_context(params) do
-      {:ok, ctx} -> render_consent(conn, ctx)
+    with :ok <- rate_limit(conn),
+         {:ok, ctx} <- build_context(params) do
+      render_consent(conn, ctx)
+    else
+      {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
       {:redirect_error, request, error} -> redirect_error(conn, request, error)
-      {:render_error, message} -> render_error_page(conn, message)
+      {:render_error, message} -> render_error_page(conn, message, 400)
     end
   end
 
@@ -31,10 +37,13 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   redirecting back to the client with a code or an error.
   """
   def authorize(conn, %{"action" => action} = params) do
-    case build_context(params) do
-      {:ok, ctx} -> handle_decision(conn, conn.assigns.current_user, ctx, action)
+    with :ok <- rate_limit(conn),
+         {:ok, ctx} <- build_context(params) do
+      handle_decision(conn, conn.assigns.current_user, ctx, action)
+    else
+      {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
       {:redirect_error, request, error} -> redirect_error(conn, request, error)
-      {:render_error, message} -> render_error_page(conn, message)
+      {:render_error, message} -> render_error_page(conn, message, 400)
     end
   end
 
@@ -43,7 +52,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   defp handle_decision(conn, user, ctx, "approve") do
     case resolve_team(conn, ctx) do
       nil ->
-        render_error_page(conn, @no_team_message)
+        render_error_page(conn, @no_team_message, 400)
 
       team ->
         attrs = %{
@@ -80,6 +89,13 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
       end
 
     team || conn.assigns[:current_team]
+  end
+
+  defp rate_limit(conn) do
+    with :ok <- Auth.rate_limit(:oauth_authorize_ip, conn),
+         :ok <- Auth.rate_limit(:oauth_authorize_user, conn.assigns.current_user) do
+      :ok
+    end
   end
 
   defp build_context(params) do
@@ -160,7 +176,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
 
   defp render_consent(conn, ctx) do
     if is_nil(resolve_team(conn, ctx)) do
-      render_error_page(conn, @no_team_message)
+      render_error_page(conn, @no_team_message, 400)
     else
       render(conn, "oauth_authorize.html",
         legacy_layout?: false,
@@ -171,9 +187,9 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
     end
   end
 
-  defp render_error_page(conn, message) do
+  defp render_error_page(conn, message, status) do
     conn
-    |> put_status(400)
+    |> put_status(status)
     |> render("oauth_error.html", legacy_layout?: false, message: message)
   end
 
