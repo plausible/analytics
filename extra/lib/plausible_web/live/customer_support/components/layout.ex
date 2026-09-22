@@ -100,12 +100,20 @@ defmodule PlausibleWeb.CustomerSupport.Components.Layout do
           💬 Customer Support
         </.link>
       </h2>
+    <div class="flex justify-end space-x-2">
       <.styled_link
-        class="text-sm flex-shrink-0"
+        class="text-sm"
+        patch={~p"/cs/email-suppressions"}
+      >
+        📩 E-mail suppressions
+      </.styled_link>
+      <.styled_link
+        class="text-sm"
         patch={~p"/cs/trial-prospects"}
       >
         🔥 Trial prospects
       </.styled_link>
+    </div>
     </div>
     """
   end

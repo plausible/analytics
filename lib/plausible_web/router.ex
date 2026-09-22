@@ -130,6 +130,9 @@ defmodule PlausibleWeb.Router do
         live "/cs/trial-prospects", CustomerSupport.TrialProspects, :index,
           as: :customer_support_trial_prospects
 
+        live "/cs/email-suppressions", CustomerSupport.EmailSuppressions, :index,
+          as: :customer_support_email_suppressions
+
         live "/cs/teams/team/:id", CustomerSupport.Team, :show, as: :customer_support_team
         live "/cs/users/user/:id", CustomerSupport.User, :show, as: :customer_support_user
         live "/cs/sites/site/:id", CustomerSupport.Site, :show, as: :customer_support_site
