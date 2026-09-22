@@ -55,7 +55,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
                 phx-click="deprovision-sso-user"
                 phx-value-identifier={member.id}
                 phx-target={@myself}
-                class="text-sm"
                 icon={:user_minus}
                 data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
               />

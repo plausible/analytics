@@ -47,13 +47,13 @@
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
-                  <:button class="flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-md transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <:button theme="ghost" size="sm" class="pr-1.5">
                     <span class="hidden md:block text-sm font-medium truncate dark:text-gray-100">
                       {@current_user.name}
                     </span>
                     <img
                       src={Plausible.Auth.User.profile_img_url(@current_user)}
-                      class="-my-0.5 w-7 rounded-full"
+                      class="size-6 rounded-full"
                     />
                   </:button>
                   <:menu class="max-w-xs">
@@ -134,39 +134,20 @@
               <li :if={ee?()} id="changelog-notification" class="relative py-2 empty:hidden"></li>
             </ul>
           <% Plausible.Auth.check_registration_enabled() != :ok -> %>
-            <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
-              <li>
-                <div class="inline-flex">
-                  <a
-                    href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
-                  >
-                    Login
-                  </a>
-                </div>
-              </li>
-            </ul>
+            <div
+              class="flex items-center gap-2"
+              x-show="!document.cookie.includes('logged_in=true')"
+            >
+              <.button_link href="/login" theme="ghost" mt?={false}>Login</.button_link>
+            </div>
           <% true -> %>
-            <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
-              <li>
-                <div class="inline-flex">
-                  <a
-                    href="/login"
-                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-hidden focus:text-gray-900 transition duration-150 ease-in-out"
-                  >
-                    Login
-                  </a>
-                </div>
-                <div class="inline-flex ml-6 rounded-sm shadow-sm">
-                  <a
-                    href="/register"
-                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-hidden focus:ring transition duration-150 ease-in-out"
-                  >
-                    Sign up
-                  </a>
-                </div>
-              </li>
-            </ul>
+            <div
+              class="flex items-center gap-2"
+              x-show="!document.cookie.includes('logged_in=true')"
+            >
+              <.button_link href="/login" theme="ghost" mt?={false}>Login</.button_link>
+              <.button_link href="/register" mt?={false}>Sign up</.button_link>
+            </div>
         <% end %>
       </div>
     </nav>

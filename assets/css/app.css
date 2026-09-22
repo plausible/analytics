@@ -59,21 +59,21 @@
    */
   .btn-base {
     @apply whitespace-nowrap truncate inline-flex items-center justify-center
-      gap-x-2 text-sm font-medium rounded-md cursor-pointer
+      gap-x-1.5 text-sm font-medium rounded-md cursor-pointer
       disabled:cursor-not-allowed
       phx-click-loading:cursor-not-allowed phx-click-loading:opacity-60;
   }
 
   .btn-xs {
-    @apply px-2 py-1;
+    @apply px-2 h-8;
   }
 
   .btn-sm {
-    @apply px-3 py-2;
+    @apply px-3 h-9;
   }
 
   .btn-md {
-    @apply px-3.5 py-2.5;
+    @apply px-3.5 h-10;
   }
 
   .btn-theme-primary {
@@ -84,9 +84,9 @@
   }
 
   .btn-theme-secondary {
-    @apply border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700
+    @apply border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750
       text-gray-800 dark:text-gray-100 hover:bg-gray-50 hover:text-gray-900
-      dark:hover:bg-gray-600 dark:hover:border-gray-600 dark:hover:text-white
+      dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:hover:text-white
       disabled:text-gray-700/40 dark:disabled:text-gray-500
       dark:disabled:bg-gray-800 dark:disabled:border-gray-800;
   }
@@ -100,8 +100,8 @@
   }
 
   .btn-theme-danger {
-    @apply border border-gray-300 dark:border-gray-800 text-red-600 bg-white
-      dark:bg-gray-800 hover:text-red-700 dark:hover:text-red-400
+    @apply border border-gray-300 dark:border-gray-750 text-red-600 bg-white
+      dark:bg-gray-750 hover:text-red-700 dark:hover:text-red-400
       dark:text-red-500 active:text-red-800 disabled:text-red-700/40
       disabled:hover:shadow-none dark:disabled:text-red-500/35
       dark:disabled:bg-gray-800;
@@ -115,25 +115,74 @@
       disabled:hover:bg-transparent disabled:hover:border-transparent;
   }
 
-  .btn-theme-icon {
-    @apply border border-transparent text-gray-500 dark:text-gray-400
-      hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100
-      dark:hover:bg-gray-800 hover:border-gray-100 dark:hover:border-gray-800
-      disabled:text-gray-400 disabled:dark:text-gray-600
-      disabled:hover:bg-transparent disabled:hover:border-transparent;
+  .btn-theme-link {
+    @apply border border-transparent text-gray-700 dark:text-gray-300
+      hover:text-gray-900 dark:hover:text-gray-100
+      disabled:text-gray-500 disabled:dark:text-gray-600;
   }
 
-  .btn-theme-icon.btn-xs {
-    @apply px-1;
+  .btn-icon {
+    @apply aspect-square px-0;
   }
 
-  .btn-theme-icon.btn-sm {
-    @apply px-2;
+  /* Inputs use the same size scale as buttons so the two line up side by side. */
+  .input-base {
+    @apply block text-sm text-gray-900 dark:text-white dark:bg-gray-750
+      border-gray-300 dark:border-gray-750 rounded-md transition-all duration-150
+      selection:bg-gray-200 dark:selection:bg-gray-700 focus:outline-none
+      focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25
+      focus:border-indigo-500 disabled:bg-gray-100 dark:disabled:bg-gray-800
+      disabled:border-gray-200 dark:disabled:border-gray-800
+      disabled:text-gray-900/40 dark:disabled:text-white/30
+      disabled:cursor-not-allowed;
+
+    /* The mini chevron of the button triggers. A background image cannot read
+       a colour token, so gray-500 and gray-400 are hardcoded */
+    &:is(select:not([multiple])) {
+      @apply pr-10;
+
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='oklch(55.2%25 0.016 285.938)'%3e%3cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3e%3c/svg%3e");
+      background-position: right 0.875rem center;
+      background-size: 1rem 1rem;
+
+      &:where(.dark, .dark *) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='oklch(70.5%25 0.015 286.067)'%3e%3cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3e%3c/svg%3e");
+      }
+    }
+
+    &[readonly] {
+      @apply bg-gray-100 dark:bg-gray-800 border-transparent
+        dark:border-transparent cursor-default focus:ring-0
+        focus:border-transparent dark:focus:border-transparent;
+    }
   }
 
-  .btn-theme-icon.btn-md {
-    @apply px-2.5;
+  .input-sm {
+    @apply px-3 h-9;
   }
+
+  .input-md {
+    @apply px-3.5 h-10;
+  }
+
+  .input-multiline {
+    @apply h-auto py-2.5;
+  }
+}
+
+@utility btn-text-primary {
+  /*
+   * Text colour is a separate axis from the theme. Utilities outrank the
+   * components layer, so these override the theme colour on any button.
+   */
+  @apply text-indigo-600 dark:text-indigo-500 hover:text-indigo-500
+    dark:hover:text-indigo-400 disabled:text-indigo-700/40
+    dark:disabled:text-indigo-500/35;
+}
+
+@utility btn-text-danger {
+  @apply text-red-600 dark:text-red-500 hover:text-red-500 dark:hover:text-red-400
+    disabled:text-red-700/40 dark:disabled:text-red-500/35;
 }
 
 @theme {

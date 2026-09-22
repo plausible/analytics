@@ -89,7 +89,6 @@ defmodule PlausibleWeb.Live.Components.Team do
 
           <.delete_button
             id={"#{:erlang.phash2(@user.email)}-remove"}
-            class="disabled:cursor-not-allowed"
             disabled={@disabled or @remove_disabled}
             aria-label="Remove member"
             phx-click="remove-member"
@@ -116,13 +115,15 @@ defmodule PlausibleWeb.Live.Components.Team do
       <PrimaListbox.listbox_trigger
         id={"#{@id}-trigger"}
         aria-label="Role"
+        theme="ghost"
+        size="sm"
         disabled={@disabled}
-        class="role !border-none !shadow-none !bg-transparent dark:!bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-700"
+        data-test-id="role"
       >
         <PrimaListbox.listbox_value>
           {role_to_capitalized_string(@role)}
         </PrimaListbox.listbox_value>
-        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        <Heroicons.chevron_down mini class="size-4" />
       </PrimaListbox.listbox_trigger>
 
       <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
@@ -156,7 +157,7 @@ defmodule PlausibleWeb.Live.Components.Team do
         <PrimaListbox.listbox_value>
           {role_to_capitalized_string(@role)}
         </PrimaListbox.listbox_value>
-        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        <Heroicons.chevron_down mini class="size-4" />
       </PrimaListbox.listbox_trigger>
 
       <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-64">
