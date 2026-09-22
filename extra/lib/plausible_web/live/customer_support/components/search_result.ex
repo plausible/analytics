@@ -4,6 +4,8 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
   """
   use PlausibleWeb, :live_component
 
+  import PlausibleWeb.CustomerSupport.Components.SuppressionWarning
+
   def favicon(assigns) do
     ~H"""
     <img src={"/favicon/sources/#{@domain}"} class={@class} />
@@ -74,8 +76,9 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
       <div class="text-sm truncate">
-        {@resource.object.name} &lt;{@resource.object.email}&gt; <br />
-        Owns {length(@resource.object.owned_teams)} team(s)
+        {@resource.object.name} &lt;{@resource.object.email}&gt;
+        <.suppression_warning email={@resource.object.email} linked?={false} />
+        <br /> Owns {length(@resource.object.owned_teams)} team(s)
       </div>
     </div>
     """
