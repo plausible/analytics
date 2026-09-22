@@ -60,8 +60,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
     "Postmark won't allow #{email} to be reactivated automatically."
   end
 
-  defp reactivate_error_message(email, _reason) do
-    "Could not reactivate #{email}."
+  defp reactivate_error_message(email, reason) do
+    "Could not reactivate #{email}: (#{inspect(reason)})."
   end
 
   defp list_suppressions(reason, search, pagination_params) do
