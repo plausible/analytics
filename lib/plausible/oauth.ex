@@ -87,7 +87,7 @@ defmodule Plausible.OAuth do
 
   `:client_id` is checked even though PKCE already proves possession of the
   verifier, as required by
-  [OAuth 2.1 §4.1.3](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension).
+  [token endpoint extension section](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension).
 
   The row is deleted on lookup whether or not the later checks pass, so a code
   can only ever be redeemed once.
@@ -186,7 +186,7 @@ defmodule Plausible.OAuth do
   for a different resource is not found.
 
   Expired, revoked and wrong-resource tokens all return `{:error, :invalid_token}`
-  ([RFC 6750 section 3.1](https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1)).
+  ([see error codes](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-error-codes)).
   """
   @spec find_access_token(String.t(), ProtectedResources.t()) ::
           {:ok, Grant.t()} | {:error, :invalid_token}

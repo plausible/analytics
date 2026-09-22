@@ -190,7 +190,7 @@ defmodule Plausible.OAuth.CIMD do
 
   Non-loopback URIs must match exactly. For loopback URIs (`localhost`,
   `127.0.0.1`, `[::1]`) the port - and only the port - may differ, per
-  [OAuth 2.1 §2.3.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-registration-requirements)
+  [registration requirements](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-registration-requirements)
   and [RFC 8252 §7.3](https://www.rfc-editor.org/rfc/rfc8252.html#section-7.3),
   because a native client binds a random port it cannot know in advance.
 
