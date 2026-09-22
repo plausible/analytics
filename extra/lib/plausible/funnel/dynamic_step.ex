@@ -50,7 +50,7 @@ defmodule Plausible.Funnel.DynamicStep do
   end
 
   defp validate_page_or_custom_goal(changeset) do
-    if get_field(changeset, :event_nmame) && get_field(changeset, :page_path) do
+    if get_field(changeset, :event_name) && get_field(changeset, :page_path) do
       add_error(changeset, :event_name, "cannot co-exist with page_path")
     else
       changeset
