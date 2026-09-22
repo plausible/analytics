@@ -6,6 +6,7 @@ defmodule Plausible.OAuthTest do
      team, scopes and resource
   - `Step 2: consume_authorization_code/2` redeems that code, exactly once
   - `Step 3: issue_token/1 and find_access_token/2`: opens a grant from the redeemed code, returns token AND resolves an access token back to its grant
+  - `Step 4: revoke_grant/1 and after_user_removed_from_team/2` invalidates both tokens
   """
 
   use Plausible.DataCase
@@ -356,6 +357,82 @@ defmodule Plausible.OAuthTest do
       |> Repo.delete!()
 
       assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+    end
+  end
+
+  describe "Step 4: revoke_grant/1 and after_user_removed_from_team/2" do
+    test "invalidates the grant's access token", %{user: user, team: team} do
+      {grant, access_token} = issue_grant(user, team)
+
+      assert :ok = OAuth.revoke_grant(grant)
+
+      assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+    end
+
+    test "keeps the original revoked_at when repeated", %{user: user, team: team} do
+      {grant, _access_token} = issue_grant(user, team)
+
+      assert :ok = OAuth.revoke_grant(grant)
+
+      revoked_at = past()
+
+      Plausible.Repo.update_all(
+        from(g in Grant, where: g.id == ^grant.id),
+        set: [revoked_at: revoked_at]
+      )
+
+      assert :ok = OAuth.revoke_grant(grant)
+
+      assert_matches %Grant{revoked_at: ^revoked_at} = Plausible.Repo.get!(Grant, grant.id)
+    end
+
+    test "removing a member revokes the grants they held against the team" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+
+      {grant, access_token} = issue_grant(member, team)
+
+      other_owner = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other_owner)
+      add_member(other_team, role: :editor, user: member)
+
+      {kept, kept_token} = issue_grant(member, other_team)
+
+      assert {:ok, _} =
+               Plausible.Teams.Memberships.Remove.remove(team, member.id, owner,
+                 send_email?: false
+               )
+
+      assert %Grant{revoked_at: revoked_at} = Plausible.Repo.get!(Grant, grant.id)
+      assert revoked_at
+      assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+
+      assert_matches %Grant{revoked_at: nil} = Plausible.Repo.get!(Grant, kept.id)
+      assert {:ok, _} = OAuth.find_access_token(kept_token, mcp())
+    end
+
+    test "a member leaving revokes the grants they held against the team" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+
+      {grant, _access_token} = issue_grant(member, team)
+
+      other_owner = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other_owner)
+      add_member(other_team, role: :editor, user: member)
+
+      {kept, kept_token} = issue_grant(member, other_team)
+
+      assert {:ok, _} =
+               Plausible.Teams.Memberships.Leave.leave(team, member, send_email?: false)
+
+      assert %Grant{revoked_at: revoked_at} = Plausible.Repo.get!(Grant, grant.id)
+      assert revoked_at
+
+      assert_matches %Grant{revoked_at: nil} = Plausible.Repo.get!(Grant, kept.id)
+      assert {:ok, _} = OAuth.find_access_token(kept_token, mcp())
     end
   end
 
