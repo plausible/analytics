@@ -112,18 +112,37 @@ defmodule Plausible.EmailSuppressions do
 
   @doc """
   Lifts a suppression after manual review, recording who did it.
+  Encapsulates suppression remote deletion at Postmark - can't be done for spam complaints.
   """
   @spec reactivate(String.t(), Plausible.Auth.User.t()) ::
-          {:ok, EmailSuppression.t()} | {:error, :not_found | Ecto.Changeset.t()}
+          {:ok, EmailSuppression.t()}
+          | {:error,
+             :not_found
+             | :cannot_delete_spam_complaint
+             | {:postmark_error, term()}
+             | Ecto.Changeset.t()}
   def reactivate(email, %Plausible.Auth.User{id: user_id}) do
     case Repo.get_by(EmailSuppression, email: email) do
       nil ->
         {:error, :not_found}
 
       suppression ->
-        suppression
-        |> EmailSuppression.reactivate_changeset(user_id)
-        |> Repo.update()
+        with :ok <- delete_in_postmark(suppression) do
+          suppression
+          |> EmailSuppression.reactivate_changeset(user_id)
+          |> Repo.update()
+        end
+    end
+  end
+
+  defp delete_in_postmark(%{reason: :spam_complaint}) do
+    {:error, :cannot_delete_spam_complaint}
+  end
+
+  defp delete_in_postmark(%{email: email}) do
+    case Plausible.Postmark.delete_suppression(email) do
+      :ok -> :ok
+      {:error, reason} -> {:error, {:postmark_error, reason}}
     end
   end
 

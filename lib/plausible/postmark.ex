@@ -31,6 +31,34 @@ defmodule Plausible.Postmark do
   }
 
   @doc """
+  https://postmarkapp.com/developer/api/suppressions-api#delete-a-suppression
+
+  Lifts a suppression on every stream we send from.
+  Postmark refuses this only for a spam complaint.
+  """
+  @spec delete_suppression(String.t()) :: :ok | {:error, term()}
+  def delete_suppression(email) do
+    @streams
+    |> Enum.map(&delete_suppression(&1, email))
+    |> Enum.find(:ok, &match?({:error, _}, &1))
+  end
+
+  defp delete_suppression(stream, email) do
+    case post("/message-streams/#{stream}/suppressions/delete", %{
+           "Suppressions" => [%{"EmailAddress" => email}]
+         }) do
+      {:ok, %{"Suppressions" => [%{"Status" => "Deleted"}]}} ->
+        :ok
+
+      {:ok, %{"Suppressions" => [%{"Status" => "Failed", "Message" => message}]}} ->
+        {:error, {stream, message}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
   One-off backfill of e-mail suppressions from Postmark's Suppressions API,
   across every message stream we send from.
 
@@ -131,16 +159,22 @@ defmodule Plausible.Postmark do
   end
 
   defp get(path, params) do
+    request(&Req.get/2, path, params: params)
+  end
+
+  defp post(path, body) do
+    request(&Req.post/2, path, json: body)
+  end
+
+  defp request(req_fun, path, opts) do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 
     opts =
-      [
-        params: params,
-        headers: [{"accept", "application/json"}, {"x-postmark-server-token", api_key()}]
-      ]
+      [headers: [{"accept", "application/json"}, {"x-postmark-server-token", api_key()}]]
+      |> Keyword.merge(opts)
       |> Keyword.merge(extra_opts)
 
-    case Req.get(@base_api_url <> path, opts) do
+    case req_fun.(@base_api_url <> path, opts) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, body}
 
