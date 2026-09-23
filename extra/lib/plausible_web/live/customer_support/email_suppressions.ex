@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
     {:noreply, socket}
   end
 
-  defp reactivate_error_message(email, :cannot_activate_in_postmark) do
+  defp reactivate_error_message(email, :cannot_delete_spam_complaint) do
     "Postmark won't allow #{email} to be reactivated automatically."
   end
 
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
             <.td>
               <div class="flex flex-col items-start gap-1">
                 <.styled_link
-                  :if={is_nil(s.reactivated_at)}
+                  :if={is_nil(s.reactivated_at) and s.reason != :spam_complaint}
                   phx-click="reactivate"
                   phx-value-email={s.email}
                   data-confirm={"Reactivate #{s.email}? Plausible will start sending mail to this address again."}
@@ -149,7 +149,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
                         <span class="font-medium">Bounce ID:</span> {s.postmark_bounce_id}
                       </span>
                       <span :if={s.postmark_inactive} class="font-medium">Inactive</span>
-                      <span :if={s.can_activate} class="font-medium">Can reactivate</span>
                     </div>
                     <.input_with_clipboard
                       :if={s.details not in [nil, ""]}
@@ -197,8 +196,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
   end
 
   defp has_postmark_details?(s) do
-    not is_nil(s.postmark_bounce_id) or s.postmark_inactive or s.can_activate or
-      s.details not in [nil, ""]
+    not is_nil(s.postmark_bounce_id) or s.postmark_inactive or s.details not in [nil, ""]
   end
 
   defp reason_strings, do: Enum.map(@reasons, &Atom.to_string/1)

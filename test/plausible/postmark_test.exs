@@ -21,25 +21,74 @@ defmodule Plausible.PostmarkTest do
     end
   end
 
-  describe "activate_bounce/1" do
-    test "PUTs to the activate endpoint for the given bounce ID" do
+  describe "delete_suppression/1" do
+    test "deletes the suppression from every stream we send from" do
       Req.Test.stub(Postmark, fn conn ->
-        assert conn.method == "PUT"
-        assert conn.request_path == "/bounces/123/activate"
-        Req.Test.json(conn, %{"Message" => "OK", "Bounce" => %{"ID" => 123, "Inactive" => false}})
+        assert conn.method == "POST"
+
+        assert conn.request_path in [
+                 "/message-streams/outbound/suppressions/delete",
+                 "/message-streams/priority/suppressions/delete"
+               ]
+
+        conn = Plug.Conn.fetch_query_params(conn)
+        {:ok, body, _conn} = Plug.Conn.read_body(conn)
+        assert Jason.decode!(body) == %{"Suppressions" => [%{"EmailAddress" => "a@example.com"}]}
+
+        Req.Test.json(conn, %{
+          "Suppressions" => [%{"EmailAddress" => "a@example.com", "Status" => "Deleted"}]
+        })
       end)
 
-      assert {:ok, %{"Message" => "OK"}} = Postmark.activate_bounce(123)
+      assert :ok = Postmark.delete_suppression("a@example.com")
     end
 
-    test "returns an error on a non-200 response" do
+    test "no-ops (still :ok) when the address wasn't suppressed on a stream" do
       Req.Test.stub(Postmark, fn conn ->
-        conn
-        |> Plug.Conn.put_status(422)
-        |> Req.Test.json(%{"Message" => "Bounce cannot be activated"})
+        Req.Test.json(conn, %{
+          "Suppressions" => [
+            %{"EmailAddress" => "a@example.com", "Status" => "Deleted", "Message" => nil}
+          ]
+        })
       end)
 
-      assert {:error, {:unexpected_status, 422, _body}} = Postmark.activate_bounce(123)
+      assert :ok = Postmark.delete_suppression("a@example.com")
+    end
+
+    test "returns an error when Postmark refuses (e.g. a spam complaint can't be deleted)" do
+      Req.Test.stub(Postmark, fn conn ->
+        Req.Test.json(conn, %{
+          "Suppressions" => [
+            %{
+              "EmailAddress" => "a@example.com",
+              "Status" => "Failed",
+              "Message" => "SpamComplaint suppressions cannot be deleted"
+            }
+          ]
+        })
+      end)
+
+      assert {:error, {stream, "SpamComplaint suppressions cannot be deleted"}} =
+               Postmark.delete_suppression("a@example.com")
+
+      assert stream in ["outbound", "priority"]
+    end
+
+    test "returns an error on a non-200 response from either stream" do
+      Req.Test.stub(Postmark, fn conn ->
+        case conn.request_path do
+          "/message-streams/outbound/suppressions/delete" ->
+            Req.Test.json(conn, %{
+              "Suppressions" => [%{"EmailAddress" => "a@example.com", "Status" => "Deleted"}]
+            })
+
+          "/message-streams/priority/suppressions/delete" ->
+            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+        end
+      end)
+
+      assert {:error, {:unexpected_status, 500, _body}} =
+               Postmark.delete_suppression("a@example.com")
     end
   end
 

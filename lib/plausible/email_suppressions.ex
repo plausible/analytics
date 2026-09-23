@@ -112,15 +112,15 @@ defmodule Plausible.EmailSuppressions do
 
   @doc """
   Lifts a suppression after manual review, recording who did it. Also
-  reactivates the underlying bounce in Postmark, when there is one, so
-  Postmark itself resumes accepting mail to the address. Refuses if Postmark
-  reports the bounce can't be reactivated (`can_activate: false`).
+  deletes the suppression in Postmark (`Plausible.Postmark.delete_suppression/1`),
+  so Postmark itself resumes accepting mail to the address. Refuses for a
+  `:spam_complaint` suppression, which Postmark never allows deleting.
   """
   @spec reactivate(String.t(), Plausible.Auth.User.t()) ::
           {:ok, EmailSuppression.t()}
           | {:error,
              :not_found
-             | :cannot_activate_in_postmark
+             | :cannot_delete_spam_complaint
              | {:postmark_error, term()}
              | Ecto.Changeset.t()}
   def reactivate(email, %Plausible.Auth.User{id: user_id}) do
@@ -129,7 +129,7 @@ defmodule Plausible.EmailSuppressions do
         {:error, :not_found}
 
       suppression ->
-        with :ok <- activate_in_postmark(suppression) do
+        with :ok <- delete_in_postmark(suppression) do
           suppression
           |> EmailSuppression.reactivate_changeset(user_id)
           |> Repo.update()
@@ -137,12 +137,13 @@ defmodule Plausible.EmailSuppressions do
     end
   end
 
-  defp activate_in_postmark(%{postmark_bounce_id: nil}), do: :ok
-  defp activate_in_postmark(%{can_activate: false}), do: {:error, :cannot_activate_in_postmark}
+  defp delete_in_postmark(%{reason: :spam_complaint}) do
+    {:error, :cannot_delete_spam_complaint}
+  end
 
-  defp activate_in_postmark(%{postmark_bounce_id: id}) do
-    case Plausible.Postmark.activate_bounce(id) do
-      {:ok, _bounce} -> :ok
+  defp delete_in_postmark(%{email: email}) do
+    case Plausible.Postmark.delete_suppression(email) do
+      :ok -> :ok
       {:error, reason} -> {:error, {:postmark_error, reason}}
     end
   end

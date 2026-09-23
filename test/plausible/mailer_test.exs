@@ -78,6 +78,10 @@ defmodule Plausible.MailerTest do
           source: :webhook
         })
 
+      Req.Test.stub(Plausible.Postmark, fn conn ->
+        Req.Test.json(conn, %{"Suppressions" => [%{"Status" => "Deleted"}]})
+      end)
+
       {:ok, _} = Plausible.EmailSuppressions.reactivate(user.email, reviewer)
 
       email = PlausibleWeb.Email.welcome_email(user)

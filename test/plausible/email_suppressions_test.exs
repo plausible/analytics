@@ -6,6 +6,21 @@ defmodule Plausible.EmailSuppressionsTest do
 
   @moduletag :ee_only
 
+  # Bounce-ID-less suppressions now hit Postmark's delete-suppression
+  # endpoint on reactivate; default it to success so tests not specifically
+  # about that integration don't need their own stub. Tests that care about
+  # the Postmark call itself (success/failure/refusal) override this.
+  setup do
+    Req.Test.stub(Postmark, fn conn ->
+      Req.Test.json(conn, %{
+        "Message" => "OK",
+        "Suppressions" => [%{"Status" => "Deleted"}]
+      })
+    end)
+
+    :ok
+  end
+
   describe "suppressed?/1" do
     test "false when no record exists" do
       refute EmailSuppressions.suppressed?("nobody@example.com")
@@ -112,8 +127,9 @@ defmodule Plausible.EmailSuppressionsTest do
       user = insert(:user)
 
       {:ok, _} =
-        EmailSuppressions.create_from_spam_complaint(%{
+        EmailSuppressions.create_from_bounce(%{
           email: "flip-flop@example.com",
+          reason: :blocked,
           source: :webhook
         })
 
@@ -243,73 +259,58 @@ defmodule Plausible.EmailSuppressionsTest do
       assert suppression.reactivated_at
     end
 
-    test "activates the bounce in Postmark when there is one" do
+    test "deletes the suppression in Postmark" do
       user = insert(:user)
 
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{
           email: "bounced@example.com",
           reason: :hard_bounce,
-          source: :webhook,
-          postmark_bounce_id: 123,
-          can_activate: true
+          source: :backfill
         })
 
       Req.Test.stub(Postmark, fn conn ->
-        assert conn.method == "PUT"
-        assert conn.request_path == "/bounces/123/activate"
-        Req.Test.json(conn, %{"Message" => "OK"})
+        assert conn.method == "POST"
+
+        assert conn.request_path in [
+                 "/message-streams/outbound/suppressions/delete",
+                 "/message-streams/priority/suppressions/delete"
+               ]
+
+        Req.Test.json(conn, %{
+          "Suppressions" => [%{"EmailAddress" => "bounced@example.com", "Status" => "Deleted"}]
+        })
       end)
 
       assert {:ok, _suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
       refute EmailSuppressions.suppressed?("bounced@example.com")
     end
 
-    test "does not call Postmark when the suppression has no bounce ID" do
+    test "refuses to reactivate a spam complaint, leaving it suppressed" do
       user = insert(:user)
 
       {:ok, _} =
-        EmailSuppressions.create_from_bounce(%{
-          email: "bounced@example.com",
-          reason: :hard_bounce,
-          source: :webhook
+        EmailSuppressions.create_from_spam_complaint(%{
+          email: "complainer@example.com",
+          source: :backfill
         })
 
       Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
 
-      assert {:ok, _suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
+      assert {:error, :cannot_delete_spam_complaint} =
+               EmailSuppressions.reactivate("complainer@example.com", user)
+
+      assert EmailSuppressions.suppressed?("complainer@example.com")
     end
 
-    test "refuses when Postmark reports the bounce can't be activated, leaving it suppressed" do
+    test "leaves it suppressed when the Postmark deletion call fails" do
       user = insert(:user)
 
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{
           email: "bounced@example.com",
           reason: :hard_bounce,
-          source: :webhook,
-          postmark_bounce_id: 123,
-          can_activate: false
-        })
-
-      Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
-
-      assert {:error, :cannot_activate_in_postmark} =
-               EmailSuppressions.reactivate("bounced@example.com", user)
-
-      assert EmailSuppressions.suppressed?("bounced@example.com")
-    end
-
-    test "leaves it suppressed when the Postmark activation call fails" do
-      user = insert(:user)
-
-      {:ok, _} =
-        EmailSuppressions.create_from_bounce(%{
-          email: "bounced@example.com",
-          reason: :hard_bounce,
-          source: :webhook,
-          postmark_bounce_id: 123,
-          can_activate: true
+          source: :backfill
         })
 
       Req.Test.stub(Postmark, fn conn ->

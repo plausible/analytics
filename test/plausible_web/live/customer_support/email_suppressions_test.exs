@@ -19,6 +19,20 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       patch_env(:super_admin_user_ids, [user.id])
     end
 
+    # Bounce-ID-less suppressions hit Postmark's delete-suppression endpoint
+    # on reactivate; default it to success so tests not specifically about
+    # that integration don't need their own stub.
+    setup do
+      Req.Test.stub(Postmark, fn conn ->
+        Req.Test.json(conn, %{
+          "Message" => "OK",
+          "Suppressions" => [%{"Status" => "Deleted"}]
+        })
+      end)
+
+      :ok
+    end
+
     test "renders suppressions, most recently suppressed first", %{conn: conn} do
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{
@@ -50,7 +64,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       assert hard_row =~ "Details"
       assert hard_row =~ "Bounce ID: 12345"
       assert hard_row =~ "Inactive"
-      assert hard_row =~ "Can reactivate"
 
       assert html =~ "Unknown user"
 
@@ -126,19 +139,25 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       refute EmailSuppressions.suppressed?("reactivate-me@example.com")
     end
 
-    test "also activates the bounce in Postmark when there is one", %{conn: conn} do
+    test "also deletes the suppression in Postmark when reactivating", %{conn: conn} do
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{
           email: "reactivate-me@example.com",
           reason: :hard_bounce,
-          source: :webhook,
-          postmark_bounce_id: 123,
-          can_activate: true
+          source: :backfill
         })
 
       Req.Test.stub(Postmark, fn conn ->
-        assert conn.request_path == "/bounces/123/activate"
-        Req.Test.json(conn, %{"Message" => "OK"})
+        assert conn.request_path in [
+                 "/message-streams/outbound/suppressions/delete",
+                 "/message-streams/priority/suppressions/delete"
+               ]
+
+        Req.Test.json(conn, %{
+          "Suppressions" => [
+            %{"EmailAddress" => "reactivate-me@example.com", "Status" => "Deleted"}
+          ]
+        })
       end)
 
       {:ok, lv, _html} = live(conn, open_suppressions())
@@ -151,17 +170,31 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       assert text(html) =~ "no longer suppressed"
     end
 
-    test "refuses to reactivate when Postmark reports the bounce can't be activated", %{
-      conn: conn
-    } do
+    test "does not offer to reactivate a spam complaint", %{conn: conn} do
+      {:ok, _} =
+        EmailSuppressions.create_from_spam_complaint(%{
+          email: "complainer@example.com",
+          source: :backfill
+        })
+
+      {:ok, lv, _html} = live(conn, open_suppressions())
+
+      refute lv
+             |> element(~s|a[phx-value-email="complainer@example.com"]|)
+             |> has_element?()
+    end
+
+    test "refuses to reactivate when Postmark's deletion call fails", %{conn: conn} do
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{
           email: "stuck@example.com",
           reason: :hard_bounce,
-          source: :webhook,
-          postmark_bounce_id: 123,
-          can_activate: false
+          source: :backfill
         })
+
+      Req.Test.stub(Postmark, fn conn ->
+        conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+      end)
 
       {:ok, lv, _html} = live(conn, open_suppressions())
 
@@ -170,7 +203,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
         |> element(~s|a[phx-value-email="stuck@example.com"]|, "Reactivate")
         |> render_click()
 
-      assert text(html) =~ "Postmark won't allow stuck@example.com to be reactivated"
+      assert text(html) =~ "Could not reactivate stuck@example.com"
       assert EmailSuppressions.suppressed?("stuck@example.com")
     end
 

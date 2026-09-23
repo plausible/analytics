@@ -31,11 +31,33 @@ defmodule Plausible.Postmark do
   }
 
   @doc """
-  https://postmarkapp.com/developer/api/bounce-api#activate-a-bounce
+  https://postmarkapp.com/developer/api/suppressions-api#delete-a-suppression
+
+  Lifts a suppression on every stream we send from - we don't track which
+  one it's actually on, and deleting a suppression that isn't there is a
+  harmless no-op per Postmark. Postmark refuses this only for a spam
+  complaint; callers should check `reason` before calling this.
   """
-  @spec activate_bounce(integer()) :: {:ok, map()} | {:error, term()}
-  def activate_bounce(bounce_id) do
-    put("/bounces/#{bounce_id}/activate")
+  @spec delete_suppression(String.t()) :: :ok | {:error, term()}
+  def delete_suppression(email) do
+    @streams
+    |> Enum.map(&delete_suppression(&1, email))
+    |> Enum.find(:ok, &match?({:error, _}, &1))
+  end
+
+  defp delete_suppression(stream, email) do
+    case post("/message-streams/#{stream}/suppressions/delete", %{
+           "Suppressions" => [%{"EmailAddress" => email}]
+         }) do
+      {:ok, %{"Suppressions" => [%{"Status" => "Deleted"}]}} ->
+        :ok
+
+      {:ok, %{"Suppressions" => [%{"Status" => "Failed", "Message" => message}]}} ->
+        {:error, {stream, message}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -142,9 +164,8 @@ defmodule Plausible.Postmark do
     request(&Req.get/2, path, params: params)
   end
 
-  defp put(path) do
-    # explicit empty body, otherwise Postmark gives 411
-    request(&Req.put/2, path, body: "")
+  defp post(path, body) do
+    request(&Req.post/2, path, json: body)
   end
 
   defp request(req_fun, path, opts) do
