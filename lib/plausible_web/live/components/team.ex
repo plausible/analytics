@@ -216,6 +216,7 @@ defmodule PlausibleWeb.Live.Components.Team do
       disabled={@disabled}
       phx-click={@click}
       phx-value-role={@role}
+      phx-hook="ConfirmedPrimaListboxSelect"
       {@rest}
     >
       <div class="flex items-center justify-between gap-x-2">

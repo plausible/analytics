@@ -97,6 +97,19 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
     end
 
+    def add_team_member(conn, %{"domain" => domain, "email" => email, "role" => role}) do
+      site =
+        Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+        |> Plausible.Repo.preload(:team)
+
+      Plausible.Teams.Test.add_member(site.team,
+        role: String.to_existing_atom(role),
+        user: Plausible.Teams.Test.new_user(email: email)
+      )
+
+      send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
       opts = [
         slowdown: params["options"]["slowdown"] || 0,

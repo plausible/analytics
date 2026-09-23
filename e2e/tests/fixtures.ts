@@ -519,6 +519,28 @@ export async function addFunnel({
   expect(response.ok()).toBeTruthy()
 }
 
+export async function addTeamMember({
+  request,
+  domain,
+  email,
+  role
+}: {
+  request: APIRequestContext
+  domain: string
+  email: string
+  role: string
+}) {
+  const response = await request.post('/e2e-tests/team-member', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { domain: domain, email: email, role: role }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
 export async function setupSite({
   user,
   page,
