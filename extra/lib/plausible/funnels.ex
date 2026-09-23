@@ -138,7 +138,6 @@ defmodule Plausible.Funnels do
   @spec with_goals_query(Plausible.Site.t()) :: Ecto.Query.t()
   def with_goals_query(site) do
     from(f in Funnel,
-      inner_join: steps in assoc(f, :steps),
       where: f.site_id == ^site.id,
       group_by: f.id,
       order_by: [desc: :id],
