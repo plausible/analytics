@@ -618,6 +618,45 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                } = purchase_step
       end
 
+      test "reports revenue for a dynamic funnel without goals", %{conn: conn, site: site} do
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Test funnel",
+            [%{"page_path" => "/checkout"}, %{"event_name" => "Purchase", "currency" => "USD"}]
+          )
+
+        funnel = Plausible.Repo.reload!(funnel)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/checkout", user_id: @user_id),
+          build(:pageview, pathname: "/checkout", user_id: @other_user_id),
+          purchase(@user_id, "100"),
+          purchase(@other_user_id, "300")
+        ])
+
+        assert [checkout_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        refute Map.has_key?(checkout_step, "revenue")
+        refute Map.has_key?(checkout_step, "revenue_per_visitor")
+
+        assert %{
+                 "visitors" => 2,
+                 "revenue" => %{
+                   "short" => "$400.0",
+                   "long" => "$400.00",
+                   "value" => 400.0,
+                   "currency" => "USD"
+                 },
+                 "revenue_per_visitor" => %{
+                   "short" => "$200.0",
+                   "long" => "$200.00",
+                   "value" => 200.0,
+                   "currency" => "USD"
+                 }
+               } = purchase_step
+      end
+
       test "divides the revenue by visitors, not by orders", %{conn: conn, site: site} do
         {:ok, funnel} = setup_checkout_funnel(site)
 
