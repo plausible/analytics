@@ -171,6 +171,56 @@ defmodule Plausible.EmailSuppressionsTest do
     end
   end
 
+  describe "list/1" do
+    setup do
+      {:ok, hard} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "hard@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      {:ok, _blocked} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "blocked@example.com",
+          reason: :blocked,
+          source: :backfill
+        })
+
+      %{hard: hard}
+    end
+
+    test "returns everything, most recently suppressed first" do
+      assert %{entries: entries} = EmailSuppressions.list()
+
+      assert Enum.map(entries, & &1.email) == ["blocked@example.com", "hard@example.com"]
+    end
+
+    test "filters by reason" do
+      assert %{entries: [suppression]} = EmailSuppressions.list(reason: :blocked)
+
+      assert suppression.email == "blocked@example.com"
+    end
+
+    test "filters by an email substring, case-insensitively" do
+      assert %{entries: [suppression]} = EmailSuppressions.list(search: "HARD@")
+
+      assert suppression.email == "hard@example.com"
+    end
+
+    test "paginates via before/after cursors" do
+      assert %{entries: [first], metadata: %{after: cursor, before: nil}} =
+               EmailSuppressions.list([], %{"limit" => "1"})
+
+      assert first.email == "blocked@example.com"
+
+      assert %{entries: [second], metadata: %{after: nil}} =
+               EmailSuppressions.list([], %{"limit" => "1", "after" => cursor})
+
+      assert second.email == "hard@example.com"
+    end
+  end
+
   describe "reactivate/2" do
     test "returns :not_found when there is no suppression for the address" do
       user = insert(:user)
