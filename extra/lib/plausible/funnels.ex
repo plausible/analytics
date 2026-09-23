@@ -147,8 +147,8 @@ defmodule Plausible.Funnels do
   defp base_get_query(site_id) do
     from(f in Funnel,
       where: f.site_id == ^site_id,
-      inner_join: steps in assoc(f, :steps),
-      inner_join: goal in assoc(steps, :goal),
+      left_join: steps in assoc(f, :steps),
+      left_join: goal in assoc(steps, :goal),
       order_by: steps.step_order,
       preload: [
         steps: {steps, goal: goal}
