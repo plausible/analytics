@@ -83,10 +83,7 @@ defmodule Plausible.Stats.Funnel do
 
   defp convert_to_first_and_last(funnel) do
     steps = Funnel.steps(funnel)
-
-    funnel
-    |> Funnel.changeset(%{funnel_type: :sequential, steps: [List.first(steps), List.last(steps)]})
-    |> Ecto.Changeset.apply_changes()
+    Funnel.swap(funnel, funnel_type: :sequential, steps: [List.first(steps), List.last(steps)])
   end
 
   defp revenue_steps(site, steps) do
