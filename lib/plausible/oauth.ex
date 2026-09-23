@@ -15,14 +15,13 @@ defmodule Plausible.OAuth do
   use Plausible.Repo
 
   alias Plausible.OAuth.{AuthorizationCode, Grant, PKCE, ProtectedResources, Token}
-  alias Plausible.Teams.Memberships
+  alias Plausible.Teams.{Membership, Memberships}
 
   @authorization_code_ttl_seconds 600
   @access_token_ttl_seconds 3600
   @refresh_token_ttl_seconds 30 * 24 * 3600
 
-  @roles_with_oauth [:owner, :admin, :editor, :billing, :viewer]
-  true = Enum.all?(@roles_with_oauth, &(&1 in Plausible.Teams.Membership.roles()))
+  @roles_with_oauth Membership.roles!([:owner, :admin, :editor, :billing, :viewer])
 
   @type token_response() :: %{
           access_token: String.t(),
