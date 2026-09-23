@@ -216,4 +216,104 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       end
     end
   end
+
+  describe "invite_all/3,4" do
+    test "creates invitations with a role per entry, without sending e-mails" do
+      inviter = new_user()
+      invitee = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      assert {:ok, [editor_invitation, viewer_invitation]} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: invitee.email, role: :editor},
+                 %{email: "new@example.com", role: :viewer}
+               ])
+
+      assert %Teams.Invitation{email: email, role: :editor} = editor_invitation
+      assert email == invitee.email
+      assert %Teams.Invitation{email: "new@example.com", role: :viewer} = viewer_invitation
+
+      assert Repo.get_by(Teams.Invitation, team_id: team.id, email: invitee.email)
+      assert Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
+
+      assert_no_emails_delivered()
+    end
+
+    test "creates none of the invitations when one of them fails" do
+      inviter = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      assert {:error, %Ecto.Changeset{}} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: "first@example.com", role: :viewer},
+                 %{email: "", role: :viewer}
+               ])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
+    end
+
+    on_ee do
+      test "counts invitations in the same call towards team member limit" do
+        owner = new_user()
+        subscribe_to_growth_plan(owner)
+        _site = new_site(owner: owner)
+        team = team_of(owner)
+        add_member(team, role: :viewer)
+
+        assert {:error, {:over_limit, 3}} =
+                 InviteToTeam.invite_all(team, owner, [
+                   %{email: "first@example.com", role: :viewer},
+                   %{email: "second@example.com", role: :viewer},
+                   %{email: "third@example.com", role: :viewer}
+                 ])
+
+        refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
+      end
+    end
+
+    test "raises on invalid role" do
+      inviter = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      assert_raise RuntimeError, ~r/Invalid role/, fn ->
+        InviteToTeam.invite_all(team, inviter, [%{email: "new@example.com", role: :guest}])
+      end
+    end
+  end
+
+  describe "send_invitation_emails/1" do
+    test "sends an e-mail per invitation, picking the template by invitee existence" do
+      inviter = new_user()
+      invitee = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      {:ok, invitations} =
+        InviteToTeam.invite_all(team, inviter, [
+          %{email: invitee.email, role: :editor},
+          %{email: "new@example.com", role: :viewer}
+        ])
+
+      assert :ok = InviteToTeam.send_invitation_emails(invitations)
+
+      subject = @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+
+      assert_email_delivered_with(
+        to: [nil: invitee.email],
+        subject: subject,
+        html_body: ~r/#{PlausibleWeb.Endpoint.url()}\/sites"/
+      )
+
+      new_user_invitation = Enum.find(invitations, &(&1.email == "new@example.com"))
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: subject,
+        html_body: ~r/\/register\/invitation\/#{new_user_invitation.invitation_id}/
+      )
+    end
+  end
 end
