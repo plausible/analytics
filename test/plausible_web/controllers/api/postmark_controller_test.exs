@@ -110,6 +110,19 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
         refute EmailSuppressions.suppressed?("bounced@example.com")
       end
 
+      test "suppresses on an Unsubscribe bounce type", %{conn: conn} do
+        payload = %{@bounce_payload | "Type" => "Unsubscribe"}
+        conn = post(conn, ~p"/api/postmark/webhook", payload)
+
+        assert json_response(conn, 200) == %{}
+        assert EmailSuppressions.suppressed?("bounced@example.com")
+
+        suppression =
+          Plausible.Repo.get_by!(Plausible.EmailSuppression, email: "bounced@example.com")
+
+        assert suppression.reason == :unsubscribe
+      end
+
       test "records the Postmark bounce details", %{conn: conn} do
         post(conn, ~p"/api/postmark/webhook", @bounce_payload)
 
@@ -144,6 +157,56 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
           Plausible.Repo.get_by!(Plausible.EmailSuppression, email: "complainer@example.com")
 
         assert suppression.reason == :spam_complaint
+      end
+    end
+
+    describe "SubscriptionChange webhook" do
+      @subscription_change_payload %{
+        "RecordType" => "SubscriptionChange",
+        "MessageID" => "883953f4-6105-42a2-a16a-77a8eac79483",
+        "ServerID" => 23,
+        "MessageStream" => "outbound",
+        "ChangedAt" => "2026-11-05T16:33:54.9070259Z",
+        "Recipient" => "unsubscribed@example.com",
+        "Origin" => "Recipient",
+        "SuppressSending" => true,
+        "SuppressionReason" => "ManualSuppression"
+      }
+
+      test "suppresses the address when it unsubscribed", %{conn: conn} do
+        conn = post(conn, ~p"/api/postmark/webhook", @subscription_change_payload)
+
+        assert json_response(conn, 200) == %{}
+        assert EmailSuppressions.suppressed?("unsubscribed@example.com")
+
+        suppression =
+          Plausible.Repo.get_by!(Plausible.EmailSuppression, email: "unsubscribed@example.com")
+
+        assert suppression.reason == :unsubscribe
+        assert suppression.source == :webhook
+      end
+
+      test "ignores a reactivation (SuppressSending: false)", %{conn: conn} do
+        payload = %{
+          @subscription_change_payload
+          | "SuppressSending" => false,
+            "SuppressionReason" => nil
+        }
+
+        conn = post(conn, ~p"/api/postmark/webhook", payload)
+
+        assert json_response(conn, 200) == %{}
+        refute EmailSuppressions.suppressed?("unsubscribed@example.com")
+      end
+
+      test "ignores HardBounce/SpamComplaint reasons, already handled by their own webhooks", %{
+        conn: conn
+      } do
+        payload = %{@subscription_change_payload | "SuppressionReason" => "HardBounce"}
+        conn = post(conn, ~p"/api/postmark/webhook", payload)
+
+        assert json_response(conn, 200) == %{}
+        refute EmailSuppressions.suppressed?("unsubscribed@example.com")
       end
     end
 
