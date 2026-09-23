@@ -15,8 +15,10 @@ defmodule Plausible.Funnel.Step do
     timestamps()
   end
 
-  @spec changeset(map() | Plausible.Goal.t()) :: Ecto.Changeset.t()
-  def changeset(goal_or_attrs \\ %{})
+  @spec changeset(map() | Plausible.Goal.t() | t()) :: Ecto.Changeset.t()
+  def changeset(goal_step_or_attrs \\ %{})
+
+  def changeset(%__MODULE__{} = step), do: change(step)
 
   def changeset(%Plausible.Goal{id: goal_id}) do
     changeset(%{goal_id: goal_id})

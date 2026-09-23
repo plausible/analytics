@@ -142,6 +142,7 @@ defmodule Plausible.Funnel do
   end
 
   defp schema_by_input(%Plausible.Goal{}), do: Step
+  defp schema_by_input(%Step{}), do: Step
   defp schema_by_input(%{goal_id: _}), do: Step
   defp schema_by_input(%{"goal_id" => _}), do: Step
   defp schema_by_input(_), do: DynamicStep
