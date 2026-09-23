@@ -29,6 +29,12 @@ config :esbuild,
     args:
       ~w(node_modules/@friendlycaptcha/sdk/site.min.js node_modules/@friendlycaptcha/sdk/site.compat.min.js --loader:.js=copy --outbase=node_modules/@friendlycaptcha/sdk --outdir=../priv/static/js/friendly-captcha),
     cd: Path.expand("../assets", __DIR__)
+  ],
+  # TEMPORARY: prima is pinned to a git ref, and git checkouts don't include the built
+  # priv/static/assets/prima.js (only Hex packages do). Remove when back on a Hex release.
+  prima: [
+    args: ~w(js/prima.js --bundle --format=esm --target=es2017 --outdir=../priv/static/assets),
+    cd: Path.expand("../deps/prima/assets", __DIR__)
   ]
 
 config :tailwind,

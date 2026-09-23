@@ -44,7 +44,8 @@ COPY assets/package.json assets/package-lock.json ./assets/
 COPY tracker/package.json tracker/package-lock.json ./tracker/
 
 RUN npm install --prefix ./assets && \
-  npm install --prefix ./tracker
+  npm install --prefix ./tracker && \
+  npm ci --prefix ./deps/prima/assets
 
 COPY assets ./assets
 COPY tracker ./tracker

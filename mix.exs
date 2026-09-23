@@ -215,6 +215,8 @@ defmodule Plausible.MixProject do
       ],
       "assets.deploy": [
         "tailwind default --minify",
+        # TEMPORARY: see the :prima esbuild profile in config/config.exs
+        "esbuild prima",
         "esbuild default --minify",
         # already minified upstream, so no --minify here
         "esbuild friendly_captcha",
