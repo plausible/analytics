@@ -5,9 +5,10 @@ defmodule PlausibleWeb.OAuth.MetadataController do
 
   use PlausibleWeb, :controller
 
+  alias Plausible.OAuth.ProtectedResources
   alias PlausibleWeb.Endpoint
 
-  @mcp Plausible.OAuth.ProtectedResources.mcp()
+  @mcp ProtectedResources.mcp()
 
   @doc """
   Serves the [RFC 9728 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728.html#name-protected-resource-metadata)
@@ -16,7 +17,7 @@ defmodule PlausibleWeb.OAuth.MetadataController do
   """
   def mcp_protected_resource(conn, _params) do
     json(conn, %{
-      resource: Endpoint.url() <> @mcp.resource_path,
+      resource: ProtectedResources.get_resource_url(@mcp),
       authorization_servers: [Endpoint.url()],
       scopes_supported: @mcp.scopes_supported,
       bearer_methods_supported: ["header"]
@@ -39,7 +40,6 @@ defmodule PlausibleWeb.OAuth.MetadataController do
       grant_types_supported: ["authorization_code"],
       code_challenge_methods_supported: ["S256"],
       token_endpoint_auth_methods_supported: ["none"],
-      scopes_supported: @mcp.scopes_supported,
       client_id_metadata_document_supported: true
     })
   end
