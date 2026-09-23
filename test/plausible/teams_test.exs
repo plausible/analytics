@@ -362,6 +362,46 @@ defmodule Plausible.TeamsTest do
     end
   end
 
+  describe "complete_setup/1" do
+    test "writes setup markers" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      refute team.setup_complete
+      refute team.setup_at
+
+      Teams.complete_setup(team)
+
+      team = Repo.reload!(team)
+
+      assert team.setup_complete
+      assert team.setup_at
+    end
+
+    test "is a no-op for a team that's already set up" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+
+      team =
+        owner
+        |> team_of()
+        |> Teams.Team.setup_changeset(
+          NaiveDateTime.utc_now(:second)
+          |> NaiveDateTime.shift(month: -1)
+        )
+        |> Repo.update!()
+
+      assert setup_at = team.setup_at
+
+      Teams.complete_setup(team)
+
+      team = Repo.reload!(team)
+
+      assert team.setup_at == setup_at
+    end
+  end
+
   describe "setup/4" do
     @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
