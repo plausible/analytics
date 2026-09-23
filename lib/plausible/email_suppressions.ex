@@ -82,20 +82,67 @@ defmodule Plausible.EmailSuppressions do
     |> upsert()
   end
 
+  @page_size 50
+
+  @doc """
+  List suppressions, most recent first - for manual review (CRM).
+  """
+  @spec list(keyword(), map()) :: Paginator.Page.t()
+  def list(filters \\ [], pagination_params \\ %{}) do
+    EmailSuppression
+    |> filter_reason(Keyword.get(filters, :reason))
+    |> filter_search(Keyword.get(filters, :search))
+    |> order_by([s], desc: s.inserted_at, desc: s.id)
+    |> preload(:reactivated_by)
+    |> Plausible.Pagination.paginate(
+      pagination_params,
+      cursor_fields: [inserted_at: :desc, id: :desc],
+      limit: @page_size
+    )
+  end
+
+  defp filter_reason(query, reason) when reason in [nil, ""], do: query
+  defp filter_reason(query, reason), do: where(query, [s], s.reason == ^reason)
+
+  defp filter_search(query, search) when search in [nil, ""], do: query
+
+  defp filter_search(query, search) do
+    where(query, [s], ilike(s.email, ^"%#{search}%"))
+  end
+
   @doc """
   Lifts a suppression after manual review, recording who did it.
+  Encapsulates suppression remote deletion at Postmark - can't be done for spam complaints.
   """
   @spec reactivate(String.t(), Plausible.Auth.User.t()) ::
-          {:ok, EmailSuppression.t()} | {:error, :not_found | Ecto.Changeset.t()}
+          {:ok, EmailSuppression.t()}
+          | {:error,
+             :not_found
+             | :cannot_delete_spam_complaint
+             | {:postmark_error, term()}
+             | Ecto.Changeset.t()}
   def reactivate(email, %Plausible.Auth.User{id: user_id}) do
     case Repo.get_by(EmailSuppression, email: email) do
       nil ->
         {:error, :not_found}
 
       suppression ->
-        suppression
-        |> EmailSuppression.reactivate_changeset(user_id)
-        |> Repo.update()
+        with :ok <- delete_in_postmark(suppression) do
+          suppression
+          |> EmailSuppression.reactivate_changeset(user_id)
+          |> Repo.update()
+        end
+    end
+  end
+
+  defp delete_in_postmark(%{reason: :spam_complaint}) do
+    {:error, :cannot_delete_spam_complaint}
+  end
+
+  defp delete_in_postmark(%{email: email}) do
+    case Plausible.Postmark.delete_suppression(email) do
+      :ok -> :ok
+      {:error, reason} -> {:error, {:postmark_error, reason}}
     end
   end
 

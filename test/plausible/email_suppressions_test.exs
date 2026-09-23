@@ -2,8 +2,23 @@ defmodule Plausible.EmailSuppressionsTest do
   use Plausible.DataCase
 
   alias Plausible.EmailSuppressions
+  alias Plausible.Postmark
 
   @moduletag :ee_only
+
+  # Suppressions without Bounce ID (backfilled) 
+  # go through delete suppressions API call on reactivate. 
+  # Tests that expect different result may override this.
+  setup do
+    Req.Test.stub(Postmark, fn conn ->
+      Req.Test.json(conn, %{
+        "Message" => "OK",
+        "Suppressions" => [%{"Status" => "Deleted"}]
+      })
+    end)
+
+    :ok
+  end
 
   describe "suppressed?/1" do
     test "false when no record exists" do
@@ -111,8 +126,9 @@ defmodule Plausible.EmailSuppressionsTest do
       user = insert(:user)
 
       {:ok, _} =
-        EmailSuppressions.create_from_spam_complaint(%{
+        EmailSuppressions.create_from_bounce(%{
           email: "flip-flop@example.com",
+          reason: :blocked,
           source: :webhook
         })
 
@@ -171,6 +187,56 @@ defmodule Plausible.EmailSuppressionsTest do
     end
   end
 
+  describe "list/1" do
+    setup do
+      {:ok, hard} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "hard@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      {:ok, _blocked} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "blocked@example.com",
+          reason: :blocked,
+          source: :backfill
+        })
+
+      %{hard: hard}
+    end
+
+    test "returns everything, most recently suppressed first" do
+      assert %{entries: entries} = EmailSuppressions.list()
+
+      assert Enum.map(entries, & &1.email) == ["blocked@example.com", "hard@example.com"]
+    end
+
+    test "filters by reason" do
+      assert %{entries: [suppression]} = EmailSuppressions.list(reason: :blocked)
+
+      assert suppression.email == "blocked@example.com"
+    end
+
+    test "filters by an email substring, case-insensitively" do
+      assert %{entries: [suppression]} = EmailSuppressions.list(search: "HARD@")
+
+      assert suppression.email == "hard@example.com"
+    end
+
+    test "paginates via before/after cursors" do
+      assert %{entries: [first], metadata: %{after: cursor, before: nil}} =
+               EmailSuppressions.list([], %{"limit" => "1"})
+
+      assert first.email == "blocked@example.com"
+
+      assert %{entries: [second], metadata: %{after: nil}} =
+               EmailSuppressions.list([], %{"limit" => "1", "after" => cursor})
+
+      assert second.email == "hard@example.com"
+    end
+  end
+
   describe "reactivate/2" do
     test "returns :not_found when there is no suppression for the address" do
       user = insert(:user)
@@ -190,6 +256,70 @@ defmodule Plausible.EmailSuppressionsTest do
       assert {:ok, suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
       assert suppression.reactivated_by_user_id == user.id
       assert suppression.reactivated_at
+    end
+
+    test "deletes the suppression in Postmark" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      Req.Test.stub(Postmark, fn conn ->
+        assert conn.method == "POST"
+
+        assert conn.request_path in [
+                 "/message-streams/outbound/suppressions/delete",
+                 "/message-streams/priority/suppressions/delete"
+               ]
+
+        Req.Test.json(conn, %{
+          "Suppressions" => [%{"EmailAddress" => "bounced@example.com", "Status" => "Deleted"}]
+        })
+      end)
+
+      assert {:ok, _suppression} = EmailSuppressions.reactivate("bounced@example.com", user)
+      refute EmailSuppressions.suppressed?("bounced@example.com")
+    end
+
+    test "refuses to reactivate a spam complaint, leaving it suppressed" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_spam_complaint(%{
+          email: "complainer@example.com",
+          source: :backfill
+        })
+
+      Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
+
+      assert {:error, :cannot_delete_spam_complaint} =
+               EmailSuppressions.reactivate("complainer@example.com", user)
+
+      assert EmailSuppressions.suppressed?("complainer@example.com")
+    end
+
+    test "leaves it suppressed when the Postmark deletion call fails" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "bounced@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      Req.Test.stub(Postmark, fn conn ->
+        conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+      end)
+
+      assert {:error, {:postmark_error, _reason}} =
+               EmailSuppressions.reactivate("bounced@example.com", user)
+
+      assert EmailSuppressions.suppressed?("bounced@example.com")
     end
   end
 end
