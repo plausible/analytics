@@ -637,6 +637,58 @@ defmodule Plausible.FunnelsTest do
         assert flexible_funnel_data.funnel_type == :flexible
       end
 
+      test "flexible mixed funnels count everyone who reaches first and last step in the last step",
+           %{
+             site: site,
+             steps: [g1 | _]
+           } do
+        s2 = %{"event_name" => "Signup"}
+        s3 = %{"page_path" => "/checkout"}
+
+        {:ok, non_flexible_funnel} =
+          Funnels.create(
+            site,
+            "From blog to signup and purchase",
+            [g1, s2, s3]
+          )
+
+        {:ok, flexible_funnel} =
+          Funnels.create(
+            site,
+            "Flexible from blog to signup and purchase",
+            [g1, s2, s3],
+            funnel_type: :flexible
+          )
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/go/to/blog/foo",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: 123,
+            timestamp: ~N[2021-01-01 00:00:03]
+          )
+        ])
+
+        query = QueryBuilder.build!(site, input_date_range: :all)
+
+        {:ok, non_flexible_funnel_data} = Stats.funnel(site, query, non_flexible_funnel.id)
+        {:ok, flexible_funnel_data} = Stats.funnel(site, query, flexible_funnel.id)
+
+        assert Enum.at(non_flexible_funnel_data.steps, 0).visitors == 1
+        assert Enum.at(non_flexible_funnel_data.steps, 1).visitors == 0
+        assert Enum.at(non_flexible_funnel_data.steps, 2).visitors == 0
+        assert Enum.at(flexible_funnel_data.steps, 0).visitors == 1
+        assert Enum.at(flexible_funnel_data.steps, 1).visitors == 0
+        assert Enum.at(flexible_funnel_data.steps, 2).visitors == 1
+
+        assert non_flexible_funnel_data.funnel_type == :sequential
+        assert flexible_funnel_data.funnel_type == :flexible
+      end
+
       test "funnels can be evaluated even where there are no visits yet", %{
         site: site,
         steps: [g1, g2, g3 | _]
