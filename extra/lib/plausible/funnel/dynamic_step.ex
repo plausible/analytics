@@ -28,8 +28,12 @@ defmodule Plausible.Funnel.DynamicStep do
     field :custom_props, :map, default: %{}
   end
 
-  @spec changeset(map()) :: Ecto.Changeset.t()
-  def changeset(attrs \\ %{}) do
+  @spec changeset(map() | t()) :: Ecto.Changeset.t()
+  def changeset(step_or_attrs \\ %{})
+
+  def changeset(%__MODULE__{} = step), do: change(step)
+
+  def changeset(attrs) do
     %__MODULE__{}
     |> cast(attrs, @fields)
     |> Plausible.Goal.base_changeset()
