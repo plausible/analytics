@@ -12,6 +12,7 @@ defmodule Plausible.PostmarkTest do
       assert Postmark.suppressing_reason("BadEmailAddress") == {:ok, :bad_email_address}
       assert Postmark.suppressing_reason("Blocked") == {:ok, :blocked}
       assert Postmark.suppressing_reason("SpamNotification") == {:ok, :spam_notification}
+      assert Postmark.suppressing_reason("Unsubscribe") == {:ok, :unsubscribe}
     end
 
     test "does not map transient bounce types" do

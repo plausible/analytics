@@ -17,7 +17,8 @@ defmodule Plausible.Postmark do
     "HardBounce" => :hard_bounce,
     "BadEmailAddress" => :bad_email_address,
     "Blocked" => :blocked,
-    "SpamNotification" => :spam_notification
+    "SpamNotification" => :spam_notification,
+    "Unsubscribe" => :unsubscribe
   }
 
   @spec suppressing_reason(String.t()) :: {:ok, atom()} | :error
