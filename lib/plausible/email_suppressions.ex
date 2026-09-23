@@ -83,6 +83,19 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
+  Records (or refreshes) a suppression originating from Postmark's
+  Subscription Change webhook (an address unsubscribing).
+  """
+  @spec create_from_unsubscribe(map()) ::
+          {:ok, EmailSuppression.t()} | {:error, Ecto.Changeset.t()}
+  def create_from_unsubscribe(attrs) do
+    attrs
+    |> Map.take([:email, :source, :details])
+    |> Map.put(:reason, :unsubscribe)
+    |> upsert()
+  end
+
+  @doc """
   Lifts a suppression after manual review, recording who did it.
   """
   @spec reactivate(String.t(), Plausible.Auth.User.t()) ::
