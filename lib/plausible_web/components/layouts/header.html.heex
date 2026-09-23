@@ -133,20 +133,19 @@
               </li>
               <li :if={ee?()} id="changelog-notification" class="relative py-2 empty:hidden"></li>
             </ul>
-          <% Plausible.Auth.check_registration_enabled() != :ok -> %>
-            <div
-              class="flex items-center gap-2"
-              x-show="!document.cookie.includes('logged_in=true')"
-            >
-              <.button_link href="/login" theme="ghost" mt?={false}>Login</.button_link>
-            </div>
           <% true -> %>
             <div
               class="flex items-center gap-2"
               x-show="!document.cookie.includes('logged_in=true')"
             >
               <.button_link href="/login" theme="ghost" mt?={false}>Login</.button_link>
-              <.button_link href="/register" mt?={false}>Sign up</.button_link>
+              <.button_link
+                :if={Plausible.Auth.check_registration_enabled() == :ok}
+                href="/register"
+                mt?={false}
+              >
+                Sign up
+              </.button_link>
             </div>
         <% end %>
       </div>

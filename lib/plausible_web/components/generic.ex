@@ -1036,42 +1036,48 @@ defmodule PlausibleWeb.Components.Generic do
 
   def edit_button(assigns) do
     ~H"""
-    <button
-      class={["btn-base btn-sm btn-theme-ghost btn-icon btn-text-primary", @class]}
+    <.button
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-primary #{@class}"}
       {@rest}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="size-4">
-        <path
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.5"
-          d="m13.25 6.25 2.836-2.836a2 2 0 0 1 2.828 0l1.672 1.672a2 2 0 0 1 0 2.828L17.75 10.75m-4.5-4.5-9.914 9.914a2 2 0 0 0-.586 1.415v3.671h3.672a2 2 0 0 0 1.414-.586l9.914-9.914m-4.5-4.5 4.5 4.5"
-        />
-      </svg>
-    </button>
+      <.pencil_icon class="size-4" />
+    </.button>
     """
   end
 
   attr :href, :string, default: nil
   attr :class, :string, default: ""
-  attr :icon, :atom, default: :trash
   attr :rest, :global, include: ~w(method disabled)
 
   def delete_button(assigns) do
-    assigns =
-      assign(assigns, :computed_class, [
-        "btn-base btn-sm btn-theme-ghost btn-icon btn-text-danger",
-        assigns.class
-      ])
-
     ~H"""
-    <.unstyled_link :if={@href} href={@href} class={@computed_class} {@rest}>
-      <.dynamic_icon name={@icon} class="size-4" />
-    </.unstyled_link>
-    <button :if={is_nil(@href)} class={@computed_class} {@rest}>
-      <.dynamic_icon name={@icon} class="size-4" />
-    </button>
+    <.button_link
+      :if={@href}
+      href={@href}
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-danger #{@class}"}
+      {@rest}
+    >
+      <Heroicons.trash class="size-4" />
+    </.button_link>
+    <.button
+      :if={is_nil(@href)}
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-danger #{@class}"}
+      {@rest}
+    >
+      <Heroicons.trash class="size-4" />
+    </.button>
     """
   end
 
