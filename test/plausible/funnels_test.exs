@@ -415,7 +415,14 @@ defmodule Plausible.FunnelsTest do
             site,
             "From blog to signup and purchase",
             [
-              %{"goal_id" => "#{g1.id}"},
+              %{
+                "goal_id" => "#{g1.id}",
+                "goal" => %{
+                  "id" => "#{g1.id}",
+                  "event_name" => g1.event_name,
+                  "page_path" => g1.page_path
+                }
+              },
               %{"event_name" => g2.event_name},
               %{"page_path" => g3.page_path}
             ]
