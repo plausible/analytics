@@ -18,7 +18,10 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-750 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-800 transition-all duration-150 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500 rounded-md selection:bg-gray-200 dark:selection:bg-gray-700 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:border-gray-200 disabled:dark:border-gray-800 disabled:text-gray-900/40 disabled:dark:text-white/30 disabled:cursor-not-allowed [&[readonly]]:bg-gray-100 [&[readonly]]:border-transparent [&[readonly]]:dark:border-transparent [&[readonly]]:dark:bg-gray-750 [&[readonly]]:focus:ring-0 [&[readonly]]:focus:border-transparent [&[readonly]]:dark:focus:border-transparent [&[readonly]]:cursor-default"
+  # Base and sizes are defined as component classes in assets/css/app.css,
+  # sharing the size scale with the `button` component. Update there only.
+  @input_class "input-base input-md"
+  @multiline_input_class "input-base input-md input-multiline"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -49,7 +52,7 @@ defmodule PlausibleWeb.Live.Components.Form do
          multiple pattern placeholder readonly required rows size step x-bind:type x-model)
   )
 
-  attr(:class, :any, default: @default_input_class)
+  attr(:class, :any, default: "")
 
   attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
@@ -76,6 +79,9 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   def input(%{type: "select"} = assigns) do
+    base = if assigns.multiple, do: @multiline_input_class, else: @input_class
+    assigns = assign(assigns, :class, [base, assigns.class])
+
     ~H"""
     <div class={@mt? && "mt-6"}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
@@ -156,6 +162,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   def input(%{type: "textarea"} = assigns) do
+    assigns = assign(assigns, :class, [@multiline_input_class, assigns.class])
+
     ~H"""
     <div class={@mt? && "mt-6"}>
       <.label :if={@label != nil and @label != ""} class="mb-1.5" for={@id}>{@label}</.label>
@@ -180,7 +188,10 @@ defmodule PlausibleWeb.Live.Components.Form do
         assigns.errors
       end
 
-    assigns = assign(assigns, :errors, errors)
+    assigns =
+      assigns
+      |> assign(:errors, errors)
+      |> assign(:class, [@input_class, assigns.class])
 
     ~H"""
     <div class={@mt? && "mt-6"}>
@@ -219,8 +230,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:value, :string, default: "")
 
   def input_with_clipboard(assigns) do
-    class = [@default_input_class, "pr-20 w-full"]
-    assigns = assign(assigns, class: class)
+    assigns = assign(assigns, class: "pr-20")
 
     ~H"""
     <div>
@@ -273,7 +283,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   slot(:inner_block)
 
   def password_field(assigns) do
-    assigns = assign(assigns, :class, [@default_input_class, "pr-10"])
+    assigns = assign(assigns, :class, "pr-10")
 
     ~H"""
     <div x-data="{ showPassword: false }">
@@ -325,7 +335,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         " this.form.querySelector('button[type=submit]').focus()"
 
     input_class = [
-      @default_input_class,
+      @input_class,
       "font-mono tracking-[0.5em] font-medium text-center w-full"
     ]
 
@@ -565,7 +575,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        class="dark:bg-gray-800 mt-1 block w-full pl-3.5 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-500 outline-hidden focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
+        mt?={false}
       />
     </.form>
     """

@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150"
         >
           <span data-role-label>{@row.role |> Atom.to_string() |> String.capitalize()}</span>
-          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+          <Heroicons.chevron_down mini class="size-4" />
         </summary>
 
         <div

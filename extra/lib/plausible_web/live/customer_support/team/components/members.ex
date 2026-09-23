@@ -49,16 +49,21 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
             <div class="flex items-center gap-x-1">
               <span :if={member.type == :membership && member.meta.user.type == :sso}>SSO </span>{member.type}
 
-              <.delete_button
+              <.button
                 :if={member.type == :membership && member.meta.user.type == :sso}
                 id={"deprovision-sso-user-#{member.id}"}
+                theme="ghost"
+                size="sm"
+                icon?={true}
+                mt?={false}
+                class="btn-text-danger"
                 phx-click="deprovision-sso-user"
                 phx-value-identifier={member.id}
                 phx-target={@myself}
-                class="text-sm"
-                icon={:user_minus}
                 data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
-              />
+              >
+                <Heroicons.user_minus class="size-4" />
+              </.button>
             </div>
           </.td>
           <.td>
