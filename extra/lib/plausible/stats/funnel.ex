@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(site, query, %Funnel{} = funnel) do
-    revenue_steps = revenue_steps(site, Funnels.steps(funnel))
+    revenue_steps = revenue_steps(site, Funnel.steps(funnel))
 
     comparison_funnel =
       if query.comparison_utc_time_range do
@@ -70,7 +70,7 @@ defmodule Plausible.Stats.Funnel do
         |> compute(short_funnel, revenue_steps)
         |> Map.fetch!(:steps)
 
-      steps = List.replace_at(Funnel.steps(final_funnel), -1, last_step)
+      steps = List.replace_at(final_funnel.steps, -1, last_step)
 
       %{final_funnel | steps: steps}
     else
@@ -82,11 +82,11 @@ defmodule Plausible.Stats.Funnel do
     do: final_funnel
 
   defp convert_to_first_and_last(funnel) do
-    steps = Funnels.steps(funnel)
-    first = List.first(steps)
-    last = %{List.last(steps) | step_order: 2}
+    steps = Funnel.steps(funnel)
 
-    %{funnel | funnel_type: :sequential, steps: [first, last], dynamic_steps: []}
+    funnel
+    |> Funnel.changeset(%{funnel_type: :sequential, steps: [List.first(steps), List.last(steps)]})
+    |> Ecto.Changeset.apply_changes()
   end
 
   defp revenue_steps(site, steps) do
@@ -156,7 +156,7 @@ defmodule Plausible.Stats.Funnel do
   defp select_user_revenue(db_query, revenue_steps) do
     sums =
       Map.new(revenue_steps, fn step ->
-        goal_condition = Plausible.Stats.Goals.goal_condition(Funnel.as_goal(goal))
+        goal_condition = Plausible.Stats.Goals.goal_condition(Funnel.as_goal(step))
 
         {revenue_key(step),
          dynamic([e], fragment("sumIf(?, ?)", e.revenue_reporting_amount, ^goal_condition))}
