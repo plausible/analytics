@@ -192,8 +192,12 @@ Plausible.License.html
 Plausible.Mailer.html
 Plausible.MigrationUtils.html
 Plausible.OAuth.AuthorizationCode.html
+Plausible.OAuth.CIMD.html
 Plausible.OAuth.Grant.html
+Plausible.OAuth.PKCE.html
 Plausible.OAuth.ProtectedResources.html
+Plausible.OAuth.Token.html
+Plausible.OAuth.html
 Plausible.OpenTelemetry.BeamMetrics.html
 Plausible.OpenTelemetry.Logger.html
 Plausible.Pagination.html
@@ -609,8 +613,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-53D73698.js
-dist/sidebar_items-36CFA628.js
+dist/search_data-A2AF85F7.js
+dist/sidebar_items-1261A45C.js
 index.html
 readme.html
 search.html
