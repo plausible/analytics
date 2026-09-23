@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
   import PlausibleWeb.Live.Components.Team, only: [role_select_input: 1]
 
   alias Plausible.Teams
-  alias Plausible.Teams.Management.Layout
 
   def mount(_params, _session, socket) do
     socket =
@@ -151,20 +150,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
-    name_changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
-
-    # Only validated here, not persisted yet - the rename is committed
-    # together with the rest of team creation (including invitations).
-    case Ecto.Changeset.apply_action(name_changeset, :update) do
-      {:ok, _team} ->
-        create_team(socket, name_changeset, Map.get(params, "rows", %{}))
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, team_name_form: to_form(changeset))}
-    end
+    create_team(socket, name, Map.get(params, "rows", %{}))
   end
 
-  defp create_team(socket, name_changeset, rows_params) do
+  defp create_team(socket, name, rows_params) do
     entries =
       rows_params
       |> Map.values()
@@ -191,21 +180,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
         {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
 
       true ->
-        layout =
-          Enum.reduce(entries, %{}, fn %{email: email, role: role}, layout ->
-            Layout.schedule_send(layout, email, role)
-          end)
-
-        persist_layout(socket, layout, name_changeset)
+        setup_team(socket, name, entries)
     end
   end
 
-  defp persist_layout(socket, layout, name_changeset) do
-    case Layout.persist(layout, %{
-           current_user: socket.assigns.current_user,
-           current_team: socket.assigns.current_team,
-           name_changeset: name_changeset
-         }) do
+  defp setup_team(socket, name, entries) do
+    case Teams.setup(
+           socket.assigns.current_team,
+           name,
+           entries,
+           socket.assigns.current_user
+         ) do
       {:ok, _} ->
         {:noreply,
          socket
@@ -213,6 +198,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
          |> redirect(
            to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
          )}
+
+      {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
+        {:noreply, assign(socket, team_name_form: to_form(changeset))}
 
       {:error, {:over_limit, limit}} ->
         {:noreply,
@@ -223,10 +211,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
          )}
 
       {:error, other} ->
-        # Team setup only ever sends brand-new invitations (never updates or
-        # removes existing memberships), so none of Layout.persist/2's other
-        # known error reasons (permission checks, last-owner protection, 2FA
-        # enforcement) are reachable from here. Anything else is unexpected.
+        # Team setup is only ever done by the team's sole owner, inviting
+        # brand-new e-mails (validated above), so none of the other known
+        # invitation error reasons (permission checks, existing membership)
+        # are reachable from here. Anything else is unexpected.
         Sentry.capture_message("Unexpected error while creating team via team setup",
           extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
         )

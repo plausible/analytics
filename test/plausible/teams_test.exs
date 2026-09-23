@@ -1,5 +1,6 @@
 defmodule Plausible.TeamsTest do
   use Plausible.DataCase, async: true
+  use Bamboo.Test
 
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
@@ -358,6 +359,75 @@ defmodule Plausible.TeamsTest do
       user = new_user() |> subscribe_to_plan("free_10k")
 
       assert Teams.accept_traffic_until(team_of(user)) == ~D[2135-01-01]
+    end
+  end
+
+  describe "setup/4" do
+    @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+
+    test "renames the team, completes setup and invites members" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      assert {:ok, team} =
+               Teams.setup(
+                 team,
+                 "New Team Name",
+                 [%{email: "new@example.com", role: :editor}],
+                 owner
+               )
+
+      assert team.name == "New Team Name"
+      assert team.setup_complete
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :editor
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"New Team Name\" team"
+      )
+    end
+
+    test "rolls back the rename and setup completion when an invitation fails" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      assert {:error, :already_a_member} =
+               Teams.setup(
+                 team,
+                 "New Team Name",
+                 [
+                   %{email: "new@example.com", role: :editor},
+                   %{email: owner.email, role: :viewer}
+                 ],
+                 owner
+               )
+
+      team = Repo.reload!(team)
+      assert team.name == Teams.default_name()
+      refute team.setup_complete
+      assert [] = Teams.Invitations.pending_team_invitations_for(team)
+      assert_no_emails_delivered()
+    end
+
+    test "returns the name changeset error without inviting anyone" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      assert {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} =
+               Teams.setup(team, "", [%{email: "new@example.com", role: :editor}], owner)
+
+      assert {"can't be blank", _} = changeset.errors[:name]
+
+      team = Repo.reload!(team)
+      refute team.setup_complete
+      assert [] = Teams.Invitations.pending_team_invitations_for(team)
+      assert_no_emails_delivered()
     end
   end
 
