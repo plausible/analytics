@@ -102,6 +102,30 @@ defmodule Plausible.Funnel do
     )
   end
 
+  @spec swap(t(), Keyword.t()) :: t()
+  def swap(funnel, opts) do
+    funnel_type = Keyword.get(opts, :funnel_type, funnel.funnel_type)
+
+    funnel
+    |> Map.put(:funnel_type, funnel_type)
+    |> swap_steps(Keyword.get(opts, :steps))
+  end
+
+  defp swap_steps(funnel, nil), do: funnel
+
+  defp swap_steps(funnel, steps) do
+    {static_steps, dynamic_steps} =
+      steps
+      |> Enum.with_index(1)
+      |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
+      |> Enum.split_with(fn
+        %Step{} -> true
+        _ -> false
+      end)
+
+    %{funnel | steps: static_steps, dynamic_steps: dynamic_steps}
+  end
+
   defp put_steps(changeset, steps) do
     {static_steps, dynamic_steps} =
       steps
