@@ -190,7 +190,7 @@ defmodule PlausibleWeb.Team.Notice do
             theme="secondary"
             size="sm"
           >
-            Accept <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+            Accept <Heroicons.chevron_down mini class="size-4" />
           </PrimaDropdown.dropdown_trigger>
           <PrimaDropdown.dropdown_menu id={"ownership-accept-menu-#{@invitation.transfer_id}"}>
             <PrimaDropdown.dropdown_item

@@ -360,14 +360,12 @@ defmodule PlausibleWeb.Live.SSOManagement do
                 id={"remove-domain-#{domain.identifier}"}
                 phx-click="remove-domain"
                 phx-value-identifier={domain.identifier}
-                class="text-sm text-red-600"
                 data-confirm={"Are you sure you want to remove domain '#{domain.domain}'?"}
               />
 
               <.delete_button
                 :if={@domain_delete_checks[domain.identifier]}
                 id={"disabled-remove-domain-#{domain.identifier}"}
-                class="text-sm text-red-600"
                 data-confirm={"You cannot delete this domain. #{@domain_delete_checks[domain.identifier]}"}
               />
             </.td>

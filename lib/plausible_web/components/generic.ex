@@ -56,10 +56,12 @@ defmodule PlausibleWeb.Components.Generic do
     "yellow" => "btn-theme-yellow",
     "danger" => "btn-theme-danger",
     "ghost" => "btn-theme-ghost",
-    "icon" => "btn-theme-icon"
+    "link" => "btn-theme-link"
   }
 
   @button_base_class "btn-base"
+
+  @button_icon_class "btn-icon"
 
   @button_sizes %{
     "xs" => "btn-xs",
@@ -81,6 +83,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
   attr(:size, :string, default: "md")
+  attr(:icon?, :boolean, default: false)
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:mt?, :boolean, default: true)
@@ -93,7 +96,8 @@ defmodule PlausibleWeb.Components.Generic do
       assign(assigns,
         button_base_class: @button_base_class,
         theme_class: @button_themes[assigns.theme],
-        size_class: @button_sizes[assigns.size]
+        size_class: @button_sizes[assigns.size],
+        icon_class: assigns.icon? && @button_icon_class
       )
 
     ~H"""
@@ -105,6 +109,7 @@ defmodule PlausibleWeb.Components.Generic do
         @button_base_class,
         @size_class,
         @theme_class,
+        @icon_class,
         @class
       ]}
       {@rest}
@@ -118,6 +123,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:theme, :string, default: "primary")
   attr(:size, :string, default: "md")
+  attr(:icon?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:method, :string, default: "get")
   attr(:mt?, :boolean, default: true)
@@ -158,7 +164,8 @@ defmodule PlausibleWeb.Components.Generic do
         onclick: onclick,
         button_base_class: @button_base_class,
         theme_class: theme_class,
-        size_class: @button_sizes[assigns.size]
+        size_class: @button_sizes[assigns.size],
+        icon_class: assigns.icon? && @button_icon_class
       )
 
     ~H"""
@@ -170,6 +177,7 @@ defmodule PlausibleWeb.Components.Generic do
         @button_base_class,
         @size_class,
         @theme_class,
+        @icon_class,
         @class
       ]}
       {@extra}
@@ -329,6 +337,8 @@ defmodule PlausibleWeb.Components.Generic do
 
   slot :button, required: true do
     attr(:class, :string)
+    attr(:theme, :string)
+    attr(:size, :string)
   end
 
   slot :menu, required: true do
@@ -336,7 +346,16 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   def dropdown(assigns) do
-    assigns = assign(assigns, :menu_class, assigns.menu |> List.first() |> Map.get(:class, ""))
+    button = List.first(assigns.button)
+
+    assigns =
+      assign(assigns,
+        menu_class: assigns.menu |> List.first() |> Map.get(:class, ""),
+        button: button,
+        button_class: Map.get(button, :class, ""),
+        button_theme: Map.get(button, :theme, "secondary"),
+        button_size: Map.get(button, :size, "md")
+      )
 
     ~H"""
     <div
@@ -345,14 +364,16 @@ defmodule PlausibleWeb.Components.Generic do
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       class="relative inline-block text-left"
     >
-      <button
+      <.button
         x-ref="button"
         x-on:click="toggle()"
-        type="button"
-        class={["py-2.5", List.first(@button).class]}
+        theme={@button_theme}
+        size={@button_size}
+        mt?={false}
+        class={@button_class}
       >
-        {render_slot(List.first(@button))}
-      </button>
+        {render_slot(@button)}
+      </.button>
       <div
         x-show="open"
         x-cloak
@@ -934,14 +955,14 @@ defmodule PlausibleWeb.Components.Generic do
           "overflow-visible",
           @truncate && "truncate",
           @max_width,
-          @actions && "flex text-right justify-end",
+          @actions && "flex items-center text-right justify-end",
           @hide_on_mobile && "hidden md:table-cell",
           @class
         ]
       }
       {@rest}
     >
-      <div :if={@actions} class="flex gap-1">
+      <div :if={@actions} class="flex items-center gap-1">
         {render_slot(@inner_block)}
       </div>
       <div :if={!@actions}>
@@ -1010,153 +1031,53 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :href, :string, required: false
-  attr :icon_name, :atom, required: false
-  attr :theme, :string, default: "default"
   attr :class, :string, default: ""
-  attr :icon_class, :string, default: ""
-  attr :size, :string, default: "4"
-  attr :rest, :global, include: ~w(method disabled)
-
-  slot :inner_block, required: false
-
-  def icon_button(assigns) do
-    icon_source =
-      case {assigns.inner_block, assigns[:icon_name]} do
-        {[], nil} ->
-          raise ArgumentError,
-                "Either `icon_name` attribute or icon inner block must be provided"
-
-        {[_ | _], icon_name} when not is_nil(icon_name) ->
-          raise ArgumentError, "Only one of `icon_name` and icon inner block must be provided"
-
-        {[_ | _], nil} ->
-          :inner_block
-
-        {[], icon_name} when not is_nil(icon_name) ->
-          :icon_name
-      end
-
-    text =
-      case assigns.theme do
-        "default" ->
-          %{
-            light: "text-indigo-700",
-            light_hover: "text-indigo-600",
-            dark: "text-indigo-500",
-            dark_hover: "text-indigo-400"
-          }
-
-        "danger" ->
-          %{
-            light: "text-red-700",
-            light_hover: "text-red-500",
-            dark: "text-red-500",
-            dark_hover: "text-red-400"
-          }
-
-        _ ->
-          raise ArgumentError, "Invalid `theme` provided"
-      end
-
-    button_class = [
-      "group/button",
-      "w-fit h-fit",
-      "p-2",
-      "enabled:hover:bg-gray-100",
-      "dark:enabled:hover:bg-gray-800",
-      "rounded-md",
-      "transition-colors",
-      "duration-150",
-      assigns.class
-    ]
-
-    icon_class = [
-      "size-#{assigns.size}",
-      text.light,
-      "group-hover/button:" <> text.light_hover,
-      "dark:" <> text.dark,
-      "dark:group-hover/button:" <> text.dark_hover,
-      "transition-colors",
-      "duration-150",
-      "group-disabled/button:opacity-50",
-      assigns.icon_class
-    ]
-
-    assigns =
-      assigns
-      |> assign(:icon_source, icon_source)
-      |> assign(:button_class, button_class)
-      |> assign(:icon_class, icon_class)
-
-    if assigns[:href] do
-      ~H"""
-      <.unstyled_link href={@href} class={@button_class} {@rest}>
-        <span :if={@icon_source == :inner_block}>
-          {render_slot(@inner_block, @icon_class)}
-        </span>
-        <.dynamic_icon
-          :if={@icon_source == :icon_name}
-          name={@icon_name}
-          class={@icon_class}
-        />
-      </.unstyled_link>
-      """
-    else
-      ~H"""
-      <button class={@button_class} {@rest}>
-        <span :if={@icon_source == :inner_block}>
-          {render_slot(@inner_block, @icon_class)}
-        </span>
-        <.dynamic_icon
-          :if={@icon_source == :icon_name}
-          name={@icon_name}
-          class={@icon_class}
-        />
-      </button>
-      """
-    end
-  end
-
-  attr :href, :string, default: nil
-  attr :class, :string, default: ""
-  attr :rest, :global, include: ~w(method disabled)
+  attr :rest, :global, include: ~w(disabled)
 
   def edit_button(assigns) do
     ~H"""
-    <.icon_button :let={icon_class} href={@href} class={@class} {@rest}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class={icon_class}
-      >
-        <path
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.5"
-          d="m13.25 6.25 2.836-2.836a2 2 0 0 1 2.828 0l1.672 1.672a2 2 0 0 1 0 2.828L17.75 10.75m-4.5-4.5-9.914 9.914a2 2 0 0 0-.586 1.415v3.671h3.672a2 2 0 0 0 1.414-.586l9.914-9.914m-4.5-4.5 4.5 4.5"
-        />
-      </svg>
-    </.icon_button>
+    <.button
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-primary #{@class}"}
+      {@rest}
+    >
+      <.pencil_icon class="size-4" />
+    </.button>
     """
   end
 
   attr :href, :string, default: nil
   attr :class, :string, default: ""
-  attr :icon, :atom, default: :trash
   attr :rest, :global, include: ~w(method disabled)
 
   def delete_button(assigns) do
     ~H"""
-    <.icon_button
-      icon_name={@icon}
-      theme="danger"
-      class={@class}
+    <.button_link
+      :if={@href}
       href={@href}
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-danger #{@class}"}
       {@rest}
-    />
+    >
+      <Heroicons.trash class="size-4" />
+    </.button_link>
+    <.button
+      :if={is_nil(@href)}
+      theme="ghost"
+      size="sm"
+      icon?={true}
+      mt?={false}
+      class={"btn-text-danger #{@class}"}
+      {@rest}
+    >
+      <Heroicons.trash class="size-4" />
+    </.button>
     """
   end
 
@@ -1183,7 +1104,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="w-full max-w-80 pl-8 pr-3.5 py-2.5 text-sm dark:bg-gray-750 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-750 rounded-md dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+              class="input-base input-md w-full max-w-80 pl-8 dark:text-gray-300 dark:placeholder:text-gray-400"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}

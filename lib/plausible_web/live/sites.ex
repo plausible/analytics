@@ -142,8 +142,7 @@ defmodule PlausibleWeb.Live.Sites do
             id="add-site-dropdown"
           >
             <PrimaDropdown.dropdown_trigger id="add-site-dropdown-trigger" theme="primary">
-              <Heroicons.plus class="size-4" /> Add
-              <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+              <Heroicons.plus class="size-4" /> Add <Heroicons.chevron_down mini class="size-4" />
             </PrimaDropdown.dropdown_trigger>
 
             <PrimaDropdown.dropdown_menu id="add-site-dropdown-menu">
@@ -218,7 +217,7 @@ defmodule PlausibleWeb.Live.Sites do
             id="go-to-team-dropdown"
           >
             <PrimaDropdown.dropdown_trigger id="go-to-team-dropdown-trigger" theme="secondary">
-              Go to team sites <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+              Go to team sites <Heroicons.chevron_down mini class="size-4" />
             </PrimaDropdown.dropdown_trigger>
 
             <PrimaDropdown.dropdown_menu id="go-to-team-dropdown-menu">
@@ -625,8 +624,9 @@ defmodule PlausibleWeb.Live.Sites do
       <PrimaDropdown.dropdown id={@dropdown_id}>
         <PrimaDropdown.dropdown_trigger
           id={"#{@dropdown_id}-trigger"}
-          theme="ghost"
-          class="!px-2.5"
+          theme="link"
+          size="sm"
+          icon?={true}
         >
           <Heroicons.ellipsis_vertical class="size-5" />
         </PrimaDropdown.dropdown_trigger>
@@ -788,7 +788,7 @@ defmodule PlausibleWeb.Live.Sites do
         class="min-w-40 group-has-[[data-sort-trigger].phx-click-loading]/sort:text-gray-800/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:hover:text-gray-800/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:dark:text-gray-100/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:dark:hover:text-gray-100/50 group-has-[[data-sort-trigger].phx-click-loading]/sort:pointer-events-none"
       >
         {@current_sort_label}
-        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        <Heroicons.chevron_down mini class="size-4" />
       </PrimaDropdown.dropdown_trigger>
       <PrimaDropdown.dropdown_menu id="sort-dropdown-menu">
         <%= for {label, %Index.UserPreference{sort_by: sort_by, sort_direction: direction}} <- @sort_options do %>

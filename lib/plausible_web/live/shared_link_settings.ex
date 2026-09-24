@@ -159,12 +159,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                 </.td>
                 <.td actions>
                   <.edit_button
-                    class="mt-1"
                     phx-click="edit-shared-link"
                     phx-value-slug={link.slug}
                   />
                   <.delete_button
-                    class="mt-1"
                     phx-click="delete-shared-link"
                     phx-value-slug={link.slug}
                     data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."

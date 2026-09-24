@@ -89,10 +89,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         self_row = "#member-row-#{:erlang.phash2(user.email)}"
         member_row = "#member-row-#{:erlang.phash2(member.email)}"
 
-        assert text_of_element(html, "#{self_row} button.role") == "Owner"
+        assert text_of_element(html, "#{self_row} #{role_el()}") == "Owner"
         assert text_of_element(html, self_row) =~ "You (SSO)"
 
-        assert text_of_element(html, "#{member_row} button.role") == "Viewer"
+        assert text_of_element(html, "#{member_row} #{role_el()}") == "Viewer"
         assert text_of_element(html, member_row) =~ "SSO"
 
         change_role(lv, member.email, "owner")
@@ -140,13 +140,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       self_row = "#member-row-#{:erlang.phash2(user.email)}"
       member2_row = "#member-row-#{:erlang.phash2(member2.email)}"
 
-      assert text_of_element(html, "#{self_row} button.role") == "Owner"
-      assert text_of_element(html, "#{member2_row} button.role") == "Admin"
+      assert text_of_element(html, "#{self_row} #{role_el()}") == "Owner"
+      assert text_of_element(html, "#{member2_row} #{role_el()}") == "Admin"
 
       change_role(lv, member2.email, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#{member2_row} button.role") == "Viewer"
+      assert text_of_element(html, "#{member2_row} #{role_el()}") == "Viewer"
 
       assert_no_emails_delivered()
 
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert elem_count(html, member_el()) == 1
 
-      assert text_of_element(html, "#{guest_el()}:first-of-type button.role") ==
+      assert text_of_element(html, "#{guest_el()}:first-of-type #{role_el()}") ==
                "Guest"
 
       change_role(lv, "guest@example.com", "viewer")
@@ -535,5 +535,9 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp guest_el() do
     ~s|#guest-list div[data-test-kind="guest"]|
+  end
+
+  defp role_el() do
+    ~s|button[data-test-id="role"]|
   end
 end
