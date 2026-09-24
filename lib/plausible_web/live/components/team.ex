@@ -93,7 +93,6 @@ defmodule PlausibleWeb.Live.Components.Team do
             aria-label="Remove member"
             phx-click="remove-member"
             phx-value-email={@user.email}
-            phx-value-name={@user.name}
             data-confirm="Are you sure you want to remove this member from the team?"
           />
         </div>
@@ -132,7 +131,6 @@ defmodule PlausibleWeb.Live.Components.Team do
           user={@user}
           id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
           phx-value-email={@user.email}
-          phx-value-name={@user.name}
           role={role}
           disabled={@disabled or @role == role}
           dispatch_animation?={@role == :guest}
