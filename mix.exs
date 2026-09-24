@@ -169,7 +169,7 @@ defmodule Plausible.MixProject do
       {:zstream, "~> 0.6.4"},
       {:con_cache,
        git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
-      {:req, "~> 0.6"},
+      {:req, "~> 0.7.4"},
       {:opentelemetry_req, "~> 1.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test, :e2e_test]},
       {:ex_json_schema, "~> 0.11.1"},
