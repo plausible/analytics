@@ -16,6 +16,14 @@ Airties:
     - regex: 'Airties; ?([^);/]+)'
       model: '$1'
 
+# Akai (https://akai.ie/)
+'Akai':
+  regex: '.+_AKAI[;,)]'
+  device: 'tv'
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
+
 # ALDI NORD
 'ALDI NORD':
   regex: 'ALDINORD[;,)]'
@@ -88,6 +96,14 @@ ARRIS:
     - regex: 'FS-ARS-01B'
       model: 'FS-ARS-01B'
 
+# ATLANTIC
+ATLANTIC:
+  regex: 'ATLANTIC [;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
 # Atlantic Electrics (https://www.atlanticelectrics.co.uk/)
 Atlantic Electrics:
   regex: 'ATLANTIC[;,)]'
@@ -106,11 +122,13 @@ Atvio:
 
 # AWOX (https://www.awox.com.tr/)
 AWOX:
-  regex: 'AWOX[;,)]'
+  regex: '.+AWOX[;,)]'
   device: 'tv'
   models:
     - regex: 'LGE/[^/]+/AWOX; ([a-z0-9]+);'
       model: '$1'
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
 
 # AYA
 AYA:
@@ -188,6 +206,14 @@ CLAYTON:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
+# Coles (https://www.coles.com.au/)
+'Coles':
+  regex: '.+_COLES[;,)]'
+  device: 'tv'
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
+
 # Continental Edison (https://www.continentaledison.fr/en/)
 Continental Edison:
   regex: 'CONTINENTAL_EDI[;,)]'
@@ -258,11 +284,27 @@ DIORA:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
-# DMM
-DMM:
+# Dream Multimedia (https://www.dmm-tv.com)
+Dream Multimedia:
   regex: 'DMM'
   device: 'tv'
   model: 'Dreambox'
+
+# Dual (https://www.dualav.com/)
+Dual:
+  regex: 'Dual[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
+# Durabase
+Durabase:
+  regex: 'Durabase[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # EGL
 EGL:
@@ -307,6 +349,14 @@ ENDURO:
 # Essentielb
 Essentielb:
   regex: 'ESSENTIELB[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
+# Eversteel
+Eversteel:
+  regex: 'Eversteel[;,)]'
   device: 'tv'
   models:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
@@ -396,6 +446,14 @@ Graetz:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
+# Grandin
+Grandin:
+  regex: 'Grandin[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
 # Grundig
 Grundig:
   regex: '(OWB|(?:Amazon.+)?Grundig)'
@@ -422,6 +480,14 @@ Hanseatic:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
+# Heider
+Heider:
+  regex: 'Heider[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
 # Hi-Level
 Hi-Level:
   regex: 'HI-LEVEL[;,)]'
@@ -436,6 +502,22 @@ HIGH1ONE:
   device: 'tv'
   models:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
+# TELE System (https://www.telesystem-world.com/)
+TELE System:
+  regex: '.+Telesystem[;,)]'
+  device: 'tv'
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
+
+# KIWI
+KIWI:
+  regex: '.+KIWI[;,)]'
+  device: 'tv'
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
       model: 'Smart TV ($1)'
 
 # Hisense
@@ -471,7 +553,7 @@ Hisense:
       model: 'MICALIDVB6886'
     - regex: '(L[A-Z]{2,3}[0-9]{2}[A-Z][0-9]{3,4}[A-Z]{0,6}[0-9]?[A-Z]?)'
       model: '$1'
-    - regex: '(H[A-Z]?[0-9]{2}[A-Z][0-9]{3,4}[A-Z]{0,4})'
+    - regex: '(H[A-Z]?[0-9]{2}[A-Z][0-9]{3,4}[A-Z]{0,5})'
       model: '$1'
     - regex: 'SmartTV_([0-9]{4})_'
       model: 'Smart TV ($1)'
@@ -508,8 +590,8 @@ HOTACK:
   device: 'peripheral'
   model: ''
 
-# Hotel
-Hotel:
+# Hotel TV Company (https://www.hoteltvcompany.co.uk/about/)
+Hotel TV Company:
   regex: 'HOTEL[;,)]'
   device: 'tv'
   model: ''
@@ -575,6 +657,30 @@ Inverto:
       model: '$1'
     - regex: '(Volksbox Web Edition|Volksbox Essential|Volksbox II|Volksbox)'
       model: '$1'
+
+# ioplee (https://www.sistemaitalia.it/)
+'ioplee':
+  regex: '.+_IOPLEE[;,)]'
+  device: 'tv'
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
+
+# IXI (https://web.archive.org/web/20240614122417/https://ixielectronics.com/)
+IXI:
+  regex: 'IXI[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
+# johnson (https://ponjohnsonentuvida.es/)
+johnson:
+  regex: 'johnson[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # JVC
 JVC:
@@ -676,13 +782,15 @@ AXEN:
 
 # Dyon (https://www.dyon.eu/)
 Dyon:
-  regex: 'DYON[;,)]'
+  regex: '(?:.+_)?DYON[;,)]'
   device: 'tv'
   models:
     - regex: 'SMART-32-X-EOS'
       model: 'Smart 32 X-EOS'
     - regex: 'LGE/[^/]+/DYON; ([a-z0-9]+)'
       model: '$1'
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
 
 # EAS Electric (https://easelectric.es/)
 EAS Electric:
@@ -694,10 +802,12 @@ EAS Electric:
 
 # Edenwood
 Edenwood:
-  regex: 'EDENWOOD[;,)]'
+  regex: '(?:.+_)?EDENWOOD[;,)]'
   device: 'tv'
   models:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
       model: 'Smart TV ($1)'
 
 # ONVO (https://onvo.com.tr/)
@@ -742,11 +852,13 @@ simfer:
 
 # Smart Tech (https://www.smarttech-tv.com/)
 Smart Tech:
-  regex: 'SMARTTECH[;,)]'
+  regex: '.+SMARTTECH[;,)]'
   device: 'tv'
   models:
     - regex: 'LGE/[^/]+/SMARTTECH; ([a-z0-9]+);'
       model: '$1'
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
 
 # Stilevs (https://stilevskktc.com/)
 Stilevs:
@@ -996,11 +1108,13 @@ NABO:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
-# Neo
-Neo:
-  regex: 'NEO, ([a-z0-9_ -]+), (?:wired|wireless)'
+# NEO
+NEO:
+  regex: 'NEO[;,)]'
   device: 'tv'
-  model: ''
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # NEXON
 NEXON:
@@ -1047,6 +1161,14 @@ Metz:
 # NORMANDE (https://normande.co.il/)
 NORMANDE:
   regex: 'NORMANDE[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
+# OCEAN (https://www.ocean.it/)
+OCEAN:
+  regex: 'OCEAN[;,)]'
   device: 'tv'
   models:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
@@ -1148,6 +1270,14 @@ PREMIER:
     - regex: 'LGE/[^/]+/PREMIER; ([a-z0-9]+);'
       model: '$1'
 
+# ProCaster
+ProCaster:
+  regex: 'ProCaster[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
 # PROFiLO
 PROFiLO:
   regex: 'PROFILO[;,)]'
@@ -1174,6 +1304,14 @@ Qilive:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
+# Quart
+Quart:
+  regex: 'Quart[;,)]'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+
 # RCA Tablets (RCA) (https://www.rca.com/ https://rca-televisions.com/)
 RCA Tablets:
   regex: 'RCA;'
@@ -1190,12 +1328,14 @@ REGAL:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
-# Saba
+# Saba (https://saba-tv.it/)
 Saba:
-  regex: 'Saba[;,)]'
+  regex: '.+Saba[;,)]'
   device: 'tv'
   models:
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
       model: 'Smart TV ($1)'
 
 # Salora
@@ -1348,9 +1488,19 @@ Sony:
 
 # Star-Light
 Star-Light:
-  regex: 'STAR LIGHT[;,)]'
+  regex: '.+STAR ?LIGHT[;,)]'
   device: 'tv'
-  model: ''
+  models:
+    - regex: 'LaTivu_(?:\d+[.\d]+)_([0-9]{4})'
+      model: 'Smart TV ($1)'
+
+# SURFTV
+SURFTV:
+  regex: 'SURFTV'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # SULPICE TV (https://sulpicetv.com/)
 SULPICE TV:
@@ -1374,6 +1524,14 @@ TALBERG:
   device: 'tv'
   models:
     - regex: 'SmartTV(2019|2020)'
+      model: 'Smart TV ($1)'
+
+# Technical (https://vestel-france.fr/en/tv)
+Technical:
+  regex: 'Technical'
+  device: 'tv'
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
 # Technicolor
@@ -1554,8 +1712,8 @@ VORTEX (RO):
     - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
       model: 'Smart TV ($1)'
 
-# VOX (https://www.voxelectronics.com/)
-VOX:
+# VOX Electronics (https://www.voxelectronics.com/)
+VOX Electronics:
   regex: 'VOX[;,)]'
   device: 'tv'
   models:
