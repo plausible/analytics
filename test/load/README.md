@@ -36,10 +36,10 @@ The output looks like this:
     http_req_duration{endpoint: "/api/health"}
     ✓ 'p(95)<300' p(95)=0s
 
-    http_req_duration{endpoint: "/api/stats/:domain/pages", domain: "dummy.site/heavy"}
+    http_req_duration{endpoint: "/api/stats/:domain/query", domain: "dummy.site/heavy"}
     ✗ 'p(95)<3000' p(95)=5.53s
 
-    http_req_duration{endpoint: "/api/stats/:domain/pages", domain: "dummy.site/light"}
+    http_req_duration{endpoint: "/api/stats/:domain/query", domain: "dummy.site/light"}
     ✗ 'p(95)<1500' p(95)=1.61s
 
     http_req_duration{endpoint: "/api/system/health/ready"}
@@ -60,10 +60,10 @@ The output looks like this:
     http_req_failed{endpoint: "/api/health"}
     ✗ 'rate<0.01' rate=100.00%
 
-    http_req_failed{endpoint: "/api/stats/:domain/pages", domain: "dummy.site/heavy"}
+    http_req_failed{endpoint: "/api/stats/:domain/query", domain: "dummy.site/heavy"}
     ✗ 'rate<0.01' rate=14.28%
 
-    http_req_failed{endpoint: "/api/stats/:domain/pages", domain: "dummy.site/light"}
+    http_req_failed{endpoint: "/api/stats/:domain/query", domain: "dummy.site/light"}
     ✗ 'rate<0.01' rate=16.66%
 
     http_req_failed{endpoint: "/api/system/health/ready"}
@@ -98,8 +98,8 @@ The output looks like this:
       { endpoint: "/api/event", domain: "dummy.site/heavy" }.................: avg=1.37s    min=0s       med=1.05s    max=7.77s    p(90)=1.86s    p(95)=7.38s
       { endpoint: "/api/event", domain: "dummy.site/light" }.................: avg=1.54s    min=0s       med=1.41s    max=7.78s    p(90)=1.91s    p(95)=7.56s
       { endpoint: "/api/health" }............................................: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s
-      { endpoint: "/api/stats/:domain/pages", domain: "dummy.site/heavy" }...: avg=1.71s    min=279.43ms med=912.92ms max=7.07s    p(90)=3.99s    p(95)=5.53s
-      { endpoint: "/api/stats/:domain/pages", domain: "dummy.site/light" }...: avg=738.31ms min=282.4ms  med=437.64ms max=1.77s    p(90)=1.45s    p(95)=1.61s
+      { endpoint: "/api/stats/:domain/query", domain: "dummy.site/heavy" }...: avg=1.71s    min=279.43ms med=912.92ms max=7.07s    p(90)=3.99s    p(95)=5.53s
+      { endpoint: "/api/stats/:domain/query", domain: "dummy.site/light" }...: avg=738.31ms min=282.4ms  med=437.64ms max=1.77s    p(90)=1.45s    p(95)=1.61s
       { endpoint: "/api/system/health/ready" }...............................: avg=209.82ms min=190.77ms med=209.82ms max=228.87ms p(90)=225.06ms p(95)=226.96ms
       { endpoint: "/api/v2/query", domain: "dummy.site/heavy" }..............: avg=3.86s    min=1.8s     med=1.99s    max=7.78s    p(90)=6.62s    p(95)=7.2s
       { endpoint: "/api/v2/query", domain: "dummy.site/light" }..............: avg=1s       min=371ms    med=989.72ms max=1.65s    p(90)=1.52s    p(95)=1.58s
@@ -108,8 +108,8 @@ The output looks like this:
       { endpoint: "/api/event", domain: "dummy.site/heavy" }.................: 21.95%  110 out of 501
       { endpoint: "/api/event", domain: "dummy.site/light" }.................: 19.60%  10 out of 51
       { endpoint: "/api/health" }............................................: 100.00% 1 out of 1
-      { endpoint: "/api/stats/:domain/pages", domain: "dummy.site/heavy" }...: 14.28%  1 out of 7
-      { endpoint: "/api/stats/:domain/pages", domain: "dummy.site/light" }...: 16.66%  1 out of 6
+      { endpoint: "/api/stats/:domain/query", domain: "dummy.site/heavy" }...: 14.28%  1 out of 7
+      { endpoint: "/api/stats/:domain/query", domain: "dummy.site/light" }...: 16.66%  1 out of 6
       { endpoint: "/api/system/health/ready" }...............................: 0.00%   0 out of 2
       { endpoint: "/api/v2/query", domain: "dummy.site/heavy" }..............: 33.33%  1 out of 3
       { endpoint: "/api/v2/query", domain: "dummy.site/light" }..............: 0.00%   0 out of 3

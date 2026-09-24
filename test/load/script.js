@@ -42,12 +42,41 @@ const endpoints = {
       "is buffered": (res) => res.headers["X-Plausible-Dropped"] != 1,
     },
   },
-  internalApiPages: {
-    method: "GET",
-    name: "/api/stats/:domain/pages",
+  internalApiQuery: {
+    method: "POST",
+    name: "/api/stats/:domain/query",
     getUrl: ({ domain }) =>
-      `${baseURL}/api/stats/${encodeURIComponent(domain)}/pages?period=all&date=${new Date().toISOString().split("T")[0]}&filters=%5B%5D`,
-    getParams: () => ({ headers: { Cookie: __ENV.AUTH_COOKIE } }),
+      `${baseURL}/api/stats/${encodeURIComponent(domain)}/query`,
+    // mirrors the "Top pages" breakdown the dashboard requests on load
+    getBody: () =>
+      JSON.stringify({
+        metrics: ["visitors", "percentage"],
+        date_range: "all",
+        relative_date: null,
+        dimensions: ["event:page"],
+        filters: [],
+        order_by: [
+          ["visitors", "desc"],
+          ["event:page", "asc"],
+        ],
+        pagination: { limit: 9, offset: 0 },
+        include: {
+          imports: true,
+          imports_meta: false,
+          time_labels: false,
+          partial_time_labels: false,
+          compare: null,
+          compare_match_day_of_week: false,
+          empty_metrics: false,
+          present_index: false,
+        },
+      }),
+    getParams: () => ({
+      headers: {
+        Cookie: __ENV.AUTH_COOKIE,
+        "Content-Type": "application/json",
+      },
+    }),
     checks: {
       "request is successful": (res) => res.status === 200,
     },
@@ -129,14 +158,14 @@ export const trackLight = () =>
 export const readinessCheck = () => makeRequest(endpoints.healthReadiness);
 export const livenessCheck = () => makeRequest(endpoints.healthLiveness);
 
-export const pagesHeavy = () =>
-  makeRequest(endpoints.internalApiPages, { domain: domainHeavy });
-export const pagesLight = () =>
-  makeRequest(endpoints.internalApiPages, { domain: domainLight });
+export const internalQueryHeavy = () =>
+  makeRequest(endpoints.internalApiQuery, { domain: domainHeavy });
+export const internalQueryLight = () =>
+  makeRequest(endpoints.internalApiQuery, { domain: domainLight });
 
-export const queryHeavy = () =>
+export const externalQueryHeavy = () =>
   makeRequest(endpoints.externalApiQuery, { domain: domainHeavy });
-export const queryLight = () =>
+export const externalQueryLight = () =>
   makeRequest(endpoints.externalApiQuery, { domain: domainLight });
 
 const scenarioOptions = {
@@ -176,14 +205,14 @@ const selectors = [
     ],
   ],
   [
-    `endpoint: "${endpoints.internalApiPages.name}", domain: "${domainHeavy}"`,
+    `endpoint: "${endpoints.internalApiQuery.name}", domain: "${domainHeavy}"`,
     [
       ["http_req_duration", ["p(95)<3000"]],
       ["http_req_failed", ["rate<0.01"]],
     ],
   ],
   [
-    `endpoint: "${endpoints.internalApiPages.name}", domain: "${domainLight}"`,
+    `endpoint: "${endpoints.internalApiQuery.name}", domain: "${domainLight}"`,
     [
       ["http_req_duration", ["p(95)<1500"]],
       ["http_req_failed", ["rate<0.01"]],
@@ -232,29 +261,29 @@ export const options = {
       preAllocatedVUs: 600,
       exec: trackLight.name,
     },
-    [pagesHeavy.name]: {
+    [internalQueryHeavy.name]: {
       ...scenarioOptions,
       rate: 6,
       preAllocatedVUs: 400,
-      exec: pagesHeavy.name,
+      exec: internalQueryHeavy.name,
     },
-    [pagesLight.name]: {
+    [internalQueryLight.name]: {
       ...scenarioOptions,
       rate: 6,
       preAllocatedVUs: 400,
-      exec: pagesLight.name,
+      exec: internalQueryLight.name,
     },
-    [queryHeavy.name]: {
+    [externalQueryHeavy.name]: {
       ...scenarioOptions,
       rate: 3,
       preAllocatedVUs: 200,
-      exec: queryHeavy.name,
+      exec: externalQueryHeavy.name,
     },
-    [queryLight.name]: {
+    [externalQueryLight.name]: {
       ...scenarioOptions,
       rate: 3,
       preAllocatedVUs: 200,
-      exec: queryLight.name,
+      exec: externalQueryLight.name,
     },
   },
   thresholds: {
