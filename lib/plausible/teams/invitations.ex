@@ -641,8 +641,6 @@ defmodule Plausible.Teams.Invitations do
   @doc false
   def ensure_new_membership(_site_or_team, nil, _role), do: :ok
 
-  def ensure_new_membership(_site_or_team, _invitee, :owner), do: :ok
-
   def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
     case Teams.Memberships.team_role(team, invitee) do
       {:ok, :guest} -> :ok
@@ -650,6 +648,9 @@ defmodule Plausible.Teams.Invitations do
       {:ok, _} -> {:error, :already_a_member}
     end
   end
+
+  # Site ownership transfers are allowed to target existing site members
+  def ensure_new_membership(%Plausible.Site{}, _invitee, :owner), do: :ok
 
   def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do

@@ -240,15 +240,42 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       assert_no_emails_delivered()
     end
 
-    test "creates none of the invitations when one of them fails" do
+    test "returns an error when inviting self as owner without creating any invitations" do
+      me = new_user()
+      _my_site = new_site(owner: me)
+      team = team_of(me)
+
+      assert {:error, :already_a_member} =
+               InviteToTeam.invite_all(team, me, [%{email: me.email, role: :owner}])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: me.email)
+    end
+
+    for email <- ["", "no-at-sign.example.com", "no-dot@example"] do
+      test "returns an error for invalid email #{inspect(email)} without creating any invitations" do
+        inviter = new_user()
+        _site = new_site(owner: inviter)
+        team = team_of(inviter)
+
+        assert {:error, :invalid_email} =
+                 InviteToTeam.invite_all(team, inviter, [
+                   %{email: "first@example.com", role: :editor},
+                   %{email: unquote(email), role: :admin}
+                 ])
+
+        refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
+      end
+    end
+
+    test "returns an error for duplicate emails without creating any invitations" do
       inviter = new_user()
       _site = new_site(owner: inviter)
       team = team_of(inviter)
 
-      assert {:error, %Ecto.Changeset{}} =
+      assert {:error, :duplicate_emails} =
                InviteToTeam.invite_all(team, inviter, [
                  %{email: "first@example.com", role: :viewer},
-                 %{email: "", role: :viewer}
+                 %{email: "first@example.com", role: :editor}
                ])
 
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")

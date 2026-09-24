@@ -39,6 +39,10 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   @doc """
   Creates team invitations for all given entries in a single transaction.
   Either all of them get created, or none. Does not send any emails yet.
+
+  Returns `{:error, :invalid_email}` or `{:error, :duplicate_emails}`
+  without touching the database if any of the entries' emails is invalid,
+  or if the same email appears more than once.
   """
   @spec invite_all(
           Teams.Team.t(),
@@ -48,16 +52,9 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
         ) ::
           {:ok, [Teams.Invitation.t()]} | {:error, any()}
   def invite_all(team, inviter, entries, opts \\ []) do
-    team = Repo.preload(team, [:owners])
-
-    Repo.transaction(fn ->
-      Enum.map(entries, fn %{email: email, role: role} ->
-        case do_invite(team, inviter, email, role, opts) do
-          {:ok, invitation} -> invitation
-          {:error, reason} -> Repo.rollback(reason)
-        end
-      end)
-    end)
+    with :ok <- validate_emails(Enum.map(entries, & &1.email)) do
+      do_invite_all(Repo.preload(team, [:owners]), inviter, entries, opts)
+    end
   end
 
   @spec send_invitation_emails([Teams.Invitation.t()]) :: :ok
@@ -72,6 +69,29 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
     invitation
     |> Repo.preload([:team, :inviter])
     |> Teams.Invitations.send_invitation_email(invitee)
+  end
+
+  defp do_invite_all(team, inviter, entries, opts) do
+    Repo.transaction(fn ->
+      Enum.map(entries, fn %{email: email, role: role} ->
+        case do_invite(team, inviter, email, role, opts) do
+          {:ok, invitation} -> invitation
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
+    end)
+  end
+
+  defp validate_emails(emails) do
+    cond do
+      not Enum.all?(emails, &valid_email?/1) -> {:error, :invalid_email}
+      Enum.uniq(emails) != emails -> {:error, :duplicate_emails}
+      true -> :ok
+    end
+  end
+
+  defp valid_email?(email) do
+    String.contains?(email, "@") and String.contains?(email, ".")
   end
 
   defp do_invite(team, inviter, invitee_email, role, opts) when role in @valid_roles do

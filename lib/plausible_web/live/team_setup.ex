@@ -167,21 +167,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       end)
       |> Enum.filter(&(&1.email != ""))
 
-    emails = Enum.map(entries, & &1.email)
-
-    cond do
-      Enum.any?(emails, &(not valid_email?(&1))) ->
-        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
-
-      Enum.uniq(emails) != emails ->
-        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
-
-      socket.assigns.current_user.email in emails ->
-        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
-
-      true ->
-        setup_team(socket, name, entries)
-    end
+    setup_team(socket, name, entries)
   end
 
   defp setup_team(socket, name, entries) do
@@ -202,6 +188,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
       {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
         {:noreply, assign(socket, team_name_form: to_form(changeset))}
 
+      {:error, :invalid_email} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
+
+      {:error, :duplicate_emails} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
+
+      # A team that's not set up yet has no members other than its owner
+      # (guests can be invited), so this can only mean inviting yourself.
+      {:error, :already_a_member} ->
+        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
+
       {:error, {:over_limit, limit}} ->
         {:noreply,
          put_live_flash(
@@ -211,20 +208,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
          )}
 
       {:error, other} ->
-        # Team setup is only ever done by the team's sole owner, inviting
-        # brand-new e-mails (validated above), so none of the other known
-        # invitation error reasons (permission checks, existing membership)
-        # are reachable from here. Anything else is unexpected.
+        # Team setup is only ever done by the team's sole owner, so
+        # permission check errors are not reachable from here. Anything
+        # else is unexpected.
         Sentry.capture_message("Unexpected error while creating team via team setup",
           extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
         )
 
         {:noreply, put_live_flash(socket, :error, "Something went wrong. Please try again")}
     end
-  end
-
-  defp valid_email?(email) do
-    String.contains?(email, "@") and String.contains?(email, ".")
   end
 
   @max_rows_when_unlimited 20
