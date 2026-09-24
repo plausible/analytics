@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth.User
+  alias PlausibleWeb.Components.PrimaListbox
 
   @role_descriptions [
     owner: "Manage the team without restrictions",
@@ -22,11 +23,16 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   def role_to_atom(role), do: Map.fetch!(@roles_cast_map, role)
 
+  defp role_to_capitalized_string(role) when is_atom(role) do
+    role |> Atom.to_string() |> String.capitalize()
+  end
+
   attr(:user, User, required: true)
   attr(:label, :string, default: nil)
   attr(:role, :atom, default: nil)
   attr(:my_role, :atom, required: true)
   attr(:me?, :boolean, default: false)
+  attr(:pending?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:remove_disabled, :boolean, default: false)
 
@@ -43,76 +49,98 @@ defmodule PlausibleWeb.Live.Components.Team do
         )
       }
     >
-      <div class="flex items-center gap-x-5">
-        <img src={User.profile_img_url(@user)} class="w-8 rounded-full bg-gray-300" />
-        <div class="flex flex-col">
-          <span class="text-sm font-medium">
-            {@user.name}
+      <div class="flex items-center gap-x-3 sm:gap-x-5">
+        <img
+          :if={not @pending?}
+          src={User.profile_img_url(@user)}
+          class="size-8 shrink-0 rounded-full bg-gray-300"
+        />
+        <div
+          :if={@pending?}
+          class="size-8 shrink-0 flex items-center justify-center rounded-full bg-indigo-500"
+        >
+          <Heroicons.envelope class="size-4 text-white" />
+        </div>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-center gap-x-1 text-sm font-medium">
+            <span :if={@pending?} class="truncate">Pending invitation</span>
+            <span :if={not @pending?} class="truncate">{@user.name}</span>
             <span
-              :if={@label}
-              class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
+              :if={@label && @me?}
+              class="shrink-0 dark:bg-indigo-600 dark:text-gray-200 bg-gray-150 text-gray-500 text-xs px-1 py-0.5 rounded-md"
             >
               {@label}
             </span>
-          </span>
-          <span class="text-gray-500 text-xs">
+            <.pill :if={@label && not @me?} color={:gray} class="shrink-0">{@label}</.pill>
+          </div>
+          <span class="text-gray-500 text-xs truncate">
             {@user.email}
           </span>
         </div>
-        <div class="flex-1 text-right">
-          <.dropdown id={"role-dropdown-#{@user.email}"}>
-            <:button class="role bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              <span :if={@disabled} class="text-gray-400">
-                {@role |> to_string() |> String.capitalize()}
-              </span>
-              <span :if={not @disabled}>
-                {@role |> to_string() |> String.capitalize()}
-              </span>
-              <Heroicons.chevron_down :if={@disabled} mini class="text-gray-400 size-4 mt-0.5" />
-              <Heroicons.chevron_down :if={not @disabled} mini class="size-4 mt-0.5" />
-            </:button>
-            <:menu class="dropdown-items max-w-60">
-              <.role_item
-                :for={{role, description} <- role_descriptions()}
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={role}
-                disabled={@disabled or @role == role}
-                dispatch_animation?={@role == :guest}
-                data-confirm={
-                  if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
-                }
-              >
-                {description}
-              </.role_item>
-              <.dropdown_divider />
+        <div class="flex-1 shrink-0 flex items-center justify-end gap-x-2">
+          <.role_switcher
+            id={"role-dropdown-#{@user.email}"}
+            user={@user}
+            role={@role}
+            my_role={@my_role}
+            me?={@me?}
+            disabled={@disabled}
+          />
 
-              <.dropdown_item
-                id={"#{:erlang.phash2(@user.email)}-remove"}
-                href="#"
-                disabled={@disabled or @remove_disabled}
-                phx-click="remove-member"
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                data-confirm="Are you sure you want to remove this member from the team?"
-              >
-                <div class={
-                  not @remove_disabled &&
-                    "text-red-600 hover:text-red-600 dark:text-red-500 hover:dark:text-red-400"
-                }>
-                  Remove member
-                </div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Remove member from your team
-                </div>
-              </.dropdown_item>
-            </:menu>
-          </.dropdown>
+          <.delete_button
+            id={"#{:erlang.phash2(@user.email)}-remove"}
+            class="disabled:cursor-not-allowed"
+            disabled={@disabled or @remove_disabled}
+            aria-label="Remove member"
+            phx-click="remove-member"
+            phx-value-email={@user.email}
+            phx-value-name={@user.name}
+            data-confirm="Are you sure you want to remove this member from the team?"
+          />
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:user, User, required: true)
+  attr(:role, :atom, required: true)
+  attr(:my_role, :atom, required: true)
+  attr(:me?, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
+
+  def role_switcher(assigns) do
+    ~H"""
+    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role} disabled={@disabled}>
+      <PrimaListbox.listbox_trigger
+        id={"#{@id}-trigger"}
+        aria-label="Role"
+        disabled={@disabled}
+        class="role !border-none !shadow-none !bg-transparent dark:!bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-700"
+      >
+        <PrimaListbox.listbox_value>
+          {role_to_capitalized_string(@role)}
+        </PrimaListbox.listbox_value>
+        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+      </PrimaListbox.listbox_trigger>
+
+      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
+        <.role_item
+          :for={{role, description} <- selectable_role_descriptions(@my_role)}
+          user={@user}
+          id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
+          phx-value-email={@user.email}
+          phx-value-name={@user.name}
+          role={role}
+          disabled={@disabled or @role == role}
+          dispatch_animation?={@role == :guest}
+          data-confirm={if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()}
+        >
+          {description}
+        </.role_item>
+      </PrimaListbox.listbox_options>
+    </PrimaListbox.listbox>
     """
   end
 
@@ -121,24 +149,32 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:my_role, :atom, required: true)
   attr(:rest, :global)
 
-  def role_picker(assigns) do
+  def role_select_input(assigns) do
     ~H"""
-    <.dropdown id={@id}>
-      <:button class="role w-[100px] inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-        {@role |> Atom.to_string() |> String.capitalize()}
+    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role}>
+      <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} aria-label="Role" class="w-[100px]">
+        <PrimaListbox.listbox_value>
+          {role_to_capitalized_string(@role)}
+        </PrimaListbox.listbox_value>
         <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-      </:button>
-      <:menu class="dropdown-items max-w-60">
-        <.role_item
-          :for={{role, description} <- role_descriptions()}
-          role={role}
-          disabled={role_change_disabled?(@my_role, role)}
+      </PrimaListbox.listbox_trigger>
+
+      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-64">
+        <PrimaListbox.listbox_option
+          :for={{role, description} <- selectable_role_descriptions(@my_role)}
+          id={"#{@id}-option-#{role}"}
+          value={role}
+          display={role_to_capitalized_string(role)}
+          phx-value-role={role}
           {@rest}
         >
-          {description}
-        </.role_item>
-      </:menu>
-    </.dropdown>
+          <div>{role_to_capitalized_string(role)}</div>
+          <PrimaListbox.option_description class="whitespace-nowrap">
+            {description}
+          </PrimaListbox.option_description>
+        </PrimaListbox.listbox_option>
+      </PrimaListbox.listbox_options>
+    </PrimaListbox.listbox>
     """
   end
 
@@ -172,20 +208,33 @@ defmodule PlausibleWeb.Live.Components.Team do
     assigns = assign(assigns, :click, click)
 
     ~H"""
-    <.dropdown_item
+    <PrimaListbox.listbox_option
       id={@id}
-      href="#"
+      value={@role}
+      display={role_to_capitalized_string(@role)}
+      disabled={@disabled}
       phx-click={@click}
       phx-value-role={@role}
-      disabled={@disabled}
       {@rest}
     >
-      <div>{@role |> Atom.to_string() |> String.capitalize()}</div>
-      <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-        {render_slot(@inner_block)}
+      <div class="flex items-center justify-between gap-x-2">
+        <span>{role_to_capitalized_string(@role)}</span>
+        <Heroicons.check
+          mini
+          class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
+        />
       </div>
-    </.dropdown_item>
+      <PrimaListbox.option_description disabled={@disabled}>
+        {render_slot(@inner_block)}
+      </PrimaListbox.option_description>
+    </PrimaListbox.listbox_option>
     """
+  end
+
+  defp selectable_role_descriptions(my_role) do
+    Enum.reject(@role_descriptions, fn {role, _description} ->
+      role_change_disabled?(my_role, role)
+    end)
   end
 
   defp role_change_disabled?(my_role, :owner), do: my_role != :owner

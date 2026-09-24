@@ -89,10 +89,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         self_row = "#member-row-#{:erlang.phash2(user.email)}"
         member_row = "#member-row-#{:erlang.phash2(member.email)}"
 
-        assert text_of_element(html, "#{self_row} button") == "Owner"
+        assert text_of_element(html, "#{self_row} button.role") == "Owner"
         assert text_of_element(html, self_row) =~ "You (SSO)"
 
-        assert text_of_element(html, "#{member_row} button") == "Viewer"
+        assert text_of_element(html, "#{member_row} button.role") == "Viewer"
         assert text_of_element(html, member_row) =~ "SSO"
 
         change_role(lv, member.email, "owner")
@@ -119,8 +119,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
-      assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation sent"
+      assert member_row1 =~ "Pending invitation"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -141,13 +140,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       self_row = "#member-row-#{:erlang.phash2(user.email)}"
       member2_row = "#member-row-#{:erlang.phash2(member2.email)}"
 
-      assert text_of_element(html, "#{self_row} button") == "Owner"
-      assert text_of_element(html, "#{member2_row} button") == "Admin"
+      assert text_of_element(html, "#{self_row} button.role") == "Owner"
+      assert text_of_element(html, "#{member2_row} button.role") == "Admin"
 
       change_role(lv, member2.email, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#{member2_row} button") == "Viewer"
+      assert text_of_element(html, "#{member2_row} button.role") == "Viewer"
 
       assert_no_emails_delivered()
 
@@ -164,7 +163,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert elem_count(html, member_el()) == 1
 
-      assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
+      assert text_of_element(html, "#{guest_el()}:first-of-type button.role") ==
+               "Guest"
 
       change_role(lv, "guest@example.com", "viewer")
       html = render(lv)
@@ -235,8 +235,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation pending"
-      assert sent =~ "Invitation sent"
+      assert pending =~ "Pending invitation"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
@@ -250,8 +250,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation pending"
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)
@@ -304,7 +303,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert sent =~ "Invitation sent"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
@@ -317,7 +316,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)
@@ -509,7 +508,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp add_invite(lv, email, role) do
     lv
-    |> element(~s|#input-role-picker a[phx-value-role="#{role}"]|)
+    |> element(~s|#input-role-picker [phx-value-role="#{role}"]|)
     |> render_click()
 
     lv

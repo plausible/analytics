@@ -213,6 +213,8 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: npm install --prefix ./assets
+      # TEMPORARY: needed by `esbuild prima` in assets.deploy while prima is pinned to a git ref
+      - run: npm ci --prefix ./deps/prima/assets
       - run: mix assets.deploy
       - run: mix do ecto.create, ecto.migrate
       - run: mix download_country_database
