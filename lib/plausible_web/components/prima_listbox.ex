@@ -38,6 +38,7 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       id={@id}
       name={@name}
       value={@value}
+      disabled={@disabled}
       class={@disabled && "cursor-not-allowed"}
       {@rest}
     >

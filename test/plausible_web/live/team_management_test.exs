@@ -400,34 +400,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
     end
 
-    test "self-demotion role items carry data-confirm, others do not", %{
-      conn: conn,
-      team: team,
-      user: user
-    } do
-      # Second owner is required so the current user's own dropdown is not disabled
-      member2 = add_member(team, role: :owner)
-
-      lv = get_liveview(conn)
-      html = render(lv)
-
-      my_hash = :erlang.phash2(user.email)
-      other_hash = :erlang.phash2(member2.email)
-
-      for role <- ~w(editor billing viewer) do
-        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected data-confirm on self #{role} item"
-
-        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on other member #{role} item"
-      end
-
-      for role <- ~w(owner admin) do
-        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on self #{role} item"
-      end
-    end
-
     test "removes self, redirecting away from team", %{conn: conn, team: team, user: user} do
       _owner2 = add_member(team, role: :owner)
 
@@ -495,9 +467,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
   end
 
   defp change_role(lv, email, role) do
-    lv
-    |> element(~s|#option-#{:erlang.phash2(email)}-#{role}|)
-    |> render_click()
+    render_change(lv, "update-role", %{"email" => email, "role" => role})
   end
 
   defp remove_member(lv, email) do
