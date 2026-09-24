@@ -19,3 +19,10 @@ config :plausible, Plausible.Ingestion.Counters, enabled: false
 config :plausible, Oban, testing: :manual
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
+
+# The consent flow fetches its client's metadata document over HTTP. Both ends
+# are stood in for locally: the name resolves to a public address so the SSRF
+# guard allows it, and a plug serves the document instead of the network.
+config :plausible, :dns_lookup_impl, PlausibleWeb.E2E.DnsLookup
+
+config :plausible, Plausible.OAuth.CIMD, req_opts: [plug: PlausibleWeb.E2E.OAuthClient]
