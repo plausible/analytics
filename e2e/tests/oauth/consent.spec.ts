@@ -1,26 +1,14 @@
-import { test, expect } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { createHash, randomBytes } from 'crypto'
-import { setupSite } from '../fixtures'
+import { enableFeatureFlag, setupSite } from '../fixtures'
 import { expectLiveViewConnected } from '../test-utils'
 
-// Defined in config/.env.e2e_test, which the server loads and this process
-// inherits - the same route BASE_URL takes. PlausibleWeb.E2E.OAuthClient serves
-// a metadata document built from these, so both ends read one definition.
-function env(name: string): string {
-  const value = process.env[name]
-
-  if (!value) {
-    throw new Error(
-      `${name} is not set - these tests are run via \`mix test.e2e\``
-    )
-  }
-
-  return value
-}
-
-const CLIENT_ID = env('E2E_OAUTH_CLIENT_ID')
-const CLIENT_NAME = env('E2E_OAUTH_CLIENT_NAME')
-const REDIRECT_URI = env('E2E_OAUTH_REDIRECT_URI')
+// Set by playwright.config.ts, which passes the same values on to the server -
+// PlausibleWeb.E2E.OAuthClient serves a metadata document built from them, so
+// both ends read one definition.
+const CLIENT_ID = process.env.E2E_OAUTH_CLIENT_ID!
+const CLIENT_NAME = process.env.E2E_OAUTH_CLIENT_NAME!
+const REDIRECT_URI = process.env.E2E_OAUTH_REDIRECT_URI!
 
 function pkce() {
   const verifier = randomBytes(32).toString('base64url')
@@ -54,13 +42,13 @@ function authorizeURL({
 
 // Server-rendered markup in this app tags elements `data-test-id`, which is not
 // the attribute getByTestId reads.
-const clientIdentity = (page: import('@playwright/test').Page) =>
+const clientIdentity = (page: Page) =>
   page.locator('[data-test-id="client-identity"]')
 
 // Nothing listens on the client's loopback redirect_uri, so the navigation the
 // authorization response triggers is answered here. The URL is what the test
 // reads; the body only has to load.
-async function stubClientCallback(page: import('@playwright/test').Page) {
+async function stubClientCallback(page: Page) {
   await page.route(`${REDIRECT_URI}**`, (route) =>
     route.fulfill({
       status: 200,
@@ -70,7 +58,7 @@ async function stubClientCallback(page: import('@playwright/test').Page) {
   )
 }
 
-async function responseParams(page: import('@playwright/test').Page) {
+async function responseParams(page: Page) {
   await page.waitForURL(`${REDIRECT_URI}**`)
 
   return new URL(page.url()).searchParams
@@ -83,6 +71,7 @@ test.describe('OAuth consent screen', () => {
     baseURL
   }) => {
     await setupSite({ page, request })
+    await enableFeatureFlag({ request, flag: 'mcp' })
     await stubClientCallback(page)
 
     const { verifier, challenge } = pkce()
@@ -135,6 +124,7 @@ test.describe('OAuth consent screen', () => {
     baseURL
   }) => {
     await setupSite({ page, request })
+    await enableFeatureFlag({ request, flag: 'mcp' })
     await stubClientCallback(page)
 
     const { challenge } = pkce()

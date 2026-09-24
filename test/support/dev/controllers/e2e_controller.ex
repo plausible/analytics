@@ -119,6 +119,22 @@ defmodule PlausibleWeb.E2EController do
       end
     end
 
+    # Flag toggles live in Postgres, which `clean_postgres` truncates before every
+    # run, so specs turn on what they need. Named here rather than converted from
+    # the request so the atom is one this module already holds.
+    @feature_flags Map.new([:mcp], &{Atom.to_string(&1), &1})
+
+    def put_feature_flag(conn, %{"flag" => flag}) do
+      case Map.fetch(@feature_flags, flag) do
+        {:ok, flag} ->
+          FunWithFlags.enable(flag)
+          send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+
+        :error ->
+          send_resp(conn, 422, Jason.encode!(%{"error" => "Unknown flag: #{flag}"}))
+      end
+    end
+
     defp get_goal(site, name) do
       Plausible.Repo.get_by!(Plausible.Goal, site_id: site.id, display_name: name)
     end
