@@ -21,7 +21,11 @@ defmodule Plausible.Stats.Exploration.Journey.Step do
   @spec journey_end_label() :: String.t()
   def journey_end_label, do: @journey_end_label
 
-  @spec from(map()) :: t()
+  @spec from(map() | Plausible.Goal.t()) :: t()
+  def from(%Plausible.Goal{} = goal) do
+    new(goal.event_name, goal.page_path, false, 0, true)
+  end
+
   def from(step) do
     new(step.name, step.pathname, step.includes_subpaths, step.subpaths_count, step.is_goal)
   end
