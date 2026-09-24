@@ -3,6 +3,15 @@ import { defineConfig, devices } from '@playwright/test'
 const baseURL: string = process.env.BASE_URL!
 const isCI: boolean = !!process.env.CI
 
+// The OAuth client tests/oauth/consent.spec.ts consents to. Both ends read it
+// from here: `webServer.env` passes the environment on to the server, where
+// PlausibleWeb.E2E.OAuthClient builds the client's metadata document from it,
+// and the spec reads the same variables.
+process.env.E2E_OAUTH_CLIENT_ID =
+  'https://e2e-oauth-client.example.com/client-metadata.json'
+process.env.E2E_OAUTH_CLIENT_NAME = 'E2E OAuth Client'
+process.env.E2E_OAUTH_REDIRECT_URI = 'http://localhost:3999/oauth/callback'
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
