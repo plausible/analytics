@@ -8,10 +8,18 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Teams
+  alias PlausibleWeb.Layouts
+
+  @signup_error_categories %{
+    name: "name",
+    email: "email",
+    password: "password"
+  }
 
   def mount(params, _session, socket) do
     socket =
       socket
+      |> assign(:legacy_layout?, false)
       |> assign_new(:invitation, fn ->
         if invitation_id = params["invitation_id"] do
           find_by_id_unified(invitation_id)
@@ -25,7 +33,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
     if socket.assigns.live_action == :register_from_invitation_form and
          socket.assigns.invitation == nil do
-      {:ok, assign(socket, invitation_expired: true)}
+      {:ok, redirect(socket, to: "/invitation-expired")}
     else
       changeset =
         if invitation = socket.assigns.invitation do
@@ -34,186 +42,144 @@ defmodule PlausibleWeb.Live.RegisterForm do
           Auth.User.settings_changeset(%Auth.User{})
         end
 
+      {heading, subtitle} = heading_and_subtitle(socket.assigns.live_action)
+
       {:ok,
        assign(socket,
          form: to_form(changeset),
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
          disable_submit: false,
-         trigger_submit: false
+         signup_previous_error: nil,
+         trigger_submit: false,
+         heading: heading,
+         subtitle: subtitle
        )}
     end
   end
 
-  def render(%{invitation_expired: true} = assigns) do
-    ~H"""
-    <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">{Plausible.product_name()}</h1>
-      <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
-    </div>
+  defp heading_and_subtitle(:register_from_invitation_form) do
+    {"Create your account", "Accept your invitation to join your team."}
+  end
 
-    <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded-sm px-8 py-6 mb-4 mt-8">
-      <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
-
-      <p class="mt-4">
-        Your invitation has expired or been revoked. Please request fresh one or you can
-        <.styled_link href={Routes.auth_path(@socket, :register_form)}>sign up</.styled_link>
-        for a 30-day unlimited free trial without an invitation.
-      </p>
-    </div>
-    """
+  defp heading_and_subtitle(:register_form) do
+    if ce?() do
+      {"Create your #{Plausible.product_name()} account",
+       "Start tracking privacy-friendly analytics in minutes."}
+    else
+      {"Start your 30-day free trial", "No credit card required. Cancel anytime."}
+    end
   end
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">
-        <%= if ce?() or @live_action == :register_from_invitation_form do %>
-          Register your {Plausible.product_name()} account
-        <% else %>
-          Register your 30-day free trial
-        <% end %>
-      </h1>
-      <div class="text-xl font-medium mt-2">
-        Set up privacy-friendly analytics with just a few clicks
-      </div>
-    </div>
+    <Layouts.auth heading={@heading} subtitle={@subtitle} flash={@flash}>
+      <.auth_container>
+        <.form
+          :let={f}
+          for={@form}
+          id="register-form"
+          class="flex flex-col gap-y-6"
+          action={~p"/login"}
+          onsubmit={form_submit_event(@invitation, @signup_previous_error)}
+          phx-change="validate"
+          phx-submit="register"
+          phx-trigger-action={@trigger_submit}
+        >
+          <input name="user[register_action]" type="hidden" value={@live_action} />
+          <input
+            :if={@team_identifier}
+            name="user[team_identifier]"
+            type="hidden"
+            value={@team_identifier}
+          />
 
-    <PlausibleWeb.Components.FlowProgress.render
-      :if={@live_action == :register_form}
-      flow={PlausibleWeb.Flows.register()}
-      current_step="Register"
-    />
-    <PlausibleWeb.Components.FlowProgress.render
-      :if={@live_action == :register_from_invitation_form}
-      flow={PlausibleWeb.Flows.invitation()}
-      current_step="Register"
-    />
+          <%= if @invitation do %>
+            <.email_input field={f[:email]} for_invitation={true} />
+            <.name_input field={f[:name]} />
+          <% else %>
+            <.name_input field={f[:name]} />
+            <.email_input field={f[:email]} for_invitation={false} />
+          <% end %>
 
-    <.focus_box>
-      <:title>
-        Enter your details
-      </:title>
-
-      <.form
-        :let={f}
-        for={@form}
-        id="register-form"
-        action={Routes.auth_path(@socket, :login)}
-        phx-hook="Metrics"
-        phx-change="validate"
-        phx-submit="register"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input name="user[register_action]" type="hidden" value={@live_action} />
-        <input
-          :if={@team_identifier}
-          name="user[team_identifier]"
-          type="hidden"
-          value={@team_identifier}
-        />
-
-        <%= if @invitation do %>
-          <.email_input field={f[:email]} for_invitation={true} />
-          <.name_input field={f[:name]} />
-        <% else %>
-          <.name_input field={f[:name]} />
-          <.email_input field={f[:email]} for_invitation={false} />
-        <% end %>
-
-        <div class="my-4">
-          <div class="flex justify-between">
-            <label for={f[:password].id} class="block font-medium text-gray-700 dark:text-gray-300">
+          <div class="flex flex-col gap-y-2">
+            <label
+              for={f[:password].id}
+              class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+            >
               Password
             </label>
-            <.password_length_hint minimum={12} field={f[:password]} />
-          </div>
-          <div class="mt-1">
-            <.password_input_with_strength
-              field={f[:password]}
-              strength={@password_strength}
-              phx-debounce={200}
-              class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
-            />
-          </div>
-        </div>
-
-        <div class="my-4">
-          <label
-            for={f[:password_confirmation].id}
-            class="block font-medium text-gray-700 dark:text-gray-300"
-          >
-            Confirm password
-          </label>
-          <div class="mt-1">
-            <.input
-              type="password"
-              autocomplete="new-password"
-              field={f[:password_confirmation]}
-              phx-debounce={200}
-              class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
-            />
-          </div>
-        </div>
-
-        <%= if PlausibleWeb.Captcha.enabled?() do %>
-          <div class="mt-4">
-            <div
-              phx-update="ignore"
-              id="hcaptcha-placeholder"
-              class="h-captcha"
-              data-sitekey={PlausibleWeb.Captcha.sitekey()}
-            >
+            <div>
+              <.password_input_with_strength
+                field={f[:password]}
+                strength={@password_strength}
+                phx-debounce={200}
+                mt?={false}
+              />
             </div>
-            <%= if @captcha_error do %>
-              <div class="text-red-500 text-xs italic mt-3" x-data x-init="hcaptcha.reset()">
-                {@captcha_error}
-              </div>
-            <% end %>
-            <script
-              phx-update="ignore"
-              id="hcaptcha-script"
-              src="https://hcaptcha.com/1/api.js"
-              async
-              defer
-            >
-            </script>
+            <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
           </div>
-        <% end %>
 
-        <% submit_text =
-          if ce?() or @invitation do
-            "Create my account"
-          else
-            "Start my free trial"
-          end %>
-        <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
-          {submit_text}
-        </.button>
+          <%= if PlausibleWeb.Captcha.enabled?() do %>
+            <PlausibleWeb.Components.Captcha.widget error={@captcha_error} />
+          <% end %>
 
-        <p class="text-center text-gray-600 dark:text-gray-500 mt-4">
-          Already have an account?
-          <.styled_link href="/login">
-            Log in
-          </.styled_link>
-        </p>
-      </.form>
-    </.focus_box>
+          <div class="flex flex-col gap-y-4">
+            <% submit_text =
+              if ce?() or @invitation do
+                "Create my account"
+              else
+                "Start my free trial"
+              end %>
+            <.button
+              id="register"
+              type="submit"
+              class="w-full"
+              mt?={false}
+              x-data={"{ captchaReady: #{not PlausibleWeb.Captcha.enabled?()} }"}
+              x-on:frc-captcha-ready.window="captchaReady = true"
+              x-on:frc-captcha-reset.window="captchaReady = false"
+              x-bind:disabled={"!captchaReady || #{@disable_submit}"}
+            >
+              {submit_text}
+            </.button>
+
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+              Already have an account?
+              <.styled_link href="/login">
+                Sign in
+              </.styled_link>
+            </p>
+          </div>
+        </.form>
+      </.auth_container>
+    </Layouts.auth>
     """
+  end
+
+  on_ee do
+    defp form_submit_event(invitation, previous_error) do
+      options = Jason.encode!(%{"props" => %{"previous_error" => previous_error || "none"}})
+
+      "window.plausible('Signup#{if invitation, do: " via invitation"}', #{options})"
+    end
+  else
+    defp form_submit_event(_, _), do: ""
   end
 
   defp name_input(assigns) do
     ~H"""
-    <div class="my-4">
-      <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
+    <div class="flex flex-col gap-y-2">
+      <label for={@field.id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
         Full name
       </label>
-      <div class="mt-1">
+      <div>
         <.input
           field={@field}
           placeholder="Jane Doe"
           phx-debounce={200}
-          class="dark:bg-gray-900 shadow-xs focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+          mt?={false}
+          autofocus="autofocus"
         />
       </div>
     </div>
@@ -221,46 +187,27 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   defp email_input(assigns) do
-    email_classes = ~w(
-      dark:bg-gray-900
-      shadow-sm
-      focus:ring-indigo-500
-      focus:border-indigo-500
-      block
-      w-full
-      border-gray-300
-      dark:border-gray-500
-      rounded-md
-      dark:text-gray-300
-    )
-
-    {email_readonly, email_extra_classes} =
+    email_readonly =
       if assigns[:for_invitation] do
-        {[readonly: "readonly"], ["bg-gray-100"]}
+        [readonly: "readonly"]
       else
-        {[], []}
+        []
       end
 
-    assigns =
-      assigns
-      |> assign(:email_readonly, email_readonly)
-      |> assign(:email_classes, email_classes ++ email_extra_classes)
+    assigns = assign(assigns, :email_readonly, email_readonly)
 
     ~H"""
-    <div class="my-4">
-      <div class="flex justify-between">
-        <label for={@field.id} class="block font-medium text-gray-700 dark:text-gray-300">
-          Email
-        </label>
-        <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>
-      </div>
-      <div class="mt-1">
+    <div class="flex flex-col gap-y-2">
+      <label for={@field.id} class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        Email
+      </label>
+      <div>
         <.input
           type="email"
           field={@field}
           placeholder="example@email.com"
           phx-debounce={200}
-          class={@email_classes}
+          mt?={false}
           {@email_readonly}
         />
       </div>
@@ -289,34 +236,58 @@ defmodule PlausibleWeb.Live.RegisterForm do
         %{"user" => _} = params,
         %{assigns: %{invitation: %{} = invitation}} = socket
       ) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      user =
-        params["user"]
-        |> Map.put("email", invitation.email)
-        |> Auth.User.new()
+    case Plausible.Auth.check_registration_enabled(:invitation) do
+      :ok ->
+        if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+          user =
+            params["user"]
+            |> Map.put("email", invitation.email)
+            |> Auth.User.new()
 
-      with_team? = invitation.type == :site_transfer
+          with_team? = invitation.type == :site_transfer
 
-      add_user(socket, user, with_team?: with_team?)
-    else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+          add_user(socket, user, with_team?: with_team?)
+        else
+          {:noreply, captcha_failed(socket)}
+        end
+
+      {:error, _, message} ->
+        socket =
+          socket
+          |> put_flash(:error, message)
+          |> redirect(to: ~p"/login")
+
+        {:noreply, socket}
     end
   end
 
   def handle_event("register", %{"user" => _} = params, socket) do
-    if not PlausibleWeb.Captcha.enabled?() or
-         PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      user = Auth.User.new(params["user"])
+    case Plausible.Auth.check_registration_enabled(:default) do
+      :ok ->
+        if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
+          user = Auth.User.new(params["user"])
 
-      add_user(socket, user)
-    else
-      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
+          add_user(socket, user)
+        else
+          {:noreply, captcha_failed(socket)}
+        end
+
+      {:error, _, message} ->
+        socket =
+          socket
+          |> put_flash(:error, message)
+          |> redirect(to: ~p"/login")
+
+        {:noreply, socket}
     end
   end
 
-  def handle_event("send-metrics-after", _params, socket) do
-    {:noreply, assign(socket, trigger_submit: true)}
+  defp captcha_failed(socket) do
+    error = "Please complete the captcha to register"
+
+    socket
+    |> assign(captcha_error: error, signup_previous_error: "captcha")
+    |> PlausibleWeb.Components.Captcha.reset()
   end
 
   defp add_user(socket, user, opts \\ []) do
@@ -329,18 +300,25 @@ defmodule PlausibleWeb.Live.RegisterForm do
       {:ok, _user} ->
         socket = assign(socket, disable_submit: true)
 
-        on_ee do
-          event_name = "Signup#{if socket.assigns.invitation, do: " via invitation"}"
-          {:noreply, push_event(socket, "send-metrics", %{event_name: event_name})}
-        else
-          {:noreply, assign(socket, trigger_submit: true)}
-        end
+        {:noreply, assign(socket, trigger_submit: true)}
 
       {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
+        socket =
+          socket
+          |> assign(
+            form: to_form(Map.put(changeset, :action, :validate)),
+            signup_previous_error: signup_error(changeset)
+          )
+          |> PlausibleWeb.Components.Captcha.reset()
+
+        {:noreply, socket}
+    end
+  end
+
+  defp signup_error(changeset) do
+    case List.first(changeset.errors) do
+      {field, _error} -> Map.get(@signup_error_categories, field, "unknown")
+      nil -> "unknown"
     end
   end
 

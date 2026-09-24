@@ -52,7 +52,7 @@ defmodule Plausible.DataMigration.BackfillTrackerScriptConfiguration do
         )
       )
 
-    if length(sites) > 0 do
+    if sites != [] do
       create_tracker_script_configurations(sites, now)
       process_batch(offset + @batch_size, now)
     end

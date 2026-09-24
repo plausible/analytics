@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
   import Phoenix.LiveViewTest
 
   on_ee do
-    import Mox
+    use Plausible.Test.Support.DNS
   end
 
   alias Plausible.Repo
@@ -14,11 +14,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
 
     on_ee do
       setup do
-        # mock all domains resolve
-        Plausible.DnsLookup.Mock
-        |> expect(:lookup, fn _domain, _type, _record, _opts, _timeout ->
-          [{192, 168, 1, 2}]
-        end)
+        stub_dns()
 
         # Stub detection by default to prevent async task race conditions
         # Tests that need specific detection results can override this stub
@@ -59,10 +55,32 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: another_site.domain}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != another_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
+    test "form submission to a domain already owned by the same team shows a targeted error",
+         %{conn: conn, site: site, user: user} do
+      owned_site = new_site(owner: user)
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+      html =
+        lv
+        |> element("form")
+        |> render_submit(%{site: %{domain: owned_site.domain}})
+
+      assert html =~ "You already own this site"
+
+      expected_settings_link =
+        ~p"/#{owned_site.domain}/settings/general"
+
+      assert html =~ expected_settings_link
+
+      site = Repo.reload!(site)
+      assert site.domain != owned_site.domain
       assert is_nil(site.domain_changed_from)
     end
 
@@ -75,11 +93,47 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: "foo.example.com"}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != "foo.example.com"
       assert is_nil(site.domain_changed_from)
+    end
+
+    test "domain swap is allowed when both sites belong to the same team",
+         %{conn: conn, site: site, user: user} do
+      other_site = new_site(owner: user)
+
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/change-domain")
+
+      new_domain = "tmp.#{site.domain}"
+
+      lv
+      |> element("form")
+      |> render_submit(%{site: %{domain: new_domain}})
+
+      on_ee do
+        render_async(lv, 500)
+      end
+
+      assert_patch(lv, "/#{URI.encode_www_form(new_domain)}/change-domain/success")
+
+      # Now swap: rename other_site to the original domain of site
+      original_domain = site.domain
+      other_original_domain = other_site.domain
+      {:ok, lv2, _html} = live(conn, "/#{other_original_domain}/change-domain")
+
+      lv2
+      |> element("form")
+      |> render_submit(%{site: %{domain: original_domain}})
+
+      on_ee do
+        render_async(lv2, 500)
+      end
+
+      assert_patch(lv2, "/#{URI.encode_www_form(original_domain)}/change-domain/success")
+
+      assert Repo.reload!(other_site).domain == original_domain
     end
 
     for {role, membership_type} <- [
@@ -150,7 +204,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: ""}})
 
-      assert html =~ htmlize_quotes("can't be blank")
+      assert html =~ "Please enter a domain or subdomain"
     end
 
     test "form validation shows error for invalid domain format", %{conn: conn, site: site} do
@@ -167,7 +221,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
     test "renders back to settings link with correct path", %{conn: conn, site: site} do
       {:ok, _lv, html} = live(conn, "/#{site.domain}/change-domain")
 
-      expected_link = Routes.site_path(conn, :settings_general, site.domain)
+      expected_link = ~p"/#{site.domain}/settings/general"
       assert html =~ expected_link
     end
 

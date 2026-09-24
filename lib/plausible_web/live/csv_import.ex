@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   use PlausibleWeb, :live_view
 
-  require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
   alias Plausible.Imported
 
@@ -222,7 +221,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       )
 
     redirect_to =
-      Routes.site_path(socket, :settings_imports_exports, site.domain)
+      ~p"/#{site.domain}/settings/imports-exports"
 
     {:noreply, redirect(socket, to: redirect_to)}
   end

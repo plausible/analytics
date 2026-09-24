@@ -5,7 +5,7 @@ import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import {
   numberShortFormatter,
-  percentageFormatter
+  rateFormatter
 } from '../../util/number-formatter'
 import { RefreshIcon } from '../../components/icons'
 import { popover } from '../../components/popover'
@@ -14,6 +14,7 @@ import { ExplorationColumn, MaxDepthColumn } from './exploration-column'
 import { useExplorationData } from './exploration-state'
 import { DIRECTION, MIN_GRID_COLUMNS, ExplorationDirection } from './constants'
 import { getSelectedSuggestion } from './journey'
+import { trackEvent } from '../../dogfood'
 
 // Column header label based on index and direction.
 function columnHeader(index: number, direction: ExplorationDirection): string {
@@ -22,6 +23,12 @@ function columnHeader(index: number, direction: ExplorationDirection): string {
   }
   const word = direction === DIRECTION.BACKWARD ? 'before' : 'after'
   return `${index} step${index === 1 ? '' : 's'} ${word}`
+}
+
+// Fires a custom event when the user picks an entry in the first column of the
+// Explore view, i.e. anchors a new journey from either a starting or end point.
+function trackExploreEntrySelected(direction: ExplorationDirection): void {
+  trackEvent('Explore entry selected', { journey_direction: direction })
 }
 
 // Scrolls the active column into view whenever the journey length changes.
@@ -127,7 +134,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {percentageFormatter(Number(overallConversionRate!))}{' '}
+                  CR: {rateFormatter(overallConversionRate)}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors!)})
@@ -194,7 +201,7 @@ export function FunnelExploration() {
                 funnel[i]?.conversion_rate != null
                   ? i === 0
                     ? '100%'
-                    : `${Number(funnel[i].conversion_rate).toFixed(1)}%`
+                    : rateFormatter(funnel[i].conversion_rate)
                   : null
 
               if (isActive && steps.length >= maxJourneySteps) {
@@ -223,7 +230,12 @@ export function FunnelExploration() {
                   maxVisitors={funnel[0]?.visitors ?? null}
                   filter={colFilter}
                   onFilterChange={isActive ? setActiveFilter : () => {}}
-                  onSelect={(step) => selectStep(i, step)}
+                  onSelect={(step) => {
+                    if (i === 0 && step !== null) {
+                      trackExploreEntrySelected(direction)
+                    }
+                    selectStep(i, step)
+                  }}
                   rateLimited={isActive && rateLimited}
                   onRetry={retry}
                 />

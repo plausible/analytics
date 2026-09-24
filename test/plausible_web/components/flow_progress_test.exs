@@ -5,76 +5,53 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
 
   alias PlausibleWeb.Components.FlowProgress
 
-  test "no flow or unknown flow renders nothing" do
+  @steps ["A", "B", "C", "D"]
+
+  test "marks steps before, at, and after the current step correctly" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: nil,
-        current_step: "unhandled"
+        steps: @steps,
+        current_step: "B"
       )
 
-    assert rendered == ""
+    assert_dot_labels(rendered, @steps)
+    assert_current_step(rendered, "B")
 
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: "unhandled",
-        current_step: "unhandled"
-      )
-
-    assert rendered == ""
+    assert_dot_classes(rendered, [
+      {"A", FlowProgress.dot_class(:completed)},
+      {"B", FlowProgress.dot_class(:current)},
+      {"C", FlowProgress.dot_class(:upcoming)},
+      {"D", FlowProgress.dot_class(:upcoming)}
+    ])
   end
 
-  test "register" do
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: PlausibleWeb.Flows.register(),
-        current_step: "Register"
-      )
+  defp assert_dot_labels(rendered, expected_labels) do
+    labels =
+      rendered
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#flow-progress [aria-label]")
+      |> LazyHTML.attribute("aria-label")
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Register 2 Activate account 3 Add site info 4 Install Plausible 5 Verify installation"
+    assert labels == expected_labels
   end
 
-  test "invitation" do
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: PlausibleWeb.Flows.invitation(),
-        current_step: "Register"
-      )
+  defp assert_current_step(rendered, expected_label) do
+    current =
+      rendered
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query(~s(#flow-progress [aria-current="step"]))
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Register 2 Activate account"
+    assert Enum.count(current) == 1
+    assert LazyHTML.attribute(current, "aria-label") == [expected_label]
   end
 
-  test "provisioning" do
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: PlausibleWeb.Flows.provisioning(),
-        current_step: "Add site info"
-      )
+  defp assert_dot_classes(rendered, expected_label_class_pairs) do
+    html = LazyHTML.from_fragment(rendered)
 
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Add site info 2 Install Plausible 3 Verify installation"
-  end
-
-  test "review" do
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: PlausibleWeb.Flows.review(),
-        current_step: "Install Plausible"
-      )
-
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Install Plausible 2 Verify installation"
-  end
-
-  test "domain_change" do
-    rendered =
-      render_component(&FlowProgress.render/1,
-        flow: PlausibleWeb.Flows.domain_change(),
-        current_step: "Set up new domain"
-      )
-
-    assert text_of_element(rendered, "#flow-progress") ==
-             "1 Set up new domain 2 Install Plausible 3 Verify installation"
+    Enum.each(expected_label_class_pairs, fn {label, expected_class} ->
+      assert html
+             |> LazyHTML.query(~s(#flow-progress [aria-label="#{label}"]))
+             |> LazyHTML.attribute("class") == [expected_class]
+    end)
   end
 end

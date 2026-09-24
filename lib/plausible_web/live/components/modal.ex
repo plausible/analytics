@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
     # NOTE: This is a workaround for @test_preload_override? being computed
     # at build time, where Mix.env() is available. Otherwise, dialyzer
     # complains.
-    preload_override? = :erlang.phash2(1, 1) == 0 and @test_preload_override?
+    preload_override? = @test_preload_override? and :erlang.phash2(1, 1) == 0
     preload? = preload_override? || Map.get(assigns, :preload?, true)
 
     socket =

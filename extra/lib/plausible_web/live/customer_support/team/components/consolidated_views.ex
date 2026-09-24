@@ -5,6 +5,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   this team.
   """
   use PlausibleWeb, :live_component
+
   import PlausibleWeb.CustomerSupport.Live
   alias Plausible.ConsolidatedView
   alias Plausible.Stats
@@ -57,7 +58,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.td>
               <.styled_link
                 new_tab={true}
-                href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, consolidated_view.domain, [])}
+                href={stats_path(consolidated_view.domain)}
               >
                 Dashboard
               </.styled_link>

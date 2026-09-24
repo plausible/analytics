@@ -26,6 +26,7 @@ import { RoutelessModalsContextProvider } from './navigation/routeless-modals-co
 import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
 import { SourcesDetails } from './stats/sources/details'
+import { RoutelessAnnotationModals } from './annotations/routeless-annotations-modals'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ function DashboardElement() {
           </LastLoadContextProvider>
           <Outlet />
           <RoutelessSegmentModals />
+          <RoutelessAnnotationModals />
         </DashboardStateContextProvider>
       </RoutelessModalsContextProvider>
     </QueryClientProvider>
@@ -102,14 +104,39 @@ export const topPagesRoute = {
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.pages} />
 }
 
+export const topPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.pagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails breakdownReportKey={BreakdownReportKey.pagesWithHostname} />
+  )
+}
+
 export const entryPagesRoute = {
   path: BREAKDOWN_REPORTS.entryPages.detailsPath,
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.entryPages} />
 }
 
+export const entryPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.entryPagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails
+      breakdownReportKey={BreakdownReportKey.entryPagesWithHostname}
+    />
+  )
+}
+
 export const exitPagesRoute = {
   path: BREAKDOWN_REPORTS.exitPages.detailsPath,
   element: <PagesDetails breakdownReportKey={BreakdownReportKey.exitPages} />
+}
+
+export const exitPagesWithHostnameRoute = {
+  path: BREAKDOWN_REPORTS.exitPagesWithHostname.detailsPath,
+  element: (
+    <PagesDetails
+      breakdownReportKey={BreakdownReportKey.exitPagesWithHostname}
+    />
+  )
 }
 
 export const countriesRoute = {
@@ -218,8 +245,11 @@ export function createAppRouter(site: PlausibleSite) {
           referrersGoogleRoute,
           referrersDrilldownRoute,
           topPagesRoute,
+          topPagesWithHostnameRoute,
           entryPagesRoute,
+          entryPagesWithHostnameRoute,
           exitPagesRoute,
+          exitPagesWithHostnameRoute,
           countriesRoute,
           regionsRoute,
           citiesRoute,

@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
-  alias Plausible.{IngestRepo, ClickhouseRepo}
   use PlausibleWeb.ConnCase
 
   describe "Debug metadata for logged in requests" do
@@ -17,13 +16,11 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
 
       assert json_response(conn, 200)
 
-      IngestRepo.query!("SYSTEM FLUSH LOGS")
-
-      %{rows: [r1, r2]} =
-        ClickhouseRepo.query!(
-          "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
-          [site.domain]
-        )
+      assert [r1, r2] =
+               eventually(fn ->
+                 rows = get_entries_from_query_log(site.domain)
+                 {length(rows) == 2, rows}
+               end)
 
       for [unparsed_log_comment] <- [r1, r2] do
         decoded = Jason.decode!(unparsed_log_comment)
@@ -69,23 +66,31 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
     setup [:create_user, :log_in]
 
     for type <- ["public", "shared"] do
-      test "for /pages request (#{type})", %{
+      test "for /query request (#{type})", %{
         conn: conn,
         user: user
       } do
         domain = :rand.bytes(20) |> Base.url_encode64()
         {site, query_string, expected_params} = setup_dashboard_case(domain, unquote(type))
-        conn = get(conn, "/api/stats/#{site.domain}/pages#{query_string}")
+
+        query_params = %{
+          "date_range" => "day",
+          "dimensions" => ["event:page"],
+          "metrics" => ["visitors"]
+        }
+
+        expected_params = Map.merge(expected_params, query_params)
+
+        conn =
+          post(conn, "/api/stats/#{site.domain}/query#{query_string}", query_params)
 
         assert json_response(conn, 200)
 
-        IngestRepo.query!("SYSTEM FLUSH LOGS")
-
-        %{rows: [r1, r2]} =
-          ClickhouseRepo.query!(
-            "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
-            [site.domain]
-          )
+        assert [r1, r2] =
+                 eventually(fn ->
+                   rows = get_entries_from_query_log(site.domain)
+                   {length(rows) == 2, rows}
+                 end)
 
         for [unparsed_log_comment] <- [r1, r2] do
           decoded = Jason.decode!(unparsed_log_comment)
@@ -93,10 +98,10 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
           assert_matches ^strict_map(%{
                            # params are asserted below
                            "params" => %{},
-                           "phoenix_action" => "pages",
+                           "phoenix_action" => "query",
                            "phoenix_controller" => "Elixir.PlausibleWeb.Api.StatsController",
-                           "request_method" => "GET",
-                           "request_path" => ^"/api/stats/#{site.domain}/pages",
+                           "request_method" => "POST",
+                           "request_path" => ^"/api/stats/#{site.domain}/query",
                            "site_domain" => ^site.domain,
                            "site_id" => ^site.id,
                            # nil team_id because viewing a public/shared dashboard

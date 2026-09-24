@@ -87,9 +87,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
     socket =
       socket
       |> assign(sso_integration: nil)
-      |> push_navigate(
-        to: Routes.customer_support_team_path(socket, :show, socket.assigns.team.id)
-      )
+      |> push_navigate(to: ~p"/cs/teams/team/#{socket.assigns.team.id}")
 
     success("SSO integration removed")
 

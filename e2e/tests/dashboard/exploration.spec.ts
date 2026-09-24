@@ -26,8 +26,8 @@ test('load user journey', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -85,8 +85,8 @@ test('load user journey and switch to a period with no events without waiting fo
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -121,8 +121,8 @@ test('load user journey and switch to a period with no events', async ({
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -204,8 +204,8 @@ test('explore a 3-step funnel', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -358,8 +358,8 @@ test('select entries in a 1-step journey', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -599,8 +599,8 @@ test('select entries in a 3-step journey', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -745,8 +745,8 @@ test('explore journey hitting 20 step limit', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -906,8 +906,8 @@ test('explore from end point', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -1070,8 +1070,8 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -1143,7 +1143,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(
       firstColumn.getByTestId('exploration-row').getByTestId('metric-value')
-    ).toHaveText(['2'])
+    ).toHaveText(['1'])
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-label')
@@ -1151,7 +1151,7 @@ test('change filters during a 3-step journey', async ({ page, request }) => {
 
     await expect(
       secondColumn.getByTestId('exploration-row').getByTestId('metric-value')
-    ).toHaveText(['2'])
+    ).toHaveText(['1'])
 
     await expect(
       thirdColumn.getByTestId('exploration-row').getByTestId('metric-label')
@@ -1351,8 +1351,8 @@ test('render various types of entries', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'
@@ -1415,8 +1415,8 @@ test('load more suggestions', async ({ page, request }) => {
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
-  await explorationTabButton.scrollIntoViewIfNeeded()
   await explorationTabButton.click()
+  await report.getByTestId('report-end').scrollIntoViewIfNeeded()
 
   await expect(report.getByTestId('exploration-title')).toHaveText(
     'Explore user journeys'

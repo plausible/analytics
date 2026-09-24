@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   import Phoenix.LiveViewTest
 
-  def team_general_path(), do: Routes.settings_path(PlausibleWeb.Endpoint, :team_general)
+  def team_general_path(), do: ~p"/settings/team/general"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "/settings/team/general" do
@@ -86,17 +86,16 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
         html = render(lv)
 
-        assert text_of_element(
-                 html,
-                 "#{member_el()}:nth-of-type(1) button"
-               ) == "Owner"
+        self_row = "#member-row-#{:erlang.phash2(user.email)}"
+        member_row = "#member-row-#{:erlang.phash2(member.email)}"
 
-        assert text_of_element(html, "#{member_el()}:nth-of-type(1)") =~ "You (SSO)"
+        assert text_of_element(html, "#{self_row} button") == "Owner"
+        assert text_of_element(html, self_row) =~ "You (SSO)"
 
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO"
+        assert text_of_element(html, "#{member_row} button") == "Viewer"
+        assert text_of_element(html, member_row) =~ "SSO"
 
-        change_role(lv, 2, "owner")
+        change_role(lv, member.email, "owner")
         html = render(lv)
 
         assert html =~ "User must have 2FA enabled to become an owner"
@@ -133,23 +132,22 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       )
     end
 
-    test "allows updating membership role in place", %{conn: conn, team: team} do
+    test "allows updating membership role in place", %{conn: conn, team: team, user: user} do
       member2 = add_member(team, role: :admin)
       lv = get_liveview(conn)
 
       html = render(lv)
 
-      assert text_of_element(
-               html,
-               "#{member_el()}:nth-of-type(1) button"
-             ) == "Owner"
+      self_row = "#member-row-#{:erlang.phash2(user.email)}"
+      member2_row = "#member-row-#{:erlang.phash2(member2.email)}"
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Admin"
+      assert text_of_element(html, "#{self_row} button") == "Owner"
+      assert text_of_element(html, "#{member2_row} button") == "Admin"
 
-      change_role(lv, 2, "viewer")
+      change_role(lv, member2.email, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
+      assert text_of_element(html, "#{member2_row} button") == "Viewer"
 
       assert_no_emails_delivered()
 
@@ -168,7 +166,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
-      change_role(lv, 1, "viewer", guest_el())
+      change_role(lv, "guest@example.com", "viewer")
       html = render(lv)
 
       assert elem_count(html, member_el()) == 2
@@ -227,10 +225,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert elem_count(html, member_el()) == 4
       assert elem_count(html, guest_el()) == 1
 
-      pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      owner = find(html, "#{member_el()}:nth-of-type(3)") |> text()
-      admin = find(html, "#{member_el()}:nth-of-type(4)") |> text()
+      pending_email = "pending@example.com"
+      sent_email = "sent@example.com"
+
+      pending = text_of_element(html, "#member-row-#{:erlang.phash2(pending_email)}")
+      sent = text_of_element(html, "#member-row-#{:erlang.phash2(sent_email)}")
+      owner = text_of_element(html, "#member-row-#{:erlang.phash2(user.email)}")
+      admin = text_of_element(html, "#member-row-#{:erlang.phash2(member2.email)}")
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
@@ -240,14 +241,12 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert admin != ""
       assert guest_member =~ "Guest"
 
-      remove_member(lv, 1)
-      # next becomes first
-      remove_member(lv, 1)
-      # last becomes second
-      remove_member(lv, 2)
+      remove_member(lv, pending_email)
+      remove_member(lv, sent_email)
+      remove_member(lv, member2.email)
 
       # remove guest
-      remove_member(lv, 1, guest_el())
+      remove_member(lv, guest.email)
 
       html = render(lv) |> text()
 
@@ -297,9 +296,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert elem_count(html, member_el()) == 3
       assert elem_count(html, guest_el()) == 1
 
-      sent = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      owner = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      admin = find(html, "#{member_el()}:nth-of-type(3)") |> text()
+      sent_email = "sent@example.com"
+
+      sent = text_of_element(html, "#member-row-#{:erlang.phash2(sent_email)}")
+      owner = text_of_element(html, "#member-row-#{:erlang.phash2(user.email)}")
+      admin = text_of_element(html, "#member-row-#{:erlang.phash2(member2.email)}")
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
@@ -308,12 +309,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert admin != ""
       assert guest_member =~ "Guest"
 
-      remove_member(lv, 1)
-      # last becomes second
-      remove_member(lv, 2)
+      remove_member(lv, sent_email)
+      remove_member(lv, member2.email)
 
       # remove guest
-      remove_member(lv, 1, guest_el())
+      remove_member(lv, guest.email)
 
       html = render(lv) |> text()
 
@@ -354,7 +354,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "owner", guest_el())
+      change_role(lv, member2.email, "owner")
       html = render(lv)
 
       refute html =~ "Error!"
@@ -378,13 +378,93 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 2, "owner")
+      change_role(lv, member2.email, "owner")
       html = render(lv)
 
       refute html =~ "Error!"
 
       assert_team_membership(user, team, :owner)
       assert_team_membership(member2, team, :owner)
+    end
+
+    test "remove member items carry data-confirm for both self and others", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      assert attr_defined?(html, "##{:erlang.phash2(user.email)}-remove", "data-confirm")
+      assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
+    end
+
+    test "self-demotion role items carry data-confirm, others do not", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      # Second owner is required so the current user's own dropdown is not disabled
+      member2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+      html = render(lv)
+
+      my_hash = :erlang.phash2(user.email)
+      other_hash = :erlang.phash2(member2.email)
+
+      for role <- ~w(editor billing viewer) do
+        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected data-confirm on self #{role} item"
+
+        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on other member #{role} item"
+      end
+
+      for role <- ~w(owner admin) do
+        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
+               "expected no data-confirm on self #{role} item"
+      end
+    end
+
+    test "removes self, redirecting away from team", %{conn: conn, team: team, user: user} do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      remove_member(lv, user.email)
+
+      assert_redirect(lv, "/sites?__team=none")
+    end
+
+    test "demotes self to billing, redirecting to team general", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, user.email, "billing")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
+    end
+
+    test "demotes self to viewer, redirecting to team general", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, user.email, "viewer")
+
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
 
     test "billing role is supported",
@@ -396,40 +476,34 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 2, "billing")
+      change_role(lv, member2.email, "billing")
       assert_team_membership(member2, team, :billing)
     end
 
-    test "degrading owner to non-admin makes everything read-only", %{conn: conn, team: team} do
+    test "demotes self to editor, redirecting to team general", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "billing")
+      change_role(lv, user.email, "editor")
 
-      html = render(lv)
-
-      options =
-        lv
-        |> render()
-        |> find("#{member_el()} a")
-
-      assert Enum.empty?(options)
-
-      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
-      assert attr_defined?(html, ~s|#invite-member|, "disabled")
+      assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
   end
 
-  defp change_role(lv, index, role, main_selector \\ member_el()) do
+  defp change_role(lv, email, role) do
     lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-value-role="#{role}"]|)
+    |> element(~s|#option-#{:erlang.phash2(email)}-#{role}|)
     |> render_click()
   end
 
-  defp remove_member(lv, index, main_selector \\ member_el()) do
+  defp remove_member(lv, email) do
     lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-click="remove-member"]|)
+    |> element(~s|##{:erlang.phash2(email)}-remove|)
     |> render_click()
   end
 

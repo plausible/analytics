@@ -121,7 +121,15 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    get_for_user!(user, site.domain)
+    get_for_user!(user, site.domain,
+      roles: [
+        :owner,
+        :admin,
+        :editor,
+        :viewer,
+        :billing
+      ]
+    )
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -358,49 +366,47 @@ defmodule Plausible.Sites do
     |> Plausible.Repo.update!()
   end
 
-  @spec stats_start_date(Site.t()) :: Date.t() | nil
+  @spec ensure_stats_start_date(Site.t()) :: Site.t()
   @doc """
-  Returns the date of the first event of the given site, or `nil` if the site
-  does not have stats yet.
+  Ensures `stats_start_date` is set on the given site, returning the
+  (possibly updated) site. `stats_start_date` stays `nil` if the site does
+  not have stats yet.
 
   If this is the first time the function is called for the site, it queries
   imported stats and Clickhouse, choosing the earliest start date and saves
-  it in the sites table.
+  it in the sites table - at the same time advancing `onboarding_status` to
+  `:first_pageview`, so callers see that reflected immediately rather than
+  needing to reload the site to notice it.
   """
-  def stats_start_date(site)
+  def ensure_stats_start_date(site)
 
   on_ee do
-    # for now, we're going to always update consolidated views
-    def stats_start_date(%Site{consolidated: true} = site) do
+    # for now, we're going to always update consolidated views,
+    # though Repo.update! runs the actual update query only when
+    # the value has changed
+    def ensure_stats_start_date(%Site{consolidated: true} = site) do
       team = Repo.preload(site, :team).team
 
       site
       |> Plausible.ConsolidatedView.change_stats_dates(team)
       |> Repo.update!()
-      |> Map.fetch!(:stats_start_date)
     end
   end
 
-  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
-    date
+  def ensure_stats_start_date(%Site{stats_start_date: %Date{}} = site) do
+    site
   end
 
-  def stats_start_date(%Site{} = site) do
-    start_date =
-      [
-        Plausible.Imported.earliest_import_start_date(site),
-        native_stats_start_date(site)
-      ]
-      |> Enum.reject(&is_nil/1)
-      |> Enum.min(Date, fn -> nil end)
+  def ensure_stats_start_date(%Site{} = site) do
+    start_date = compute_stats_start_date(site)
 
     if start_date do
-      updated_site =
-        site
-        |> Site.set_stats_start_date(start_date)
-        |> Repo.update!()
-
-      updated_site.stats_start_date
+      site
+      |> Site.set_stats_start_date(start_date)
+      |> Site.put_onboarding_status_advance(:first_pageview)
+      |> Repo.update!()
+    else
+      site
     end
   end
 
@@ -409,13 +415,21 @@ defmodule Plausible.Sites do
     Plausible.Stats.Clickhouse.pageview_start_date_local(site)
   end
 
+  defp compute_stats_start_date(site) do
+    [
+      Plausible.Imported.earliest_import_start_date(site),
+      native_stats_start_date(site)
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.min(Date, fn -> nil end)
+  end
+
   def has_stats?(site) do
-    !!stats_start_date(site)
+    !!ensure_stats_start_date(site).stats_start_date
   end
 
   def create_shared_link(site, name, opts \\ []) do
     password = Keyword.get(opts, :password)
-    segment_id = Keyword.get(opts, :segment_id)
 
     site = Plausible.Repo.preload(site, :team)
     skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
@@ -423,12 +437,38 @@ defmodule Plausible.Sites do
     if not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok do
       {:error, :upgrade_required}
     else
+      segment_id = fetch_segment_id_for_site(Keyword.get(opts, :segment_id), site)
+
       %SharedLink{site_id: site.id, slug: Nanoid.generate()}
       |> SharedLink.changeset(
-        %{name: name, password: password, segment_id: segment_id},
+        %{name: name, password: password},
         Keyword.take(opts, [:skip_special_name_check?])
       )
+      |> Ecto.Changeset.put_change(:segment_id, segment_id)
       |> Repo.insert()
+    end
+  end
+
+  def update_shared_link(shared_link, site, params) do
+    # Set segment_id via put_change, not cast, to enforce site-scoped ownership.
+    segment_id = fetch_segment_id_for_site(params["segment_id"], site)
+    link_params = Map.drop(params, ["segment_id"])
+
+    shared_link
+    |> SharedLink.changeset(link_params)
+    |> Ecto.Changeset.put_change(:segment_id, segment_id)
+    |> Repo.update()
+  end
+
+  defp fetch_segment_id_for_site(id, _site) when id in [nil, ""], do: nil
+
+  defp fetch_segment_id_for_site(id, site) do
+    with {int, ""} when int > 0 <- Integer.parse(to_string(id)),
+         %{id: segment_id} <-
+           Repo.get_by(Plausible.Segments.Segment, id: int, site_id: site.id) do
+      segment_id
+    else
+      _ -> nil
     end
   end
 
@@ -497,6 +537,8 @@ defmodule Plausible.Sites do
         where: coalesce(gm.role, tm.role) in ^roles,
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         where: is_nil(gm.id) or gm.site_id == s.id,
+        order_by: [desc: s.domain == ^domain],
+        limit: 1,
         select: s
       )
 

@@ -92,6 +92,8 @@ sso:
 	@echo "- user@plausible.test / plausible"
 	@echo "- user1@plausible.test / plausible"
 	@echo "- user2@plausible.test / plausible"
+	@echo ""
+	@echo "Run plausible application server with ALLOW_RESERVED_IPS=true"
 	
 sso-stop:
 	docker stop idp

@@ -8,12 +8,15 @@
   <div class="mt-4 flex">
     <.button_link
       :if={!@conn.assigns[:current_user]}
-      href={Routes.auth_path(@conn, :login_form, return_to: url_path(@conn))}
+      href={~p"/login?#{[return_to: url_path(@conn)]}"}
       class="mr-4"
     >
       Log in
     </.button_link>
-    <.button_link theme="secondary" href={PlausibleWeb.LayoutView.home_dest(@conn)}>
+    <.button_link
+      theme="secondary"
+      href={PlausibleWeb.LayoutView.home_dest(@conn.assigns[:current_user])}
+    >
       Go to homepage
     </.button_link>
   </div>

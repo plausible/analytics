@@ -10,9 +10,9 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       doc = render_password_input_with_strength("very-secret-and-very-long-123")
 
       assert element_exists?(doc, ~s/input#user_password[type="password"][name="user[password]"]/)
-      assert element_exists?(doc, ~s/div.rounded-full.bg-indigo-600/)
       refute element_exists?(doc, "label")
-      refute element_exists?(doc, "p")
+      assert text_of_element(doc, "p") =~ "Password strength:"
+      assert text_of_element(doc, "p") =~ "Strong"
     end
 
     test "renders with label when passed" do
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
     test "renders weak password warning and hints when password too short" do
       doc = render_password_input_with_strength("too-short")
 
-      assert text_of_element(doc, "p:first-of-type") == "Password is too weak"
+      assert text_of_element(doc, "p:first-of-type") == "Password is too weak."
       assert text_of_element(doc, "p:last-of-type") != ""
     end
 
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
         )
 
       assert warning_p = find(doc, "p")
-      assert text(warning_p) == "Password is too weak"
+      assert text(warning_p) == "Password is too weak."
     end
 
     test "renders too long password case gracefully" do
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-gray-500"
-      assert text(p_hint) == "Min 12 characters"
+      assert text(p_hint) == "At least 12 characters"
     end
 
     test "renders for too short password" do
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-red-500"
-      assert text(p_hint) == "Min 12 characters"
+      assert text(p_hint) == "At least 12 characters"
     end
 
     test "renders gracefully for too long password" do
@@ -80,52 +80,42 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert p_hint = find(doc, "p")
       assert text_of_attr(p_hint, "class") =~ "text-gray-500"
-      assert text(p_hint) == "Min 12 characters"
+      assert text(p_hint) == "At least 12 characters"
     end
   end
 
   describe "strength_meter/1" do
     test "renders too weak level" do
       doc = render_component(&Form.strength_meter/1, score: 0, warning: "", suggestions: [])
-      meter = find(doc, "div.rounded-full")
 
-      assert text_of_attr(meter, "style") == "width: 0%"
-      assert p_warning = find(doc, "p")
-      assert text(p_warning) == "Password is too weak"
+      refute element_exists?(doc, "div.rounded-full")
+      assert text_of_element(doc, "p") == "Password is too weak."
     end
 
     test "renders very weak level" do
       doc = render_component(&Form.strength_meter/1, score: 1, warning: "", suggestions: [])
-      meter = find(doc, "div.rounded-full")
 
-      assert text_of_attr(meter, "style") == "width: 25%"
-      assert p_warning = find(doc, "p")
-      assert text(p_warning) == "Password is too weak"
+      assert text_of_element(doc, "p") == "Password is too weak."
     end
 
     test "renders somewhat weak level" do
       doc = render_component(&Form.strength_meter/1, score: 2, warning: "", suggestions: [])
-      meter = find(doc, "div.rounded-full")
 
-      assert text_of_attr(meter, "style") == "width: 50%"
-      assert p_warning = find(doc, "p")
-      assert text(p_warning) == "Password is too weak"
+      assert text_of_element(doc, "p") == "Password is too weak."
     end
 
     test "renders strong level" do
       doc = render_component(&Form.strength_meter/1, score: 3, warning: "", suggestions: [])
-      meter = find(doc, "div.rounded-full")
 
-      assert text_of_attr(meter, "style") == "width: 75%"
-      refute element_exists?(doc, "p")
+      assert text_of_element(doc, "p") =~ "Password strength:"
+      assert text_of_element(doc, "p") =~ "Good"
     end
 
     test "renders very strong level" do
       doc = render_component(&Form.strength_meter/1, score: 4, warning: "", suggestions: [])
-      meter = find(doc, "div.rounded-full")
 
-      assert text_of_attr(meter, "style") == "width: 100%"
-      refute element_exists?(doc, "p")
+      assert text_of_element(doc, "p") =~ "Password strength:"
+      assert text_of_element(doc, "p") =~ "Strong"
     end
 
     test "renders hints paragraph when warning hint is present" do

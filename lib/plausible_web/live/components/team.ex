@@ -8,10 +8,25 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   alias Plausible.Auth.User
 
+  @role_descriptions [
+    owner: "Manage the team without restrictions",
+    admin: "Manage all team settings",
+    editor: "Create and view new sites",
+    billing: "Manage subscription",
+    viewer: "View all sites under your team"
+  ]
+
+  def role_descriptions, do: @role_descriptions
+
+  @roles_cast_map Enum.into(@role_descriptions, %{}, fn {role, _} -> {to_string(role), role} end)
+
+  def role_to_atom(role), do: Map.fetch!(@roles_cast_map, role)
+
   attr(:user, User, required: true)
   attr(:label, :string, default: nil)
   attr(:role, :atom, default: nil)
   attr(:my_role, :atom, required: true)
+  attr(:me?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:remove_disabled, :boolean, default: false)
 
@@ -58,59 +73,19 @@ defmodule PlausibleWeb.Live.Components.Team do
             </:button>
             <:menu class="dropdown-items max-w-60">
               <.role_item
+                :for={{role, description} <- role_descriptions()}
                 user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-owner"}
+                id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
-                role={:owner}
-                disabled={@disabled or @role == :owner}
+                role={role}
+                disabled={@disabled or @role == role}
                 dispatch_animation?={@role == :guest}
+                data-confirm={
+                  if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
+                }
               >
-                Manage the team without restrictions
-              </.role_item>
-              <.role_item
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-admin"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={:admin}
-                disabled={@disabled or @role == :admin}
-                dispatch_animation?={@role == :guest}
-              >
-                Manage all team settings
-              </.role_item>
-              <.role_item
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-editor"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={:editor}
-                disabled={@disabled or @role == :editor}
-                dispatch_animation?={@role == :guest}
-              >
-                Create and view new sites
-              </.role_item>
-              <.role_item
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-billing"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={:billing}
-                disabled={@disabled or @role == :billing}
-                dispatch_animation?={@role == :guest}
-              >
-                Manage subscription
-              </.role_item>
-              <.role_item
-                user={@user}
-                id={"option-#{:erlang.phash2(@user.email)}-viewer"}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-                role={:viewer}
-                disabled={@disabled or @role == :viewer}
-                dispatch_animation?={@role == :guest}
-              >
-                View all sites under your team
+                {description}
               </.role_item>
               <.dropdown_divider />
 
@@ -121,6 +96,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 phx-click="remove-member"
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
+                data-confirm="Are you sure you want to remove this member from the team?"
               >
                 <div class={
                   not @remove_disabled &&
@@ -137,6 +113,32 @@ defmodule PlausibleWeb.Live.Components.Team do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:role, :atom, required: true)
+  attr(:my_role, :atom, required: true)
+  attr(:rest, :global)
+
+  def role_picker(assigns) do
+    ~H"""
+    <.dropdown id={@id}>
+      <:button class="role w-[100px] inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+        {@role |> Atom.to_string() |> String.capitalize()}
+        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+      </:button>
+      <:menu class="dropdown-items max-w-60">
+        <.role_item
+          :for={{role, description} <- role_descriptions()}
+          role={role}
+          disabled={role_change_disabled?(@my_role, role)}
+          {@rest}
+        >
+          {description}
+        </.role_item>
+      </:menu>
+    </.dropdown>
     """
   end
 
@@ -184,5 +186,12 @@ defmodule PlausibleWeb.Live.Components.Team do
       </div>
     </.dropdown_item>
     """
+  end
+
+  defp role_change_disabled?(my_role, :owner), do: my_role != :owner
+  defp role_change_disabled?(my_role, _role), do: my_role not in [:owner, :admin]
+
+  defp lower_role_warning() do
+    "You're about to lower your own role. Some team management features will no longer be accessible to you, and you'll need to ask a team owner to restore your access. Do you want to continue?"
   end
 end

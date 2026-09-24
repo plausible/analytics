@@ -13,6 +13,8 @@ if Mix.env() != :e2e_test do
 
   Application.ensure_all_started(:double)
 
+  FunWithFlags.enable(:annotations)
+
   Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 end
 

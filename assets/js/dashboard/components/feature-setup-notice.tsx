@@ -3,18 +3,8 @@ import classNames from 'classnames'
 import { MODES } from '../stats/behaviours/modes-context'
 import * as api from '../api'
 import { useSiteContext } from '../site-context'
-import { Pill } from './pill'
-import { DiamondIcon } from './icons'
+import { UpgradePill } from './pill'
 import { buttonClassName } from './button'
-
-function BusinessPill() {
-  return (
-    <Pill color="yellow">
-      <DiamondIcon className="size-3.5 [&_path]:stroke-2" />
-      Business
-    </Pill>
-  )
-}
 
 export function FeatureSetupNotice({
   feature,
@@ -121,7 +111,7 @@ export function FeatureSetupNotice({
       >
         {previewMock && (
           <div className="flex justify-center mb-3">
-            <BusinessPill />
+            <UpgradePill plan="Business" color="yellow" />
           </div>
         )}
         <div className="text-center mt-2 text-gray-800 dark:text-gray-200 font-medium text-pretty">

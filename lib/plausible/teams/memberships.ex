@@ -45,11 +45,19 @@ defmodule Plausible.Teams.Memberships do
 
   @spec team_role(Teams.Team.t(), Auth.User.t()) ::
           {:ok, Teams.Membership.role()} | {:error, :not_a_member}
-  def team_role(team, user) do
+  def team_role(%Teams.Team{} = team, %Auth.User{} = user),
+    do: team_role(team_id: team.id, user_id: user.id)
+
+  @spec team_role(team_id: pos_integer(), user_id: pos_integer()) ::
+          {:ok, Teams.Membership.role()} | {:error, :not_a_member}
+  def team_role(opts) when is_list(opts) do
+    team_id = Keyword.fetch!(opts, :team_id)
+    user_id = Keyword.fetch!(opts, :user_id)
+
     result =
       from(u in Auth.User,
         inner_join: tm in assoc(u, :team_memberships),
-        where: tm.team_id == ^team.id and tm.user_id == ^user.id,
+        where: tm.team_id == ^team_id and tm.user_id == ^user_id,
         select: tm.role
       )
       |> Repo.one()
@@ -167,6 +175,7 @@ defmodule Plausible.Teams.Memberships do
             Repo.delete!(guest_membership)
             prune_guests(guest_membership.team_membership.team)
             Plausible.Segments.after_user_removed_from_site(site, user)
+            Plausible.Annotations.after_user_removed_from_site(site, user)
           end)
 
         send_site_member_removed_email(guest_membership)

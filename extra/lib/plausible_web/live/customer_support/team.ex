@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
 
       {:noreply, go_to_tab(socket, tab, params, :team, tab_component(tab))}
     else
-      {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
+      {:noreply, redirect(socket, to: ~p"/cs")}
     end
   end
 

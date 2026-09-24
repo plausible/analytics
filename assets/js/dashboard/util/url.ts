@@ -9,12 +9,15 @@ export function apiPath(
 
 export function externalLinkForPage(
   site: PlausibleSite,
-  page: string
+  page: string,
+  hostname?: string
 ): string | null {
+  if (hostname) {
+    return `https://${hostname}${page}`
+  }
   if (site.isConsolidatedView) {
     return null
   }
-
   try {
     const domainURL = new URL(`https://${site.domain}`)
     return `https://${domainURL.host}${page}`

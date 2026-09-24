@@ -8,6 +8,7 @@ import { Metric } from '../metrics'
 import { MainGraph, MainGraphContainer, useMainGraphWidth } from './main-graph'
 import { useGraphIntervalContext } from './graph-interval-context'
 import { useSetImportsIncluded } from './imports-included-context'
+import { useGetAnnotations } from '../../annotations/routeless-annotations-modals'
 
 // height of at least one row of top stats
 const DEFAULT_TOP_STATS_LOADING_HEIGHT_PX = 85
@@ -22,6 +23,7 @@ export default function VisitorGraph({
   const mainGraphContainer = useRef<HTMLDivElement>(null)
   const { width } = useMainGraphWidth(mainGraphContainer)
   const site = useSiteContext()
+  const getAnnotationsQuery = useGetAnnotations()
 
   const { selectedInterval } = useGraphIntervalContext()
 
@@ -111,7 +113,7 @@ export default function VisitorGraph({
     !showFullLoader
 
   return (
-    <div className="col-span-full relative w-full bg-white rounded-md shadow-sm dark:bg-gray-900">
+    <div className="relative w-full bg-white rounded-md shadow-sm dark:bg-gray-900">
       <>
         <div
           id="top-stats-container"
@@ -139,7 +141,11 @@ export default function VisitorGraph({
             {!!mainGraphApiState.data && !!width && (
               <>
                 {!showGraphLoader && (
-                  <MainGraph width={width} data={mainGraphApiState.data} />
+                  <MainGraph
+                    width={width}
+                    data={mainGraphApiState.data}
+                    annotations={getAnnotationsQuery.data ?? []}
+                  />
                 )}
                 {showGraphLoader && <Loader />}
               </>

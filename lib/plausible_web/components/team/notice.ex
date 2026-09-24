@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Team.Notice do
         <p>
           You can also create a team and assign different roles to team members, such as admin,
           editor, viewer or billing. Team members will gain access to all your sites. <.styled_link href={
-            Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)
+            ~p"/team/setup"
           }>
             Create your team here
           </.styled_link>.
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Team.Notice do
       <.notice theme={:gray} class="mt-4">
         <p>
           Team members automatically have access to this site.
-          <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :team_general)}>
+          <.styled_link href={~p"/settings/team/general"}>
             View team members
           </.styled_link>
         </p>
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Team.Notice do
         <:actions>
           <.button_link
             method="post"
-            href={Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, i.invitation_id)}
+            href={~p"/settings/team/invitations/#{i.invitation_id}/reject"}
             phx-value-invitation-id={i.invitation_id}
             theme="ghost"
             size="sm"
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Team.Notice do
           </.button_link>
           <.button_link
             method="post"
-            href={Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, i.invitation_id)}
+            href={~p"/settings/team/invitations/#{i.invitation_id}/accept"}
             theme="secondary"
             size="sm"
             class="order-1 md:order-2"
@@ -161,13 +161,7 @@ defmodule PlausibleWeb.Team.Notice do
       <:actions>
         <.button_link
           method="post"
-          href={
-            Routes.invitation_path(
-              PlausibleWeb.Endpoint,
-              :reject_invitation,
-              @invitation.transfer_id
-            )
-          }
+          href={~p"/settings/team/invitations/#{@invitation.transfer_id}/reject"}
           theme="ghost"
           size="sm"
           class="order-3 md:order-1"
@@ -178,13 +172,7 @@ defmodule PlausibleWeb.Team.Notice do
         <.button_link
           :if={@can_accept?}
           method="post"
-          href={
-            Routes.invitation_path(
-              PlausibleWeb.Endpoint,
-              :accept_invitation,
-              @invitation.transfer_id
-            )
-          }
+          href={~p"/settings/team/invitations/#{@invitation.transfer_id}/accept"}
           theme="secondary"
           size="sm"
           class="order-1 md:order-2"
@@ -208,7 +196,7 @@ defmodule PlausibleWeb.Team.Notice do
             <PrimaDropdown.dropdown_item
               as={&link/1}
               id={"ownership-accept-item-upgrade-#{@invitation.transfer_id}"}
-              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+              href={~p"/billing/choose-plan"}
             >
               Upgrade to accept
             </PrimaDropdown.dropdown_item>
@@ -216,12 +204,7 @@ defmodule PlausibleWeb.Team.Notice do
               as={fn a -> link(Map.put(a, :method, "post")) end}
               id={"ownership-accept-item-members-#{@invitation.transfer_id}"}
               href={
-                Routes.invitation_path(
-                  PlausibleWeb.Endpoint,
-                  :accept_invitation,
-                  @invitation.transfer_id,
-                  skip_site_members_transfer: "true"
-                )
+                ~p"/settings/team/invitations/#{@invitation.transfer_id}/accept?#{[skip_site_members_transfer: "true"]}"
               }
             >
               Accept without members
@@ -230,7 +213,7 @@ defmodule PlausibleWeb.Team.Notice do
         </PrimaDropdown.dropdown>
         <.button_link
           :if={not @can_accept? and not @can_accept_without_members?}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          href={~p"/billing/choose-plan"}
           theme="secondary"
           size="sm"
           class="order-1 md:order-3"
@@ -262,7 +245,7 @@ defmodule PlausibleWeb.Team.Notice do
         <:actions>
           <.button_link
             method="post"
-            href={Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, i.invitation_id)}
+            href={~p"/settings/team/invitations/#{i.invitation_id}/reject"}
             theme="ghost"
             size="sm"
             class="order-2 md:order-1"
@@ -272,7 +255,7 @@ defmodule PlausibleWeb.Team.Notice do
           </.button_link>
           <.button_link
             method="post"
-            href={Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, i.invitation_id)}
+            href={~p"/settings/team/invitations/#{i.invitation_id}/accept"}
             theme="secondary"
             size="sm"
             class="order-1 md:order-2"

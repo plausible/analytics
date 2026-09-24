@@ -5,6 +5,7 @@ import {
   formatISO,
   now,
   parseNaiveDate,
+  parseUTCDate,
   shiftMonths,
   yesterday
 } from './date'
@@ -109,6 +110,12 @@ for (const [timezone, suite] of sets) {
     )
   })
 }
+
+it('startOf("week") returns a Monday', () => {
+  expect(formatISO(parseUTCDate('2026-07-02').startOf('week'))).toEqual(
+    '2026-06-29' // Monday
+  )
+})
 
 describe('formatting site-timezoned datetimes from database works flawlessly', () => {
   it('is able to enrich UTC date string with site timezone, formatting the value correctly', () => {

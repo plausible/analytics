@@ -1,4 +1,8 @@
 defmodule Plausible.Session.Salts do
+  @moduledoc """
+  Genserver caching salts and managing their rotation.
+  """
+
   use GenServer
   use Plausible.Repo
 

@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Capabilities do
         StatsAPI: false,
         SitesAPI: false,
         SiteSegments: false,
+        SiteAnnotations: false,
         Teams: false,
         SharedLinks: false,
         SSO: false,

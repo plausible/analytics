@@ -79,9 +79,10 @@ defmodule Plausible.Auth.User do
   def new(attrs \\ %{}) do
     %Plausible.Auth.User{}
     |> cast(attrs, @required)
-    |> validate_required(@required)
+    |> validate_required(:name, message: "Please enter your name")
+    |> validate_required(:email, message: "Please enter your email")
+    |> validate_required(:password, message: "Please enter a password")
     |> validate_password_length()
-    |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
     |> set_email_verification_status()

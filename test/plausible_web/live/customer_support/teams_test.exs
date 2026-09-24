@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
+      ~p"/cs/teams/team/#{id}?#{qs}"
     end
 
     setup [:create_user, :log_in, :create_site]
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|button[phx-click="delete-team"]|)
         |> render_click()
 
-        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, ~p"/cs")
 
         refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
       end
@@ -154,10 +154,161 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text_of_attr(html, "#team_accept_traffic_until", "value") == "2029-01-15"
       end
 
+      test "prolonging trial_expiry_date cancels a pending expired-trial deletion schedule", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            category: :expired_trial,
+            status: :scheduled,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+
+        lv
+        |> element(~s|form[phx-submit="save-team"]|)
+        |> render_submit(%{"team" => %{"trial_expiry_date" => "2029-01-01"}})
+
+        html = render(lv)
+        refute text(html) =~ "Deletion scheduled"
+
+        assert Plausible.Repo.reload!(schedule).status == :cancelled
+      end
+
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
+      end
+
+      test "does not show a deletion schedule section when there is none", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+
+        refute text(html) =~ "Deletion scheduled"
+      end
+
+      test "shows an active deletion schedule and allows snoozing it", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        future = Date.utc_today() |> Date.add(7)
+
+        lv
+        |> element(~s|form[phx-submit="snooze-schedule"]|)
+        |> render_submit(%{
+          "team_deletion_schedule" => %{
+            "snoozed_until" => "#{future}",
+            "snooze_note" => "give them time"
+          }
+        })
+
+        html = render(lv)
+        assert text(html) =~ "Snoozed until #{future}"
+        assert text(html) =~ "give them time"
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :snoozed
+        assert updated.snoozed_until == future
+        assert updated.snooze_note == "give them time"
+      end
+
+      test "rejects a snooze date that isn't in the future", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        today_iso = Date.to_iso8601(Date.utc_today())
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => today_iso}})
+
+        assert text(html) =~ "must be in the future"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
+      end
+
+      test "rejects a blank snooze date", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => ""}})
+
+        assert text(html) =~ "can't be blank"
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
+      end
+
+      test "allows unsnoozing a snoozed schedule", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :snoozed,
+            snoozed_until: ~D[2026-09-20],
+            snooze_note: "customer asked for time",
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Snoozed until"
+        assert element_exists?(html, ~s|button[phx-click="unsnooze-schedule"]|)
+
+        lv |> element(~s|button[phx-click="unsnooze-schedule"]|) |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :scheduled
+        assert updated.is_backlog
       end
     end
 
@@ -431,6 +582,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "shared_segments" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "true",
               "sites_api" => "true"
             }
@@ -464,6 +616,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "shared_segments" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "true",
               "sites_api" => "true",
               "sso" => "false",
@@ -658,6 +811,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "props" => "false",
               "revenue_goals" => "false",
               "site_segments" => "false",
+              "site_annotations" => "false",
               "shared_links" => "false",
               "sites_api" => "false",
               "sso" => "false"
@@ -908,8 +1062,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         integration = SSO.initiate_saml_integration(team)
 
-        SSO.Domains.add(integration, "sso1.example.com")
-        SSO.Domains.add(integration, "sso2.example.com")
+        SSO.Domains.add(integration, "sso1.example.com", skip_checks?: true)
+        SSO.Domains.add(integration, "sso2.example.com", skip_checks?: true)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
@@ -924,7 +1078,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       test "delete domain", %{conn: conn, user: user} do
         team = team_of(user)
         integration = SSO.initiate_saml_integration(team)
-        {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com")
+        {:ok, domain} = SSO.Domains.add(integration, "sso1.example.com", skip_checks?: true)
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :sso))
 
         lv |> element("button#remove-sso-domain-#{domain.identifier}") |> render_click()
@@ -934,7 +1088,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       test "deprovisioning users", %{conn: conn, user: user} do
         team = team_of(user) |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
-        {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
+        {:ok, sso_domain} = SSO.Domains.add(integration, "example.com", skip_checks?: true)
 
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
@@ -970,7 +1124,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
+        assert to == ~p"/cs/teams/team/#{team.id}"
       end
     end
 

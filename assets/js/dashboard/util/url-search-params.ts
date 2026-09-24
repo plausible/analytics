@@ -19,6 +19,69 @@ const LABEL_URL_PARAM_NAME = 'l'
 
 const REDIRECTED_SEARCH_PARAM_NAME = 'r'
 
+const API_VERSION_RELOAD_PARAM_NAME = 'api_version_reloaded'
+
+const EXPECTED_API_VERSION = parseInt(
+  document
+    .querySelector('meta[name="x-api-version"]')
+    ?.getAttribute('content') ?? '0',
+  10
+)
+
+/**
+ * Navigates to the current URL with `api_version_reloaded=<currentApiVersion>`
+ * appended, using `location.replace` so the pre-reload entry is not kept in
+ * browser history.
+ *
+ * Returns early without navigating if:
+ *
+ * - the x-plausible-version response header is not present
+ * - the expected version matches the actual version
+ * - the version is already present in search params
+ *
+ * The latter prevents an infinite reload loop when the versions are
+ * permanently out of sync.
+ *
+ * BE: lib/plausible_web/plugs/internal_stats_api_version.ex
+ */
+export function maybeReloadForApiVersion(
+  windowLocation: Location,
+  responseHeaders: Headers
+) {
+  const currentApiVersion = getCurrentApiVersion(responseHeaders)
+  const params = new URLSearchParams(windowLocation.search)
+
+  if (
+    currentApiVersion === null ||
+    currentApiVersion <= EXPECTED_API_VERSION ||
+    params.get(API_VERSION_RELOAD_PARAM_NAME) === currentApiVersion.toString()
+  ) {
+    return
+  }
+
+  console.warn('API version mismatch detected, reloading...')
+
+  const newSearch = searchWithApiVersionReload(
+    windowLocation.search,
+    currentApiVersion.toString()
+  )
+  windowLocation.replace(
+    `${windowLocation.pathname}${newSearch}${windowLocation.hash}`
+  )
+}
+
+function getCurrentApiVersion(responseHeaders: Headers): number | null {
+  const versionString = responseHeaders?.get('x-api-version')
+  return versionString ? parseInt(versionString, 10) : null
+}
+
+function searchWithApiVersionReload(search: string, value: string): string {
+  return stringifySearch({
+    ...parseSearch(search),
+    [API_VERSION_RELOAD_PARAM_NAME]: value
+  })
+}
+
 /**
  * This function is able to serialize for URL simple params @see serializeSimpleSearchEntry as well
  * two complex params, labels and filters.

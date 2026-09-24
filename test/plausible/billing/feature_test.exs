@@ -1,10 +1,10 @@
 defmodule Plausible.Billing.FeatureTest do
-  alias Plausible.Billing.Feature.SiteSegments
   use Plausible.DataCase
 
   alias Plausible.Billing.Feature.{
     Goals,
     SiteSegments,
+    SiteAnnotations,
     SharedLinks,
     Funnels,
     RevenueGoals,
@@ -101,7 +101,7 @@ defmodule Plausible.Billing.FeatureTest do
   end
 
   describe "growth features" do
-    for mod <- [SharedLinks, SiteSegments] do
+    for mod <- [SharedLinks, SiteSegments, SiteAnnotations] do
       test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan that supports #{mod}" do
         team =
           new_user()

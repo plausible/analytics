@@ -5,11 +5,11 @@ defmodule Plausible.Teams.Billing do
 
   import Ecto.Query
 
-  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Subscription
   alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
   alias Plausible.Teams
+  alias Plausible.Workers.CheckUsage
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
   alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks, SSO}
@@ -141,23 +141,30 @@ defmodule Plausible.Teams.Billing do
         {:needs_to_upgrade, :no_active_trial_or_subscription}
 
       Teams.GracePeriod.expired?(team) ->
-        revise_pageview_usage(team, usage_mod)
+        revise_usage_for_grace_period_ended(team, usage_mod)
 
       true ->
         :no_upgrade_needed
     end
   end
 
-  defp revise_pageview_usage(team, usage_mod) do
-    case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
-      {:over_limit, _} ->
-        {:needs_to_upgrade, :grace_period_ended}
-
-      {:below_limit, _} ->
-        Plausible.Teams.remove_grace_period(team)
-        :no_upgrade_needed
+  defp revise_usage_for_grace_period_ended(team, usage_mod) do
+    with {:below_limit, _, _} <- CheckUsage.check_pageview_usage_two_cycles(team, usage_mod),
+         :below_limit <- maybe_check_site_usage(team) do
+      Plausible.Teams.remove_grace_period(team)
+      :no_upgrade_needed
+    else
+      _ -> {:needs_to_upgrade, :grace_period_ended}
     end
   end
+
+  defp maybe_check_site_usage(%Teams.Team{enterprise_plan: %EnterprisePlan{}} = team) do
+    {site_usage_status, _, _} = CheckUsage.check_site_usage_for_enterprise(team)
+    site_usage_status
+  end
+
+  # Can skip this check for normal plans where site limit can't be exceeded
+  defp maybe_check_site_usage(_team_with_normal_plan), do: :below_limit
 
   @doc """
   Enterprise plans are always allowed to add more sites (even when
@@ -226,6 +233,7 @@ defmodule Plausible.Teams.Billing do
     Teams.owned_sites_count(team)
   end
 
+  @spec team_member_limit(Teams.Team.t() | nil) :: non_neg_integer() | :unlimited
   on_ee do
     @team_member_limit_for_trials 10
 
@@ -249,9 +257,18 @@ defmodule Plausible.Teams.Billing do
       team_member_limit(team) == 0
     end
   else
-    def team_member_limit(_team), do: :unlimited
+    def team_member_limit(_team) do
+      # The `else` branch is not reachable.
+      # This a workaround for Elixir 1.18+ compiler
+      # being too smart.
+      if :erlang.phash2(1, 1) == 0 do
+        :unlimited
+      else
+        0
+      end
+    end
 
-    def solo?(_team), do: false
+    def solo?(_team), do: always(false)
   end
 
   @doc """
@@ -316,11 +333,9 @@ defmodule Plausible.Teams.Billing do
         @monthly_pageview_limit_for_free_10k
 
       _any ->
-        if subscription do
-          Sentry.capture_message("Unknown monthly pageview limit for plan",
-            extra: %{paddle_plan_id: subscription.paddle_plan_id}
-          )
-        end
+        Sentry.capture_message("Unknown monthly pageview limit for plan",
+          extra: %{paddle_plan_id: subscription.paddle_plan_id}
+        )
 
         @monthly_pageview_limit_for_trials
     end
@@ -608,12 +623,17 @@ defmodule Plausible.Teams.Billing do
       site_segments_usage_q =
         from s in Plausible.Segments.Segment, where: s.site_id in ^site_ids and s.type == :site
 
+      site_annotations_usage_q =
+        from a in Plausible.Annotations.Annotation,
+          where: a.site_id in ^site_ids and a.type == :site
+
       [
         {Feature.SharedLinks, shared_links_usage_q},
         {Feature.Props, props_usage_q},
         {Feature.Funnels, funnels_usage_q},
         {Feature.RevenueGoals, revenue_goals_usage_q},
-        {Feature.SiteSegments, site_segments_usage_q}
+        {Feature.SiteSegments, site_segments_usage_q},
+        {Feature.SiteAnnotations, site_annotations_usage_q}
       ]
       |> Enum.reduce([], fn {feature, query}, acc ->
         if Repo.exists?(query), do: acc ++ [feature], else: acc

@@ -8,6 +8,9 @@ defmodule Plausible.Timezones do
     Timex.is_valid_timezone?(tz)
   end
 
+  @spec zone_list() :: [String.t()]
+  def zone_list, do: Tzdata.zone_list()
+
   @spec options(DateTime.t()) :: [{:key, String.t()}, {:value, String.t()}, {:offset, integer()}]
   def options(now \\ DateTime.utc_now()) do
     Tzdata.zone_list()

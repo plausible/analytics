@@ -22,19 +22,27 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows the site form", %{conn: conn} do
       conn = get(conn, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add website info"
+      assert html_response(conn, 200) =~ "Add a website"
     end
 
-    test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
+    test "default flow is 'register', shows onboarding steps regardless of sites provisioned", %{
+      conn: conn1,
+      user: user
+    } do
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
 
       new_site(owner: user, domain: "test-site.com")
 
       conn = get(conn1, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ ~s(id="flow-progress")
+    end
+
+    test "does not show onboarding steps when ?flow=provisioning", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=provisioning")
+      refute html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
     test "does not display limit notice when user is on an enterprise plan", %{
@@ -215,7 +223,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and team is not setup",
+    test "shows upgrade link in header when user is on trial and team is not setup",
          %{conn: conn, user: user} do
       new_site(owner: user)
 
@@ -224,17 +232,17 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
 
       assert text_of_element(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
-             ) =~ "Upgrade"
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
+             ) =~ "Choose a plan"
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and is owner of a setup team",
+    test "shows upgrade link in header when user is on trial and is owner of a setup team",
          %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       team = Plausible.Teams.complete_setup(team)
@@ -245,12 +253,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
     end
 
     @tag :ee_only
-    test "shows upgrade button in header when user is on trial and has billing role in a setup team",
+    test "shows upgrade link in header when user is on trial and has billing role in a setup team",
          %{conn: base_conn} do
       member = new_user()
       owner = new_user(trial_expiry_date: Date.add(Date.utc_today(), 30))
@@ -266,12 +274,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                resp,
-               ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+               ~s|a[href="#{~p"/settings/billing/subscription"}"]|
              )
     end
 
     @tag :ee_only
-    test "does not show upgrade button in header when user is on trial but has non-billing role in a setup team",
+    test "does not show upgrade link in header when user is on trial but has non-billing role in a setup team",
          %{conn: base_conn} do
       for role <- [:admin, :editor, :viewer] do
         member = new_user()
@@ -286,9 +294,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         refute element_exists?(
                  resp,
-                 ~s|a[href="#{Routes.settings_path(conn, :subscription)}"]|
+                 ~s|a[href="#{~p"/settings/billing/subscription"}"]|
                ),
-               "expected no Upgrade button for role #{role}"
+               "expected no upgrade link for role #{role}"
       end
     end
 
@@ -362,7 +370,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/#{URI.encode_www_form("éxample.com")}/installation?site_created=true&flow="
+               "/#{URI.encode_www_form("éxample.com")}/installation?flow="
 
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
@@ -379,7 +387,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
+      assert html_response(conn, 200) =~ "Please enter a domain or subdomain"
     end
 
     test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
@@ -480,7 +488,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -501,7 +509,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?flow="
       assert Plausible.Teams.Billing.site_usage(team) == 3
     end
 
@@ -515,7 +523,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
+        assert redirected_to(conn) == "/example.com/installation?flow="
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -529,7 +537,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ htmlize_quotes("can't be blank")
+      assert html_response(conn, 200) =~ "Please enter a domain or subdomain"
     end
 
     test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
@@ -555,7 +563,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com%2Fsome_blog_site/installation?site_created=true&flow="
+               "/example.com%2Fsome_blog_site/installation?flow="
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
@@ -570,7 +578,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+               "This domain is already registered. Ask the owner for access"
 
       if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
@@ -593,7 +601,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+               "This domain is already registered. Ask the owner for access"
 
       if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
@@ -618,7 +626,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com/installation?site_created=true&flow="
+               "/example.com/installation?flow="
     end
 
     for role <- [:owner, :admin, :editor] do
@@ -660,7 +668,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           })
 
         assert html_response(conn, 200) =~
-                 "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+                 "This domain is already registered. Ask the owner for access"
       end
     end
   end
@@ -671,17 +679,20 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      conn = get(conn, ~p"/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
       assert resp =~ "Settings for #{site.domain}"
+      assert resp =~ "Site details"
       assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
-      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+      assert resp =~ ~p"/#{site.domain}/change-domain"
 
-      assert resp =~ "Site timezone"
+      assert resp =~ "Reporting timezone"
 
-      assert resp =~ "Site installation"
+      assert resp =~ "Tracking"
+
+      assert resp =~
+               ~p"/#{site.domain}/installation?#{[flow: PlausibleWeb.Flows.review()]}"
     end
 
     on_ee do
@@ -693,7 +704,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         resp = html_response(conn, 200)
 
         assert [tile_element] = find(resp, ~s|div[data-test-id="settings-tile"]|) |> Enum.into([])
-        assert text(tile_element) =~ "Site timezone"
+        assert text(tile_element) =~ "Reporting timezone"
+        refute text(tile_element) =~ "Site domain"
       end
     end
 
@@ -914,6 +926,46 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
       refute resp =~ "A Better Way of Inviting People"
+    end
+  end
+
+  describe "GET /:domain/settings/email-reports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders the page without advancing onboarding_status by default", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports")
+
+      assert html_response(conn, 200) =~ "Weekly email reports"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    test "advances onboarding_status to :completed when cta_clicked=true", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :first_pageview) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
+    end
+
+    test "cta_clicked=true does not regress :completed onboarding_status", %{
+      conn: conn,
+      site: site
+    } do
+      site = site |> Ecto.Changeset.change(onboarding_status: :completed) |> Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/email-reports?cta_clicked=true")
+
+      assert html_response(conn, 200)
+      assert Repo.reload!(site).onboarding_status == :completed
     end
   end
 
@@ -1314,14 +1366,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "renders looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      assert resp =~ "Google Looker Studio Connector"
+      assert resp =~ "Google Data Studio Connector"
     end
 
     @tag :ce_build_only
     test "does not render looker studio integration section", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
-      refute resp =~ "Google Looker Studio Connector"
+      refute resp =~ "Google Data Studio Connector"
     end
   end
 
@@ -1881,7 +1933,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       Plausible.Site.set_stats_start_date(site, ~D[2023-01-01])
       |> Repo.update!()
 
-      delete(conn, Routes.site_path(conn, :reset_stats, site.domain))
+      delete(conn, ~p"/#{site.domain}/stats")
 
       assert Repo.reload(site).stats_start_date == nil
     end
@@ -1891,7 +1943,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "renders the transfer tile", %{conn: conn, site: site} do
-      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      conn = get(conn, ~p"/#{site.domain}/settings/danger-zone")
       html = html_response(conn, 200)
       assert html =~ "Danger zone"
       assert html =~ "Transfer site"

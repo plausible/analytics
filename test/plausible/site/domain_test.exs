@@ -19,7 +19,7 @@ defmodule Plausible.Site.DomainTest do
     site2 = insert(:site)
     assert {:error, changeset} = Domain.change(site2, "new-domain.example.com")
     assert {error_message, _} = changeset.errors[:domain]
-    assert error_message =~ "This domain cannot be registered"
+    assert error_message =~ "This domain is already registered"
   end
 
   test "domain is also guaranteed unique against existing domain_changed_from entries" do
@@ -33,7 +33,7 @@ defmodule Plausible.Site.DomainTest do
     assert {:error, %{errors: [{:domain, {^error, _}}]}} =
              Domain.change(site2, site1.domain_changed_from)
 
-    assert error =~ "This domain cannot be registered"
+    assert error =~ "This domain is already registered"
   end
 
   test "a single site's domain can be changed back and forth" do
@@ -47,6 +47,32 @@ defmodule Plausible.Site.DomainTest do
 
     assert {:ok, _} = Domain.change(Repo.reload!(site1), "foo.example.com")
     assert {:ok, _} = Domain.change(Repo.reload!(site1), "bar.example.com")
+  end
+
+  test "domain swap is allowed between sites in the same team" do
+    team = insert(:team)
+    site1 = insert(:site, domain: "one.example.com", team: team)
+    site2 = insert(:site, domain: "two.example.com", team: team)
+
+    assert {:ok, _} = Domain.change(site1, "tmp-one.example.com")
+
+    # site1's old domain "one.example.com" is now in domain_changed_from,
+    # but site2 is on the same team so swapping is allowed
+    assert {:ok, updated} = Domain.change(Repo.reload!(site2), "one.example.com")
+    assert updated.domain == "one.example.com"
+  end
+
+  test "domain swap is blocked between sites in different teams" do
+    team1 = insert(:team)
+    team2 = insert(:team)
+    site1 = insert(:site, domain: "one.example.com", team: team1)
+    site2 = insert(:site, domain: "two.example.com", team: team2)
+
+    assert {:ok, _} = Domain.change(site1, "tmp-one.example.com")
+
+    assert {:error, changeset} = Domain.change(Repo.reload!(site2), "one.example.com")
+    assert {error_message, _} = changeset.errors[:domain]
+    assert error_message =~ "This domain is already registered"
   end
 
   test "change info is cleared when the grace period expires" do
@@ -86,7 +112,7 @@ defmodule Plausible.Site.DomainTest do
   test "new domain gets validated" do
     site = build(:site)
     changeset = Site.update_changeset(site, %{domain: " "})
-    assert {"can't be blank", _} = changeset.errors[:domain]
+    assert {"Please enter a domain or subdomain", _} = changeset.errors[:domain]
 
     changeset = Site.update_changeset(site, %{domain: "?#[]"})
     assert {"must not contain URI reserved characters" <> _, _} = changeset.errors[:domain]

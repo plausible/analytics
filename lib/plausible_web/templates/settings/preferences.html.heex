@@ -5,7 +5,7 @@
     </:title>
     <.form
       :let={f}
-      action={Routes.settings_path(@conn, :update_name)}
+      action={~p"/settings/preferences/name"}
       for={@name_changeset}
       method="post"
     >
@@ -32,7 +32,7 @@
     </:title>
     <.form
       :let={f}
-      action={Routes.settings_path(@conn, :update_theme)}
+      action={~p"/settings/preferences/theme"}
       for={@theme_changeset}
       method="post"
     >

@@ -33,33 +33,37 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
       phx-change="validate"
       phx-submit="set"
       phx-trigger-action={@trigger_submit}
-      class="bg-white dark:bg-gray-800 max-w-md w-full mx-auto shadow-md rounded-sm px-8 py-6 mt-8"
+      class="flex flex-col gap-y-6"
     >
       <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
-      <h2 class="text-xl font-black dark:text-gray-100">
-        Reset your password
-      </h2>
-      <div class="my-4">
-        <.password_length_hint
-          minimum={12}
-          field={f[:password]}
-          class={["text-sm", "mt-1", "mb-2"]}
-          ok_class="text-gray-600 dark:text-gray-600"
-          error_class="text-red-600 dark:text-red-500"
-        />
-        <.password_input_with_strength
-          field={f[:password]}
-          strength={@password_strength}
-          phx-debounce={200}
-          class="transition bg-gray-100 dark:bg-gray-900 outline-hidden appearance-none border border-transparent rounded-xs w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-hidden focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
-        />
+
+      <div class="flex flex-col gap-y-2">
+        <label
+          for={f[:password].id}
+          class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+        >
+          New password
+        </label>
+        <div>
+          <.password_input_with_strength
+            field={f[:password]}
+            strength={@password_strength}
+            phx-debounce={200}
+            mt?={false}
+          />
+        </div>
+        <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
       </div>
-      <.button id="set" type="submit" class="mt-4 w-full">
-        Set password →
-      </.button>
-      <p class="text-center text-gray-500 text-xs mt-4">
-        Don't have an account? <.styled_link href="/register">Register</.styled_link> instead.
-      </p>
+
+      <div class="flex flex-col gap-y-4">
+        <.button id="set" type="submit" class="w-full" mt?={false}>
+          Update password
+        </.button>
+
+        <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+          <.styled_link href="/login">Back to sign in</.styled_link>
+        </p>
+      </div>
     </.form>
     """
   end

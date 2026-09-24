@@ -208,6 +208,7 @@ export default function Sources() {
 
     return (
       <IndexBreakdown
+        key={currentReportKey}
         metrics={metrics}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}

@@ -152,6 +152,71 @@ defmodule PlausibleWeb.Live.SitesTest do
   end
 
   on_ee do
+    describe "pending setup badge and verification query parameter" do
+      @tag :ee_only
+      test "shows for a site with onboarding_status :new_site", %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        assert site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        assert dashboard_link_href =~ "verify_installation=true"
+
+        assert Repo.reload!(site).onboarding_status == :new_site
+      end
+
+      @tag :ee_only
+      test "advances onboarding_status (and hides the badge) when the site already has visitors, before its dashboard has ever been loaded",
+           %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+        populate_stats(site, [build(:pageview)])
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        refute site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        refute dashboard_link_href =~ "verify_installation=true"
+
+        assert Repo.reload!(site).onboarding_status == :first_pageview
+      end
+
+      for status <- [:verification_succeeded, :first_pageview, :completed] do
+        @tag :ee_only
+        test "does not show once onboarding_status has moved to #{status} (even with stats_start_date reset)",
+             %{conn: conn, user: user} do
+          site = new_site(owner: user, onboarding_status: unquote(status), stats_start_date: nil)
+
+          {:ok, _lv, html} = live(conn, "/sites")
+
+          site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+          refute site_card =~ "Setup pending"
+
+          dashboard_link_href =
+            text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+
+          refute dashboard_link_href =~ "verify_installation=true"
+        end
+      end
+
+      @tag :ce_build_only
+      test "never shows on CE", %{conn: conn, user: user} do
+        site = new_site(owner: user, onboarding_status: :new_site)
+
+        {:ok, _lv, html} = live(conn, "/sites")
+
+        site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+        refute site_card =~ "Setup pending"
+
+        dashboard_link_href = text_of_attr(html, "li[data-domain=\"#{site.domain}\"] > a", "href")
+        refute dashboard_link_href =~ "verify_installation=true"
+      end
+    end
+
     describe "consolidated views appearance" do
       test "consolidated view shows up", %{conn: conn, user: user} do
         new_site(owner: user)
@@ -704,6 +769,78 @@ defmodule PlausibleWeb.Live.SitesTest do
                html,
                button_selector
              )
+    end
+
+    test "billing role member can pin a site via the ellipsis menu", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: billing_user, conn: conn})
+
+      {:ok, lv, _html} = live(conn, "/sites?__team=#{team.identifier}")
+
+      button_selector =
+        ~s/button[phx-value-domain="#{site.domain}"][data-test-id="ellipsis-menu-pin-item"]/
+
+      html = lv |> element(button_selector) |> render_click()
+
+      assert html =~ "Site pinned"
+    end
+
+    test "billing role member does not see Settings in the ellipsis menu", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      team = site.team |> Plausible.Teams.complete_setup()
+      billing_user = add_member(team, role: :billing)
+
+      {:ok, conn: conn} = log_in(%{user: billing_user, conn: conn})
+
+      {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+      settings_selector =
+        ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+
+      refute element_exists?(html, settings_selector)
+    end
+  end
+
+  describe "ellipsis menu settings visibility" do
+    @allowed_to_see_settings [:owner, :editor, :admin]
+    for role <- @allowed_to_see_settings do
+      test "#{role} can see settings", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        team = site.team |> Plausible.Teams.complete_setup()
+        member = add_member(team, role: unquote(role))
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        assert element_exists?(
+                 html,
+                 ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+               )
+      end
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- @allowed_to_see_settings do
+      test "#{role} can't see settings", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        team = site.team |> Plausible.Teams.complete_setup()
+        member = add_member(team, role: :viewer)
+
+        {:ok, conn: conn} = log_in(%{user: member, conn: conn})
+
+        {:ok, _lv, html} = live(conn, "/sites?__team=#{team.identifier}")
+
+        refute element_exists?(
+                 html,
+                 ~s|li[data-domain="#{site.domain}"] a[href$="/settings/general"]|
+               )
+      end
     end
   end
 

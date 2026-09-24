@@ -4,6 +4,7 @@ import {
   getSearchWithEnforcedSegment,
   isSearchEntryDefined,
   maybeGetLatestReadableSearch,
+  maybeReloadForApiVersion,
   parseFilter,
   parseLabelsEntry,
   parseSearch,
@@ -257,5 +258,74 @@ describe(`${getSearchWithEnforcedSegment.name}`, () => {
     expect(
       getSearchWithEnforcedSegment(expectedUpdatedSearch, segment)
     ).toEqual(expectedUpdatedSearch)
+  })
+})
+
+describe(`${maybeReloadForApiVersion.name}`, () => {
+  const dashboardPathname = '/example.com'
+
+  beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  type MockWindowLocation = Location & { replace: jest.Mock }
+
+  function makeLocation(search: string): MockWindowLocation {
+    return {
+      pathname: dashboardPathname,
+      search,
+      hash: '',
+      replace: jest.fn()
+    } as unknown as MockWindowLocation
+  }
+
+  function makeHeaders(version: string | null): Headers {
+    const headers = new Headers()
+    if (version !== null) headers.set('x-api-version', version)
+    return headers
+  }
+
+  it('reloads when effective API version is greater than expected', () => {
+    const location = makeLocation('')
+    maybeReloadForApiVersion(location, makeHeaders('1'))
+    expect(location.replace).toHaveBeenCalledWith(
+      `${dashboardPathname}?api_version_reloaded=1`
+    )
+  })
+
+  it('does not reload when effective API version equals expected', () => {
+    const location = makeLocation('')
+    maybeReloadForApiVersion(location, makeHeaders('0'))
+    expect(location.replace).not.toHaveBeenCalled()
+  })
+
+  it('does not reload when effective API version is less than expected (FE loaded from newer node, cluster not fully updated)', () => {
+    const location = makeLocation('')
+    maybeReloadForApiVersion(location, makeHeaders('-1'))
+    expect(location.replace).not.toHaveBeenCalled()
+  })
+
+  it('does not reload when x-api-version header is absent', () => {
+    const location = makeLocation('')
+    maybeReloadForApiVersion(location, makeHeaders(null))
+    expect(location.replace).not.toHaveBeenCalled()
+  })
+
+  it('does not reload when already reloaded for this version', () => {
+    const location = makeLocation('?api_version_reloaded=1')
+    maybeReloadForApiVersion(location, makeHeaders('1'))
+    expect(location.replace).not.toHaveBeenCalled()
+  })
+
+  it('reloads again if a newer version is detected after a previous reload', () => {
+    const location = makeLocation('?api_version_reloaded=1')
+    maybeReloadForApiVersion(location, makeHeaders('2'))
+    expect(location.replace).toHaveBeenCalledWith(
+      `${dashboardPathname}?api_version_reloaded=2`
+    )
   })
 })

@@ -1278,7 +1278,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              }
     end
 
-    test "salts rotating once does not", %{conn: conn, site: site} do
+    test "salts rotating once keeps the same session", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       Plausible.Session.WriteBuffer.flush()
       Plausible.Session.Salts.rotate()
@@ -1286,9 +1286,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
 
       [event1, event2] = get_events(site)
-      [session1, session2] = get_sessions(site)
+      [session] = get_sessions_final(site)
 
-      records = [event1, event2, session1, session2]
+      assert session.pageviews == 2
+
+      records = [event1, event2, session]
 
       assert records |> Enum.map(& &1.user_id) |> Enum.uniq() |> Enum.count() == 1
       assert records |> Enum.map(& &1.session_id) |> Enum.uniq() |> Enum.count() == 1
@@ -2297,6 +2299,14 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> assert_acquisition_channel("AI Assistants")
     end
 
+    test "utm_source=gemini is Google Gemini and AI Assistants", %{site: site} do
+      site
+      |> event_with_utm_source("gemini")
+      |> assert_source("Google Gemini")
+      |> assert_utm_source("gemini")
+      |> assert_acquisition_channel("AI Assistants")
+    end
+
     test "chatgpt.com is ChatGPT and AI Assistants", %{site: site} do
       site
       |> event_with_referrer("https://chatgpt.com")
@@ -2577,6 +2587,18 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       from(e in Plausible.ClickhouseEventV2,
         where: e.site_id == ^site.id,
         order_by: [desc: e.timestamp]
+      )
+    )
+  end
+
+  defp get_sessions_final(site) do
+    Plausible.Session.WriteBuffer.flush()
+
+    ClickhouseRepo.all(
+      from(s in Plausible.ClickhouseSessionV2,
+        hints: "FINAL",
+        where: s.site_id == ^site.id,
+        order_by: [desc: s.timestamp]
       )
     )
   end

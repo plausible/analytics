@@ -45,8 +45,6 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_within_plan_limits(_, _, _), do: :ok
 
-  def eligible_for_upgrade?(usage), do: usage.sites > 0
-
   def ensure_feature_access(usage, plan) do
     case usage.features -- plan.features do
       [] -> :ok
@@ -63,14 +61,9 @@ defmodule Plausible.Billing.Quota do
 
   To avoid confusion, we do not recommend a lower tier for customers that
   are already on a higher tier (even if their usage is low enough).
-
-  `nil` is returned if the usage is not eligible for upgrade.
   """
   def suggest_tier(usage, highest_starter, highest_growth, highest_business, owned_tier) do
     cond do
-      not eligible_for_upgrade?(usage) ->
-        nil
-
       not is_nil(highest_starter) and usage_fits_plan?(usage, highest_starter) and
           owned_tier not in [:business, :growth] ->
         :starter

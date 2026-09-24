@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       else
         socket
       end
-      |> assign_suggestions(assigns[:suggestions])
+      |> assign_suggestions(assigns)
 
     {:ok, socket}
   end
@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       end
       |> Enum.take(suggestions_limit(socket.assigns))
 
-    {:noreply, assign(socket, %{suggestions: suggestions})}
+    {:noreply, assign(socket, %{suggestions: suggestions, searching?: input_len > 0})}
   end
 
   defp do_select(socket, submit_value, display_value) do
@@ -364,17 +364,23 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     end)
   end
 
-  defp assign_suggestions(socket, nil = _suggestions_from_update) do
+  defp assign_suggestions(socket, %{suggestions: _}), do: socket
+
+  # A background suggest_fun task delivered a result for a different key
+  # (namely, the initial options prefetch) - since the user has already
+  # searched, this stale result must not clobber the up-to-date suggestions.
+  defp assign_suggestions(%{assigns: %{searching?: true}} = socket, %{async_result?: true}),
+    do: socket
+
+  defp assign_suggestions(socket, _assigns), do: fill_suggestions_from_options(socket)
+
+  defp fill_suggestions_from_options(socket) do
     suggestions =
       socket.assigns
       |> Map.get(:options, [])
       |> Enum.take(suggestions_limit(socket.assigns))
 
     assign(socket, suggestions: suggestions)
-  end
-
-  defp assign_suggestions(socket, _suggestions_from_update) do
-    socket
   end
 
   defp select_default(socket) do
@@ -405,7 +411,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           __MODULE__,
           Keyword.new([
             {:id, id},
-            {key_to_update, result}
+            {key_to_update, result},
+            {:async_result?, true}
           ])
         )
       end)

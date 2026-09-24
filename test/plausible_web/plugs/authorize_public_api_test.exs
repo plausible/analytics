@@ -212,22 +212,28 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         user = new_user()
         api_key = insert_api_key(unquote(key_type), user: user, scopes: ["sites:read:*"])
 
-        1..Plausible.Auth.ApiKey.burst_request_limit()
-        |> Enum.map(fn _ ->
-          conn =
-            get_fresh_conn()
-            |> authorize(api_key, api_scope: "sites:read:*")
+        limit = Plausible.Auth.ApiKey.burst_request_limit()
 
-          refute conn.halted
-          assert conn.assigns.current_user.id == user.id
-        end)
+        # The limiter uses a fixed time window, so a client straddling a window
+        # boundary can legitimately get up to `2 * limit` requests through in
+        # quick succession. Only the `2 * limit + 1`th request is guaranteed to
+        # be throttled, so that's what the test asserts (rather than assuming
+        # the `limit + 1`th trips, which flakes near a boundary).
+        conns =
+          for _ <- 1..(2 * limit + 1) do
+            get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+          end
 
-        conn =
-          get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+        {allowed, rest} = Enum.split(conns, limit)
 
-        assert conn.halted
+        # The first `limit` requests always fit within a single window and pass.
+        assert Enum.all?(allowed, &(not &1.halted))
+        assert Enum.all?(allowed, &(&1.assigns.current_user.id == user.id))
 
-        assert json_response(conn, 429)["error"] ==
+        # At least one of the remaining requests exceeds the per-window limit.
+        assert throttled = Enum.find(rest, & &1.halted)
+
+        assert json_response(throttled, 429)["error"] ==
                  "Too many API requests in a short period of time. The limit is 60 per 10 seconds. Please throttle your requests."
       end
 
@@ -242,29 +248,32 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         patch_env(Plausible.Auth.ApiKey,
           legacy_per_user_hourly_request_limit: legacy_hourly_limit,
           # relax burst request limit to check hourly request limit
-          burst_request_limit: 200,
-          burst_period_seconds: 30
+          burst_request_limit: 1_000,
+          burst_period_seconds: 10
         )
 
         user = new_user(team: [hourly_api_request_limit: team_hourly_limit])
         api_key = insert_api_key(unquote(key_type), user: user)
 
-        1..100
-        |> Enum.map(fn _ ->
-          conn =
-            get_fresh_conn()
-            |> authorize(api_key, api_scope: "sites:read:*")
+        limit = 100
 
-          refute conn.halted
-          assert conn.assigns.current_user.id == user.id
-        end)
+        # See the burst test above: with a fixed window, only the
+        # `2 * limit + 1`th request is guaranteed to be throttled.
+        conns =
+          for _ <- 1..(2 * limit + 1) do
+            get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+          end
 
-        conn =
-          get_fresh_conn() |> authorize(api_key, api_scope: "sites:read:*")
+        {allowed, rest} = Enum.split(conns, limit)
 
-        assert conn.halted
+        # The first `limit` requests pass, which also confirms the higher of the
+        # two configured limits (not the ignored lower one) is the one applied.
+        assert Enum.all?(allowed, &(not &1.halted))
+        assert Enum.all?(allowed, &(&1.assigns.current_user.id == user.id))
 
-        assert json_response(conn, 429)["error"] ==
+        assert throttled = Enum.find(rest, & &1.halted)
+
+        assert json_response(throttled, 429)["error"] ==
                  "Too many API requests. The limit is 100 per hour. Please contact us to request more capacity."
       end
 

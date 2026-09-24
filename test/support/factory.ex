@@ -1,4 +1,7 @@
 defmodule Plausible.Factory do
+  @moduledoc """
+  See https://ecto.hexdocs.pm/test-factories.html
+  """
   use ExMachina.Ecto, repo: Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
@@ -82,7 +85,8 @@ defmodule Plausible.Factory do
     site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
-      timezone: "Etc/UTC"
+      timezone: "Etc/UTC",
+      onboarding_status: :new_site
     }
 
     merge_attributes(site, attrs)
@@ -102,6 +106,25 @@ defmodule Plausible.Factory do
     }
   end
 
+  def pending_stats_deletion_factory do
+    %Plausible.PendingStatsDeletion{
+      site_id: sequence(:pending_stats_deletion_site_id, &(&1 + 1))
+    }
+  end
+
+  def team_deletion_schedule_factory do
+    today = Date.utc_today()
+    deletion_date = Date.shift(today, day: 60)
+
+    %Plausible.TeamDeletionSchedule{
+      team: build(:team),
+      category: :expired_trial,
+      expiry_date: today,
+      deletion_date: deletion_date,
+      first_notice_due_date: Date.shift(deletion_date, day: -30)
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -110,7 +133,7 @@ defmodule Plausible.Factory do
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       hostname: hostname,
-      site_id: Enum.random(1000..10_000),
+      site_id: Enum.random(1_000_000_000..2_000_000_000),
       entry_page: "/",
       pageviews: 1,
       events: 1,
@@ -137,7 +160,7 @@ defmodule Plausible.Factory do
 
     event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
-      site_id: Enum.random(1000..10_000),
+      site_id: Enum.random(1_000_000_000..2_000_000_000),
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
@@ -389,6 +412,16 @@ defmodule Plausible.Factory do
   def segment_factory do
     %Plausible.Segments.Segment{
       segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
+    }
+  end
+
+  def annotation_factory do
+    %Plausible.Annotations.Annotation{
+      note: "a test annotation",
+      type: :site,
+      datetime: ~U[2026-01-04 00:00:00Z],
+      date: ~D[2026-01-04],
+      granularity: :date
     }
   end
 

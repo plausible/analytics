@@ -359,7 +359,7 @@ const SaveAsSegmentAction = ({ className }: { className?: string }) => {
     <AppNavigationLink
       className={className}
       search={(s) => s}
-      onClick={() => setModal('create')}
+      onClick={() => setModal({ type: 'create-segment' })}
       state={{ expandedSegment: null }}
     >
       Save as segment

@@ -4,6 +4,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
   @moduletag :ee_only
 
   on_ee do
+    use Plausible.Test.Support.DNS
+
     alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plug.Conn
@@ -38,6 +40,12 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         assert Verification.url("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
+      end
+
+      test "url without url_override is protected against SSRF when DNS resolves to a private IP" do
+        expect_dns_lookup("example.com", [{192, 168, 1, 1}])
+
+        refute Verification.url("example.com", "ex4mpl3")
       end
 
       test "meta_tag", %{bypass: bypass} do

@@ -49,9 +49,7 @@ defmodule Plausible.Funnels do
 
       :ok ->
         funnel
-        |> edit_changeset(name, steps,
-          strict_order?: Keyword.get(opts, :strict_order?, !!funnel.strict_order)
-        )
+        |> edit_changeset(name, steps, opts)
         |> Repo.update()
     end
   end
@@ -59,21 +57,28 @@ defmodule Plausible.Funnels do
   @spec create_changeset(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
   def create_changeset(site, name, steps, opts \\ []) do
+    funnel_type = Keyword.get(opts, :funnel_type, Funnel.default_funnel_type())
+
     Funnel.changeset(%Funnel{site_id: site.id}, %{
       name: name,
       steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
+      funnel_type: funnel_type
     })
   end
 
   @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
-  def edit_changeset(funnel, name, steps, opts) do
-    Funnel.changeset(funnel, %{
-      name: name,
-      steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
-    })
+  def edit_changeset(funnel, name, steps, opts \\ []) do
+    params = %{name: name, steps: steps}
+
+    params =
+      if funnel_type = Keyword.get(opts, :funnel_type) do
+        Map.put(params, :funnel_type, funnel_type)
+      else
+        params
+      end
+
+    Funnel.changeset(funnel, params)
   end
 
   @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()
@@ -148,7 +153,19 @@ defmodule Plausible.Funnels do
       order_by: steps.step_order,
       preload: [
         steps: {steps, goal: goal}
-      ]
+      ],
+      select: %{
+        f
+        | funnel_type:
+            type(
+              fragment(
+                "case when ? = true then 'strict' when ? = true then 'flexible' else 'sequential' end",
+                f.strict_order,
+                f.first_and_last
+              ),
+              f.funnel_type
+            )
+      }
     )
   end
 end

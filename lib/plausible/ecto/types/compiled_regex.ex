@@ -9,6 +9,6 @@ defmodule Plausible.Ecto.Types.CompiledRegex do
   def cast(val) when is_binary(val), do: {:ok, val}
   def cast(_), do: :error
 
-  def load(val), do: {:ok, Regex.compile!(val)}
+  def load(val), do: {:ok, Regex.compile!(val, "E")}
   def dump(val), do: {:ok, val}
 end

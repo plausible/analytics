@@ -1,11 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
-import {
-  EllipsisVerticalIcon,
-  ArrowDownTrayIcon
-} from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon } from '@heroicons/react/24/outline'
 import { Toggle } from '../components/toggle'
-import { Spinner } from '../components/icons'
 import classNames from 'classnames'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { useGraphIntervalContext } from '../stats/graph/graph-interval-context'
@@ -14,57 +10,11 @@ import { useDashboardStateContext } from '../dashboard-state-context'
 import { DashboardPeriod } from '../dashboard-time-periods'
 import { IntervalPicker } from '../stats/graph/interval-picker'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { useSiteContext } from '../site-context'
-import * as api from '../api'
 import { Notice } from '../components/notice'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
-import { CsvExportV2, ExportStatus } from '../stats/csv-export/csv-export'
-
-function ExportItem({ selectedInterval }: { selectedInterval: string }) {
-  const site = useSiteContext()
-  const { dashboardState } = useDashboardStateContext()
-  const [exporting, setExporting] = useState(false)
-
-  function pollExportReady() {
-    if (document.cookie.includes('exporting')) {
-      setTimeout(pollExportReady, 1000)
-    } else {
-      setExporting(false)
-    }
-  }
-
-  function startExport() {
-    setExporting(true)
-    document.cookie = 'exporting='
-    pollExportReady()
-  }
-
-  const params = api.dashboardStateToSearchParams(dashboardState, [
-    { interval: selectedInterval, comparison: undefined }
-  ])
-  const endpoint = `/${encodeURIComponent(site.domain)}/export?${params}`
-
-  return (
-    <a
-      href={endpoint}
-      download
-      onClick={startExport}
-      className={classNames(
-        popover.items.classNames.navigationLink,
-        popover.items.classNames.hoverLink
-      )}
-    >
-      <span className="text-sm">Export stats</span>
-      {exporting ? (
-        <Spinner className="animate-spin size-4 text-indigo-500" />
-      ) : (
-        <ArrowDownTrayIcon className="size-4 stroke-2" />
-      )}
-    </a>
-  )
-}
+import { CsvExport, ExportStatus } from '../stats/csv-export/csv-export'
 
 function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   const { dashboardState } = useDashboardStateContext()
@@ -92,7 +42,6 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
 }
 
 function DashboardOptionsMenuItems() {
-  const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useGraphIntervalContext()
@@ -138,7 +87,7 @@ function DashboardOptionsMenuItems() {
           'justify-center'
         )}
       >
-        <EllipsisVerticalIcon className="size-4" />
+        <EllipsisVerticalIcon className="-mx-px size-4.5" />
       </Popover.Button>
       <Transition
         as="div"
@@ -158,14 +107,10 @@ function DashboardOptionsMenuItems() {
               options={availableIntervals}
             />
           )}
-          {site.flags.dashboard_csv_export_v2 ? (
-            <CsvExportV2
-              exportStatus={exportStatus}
-              setExportStatus={setExportStatus}
-            />
-          ) : (
-            <ExportItem selectedInterval={selectedInterval} />
-          )}
+          <CsvExport
+            exportStatus={exportStatus}
+            setExportStatus={setExportStatus}
+          />
           {imports.status === 'visible' && (
             <>
               <ImportedSwitchItem disabled={imports.disabled} />
@@ -209,7 +154,7 @@ export function DashboardOptionsMenu() {
           'justify-center'
         )}
       >
-        <EllipsisVerticalIcon className="size-4" />
+        <EllipsisVerticalIcon className="-mx-px size-4.5" />
       </button>
     )
   }

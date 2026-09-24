@@ -1,4 +1,6 @@
 defmodule Plausible.TestUtils do
+  @moduledoc false
+
   use Plausible.Repo
   use Plausible
   alias Plausible.Factory
@@ -115,7 +117,9 @@ defmodule Plausible.TestUtils do
       team = Plausible.Teams.complete_setup(team)
       integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, ctx[:domain] || "example.com")
+      {:ok, sso_domain} =
+        SSO.Domains.add(integration, ctx[:domain] || "example.com", skip_checks?: true)
+
       _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
@@ -263,6 +267,18 @@ defmodule Plausible.TestUtils do
     )
   end
 
+  def get_entries_from_query_log(site_domain) do
+    Plausible.IngestRepo.query!("SYSTEM FLUSH LOGS")
+
+    %{rows: rows} =
+      Plausible.ClickhouseRepo.query!(
+        "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
+        [site_domain]
+      )
+
+    rows
+  end
+
   def random_ip() do
     Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
   end
@@ -277,7 +293,7 @@ defmodule Plausible.TestUtils do
 
     case Finch.request(healthcheck_req, Plausible.Finch) do
       {:ok, %Finch.Response{}} -> true
-      {:error, %Mint.TransportError{reason: :econnrefused}} -> false
+      {:error, %Finch.TransportError{reason: :econnrefused}} -> false
     end
   end
 

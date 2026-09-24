@@ -114,7 +114,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -129,7 +130,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -144,7 +146,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -159,7 +162,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -174,7 +178,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -189,7 +194,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -204,7 +210,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -219,7 +226,8 @@
     "features": [
       "goals",
       "shared_links",
-      "site_segments"
+      "site_segments",
+      "site_annotations"
     ],
     "data_retention_in_years": 3
   },
@@ -235,6 +243,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -255,6 +264,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -275,6 +285,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -295,6 +306,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -315,6 +327,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -335,6 +348,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -355,6 +369,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",
@@ -375,6 +390,7 @@
       "goals",
       "shared_links",
       "site_segments",
+      "site_annotations",
       "props",
       "stats_api",
       "revenue_goals",

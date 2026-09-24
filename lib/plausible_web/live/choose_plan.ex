@@ -4,11 +4,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use PlausibleWeb, :live_view
 
-  require Plausible.Billing.Subscription.Status
-
   alias PlausibleWeb.Components.Billing.{PlanBox, Notice, PageviewSlider}
   alias Plausible.Billing.{Plans, Quota, PlanBenefits}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
@@ -141,11 +138,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         />
         <Notice.subscription_past_due class="pb-6" subscription={@subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@subscription} />
-        <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
 
         <div class="mt-6 w-full md:flex">
           <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            href={~p"/settings/billing/subscription"}
             class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 text-sm font-semibold gap-1 items-center transition-colors duration-150"
           >
             <span>←</span>
@@ -164,7 +160,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </div>
         <div class="md:hidden mt-6 max-w-md mx-auto">
           <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            href={~p"/settings/billing/subscription"}
             class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-semibold"
           >
             ← Back to settings
@@ -233,7 +229,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               title_class="text-gray-900 dark:text-gray-200"
             >
               <p class="text-gray-600 dark:text-gray-400">
-                You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly. If your pageviews exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+                An occasional traffic spike won’t trigger extra charges or stop your stats from being counted. A single month over your tier requires no action. If your usage exceeds your tier for two consecutive months, we’ll notify you and give you one week to upgrade. If you don’t upgrade, your dashboards will be temporarily locked, but your stats will continue to be collected. You can unlock them at any time by upgrading, or they’ll unlock automatically at the start of your next billing cycle if your usage drops back within your tier.
               </p>
             </.accordion_item>
           </.accordion_menu>
@@ -259,7 +255,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     Please see your full usage report (including sites and team members) under the
     <a
       class="inline font-medium text-indigo-600 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors duration-150"
-      href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+      href={~p"/settings/billing/subscription"}
     >
       "Subscription" section
     </a>

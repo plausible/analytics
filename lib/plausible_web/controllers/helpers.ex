@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.ControllerHelpers do
+  @moduledoc false
+
   import Plug.Conn
   import Phoenix.Controller
 

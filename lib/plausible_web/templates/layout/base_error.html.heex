@@ -6,39 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
     <title>Plausible · Web analytics</title>
-    <link rel="stylesheet" href={Routes.static_path(PlausibleWeb.Endpoint, "/css/app.css")} />
+    <link rel="stylesheet" href={~p"/css/app.css"} />
   </head>
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
     <div class="w-full my-8 text-center">
-      <a href={home_dest(@conn)}>
-        <img
-          src={
-            PlausibleWeb.Router.Helpers.static_path(
-              @conn,
-              logo_path("logo_dark.svg")
-            )
-          }
-          class="w-44 hidden dark:inline"
-          alt="Plausible logo"
-          loading="lazy"
-        />
-        <img
-          src={
-            PlausibleWeb.Router.Helpers.static_path(
-              @conn,
-              logo_path("logo_light.svg")
-            )
-          }
-          class="w-44 inline dark:hidden"
-          alt="Plausible logo"
-          loading="lazy"
-        />
+      <a href={home_dest(@conn.assigns[:current_user])}>
+        <Layout.logo />
       </a>
     </div>
 
     {@inner_content}
 
-    <script type="text/javascript" src={Routes.static_path(PlausibleWeb.Endpoint, "/js/app.js")}>
+    <script type="text/javascript" src={~p"/js/app.js"}>
     </script>
   </body>
 </html>

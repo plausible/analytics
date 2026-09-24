@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.SamplingCache do
   @moduledoc """
-  Cache storing estimation for events ingested by a site in the past month.
+  Cache storing estimation for events ingested by a site in the past 30 days.
 
   Used for sampling rate calculations in Plausible.Stats.Sampling.
   """

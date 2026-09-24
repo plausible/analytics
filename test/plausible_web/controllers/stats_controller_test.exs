@@ -3,6 +3,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   use Plausible.Repo
 
   @react_container "div#stats-react-container"
+  @verification_banner "#verification-ui"
 
   describe "GET /:domain - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -35,6 +36,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert "noindex, nofollow" ==
                resp
                |> find("meta[name=robots]")
+               |> text_of_attr("content")
+
+      assert to_string(Plausible.InternalStatsApiVersion.api_version()) ==
+               resp
+               |> find("meta[name=x-api-version]")
                |> text_of_attr("content")
 
       assert text_of_element(resp, "title") == "Plausible · #{site.domain}"
@@ -77,6 +83,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ])
     end
 
+    @tag :ee_only
     test "plausible.io live demo - shows site stats, header and footer", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
@@ -98,28 +105,42 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "Getting started"
     end
 
-    test "public site - redirect to /login when no stats because verification requires it", %{
-      conn: conn
-    } do
+    test "public site - shows an empty dashboard without stats (no verification banner)",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
+      resp = get(conn, "/some-other-public-site.io") |> html_response(200)
 
-      assert redirected_to(conn) ==
-               Routes.auth_path(conn, :login_form,
-                 return_to: "/some-other-public-site.io/verification"
-               )
+      refute element_exists?(resp, @verification_banner)
     end
 
-    test "public site - no stats with skip_to_dashboard", %{
-      conn: conn
-    } do
+    test "public site - anonymous visitors never see the verification banner, even with the param",
+         %{
+           conn: conn
+         } do
       new_site(domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, "/some-other-public-site.io?skip_to_dashboard=true")
-      resp = html_response(conn, 200)
+      resp =
+        get(conn, "/some-other-public-site.io?verify_installation=true") |> html_response(200)
 
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      refute element_exists?(resp, @verification_banner)
+    end
+
+    test "public site - anonymous visitors never see the email reports CTA", %{conn: conn} do
+      public_site =
+        new_site(
+          domain: "some-other-public-site.io",
+          public: true,
+          onboarding_status: :first_pageview
+        )
+
+      resp = get(conn, "/#{public_site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -141,15 +162,130 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can view stats of a website I've created, enforcing pageviews check skip", %{
-      conn: conn,
-      site: site
-    } do
-      resp = conn |> get(conn |> get("/" <> site.domain) |> redirected_to()) |> html_response(200)
-      refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
+    on_ee do
+      test "verification banner showing in the provisioning flow",
+           %{
+             conn: conn,
+             user: user,
+             site: site
+           } do
+        get_dashboard_resp = fn conn, site, q ->
+          get(conn, "/#{site.domain}#{q}") |> html_response(200)
+        end
 
-      resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
-      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+        q = "?verify_installation=true&flow=#{PlausibleWeb.Flows.provisioning()}"
+
+        # No `?verify_installation=true` query parameter -> doesn't show
+        resp = get_dashboard_resp.(conn, site, "")
+        refute element_exists?(resp, @verification_banner)
+
+        # site.onboarding_status != :new_site -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, q)
+          refute element_exists?(resp, @verification_banner)
+        end
+
+        # site.onboarding_status != :new_site & flow param not provided -> doesn't show
+        for status <- [:verification_succeeded, :first_pageview, :completed] do
+          site = new_site(owner: user, onboarding_status: status)
+          resp = get_dashboard_resp.(conn, site, "?verify_installation=true")
+          refute element_exists?(resp, @verification_banner)
+        end
+
+        # both conditions met -> shows
+        resp = get_dashboard_resp.(conn, site, q)
+        assert element_exists?(resp, @verification_banner)
+      end
+
+      for flow <- [PlausibleWeb.Flows.review(), PlausibleWeb.Flows.domain_change()] do
+        test "verification banner in #{flow} flow shows when verify_installation query param is present",
+             %{
+               conn: conn,
+               site: site
+             } do
+          site
+          |> Plausible.Site.put_onboarding_status_advance(:completed)
+          |> Plausible.Repo.update!()
+
+          resp =
+            get(conn, "/#{site.domain}?verify_installation=true&flow=#{unquote(flow)}")
+            |> html_response(200)
+
+          assert element_exists?(resp, @verification_banner)
+        end
+      end
+    end
+
+    test "shows email reports CTA when onboarding_status is :first_pageview", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
+    test "shows email reports CTA on the very first load that discovers a pageview, without needing a second refresh",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :verification_succeeded)
+      populate_stats(site, [build(:pageview)])
+
+      assert Repo.reload!(site).onboarding_status == :verification_succeeded
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+      assert Repo.reload!(site).onboarding_status == :first_pageview
+    end
+
+    for status <- [:new_site, :verification_succeeded, :completed] do
+      test "does not show email reports CTA when onboarding_status is #{status}", %{
+        conn: conn,
+        user: user
+      } do
+        site = new_site(owner: user, onboarding_status: unquote(status))
+
+        resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+      end
+    end
+
+    test "does not show email reports CTA for a viewer, since they can't reach the settings page it links to",
+         %{conn: conn, user: user} do
+      site = new_site(onboarding_status: :first_pageview)
+      add_guest(site, user: user, role: :viewer)
+
+      resp = get(conn, "/#{site.domain}") |> html_response(200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "viewer"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    on_ee do
+      test "does not show email reports CTA for consolidated views", %{
+        conn: conn,
+        user: user
+      } do
+        new_site(owner: user)
+        new_site(owner: user)
+        cv = user |> team_of() |> new_consolidated_view()
+
+        # `onboarding_status` should always be :completed for
+        # consolidated views anyway but this test makes sure that
+        # stats_controller explicitly excludes email reports CTA
+        # for consolidated views too.
+        cv
+        |> Ecto.Changeset.change(%{onboarding_status: :first_pageview})
+        |> Plausible.Repo.update!()
+
+        resp = get(conn, "/#{cv.domain}") |> html_response(200)
+
+        assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+      end
     end
 
     on_ee do
@@ -223,21 +359,22 @@ defmodule PlausibleWeb.StatsControllerTest do
         assert cv.native_stats_start_at == twenty_days_ago
       end
 
-      test "does not redirect consolidated views to verification", %{
-        conn: conn,
-        user: user
-      } do
+      test "does not show verification banner for consolidated views even with the explicit param",
+           %{
+             conn: conn,
+             user: user
+           } do
         new_site(owner: user)
         new_site(owner: user)
         cv = user |> team_of() |> new_consolidated_view()
 
-        conn = get(conn, "/" <> cv.domain)
-        resp = html_response(conn, 200)
+        resp = get(conn, "/#{cv.domain}?verify_installation=true") |> html_response(200)
 
         assert text_of_attr(resp, @react_container, "data-domain") == cv.domain
         assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
         assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
         assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
+        refute element_exists?(resp, @verification_banner)
       end
 
       test "redirects to /sites if for some reason ineligible anymore", %{
@@ -328,9 +465,9 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "does not show CRM link to the site", %{conn: conn, site: site} do
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+      resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-      refute html_response(conn, 200) =~ "/cs/sites"
+      refute resp =~ "/cs/sites"
     end
 
     test "all segments (personal or site) are stuffed into dataset, with their associated owner_id and owner_name",
@@ -381,11 +518,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
-    test "can enter verification when site is without stats", %{conn: conn} do
-      site = new_site()
+    test "can enter verification regardless of whether the site has stats or not", %{conn: conn} do
+      site_without_stats = new_site()
+      site_with_stats = new_site()
+      populate_stats(site_with_stats, [build(:pageview)])
 
-      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      for site <- [site_without_stats, site_with_stats] do
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
@@ -399,13 +546,25 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
-    test "can view private locked verification without stats", %{conn: conn} do
-      user = new_user()
-      site = new_site(owner: user)
-      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+    test "can trigger verification on a locked private dashboard regardless of whether the site has stats or not",
+         %{conn: conn} do
+      site_without_stats = new_site(owner: new_user())
+      site_without_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
-      conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
-      assert html_response(conn, 200) =~ "Verifying your installation"
+      site_with_stats = new_site(owner: new_user())
+      populate_stats(site_with_stats, [build(:pageview)])
+      site_with_stats.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+
+      for site <- [site_without_stats, site_with_stats] do
+        resp =
+          get(
+            conn,
+            "/#{site.domain}?verify_installation=true&flow=#{PlausibleWeb.Flows.review()}"
+          )
+          |> html_response(200)
+
+        assert element_exists?(resp, @verification_banner)
+      end
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
@@ -418,965 +577,41 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ "This dashboard is actually locked"
     end
 
+    test "does not show email reports CTA when viewing as a super admin without site membership",
+         %{conn: conn} do
+      site = new_site(onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "super_admin"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
+    end
+
+    test "still shows email reports CTA for a super admin who is also a real site member",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user, onboarding_status: :first_pageview)
+
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "true"
+    end
+
     on_ee do
       test "shows CRM link to the site", %{conn: conn} do
         site = new_site()
-        conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+        resp = get(conn, "/" <> site.domain) |> html_response(200)
 
-        assert html_response(conn, 200) =~
-                 Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)
+        assert resp =~
+                 ~p"/cs/sites/site/#{site.id}"
       end
     end
   end
 
   defp make_user_super_admin(%{user: user}) do
     Application.put_env(:plausible, :super_admin_user_ids, [user.id])
-  end
-
-  describe "[LEGACY] GET /:domain/export" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "exports all the necessary CSV files", %{conn: conn, site: site} do
-      conn = get(conn, "/" <> site.domain <> "/export")
-
-      assert {"content-type", "application/zip; charset=utf-8"} =
-               List.keyfind(conn.resp_headers, "content-type", 0)
-
-      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
-
-      zip = Enum.map(zip, fn {filename, _} -> filename end)
-
-      assert ~c"visitors.csv" in zip
-      assert ~c"browsers.csv" in zip
-      assert ~c"browser_versions.csv" in zip
-      assert ~c"cities.csv" in zip
-      assert ~c"conversions.csv" in zip
-      assert ~c"countries.csv" in zip
-      assert ~c"devices.csv" in zip
-      assert ~c"entry_pages.csv" in zip
-      assert ~c"exit_pages.csv" in zip
-      assert ~c"operating_systems.csv" in zip
-      assert ~c"operating_system_versions.csv" in zip
-      assert ~c"pages.csv" in zip
-      assert ~c"regions.csv" in zip
-      assert ~c"sources.csv" in zip
-      assert ~c"channels.csv" in zip
-      assert ~c"utm_campaigns.csv" in zip
-      assert ~c"utm_contents.csv" in zip
-      assert ~c"utm_mediums.csv" in zip
-      assert ~c"utm_sources.csv" in zip
-      assert ~c"utm_terms.csv" in zip
-    end
-
-    test "exports scroll depth metric in pages.csv", %{conn: conn, site: site} do
-      t0 = ~N[2020-01-01 00:00:00]
-      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
-
-      populate_stats(site, [
-        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:engagement,
-          user_id: 12,
-          pathname: "/blog",
-          timestamp: t1,
-          scroll_depth: 20,
-          engagement_time: 60_000
-        ),
-        build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:engagement,
-          user_id: 12,
-          pathname: "/another",
-          timestamp: t2,
-          scroll_depth: 24,
-          engagement_time: 60_000
-        ),
-        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:engagement,
-          user_id: 34,
-          pathname: "/blog",
-          timestamp: t1,
-          scroll_depth: 17,
-          engagement_time: 60_000
-        ),
-        build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:engagement,
-          user_id: 34,
-          pathname: "/another",
-          timestamp: t2,
-          scroll_depth: 26,
-          engagement_time: 60_000
-        ),
-        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:engagement,
-          user_id: 34,
-          pathname: "/blog",
-          timestamp: t3,
-          scroll_depth: 60,
-          engagement_time: 60_000
-        ),
-        build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:engagement,
-          user_id: 56,
-          pathname: "/blog",
-          timestamp: t1,
-          scroll_depth: 100,
-          engagement_time: 60_000
-        )
-      ])
-
-      pages =
-        conn
-        |> get("/#{site.domain}/export?period=day&date=2020-01-01")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"pages.csv")
-
-      assert pages == [
-               ["name", "visitors", "pageviews", "bounce_rate", "time_on_page", "scroll_depth"],
-               ["/blog", "3", "4", "33", "80", "60"],
-               ["/another", "2", "2", "0", "60", "25"],
-               [""]
-             ]
-    end
-
-    test "exports only internally used props in custom_props.csv for a growth plan", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
-
-      [owner | _] = Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
-        build(:event, name: "File Download", "meta.key": ["url"], "meta.value": ["b"])
-      ])
-
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["url", "(none)", "1", "1", "50.0"],
-               ["url", "b", "1", "1", "50.0"],
-               [""]
-             ]
-    end
-
-    test "does not include custom_props.csv for a growth plan if no internal props used", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
-
-      [owner | _] = Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["a"])
-      ])
-
-      {:ok, zip} =
-        conn
-        |> get("/#{site.domain}/export?period=day")
-        |> response(200)
-        |> :zip.unzip([:memory])
-
-      files = Map.new(zip)
-
-      refute Map.has_key?(files, ~c"custom_props.csv")
-    end
-
-    test "exports data in zipped csvs", %{conn: conn, site: site} do
-      populate_exported_stats(site)
-
-      conn =
-        get(conn, "/" <> site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20")
-
-      assert_zip(conn, "30d")
-    end
-
-    test "fails to export with interval=undefined, looking at you, spiders", %{
-      conn: conn,
-      site: site
-    } do
-      assert conn
-             |> get("/" <> site.domain <> "/export?date=2021-10-20&interval=undefined")
-             |> response(400)
-    end
-
-    test "exports allowed event props for a trial account", %{conn: conn, site: site} do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:event, "meta.key": ["author"], "meta.value": ["marko"], name: "Newsletter Signup"),
-        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
-        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
-        build(:pageview, "meta.key": ["disallowed"], "meta.value": ["whatever"]),
-        build(:pageview)
-      ])
-
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["author", "(none)", "3", "4", "50.0"],
-               ["author", "uku", "2", "2", "33.33"],
-               ["author", "marko", "1", "1", "16.67"],
-               ["logged_in", "(none)", "5", "5", "83.33"],
-               ["logged_in", "true", "1", "2", "16.67"],
-               [""]
-             ]
-    end
-
-    test "exports data grouped by interval", %{conn: conn, site: site} do
-      populate_exported_stats(site)
-
-      visitors =
-        conn
-        |> get(
-          "/" <>
-            site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20&interval=week"
-        )
-        |> response(200)
-        |> unzip_and_parse_csv(~c"visitors.csv")
-
-      assert visitors == [
-               [
-                 "date",
-                 "visitors",
-                 "pageviews",
-                 "visits",
-                 "views_per_visit",
-                 "bounce_rate",
-                 "visit_duration"
-               ],
-               ["2021-09-20", "1", "1", "1", "1.0", "100", "0"],
-               ["2021-09-27", "0", "0", "0", "0.0", "0.0", ""],
-               ["2021-10-04", "0", "0", "0", "0.0", "0.0", ""],
-               ["2021-10-11", "0", "0", "0", "0.0", "0.0", ""],
-               ["2021-10-18", "3", "4", "3", "1.33", "33", "40"],
-               [""]
-             ]
-    end
-
-    test "exports operating system versions", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview,
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
-        build(:pageview,
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
-        build(:pageview, operating_system: "Mac", operating_system_version: "13")
-      ])
-
-      os_versions =
-        conn
-        |> get("/#{site.domain}/export?period=day")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"operating_system_versions.csv")
-
-      assert os_versions == [
-               ["name", "version", "visitors"],
-               ["Mac", "14", "3"],
-               ["Ubuntu", "20.04", "2"],
-               ["Mac", "13", "1"],
-               [""]
-             ]
-    end
-
-    test "exports imported data when requested", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
-
-      insert(:goal, site: site, event_name: "Outbound Link: Click")
-
-      populate_stats(site, site_import.id, [
-        build(:imported_visitors, visitors: 9),
-        build(:imported_browsers, browser: "Chrome", pageviews: 1),
-        build(:imported_devices, device: "Desktop", pageviews: 1),
-        build(:imported_entry_pages, entry_page: "/test", pageviews: 1),
-        build(:imported_exit_pages, exit_page: "/test", pageviews: 1),
-        build(:imported_locations,
-          country: "PL",
-          region: "PL-22",
-          city: 3_099_434,
-          pageviews: 1
-        ),
-        build(:imported_operating_systems, operating_system: "Mac", pageviews: 1),
-        build(:imported_pages, page: "/test", pageviews: 1),
-        build(:imported_sources,
-          source: "Google",
-          channel: "Paid Search",
-          utm_medium: "search",
-          utm_campaign: "ads",
-          utm_source: "google",
-          utm_content: "content",
-          utm_term: "term",
-          pageviews: 1
-        ),
-        build(:imported_custom_events,
-          name: "Outbound Link: Click",
-          link_url: "https://example.com",
-          visitors: 5,
-          events: 10
-        )
-      ])
-
-      tomorrow = Date.utc_today() |> Date.add(1) |> Date.to_iso8601()
-
-      conn = get(conn, "/#{site.domain}/export?date=#{tomorrow}&with_imported=true")
-
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
-
-      filenames = zip |> Enum.map(fn {filename, _} -> to_string(filename) end)
-
-      # NOTE: currently, custom_props.csv is not populated from imported data
-      expected_filenames = [
-        "visitors.csv",
-        "sources.csv",
-        "channels.csv",
-        "utm_mediums.csv",
-        "utm_sources.csv",
-        "utm_campaigns.csv",
-        "utm_contents.csv",
-        "utm_terms.csv",
-        "pages.csv",
-        "entry_pages.csv",
-        "exit_pages.csv",
-        "countries.csv",
-        "regions.csv",
-        "cities.csv",
-        "browsers.csv",
-        "browser_versions.csv",
-        "operating_systems.csv",
-        "operating_system_versions.csv",
-        "devices.csv",
-        "conversions.csv",
-        "referrers.csv"
-      ]
-
-      Enum.each(expected_filenames, fn expected ->
-        assert expected in filenames
-      end)
-
-      Enum.each(zip, fn
-        {~c"visitors.csv", data} ->
-          csv = parse_csv(data)
-
-          assert List.first(csv) == [
-                   "date",
-                   "visitors",
-                   "pageviews",
-                   "visits",
-                   "views_per_visit",
-                   "bounce_rate",
-                   "visit_duration"
-                 ]
-
-          assert Enum.at(csv, -2) ==
-                   [Date.to_iso8601(Date.utc_today()), "9", "1", "1", "1.0", "0.0", "10.0"]
-
-        {~c"sources.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["Google", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"channels.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["Paid Search", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"utm_mediums.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["search", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"utm_sources.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["google", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"utm_campaigns.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["ads", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"utm_contents.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["content", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"utm_terms.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["term", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"pages.csv", data} ->
-          assert parse_csv(data) == [
-                   [
-                     "name",
-                     "visitors",
-                     "pageviews",
-                     "bounce_rate",
-                     "time_on_page",
-                     "scroll_depth"
-                   ],
-                   ["/test", "1", "1", "0.0", "10", ""],
-                   [""]
-                 ]
-
-        {~c"entry_pages.csv", data} ->
-          assert parse_csv(data) == [
-                   [
-                     "name",
-                     "unique_entrances",
-                     "total_entrances",
-                     "bounce_rate",
-                     "visit_duration"
-                   ],
-                   ["/test", "1", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-
-        {~c"exit_pages.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "unique_exits", "total_exits", "exit_rate"],
-                   ["/test", "1", "1", "100.0"],
-                   [""]
-                 ]
-
-        {~c"countries.csv", data} ->
-          assert parse_csv(data) == [["name", "visitors"], ["Poland", "1"], [""]]
-
-        {~c"regions.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors"],
-                   ["Pomerania", "1"],
-                   [""]
-                 ]
-
-        {~c"cities.csv", data} ->
-          assert parse_csv(data) == [["name", "visitors"], ["Gdańsk", "1"], [""]]
-
-        {~c"browsers.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors"],
-                   ["Chrome", "1"],
-                   [""]
-                 ]
-
-        {~c"browser_versions.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "version", "visitors"],
-                   ["Chrome", "(not set)", "1"],
-                   [""]
-                 ]
-
-        {~c"operating_systems.csv", data} ->
-          assert parse_csv(data) == [["name", "visitors"], ["Mac", "1"], [""]]
-
-        {~c"operating_system_versions.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "version", "visitors"],
-                   ["Mac", "(not set)", "1"],
-                   [""]
-                 ]
-
-        {~c"devices.csv", data} ->
-          assert parse_csv(data) == [["name", "visitors"], ["Desktop", "1"], [""]]
-
-        {~c"conversions.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "unique_conversions", "total_conversions"],
-                   ["Outbound Link: Click", "5", "10"],
-                   [""]
-                 ]
-
-        {~c"referrers.csv", data} ->
-          assert parse_csv(data) == [
-                   ["name", "visitors", "bounce_rate", "visit_duration"],
-                   ["Direct / None", "1", "0.0", "10.0"],
-                   [""]
-                 ]
-      end)
-    end
-  end
-
-  defp parse_csv(file_content) when is_binary(file_content) do
-    file_content
-    |> String.split("\r\n")
-    |> Enum.map(&String.split(&1, ","))
-  end
-
-  describe "[LEGACY] GET /:domain/export - via shared link" do
-    setup [:create_user, :create_site]
-
-    test "exports data in zipped csvs", %{conn: conn, site: site} do
-      link = insert(:shared_link, site: site)
-
-      populate_exported_stats(site)
-
-      conn =
-        get(
-          conn,
-          "/" <>
-            site.domain <> "/export?auth=#{link.slug}&period=custom&from=2021-09-20&to=2021-10-20"
-        )
-
-      assert_zip(conn, "30d")
-    end
-  end
-
-  describe "[LEGACY] GET /:domain/export - for past 6 months" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
-      populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-11-20")
-      assert_zip(conn, "6m")
-    end
-  end
-
-  describe "[LEGACY] GET /:domain/export - with path filter" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
-      populate_exported_stats(site)
-
-      filters = Jason.encode!([[:is, "event:page", ["/some-other-page"]]])
-
-      conn =
-        get(
-          conn,
-          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
-        )
-
-      assert_zip(conn, "30d-filter-path")
-    end
-
-    test "exports scroll depth in visitors.csv", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 00:00:00]),
-        build(:engagement,
-          user_id: 12,
-          pathname: "/blog",
-          timestamp: ~N[2020-01-05 00:01:00],
-          scroll_depth: 40
-        ),
-        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 10:00:00]),
-        build(:engagement,
-          user_id: 12,
-          pathname: "/blog",
-          timestamp: ~N[2020-01-05 10:01:00],
-          scroll_depth: 17
-        ),
-        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-07 00:00:00]),
-        build(:engagement,
-          user_id: 34,
-          pathname: "/blog",
-          timestamp: ~N[2020-01-07 00:01:00],
-          scroll_depth: 90
-        )
-      ])
-
-      filters = Jason.encode!([[:is, "event:page", ["/blog"]]])
-
-      pages =
-        conn
-        |> get("/#{site.domain}/export?date=2020-01-08&period=7d&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"visitors.csv")
-
-      assert pages == [
-               [
-                 "date",
-                 "visitors",
-                 "pageviews",
-                 "visits",
-                 "views_per_visit",
-                 "bounce_rate",
-                 "visit_duration",
-                 "scroll_depth"
-               ],
-               ["2020-01-01", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-02", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-03", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-04", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-05", "1", "2", "2", "1.0", "100", "0", "28"],
-               ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
-               ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
-               [""]
-             ]
-    end
-  end
-
-  describe "[LEGACY] GET /:domain/export - with a custom prop filter" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "custom-props.csv only returns the prop and its value in filter", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
-      ])
-
-      filters = Jason.encode!([[:is, "event:props:author", ["marko"]]])
-
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "percentage"],
-               ["author", "marko", "1", "1", "100.0"],
-               [""]
-             ]
-    end
-  end
-
-  defp unzip_and_parse_csv(archive, filename) do
-    {:ok, zip} = :zip.unzip(archive, [:memory])
-    {_filename, data} = Enum.find(zip, &(elem(&1, 0) == filename))
-    parse_csv(data)
-  end
-
-  defp assert_zip(conn, folder) do
-    assert conn.status == 200
-
-    assert {"content-type", "application/zip; charset=utf-8"} =
-             List.keyfind(conn.resp_headers, "content-type", 0)
-
-    {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
-
-    folder = Path.expand(folder, "test/plausible_web/controllers/CSVs")
-
-    Enum.map(zip, &assert_csv_by_fixture(&1, folder))
-  end
-
-  defp assert_csv_by_fixture({file, downloaded}, folder) do
-    file =
-      file
-      |> maybe_get_legacy_variant(folder)
-      |> Path.expand(folder)
-
-    {:ok, content} = File.read(file)
-    msg = "CSV file comparison failed (#{file})"
-    assert downloaded == content, message: msg, left: downloaded, right: content
-  end
-
-  # Remember to clean up the legacy fixture files too once the
-  # legacy CSV export disappears.
-  defp maybe_get_legacy_variant(filename, folder) do
-    path_filter? = String.contains?(folder, "filter-path")
-
-    case {filename, path_filter?} do
-      {~c"exit_pages.csv", true} -> ~c"exit_pages_legacy.csv"
-      {~c"visitors.csv", true} -> ~c"visitors_legacy.csv"
-      {filename, _} -> filename
-    end
-  end
-
-  defp populate_exported_stats(site) do
-    populate_stats(site, [
-      build(:pageview,
-        user_id: 123,
-        pathname: "/",
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -1)
-          |> NaiveDateTime.truncate(:second),
-        country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        referrer_source: "Google"
-      ),
-      build(:engagement,
-        user_id: 123,
-        pathname: "/",
-        timestamp: ~N[2021-10-20 12:00:00] |> NaiveDateTime.truncate(:second),
-        engagement_time: 30_000,
-        scroll_depth: 30,
-        country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        referrer_source: "Google"
-      ),
-      build(:pageview,
-        user_id: 123,
-        pathname: "/some-other-page",
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -2)
-          |> NaiveDateTime.truncate(:second),
-        country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        referrer_source: "Google"
-      ),
-      build(:engagement,
-        user_id: 123,
-        pathname: "/some-other-page",
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], minute: -1)
-          |> NaiveDateTime.truncate(:second),
-        engagement_time: 60_000,
-        scroll_depth: 30,
-        country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        referrer_source: "Google"
-      ),
-      build(:pageview,
-        user_id: 100,
-        pathname: "/",
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
-        utm_medium: "search",
-        utm_campaign: "ads",
-        utm_source: "google",
-        utm_content: "content",
-        utm_term: "term",
-        browser: "Firefox",
-        browser_version: "120",
-        operating_system: "Mac",
-        operating_system_version: "14"
-      ),
-      build(:engagement,
-        user_id: 100,
-        pathname: "/",
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1, minute: 1)
-          |> NaiveDateTime.truncate(:second),
-        engagement_time: 30_000,
-        scroll_depth: 30,
-        utm_medium: "search",
-        utm_campaign: "ads",
-        utm_source: "google",
-        utm_content: "content",
-        utm_term: "term",
-        browser: "Firefox",
-        browser_version: "120",
-        operating_system: "Mac",
-        operating_system_version: "14"
-      ),
-      build(:pageview,
-        user_id: 200,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -1)
-          |> NaiveDateTime.truncate(:second),
-        country_code: "EE",
-        browser: "Firefox",
-        browser_version: "120",
-        operating_system: "Mac",
-        operating_system_version: "14"
-      ),
-      build(:engagement,
-        user_id: 200,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -1, minute: 1)
-          |> NaiveDateTime.truncate(:second),
-        engagement_time: 30_000,
-        scroll_depth: 20,
-        country_code: "EE",
-        browser: "Firefox",
-        browser_version: "120",
-        operating_system: "Mac",
-        operating_system_version: "14"
-      ),
-      build(:pageview,
-        user_id: 300,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -5)
-          |> NaiveDateTime.truncate(:second),
-        utm_campaign: "ads",
-        country_code: "EE",
-        referrer_source: "Google",
-        click_id_param: "gclid",
-        browser: "FirefoxNoVersion",
-        operating_system: "MacNoVersion"
-      ),
-      build(:engagement,
-        user_id: 300,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], month: -5, minute: 1)
-          |> NaiveDateTime.truncate(:second),
-        engagement_time: 30_000,
-        scroll_depth: 20,
-        utm_campaign: "ads",
-        country_code: "EE",
-        referrer_source: "Google",
-        click_id_param: "gclid",
-        browser: "FirefoxNoVersion",
-        operating_system: "MacNoVersion"
-      ),
-      build(:pageview,
-        user_id: 456,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1, minute: -1)
-          |> NaiveDateTime.truncate(:second),
-        pathname: "/signup",
-        "meta.key": ["variant"],
-        "meta.value": ["A"]
-      ),
-      build(:engagement,
-        user_id: 456,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
-        pathname: "/signup",
-        engagement_time: 60_000,
-        scroll_depth: 20,
-        "meta.key": ["variant"],
-        "meta.value": ["A"]
-      ),
-      build(:event,
-        user_id: 456,
-        timestamp:
-          NaiveDateTime.shift(~N[2021-10-20 12:00:00], day: -1) |> NaiveDateTime.truncate(:second),
-        name: "Signup",
-        "meta.key": ["variant"],
-        "meta.value": ["A"]
-      )
-    ])
-
-    insert(:goal, %{site: site, event_name: "Signup"})
-  end
-
-  describe "[LEGACY] GET /:domain/export - with goal filter" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
-      populate_exported_stats(site)
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      conn =
-        get(
-          conn,
-          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
-        )
-
-      assert_zip(conn, "30d-filter-goal")
-    end
-
-    test "custom-props.csv only returns the prop names for the goal in filter", %{
-      conn: conn,
-      site: site
-    } do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
-
-      populate_stats(site, [
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
-      ])
-
-      insert(:goal, site: site, event_name: "Newsletter Signup")
-      filters = Jason.encode!([[:is, "event:goal", ["Newsletter Signup"]]])
-
-      result =
-        conn
-        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"custom_props.csv")
-
-      assert result == [
-               ["property", "value", "visitors", "events", "conversion_rate"],
-               ["author", "marko", "2", "2", "50.0"],
-               ["author", "uku", "1", "1", "25.0"],
-               [""]
-             ]
-    end
-
-    test "exports conversions and conversion rate for operating system versions", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
-        ),
-        build(:event,
-          name: "Signup",
-          operating_system: "Lubuntu",
-          operating_system_version: "20.04"
-        )
-      ])
-
-      insert(:goal, site: site, event_name: "Signup")
-
-      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-
-      os_versions =
-        conn
-        |> get("/#{site.domain}/export?period=day&filters=#{filters}")
-        |> response(200)
-        |> unzip_and_parse_csv(~c"operating_system_versions.csv")
-
-      assert os_versions == [
-               ["name", "version", "conversions", "conversion_rate"],
-               ["Mac", "14", "3", "75.0"],
-               ["Ubuntu", "20.04", "2", "100.0"],
-               ["Lubuntu", "20.04", "1", "100.0"],
-               [""]
-             ]
-    end
   end
 
   describe "GET /share/:domain?auth=:auth" do
@@ -1403,6 +638,18 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+    end
+
+    test "never shows the email reports CTA, regardless of the site's onboarding_status", %{
+      conn: conn
+    } do
+      site = new_site(onboarding_status: :first_pageview)
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-show-email-reports-cta") == "false"
     end
 
     test "if the shared link is limited to a segment, only that segment is stuffed into data-segments",

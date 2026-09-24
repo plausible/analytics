@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import { cycleSortDirection } from '../hooks/use-order-by-legacy'
+import { cycleSortDirection } from '../hooks/use-metric-order-by'
 import { SortDirection } from '../../types/query-api'
 import classNames from 'classnames'
 

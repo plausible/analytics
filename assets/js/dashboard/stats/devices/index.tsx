@@ -100,6 +100,7 @@ export function Devices() {
         />
       </ReportHeader>
       <IndexBreakdown
+        key={reportKey}
         metrics={metrics}
         dimensions={reportConfig.dimensions}
         dimensionLabel={reportConfig.dimensionLabel}

@@ -76,23 +76,45 @@ export const getBreakdownMetricLabel = (
     dimensions: string[]
   }
 ): string => {
+  if (dimensions.includes('visit:entry_page')) {
+    return getEntryPagesBreakdownMetricLabel(metric, {
+      hasConversionGoalFilter,
+      isRealtime
+    })
+  }
+  if (dimensions.includes('visit:exit_page')) {
+    return getExitPagesBreakdownMetricLabel(metric, {
+      hasConversionGoalFilter,
+      isRealtime
+    })
+  }
   switch (dimensions[0]) {
-    case 'visit:entry_page':
-      return getEntryPagesBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter,
-        isRealtime
-      })
-    case 'visit:exit_page':
-      return getExitPagesBreakdownMetricLabel(metric, {
-        hasConversionGoalFilter,
-        isRealtime
-      })
     case 'event:goal':
       return getConversionsBreakdownMetricLabel(metric)
-    default:
+    default: {
+      if (dimensions[0]?.startsWith('event:props:')) {
+        return getCustomPropsBreakdownMetricLabel(metric)
+      }
       return getDefaultBreakdownMetricLabel(metric, {
         hasConversionGoalFilter,
         isRealtime
+      })
+    }
+  }
+}
+
+const getCustomPropsBreakdownMetricLabel = (metric: Metric): string => {
+  switch (metric) {
+    case 'visitors':
+      return 'Visitors'
+    case 'events':
+      return 'Events'
+    case 'percentage':
+      return '%'
+    default:
+      return getDefaultBreakdownMetricLabel(metric, {
+        hasConversionGoalFilter: false,
+        isRealtime: false
       })
   }
 }

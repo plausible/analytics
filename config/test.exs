@@ -52,6 +52,12 @@ config :plausible, Plausible.HelpScout,
     plug: {Req.Test, Plausible.HelpScout}
   ]
 
+config :plausible, Plausible.Postmark,
+  req_opts: [
+    plug: {Req.Test, Plausible.Postmark},
+    retry: false
+  ]
+
 config :plausible, Plausible.InstallationSupport.Checks.Detection,
   req_opts: [
     plug: {Req.Test, Plausible.InstallationSupport.Checks.Detection}
@@ -60,6 +66,11 @@ config :plausible, Plausible.InstallationSupport.Checks.Detection,
 config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
   req_opts: [
     plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
+  ]
+
+config :plausible, Plausible.OAuth.CIMD,
+  req_opts: [
+    plug: {Req.Test, Plausible.OAuth.CIMD}
   ]
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)

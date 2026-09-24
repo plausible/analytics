@@ -9,7 +9,7 @@
     analytics. Invitations expire after 48 hours.
   </:subtitle>
 
-  <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>
+  <.form :let={f} for={@conn} action={~p"/sites/#{@site.domain}/memberships/invite"}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={Map.get(assigns, :is_at_limit, false)}
       current_user={@current_user}
@@ -48,8 +48,6 @@
             value="editor"
             x-model="selectedOption"
             required="true"
-            width="w-4"
-            class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
           />
           <div class="ml-3 flex flex-col">
             <span
@@ -78,8 +76,6 @@
             value="viewer"
             x-model="selectedOption"
             required="true"
-            width="w-4"
-            class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
           />
           <div class="ml-3 flex flex-col">
             <span

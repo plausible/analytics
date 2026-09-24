@@ -1,15 +1,16 @@
 defmodule Plausible.Teams.GracePeriodTest do
   use Plausible.DataCase, async: true
 
-  test "active?/1 returns false when grace period cannot be telled" do
+  test "active?/1 returns false when grace period is nil" do
     without_grace_period =
       new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: nil])
       |> team_of()
 
     refute Plausible.Teams.GracePeriod.active?(without_grace_period)
+  end
 
-    without_team = nil
-    refute Plausible.Teams.GracePeriod.active?(without_team)
+  test "active?/1 returns false when team is nil" do
+    refute Plausible.Teams.GracePeriod.active?(nil)
   end
 
   test "active?/1 returns false when grace period is expired" do
@@ -42,15 +43,29 @@ defmodule Plausible.Teams.GracePeriodTest do
     assert Plausible.Teams.GracePeriod.active?(team)
   end
 
-  test "expired?/1 returns false when grace period cannot be telled" do
+  test "active?/1 returns false for a manual lock grace period with is_over = true" do
+    grace_period = %Plausible.Teams.GracePeriod{
+      manual_lock: true,
+      is_over: true
+    }
+
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
+
+    refute Plausible.Teams.GracePeriod.active?(team)
+  end
+
+  test "expired?/1 returns false when grace period is nil" do
     without_grace_period =
       new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: nil])
       |> team_of()
 
     refute Plausible.Teams.GracePeriod.expired?(without_grace_period)
+  end
 
-    without_team = nil
-    refute Plausible.Teams.GracePeriod.expired?(without_team)
+  test "expired?/1 returns false when team is nil" do
+    refute Plausible.Teams.GracePeriod.expired?(nil)
   end
 
   test "expired?/1 returns true when grace period is expired" do
@@ -58,6 +73,19 @@ defmodule Plausible.Teams.GracePeriodTest do
 
     grace_period = %Plausible.Teams.GracePeriod{
       end_date: yesterday,
+      is_over: true
+    }
+
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
+
+    assert Plausible.Teams.GracePeriod.expired?(team)
+  end
+
+  test "expired?/1 returns true when manual lock grace period is manually terminated" do
+    grace_period = %Plausible.Teams.GracePeriod{
+      manual_lock: true,
       is_over: true
     }
 

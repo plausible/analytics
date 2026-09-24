@@ -358,44 +358,58 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                      }) = response
     end
 
-    test "the last editor of a dangling site segment (segment with owner_id: nil) becomes the new owner",
-         %{
-           conn: conn,
-           user: user
-         } do
-      site = new_site()
-      add_guest(site, user: user, role: :editor)
+    for {casename, segment_has_owner?} <- [
+          {"dangling site segment", false},
+          {"site segment by other user", true}
+        ] do
+      test "the last editor of a #{casename} becomes the new owner",
+           %{
+             conn: conn,
+             site: site,
+             user: user
+           } do
+        segment_owner =
+          if(unquote(segment_has_owner?),
+            do:
+              site.team
+              |> add_member(
+                user: new_user(name: "other user"),
+                role: :editor
+              ),
+            else: nil
+          )
 
-      segment =
-        insert(:segment,
-          site: site,
-          name: "original name",
-          type: :site,
-          owner: nil
-        )
+        segment =
+          insert(:segment,
+            site: site,
+            name: "original name",
+            type: :site,
+            owner: segment_owner
+          )
 
-      response =
-        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{"name" => "updated name"})
-        |> json_response(200)
+        response =
+          patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{"name" => "updated name"})
+          |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "id" => ^segment.id,
-                       "name" => "updated name",
-                       "type" =>
-                         ^any(
-                           :string,
-                           ~r/#{segment.type}/
-                         ),
-                       "owner_id" => ^user.id,
-                       "owner_name" => ^user.name,
-                       "segment_data" => ^segment.segment_data,
-                       "inserted_at" =>
-                         ^any(
-                           :string,
-                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S")}/
-                         ),
-                       "updated_at" => ^any(:iso8601_naive_datetime)
-                     }) = response
+        assert_matches ^strict_map(%{
+                         "id" => ^segment.id,
+                         "name" => "updated name",
+                         "type" =>
+                           ^any(
+                             :string,
+                             ~r/#{segment.type}/
+                           ),
+                         "owner_id" => ^user.id,
+                         "owner_name" => ^user.name,
+                         "segment_data" => ^segment.segment_data,
+                         "inserted_at" =>
+                           ^any(
+                             :string,
+                             ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S")}/
+                           ),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }) = response
+      end
     end
 
     test "cannot move segment to another site by passing site_id param", %{
@@ -403,19 +417,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       user: user,
       site: site
     } do
-      victim_site = new_site()
+      other_site = new_site()
       segment = insert(:segment, site: site, owner: user, type: :personal, name: "test segment")
 
       patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
         "name" => "updated name",
         "type" => "personal",
         "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]], "labels" => %{}},
-        "site_id" => victim_site.id
+        "site_id" => other_site.id
       })
 
       reloaded = Repo.reload!(segment)
       assert reloaded.site_id == site.id
-      assert reloaded.site_id != victim_site.id
+      assert reloaded.site_id != other_site.id
     end
   end
 

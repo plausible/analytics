@@ -150,6 +150,36 @@ test.each([
   }
 )
 
+test('arrow keys shift the period when the custom-range calendar is closed, but not while it is open', async () => {
+  const localDomain = 'no-arrow-hijack.test'
+  const startUrl = `${getRouterBasepath({ domain: localDomain, shared: false })}${stringifySearch({ period: 'month', date: '2024-08-15' })}`
+
+  render(<DashboardPeriodPicker />, {
+    wrapper: (props) => (
+      <TestContextProviders
+        siteOptions={{ domain: localDomain, statsBegin: '2020-01-01' }}
+        routerProps={{ initialEntries: [startUrl] }}
+        {...props}
+      />
+    )
+  })
+
+  expect(screen.getByText('August 2024')).toBeVisible()
+  expect(document.querySelector('.flatpickr-calendar')).toBeNull()
+
+  await userEvent.keyboard('{ArrowLeft}')
+  expect(screen.getByText('July 2024')).toBeVisible()
+
+  await userEvent.keyboard('c')
+  expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
+
+  await userEvent.keyboard('{ArrowLeft}')
+  await userEvent.keyboard('{ArrowLeft}')
+
+  expect(screen.getByText('July 2024')).toBeVisible()
+  expect(document.querySelector('.flatpickr-calendar')).not.toBeNull()
+})
+
 test('going back resets the stored dashboardState period to previous value', async () => {
   const BrowserBackButton = () => {
     const navigate = useNavigate()

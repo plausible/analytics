@@ -3,14 +3,31 @@ import { ChronoUnit, DateTimeFormatter } from '@js-joda/core'
 import { Locale } from '@js-joda/locale_en-us'
 import { currentTime, timeToISO } from '../test-utils'
 import { setupSite, populateStats, StatsEntry } from '../fixtures'
+import { randomID } from '../test-utils'
 
 test('site switcher allows switching between different sites', async ({
   page,
   request
 }) => {
-  const { domain: domain1, user } = await setupSite({ page, request })
-  const { domain: domain2 } = await setupSite({ page, request, user })
-  const { domain: domain3 } = await setupSite({ page, request, user })
+  const suffix = randomID()
+  // domain name matters in this test, the sites are sorted alphabetically in the dropdown
+  const { domain: domain1, user } = await setupSite({
+    page,
+    request,
+    domain: `a-${suffix}.example.com`
+  })
+  const { domain: domain2 } = await setupSite({
+    page,
+    request,
+    user,
+    domain: `b-${suffix}.example.com`
+  })
+  const { domain: domain3 } = await setupSite({
+    page,
+    request,
+    user,
+    domain: `c-${suffix}.example.com`
+  })
 
   await populateStats({
     request,
@@ -40,24 +57,33 @@ test('site switcher allows switching between different sites', async ({
   const domain2Link = page.getByRole('link', { name: domain2 })
   const domain3Link = page.getByRole('link', { name: domain3 })
 
-  const domain1Key = await domain1Link.locator('kbd').textContent()
-  const domain3Key = await domain3Link.locator('kbd').textContent()
-
   await expect(domain1Link).toBeVisible()
+  await expect(domain1Link.locator('kbd')).toHaveText('1')
   await expect(domain2Link).toBeVisible()
+  await expect(domain2Link.locator('kbd')).toHaveText('2')
   await expect(domain3Link).toBeVisible()
+  await expect(domain3Link.locator('kbd')).toHaveText('3')
 
   await page.getByRole('link', { name: domain2 }).click()
 
   await expect(page).toHaveURL(`/${domain2}`)
   await expect(switcherButton).toHaveText(domain2)
 
-  await page.keyboard.press(domain3Key!)
+  // make sure sites are loaded
+  await switcherButton.click()
+  await expect(domain3Link).toBeVisible()
+  // keybind should work when dropdown closed
+  await switcherButton.click()
+  await page.keyboard.press('3')
 
   await expect(page).toHaveURL(`/${domain3}`)
   await expect(switcherButton).toHaveText(domain3)
 
-  await page.keyboard.press(domain1Key!)
+  // make sure sites are loaded
+  await switcherButton.click()
+  await expect(domain1Link).toBeVisible()
+  // keybind should work when dropdown open
+  await page.keyboard.press('1')
 
   await expect(page).toHaveURL(`/${domain1}`)
   await expect(switcherButton).toHaveText(domain1)

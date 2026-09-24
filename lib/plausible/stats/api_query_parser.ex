@@ -250,8 +250,8 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   defp parse_dimension_entry(key, error_message) do
     case {
-      parse_time(key),
-      parse_filter_dimension_string(key)
+      parse_time_dimension(key),
+      parse_non_time_dimension(key)
     } do
       {{:ok, time}, _} -> {:ok, time}
       {_, {:ok, dimension}} -> {:ok, dimension}
@@ -261,18 +261,18 @@ defmodule Plausible.Stats.ApiQueryParser do
 
   defp parse_metric_or_dimension([value, _] = entry) do
     case {
-      parse_time(value),
+      parse_time_dimension(value),
       parse_metric(value),
-      parse_filter_dimension_string(value)
+      parse_non_time_dimension(value)
     } do
-      {{:ok, time}, _, _} ->
-        {:ok, time}
+      {{:ok, time_dimension}, _, _} ->
+        {:ok, time_dimension}
 
       {_, {:ok, metric}, _} ->
         {:ok, metric}
 
-      {_, _, {:ok, dimension}} ->
-        {:ok, dimension}
+      {_, _, {:ok, non_time_dimension}} ->
+        {:ok, non_time_dimension}
 
       _ ->
         {:error,
@@ -280,13 +280,23 @@ defmodule Plausible.Stats.ApiQueryParser do
     end
   end
 
-  defp parse_time("time"), do: {:ok, "time"}
-  defp parse_time("time:minute"), do: {:ok, "time:minute"}
-  defp parse_time("time:hour"), do: {:ok, "time:hour"}
-  defp parse_time("time:day"), do: {:ok, "time:day"}
-  defp parse_time("time:week"), do: {:ok, "time:week"}
-  defp parse_time("time:month"), do: {:ok, "time:month"}
-  defp parse_time(_), do: :error
+  defp parse_time_dimension("time"), do: {:ok, "time"}
+  defp parse_time_dimension("time:minute"), do: {:ok, "time:minute"}
+  defp parse_time_dimension("time:hour"), do: {:ok, "time:hour"}
+  defp parse_time_dimension("time:day"), do: {:ok, "time:day"}
+  defp parse_time_dimension("time:week"), do: {:ok, "time:week"}
+  defp parse_time_dimension("time:month"), do: {:ok, "time:month"}
+  defp parse_time_dimension(_), do: :error
+
+  @breakdown_only_non_time_dimensions ["event:prop_key"]
+
+  defp parse_non_time_dimension(dimension) do
+    if dimension in @breakdown_only_non_time_dimensions do
+      {:ok, dimension}
+    else
+      parse_filter_dimension_string(dimension)
+    end
+  end
 
   defp parse_order_direction([_, "asc"]), do: {:ok, :asc}
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}

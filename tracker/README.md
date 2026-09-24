@@ -9,7 +9,7 @@ See also [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ### Dependencies
 
-To download dependencies, do:
+To download dependencies, do
 
 ```bash
 npm install

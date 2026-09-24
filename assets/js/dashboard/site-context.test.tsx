@@ -19,6 +19,7 @@ describe('parseSiteFromDataset', () => {
       data-exploration-journey-end-event="__journey_end__"
       data-exploration-max-journey-steps="20"
       data-site-segments-available="true"
+      data-site-annotations-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
@@ -32,7 +33,7 @@ describe('parseSiteFromDataset', () => {
       data-is-dbip="false"
       data-current-user-role="owner"
       data-current-user-id="1"
-      data-flags='{"dashboard_csv_export_v2": false}'
+      data-flags="{}"
       data-valid-intervals-by-period='{"12mo":["day","week","month"],"7d":["hour","day"],"28d":["day","week"],"30d":["day","week"],"91d":["day","week","month"],"6mo":["day","week","month"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
       {...attrs}
     />
@@ -50,6 +51,7 @@ describe('parseSiteFromDataset', () => {
     explorationJourneyEndEvent: '__journey_end__',
     explorationMaxJourneySteps: 20,
     siteSegmentsAvailable: true,
+    siteAnnotationsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
@@ -58,9 +60,10 @@ describe('parseSiteFromDataset', () => {
     embedded: false,
     background: undefined,
     isDbip: false,
-    flags: { dashboard_csv_export_v2: false },
+    flags: {},
     shared: false,
-    isConsolidatedView: false
+    isConsolidatedView: false,
+    showEmailReportsCta: false
   }
 
   it('parses from dom string map correctly', () => {

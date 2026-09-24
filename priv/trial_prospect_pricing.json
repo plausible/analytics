@@ -1,0 +1,12 @@
+{
+  "tiers": [
+    { "monthly_pageview_limit": 10000,    "starter": 9,   "growth": 14,  "business": 19 },
+    { "monthly_pageview_limit": 100000,   "starter": 19,  "growth": 29,  "business": 39 },
+    { "monthly_pageview_limit": 200000,   "starter": 29,  "growth": 44,  "business": 59 },
+    { "monthly_pageview_limit": 500000,   "starter": 49,  "growth": 74,  "business": 99 },
+    { "monthly_pageview_limit": 1000000,  "starter": 69,  "growth": 104, "business": 139 },
+    { "monthly_pageview_limit": 2000000,  "starter": 89,  "growth": 134, "business": 179 },
+    { "monthly_pageview_limit": 5000000,  "starter": 129, "growth": 194, "business": 259 },
+    { "monthly_pageview_limit": 10000000, "starter": 169, "growth": 254, "business": 339 }
+  ]
+}

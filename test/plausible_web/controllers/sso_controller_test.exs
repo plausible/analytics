@@ -14,7 +14,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       integration = SSO.initiate_saml_integration(team)
       domain = "example-#{Enum.random(1..10_000)}.com"
 
-      {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+      {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
       sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
       {:ok,
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})
         conn = set_current_team(conn, team)
 
-        conn = get(conn, Routes.settings_path(conn, :team_general))
+        conn = get(conn, ~p"/settings/team/general")
 
         assert html = html_response(conn, 200)
 
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         {:ok, conn: conn} = log_in(%{conn: conn, user: user})
         conn = set_current_team(conn, team)
 
-        conn = get(conn, Routes.settings_path(conn, :team_general))
+        conn = get(conn, ~p"/settings/team/general")
 
         assert html = html_response(conn, 200)
 
@@ -55,11 +55,11 @@ defmodule PlausibleWeb.SSOControllerTest do
 
     describe "login_form/2" do
       test "renders login view", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :login_form, prefer: "sso"))
+        conn = get(conn, ~p"/sso/login?#{[prefer: "sso"]}")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-On email"
+        assert html =~ "Sign in with SSO"
         assert element_exists?(html, "input[name=email]")
         assert text_of_attr(html, ~s|input[name="return_to"]|, "value") == nil
       end
@@ -68,22 +68,18 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :login_form,
-              prefer: "sso",
-              email: "user@example.com",
-              autosubmit: true
-            )
+            ~p"/sso/login?#{[prefer: "sso", email: "user@example.com", autosubmit: true]}"
           )
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Enter your Single Sign-On email"
+        assert html =~ "Sign in with SSO"
         assert text_of_attr(html, "input[name=email]", "value") == "user@example.com"
         assert html =~ ~s|document.getElementById("sso-login-form").submit()|
       end
 
       test "passes return_to parameter to form", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites", prefer: "sso"))
+        conn = get(conn, ~p"/sso/login?#{[return_to: ~p"/sites", prefer: "sso"]}")
 
         assert html = html_response(conn, 200)
 
@@ -96,13 +92,13 @@ defmodule PlausibleWeb.SSOControllerTest do
           |> init_session()
           |> fetch_session()
           |> fetch_flash()
-          |> put_flash(:login_error, "Wrong email.")
+          |> put_flash(:login_error, "We couldn't find a Single Sign-On account for that email.")
 
-        conn = get(conn, Routes.sso_path(conn, :login_form, return_to: "/sites"))
+        conn = get(conn, ~p"/sso/login?#{[return_to: "/sites"]}")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Wrong email."
+        assert html =~ htmlize_quotes("We couldn't find a Single Sign-On account for that email.")
         assert element_exists?(html, "input[name=email]")
         assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
       end
@@ -116,13 +112,10 @@ defmodule PlausibleWeb.SSOControllerTest do
       } do
         email = "paul@" <> domain
 
-        conn = post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+        conn = post(conn, ~p"/sso/login", %{"email" => email})
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :saml_signin, integration.identifier,
-                   email: email,
-                   return_to: ""
-                 )
+                 ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: ""]}"
       end
 
       test "passes redirect path if provided", %{
@@ -133,25 +126,23 @@ defmodule PlausibleWeb.SSOControllerTest do
         email = "claire@" <> domain
 
         conn =
-          post(conn, Routes.sso_path(conn, :login), %{"email" => email, "return_to" => "/sites"})
+          post(conn, ~p"/sso/login", %{"email" => email, "return_to" => "/sites"})
 
         assert redirected_to(conn, 302) ==
-                 Routes.sso_path(conn, :saml_signin, integration.identifier,
-                   email: email,
-                   return_to: "/sites"
-                 )
+                 ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
       end
 
       test "renders login form with error on no matching integration", %{conn: conn} do
         conn =
-          post(conn, Routes.sso_path(conn, :login), %{
+          post(conn, ~p"/sso/login", %{
             "email" => "nomatch@example.com",
             "return_to" => "/sites"
           })
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form)
+        assert redirected_to(conn, 302) == ~p"/sso/login"
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
 
       test "limits login attempts to 5 per minute", %{conn: conn} do
@@ -162,10 +153,10 @@ defmodule PlausibleWeb.SSOControllerTest do
           eventually(
             fn ->
               Enum.each(1..5, fn _ ->
-                post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+                post(conn, ~p"/sso/login", %{"email" => email})
               end)
 
-              conn = post(conn, Routes.sso_path(conn, :login), %{"email" => email})
+              conn = post(conn, ~p"/sso/login", %{"email" => email})
 
               {conn.status == 429, conn}
             end,
@@ -183,10 +174,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :saml_signin, integration.identifier,
-              email: email,
-              return_to: "/sites"
-            )
+            ~p"/sso/saml/signin/#{integration.identifier}?#{[email: email, return_to: "/sites"]}"
           )
 
         assert html = html_response(conn, 200)
@@ -194,7 +182,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         assert html =~ "Processing Single Sign-On request..."
 
         assert text_of_attr(html, "form#sso-req-form", "action") ==
-                 Routes.sso_path(conn, :saml_consume, integration.identifier)
+                 ~p"/sso/saml/consume/#{integration.identifier}"
 
         assert text_of_attr(html, "input[name=email]", "value") == email
         assert text_of_attr(html, "input[name=return_to]", "value") == "/sites"
@@ -210,7 +198,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         email = "dana.lake@" <> domain
 
         conn =
-          post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), %{
+          post(conn, ~p"/sso/saml/consume/#{integration.identifier}", %{
             "email" => email,
             "return_to" => "/sites"
           })
@@ -239,7 +227,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         add_member(team, user: existing_user, role: :admin)
 
         conn =
-          post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), %{
+          post(conn, ~p"/sso/saml/consume/#{integration.identifier}", %{
             "email" => email,
             "return_to" => "/sites"
           })
@@ -257,14 +245,15 @@ defmodule PlausibleWeb.SSOControllerTest do
 
       test "redirects to login when no matching integration found", %{conn: conn} do
         conn =
-          post(conn, Routes.sso_path(conn, :saml_consume, Ecto.UUID.generate()), %{
+          post(conn, ~p"/sso/saml/consume/#{Ecto.UUID.generate()}", %{
             "email" => "missed@example.com",
             "return_to" => "/sites"
           })
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :login_form, return_to: "/sites")
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: "/sites"]}"
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) == "Wrong email."
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "We couldn't find a Single Sign-On account for that email."
       end
     end
 
@@ -273,7 +262,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
       test "redirects when team is not setup", %{conn: conn, team: team} do
         conn = set_current_team(conn, team)
-        conn = get(conn, Routes.sso_path(conn, :sso_settings))
+        conn = get(conn, ~p"/settings/sso/general")
 
         assert redirected_to(conn, 302) == "/sites"
       end
@@ -281,7 +270,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       test "redirects when team lacks SSO plan feature", %{conn: conn, team: team} do
         team = Plausible.Teams.complete_setup(team)
         conn = set_current_team(conn, team)
-        conn = get(conn, Routes.sso_path(conn, :sso_settings))
+        conn = get(conn, ~p"/settings/sso/general")
 
         assert redirected_to(conn, 302) == "/sites"
       end
@@ -290,7 +279,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         user |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.SSO])
         team = Plausible.Teams.complete_setup(team)
         conn = set_current_team(conn, team)
-        conn = get(conn, Routes.sso_path(conn, :sso_settings))
+        conn = get(conn, ~p"/settings/sso/general")
 
         assert html = html_response(conn, 200)
 
@@ -300,77 +289,80 @@ defmodule PlausibleWeb.SSOControllerTest do
 
     describe "provision_notice/2" do
       test "renders the notice", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :provision_notice))
+        conn = get(conn, ~p"/sso/notice")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must first"
-        assert html =~ "log out"
-        assert html =~ "and log in as SSO user"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "has turned off email and password logins"
+        assert html =~ "To access this team,"
+        assert html =~ "sign out"
+        assert html =~ "and sign in with SSO"
       end
     end
 
     describe "provision_issue/2" do
       test "renders issue for not_a_member", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "not_a_member"))
+        conn = get(conn, ~p"/sso/issue?#{[issue: "not_a_member"]}")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must join as a team member first"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, you must be added as a team member first"
       end
 
       test "renders issue for multiple_memberships", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships"))
+        conn = get(conn, ~p"/sso/issue?#{[issue: "multiple_memberships"]}")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must first leave all other teams"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, you must leave all other teams first"
       end
 
       test "renders issue for multiple_memberships_noforce", %{conn: conn} do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :provision_issue, issue: "multiple_memberships_noforce")
+            ~p"/sso/issue?#{[issue: "multiple_memberships_noforce"]}"
           )
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To log in as an SSO user, you must first leave all other teams"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To sign in with SSO, you must leave all other teams first"
 
-        assert html =~ "Log in"
-        assert html =~ "with your email and password"
+        assert html =~ "Sign in with email and password"
+        assert html =~ "to resolve the issue"
       end
 
       test "renders issue for active_personal_team", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :provision_issue, issue: "active_personal_team"))
+        conn = get(conn, ~p"/sso/issue?#{[issue: "active_personal_team"]}")
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
-        assert html =~ "To access this team, you must either remove or transfer all sites"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To access this team, remove or transfer all sites under"
+        assert html =~ "My Personal Sites"
+        assert html =~ "cancel its subscription if active"
       end
 
       test "renders issue for active_personal_team_noforce", %{conn: conn} do
         conn =
           get(
             conn,
-            Routes.sso_path(conn, :provision_issue, issue: "active_personal_team_noforce")
+            ~p"/sso/issue?#{[issue: "active_personal_team_noforce"]}"
           )
 
         assert html = html_response(conn, 200)
 
-        assert html =~ "Single Sign-On enforcement"
+        assert html =~ "Single Sign-On required"
+        assert html =~ "To sign in with SSO, remove or transfer all sites under"
+        assert html =~ "My Personal Sites"
+        assert html =~ "cancel its subscription if active"
 
-        assert html =~
-                 "To log in as an SSO user, you must either remove or transfer all sites"
-
-        assert html =~ "Log in"
-        assert html =~ "with your email and password"
+        assert html =~ "Sign in with email and password"
+        assert html =~ "to resolve the issue"
       end
     end
 
@@ -410,7 +402,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         Auth.UserSessions.create!(user3, "Device 4", now: NaiveDateTime.shift(now, hour: -2))
 
-        conn = get(conn, Routes.sso_path(conn, :team_sessions))
+        conn = get(conn, ~p"/settings/sso/sessions")
 
         assert html = html_response(conn, 200)
 
@@ -424,7 +416,7 @@ defmodule PlausibleWeb.SSOControllerTest do
       end
 
       test "shows empty state when there are no sessions", %{conn: conn} do
-        conn = get(conn, Routes.sso_path(conn, :team_sessions))
+        conn = get(conn, ~p"/settings/sso/sessions")
 
         assert html = html_response(conn, 200)
 
@@ -454,9 +446,9 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         session = Auth.UserSessions.create!(user, "Unknown")
 
-        conn = delete(conn, Routes.sso_path(conn, :delete_session, session.id))
+        conn = delete(conn, ~p"/settings/sso/sessions/#{session.id}")
 
-        assert redirected_to(conn, 302) == Routes.sso_path(conn, :team_sessions)
+        assert redirected_to(conn, 302) == ~p"/settings/sso/sessions"
 
         assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                  "Session logged out successfully"

@@ -79,7 +79,7 @@ defmodule Plausible.Stats.Imported.Base do
 
     cond do
       # Behavioral filters cannot be emulated via aggregated imported stats
-      length(behavioral_filters) > 0 ->
+      behavioral_filters != [] ->
         []
 
       custom_prop_query?(query) ->

@@ -6,8 +6,8 @@ defmodule PlausibleWeb.Live.Sites do
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
   import PlausibleWeb.StatsView, only: [large_number_format: 1]
-  require Logger
 
+  alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Sites.Index
   alias Plausible.Teams
@@ -115,14 +115,14 @@ defmodule PlausibleWeb.Live.Sites do
         @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
       } />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
-        <h2 class="text-xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl sm:leading-9 min-w-0 truncate">
+      <div class="group py-4 border-b border-gray-200 dark:border-gray-750 flex items-center gap-2">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl min-w-0 truncate">
           {Teams.name(@current_team)}
         </h2>
         <.unstyled_link
           :if={Teams.setup?(@current_team)}
           data-test-id="team-settings-link"
-          href={Routes.settings_path(@socket, :team_general)}
+          href={~p"/settings/team/general"}
           class="shrink-0"
         >
           <Heroicons.cog_6_tooth class="hidden group-hover:inline size-5 dark:text-gray-100 text-gray-900" />
@@ -150,7 +150,7 @@ defmodule PlausibleWeb.Live.Sites do
               <PrimaDropdown.dropdown_item
                 as={&link/1}
                 id="add-site-dropdown-menuitem-1"
-                href={Routes.site_path(@socket, :new, %{flow: PlausibleWeb.Flows.provisioning()})}
+                href={~p"/sites/new?#{[flow: PlausibleWeb.Flows.provisioning()]}"}
               >
                 <Heroicons.plus class={PrimaDropdown.dropdown_item_icon_class()} /> Add website
               </PrimaDropdown.dropdown_item>
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Live.Sites do
 
           <.button_link
             :if={!@consolidated_view_cta_dismissed?}
-            href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
+            href={~p"/sites/new?#{[flow: PlausibleWeb.Flows.provisioning()]}"}
             mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </div>
 
-      <div class="flex flex-col gap-y-4 my-4">
+      <div class="flex flex-col gap-y-4 has-[*]:my-4">
         <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
         <PlausibleWeb.Team.Notice.site_ownership_invitations
           site_ownership_invitations={@site_ownership_invitations}
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Live.Sites do
           </.button_link>
           <.button_link
             :if={not Teams.setup?(@current_team) and @has_sites? and length(@teams) == 1}
-            href={Routes.site_path(@socket, :index, __team: hd(@teams).identifier)}
+            href={~p"/sites?#{[__team: hd(@teams).identifier]}"}
             theme="secondary"
             mt?={false}
           >
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Live.Sites do
                   :for={team <- @teams}
                   as={&link/1}
                   id={"go-to-team-dropdown-menuitem-#{team.identifier}"}
-                  href={Routes.site_path(@socket, :index, __team: team.identifier)}
+                  href={~p"/sites?#{[__team: team.identifier]}"}
                 >
                   {Teams.name(team)}
                 </PrimaDropdown.dropdown_item>
@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Live.Sites do
       </div>
 
       <div :if={@has_sites?}>
-        <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <.consolidated_view_card_cta
             :if={
               not @searching? and
@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Live.Sites do
         <.pagination
           :if={@sites.total_pages > 1}
           id="sites-pagination"
-          uri={URI.new!(Routes.site_path(@socket, :index, @uri_params))}
+          uri={URI.new!(~p"/sites?#{@uri_params}")}
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
@@ -310,7 +310,7 @@ defmodule PlausibleWeb.Live.Sites do
           <div class="mt-1 text-sm text-gray-900/80 dark:text-gray-100/60">
             <p>
               To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
-              <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
+              <.styled_link href={~p"/settings/billing/subscription"}>
                 Upgrade now →
               </.styled_link>
             </p>
@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card-cta"
-      class="relative col-span-1 flex flex-col justify-between bg-white p-6 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
+      class="relative col-span-1 flex flex-col justify-between bg-white p-5 dark:bg-gray-800 rounded-md shadow-lg dark:shadow-xl"
     >
       <div class="flex flex-col">
         <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -345,7 +345,7 @@ defmodule PlausibleWeb.Live.Sites do
         </p>
         <div class="flex gap-x-2">
           <.button_link
-            href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}
+            href={~p"/team/setup"}
             mt?={false}
           >
             Create team
@@ -381,7 +381,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="flex gap-x-2">
           <.button_link
             :if={@can_manage_consolidated_view?}
-            href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)}
+            href={url(~p"/billing/choose-plan")}
             mt?={false}
           >
             Upgrade
@@ -437,12 +437,12 @@ defmodule PlausibleWeb.Live.Sites do
       class="relative row-span-2"
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @consolidated_view.domain, [])}
-        class="flex flex-col justify-between gap-6 h-full bg-white p-6 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
+        href={stats_path(@consolidated_view.domain)}
+        class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
       >
         <div class="flex flex-col flex-1 justify-between gap-y-5">
           <div class="flex flex-col gap-y-2 mb-auto">
-            <span class="size-8 sm:size-10 bg-indigo-600 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+            <span class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
               <.globe_icon />
             </span>
             <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
@@ -534,6 +534,13 @@ defmodule PlausibleWeb.Live.Sites do
   attr(:sparkline, :map, required: true)
 
   def site(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :needs_verification?,
+        ee?() and assigns.site.onboarding_status == :new_site
+      )
+
     ~H"""
     <li
       class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
@@ -553,10 +560,18 @@ defmodule PlausibleWeb.Live.Sites do
       }
     >
       <.unstyled_link
-        href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+        href={
+          stats_path(
+            @site.domain,
+            if(@needs_verification?,
+              do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
+              else: []
+            )
+          )
+        }
         class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
       >
-        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-6 group-hover:shadow-lg cursor-pointer transition duration-100">
+        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-5 group-hover:shadow-lg cursor-pointer transition duration-100">
           <div class="w-full flex items-center justify-between gap-x-2.5">
             <.favicon domain={@site.domain} />
             <div class="flex-1 w-full">
@@ -568,12 +583,15 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <.site_stats sparkline={@sparkline} />
+          <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
         </div>
       </.unstyled_link>
 
       <div class="absolute right-1 top-3.5">
-        <.ellipsis_menu site={@site} can_manage?={List.first(@site.memberships).role != :viewer} />
+        <.ellipsis_menu
+          site={@site}
+          can_manage?={List.first(@site.memberships).role in [:owner, :admin, :editor]}
+        />
       </div>
     </li>
     """
@@ -618,7 +636,7 @@ defmodule PlausibleWeb.Live.Sites do
             :if={@can_manage?}
             id={"#{@dropdown_id}-item-1"}
             as={&link/1}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain)}
+            href={~p"/#{@site.domain}/settings/general"}
           >
             <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
           </PrimaDropdown.dropdown_item>
@@ -648,15 +666,6 @@ defmodule PlausibleWeb.Live.Sites do
             />
             {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
           </PrimaDropdown.dropdown_item>
-
-          <PrimaDropdown.dropdown_item
-            :if={Application.get_env(:plausible, :environment) == "dev" and Sites.regular?(@site)}
-            id={"#{@dropdown_id}-item-3"}
-            phx-click="delete-site"
-            phx-value-domain={@site.domain}
-          >
-            <Heroicons.trash class="size-4 text-red-600" /> [DEV ONLY] Quick delete
-          </PrimaDropdown.dropdown_item>
         </PrimaDropdown.dropdown_menu>
       </PrimaDropdown.dropdown>
     </div>
@@ -664,6 +673,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr(:sparkline, :any, required: true)
+  attr(:needs_verification?, :boolean, default: false)
 
   def site_stats(assigns) do
     ~H"""
@@ -692,7 +702,10 @@ defmodule PlausibleWeb.Live.Sites do
             </p>
           </div>
 
-          <.percentage_change change={@sparkline.visitors_change} />
+          <.pill :if={@needs_verification?} color={:yellow}>
+            Setup pending
+          </.pill>
+          <.percentage_change :if={not @needs_verification?} change={@sparkline.visitors_change} />
         </div>
       </span>
     </div>
@@ -796,11 +809,15 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def favicon(assigns) do
-    src = "/favicon/sources/#{assigns.domain}"
-    assigns = assign(assigns, :src, src)
+    assigns =
+      assign(assigns,
+        light_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=light",
+        dark_src: "/favicon/sources/#{assigns.domain}?placeholder=site&ui-mode=dark"
+      )
 
     ~H"""
-    <img src={@src} class="size-[18px] shrink-0" />
+    <img src={@light_src} alt="" class="shrink-0 size-6 rounded-md dark:hidden" />
+    <img src={@dark_src} alt="" class="shrink-0 size-6 rounded-md hidden dark:block" />
     """
   end
 
@@ -953,14 +970,16 @@ defmodule PlausibleWeb.Live.Sites do
     site_entries =
       Sites.get_for_user_by_ids(assigns.current_user, page.entries, team: assigns.current_team)
 
-    sites = %{page | entries: site_entries}
-
     sparklines =
       if connected?(socket) do
         Plausible.Stats.Sparkline.parallel_overview(site_entries)
       else
         %{}
       end
+
+    site_entries = Enum.map(site_entries, &advance_onboarding_status_if_needed(&1, sparklines))
+
+    sites = %{page | entries: site_entries}
 
     consolidated_sparkline =
       if connected?(socket),
@@ -974,6 +993,23 @@ defmodule PlausibleWeb.Live.Sites do
       consolidated_sparkline: consolidated_sparkline || Map.get(assigns, :consolidated_sparkline)
     )
   end
+
+  defp advance_onboarding_status_if_needed(
+         %Plausible.Site{onboarding_status: :new_site} = site,
+         sparklines
+       ) do
+    case Map.get(sparklines, site.domain) do
+      %{visitors: visitors} when visitors > 0 ->
+        site
+        |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
+        |> Repo.update!()
+
+      _ ->
+        site
+    end
+  end
+
+  defp advance_onboarding_status_if_needed(site, _sparklines), do: site
 
   defp refresh_index_pins(socket) do
     assign(socket, :index_state, Index.refresh_pins(socket.assigns.index_state))
@@ -992,7 +1028,7 @@ defmodule PlausibleWeb.Live.Sites do
     socket
     |> assign(:uri_params, uri_params)
     |> assign(:filter_text, trimmed)
-    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
+    |> push_patch(to: ~p"/sites?#{uri_params}", replace: true)
   end
 
   defp reset_pagination(socket) do
@@ -1016,7 +1052,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     socket
     |> assign(:uri_params, uri_params)
-    |> push_patch(to: Routes.site_path(socket, :index, uri_params), replace: true)
+    |> push_patch(to: ~p"/sites?#{uri_params}", replace: true)
   end
 
   defp hash_domain(domain) do

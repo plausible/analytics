@@ -38,7 +38,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
         team = new_site(owner: owner).team
         integration = SSO.initiate_saml_integration(team)
         domain = "#{Enum.random(1..10_000)}.example.com"
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
 
         {:ok,
          owner: owner,

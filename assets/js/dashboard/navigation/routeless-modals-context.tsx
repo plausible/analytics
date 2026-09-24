@@ -1,7 +1,8 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react'
 import { RoutelessSegmentModal } from '../segments/routeless-segment-modals'
+import { RoutelessAnnotationModal } from '../annotations/routeless-annotations-modals'
 
-type ActiveModal = null | RoutelessSegmentModal
+type ActiveModal = null | RoutelessSegmentModal | RoutelessAnnotationModal
 
 const routelessModalsContextDefaultValue: {
   modal: ActiveModal

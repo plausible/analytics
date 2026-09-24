@@ -19,6 +19,7 @@ export type ApiFilter =
 export type NonTimeDimension =
   | apiTypes.SimpleFilterDimensions
   | apiTypes.CustomPropertyFilterDimensions
+  | apiTypes.GoalDimension
 
 export type TimeDimension = apiTypes.TimeDimensions | 'time:minute'
 

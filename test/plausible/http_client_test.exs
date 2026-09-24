@@ -109,7 +109,7 @@ defmodule Plausible.HTTPClientTest do
       Conn.resp(conn, 200, "ok")
     end)
 
-    assert {:error, %Mint.TransportError{reason: :timeout}} ==
+    assert {:error, %Finch.TransportError{reason: :timeout}} =
              HTTPClient.post(bypass_url(bypass, path: "/timeout"), [], %{}, receive_timeout: 100)
 
     Bypass.pass(bypass)

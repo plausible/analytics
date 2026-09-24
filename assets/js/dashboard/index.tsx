@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
-import Locations from './stats/locations'
+import { Locations } from './stats/locations'
 import { Devices } from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
@@ -11,6 +11,8 @@ import { isRealTimeDashboard } from './util/filters'
 import { GraphIntervalProvider } from './stats/graph/graph-interval-context'
 import { ImportsIncludedProvider } from './stats/graph/imports-included-context'
 import { CurrentVisitorsProvider } from './current-visitors-context'
+import { VerificationLiveViewPortal } from './verification/portal'
+import { EmailReportsCTABanner } from './email-reports-cta-banner'
 
 function DashboardStats({
   importedDataInView,
@@ -21,7 +23,11 @@ function DashboardStats({
 }) {
   return (
     <>
-      <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
+      <div className="col-span-full">
+        <EmailReportsCTABanner />
+        <VerificationLiveViewPortal />
+        <VisitorGraph updateImportedDataInView={updateImportedDataInView} />
+      </div>
       <Sources />
       <Pages />
       <Locations />

@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Api.InternalController do
+  use Plausible
   use PlausibleWeb, :controller
   use Plausible.Repo
   import Ecto.Query
@@ -57,13 +58,34 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
+  def complete_onboarding(conn, %{"domain" => domain}) do
+    with %User{} = user <- conn.assigns[:current_user],
+         site <- Sites.get_by_domain(domain),
+         true <- Teams.Memberships.has_editor_access?(site, user) do
+      site
+      |> Plausible.Site.put_onboarding_status_advance(:completed)
+      |> Repo.update!()
+
+      json(conn, "ok")
+    else
+      _ ->
+        PlausibleWeb.Api.Helpers.unauthorized(
+          conn,
+          "You need to be logged in as the owner, admin, or editor of this site"
+        )
+    end
+  end
+
   defp sites_for(user, team) do
     from(u in subquery(Teams.Sites.accessible_by(user, team)),
       inner_join: s in ^Plausible.Site.regular(),
       on: u.site_id == s.id,
       left_join: up in Plausible.Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
-      select: %{domain: s.domain},
+      select: %{
+        domain: s.domain,
+        needs_verification: ^ee?() and s.onboarding_status == :new_site
+      },
       order_by: [
         asc:
           fragment(

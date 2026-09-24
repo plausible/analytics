@@ -17,7 +17,7 @@ defmodule Plausible.InstallationSupport.Detection.ChecksTest do
       test "handles wordpress detection, retrying on 429" do
         url_to_verify = nil
         test = self()
-        stub_lookup_a_records(@expected_domain)
+        stub_dns()
 
         get_context_from_body = fn conn ->
           {:ok, body, _conn} = Plug.Conn.read_body(conn)

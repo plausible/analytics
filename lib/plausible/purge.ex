@@ -40,7 +40,7 @@ defmodule Plausible.Purge do
   Deletes imported stats from and clears the `stats_start_date` field.
 
   The `stats_start_date` is expected to get repopulated the next time
-  `Plausible.Sites.stats_start_date/1` is called.
+  `Plausible.Sites.ensure_stats_start_date/1` is called.
 
   If the input argument is a site, all imported stats are deleted. If it's a site import,
   only imported stats for that import are deleted.
@@ -48,7 +48,7 @@ defmodule Plausible.Purge do
   def delete_imported_stats!(%Plausible.Site{} = site) do
     Enum.each(Plausible.Imported.tables(), fn table ->
       sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64}"
-      Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [site.id])
+      Ecto.Adapters.SQL.query!(Plausible.DeletionRepo, sql, [site.id])
     end)
 
     Plausible.Sites.clear_stats_start_date!(site)
@@ -71,7 +71,7 @@ defmodule Plausible.Purge do
     Enum.each(Plausible.Imported.tables(), fn table ->
       sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64} AND import_id = {$1:UInt64}"
 
-      Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [site.id, import_id])
+      Ecto.Adapters.SQL.query!(Plausible.DeletionRepo, sql, [site.id, import_id])
     end)
 
     Plausible.Sites.clear_stats_start_date!(site)
