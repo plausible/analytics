@@ -15,7 +15,19 @@ defmodule Plausible.Stats.Funnel do
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.{Base, Comparisons, DateTimeRange, Query}
+  alias Plausible.Stats.Exploration
   alias Plausible.Stats.Goal.Revenue
+
+  def suggest(site, query, goals, search_term) do
+    journey = Enum.map(goals, &Exploration.Journey.Step.from/1)
+
+    site
+    |> Exploration.next_steps(query, journey,
+      search_term: search_term,
+      include_wildard?: false
+    )
+    |> Enum.map(&Map.fetch!(&1, :step))
+  end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
