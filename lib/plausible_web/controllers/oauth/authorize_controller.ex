@@ -47,9 +47,8 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp rate_limit(conn) do
-    with :ok <- Auth.rate_limit(:oauth_authorize_ip, conn),
-         :ok <- Auth.rate_limit(:oauth_authorize_user, conn.assigns.current_user) do
-      :ok
+    with :ok <- Auth.rate_limit(:oauth_authorize_ip, conn) do
+      Auth.rate_limit(:oauth_authorize_user, conn.assigns.current_user)
     end
   end
 
