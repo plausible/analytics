@@ -24,90 +24,27 @@ defmodule PlausibleWeb.OAuth.FlowTest do
     stub_metadata(@metadata_doc)
 
     user = new_user()
+    FunWithFlags.enable(:mcp, for_actor: user)
     {:ok, team} = Plausible.Teams.get_or_create(user)
     {:ok, conn: conn} = log_in(%{user: user, conn: conn})
 
     {:ok, conn: conn, user: user, team: team}
   end
 
-  defp stub_metadata(doc) do
-    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
-      Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
-    end)
-  end
-
-  defp stub_metadata_with_counter(doc) do
-    counter = :atomics.new(1, [])
-
-    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
-      :atomics.add_get(counter, 1, 1)
-      Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
-    end)
-
-    counter
-  end
-
-  defp resource do
-    alias Plausible.OAuth.ProtectedResources
-    ProtectedResources.get_resource_url(ProtectedResources.mcp())
-  end
-
-  defp pkce do
-    verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
-    challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
-    {verifier, challenge}
-  end
-
-  defp authorize_params(challenge, overrides \\ %{}) do
-    Map.merge(
-      %{
-        "client_id" => @client_id,
-        "redirect_uri" => @redirect_uri,
-        "response_type" => "code",
-        "code_challenge" => challenge,
-        "code_challenge_method" => "S256",
-        "scope" => "sites:read:*",
-        "state" => "xyz-state",
-        "resource" => resource()
-      },
-      overrides
-    )
-  end
-
-  defp get_authorize(conn, params),
-    do: get(conn, "/login/oauth/authorize?" <> URI.encode_query(params))
-
-  # The screen is a LiveView embedded in a dead render, so it is reached the way
-  # the rest of the suite reaches those: isolated, given the context the
-  # controller would have built. `build/1` is the single fetch a round trip makes.
-  defp consent_screen(conn, params) do
-    {:ok, ctx} = PlausibleWeb.OAuth.AuthorizationRequest.build(params)
-
-    {:ok, lv, _html} =
-      live_isolated(conn, PlausibleWeb.Live.OAuthAuthorize, session: %{"ctx" => ctx})
-
-    lv
-  end
-
-  defp approve(conn, params), do: conn |> consent_screen(params) |> click("approve")
-
-  defp deny(conn, params), do: conn |> consent_screen(params) |> click("deny")
-
-  defp click(lv, action), do: lv |> element("button[phx-click=#{action}]") |> render_click()
-
-  defp params_from_redirect({:error, {:redirect, %{to: url}}}), do: params_from_redirect(url)
-
-  defp params_from_redirect(%Plug.Conn{} = conn),
-    do: params_from_redirect(redirected_to(conn, 302))
-
-  defp params_from_redirect(url) when is_binary(url) do
-    assert String.starts_with?(url, @redirect_uri)
-    url |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
-  end
-
-  defp token_conn, do: build_conn() |> put_req_header("accept", "application/json")
-
   describe "GET /login/oauth/authorize" do
+    test "returns 'not_implemented' when the :mcp flag is not enabled for the user", %{
+      conn: conn,
+      user: user
+    } do
+      # setup enables it for this user, so it needs disabling here
+      FunWithFlags.disable(:mcp, for_actor: user)
+
+      {_verifier, challenge} = pkce()
+      conn = get_authorize(conn, authorize_params(challenge))
+
+      assert %{"error" => "not_implemented"} == json_response(conn, 501)
+    end
+
     test "renders the consent screen with client and scope details", %{conn: conn} do
       {_verifier, challenge} = pkce()
 
@@ -452,5 +389,80 @@ defmodule PlausibleWeb.OAuth.FlowTest do
 
       assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == team.id
     end
+  end
+
+  defp stub_metadata(doc) do
+    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+      Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
+    end)
+  end
+
+  defp stub_metadata_with_counter(doc) do
+    counter = :atomics.new(1, [])
+
+    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+      :atomics.add_get(counter, 1, 1)
+      Plug.Conn.send_resp(conn, 200, Jason.encode!(doc))
+    end)
+
+    counter
+  end
+
+  defp resource do
+    alias Plausible.OAuth.ProtectedResources
+    ProtectedResources.get_resource_url(ProtectedResources.mcp())
+  end
+
+  defp pkce do
+    verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
+    {verifier, challenge}
+  end
+
+  defp authorize_params(challenge, overrides \\ %{}) do
+    Map.merge(
+      %{
+        "client_id" => @client_id,
+        "redirect_uri" => @redirect_uri,
+        "response_type" => "code",
+        "code_challenge" => challenge,
+        "code_challenge_method" => "S256",
+        "scope" => "sites:read:*",
+        "state" => "xyz-state",
+        "resource" => resource()
+      },
+      overrides
+    )
+  end
+
+  defp get_authorize(conn, params),
+    do: get(conn, "/login/oauth/authorize?" <> URI.encode_query(params))
+
+  # The screen is a LiveView embedded in a dead render, so it is reached the way
+  # the rest of the suite reaches those: isolated, given the context the
+  # controller would have built. `build/1` is the single fetch a round trip makes.
+  defp consent_screen(conn, params) do
+    {:ok, ctx} = PlausibleWeb.OAuth.AuthorizationRequest.build(params)
+
+    {:ok, lv, _html} =
+      live_isolated(conn, PlausibleWeb.Live.OAuthAuthorize, session: %{"ctx" => ctx})
+
+    lv
+  end
+
+  defp approve(conn, params), do: conn |> consent_screen(params) |> click("approve")
+
+  defp deny(conn, params), do: conn |> consent_screen(params) |> click("deny")
+
+  defp click(lv, action), do: lv |> element("button[phx-click=#{action}]") |> render_click()
+
+  defp params_from_redirect({:error, {:redirect, %{to: url}}}), do: params_from_redirect(url)
+
+  defp params_from_redirect(%Plug.Conn{} = conn),
+    do: params_from_redirect(redirected_to(conn, 302))
+
+  defp params_from_redirect(url) when is_binary(url) do
+    assert String.starts_with?(url, @redirect_uri)
+    url |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
   end
 end

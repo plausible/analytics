@@ -12,6 +12,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   alias PlausibleWeb.OAuth.AuthorizationResponse
   alias PlausibleWeb.OAuth.GrantableTeams
 
+  plug :require_feature_flag
   plug :put_view, PlausibleWeb.AuthView
 
   @no_team_message "You need to belong to a team before authorizing an application. Please create or join a team and try again."
@@ -30,6 +31,18 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
       {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
       {:redirect_error, request, error} -> redirect_error(conn, request, error)
       {:render_error, message} -> render_error_page(conn, message, 400)
+    end
+  end
+
+  # remove on rollout
+  defp require_feature_flag(conn, _opts) do
+    if FunWithFlags.enabled?(:mcp, for: conn.assigns.current_user) do
+      conn
+    else
+      conn
+      |> put_status(501)
+      |> json(%{error: "not_implemented"})
+      |> halt()
     end
   end
 
