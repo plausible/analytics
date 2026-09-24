@@ -1,7 +1,6 @@
-defmodule PlausibleWeb.OAuth.FlowTest do
+defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
   @moduledoc """
-  Walks the full token acquire flow the way a real MCP client does: discovery ->
-  consent -> authorization code -> access token.
+  Tests /login/oauth/authorize screen
   """
 
   use PlausibleWeb.ConnCase, async: true
