@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.E2E.OAuthClient do
   @moduledoc """
   Serves the Client ID Metadata Document `Plausible.OAuth.CIMD` fetches, wired in
-  as that fetch's `:plug` - the seam `Req.Test` occupies under `MIX_ENV=test`.
-  Values come from `config/.env.e2e_test`, which the Playwright spec reads too.
+  as that fetch's `:plug`, similar to `MIX_ENV=test`.
+  Values come from the environment `e2e/playwright.config.ts`.
   """
 
   @spec client_id() :: String.t()
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.E2E.OAuthClient do
 
   defp fetch!(var) do
     System.get_env(var) ||
-      raise "#{var} is not set - the e2e OAuth client is defined in config/.env.e2e_test"
+      raise "#{var} is not set - the e2e OAuth client is defined in e2e/playwright.config.ts"
   end
 
   def init(opts), do: opts

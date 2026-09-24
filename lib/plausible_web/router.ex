@@ -190,6 +190,7 @@ defmodule PlausibleWeb.Router do
         post "/funnel", E2EController, :create_funnel
         post "/goal", E2EController, :create_goal
         put "/verification", E2EController, :put_verification_scenario
+        put "/feature-flag", E2EController, :put_feature_flag
       end
     end
   end

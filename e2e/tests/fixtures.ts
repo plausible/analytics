@@ -258,6 +258,24 @@ export async function setVerificationScenario({
   expect(response.ok()).toBeTruthy()
 }
 
+export async function enableFeatureFlag({
+  request,
+  flag
+}: {
+  request: APIRequestContext
+  flag: string
+}) {
+  const response = await request.put('/e2e-tests/feature-flag', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    data: { flag }
+  })
+
+  expect(response.ok()).toBeTruthy()
+}
+
 export async function addGoal({
   request,
   domain,
