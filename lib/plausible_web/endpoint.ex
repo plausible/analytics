@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Endpoint do
   use Plausible
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
+  use PlausibleWeb.VerifiedRoutes
 
   on_ce do
     plug :maybe_handle_acme_challenge
@@ -94,12 +95,16 @@ defmodule PlausibleWeb.Endpoint do
     config!(:websocket_url)
   end
 
-  @authorization_endpoint_path "/login/oauth/authorize"
   @cors_opts CORSPlug.init([])
 
-  # As per OAuth 2.1, section 3.1, CORS must not be supported at the authorization endpoint
-  def cors(%Plug.Conn{request_path: @authorization_endpoint_path} = conn, _opts), do: conn
-  def cors(conn, _opts), do: CORSPlug.call(conn, @cors_opts)
+  # CORS must not be supported at the [authorization endpoint](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-endpoint)
+  def cors(conn, _opts) do
+    if conn.request_path == ~p"/login/oauth/authorize" do
+      conn
+    else
+      CORSPlug.call(conn, @cors_opts)
+    end
+  end
 
   def runtime_session(conn, _opts) do
     Plug.run(conn, [{Plug.Session, runtime_session_opts()}])
