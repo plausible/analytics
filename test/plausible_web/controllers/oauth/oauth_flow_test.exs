@@ -7,6 +7,8 @@ defmodule PlausibleWeb.OAuth.FlowTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Test.Support.DNS
 
+  import Phoenix.LiveViewTest
+
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 
@@ -75,13 +77,32 @@ defmodule PlausibleWeb.OAuth.FlowTest do
   defp get_authorize(conn, params),
     do: get(conn, "/login/oauth/authorize?" <> URI.encode_query(params))
 
-  defp approve(conn, params),
-    do: post(conn, "/login/oauth/authorize", Map.put(params, "action", "approve"))
+  # The screen is a LiveView embedded in a dead render, so it is reached the way
+  # the rest of the suite reaches those: isolated, given the context the
+  # controller would have built. `build/1` is the single fetch a round trip makes.
+  defp consent_screen(conn, params) do
+    {:ok, ctx} = PlausibleWeb.OAuth.AuthorizationRequest.build(params)
 
-  defp params_from_redirect(conn) do
-    location = redirected_to(conn, 302)
-    assert String.starts_with?(location, @redirect_uri)
-    location |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
+    {:ok, lv, _html} =
+      live_isolated(conn, PlausibleWeb.Live.OAuthAuthorize, session: %{"ctx" => ctx})
+
+    lv
+  end
+
+  defp approve(conn, params), do: conn |> consent_screen(params) |> click("approve")
+
+  defp deny(conn, params), do: conn |> consent_screen(params) |> click("deny")
+
+  defp click(lv, action), do: lv |> element("button[phx-click=#{action}]") |> render_click()
+
+  defp params_from_redirect({:error, {:redirect, %{to: url}}}), do: params_from_redirect(url)
+
+  defp params_from_redirect(%Plug.Conn{} = conn),
+    do: params_from_redirect(redirected_to(conn, 302))
+
+  defp params_from_redirect(url) when is_binary(url) do
+    assert String.starts_with?(url, @redirect_uri)
+    url |> URI.parse() |> Map.fetch!(:query) |> URI.decode_query()
   end
 
   defp token_conn, do: build_conn() |> put_req_header("accept", "application/json")
@@ -293,7 +314,7 @@ defmodule PlausibleWeb.OAuth.FlowTest do
     end
   end
 
-  describe "POST /login/oauth/authorize" do
+  describe "the consent decision" do
     test "approving redirects back with a code and the original state", %{conn: conn} do
       {_verifier, challenge} = pkce()
 
@@ -305,51 +326,66 @@ defmodule PlausibleWeb.OAuth.FlowTest do
                      }) = returned
     end
 
+    test "the client_name stored on the code is the one the user was shown", %{conn: conn} do
+      {_verifier, challenge} = pkce()
+      params = authorize_params(challenge)
+
+      stub_metadata(%{
+        "client_id" => @client_id,
+        "redirect_uris" => [@redirect_uri],
+        "client_name" => "Shown Name"
+      })
+
+      assert conn |> get_authorize(params) |> html_response(200) =~ "Shown Name"
+
+      lv = consent_screen(conn, params)
+      assert render(lv) =~ "Shown Name"
+
+      fetches =
+        stub_metadata_with_counter(%{
+          "client_id" => @client_id,
+          "redirect_uris" => [@redirect_uri],
+          "client_name" => "Swapped After Approval"
+        })
+
+      click(lv, "approve")
+
+      assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).client_name == "Shown Name"
+
+      # Nothing is re-read once the screen exists, so there is no second
+      # response for a swapped document to arrive in.
+      assert :atomics.get(fetches, 1) == 0
+    end
+
     test "denying redirects back with access_denied and issues no code", %{conn: conn} do
       {_verifier, challenge} = pkce()
-      params = Map.put(authorize_params(challenge), "action", "deny")
 
-      returned = conn |> post("/login/oauth/authorize", params) |> params_from_redirect()
+      returned = conn |> deny(authorize_params(challenge)) |> params_from_redirect()
 
       assert_matches ^strict_map(%{"error" => "access_denied", "state" => "xyz-state"}) = returned
 
       assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
     end
 
-    test "a missing action is treated as a denial", %{conn: conn} do
-      {_verifier, challenge} = pkce()
-
-      returned =
-        conn
-        |> post("/login/oauth/authorize", authorize_params(challenge))
-        |> params_from_redirect()
-
-      assert returned["error"] == "access_denied"
-    end
-
-    test "a user with an unverified email cannot approve", %{conn: conn, user: user} do
+    test "a user with an unverified email cannot reach the screen, let alone approve",
+         %{conn: conn, user: user} do
       user |> Ecto.Changeset.change(email_verified: false) |> Plausible.Repo.update!()
 
       {_verifier, challenge} = pkce()
-      approve(conn, authorize_params(challenge))
+      conn = get_authorize(conn, authorize_params(challenge))
 
+      assert redirected_to(conn) == "/activate"
       assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
     end
 
-    test "rate-limits the user across repeated POST requests", %{conn: conn} do
-      fetches = stub_metadata_with_counter(@metadata_doc)
+    test "refuses an approval once the user is over the rate limit", %{conn: conn, user: user} do
       {_verifier, challenge} = pkce()
-      params = authorize_params(challenge)
+      lv = consent_screen(conn, authorize_params(challenge))
 
-      statuses = Enum.map(1..30, fn _ -> approve(conn, params).status end)
+      Enum.each(1..30, fn _ -> Plausible.Auth.rate_limit(:oauth_authorize_user, user) end)
 
-      # 30 requests fall into at most two one-minute windows of 10
-      limits = Enum.count(statuses, &(&1 == 429))
-      passes = Enum.count(statuses, &(&1 == 302))
-
-      assert limits >= 10
-      assert passes >= 10
-      assert :atomics.get(fetches, 1) == passes
+      assert click(lv, "approve") =~ "Too many authorization requests"
+      assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
     end
   end
 

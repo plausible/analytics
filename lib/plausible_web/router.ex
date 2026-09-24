@@ -500,7 +500,6 @@ defmodule PlausibleWeb.Router do
     ]
 
     get "/authorize", OAuth.AuthorizeController, :authorize_form
-    post "/authorize", OAuth.AuthorizeController, :authorize
   end
 
   scope "/login/oauth", PlausibleWeb do

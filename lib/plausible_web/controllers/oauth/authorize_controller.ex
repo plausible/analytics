@@ -1,14 +1,16 @@
 defmodule PlausibleWeb.OAuth.AuthorizeController do
   @moduledoc """
   OAuth 2.1 authorization controller.
+
+  Fetches CIMD and renders `PlausibleWeb.Live.OAuthAuthorize` or related errors.
   """
 
   use PlausibleWeb, :controller
 
   alias Plausible.Auth
-  alias Plausible.OAuth
-  alias Plausible.OAuth.CIMD
-  alias Plausible.OAuth.ProtectedResources
+  alias PlausibleWeb.OAuth.AuthorizationRequest
+  alias PlausibleWeb.OAuth.AuthorizationResponse
+  alias PlausibleWeb.OAuth.GrantableTeams
 
   plug :put_view, PlausibleWeb.AuthView
 
@@ -22,78 +24,12 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   """
   def authorize_form(conn, params) do
     with :ok <- rate_limit(conn),
-         {:ok, ctx} <- build_context(params) do
+         {:ok, ctx} <- AuthorizationRequest.build(params) do
       render_consent(conn, ctx)
     else
       {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
       {:redirect_error, request, error} -> redirect_error(conn, request, error)
       {:render_error, message} -> render_error_page(conn, message, 400)
-    end
-  end
-
-  @doc """
-  Turns the user's approve/deny decision into an
-  [authorization response](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-response),
-  redirecting back to the client with a code or an error.
-  """
-  def authorize(conn, %{"action" => action} = params) do
-    with :ok <- rate_limit(conn),
-         {:ok, ctx} <- build_context(params) do
-      handle_decision(conn, conn.assigns.current_user, ctx, action)
-    else
-      {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
-      {:redirect_error, request, error} -> redirect_error(conn, request, error)
-      {:render_error, message} -> render_error_page(conn, message, 400)
-    end
-  end
-
-  def authorize(conn, params), do: authorize(conn, Map.put(params, "action", "deny"))
-
-  defp handle_decision(conn, user, ctx, "approve") do
-    case resolve_team(conn, ctx) do
-      nil ->
-        render_error_page(conn, @no_team_message, 400)
-
-      team ->
-        attrs = %{
-          client_id: ctx.client_id,
-          client_name: ctx.client_name,
-          redirect_uri: ctx.redirect_uri,
-          code_challenge: ctx.code_challenge,
-          code_challenge_method: ctx.code_challenge_method,
-          scopes: ctx.scopes,
-          resource: ctx.resource
-        }
-
-        case OAuth.create_authorization_code(user, team, attrs) do
-          {:ok, code} ->
-            redirect(conn,
-              external: redirect_with(ctx.redirect_uri, code: code, state: ctx.state)
-            )
-
-          {:error, _} ->
-            redirect_error(conn, ctx, "server_error")
-        end
-    end
-  end
-
-  defp handle_decision(conn, _user, ctx, _denied_or_unknown) do
-    redirect_error(conn, ctx, "access_denied")
-  end
-
-  defp resolve_team(conn, ctx) do
-    teams = grantable_teams(conn)
-
-    Enum.find(teams, &(&1.identifier == ctx.team)) || List.first(teams)
-  end
-
-  # The teams offered on the consent screen are the only ones a grant can bind
-  # to. `current_team` is deliberately not consulted: on this route the URL is
-  # authored by the client, so the ambient team is attacker-influenced.
-  defp grantable_teams(conn) do
-    case conn.assigns[:my_team] do
-      nil -> conn.assigns[:teams] || []
-      my_team -> [my_team | conn.assigns[:teams] || []]
     end
   end
 
@@ -104,94 +40,15 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
     end
   end
 
-  defp build_context(params) do
-    request = authorization_request(params)
-
-    with {:ok, metadata} <- fetch_client_metadata(request.client_id),
-         :ok <- validate_redirect_uri(request.redirect_uri, metadata) do
-      build_context_with_validated_redirect_uri(request, metadata)
-    end
-  end
-
-  defp authorization_request(params) do
-    %{
-      client_id: params["client_id"],
-      redirect_uri: params["redirect_uri"],
-      response_type: params["response_type"],
-      code_challenge: params["code_challenge"],
-      code_challenge_method: params["code_challenge_method"],
-      scope: params["scope"],
-      resource: params["resource"],
-      state: params["state"],
-      team: params["team"]
-    }
-  end
-
-  defp build_context_with_validated_redirect_uri(request, metadata) do
-    cond do
-      request.response_type != "code" ->
-        {:redirect_error, request, "unsupported_response_type"}
-
-      blank?(request.code_challenge) ->
-        {:redirect_error, request, "invalid_request"}
-
-      request.code_challenge_method != "S256" ->
-        {:redirect_error, request, "invalid_request"}
-
-      true ->
-        with {:ok, resource} <- ProtectedResources.get_by_url(request.resource),
-             {:ok, scopes} <-
-               ProtectedResources.normalize_requested_scopes(request.scope, resource) do
-          {:ok,
-           %{
-             client_id: request.client_id,
-             redirect_uri: request.redirect_uri,
-             response_type: request.response_type,
-             code_challenge: request.code_challenge,
-             code_challenge_method: request.code_challenge_method,
-             scopes: scopes,
-             resource: ProtectedResources.get_resource_url(resource),
-             state: request.state,
-             team: request.team,
-             client_name: metadata["client_name"]
-           }}
-        else
-          {:error, :not_found} -> {:redirect_error, request, "invalid_target"}
-          {:error, :invalid_scope} -> {:redirect_error, request, "invalid_scope"}
-        end
-    end
-  end
-
-  defp fetch_client_metadata(client_id) when is_binary(client_id) and client_id != "" do
-    case CIMD.fetch(client_id) do
-      {:ok, metadata} -> {:ok, metadata}
-      {:error, _} -> {:render_error, "Invalid or unreachable client_id metadata document."}
-    end
-  end
-
-  defp fetch_client_metadata(_), do: {:render_error, "Missing or invalid client_id."}
-
-  defp validate_redirect_uri(redirect_uri, metadata) do
-    if CIMD.redirect_uri_registered?(redirect_uri, metadata["redirect_uris"] || []) do
-      :ok
-    else
-      {:render_error,
-       "The redirect_uri does not match any registered redirect URI for this client."}
-    end
-  end
-
   defp render_consent(conn, ctx) do
-    case resolve_team(conn, ctx) do
-      nil ->
-        render_error_page(conn, @no_team_message, 400)
-
-      team ->
-        render(conn, "oauth_authorize.html",
-          legacy_layout?: false,
-          ctx: ctx,
-          teams: grantable_teams(conn),
-          selected_team: team
-        )
+    if GrantableTeams.resolve(conn.assigns, ctx.team) do
+      render(conn, "oauth_authorize.html",
+        legacy_layout?: false,
+        connect_live_socket: true,
+        ctx: ctx
+      )
+    else
+      render_error_page(conn, @no_team_message, 400)
     end
   end
 
@@ -202,21 +59,8 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp redirect_error(conn, %{redirect_uri: redirect_uri, state: state}, error) do
-    redirect(conn, external: redirect_with(redirect_uri, error: error, state: state))
+    redirect(conn,
+      external: AuthorizationResponse.redirect_url(redirect_uri, error: error, state: state)
+    )
   end
-
-  defp redirect_with(redirect_uri, params) do
-    query = params |> Enum.reject(fn {_k, v} -> is_nil(v) end) |> URI.encode_query()
-    uri = URI.parse(redirect_uri)
-
-    merged =
-      case uri.query do
-        empty when empty in [nil, ""] -> query
-        existing -> existing <> "&" <> query
-      end
-
-    URI.to_string(%{uri | query: merged})
-  end
-
-  defp blank?(value), do: is_nil(value) or value == ""
 end
