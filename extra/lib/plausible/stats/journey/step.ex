@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Exploration.Journey.Step do
 
   @spec from(map() | Plausible.Goal.t()) :: t()
   def from(%Plausible.Goal{} = goal) do
-    new(goal.event_name, goal.page_path, false, 0, true)
+    new(goal.event_name || "pageview", goal.page_path || "", false, 0, true)
   end
 
   def from(step) do

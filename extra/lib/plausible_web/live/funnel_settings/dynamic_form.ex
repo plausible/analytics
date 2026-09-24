@@ -131,14 +131,20 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
-                    suggest_fun={&suggest/2}
+                    suggest_fun={fn input, _choices -> 
+                      suggest(
+                        input, 
+                        @site,
+                        @steps,
+                        step_idx
+                      ) 
+                  end}
                     on_selection_made={
                       fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
                       end
                     }
                     id={"step-#{step_idx}"}
-                    options={Enum.reject([selected_option(@steps, false, step_idx)], &is_nil/1)}
                   />
                 </div>
 
@@ -358,19 +364,30 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     {:noreply, evaluate_funnel(socket)}
   end
 
-  defp suggest(_input, choices) do
-    # FIXME: actually suggest choices
-    choices
+  defp suggest(input, site, steps, step_idx) do
+    steps =
+      steps
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx}" end)
+      |> Enum.map(&elem(&1, 1))
+
+    query =
+      QueryBuilder.build!(site,
+        metrics: [:pageviews],
+        input_date_range: :month
+      )
+
+    site
+    |> Plausible.Stats.Funnel.suggest(query, steps, input)
+    |> Enum.map(&{to_step_data(&1), to_string(&1)})
   end
 
   defp has_steps_errors?(f) do
     not f.source.valid?
   end
 
-  defp store_step(assigns, id, _step_data) do
-    # FIXME: determine what on the basis of step_data
-    what = %{}
-    Map.put(assigns.steps, id, what)
+  defp store_step(assigns, id, step_data) do
+    Map.put(assigns.steps, id, to_goal(step_data))
   end
 
   defp drop_step(steps, step_idx) do
@@ -378,15 +395,31 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     Map.delete(steps, step_input_id)
   end
 
-  defp selected_option(%Funnel{} = funnel, false, idx) do
-    if goal = Enum.at(Funnel.goals(funnel), idx - 1) do
-      # FIXME: generate step_data here
-      what = ""
-      {goal.id, what}
+  defp selected_option(steps, false, idx) do
+    if goal = steps["step-#{idx}"] do
+      {to_step_data(goal), to_string(goal)}
     end
   end
 
   defp selected_option(_, _, _), do: nil
+
+  defp to_goal(step_data) when is_binary(step_data) and step_data != "" do
+    step_data
+    |> JSON.decode!()
+    |> Funnel.DynamicStep.changeset()
+    |> Ecto.Changeset.apply_changes()
+    |> Funnel.DynamicStep.as_goal()
+  end
+
+  defp to_step_data(%Plausible.Goal{} = goal) do
+    JSON.encode!(%{
+      goal_id: goal.id,
+      event_name: goal.event_name,
+      page_path: goal.page_path,
+      scroll_threshold: goal.scroll_threshold,
+      currency: goal.currency
+    })
+  end
 
   defp find_sequence_break(input) do
     input
