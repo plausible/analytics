@@ -1,13 +1,8 @@
 defmodule PlausibleWeb.Live.OAuthAuthorize do
   @moduledoc """
-  Consent screen for an OAuth authorization request.
+  OAuth 2.1 consent screen.
 
-  The client's metadata document is fetched once, by the controller that renders
-  this view, and the context it yields travels into the socket as signed session
-  data. The approve/deny decision is then taken against that context rather than
-  against a second fetch of a document the client can change in between, so what
-  the grant records is what the user was shown - a client cannot serve one
-  `client_name` to the screen and another to the click.
+  Renders the UI for the user to approve or deny an application.
   """
 
   use PlausibleWeb, :live_view

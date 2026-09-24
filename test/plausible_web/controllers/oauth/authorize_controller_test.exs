@@ -9,6 +9,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
   import Phoenix.LiveViewTest
 
   alias Plausible.OAuth.ProtectedResources
+  alias Plausible.OAuth.Token
 
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
@@ -364,52 +365,47 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     assert Plausible.Repo.reload!(user).last_team_identifier == before
   end
 
-  test "approving redirects back with a code and the original state", %{
-    conn: conn,
-    valid_params: valid_params,
-    valid_doc: valid_doc
-  } do
+  test "approving the application redirects back with a code and the original state query param",
+       %{
+         conn: conn,
+         user: user,
+         team: team,
+         valid_params: valid_params,
+         valid_doc: valid_doc
+       } do
     stub_dns()
-    stub_metadata(valid_doc)
+    fetches = stub_metadata(valid_doc)
 
     lv = render_consent_screen(conn, valid_params)
     click(lv, "approve")
     {redirect_url, _flash} = assert_redirect(lv)
 
+    # client metadata is fetched exactly once
+    assert fetches |> :atomics.get(1) == 1
+
     [base, qs] = String.split(redirect_url, "?")
+    decoded_qs = URI.decode_query(qs)
 
     assert base == valid_params["redirect_uri"]
 
     assert_matches ^strict_map(%{
                      "code" => ^any(:string, &(&1 != "")),
                      "state" => "xyz-state"
-                   }) = URI.decode_query(qs)
-  end
+                   }) = decoded_qs
 
-  test "the client_name stored on the code is the one the user was shown", %{
-    conn: conn,
-    valid_params: valid_params,
-    valid_doc: valid_doc
-  } do
-    stub_dns()
-
-    stub_metadata(%{valid_doc | "client_name" => "Shown Name"})
-
-    assert conn |> get_authorize(valid_params) |> html_response(200) =~ "Shown Name"
-
-    lv = render_consent_screen(conn, valid_params)
-    assert render(lv) =~ "Shown Name"
-
-    fetches =
-      stub_metadata(%{valid_doc | "client_name" => "Swapped After Approval"})
-
-    click(lv, "approve")
-
-    assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).client_name == "Shown Name"
-
-    # Nothing is re-read once the screen exists, so there is no second
-    # response for a swapped document to arrive in.
-    assert :atomics.get(fetches, 1) == 0
+    assert_matches %{
+                     code_hash: ^Token.hash(decoded_qs["code"]),
+                     client_id: ^valid_params["client_id"],
+                     client_name: ^valid_doc["client_name"],
+                     redirect_uri: ^valid_params["redirect_uri"],
+                     resource: ^valid_params["resource"],
+                     code_challenge: ^valid_params["code_challenge"],
+                     code_challenge_method: ^valid_params["code_challenge_method"],
+                     scopes: [^valid_params["scope"]],
+                     user_id: ^user.id,
+                     team_id: ^team.id,
+                     expires_at: ^(&(NaiveDateTime.compare(&1, NaiveDateTime.utc_now()) == :gt))
+                   } = Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode)
   end
 
   test "denying redirects back with access_denied and issues no code", %{
