@@ -18,6 +18,7 @@ defmodule Plausible.Funnel do
   import Ecto.Changeset
 
   alias Plausible.Funnel.Step
+  alias Plausible.Funnel.DynamicStep
 
   @funnel_types [:sequential, :flexible, :strict]
 
@@ -62,6 +63,8 @@ defmodule Plausible.Funnel do
 
     belongs_to :site, Plausible.Site
 
+    embeds_many :dynamic_steps, DynamicStep, on_replace: :delete
+
     has_many :steps, Step,
       preload_order: [
         asc: :step_order
@@ -72,25 +75,106 @@ defmodule Plausible.Funnel do
     timestamps()
   end
 
+  def goals(funnel) do
+    funnel
+    |> steps()
+    |> Enum.map(&as_goal/1)
+  end
+
+  def steps(funnel) do
+    funnel.steps
+    |> Enum.concat(funnel.dynamic_steps)
+    |> Enum.sort_by(& &1.step_order)
+  end
+
+  def as_goal(%Step{} = step), do: Step.as_goal(step)
+  def as_goal(%DynamicStep{} = step), do: DynamicStep.as_goal(step)
+
   def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
     funnel
     |> cast(attrs, [:name, :funnel_type])
     |> validate_required([:name])
     |> set_funnel_type()
     |> put_steps(attrs[:steps] || attrs["steps"])
-    |> validate_length(:steps, min: @min_steps, max: @max_steps)
+    |> validate_steps_length()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
   end
 
-  def put_steps(changeset, steps) do
-    steps
-    |> Enum.map(&Step.changeset(%Step{}, &1))
-    |> Enum.with_index(fn step, step_order ->
-      Ecto.Changeset.put_change(step, :step_order, step_order + 1)
-    end)
-    |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
+  @spec swap(t(), Keyword.t()) :: t()
+  def swap(funnel, opts) do
+    funnel_type = Keyword.get(opts, :funnel_type, funnel.funnel_type)
+
+    funnel
+    |> Map.put(:funnel_type, funnel_type)
+    |> swap_steps(Keyword.get(opts, :steps))
+  end
+
+  defp swap_steps(funnel, nil), do: funnel
+
+  defp swap_steps(funnel, steps) do
+    {static_steps, dynamic_steps} =
+      steps
+      |> Enum.with_index(1)
+      |> Enum.map(fn {step, idx} -> %{step | step_order: idx} end)
+      |> Enum.split_with(fn
+        %Step{} -> true
+        _ -> false
+      end)
+
+    %{funnel | steps: static_steps, dynamic_steps: dynamic_steps}
+  end
+
+  defp put_steps(changeset, steps) do
+    {static_steps, dynamic_steps} =
+      steps
+      |> Enum.with_index(1)
+      |> Enum.map(fn {input, idx} ->
+        input
+        |> schema_by_input()
+        |> build_step(input, idx)
+      end)
+      |> Enum.split_with(fn
+        %{data: %Step{}} -> true
+        _ -> false
+      end)
+
+    changeset
+    |> Ecto.Changeset.put_assoc(:steps, static_steps)
+    |> Ecto.Changeset.put_embed(:dynamic_steps, dynamic_steps)
+  end
+
+  defp validate_steps_length(changeset) do
+    steps_count =
+      length(Ecto.Changeset.get_assoc(changeset, :steps)) +
+        length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
+
+    if steps_count < @min_steps or steps_count > @max_steps do
+    end
+
+    cond do
+      steps_count < @min_steps ->
+        add_error(changeset, :steps, "should have at least #{@min_steps} item(s)")
+
+      steps_count > @max_steps ->
+        add_error(changeset, :steps, "should have no more than #{@max_steps} item(s)")
+
+      true ->
+        changeset
+    end
+  end
+
+  defp schema_by_input(%Plausible.Goal{}), do: Step
+  defp schema_by_input(%Step{}), do: Step
+  defp schema_by_input(%{goal_id: _}), do: Step
+  defp schema_by_input(%{"goal_id" => _}), do: Step
+  defp schema_by_input(_), do: DynamicStep
+
+  defp build_step(step_schema, params, step_order) do
+    params
+    |> step_schema.changeset()
+    |> Ecto.Changeset.put_change(:step_order, step_order)
   end
 
   defp set_funnel_type(%{valid?: true} = changeset) do

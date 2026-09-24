@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
           authorized_site: site
         }
       ) do
-    goals = Enum.map(funnel.steps, & &1.goal)
+    goals = Plausible.Funnel.goals(funnel)
 
     %{
       funnel: %{
