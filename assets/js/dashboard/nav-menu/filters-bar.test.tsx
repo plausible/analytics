@@ -1,77 +1,56 @@
-import React from 'react'
+import React, { ComponentProps } from 'react'
 import { render, screen } from '../../../test-utils'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
-import { FiltersBar, handleVisibility } from './filters-bar'
+import { FiltersBar } from './filters-bar'
 import { getRouterBasepath } from '../router'
 import { stringifySearch } from '../util/url-search-params'
 import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
 
 mockAnimationsApi()
-const resizeObserver = mockResizeObserver()
+mockResizeObserver()
 
 const domain = 'dummy.site'
 
-test('user can see expected filters and clear them one by one or all together on small screens', async () => {
-  const searchRecord = {
-    filters: [
-      ['is', 'country', ['DE']],
-      ['is', 'goal', ['Subscribed to Newsletter']],
-      ['is', 'page', ['/docs', '/blog']]
-    ],
-    labels: { DE: 'Germany' }
-  }
-  const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
+const renderFiltersBar = ({
+  searchRecord,
+  siteOptions,
+  ...providerProps
+}: {
+  searchRecord: Record<string, unknown>
+} & Omit<ComponentProps<typeof TestContextProviders>, 'children'>) =>
+  render(<FiltersBar />, {
+    wrapper: (props) => (
+      <TestContextProviders
+        routerProps={{
+          initialEntries: [
+            {
+              pathname: getRouterBasepath({ domain, shared: false }),
+              search: stringifySearch(searchRecord)
+            }
+          ]
+        }}
+        siteOptions={{ domain, ...siteOptions }}
+        {...providerProps}
+        {...props}
+      />
+    )
+  })
 
-  render(
-    <FiltersBar
-      accessors={{
-        topBar: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(600)
-            }) as unknown as HTMLElement
-        ),
-        leftSection: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(200)
-            }) as unknown as HTMLElement
-        ),
-        rightSection: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(300)
-            }) as unknown as HTMLElement
-        )
-      }}
-    />,
-    {
-      wrapper: (props) => (
-        <TestContextProviders
-          routerProps={{ initialEntries: [startUrl] }}
-          siteOptions={{ domain }}
-          {...props}
-        />
-      )
+test('user can see expected filters and clear them one by one or all together', async () => {
+  renderFiltersBar({
+    searchRecord: {
+      filters: [
+        ['is', 'country', ['DE']],
+        ['is', 'goal', ['Subscribed to Newsletter']],
+        ['is', 'page', ['/docs', '/blog']]
+      ],
+      labels: { DE: 'Germany' }
     }
-  )
-
-  // needed to initiate the layout calculation effect of the component
-  resizeObserver.resize()
+  })
 
   const queryFilterPills = () =>
     screen.queryAllByRole('link', { hidden: false, name: /.* is .*/i })
-
-  // all filters appear in See more menu (see the mock widths in props)
-  expect(queryFilterPills().map((m) => m.textContent)).toEqual([])
-
-  await userEvent.click(
-    screen.getByRole('button', {
-      hidden: false,
-      name: 'See 3 more filters and actions'
-    })
-  )
 
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([
     'Country is Germany',
@@ -101,74 +80,32 @@ test('user can see expected filters and clear them one by one or all together on
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([])
 })
 
-describe(`${handleVisibility.name}`, () => {
-  it('is able to fit all exactly, whether "See more" is rendered in the actions or not', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 1000,
-      seeMoreWidth: 100,
-      pillWidths: [200, 200, 200, 200],
-      pillGap: 25,
-      mustShowSeeMoreMenu: true
+test('action tooltips show the keybind and the docs link', async () => {
+  renderFiltersBar({
+    searchRecord: {
+      filters: [['is', 'country', ['DE']]],
+      labels: { DE: 'Germany' }
     }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 900,
-      visibleCount: 4
-    })
-
-    handleVisibility({
-      ...input
-    })
-    expect(setVisibility).toHaveBeenCalledTimes(2)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 900,
-      visibleCount: 4
-    })
-
-    handleVisibility({ ...input, leftoverWidth: 999 })
-    expect(setVisibility).toHaveBeenCalledTimes(3)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 675,
-      visibleCount: 3
-    })
   })
 
-  it('handles 1 filter correctly', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 300,
-      seeMoreWidth: 50,
-      pillWidths: [250],
-      pillGap: 25,
-      mustShowSeeMoreMenu: false
-    }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 275,
-      visibleCount: 1
-    })
-  })
+  const addFilter = screen.getByRole('button', { name: 'Add filter' })
+  await userEvent.hover(addFilter)
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Add filter')
+  await userEvent.unhover(addFilter)
 
-  it('handles 2 filters correctly, shrinking to 0 width', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 300,
-      seeMoreWidth: 50,
-      pillWidths: [250, 200],
-      pillGap: 25,
-      mustShowSeeMoreMenu: true
-    }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 0,
-      visibleCount: 0
-    })
-  })
+  const clearAll = screen.getByRole('link', { name: 'Clear all filters' })
+  await userEvent.hover(clearAll)
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Clear all filtersESC')
+  await userEvent.unhover(clearAll)
+
+  await userEvent.hover(screen.getByRole('link', { name: 'Save as segment' }))
+  await userEvent.hover(
+    screen.getByRole('link', { name: 'Learn more about segments' })
+  )
+  expect(
+    screen.getByRole('link', { name: 'Learn more about segments' })
+  ).toHaveAttribute(
+    'href',
+    'https://plausible.io/docs/filters-segments#how-to-save-a-segment'
+  )
 })
