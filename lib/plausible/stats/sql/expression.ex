@@ -128,13 +128,14 @@ defmodule Plausible.Stats.SQL.Expression do
       on: true
     )
     |> select_merge_as([s, time_slot: time_slot], %{
-      key => fragment("toStartOfHour(?)", time_slot)
+      key => fragment("toUnixTimestamp(toStartOfHour(?))", time_slot)
     })
   end
 
   def select_dimension(q, key, "time:hour", _table, query) do
     select_merge_as(q, [t], %{
-      key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+      key =>
+        fragment("toUnixTimestamp(toStartOfHour(toTimeZone(?, ?)))", t.timestamp, ^query.timezone)
     })
   end
 
