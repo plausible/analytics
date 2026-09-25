@@ -34,12 +34,14 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -h 127.0.0.1"
+          --health-start-period 30s
+          --health-start-interval 1s
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
       clickhouse:
-        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        image: clickhouse/clickhouse-server:25.11.5.8
         ports:
           - 8123:8123
         env:
@@ -47,6 +49,7 @@ jobs:
         options: >-
           --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
           --health-start-period 2m
+          --health-start-interval 1s
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -130,12 +133,14 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -h 127.0.0.1"
+          --health-start-period 30s
+          --health-start-interval 1s
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
       clickhouse:
-        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        image: clickhouse/clickhouse-server:25.11.5.8
         ports:
           - 8123:8123
         env:
@@ -143,6 +148,7 @@ jobs:
         options: >-
           --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
           --health-start-period 2m
+          --health-start-interval 1s
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
