@@ -102,9 +102,9 @@ test('saving a segment', async ({ page, request }) => {
       modal(page).getByRole('heading', { name: 'Create segment' })
     ).toBeVisible()
 
-    await expect(
-      modal(page).getByPlaceholder('Source is Facebook')
-    ).toHaveAccessibleName('Segment name')
+    await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+      'Source is Facebook'
+    )
 
     await expect(
       modal(page).getByRole('radio', { name: 'Personal segment' })
@@ -180,9 +180,9 @@ test('saving a segment', async ({ page, request }) => {
       modal(page).getByRole('heading', { name: 'Create segment' })
     ).toBeVisible()
 
-    await expect(
-      modal(page).getByPlaceholder('UTM source is Adwords and Source is Google')
-    ).toHaveAccessibleName('Segment name')
+    await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+      'UTM source is Adwords and Source is Google'
+    )
 
     await modal(page).getByLabel('Segment name').fill('Ads from Google')
 
@@ -271,6 +271,10 @@ test('editing an existing segment', async ({ page, request }) => {
   await expect(
     modal(page).getByRole('heading', { name: 'Update segment' })
   ).toBeVisible()
+
+  await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+    'Traffic from Google'
+  )
 
   await modal(page).getByLabel('Segment name').fill('Ads from Google')
 

@@ -27,6 +27,7 @@ import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
 import { SourcesDetails } from './stats/sources/details'
 import { RoutelessAnnotationModals } from './annotations/routeless-annotations-modals'
+import { ToastHost } from './components/toast'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,7 @@ function DashboardElement() {
           <Outlet />
           <RoutelessSegmentModals />
           <RoutelessAnnotationModals />
+          <ToastHost />
         </DashboardStateContextProvider>
       </RoutelessModalsContextProvider>
     </QueryClientProvider>
