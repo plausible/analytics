@@ -1,0 +1,8 @@
+<Layouts.auth heading="Authorize access" flash={@flash}>
+  <.auth_container>
+    {live_render(@conn, PlausibleWeb.Live.OAuthAuthorize,
+      container: {:div, class: "contents"},
+      session: %{"ctx" => @ctx}
+    )}
+  </.auth_container>
+</Layouts.auth>
