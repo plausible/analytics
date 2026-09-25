@@ -46,9 +46,11 @@ const toggleButton = {
   }
 }
 
+const staticRow = 'px-4 py-2.5 text-sm rounded-md'
+
 const navigationLink = classNames(
   'flex items-center justify-between',
-  'px-4 py-2.5 text-sm rounded-md',
+  staticRow,
   'cursor-pointer'
 )
 
@@ -66,9 +68,11 @@ const hoverLink = classNames(
 
 const items = {
   classNames: {
+    staticRow,
     navigationLink,
     hoverLink,
     label: 'flex-1 min-w-0 truncate',
+    description: 'font-normal text-xs text-gray-500 dark:text-gray-400',
     /** Full-width row that holds a leading icon and a `label` span. */
     iconRow: classNames(navigationLink, hoverLink, 'gap-x-2 w-full text-left'),
     selectedOption: classNames(

@@ -148,6 +148,7 @@ export function DashboardOptionsMenu() {
     return (
       <button
         disabled
+        data-testid="dashboard-options-menu"
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
