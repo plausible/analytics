@@ -138,7 +138,12 @@ const SegmentLink = ({
         <div className="truncate" title={name}>
           {name}
         </div>
-        <div className="flex items-baseline gap-x-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+        <div
+          className={classNames(
+            'flex items-baseline gap-x-1',
+            popover.items.classNames.description
+          )}
+        >
           {!!authorship && (
             <span className="truncate min-w-0">{authorship}</span>
           )}
