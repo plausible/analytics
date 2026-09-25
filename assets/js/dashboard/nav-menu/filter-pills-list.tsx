@@ -1,13 +1,14 @@
 import React, { CSSProperties } from 'react'
 import { useDashboardStateContext } from '../dashboard-state-context'
-import { FilterPill, FilterPillAction, FilterPillProps } from './filter-pill'
+import { FilterPill, FilterPillAction } from './filter-pill'
 import { cleanLabels, EVENT_PROPS_PREFIX } from '../util/filters'
 import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { filterRoute } from '../router'
-import { canRemoveFilter } from '../filtering/segments'
+import { canRemoveFilter, isSegmentFilter } from '../filtering/segments'
 import { useSegmentsContext } from '../filtering/segments-context'
+import { SegmentPillMenu } from './segments/segment-pill-menu'
 import { Filter } from '../dashboard-state'
 
 export const AppliedFilterPillsList = React.forwardRef<
@@ -15,19 +16,36 @@ export const AppliedFilterPillsList = React.forwardRef<
   { className?: string; style?: CSSProperties }
 >(({ className, style }, ref) => {
   const { dashboardState } = useDashboardStateContext()
-  const { limitedToSegment } = useSegmentsContext()
+  const { segments, limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
-  const getPillAction = (filter: Filter): FilterPillAction => ({
-    type: 'link',
-    navigationTarget: {
-      path: filterRoute.path,
-      search: (s) => s,
-      params: {
-        field: filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
+  const getPillAction = (filter: Filter): FilterPillAction | undefined => {
+    if (!isSegmentFilter(filter)) {
+      return {
+        type: 'link',
+        navigationTarget: {
+          path: filterRoute.path,
+          search: (s) => s,
+          params: {
+            field: filter[1].startsWith(EVENT_PROPS_PREFIX)
+              ? 'props'
+              : filter[1]
+          }
+        }
       }
     }
-  })
+    const [_operation, _dimension, [id]] = filter
+    const segment = segments.find((s) => String(s.id) === String(id))
+    if (!segment) {
+      return undefined
+    }
+    return {
+      type: 'menu',
+      renderMenu: (closeMenu) => (
+        <SegmentPillMenu segment={segment} closeMenu={closeMenu} />
+      )
+    }
+  }
 
   return (
     // the negative margin hides the inner padding, which keeps
@@ -68,17 +86,3 @@ export const AppliedFilterPillsList = React.forwardRef<
     </div>
   )
 })
-
-export const FilterPillsList = ({
-  className,
-  pills
-}: {
-  className?: string
-  pills: FilterPillProps[]
-}) => (
-  <div className={classNames('flex gap-2', className)}>
-    {pills.map((pill, index) => (
-      <FilterPill key={index} {...pill} />
-    ))}
-  </div>
-)

@@ -116,22 +116,6 @@ export const parseApiSegmentData = ({
   ...rest
 })
 
-export function getSearchToRemoveSegmentFilter(): Required<AppNavigationTarget>['search'] {
-  return (searchRecord) => {
-    const updatedFilters = (
-      (Array.isArray(searchRecord.filters)
-        ? searchRecord.filters
-        : []) as Filter[]
-    ).filter((f) => !isSegmentFilter(f))
-    const currentLabels = searchRecord.labels ?? {}
-    return {
-      ...searchRecord,
-      filters: updatedFilters,
-      labels: cleanLabels(updatedFilters, currentLabels)
-    }
-  }
-}
-
 export function getSearchToSetSegmentFilter(
   segment: Pick<SavedSegment, 'id' | 'name'>,
   options: { omitAllOtherFilters?: boolean } = {}
@@ -272,8 +256,21 @@ export function isListableSegment({
   return false
 }
 
-export function canSeeSegmentDetails({ user }: { user: UserContextValue }) {
-  return user.loggedIn && user.role !== Role.public
+export function getNavigationToExpandSegment(
+  segment: SavedSegments[number]
+): Pick<AppNavigationTarget, 'search'> & {
+  state: { expandedSegment: SavedSegments[number] }
+} {
+  return {
+    search: (s) => ({
+      ...s,
+      filters: segment.segment_data.filters,
+      labels: segment.segment_data.labels
+    }),
+    state: {
+      expandedSegment: segment
+    }
+  }
 }
 
 export function canRemoveFilter(
@@ -287,16 +284,4 @@ export function canRemoveFilter(
     )
   }
   return true
-}
-
-export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
-  const segmentFilter = filters.find(isSegmentFilter)
-  if (!segmentFilter) {
-    return undefined
-  }
-  const [_operation, _dimension, clauses] = segmentFilter
-  if (clauses.length !== 1) {
-    throw new Error('Dashboard can be filtered by only one segment')
-  }
-  return segmentFilter
 }
