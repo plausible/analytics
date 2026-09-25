@@ -6,6 +6,7 @@ import {
   populateStats,
   createSharedLink
 } from '../fixtures'
+import { openFilterSubmenuItem } from '../test-utils'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -166,7 +167,7 @@ test('back navigation closes the modal', async ({ page, request, baseURL }) => {
 
   await page.getByRole('button', { name: 'Filter' }).click()
 
-  await page.getByRole('link', { name: 'Page' }).click()
+  await openFilterSubmenuItem(page, 'Page', 'Page')
 
   await expect(page).toHaveURL(baseURL + '/' + domain + '/filter/page')
 

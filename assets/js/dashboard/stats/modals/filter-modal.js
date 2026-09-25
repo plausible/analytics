@@ -4,49 +4,42 @@ import { useParams } from 'react-router-dom'
 import { ModalLayout, ModalFooter } from '../../components/modal-layout'
 import {
   EVENT_PROPS_PREFIX,
-  FILTER_GROUP_TO_MODAL_TYPE,
-  formatFilterGroup,
+  formattedFilters,
   FILTER_OPERATIONS,
-  getFilterGroup,
-  FILTER_MODAL_TO_FILTER_GROUP,
+  getFilterDimension,
   cleanLabels,
-  getAvailableFilterModals
+  getAvailableFilterDimensions
 } from '../../util/filters'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import { isModifierPressed, isTyping } from '../../keybinding'
-import FilterModalGroup from './filter-modal-group'
+import FilterModalDimension from './filter-modal-dimension'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { SegmentModal } from '../../segments/segment-modals'
 import { findAppliedSegmentFilter } from '../../filtering/segments'
 import { Button } from '../../components/button'
 
-function partitionFilters(modalType, filters) {
+function partitionFilters(dimension, filters) {
   const otherFilters = []
   const filterState = {}
-  let hasRelevantFilters = false
+  let filtersToRemoveCount = 0
 
   filters.forEach((filter, index) => {
-    const filterGroup = getFilterGroup(filter)
-    if (FILTER_GROUP_TO_MODAL_TYPE[filterGroup] === modalType) {
-      const key = filterState[filterGroup]
-        ? `${filterGroup}:${index}`
-        : filterGroup
+    if (getFilterDimension(filter) === dimension) {
+      const key = filterState[dimension] ? `${dimension}:${index}` : dimension
       filterState[key] = filter
-      hasRelevantFilters = true
+      filtersToRemoveCount++
     } else {
       otherFilters.push(filter)
     }
   })
 
-  FILTER_MODAL_TO_FILTER_GROUP[modalType].forEach((filterGroup) => {
-    if (!filterState[filterGroup]) {
-      filterState[filterGroup] = emptyFilter(filterGroup)
-    }
-  })
+  if (!filterState[dimension]) {
+    filterState[dimension] = emptyFilter(dimension)
+  }
 
-  return { filterState, otherFilters, hasRelevantFilters }
+  return { filterState, otherFilters, filtersToRemoveCount }
 }
 
 function emptyFilter(key) {
@@ -59,13 +52,9 @@ class FilterModal extends React.Component {
   constructor(props) {
     super(props)
 
-    const modalType = this.props.modalType
-
     const dashboardState = this.props.dashboardState
-    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(
-      modalType,
-      dashboardState.filters
-    )
+    const { filterState, otherFilters, filtersToRemoveCount } =
+      partitionFilters(this.props.dimension, dashboardState.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.closeModal = this.closeModal.bind(this)
@@ -74,7 +63,7 @@ class FilterModal extends React.Component {
       filterState,
       labelState: dashboardState.labels,
       otherFilters,
-      hasRelevantFilters
+      filtersToRemoveCount
     }
   }
 
@@ -170,15 +159,10 @@ class FilterModal extends React.Component {
     })
   }
 
-  getFilterGroups() {
-    const groups = FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType]
-    return groups
-  }
-
   render() {
     return (
       <ModalLayout
-        title={`Filter by ${formatFilterGroup(this.props.modalType)}`}
+        title={`Filter by ${formattedFilters[this.props.dimension]}`}
         onClose={this.closeModal}
       >
         <form
@@ -186,21 +170,18 @@ class FilterModal extends React.Component {
           onSubmit={this.handleSubmit.bind(this)}
         >
           <div className="flex flex-col gap-y-3 mb-2">
-            {this.getFilterGroups().map((filterGroup) => (
-              <FilterModalGroup
-                key={filterGroup}
-                filterGroup={filterGroup}
-                filterState={this.state.filterState}
-                labels={this.state.labelState}
-                onUpdateRowValue={this.onUpdateRowValue.bind(this)}
-                onAddRow={this.onAddRow.bind(this)}
-                onDeleteRow={this.onDeleteRow.bind(this)}
-              />
-            ))}
+            <FilterModalDimension
+              dimension={this.props.dimension}
+              filterState={this.state.filterState}
+              labels={this.state.labelState}
+              onUpdateRowValue={this.onUpdateRowValue.bind(this)}
+              onAddRow={this.onAddRow.bind(this)}
+              onDeleteRow={this.onDeleteRow.bind(this)}
+            />
           </div>
 
           <ModalFooter>
-            {this.state.hasRelevantFilters ? (
+            {this.state.filtersToRemoveCount > 0 ? (
               <Button
                 theme="secondary"
                 size="sm"
@@ -208,7 +189,7 @@ class FilterModal extends React.Component {
                   this.selectFiltersAndCloseModal(this.state.otherFilters)
                 }}
               >
-                {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1
+                {this.state.filtersToRemoveCount > 1
                   ? 'Remove filters'
                   : 'Remove filter'}
               </Button>
@@ -238,7 +219,7 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
-  if (!Object.keys(getAvailableFilterModals(site)).includes(field)) {
+  if (!getAvailableFilterDimensions(site).includes(field)) {
     return null
   }
   const appliedSegmentFilter =
@@ -252,7 +233,7 @@ export default function FilterModalWithRouter(props) {
   return (
     <FilterModal
       {...props}
-      modalType={field || 'page'}
+      dimension={field}
       dashboardState={dashboardState}
       navigate={navigate}
       site={site}
