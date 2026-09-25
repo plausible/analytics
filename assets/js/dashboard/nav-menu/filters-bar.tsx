@@ -1,11 +1,19 @@
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
+import { StarIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
-import React, { useRef, useState, useLayoutEffect } from 'react'
-import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
+import React, {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from 'react'
+import { AppliedFilterPillsList } from './filter-pills-list'
+import { FilterMenu } from './filter-menu'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { Popover, Transition } from '@headlessui/react'
-import { popover, BlurMenuButtonOnEscape } from '../components/popover'
+import { popover } from '../components/popover'
+import { QuestionMarkCircleIcon, TrashIcon } from '../components/icons'
+import { Tooltip } from '../util/tooltip'
 import {
   canSeeSaveAsSegmentAction,
   isSegmentFilter
@@ -14,103 +22,13 @@ import { useRoutelessModalsContext } from '../navigation/routeless-modals-contex
 import { DashboardState } from '../dashboard-state'
 import { useUserContext } from '../user-context'
 
-// Component structure is
-// `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
-// where `..` represents an ideally equal length.
-// The following calculations guarantee that.
-const SEE_MORE_WIDTH_PX = 32
-const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
-const SEE_MORE_LEFT_MARGIN_PX = 0
+const SCROLL_FADE_PX = 32
 
-export const handleVisibility = ({
-  setVisibility,
-  leftoverWidth,
-  seeMoreWidth,
-  pillWidths,
-  pillGap,
-  mustShowSeeMoreMenu
-}: {
-  setVisibility: (v: VisibilityState) => void
-  leftoverWidth: number | null
-  pillWidths: (number | null)[] | null
-  seeMoreWidth: number
-  pillGap: number
-  mustShowSeeMoreMenu: boolean
-}): void => {
-  if (leftoverWidth === null || pillWidths === null) {
-    return
-  }
-
-  const fitToWidth = (maxWidth: number) => {
-    let visibleCount = 0
-    let currentWidth = 0
-    let lastValidWidth = 0
-    for (const pillWidth of pillWidths) {
-      currentWidth += (pillWidth ?? 0) + pillGap
-      if (currentWidth <= maxWidth) {
-        lastValidWidth = currentWidth
-        visibleCount += 1
-      } else {
-        break
-      }
-    }
-    return { visibleCount, lastValidWidth }
-  }
-
-  const fits = fitToWidth(leftoverWidth)
-
-  const seeMoreWillBePresent =
-    fits.visibleCount < pillWidths.length || mustShowSeeMoreMenu
-
-  // Check if the appearance of "See more" would cause overflow
-  if (seeMoreWillBePresent) {
-    const maybeFitsLess = fitToWidth(leftoverWidth - seeMoreWidth)
-    if (maybeFitsLess.visibleCount < fits.visibleCount) {
-      return setVisibility({
-        width: maybeFitsLess.lastValidWidth,
-        visibleCount: maybeFitsLess.visibleCount
-      })
-    }
-  }
-
-  return setVisibility({
-    width: fits.lastValidWidth,
-    visibleCount: fits.visibleCount
-  })
-}
-
-const getElementWidthOrNull = <
-  T extends Pick<HTMLElement, 'getBoundingClientRect'>
->(
-  element: T | null
-) => (element === null ? null : element.getBoundingClientRect().width)
-
-type VisibilityState = {
-  width: number
-  visibleCount: number
-}
-
-type ElementAccessor = (
-  filtersBarElement: HTMLElement | null
-) => HTMLElement | null | undefined
-
-/**
- * The accessors are paths to other elements that FiltersBar needs to measure:
- * they depend on the structure of the parent and are thus passed as props.
- * Passing these with refs would be more reactive, but the main layout effect
- * didn't trigger then as expected.
- */
-interface FiltersBarProps {
-  accessors: {
-    topBar: ElementAccessor
-    leftSection: ElementAccessor
-    rightSection: ElementAccessor
-  }
-}
+type ScrollOverflow = { start: boolean; end: boolean }
 
 const canShowClearAllAction = ({
   filters
-}: Pick<DashboardState, 'filters'>): boolean => filters.length >= 2
+}: Pick<DashboardState, 'filters'>): boolean => filters.length >= 1
 
 const canShowSaveAsSegmentAction = ({
   filters,
@@ -118,10 +36,7 @@ const canShowSaveAsSegmentAction = ({
 }: Pick<DashboardState, 'filters'> & { isEditingSegment: boolean }): boolean =>
   filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
 
-export const FiltersBar = ({ accessors }: FiltersBarProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const pillsRef = useRef<HTMLDivElement>(null)
-  const [visibility, setVisibility] = useState<null | VisibilityState>(null)
+export const FiltersBar = () => {
   const { dashboardState, expandedSegment } = useDashboardStateContext()
   const user = useUserContext()
 
@@ -134,235 +49,185 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       isEditingSegment: !!expandedSegment
     }) && canSeeSaveAsSegmentAction({ user })
 
-  const actionsInSeeMoreMenu = [
-    showingSaveAsSegment && ('save as segment' as const),
-    showingClearAll && ('clear all filters' as const)
-  ].filter((f) => f)
-
-  const mustShowSeeMoreMenu = actionsInSeeMoreMenu.length > 0
-
-  useLayoutEffect(() => {
-    const topBar = accessors.topBar(containerRef.current)
-    const leftSection = accessors.leftSection(containerRef.current)
-    const rightSection = accessors.rightSection(containerRef.current)
-
-    const resizeObserver = new ResizeObserver(() => {
-      const pillWidths = pillsRef.current
-        ? Array.from(pillsRef.current.children).map((el) =>
-            getElementWidthOrNull(el)
-          )
-        : null
-      handleVisibility({
-        setVisibility,
-        pillWidths,
-        pillGap: PILL_X_GAP_PX,
-        leftoverWidth:
-          topBar && leftSection && rightSection
-            ? getElementWidthOrNull(topBar)! -
-              getElementWidthOrNull(leftSection)! -
-              getElementWidthOrNull(rightSection)!
-            : null,
-        seeMoreWidth:
-          SEE_MORE_LEFT_MARGIN_PX +
-          SEE_MORE_WIDTH_PX +
-          SEE_MORE_RIGHT_MARGIN_PX,
-        mustShowSeeMoreMenu
-      })
-    })
-
-    if (containerRef.current && topBar) {
-      resizeObserver.observe(topBar)
-    }
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [accessors, dashboardState.filters, mustShowSeeMoreMenu])
+  const hasActions = showingSaveAsSegment || showingClearAll
 
   if (!dashboardState.filters.length) {
-    // functions as spacer between elements.leftSection and elements.rightSection
-    return <div className="w-4" />
+    return (
+      <div className="flex flex-1 justify-end">
+        <FilterMenu />
+      </div>
+    )
   }
 
   return (
-    <div
-      className={classNames(
-        'flex w-full items-center',
-        visibility === null && 'invisible' // hide until we've calculated the positions
-      )}
-      ref={containerRef}
-    >
-      <div className="flex items-center">
-        <AppliedFilterPillsList
-          ref={pillsRef}
-          direction="horizontal"
-          slice={{
-            type: 'invisible-outside',
-            start: 0,
-            end: visibility?.visibleCount
-          }}
-          className="overflow-hidden"
-          style={{ width: visibility?.width ?? 0 }}
-        />
-      </div>
-      {visibility !== null &&
-        (dashboardState.filters.length !== visibility.visibleCount ||
-          mustShowSeeMoreMenu) && (
-          <SeeMoreMenu
-            actions={actionsInSeeMoreMenu}
-            className="md:relative"
-            filtersCount={dashboardState.filters.length}
-            visibleFiltersCount={visibility.visibleCount}
+    <div className="flex items-center gap-x-1 md:min-w-0">
+      <ScrollableFilterPills />
+      <div className="flex shrink-0 items-center gap-x-1">
+        <FilterMenu compact />
+        {hasActions && (
+          <div
+            aria-hidden="true"
+            className="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600"
           />
         )}
+        {showingSaveAsSegment && <SaveAsSegmentAction />}
+        {showingClearAll && <ClearAction />}
+      </div>
     </div>
   )
 }
 
-const SeeMoreMenu = ({
-  className,
-  filtersCount,
-  visibleFiltersCount,
-  actions
-}: {
-  className?: string
-  filtersCount: number
-  visibleFiltersCount: number
-  actions: Array<'save as segment' | 'clear all filters' | false>
-}) => {
-  const seeMoreRef = useRef<HTMLButtonElement>(null)
-  const filtersInMenuCount = filtersCount - visibleFiltersCount
+const getScrollOverflow = (element: HTMLElement): ScrollOverflow => ({
+  start: element.scrollLeft > 1,
+  end: element.scrollLeft + element.clientWidth < element.scrollWidth - 1
+})
 
-  const title =
-    filtersInMenuCount === 1
-      ? 'See 1 more filter and actions'
-      : filtersInMenuCount > 1
-        ? `See ${filtersInMenuCount} more filters and actions`
-        : 'See actions'
+const getFadeMask = ({ start, end }: ScrollOverflow) => {
+  if (!start && !end) {
+    return undefined
+  }
+  const from = start ? `transparent, black ${SCROLL_FADE_PX}px` : 'black'
+  const to = end
+    ? `black calc(100% - ${SCROLL_FADE_PX}px), transparent`
+    : 'black'
+  return `linear-gradient(to right, ${from}, ${to})`
+}
 
-  const showMoreFilters = filtersCount !== visibleFiltersCount
-  const showSomeActions = actions.some((a) => a)
+const ScrollableFilterPills = () => {
+  const { dashboardState } = useDashboardStateContext()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [overflow, setOverflow] = useState<ScrollOverflow>({
+    start: false,
+    end: false
+  })
+  const filtersCount = dashboardState.filters.length
+  const previousFiltersCount = useRef(filtersCount)
+
+  const updateOverflow = (element: HTMLElement) => {
+    const next = getScrollOverflow(element)
+    setOverflow((current) =>
+      current.start === next.start && current.end === next.end ? current : next
+    )
+  }
+
+  useLayoutEffect(() => {
+    const element = scrollRef.current
+    if (!element) {
+      return
+    }
+    const onChange = () => updateOverflow(element)
+    const resizeObserver = new ResizeObserver(onChange)
+    resizeObserver.observe(element)
+    element.addEventListener('scroll', onChange, { passive: true })
+    return () => {
+      resizeObserver.disconnect()
+      element.removeEventListener('scroll', onChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    const element = scrollRef.current
+    if (!element) {
+      return
+    }
+    // new filters are prepended, so bring the start into view when one is added
+    if (filtersCount > previousFiltersCount.current) {
+      element.scrollLeft = 0
+    }
+    previousFiltersCount.current = filtersCount
+    updateOverflow(element)
+  }, [dashboardState.filters, filtersCount])
 
   return (
-    <Popover className={className}>
-      <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
-      <Popover.Button
-        title={title}
-        ref={seeMoreRef}
-        className={classNames(
-          popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.shadow,
-          'justify-center',
-          'relative group'
-        )}
-        style={{
-          height: SEE_MORE_WIDTH_PX,
-          width: SEE_MORE_WIDTH_PX,
-          marginLeft: SEE_MORE_LEFT_MARGIN_PX,
-          marginRight: SEE_MORE_RIGHT_MARGIN_PX
-        }}
-      >
-        <EllipsisHorizontalIcon className="block size-4" />
-        {showMoreFilters && (
-          <div
-            aria-hidden="true"
-            className="absolute flex justify-end left-0 -right-1 bottom-0 translate-y-1/4"
-          >
-            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow-sm px-[3px] py-[1px] flex items-center rounded-xs bg-gray-100 dark:bg-gray-850">
-              +{filtersInMenuCount}
-            </div>
-          </div>
-        )}
-      </Popover.Button>
-      <Transition
-        as="div"
-        {...popover.transition.props}
-        className={classNames(
-          popover.transition.classNames.fullwidth,
-          'mt-2 md:right-auto md:origin-top-left'
-        )}
-      >
-        <Popover.Panel
-          className={classNames(
-            popover.panel.classNames.roundedSheet,
-            'flex flex-col'
-          )}
-        >
-          {showMoreFilters && (
-            <>
-              <div className="py-4 px-4">
-                <AppliedFilterPillsList
-                  direction="vertical"
-                  pillClassName="!shadow-none !bg-gray-100 dark:!bg-gray-700"
-                  slice={{
-                    type: 'no-render-outside',
-                    start: visibleFiltersCount
-                  }}
-                />
-              </div>
-              {showSomeActions && (
-                <div className="mb-1 border-gray-200 dark:border-gray-700 border-b"></div>
-              )}
-            </>
-          )}
-          {showSomeActions && (
-            <div className="flex flex-col">
-              {actions.map((action) => {
-                const linkClassName = classNames(
-                  popover.items.classNames.navigationLink,
-                  popover.items.classNames.selectedOption,
-                  popover.items.classNames.hoverLink,
-                  'whitespace-nowrap'
-                )
-
-                switch (action) {
-                  case 'clear all filters':
-                    return (
-                      <ClearAction key={action} className={linkClassName} />
-                    )
-                  case 'save as segment':
-                    return (
-                      <SaveAsSegmentAction
-                        key={action}
-                        className={linkClassName}
-                      />
-                    )
-                  default:
-                    return null
-                }
-              })}
-            </div>
-          )}
-        </Popover.Panel>
-      </Transition>
-    </Popover>
+    <AppliedFilterPillsList
+      ref={scrollRef}
+      className="md:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ maskImage: getFadeMask(overflow) }}
+    />
   )
 }
 
-const ClearAction = ({ className }: { className?: string }) => (
-  <AppNavigationLink
-    className={className}
-    search={(search) => ({
-      ...search,
-      filters: null,
-      labels: null
-    })}
-  >
-    Clear all filters
-  </AppNavigationLink>
+const actionClassName = classNames(
+  popover.toggleButton.classNames.rounded,
+  popover.toggleButton.classNames.ghost,
+  'justify-center'
 )
 
-const SaveAsSegmentAction = ({ className }: { className?: string }) => {
+const ActionTooltip = ({
+  label,
+  keybind,
+  children,
+  docsLink
+}: {
+  label: string
+  keybind?: string
+  children: ReactNode
+  docsLink?: { href: string; label: string }
+}) => (
+  <Tooltip
+    interactive={!!docsLink}
+    containerRef={{ current: document.body }}
+    info={
+      <span className="flex items-center gap-x-2 whitespace-nowrap">
+        {label}
+        {keybind && (
+          <kbd className="rounded-sm border border-gray-600 dark:border-gray-500 px-1 font-sans text-xs text-gray-300">
+            {keybind}
+          </kbd>
+        )}
+        {docsLink && (
+          <a
+            href={docsLink.href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={docsLink.label}
+          >
+            <QuestionMarkCircleIcon className="size-4" />
+          </a>
+        )}
+      </span>
+    }
+  >
+    {children}
+  </Tooltip>
+)
+
+const ClearAction = () => (
+  <ActionTooltip label="Clear all filters" keybind="ESC">
+    <AppNavigationLink
+      aria-label="Clear all filters"
+      className={actionClassName}
+      search={(search) => ({
+        ...search,
+        filters: null,
+        labels: null
+      })}
+    >
+      <TrashIcon className="block size-4" />
+    </AppNavigationLink>
+  </ActionTooltip>
+)
+
+const SaveAsSegmentAction = () => {
   const { setModal } = useRoutelessModalsContext()
 
   return (
-    <AppNavigationLink
-      className={className}
-      search={(s) => s}
-      onClick={() => setModal({ type: 'create-segment' })}
-      state={{ expandedSegment: null }}
+    <ActionTooltip
+      label="Save as segment"
+      docsLink={{
+        href: 'https://plausible.io/docs/filters-segments#how-to-save-a-segment',
+        label: 'Learn more about segments'
+      }}
     >
-      Save as segment
-    </AppNavigationLink>
+      <AppNavigationLink
+        aria-label="Save as segment"
+        className={actionClassName}
+        search={(s) => s}
+        onClick={() => setModal({ type: 'create-segment' })}
+        state={{ expandedSegment: null }}
+      >
+        <StarIcon className="block size-4" />
+      </AppNavigationLink>
+    </ActionTooltip>
   )
 }

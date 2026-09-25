@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { TrashIcon } from '@heroicons/react/20/solid'
+import { TrashIcon } from '../../components/icons'
 import classNames from 'classnames'
 
 import FilterOperatorSelector from '../../components/filter-operator-selector'
