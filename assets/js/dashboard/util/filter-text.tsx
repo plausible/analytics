@@ -52,7 +52,7 @@ function formatClauses(labels: Array<string | number>): ReactNode[] {
   return labels.map((label, index) => (
     <Fragment key={index}>
       {index > 0 && ' or '}
-      <b>{label}</b>
+      <span className="font-semibold">{label}</span>
     </Fragment>
   ))
 }

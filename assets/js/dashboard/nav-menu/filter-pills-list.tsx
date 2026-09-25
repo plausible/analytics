@@ -1,6 +1,6 @@
-import React, { DetailedHTMLProps, HTMLAttributes } from 'react'
+import React, { CSSProperties } from 'react'
 import { useDashboardStateContext } from '../dashboard-state-context'
-import { FilterPill, FilterPillProps } from './filter-pill'
+import { FilterPill, FilterPillAction, FilterPillProps } from './filter-pill'
 import { cleanLabels, EVENT_PROPS_PREFIX } from '../util/filters'
 import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
@@ -8,133 +8,77 @@ import classNames from 'classnames'
 import { filterRoute } from '../router'
 import { canRemoveFilter } from '../filtering/segments'
 import { useSegmentsContext } from '../filtering/segments-context'
-
-export const PILL_X_GAP_PX = 10
-export const PILL_Y_GAP_PX = 8
-
-type SliceStartEnd = {
-  /** The beginning index of the specified portion of the array. If start is undefined, then the slice begins at index 0. */
-  start?: number
-  /** The end index of the specified portion of the array. This is exclusive of the element at the index 'end'. If end is undefined, then the slice extends to the end of the array. */
-  end?: number
-}
-
-type InvisibleOutsideSlice = {
-  type: 'invisible-outside'
-} & SliceStartEnd
-
-type NoRenderOutsideSlice = {
-  type: 'no-render-outside'
-} & SliceStartEnd
-
-type AppliedFilterPillsListProps = Omit<
-  FilterPillsListProps,
-  'slice' | 'pillProps' | 'pills'
-> & {
-  slice?: InvisibleOutsideSlice | NoRenderOutsideSlice
-  pillClassName?: string
-}
-
-type FilterPillsListProps = {
-  direction: 'horizontal' | 'vertical'
-} & DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
-    pills: FilterPillProps[]
-  }
+import { Filter } from '../dashboard-state'
 
 export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
-  AppliedFilterPillsListProps
->(({ className, style, slice, direction, pillClassName }, ref) => {
+  { className?: string; style?: CSSProperties }
+>(({ className, style }, ref) => {
   const { dashboardState } = useDashboardStateContext()
   const { limitedToSegment } = useSegmentsContext()
   const navigate = useAppNavigate()
 
-  const renderableFilters =
-    slice?.type === 'no-render-outside'
-      ? dashboardState.filters.slice(slice.start, slice.end)
-      : dashboardState.filters
-
-  const indexAdjustment =
-    slice?.type === 'no-render-outside' ? (slice.start ?? 0) : 0
-
-  const isInvisible = (index: number) => {
-    return slice?.type === 'invisible-outside'
-      ? index < (slice.start ?? 0) ||
-          index > (slice.end ?? dashboardState.filters.length) - 1
-      : false
-  }
+  const getPillAction = (filter: Filter): FilterPillAction => ({
+    type: 'link',
+    navigationTarget: {
+      path: filterRoute.path,
+      search: (s) => s,
+      params: {
+        field: filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
+      }
+    }
+  })
 
   return (
-    <FilterPillsList
-      pills={renderableFilters.map((filter, index) => ({
-        className: classNames(isInvisible(index) && 'invisible', pillClassName),
-        plainText: plainFilterText(dashboardState, filter),
-        children: styledFilterText(dashboardState, filter),
-        interactive: {
-          navigationTarget: {
-            path: filterRoute.path,
-            search: (s) => s,
-            params: {
-              field: filter[1].startsWith(EVENT_PROPS_PREFIX)
-                ? 'props'
-                : filter[1]
-            }
-          },
-          onRemoveClick: canRemoveFilter(filter, limitedToSegment)
-            ? () => {
-                const newFilters = dashboardState.filters.filter(
-                  (_, i) => i !== index + indexAdjustment
-                )
-
-                navigate({
-                  search: (searchRecord) => ({
-                    ...searchRecord,
-                    filters: newFilters,
-                    labels: cleanLabels(newFilters, dashboardState.labels)
-                  })
-                })
-              }
-            : undefined
-        }
-      }))}
-      className={className}
-      style={style}
-      ref={ref}
-      direction={direction}
-    />
-  )
-})
-
-export const FilterPillsList = React.forwardRef<
-  HTMLDivElement,
-  FilterPillsListProps
->(({ className, style, direction, pills }, ref) => {
-  // this padding allows pill dropshadows to be visible
-  // even when overflow:hidden is given to pill parent container
-  // box-content guarantees width given as style to apply to available space
-  const innerClassName = 'p-1 box-content'
-  // this hides the padding of the inner component to ease placement
-  const wrapperClassName = '-m-1'
-  return (
-    <div className={wrapperClassName}>
+    // the negative margin hides the inner padding, which keeps
+    // pill focus rings visible when the pills scroll
+    <div className="-m-1 min-w-0">
       <div
         ref={ref}
-        className={classNames(
-          'flex',
-          {
-            'flex-row': direction === 'horizontal',
-            'flex-col items-start': direction === 'vertical'
-          },
-          innerClassName,
-          className
-        )}
-        // gaps given as style to be able to use their numeric values in calculations
-        style={{ columnGap: PILL_X_GAP_PX, rowGap: PILL_Y_GAP_PX, ...style }}
+        className={classNames('flex gap-x-1 p-1', className)}
+        style={style}
       >
-        {pills.map((options, index) => (
-          <FilterPill key={index} {...options} />
+        {dashboardState.filters.map((filter, index) => (
+          <FilterPill
+            key={index}
+            plainText={plainFilterText(dashboardState, filter)}
+            action={getPillAction(filter)}
+            onRemoveClick={
+              canRemoveFilter(filter, limitedToSegment)
+                ? () => {
+                    const newFilters = dashboardState.filters.filter(
+                      (_, i) => i !== index
+                    )
+
+                    navigate({
+                      search: (searchRecord) => ({
+                        ...searchRecord,
+                        filters: newFilters,
+                        labels: cleanLabels(newFilters, dashboardState.labels)
+                      })
+                    })
+                  }
+                : undefined
+            }
+          >
+            {styledFilterText(dashboardState, filter)}
+          </FilterPill>
         ))}
       </div>
     </div>
   )
 })
+
+export const FilterPillsList = ({
+  className,
+  pills
+}: {
+  className?: string
+  pills: FilterPillProps[]
+}) => (
+  <div className={classNames('flex gap-2', className)}>
+    {pills.map((pill, index) => (
+      <FilterPill key={index} {...pill} />
+    ))}
+  </div>
+)

@@ -109,7 +109,7 @@ export const DashboardPeriodMenu = ({
         <Popover.Button
           ref={buttonRef}
           className={classNames(
-            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-700 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
+            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-800 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
             periodsWithArrows.includes(dashboardState.period)
               ? 'pr-1.5'
               : 'pr-2.5'

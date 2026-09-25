@@ -1,10 +1,9 @@
-import React, { ReactNode, useRef } from 'react'
+import React, { ReactNode } from 'react'
 import { SiteSwitcher } from '../site-switcher'
 import { useSiteContext } from '../site-context'
 import CurrentVisitors from '../stats/current-visitors'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
-import { FilterMenu } from './filter-menu'
 import { FiltersBar } from './filters-bar'
 import { DashboardPeriodPicker } from './query-periods/dashboard-period-picker'
 import { SegmentMenu } from './segments/segment-menu'
@@ -44,33 +43,16 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
 }
 
 function TopBarInner({ showCurrentVisitors }: TopBarProps) {
-  const leftActionsRef = useRef<HTMLDivElement>(null)
-
   return (
-    <div className="flex min-w-0 flex-nowrap items-center gap-x-1 md:gap-x-2.5 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0">
-      <div
-        className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5"
-        ref={leftActionsRef}
-      >
+    <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0">
+      <div className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5">
         <SiteSwitcher />
         {showCurrentVisitors && <CurrentVisitors />}
       </div>
-      <div className="flex flex-1">
-        <FiltersBar
-          accessors={{
-            topBar: (filtersBarElement) =>
-              filtersBarElement?.parentElement?.parentElement,
-            leftSection: (filtersBarElement) =>
-              filtersBarElement?.parentElement?.parentElement
-                ?.firstElementChild as HTMLElement,
-            rightSection: (filtersBarElement) =>
-              filtersBarElement?.parentElement?.parentElement
-                ?.lastElementChild as HTMLElement
-          }}
-        />
+      <div className="flex flex-1 md:min-w-0">
+        <FiltersBar />
       </div>
-      <div className="flex gap-x-1 md:gap-x-2.5 shrink-0">
-        <FilterMenu />
+      <div className="flex gap-x-1 shrink-0">
         <SegmentMenu />
         <DashboardPeriodPicker />
         <DashboardOptionsMenu />
