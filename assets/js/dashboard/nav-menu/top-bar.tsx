@@ -6,8 +6,8 @@ import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FiltersBar } from './filters-bar'
 import { DashboardPeriodPicker } from './query-periods/dashboard-period-picker'
-import { SegmentMenu } from './segments/segment-menu'
 import { DashboardOptionsMenu } from './dashboard-options-menu'
+import { useDashboardStateContext } from '../dashboard-state-context'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -43,19 +43,20 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
 }
 
 function TopBarInner({ showCurrentVisitors }: TopBarProps) {
+  const { expandedSegment } = useDashboardStateContext()
+
   return (
     <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0">
-      <div className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5">
-        <SiteSwitcher />
+      <div className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5 empty:hidden">
+        {!expandedSegment && <SiteSwitcher />}
         {showCurrentVisitors && <CurrentVisitors />}
       </div>
       <div className="flex flex-1 md:min-w-0">
         <FiltersBar />
       </div>
-      <div className="flex gap-x-1 shrink-0">
-        <SegmentMenu />
-        <DashboardPeriodPicker />
-        <DashboardOptionsMenu />
+      <div className="flex gap-x-1 shrink-0 empty:hidden">
+        {!expandedSegment && <DashboardPeriodPicker />}
+        {!expandedSegment && <DashboardOptionsMenu />}
       </div>
     </div>
   )

@@ -22,7 +22,7 @@ describe('public (no "by <user>" shown)', () => {
       />
     )
 
-    expect(screen.getByText('Created at 1 Feb')).toBeVisible()
+    expect(screen.getByText('Created on 1 Feb')).toBeVisible()
     expect(screen.queryByText(/Last updated/)).toBeNull()
     expect(screen.queryByText(/by /)).toBeNull()
   })
@@ -43,8 +43,8 @@ describe('public (no "by <user>" shown)', () => {
       />
     )
 
-    expect(screen.getByText('Created at 1 Feb')).toBeVisible()
-    expect(screen.getByText('Last updated at 1 Feb')).toBeVisible()
+    expect(screen.getByText('Created on 1 Feb')).toBeVisible()
+    expect(screen.getByText('last updated on 1 Feb')).toBeVisible()
     expect(screen.queryByText(/by /)).toBeNull()
   })
 })
@@ -68,7 +68,7 @@ describe('shown to a site member ("by <user>" shown)', () => {
       />
     )
 
-    expect(screen.getByText('Created at 1 Feb by (Removed User)')).toBeVisible()
+    expect(screen.getByText('Created on 1 Feb by (Removed User)')).toBeVisible()
     expect(screen.queryByText(/Last updated/)).toBeNull()
   })
 
@@ -88,9 +88,9 @@ describe('shown to a site member ("by <user>" shown)', () => {
       />
     )
 
-    expect(screen.getByText('Created at 1 Feb')).toBeVisible()
+    expect(screen.getByText('Created on 1 Feb')).toBeVisible()
     expect(
-      screen.queryByText('Last updated at 5 Feb by Jane Smith')
+      screen.queryByText('last updated on 5 Feb by Jane Smith')
     ).toBeVisible()
   })
 })

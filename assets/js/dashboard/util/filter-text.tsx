@@ -41,6 +41,32 @@ export function styledFilterText(
   )
 }
 
+/** e.g. { subject: 'Country is', values: 'Germany or Poland' } */
+export function plainFilterTextParts(
+  dashboardState: Pick<DashboardState, 'labels'>,
+  [operation, filterKey, clauses]: Filter
+) {
+  const operationName = FILTER_OPERATIONS_DISPLAY_NAMES[operation]
+  if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    return {
+      subject: `Property ${getPropertyKeyFromFilterKey(filterKey)} ${operationName}`,
+      values: clauses.join(' or ')
+    }
+  }
+  const formattedFilter = (
+    formattedFilters as Record<string, string | undefined>
+  )[filterKey]
+  if (!formattedFilter) {
+    throw new Error(`Unknown filter: ${filterKey}`)
+  }
+  return {
+    subject: `${capitalize(formattedFilter)} ${operationName}`,
+    values: clauses
+      .map((value) => getLabel(dashboardState.labels, filterKey, value))
+      .join(' or ')
+  }
+}
+
 export function plainFilterText(
   dashboardState: Pick<DashboardState, 'labels'>,
   filter: Filter
