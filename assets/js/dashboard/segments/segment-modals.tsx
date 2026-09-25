@@ -53,7 +53,6 @@ interface SegmentModalProps {
   user: UserContextValue
   siteSegmentsAvailable: boolean
   onClose: () => void
-  namePlaceholder: string
 }
 
 export const CreateSegmentModal = ({
@@ -62,18 +61,19 @@ export const CreateSegmentModal = ({
   onSave,
   siteSegmentsAvailable: siteSegmentsAvailable,
   user,
-  namePlaceholder,
+  suggestedName,
   error,
   reset,
   status
 }: SegmentModalProps &
   ApiRequestProps & {
     segment?: SavedSegment
+    suggestedName: string
     onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
   }) => {
   const defaultName = segment?.name
     ? `Copy of ${segment.name}`.slice(0, 255)
-    : ''
+    : suggestedName
   const [name, setName] = useState(defaultName)
   const defaultType =
     segment?.type === SegmentType.site &&
@@ -96,9 +96,10 @@ export const CreateSegmentModal = ({
     <ModalLayout title="Create segment" onClose={onClose}>
       <LabeledTextInput
         {...nameInputProps}
+        focusOnMount
         value={name}
         onChange={setName}
-        placeholder={namePlaceholder}
+        placeholder={suggestedName}
       />
       <SegmentTypeSelector
         type={type}
@@ -115,7 +116,7 @@ export const CreateSegmentModal = ({
             const trimmedName = name.trim()
             const saveableName = trimmedName.length
               ? trimmedName
-              : namePlaceholder
+              : suggestedName
             onSave({ name: saveableName, type })
           }}
         />
@@ -135,10 +136,17 @@ export const CreateSegmentModal = ({
   )
 }
 
-function getLinksDeleteNotice(links: string[]) {
-  return links.length === 1
-    ? 'This segment is used in a shared link. To delete it, you also need to delete the shared link.'
-    : `This segment is used in ${links.length} shared links. To delete it, you also need to delete the shared links.`
+function getDeleteNotice(segment: SavedSegment, links: string[]) {
+  if (links.length === 1) {
+    return 'This segment is used by a shared link. To delete the segment, this link must also be deleted:'
+  }
+  if (links.length > 1) {
+    return `This segment is used by ${links.length} shared links. To delete the segment, these links must also be deleted:`
+  }
+  if (segment.type === SegmentType.site) {
+    return 'This site segment will be removed for everyone with access to this dashboard. Are you sure?'
+  }
+  return 'Are you sure?'
 }
 
 export const DeleteSegmentModal = ({
@@ -151,7 +159,7 @@ export const DeleteSegmentModal = ({
 }: {
   onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id'>) => void
-  segment: SavedSegment & { segment_data?: SegmentData }
+  segment: SavedSegment
 } & ApiRequestProps) => {
   const site = useSiteContext()
   const [confirmed, setConfirmed] = useState(false)
@@ -166,58 +174,55 @@ export const DeleteSegmentModal = ({
     }
   })
 
+  const links = linksQuery.data ?? []
   const deleteDisabled =
     status === 'pending' ||
     linksQuery.status !== 'success' ||
-    (!!linksQuery.data?.length && !confirmed)
+    (!!links.length && !confirmed)
 
   return (
     <ModalLayout
       title={`Delete ${SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}`}
       onClose={onClose}
     >
-      <div className="flex flex-col gap-y-2">
-        <p className="text-sm dark:text-gray-100">
-          {`You're about to delete `}
-          <span className="break-all font-semibold">{`"${segment.name}"`}</span>
-          {`. Are you sure?`}
-        </p>
-        {linksQuery.status === 'pending' && (
-          <div className="loading sm">
-            <div />
-          </div>
-        )}
-        {linksQuery.status === 'success' && !!linksQuery.data?.length && (
-          <ErrorPanel
-            errorMessage={
-              <span className="break-normal">
-                {getLinksDeleteNotice(linksQuery.data)}
-              </span>
-            }
-          />
-        )}
-        {linksQuery.status === 'error' && (
-          <ErrorPanel
-            errorMessage="Error loading related shared links"
-            onRetry={linksQuery.refetch}
-          />
-        )}
-      </div>
-      {!!segment.segment_data && (
-        <FiltersInSegment
-          segment_data={segment.segment_data}
-          className={linksQuery.data?.length ? undefined : 'mb-4'}
+      <p className="text-sm dark:text-gray-100">
+        {`You’re about to delete `}
+        <span className="break-all font-semibold">{`“${segment.name}”`}</span>
+        {'. '}
+        {linksQuery.status === 'success' && getDeleteNotice(segment, links)}
+      </p>
+      {linksQuery.status === 'pending' && (
+        <div className="loading sm">
+          <div />
+        </div>
+      )}
+      {linksQuery.status === 'error' && (
+        <ErrorPanel
+          errorMessage="Error loading related shared links"
+          onRetry={linksQuery.refetch}
         />
       )}
-      {!!linksQuery.data?.length && (
+      {!!links.length && (
         <>
-          <RelatedSharedLinks sharedLinks={linksQuery.data} />
+          <div className="flex flex-col items-start gap-y-1 text-sm">
+            {links.map((name, index) => (
+              <a
+                key={index}
+                href={`/${encodeURIComponent(site.domain)}/settings/visibility`}
+                className="break-words text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400"
+              >
+                {name}
+              </a>
+            ))}
+          </div>
           <Checkbox
             id="confirm"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.currentTarget.checked)}
           >
-            Yes, delete the associated shared links
+            {links.length === 1
+              ? 'Also delete this shared link'
+              : `Also delete these ${links.length} shared links`}
           </Checkbox>
         </>
       )}
@@ -237,7 +242,11 @@ export const DeleteSegmentModal = ({
                 }
           }
         >
-          Delete
+          {links.length === 0
+            ? 'Delete'
+            : links.length === 1
+              ? 'Delete segment and link'
+              : 'Delete segment and links'}
         </Button>
       </ModalFooter>
       {error !== null && (
@@ -252,21 +261,6 @@ export const DeleteSegmentModal = ({
         />
       )}
     </ModalLayout>
-  )
-}
-
-const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
-  return (
-    <div className="flex flex-col gap-y-2">
-      <p className={inModalSectionLabelClassName}>Shared links</p>
-      <FilterPillsList
-        className="flex-wrap"
-        pills={sharedLinks.map((name) => ({
-          plainText: name,
-          children: name
-        }))}
-      />
-    </div>
   )
 }
 
@@ -358,6 +352,7 @@ export const UpdateSegmentModal = ({
   reset
 }: SegmentModalProps &
   ApiRequestProps & {
+    namePlaceholder: string
     onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
     segment: SavedSegment
   }) => {
@@ -376,6 +371,7 @@ export const UpdateSegmentModal = ({
     <ModalLayout title="Update segment" onClose={onClose}>
       <LabeledTextInput
         {...nameInputProps}
+        focusOnMount
         value={name}
         onChange={setName}
         placeholder={namePlaceholder}

@@ -22,7 +22,12 @@ export class MockAPI {
   // sets get handler
   public get(
     urlWithoutQueryString: string,
-    responseHandler: typeof fetch | Record<string, unknown> | number | null
+    responseHandler:
+      | typeof fetch
+      | Record<string, unknown>
+      | unknown[]
+      | number
+      | null
   ): jest.Mock {
     return this.register('get', urlWithoutQueryString, responseHandler)
   }
@@ -46,7 +51,12 @@ export class MockAPI {
   private register(
     method: string,
     urlWithoutQueryString: string,
-    responseHandler: typeof fetch | Record<string, unknown> | number | null
+    responseHandler:
+      | typeof fetch
+      | Record<string, unknown>
+      | unknown[]
+      | number
+      | null
   ): jest.Mock {
     const handler: typeof fetch =
       typeof responseHandler === 'function'
