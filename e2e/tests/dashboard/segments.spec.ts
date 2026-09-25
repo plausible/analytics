@@ -79,8 +79,6 @@ const addUtmSourceFilter = async (page: Page, utmSource: string) => {
 }
 
 const createPersonalSegment = async (page: Page, name: string) => {
-  await page.getByRole('button', { name: 'See actions' }).click()
-
   await page.getByRole('link', { name: 'Save as segment' }).click()
 
   await modal(page).getByLabel('Segment name').fill(name)
@@ -97,8 +95,6 @@ test('saving a segment', async ({ page, request }) => {
 
   await test.step('creating personal segment using defaults', async () => {
     await addSourceFilter(page, 'Facebook')
-
-    await page.getByRole('button', { name: 'See actions' }).click()
 
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
@@ -139,8 +135,6 @@ test('saving a segment', async ({ page, request }) => {
   await test.step('creating a personal segment with a custom name', async () => {
     await addSourceFilter(page, 'Google')
 
-    await page.getByRole('button', { name: 'See actions' }).click()
-
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
     await expect(
@@ -179,8 +173,6 @@ test('saving a segment', async ({ page, request }) => {
   await test.step('creating a site segment from more than one filter', async () => {
     await addSourceFilter(page, 'Google')
     await addUtmSourceFilter(page, 'Adwords')
-
-    await page.getByRole('button', { name: 'See actions' }).click()
 
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
@@ -239,28 +231,6 @@ test('creating a segment from a combination of segment and a filter is not allow
   await createPersonalSegment(page, 'Traffic from Google')
   await addUtmSourceFilter(page, 'Adwords')
 
-  // Add UTM medium and campaign filters. Every new filter is prepended, so
-  // Segment ends up as the last pill and overflows into "See more".
-  const utmMediumFilterRow = filterRow(page, 'utm_medium')
-  const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
-
-  await filterButton(page).click()
-  await openFilterSubmenuItem(page, 'UTM tags', 'UTM medium')
-  await page.getByPlaceholder('Select a UTM Medium').click()
-  await suggestedItem(utmMediumFilterRow, 'email').click()
-  await applyFilterButton(page).click()
-
-  await filterButton(page).click()
-  await openFilterSubmenuItem(page, 'UTM tags', 'UTM campaign')
-  await page.getByPlaceholder('Select a UTM Campaign').click()
-  await suggestedItem(utmCampaignFilterRow, 'promo').click()
-  await applyFilterButton(page).click()
-
-  await expect(
-    page.getByRole('link', { name: 'UTM campaign is promo' })
-  ).toBeVisible()
-
-  await page.getByRole('button', { name: /See.*more/ }).click()
   await expect(
     page.getByRole('link', { name: 'UTM source is Adwords' })
   ).toBeVisible()

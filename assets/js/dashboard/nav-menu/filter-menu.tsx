@@ -4,6 +4,8 @@ import { useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { FilterIcon } from '../components/icons'
 import { Popover, Transition } from '@headlessui/react'
+import { PlusIcon } from '@heroicons/react/24/outline'
+import { Tooltip } from '../util/tooltip'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
@@ -27,30 +29,60 @@ import {
   useSubmenu
 } from './submenu'
 
-const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
+const FilterMenuItems = ({
+  open,
+  closeDropdown,
+  compact
+}: {
+  open: boolean
+  closeDropdown: () => void
+  compact: boolean
+}) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button
-        ref={buttonRef}
-        className={classNames(
-          popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.ghost
-        )}
-      >
-        <FilterIcon className="block size-3.5" />
-        <span className={popover.toggleButton.classNames.truncatedText}>
-          Filter
-        </span>
-      </Popover.Button>
+      {compact ? (
+        <Tooltip
+          info={open ? null : 'Add filter'}
+          containerRef={{ current: document.body }}
+        >
+          <Popover.Button
+            ref={buttonRef}
+            aria-label="Add filter"
+            className={classNames(
+              popover.toggleButton.classNames.rounded,
+              popover.toggleButton.classNames.ghost,
+              'justify-center'
+            )}
+          >
+            <PlusIcon className="block size-4" />
+          </Popover.Button>
+        </Tooltip>
+      ) : (
+        <Popover.Button
+          ref={buttonRef}
+          className={classNames(
+            popover.toggleButton.classNames.rounded,
+            popover.toggleButton.classNames.ghost
+          )}
+        >
+          <FilterIcon className="block size-3.5" />
+          <span className={popover.toggleButton.classNames.truncatedText}>
+            Filter
+          </span>
+        </Popover.Button>
+      )}
       <Transition
         as="div"
         {...popover.transition.props}
         className={classNames(
           popover.transition.classNames.fullwidth,
-          'mt-2 md:left-auto md:w-56 md:origin-top-right'
+          'mt-2 md:w-56',
+          compact
+            ? 'md:right-auto md:origin-top-left'
+            : 'md:left-auto md:origin-top-right'
         )}
       >
         <Popover.Panel
@@ -197,8 +229,10 @@ const SubmenuBody = ({
   )
 }
 
-export const FilterMenu = () => (
+export const FilterMenu = ({ compact = false }: { compact?: boolean }) => (
   <Popover className="shrink-0 md:relative">
-    {({ close }) => <FilterMenuItems closeDropdown={close} />}
+    {({ open, close }) => (
+      <FilterMenuItems open={open} closeDropdown={close} compact={compact} />
+    )}
   </Popover>
 )
