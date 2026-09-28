@@ -119,13 +119,12 @@ defmodule PlausibleWeb.Live.Components.Team do
       <PrimaListbox.listbox id={@id} name="role" value={@role} disabled={@disabled}>
         <PrimaListbox.listbox_trigger
           id={"#{@id}-trigger"}
-          aria-label="Role"
           theme="ghost"
           size="sm"
           disabled={@disabled}
-          data-test-id="role"
         >
-          <PrimaListbox.listbox_value>
+          <span class="sr-only">Role:</span>
+          <PrimaListbox.listbox_value data-test-id="role">
             {role_to_capitalized_string(@role)}
           </PrimaListbox.listbox_value>
           <Heroicons.chevron_down mini class="size-4" />
@@ -176,7 +175,8 @@ defmodule PlausibleWeb.Live.Components.Team do
   def role_select_input(assigns) do
     ~H"""
     <PrimaListbox.listbox id={@id} name={@name} value={@role}>
-      <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} aria-label="Role" class="w-[100px]">
+      <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} class="w-[100px]">
+        <span class="sr-only">Role:</span>
         <PrimaListbox.listbox_value>
           {role_to_capitalized_string(@role)}
         </PrimaListbox.listbox_value>

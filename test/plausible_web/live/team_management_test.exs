@@ -535,6 +535,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
   end
 
   defp role_el() do
-    ~s|button[data-test-id="role"]|
+    ~s|[data-test-id="role"]|
   end
 end
