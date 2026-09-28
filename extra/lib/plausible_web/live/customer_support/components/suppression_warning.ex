@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.CustomerSupport.Components.SuppressionWarning do
+  @moudledoc """
+  A warning icon next to e-mail address, optionally linking to supressions list
+  """
+
   use Phoenix.Component
   use PlausibleWeb.VerifiedRoutes
 
