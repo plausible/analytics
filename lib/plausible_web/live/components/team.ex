@@ -61,15 +61,15 @@ defmodule PlausibleWeb.Live.Components.Team do
         </div>
         <div class="flex-1 text-right">
           <.dropdown id={"role-dropdown-#{@user.email}"}>
-            <:button class="role bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+            <:button theme="ghost" size="sm" class="role">
               <span :if={@disabled} class="text-gray-400">
                 {@role |> to_string() |> String.capitalize()}
               </span>
               <span :if={not @disabled}>
                 {@role |> to_string() |> String.capitalize()}
               </span>
-              <Heroicons.chevron_down :if={@disabled} mini class="text-gray-400 size-4 mt-0.5" />
-              <Heroicons.chevron_down :if={not @disabled} mini class="size-4 mt-0.5" />
+              <Heroicons.chevron_down :if={@disabled} mini class="text-gray-400 size-4" />
+              <Heroicons.chevron_down :if={not @disabled} mini class="size-4" />
             </:button>
             <:menu class="dropdown-items max-w-60">
               <.role_item
@@ -124,9 +124,9 @@ defmodule PlausibleWeb.Live.Components.Team do
   def role_picker(assigns) do
     ~H"""
     <.dropdown id={@id}>
-      <:button class="role w-[100px] inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 rounded-md text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+      <:button theme="secondary" size="md" class="role w-[100px] justify-between">
         {@role |> Atom.to_string() |> String.capitalize()}
-        <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+        <Heroicons.chevron_down mini class="size-4" />
       </:button>
       <:menu class="dropdown-items max-w-60">
         <.role_item
