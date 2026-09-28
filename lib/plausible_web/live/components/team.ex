@@ -169,13 +169,13 @@ defmodule PlausibleWeb.Live.Components.Team do
   defp role_change(_user, _role), do: "update-role"
 
   attr(:id, :string, required: true)
+  attr(:name, :string, required: true)
   attr(:role, :atom, required: true)
   attr(:my_role, :atom, required: true)
-  attr(:rest, :global)
 
   def role_select_input(assigns) do
     ~H"""
-    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role}>
+    <PrimaListbox.listbox id={@id} name={@name} value={@role}>
       <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} aria-label="Role" class="w-[100px]">
         <PrimaListbox.listbox_value>
           {role_to_capitalized_string(@role)}
@@ -189,8 +189,6 @@ defmodule PlausibleWeb.Live.Components.Team do
           id={"#{@id}-option-#{role}"}
           value={role}
           display={role_to_capitalized_string(role)}
-          phx-value-role={role}
-          {@rest}
         >
           <div>{role_to_capitalized_string(role)}</div>
           <PrimaListbox.option_description class="whitespace-nowrap">

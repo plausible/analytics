@@ -508,13 +508,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp add_invite(lv, email, role) do
     lv
-    |> element(~s|#input-role-picker [phx-value-role="#{role}"]|)
-    |> render_click()
-
-    lv
     |> element("#team-layout-form")
     |> render_submit(%{
-      "input-email" => email
+      "input-email" => email,
+      "input-role" => role
     })
   end
 

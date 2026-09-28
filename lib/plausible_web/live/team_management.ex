@@ -25,7 +25,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
       layout: layout,
       my_role: my_role,
       team_layout_changed?: false,
-      input_role: :viewer,
       input_email: ""
     )
   end
@@ -59,9 +58,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
           <.role_select_input
             id="input-role-picker"
-            role={@input_role}
+            name="input-role"
+            role={:viewer}
             my_role={@my_role}
-            phx-click="select-role"
           />
 
           <.button
@@ -122,17 +121,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, assign(socket, input_email: params["input-email"])}
   end
 
-  def handle_event("select-role", %{"role" => role}, socket) do
-    socket = assign(socket, input_role: role_to_atom(role))
-    {:noreply, socket}
-  end
-
   def handle_event(
         "input-invitation",
-        %{"input-email" => email},
-        %{assigns: %{layout: layout, input_role: role}} = socket
+        %{"input-email" => email, "input-role" => role},
+        %{assigns: %{layout: layout}} = socket
       ) do
     email = String.trim(email)
+    role = role_to_atom(role)
 
     existing_entry = Map.get(layout, email)
 
