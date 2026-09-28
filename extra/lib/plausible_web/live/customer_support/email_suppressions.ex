@@ -129,18 +129,21 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
             </.td>
             <.td>{format_datetime(s.inserted_at)}</.td>
             <.td>
-              <div class="flex flex-col items-start gap-1">
-                <.styled_link
+              <div class="flex items-center gap-2 -ml-3">
+                <.button
                   :if={is_nil(s.reactivated_at) and s.reason != :spam_complaint}
+                  theme="ghost"
+                  size="sm"
+                  mt?={false}
                   phx-click="reactivate"
                   phx-value-email={s.email}
                   data-confirm={"Reactivate #{s.email}? Plausible will start sending mail to this address again."}
                 >
                   Reactivate
-                </.styled_link>
+                </.button>
 
                 <.dropdown :if={has_postmark_details?(s)} id={"suppression-details-#{s.id}"}>
-                  <:button class="!py-0 text-sm text-indigo-600 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400">
+                  <:button theme="ghost" size="sm">
                     Details
                   </:button>
                   <:menu class="w-80 p-3 text-xs text-gray-500 dark:text-gray-400 space-y-2">

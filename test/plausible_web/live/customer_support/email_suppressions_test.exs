@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
 
       html =
         lv
-        |> element(~s|a[phx-value-email="reactivate-me@example.com"]|, "Reactivate")
+        |> element(~s|button[phx-value-email="reactivate-me@example.com"]|, "Reactivate")
         |> render_click()
 
       assert text(html) =~ "no longer suppressed"
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
 
       html =
         lv
-        |> element(~s|a[phx-value-email="reactivate-me@example.com"]|, "Reactivate")
+        |> element(~s|button[phx-value-email="reactivate-me@example.com"]|, "Reactivate")
         |> render_click()
 
       assert text(html) =~ "no longer suppressed"
@@ -179,7 +179,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       {:ok, lv, _html} = live(conn, open_suppressions())
 
       refute lv
-             |> element(~s|a[phx-value-email="complainer@example.com"]|)
+             |> element(~s|button[phx-value-email="complainer@example.com"]|)
              |> has_element?()
     end
 
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
 
       html =
         lv
-        |> element(~s|a[phx-value-email="stuck@example.com"]|, "Reactivate")
+        |> element(~s|button[phx-value-email="stuck@example.com"]|, "Reactivate")
         |> render_click()
 
       assert text(html) =~ "Could not reactivate stuck@example.com"
@@ -222,7 +222,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       {:ok, lv, _html} = live(conn, open_suppressions())
 
       refute lv
-             |> element(~s|a[phx-value-email="already-fine@example.com"]|)
+             |> element(~s|button[phx-value-email="already-fine@example.com"]|)
              |> has_element?()
     end
 

@@ -39,14 +39,16 @@ defmodule PlausibleWeb.Api.PostmarkController do
         conn,
         %{
           "RecordType" => "SubscriptionChange",
-          "SuppressSending" => true,
-          "SuppressionReason" => "ManualSuppression"
+          "SuppressSending" => suppress?,
+          "SuppressionReason" => reason
         } = params
       ) do
-    params
-    |> unsubscribe_attrs()
-    |> Plausible.EmailSuppressions.create_from_unsubscribe()
-    |> log_on_error(params)
+    if suppress? == true and reason == "ManualSuppression" do
+      params
+      |> unsubscribe_attrs()
+      |> Plausible.EmailSuppressions.create_from_unsubscribe()
+      |> log_on_error(params)
+    end
 
     ok(conn)
   end
