@@ -365,6 +365,7 @@ defmodule PlausibleWeb.Components.Generic do
       class="relative inline-block text-left"
     >
       <.button
+        id={"#{@id}-button"}
         x-ref="button"
         x-on:click="toggle()"
         theme={@button_theme}
