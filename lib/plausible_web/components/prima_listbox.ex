@@ -20,8 +20,9 @@ defmodule PlausibleWeb.Components.PrimaListbox do
     "md" => "btn-md"
   }
 
+  @disabled_class "data-disabled:cursor-not-allowed data-disabled:text-gray-300 dark:data-disabled:text-gray-600"
   @options_base_class "relative z-50 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5 focus:outline-none"
-  @option_class "group block rounded-md text-sm/6 text-gray-900 dark:text-gray-100 px-3 py-1.5 cursor-pointer data-focus:bg-gray-100 dark:data-focus:bg-gray-700/80 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:text-gray-300 dark:data-disabled:text-gray-600"
+  @option_class "group block rounded-md text-sm/6 text-gray-900 dark:text-gray-100 px-3 py-1.5 cursor-pointer data-focus:bg-gray-100 dark:data-focus:bg-gray-700/80 #{@disabled_class}"
 
   defdelegate listbox_value(assigns), to: Listbox
 
@@ -62,7 +63,7 @@ defmodule PlausibleWeb.Components.PrimaListbox do
           @trigger_sizes[assigns.size],
           @trigger_themes[assigns.theme],
           assigns.class,
-          assigns.disabled && "pointer-events-none !text-gray-300 dark:!text-gray-600"
+          @disabled_class
         ]
       )
 
@@ -70,8 +71,7 @@ defmodule PlausibleWeb.Components.PrimaListbox do
     <Listbox.listbox_trigger
       id={@id}
       class={@computed_class}
-      aria-disabled={@disabled && "true"}
-      tabindex={@disabled && "-1"}
+      disabled={@disabled}
       {@rest}
     >
       {render_slot(@inner_block)}
