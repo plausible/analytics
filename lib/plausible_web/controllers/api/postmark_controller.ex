@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.PostmarkController do
   @moduledoc """
-  Receives Postmark's Bounce and SpamComplaint webhooks and records
-  addresses in `Plausible.EmailSuppressions`.
+  Receives Postmark's Bounce, SpamComplaint and SubscriptionChange webhooks
+  and records addresses in `Plausible.EmailSuppressions`.
 
   See https://postmarkapp.com/developer/webhooks/webhooks-overview
   """
@@ -35,6 +35,22 @@ defmodule PlausibleWeb.Api.PostmarkController do
     ok(conn)
   end
 
+  def webhook(
+        conn,
+        %{
+          "RecordType" => "SubscriptionChange",
+          "SuppressSending" => true,
+          "SuppressionReason" => "ManualSuppression"
+        } = params
+      ) do
+    params
+    |> unsubscribe_attrs()
+    |> Plausible.EmailSuppressions.create_from_unsubscribe()
+    |> log_on_error(params)
+
+    ok(conn)
+  end
+
   def webhook(conn, params) do
     Sentry.capture_message("Received unexpected Postmark webhook record type",
       extra: %{record_type: params["RecordType"], params: params}
@@ -51,6 +67,14 @@ defmodule PlausibleWeb.Api.PostmarkController do
       postmark_inactive: params["Inactive"] || false,
       can_activate: params["CanActivate"] || false,
       details: params["Details"]
+    }
+  end
+
+  defp unsubscribe_attrs(params) do
+    %{
+      email: params["Recipient"],
+      source: :webhook,
+      details: "Unsubscribed via Postmark (origin: #{params["Origin"]})"
     }
   end
 
