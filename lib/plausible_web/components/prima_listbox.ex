@@ -3,7 +3,23 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   alias Prima.Listbox
   use Phoenix.Component
 
-  @trigger_base_class "inline-flex items-center justify-between font-medium rounded-md px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+  # Themes/sizes/base are defined as component classes in
+  # assets/css/app.css, shared with the Phoenix `button` component
+  # (lib/plausible_web/components/generic.ex). Update there only.
+  @trigger_base_class "btn-base justify-between focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+
+  @trigger_themes %{
+    "secondary" => "btn-theme-secondary",
+    "ghost" => "btn-theme-ghost",
+    "link" => "btn-theme-link"
+  }
+
+  @trigger_sizes %{
+    "xs" => "btn-xs",
+    "sm" => "btn-sm",
+    "md" => "btn-md"
+  }
+
   @options_base_class "relative z-50 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5 focus:outline-none"
   @option_class "group block rounded-md text-sm/6 text-gray-900 dark:text-gray-100 px-3 py-1.5 cursor-pointer data-focus:bg-gray-100 dark:data-focus:bg-gray-700/80 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:text-gray-300 dark:data-disabled:text-gray-600"
 
@@ -31,6 +47,8 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   end
 
   attr(:id, :string, required: true)
+  attr(:theme, :string, default: "secondary")
+  attr(:size, :string, default: "md")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
@@ -41,6 +59,8 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       assign(assigns,
         computed_class: [
           @trigger_base_class,
+          @trigger_sizes[assigns.size],
+          @trigger_themes[assigns.theme],
           assigns.class,
           assigns.disabled && "pointer-events-none !text-gray-300 dark:!text-gray-600"
         ]
