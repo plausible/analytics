@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Live.Components.Team do
           <.delete_button
             id={"#{:erlang.phash2(@user.email)}-remove"}
             disabled={@disabled or @remove_disabled}
-            aria-label="Remove member"
+            aria-label={"Remove member #{@user.email}"}
             phx-click="remove-member"
             phx-value-email={@user.email}
             phx-value-name={@user.name}
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.Components.Team do
           size="sm"
           disabled={@disabled}
         >
-          <span class="sr-only">Role:</span>
+          <span class="sr-only">Role for {@user.email}:</span>
           <PrimaListbox.listbox_value data-test-id="role">
             {role_to_capitalized_string(@role)}
           </PrimaListbox.listbox_value>
