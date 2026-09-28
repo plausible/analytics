@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.CustomerSupport.Components.SuppressionWarning do
-  @moudledoc """
+  @moduledoc """
   A warning icon next to e-mail address, optionally linking to suppressions list
   """
 
