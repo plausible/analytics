@@ -68,7 +68,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
                                        %{attributes: persistor_span_attributes(headers)} do
           result =
             Req.new(
-              finch: Plausible.Finch,
+              finch: [name: Plausible.Finch],
               body: encode_payload(event, session_attrs),
               headers: headers,
               retry: &handle_transient_error/2,
