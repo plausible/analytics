@@ -4,7 +4,7 @@ import { SortDirection } from '../../types/query-api'
 import { SortButton } from './sort-button'
 import { Tooltip } from '../util/tooltip'
 
-export type ColumnConfiguraton<T extends Record<string, unknown>> = {
+export type ColumnConfiguration<T extends Record<string, unknown>> = {
   /** Unique column ID, used for sorting purposes and to get the value of the cell using rowItem[key] */
   key: keyof T
   /** Column title */
@@ -82,7 +82,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   rowIndex: number
   pageIndex?: number
   item: T
-  columns: ColumnConfiguraton<T>[]
+  columns: ColumnConfiguration<T>[]
   tappedRowName?: string | null
   onRowTap?: (rowName: string | null) => void
 }) => {
@@ -133,12 +133,12 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   data,
   columns
 }: {
-  columns: ColumnConfiguraton<T>[]
+  columns: ColumnConfiguration<T>[]
   data: T[] | { pages: T[][] }
 }) => {
   const [tappedRowName, setTappedRowName] = React.useState<string | null>(null)
 
-  const renderColumnLabel = (column: ColumnConfiguraton<T>) => {
+  const renderColumnLabel = (column: ColumnConfiguration<T>) => {
     if (column.metricWarning) {
       return (
         <Tooltip

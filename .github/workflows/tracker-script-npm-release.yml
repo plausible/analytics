@@ -7,7 +7,7 @@ on:
 
 jobs:
   tracker-release-npm:
-    # needs to be Github hosted runner, see
+    # needs to be GitHub hosted runner, see
     # https://docs.npmjs.com/trusted-publishers#limitations-and-future-improvements
     runs-on: ubuntu-latest
     permissions:

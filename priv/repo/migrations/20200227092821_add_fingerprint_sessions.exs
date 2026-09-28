@@ -1,4 +1,4 @@
-defmodule Plausible.Repo.Migrations.AddFingerprintSesssions do
+defmodule Plausible.Repo.Migrations.AddFingerprintSessions do
   use Ecto.Migration
 
   def change do
