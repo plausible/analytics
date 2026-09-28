@@ -110,40 +110,63 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:disabled, :boolean, default: false)
 
   def role_switcher(assigns) do
-    ~H"""
-    <PrimaListbox.listbox id={@id} name={"#{@id}-value"} value={@role} disabled={@disabled}>
-      <PrimaListbox.listbox_trigger
-        id={"#{@id}-trigger"}
-        aria-label="Role"
-        theme="ghost"
-        size="sm"
-        disabled={@disabled}
-        data-test-id="role"
-      >
-        <PrimaListbox.listbox_value>
-          {role_to_capitalized_string(@role)}
-        </PrimaListbox.listbox_value>
-        <Heroicons.chevron_down mini class="size-4" />
-      </PrimaListbox.listbox_trigger>
+    assigns = assign(assigns, :change, role_change(assigns.user, assigns.role))
 
-      <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
-        <.role_item
-          :for={{role, description} <- selectable_role_descriptions(@my_role)}
-          user={@user}
-          id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
-          phx-value-email={@user.email}
-          phx-value-name={@user.name}
-          role={role}
-          disabled={@disabled or @role == role}
-          dispatch_animation?={@role == :guest}
-          data-confirm={if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()}
+    ~H"""
+    <form id={"role-form-#{:erlang.phash2(@user.email)}"} phx-change={@change}>
+      <input type="hidden" name="email" value={@user.email} />
+
+      <PrimaListbox.listbox id={@id} name="role" value={@role} disabled={@disabled}>
+        <PrimaListbox.listbox_trigger
+          id={"#{@id}-trigger"}
+          aria-label="Role"
+          theme="ghost"
+          size="sm"
+          disabled={@disabled}
+          data-test-id="role"
         >
-          {description}
-        </.role_item>
-      </PrimaListbox.listbox_options>
-    </PrimaListbox.listbox>
+          <PrimaListbox.listbox_value>
+            {role_to_capitalized_string(@role)}
+          </PrimaListbox.listbox_value>
+          <Heroicons.chevron_down mini class="size-4" />
+        </PrimaListbox.listbox_trigger>
+
+        <PrimaListbox.listbox_options id={"#{@id}-options"} class="max-w-60">
+          <PrimaListbox.listbox_option
+            :for={{role, description} <- selectable_role_descriptions(@my_role)}
+            id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
+            value={role}
+            display={role_to_capitalized_string(role)}
+            disabled={@disabled or @role == role}
+            data-confirm={if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()}
+          >
+            <div class="flex items-center justify-between gap-x-2">
+              <span>{role_to_capitalized_string(role)}</span>
+              <Heroicons.check
+                mini
+                class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
+              />
+            </div>
+            <PrimaListbox.option_description disabled={@disabled or @role == role}>
+              {description}
+            </PrimaListbox.option_description>
+          </PrimaListbox.listbox_option>
+        </PrimaListbox.listbox_options>
+      </PrimaListbox.listbox>
+    </form>
     """
   end
+
+  defp role_change(user, :guest) do
+    JS.hide(
+      transition: {"duration-500", "opacity-100", "opacity-0"},
+      to: "#member-row-#{:erlang.phash2(user.email)}",
+      time: 500
+    )
+    |> JS.push("update-role")
+  end
+
+  defp role_change(_user, _role), do: "update-role"
 
   attr(:id, :string, required: true)
   attr(:role, :atom, required: true)
@@ -176,59 +199,6 @@ defmodule PlausibleWeb.Live.Components.Team do
         </PrimaListbox.listbox_option>
       </PrimaListbox.listbox_options>
     </PrimaListbox.listbox>
-    """
-  end
-
-  attr(:role, :atom, required: true)
-  attr(:disabled, :boolean, default: false)
-  attr(:dispatch_animation?, :boolean, default: false)
-  attr(:rest, :global)
-  attr(:user, :map, default: %{email: nil})
-  attr(:id, :string, default: nil)
-
-  slot(:inner_block, required: true)
-
-  def role_item(assigns) do
-    click =
-      cond do
-        phx_click = assigns.rest[:"phx-click"] ->
-          phx_click
-
-        assigns.dispatch_animation? ->
-          JS.hide(
-            transition: {"duration-500", "opacity-100", "opacity-0"},
-            to: "#member-row-#{:erlang.phash2(assigns.user.email)}",
-            time: 500
-          )
-          |> JS.push("update-role")
-
-        true ->
-          "update-role"
-      end
-
-    assigns = assign(assigns, :click, click)
-
-    ~H"""
-    <PrimaListbox.listbox_option
-      id={@id}
-      value={@role}
-      display={role_to_capitalized_string(@role)}
-      disabled={@disabled}
-      phx-click={@click}
-      phx-value-role={@role}
-      {@rest}
-    >
-      <div class="flex items-center justify-between gap-x-2">
-        <span>{role_to_capitalized_string(@role)}</span>
-        <Heroicons.check
-          mini
-          class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
-        />
-      </div>
-      <PrimaListbox.option_description disabled={@disabled}>
-        {render_slot(@inner_block)}
-      </PrimaListbox.option_description>
-    </PrimaListbox.listbox_option>
     """
   end
 

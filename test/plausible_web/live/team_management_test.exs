@@ -496,8 +496,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp change_role(lv, email, role) do
     lv
-    |> element(~s|#option-#{:erlang.phash2(email)}-#{role}|)
-    |> render_click()
+    |> element(~s|#role-form-#{:erlang.phash2(email)}|)
+    |> render_change(%{"role" => role})
   end
 
   defp remove_member(lv, email) do
