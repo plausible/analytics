@@ -94,11 +94,16 @@ defmodule Plausible.Funnels do
   def list(%Plausible.Site{} = site) do
     q =
       from(f in Funnel,
-        inner_join: steps in assoc(f, :steps),
+        left_join: steps in assoc(f, :steps),
         where: f.site_id == ^site.id,
         group_by: f.id,
         order_by: [desc: :id],
-        select: %{name: f.name, id: f.id, steps_count: count(steps)}
+        select: %{
+          name: f.name,
+          id: f.id,
+          steps_count:
+            count(steps) + fragment("coalesce(jsonb_array_length(?), 0)", f.dynamic_steps)
+        }
       )
 
     Repo.all(q)
