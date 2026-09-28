@@ -312,6 +312,43 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
       end
     end
 
+    describe "members" do
+      test "shows no suppression warning for a member whose e-mail isn't suppressed", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "fine@example.com"), role: :editor)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        refute element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: member.email]}"}"]|
+               )
+      end
+
+      test "shows a suppression warning linking to the suppression search for a suppressed member",
+           %{conn: conn, user: user} do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "bounced@example.com"), role: :editor)
+
+        {:ok, _} =
+          Plausible.EmailSuppressions.create_from_bounce(%{
+            email: member.email,
+            reason: :hard_bounce,
+            source: :webhook
+          })
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        assert element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: member.email]}"}"]|
+               )
+      end
+    end
+
     describe "sites" do
       @arrow_down "↓"
       @arrow_up "↑"

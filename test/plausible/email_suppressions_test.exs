@@ -6,8 +6,8 @@ defmodule Plausible.EmailSuppressionsTest do
 
   @moduletag :ee_only
 
-  # Suppressions without Bounce ID (backfilled) 
-  # go through delete suppressions API call on reactivate. 
+  # Suppressions without Bounce ID (backfilled)
+  # go through delete suppressions API call on reactivate.
   # Tests that expect different result may override this.
   setup do
     Req.Test.stub(Postmark, fn conn ->
