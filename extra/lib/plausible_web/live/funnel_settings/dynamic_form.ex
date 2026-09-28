@@ -308,7 +308,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
           }
         } = socket
       ) do
-    steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
+    steps =
+      Enum.map(params["steps"], fn {_idx, payload} -> JSON.decode!(payload["step_data"]) end)
 
     save_fn =
       case funnel do
@@ -439,8 +440,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
 
   defp to_step_data(%Plausible.Goal{} = goal) do
     JSON.encode!(%{
-      goal_id: goal.id,
-      event_name: goal.event_name,
+      event_name: if(goal.event_name != "pageview", do: goal.event_name),
       page_path: goal.page_path,
       scroll_threshold: goal.scroll_threshold,
       currency: goal.currency
