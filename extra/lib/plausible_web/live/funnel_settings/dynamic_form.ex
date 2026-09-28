@@ -131,14 +131,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
-                    suggest_fun={fn input, _choices -> 
-                      suggest(
-                        input, 
-                        @site,
-                        @steps,
-                        step_idx
-                      ) 
-                  end}
+                    suggest_fun={fn input, _choices -> suggest(input, @site, @steps, step_idx) end}
                     on_selection_made={
                       fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
@@ -380,6 +373,39 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     site
     |> Plausible.Stats.Funnel.suggest(query, steps, input)
     |> Enum.map(&{to_step_data(&1), to_string(&1)})
+    |> maybe_prepend_creatable(input)
+  end
+
+  defp maybe_prepend_creatable(results, input) when input in [nil, ""] do
+    results
+  end
+
+  defp maybe_prepend_creatable([], input) do
+    {value, label} = generate_creatable(input)
+    [{value, {label, :creatable}}]
+  end
+
+  defp maybe_prepend_creatable([{_, first_match_label} | _] = results, input) do
+    {value, label} = generate_creatable(input)
+
+    if label != first_match_label do
+      [{value, {label, :creatable}} | results]
+    else
+      results
+    end
+  end
+
+  defp generate_creatable(input) do
+    normalized = String.downcase(input)
+
+    if String.starts_with?(input, "/") or String.starts_with?(normalized, "visit /") do
+      [_, path] = String.split(input, "/", parts: 2)
+      path = "/" <> path
+
+      {JSON.encode!(%{page_path: path}), "Visit #{path}"}
+    else
+      {JSON.encode!(%{event_name: input}), input}
+    end
   end
 
   defp has_steps_errors?(f) do
