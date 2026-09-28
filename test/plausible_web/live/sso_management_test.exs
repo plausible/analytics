@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.SSOMangementTest do
+defmodule PlausibleWeb.Live.SSOManagementTest do
   use PlausibleWeb.ConnCase, async: false
   use Oban.Testing, repo: Plausible.Repo
 

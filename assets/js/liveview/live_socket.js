@@ -1,6 +1,6 @@
 /**
   The modules below this comment block are resolved from '../deps' folder,
-  which does not exist when running the lint command in Github CI
+  which does not exist when running the lint command in GitHub CI
 */
 
 /* eslint-disable import/no-unresolved */
