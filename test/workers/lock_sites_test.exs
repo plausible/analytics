@@ -63,7 +63,7 @@ defmodule Plausible.Workers.LockSitesTest do
     assert Repo.reload!(site.team).locked
   end
 
-  test "does not lock active subsriber's sites" do
+  test "does not lock active subscriber's sites" do
     user = new_user() |> subscribe_to_growth_plan(status: Subscription.Status.active())
     site = new_site(owner: user)
 

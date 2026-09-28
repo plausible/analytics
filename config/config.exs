@@ -71,7 +71,7 @@ config :plausible, Plausible.Repo,
   connect_timeout: 300_000,
   handshake_timeout: 300_000,
   queue_target: 500,
-  queue_inerval: 1100
+  queue_interval: 1100
 
 config :plausible, Plausible.Cache, enabled: true
 

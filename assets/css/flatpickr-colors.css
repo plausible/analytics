@@ -18,7 +18,7 @@
   @apply w-full min-w-0 max-w-none;
 }
 
-/* Hader */
+/* Header */
 .flatpickr-months {
   @apply relative items-center py-1;
 }

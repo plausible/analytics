@@ -1,4 +1,4 @@
-defmodule Plausible.Repo.Migrations.BackfillEnterisePlansFeautresSitesApi do
+defmodule Plausible.Repo.Migrations.BackfillEnterisePlansFeaturesSitesApi do
   use Ecto.Migration
 
   def change do

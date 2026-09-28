@@ -349,7 +349,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
 
-  test "drops events for site with accept_trafic_until in the past" do
+  test "drops events for site with accept_traffic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
     owner = new_user(team: [accept_traffic_until: yesterday])

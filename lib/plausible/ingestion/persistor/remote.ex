@@ -92,7 +92,7 @@ defmodule Plausible.Ingestion.Persistor.Remote do
     true
   end
 
-  defp handle_transient_error(_reqeust, _response), do: false
+  defp handle_transient_error(_request, _response), do: false
 
   defp persistor_span_attributes(headers) do
     site_id = find_header(headers, "x-site-id")
