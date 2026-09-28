@@ -161,6 +161,10 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
     end
 
     describe "SubscriptionChange webhook" do
+      setup %{test_pid: test_pid} do
+        Plausible.Test.Support.Sentry.setup(test_pid)
+      end
+
       @subscription_change_payload %{
         "RecordType" => "SubscriptionChange",
         "MessageID" => "883953f4-6105-42a2-a16a-77a8eac79483",
@@ -186,7 +190,9 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
         assert suppression.source == :webhook
       end
 
-      test "ignores a reactivation (SuppressSending: false)", %{conn: conn} do
+      test "ignores a reactivation (SuppressSending: false), without reporting to Sentry", %{
+        conn: conn
+      } do
         payload = %{
           @subscription_change_payload
           | "SuppressSending" => false,
@@ -197,16 +203,27 @@ defmodule PlausibleWeb.Api.PostmarkControllerTest do
 
         assert json_response(conn, 200) == %{}
         refute EmailSuppressions.suppressed?("unsubscribed@example.com")
+        assert Sentry.Test.pop_sentry_reports() == []
       end
 
-      test "ignores HardBounce/SpamComplaint reasons, already handled by their own webhooks", %{
-        conn: conn
-      } do
+      test "ignores a HardBounce reason, already handled by the Bounce webhook, without reporting to Sentry",
+           %{conn: conn} do
         payload = %{@subscription_change_payload | "SuppressionReason" => "HardBounce"}
         conn = post(conn, ~p"/api/postmark/webhook", payload)
 
         assert json_response(conn, 200) == %{}
         refute EmailSuppressions.suppressed?("unsubscribed@example.com")
+        assert Sentry.Test.pop_sentry_reports() == []
+      end
+
+      test "ignores a SpamComplaint reason, already handled by the SpamComplaint webhook, without reporting to Sentry",
+           %{conn: conn} do
+        payload = %{@subscription_change_payload | "SuppressionReason" => "SpamComplaint"}
+        conn = post(conn, ~p"/api/postmark/webhook", payload)
+
+        assert json_response(conn, 200) == %{}
+        refute EmailSuppressions.suppressed?("unsubscribed@example.com")
+        assert Sentry.Test.pop_sentry_reports() == []
       end
     end
 
