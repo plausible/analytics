@@ -10,8 +10,6 @@ import { usePopper } from 'react-popper'
 import classNames from 'classnames'
 import { createPortal } from 'react-dom'
 
-const INTERACTIVE_HIDE_DELAY_MS = 150
-
 export function Tooltip({
   children,
   info,
@@ -71,10 +69,8 @@ export function Tooltip({
 
   const hide = () => {
     if (interactive) {
-      hideTimeout.current = setTimeout(
-        () => setVisible(false),
-        INTERACTIVE_HIDE_DELAY_MS
-      )
+      // lets the pointer move onto the tooltip before it hides
+      hideTimeout.current = setTimeout(() => setVisible(false))
     } else {
       setVisible(false)
     }
@@ -133,7 +129,9 @@ function TooltipMessage({
       {...popperAttributes}
       className={classNames(
         'z-[99] [body:has(.modal.is-open)_&]:z-[1000] px-2 py-1 rounded-sm text-sm text-gray-100 font-medium bg-gray-800 dark:bg-gray-700',
-        !interactive && 'pointer-events-none'
+        interactive
+          ? 'before:absolute before:inset-x-0 before:top-full before:h-1.5 [&[data-popper-placement^=bottom]]:before:top-auto [&[data-popper-placement^=bottom]]:before:bottom-full'
+          : 'pointer-events-none'
       )}
       role="tooltip"
       onMouseEnter={onMouseEnter}
