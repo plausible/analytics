@@ -100,12 +100,12 @@ test('removing and re-adding a row', async ({ page, request }) => {
   await expect(row1.locator('input[type="email"]')).toHaveValue(
     'row1@example.com'
   )
-  await expect(row1.getByRole('button', { name: 'Role' })).toHaveText('Admin')
+  await expect(row1.getByTestId('role')).toHaveText('Admin')
 
   await expect(row3.locator('input[type="email"]')).toHaveValue(
     'row3@example.com'
   )
-  await expect(row3.getByRole('button', { name: 'Role' })).toHaveText('Billing')
+  await expect(row3.getByTestId('role')).toHaveText('Billing')
 
   await addAnother.click()
 
@@ -113,5 +113,5 @@ test('removing and re-adding a row', async ({ page, request }) => {
   await expect(visibleRows.nth(2)).toHaveAttribute('id', 'member-row-2')
 
   await expect(row2.locator('input[type="email"]')).toHaveValue('')
-  await expect(row2.getByRole('button', { name: 'Role' })).toHaveText('Viewer')
+  await expect(row2.getByTestId('role')).toHaveText('Viewer')
 })
