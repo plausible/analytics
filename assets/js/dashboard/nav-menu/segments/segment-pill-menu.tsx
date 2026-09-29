@@ -22,8 +22,10 @@ import {
   submenuIconClassName as iconClassName,
   useSubmenu
 } from '../submenu'
+import { SegmentsSubmenu, useListableSegments } from './segments-submenu'
 
 const VIEW_FILTERS_LABEL = 'View filters'
+const SWITCH_SEGMENT_LABEL = 'Switch segment'
 
 const deleteClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -56,6 +58,22 @@ const SegmentFilters = ({ segment }: { segment: SavedSegments[number] }) => (
   </>
 )
 
+const SegmentTitle = ({ segment }: { segment: SavedSegments[number] }) => {
+  const user = useUserContext()
+  return (
+    <div className="flex flex-col flex-1 min-w-0 gap-y-0.5 font-semibold">
+      <span className="truncate" title={segment.name}>
+        {segment.name}
+      </span>
+      <SegmentAuthorship
+        className={popover.items.classNames.description}
+        segment={segment}
+        showOnlyPublicData={!user.loggedIn || user.role === Role.public}
+      />
+    </div>
+  )
+}
+
 export const SegmentPillMenu = ({
   segment,
   closeMenu
@@ -65,15 +83,28 @@ export const SegmentPillMenu = ({
 }) => {
   const user = useUserContext()
   const { setModal } = useRoutelessModalsContext()
-  const submenu = useSubmenu<'filters'>()
+  const listableSegments = useListableSegments()
+  const submenu = useSubmenu<'switch' | 'filters'>()
   const canEdit = canExpandSegment({ segment, user })
   const canDuplicate = canSeeSaveAsSegmentAction({ user })
+  const canSwitch =
+    listableSegments.visible &&
+    listableSegments.segments.some((s) => s.id !== segment.id)
+  const switchOpen = submenu.openKey === 'switch'
   const filtersOpen = submenu.openKey === 'filters'
 
-  if (filtersOpen && !submenu.besideMenu) {
+  const switchBody = (
+    <SegmentsSubmenu closeList={closeMenu} selectedId={segment.id} />
+  )
+  const filtersBody = <SegmentFilters segment={segment} />
+
+  if ((switchOpen || filtersOpen) && !submenu.besideMenu) {
     return (
-      <SubmenuInPlace submenu={submenu} label={VIEW_FILTERS_LABEL}>
-        <SegmentFilters segment={segment} />
+      <SubmenuInPlace
+        submenu={submenu}
+        label={switchOpen ? SWITCH_SEGMENT_LABEL : VIEW_FILTERS_LABEL}
+      >
+        {switchOpen ? switchBody : filtersBody}
       </SubmenuInPlace>
     )
   }
@@ -84,21 +115,26 @@ export const SegmentPillMenu = ({
       onMouseLeave={submenu.scheduleClose}
       onKeyDown={submenu.handleEscape}
     >
-      <div
-        className={classNames(
-          popover.items.classNames.staticRow,
-          'flex flex-col gap-y-0.5 font-semibold'
-        )}
-      >
-        <span className="truncate" title={segment.name}>
-          {segment.name}
-        </span>
-        <SegmentAuthorship
-          className={popover.items.classNames.description}
-          segment={segment}
-          showOnlyPublicData={!user.loggedIn || user.role === Role.public}
-        />
-      </div>
+      {canSwitch ? (
+        <>
+          <SubmenuRow
+            expanded={switchOpen}
+            submenuId={submenu.submenuId}
+            onOpen={(anchor) => submenu.openWith('switch', anchor)}
+          >
+            <SegmentTitle segment={segment} />
+          </SubmenuRow>
+          {switchOpen && (
+            <SubmenuPanel submenu={submenu} label={SWITCH_SEGMENT_LABEL}>
+              {switchBody}
+            </SubmenuPanel>
+          )}
+        </>
+      ) : (
+        <div className={popover.items.classNames.staticRow}>
+          <SegmentTitle segment={segment} />
+        </div>
+      )}
       <MenuSeparator />
       <SubmenuRow
         label={VIEW_FILTERS_LABEL}
@@ -109,7 +145,7 @@ export const SegmentPillMenu = ({
       />
       {filtersOpen && (
         <SubmenuPanel submenu={submenu} label={VIEW_FILTERS_LABEL}>
-          <SegmentFilters segment={segment} />
+          {filtersBody}
         </SubmenuPanel>
       )}
       {canEdit && (
