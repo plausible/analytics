@@ -400,7 +400,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
     end
 
-    test "self-demotion role items carry data-confirm, others do not", %{
+    test "self-demotion role items carry data-confirm-message, others do not", %{
       conn: conn,
       team: team,
       user: user
@@ -415,16 +415,16 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       other_hash = :erlang.phash2(member2.email)
 
       for role <- ~w(editor billing viewer) do
-        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected data-confirm on self #{role} item"
+        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm-message"),
+               "expected data-confirm-message on self #{role} item"
 
-        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on other member #{role} item"
+        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm-message"),
+               "expected no data-confirm-message on other member #{role} item"
       end
 
       for role <- ~w(owner admin) do
-        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on self #{role} item"
+        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm-message"),
+               "expected no data-confirm-message on self #{role} item"
       end
     end
 

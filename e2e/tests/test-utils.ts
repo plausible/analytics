@@ -21,6 +21,25 @@ export async function expectLiveViewConnected(page: Page) {
     .toBeGreaterThan(0)
 }
 
+const visibleFlash = (page: Page) =>
+  page.getByTestId('live-flash').filter({ visible: true })
+
+export async function hasFlashMessage(page: Page, message?: string) {
+  const flash = visibleFlash(page)
+  await expect(
+    message ? flash.filter({ hasText: message }) : flash
+  ).toBeVisible()
+}
+
+export async function hasNoFlashMessage(page: Page) {
+  await expect(visibleFlash(page)).toHaveCount(0)
+}
+
+export async function closeFlashMessage(page: Page) {
+  await visibleFlash(page).getByRole('button').click()
+  await hasNoFlashMessage(page)
+}
+
 export function randomID() {
   return Math.random().toString(16).slice(2)
 }

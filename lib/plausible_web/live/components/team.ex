@@ -137,7 +137,10 @@ defmodule PlausibleWeb.Live.Components.Team do
             value={role}
             display={role_to_capitalized_string(role)}
             disabled={@disabled or @role == role}
-            data-confirm={if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()}
+            phx-hook="Confirm"
+            data-confirm-message={
+              if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
+            }
           >
             <div class="flex items-center justify-between gap-x-2">
               <span>{role_to_capitalized_string(role)}</span>
