@@ -30,19 +30,33 @@ defmodule Plausible.Stats.Funnel do
         include_wildard?: false
       )
 
-    Enum.map(suggestions, &step_to_goal(Map.fetch!(&1, :step), goals_map))
+    {suggestions, unmatched_goals} =
+      Enum.reduce(suggestions, {[], goals_map}, fn suggestion, {suggestions, goals_map} ->
+        case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
+          {goal, :static, key} ->
+            {[goal | suggestions], Map.delete(goals_map, key)}
+
+          {goal, :dynamic} ->
+            {[goal | suggestions], goals_map}
+        end
+      end)
+
+    {Enum.reverse(suggestions), Map.values(unmatched_goals)}
   end
 
   def step_to_goal(step, goals_map) do
     if goal = goals_map[{step.name, step.pathname}] do
-      goal
+      {goal, :static, {step.name, step.pathname}}
     else
-      %Plausible.Goal{}
-      |> Plausible.Goal.changeset(%{
-        event_name: if(step.name != "pageview", do: step.name),
-        page_path: step.pathname
-      })
-      |> Ecto.Changeset.apply_changes()
+      goal =
+        %Plausible.Goal{}
+        |> Plausible.Goal.changeset(%{
+          event_name: if(step.name != "pageview", do: step.name),
+          page_path: step.pathname
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      {goal, :dynamic}
     end
   end
 

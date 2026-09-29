@@ -141,7 +141,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
-                    suggest_fun={fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end}
+                    suggest_fun={
+                      fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
+                    }
                     on_selection_made={
                       fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
@@ -320,7 +322,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       ) do
     steps =
       Enum.map(params["steps"], fn {_idx, payload} -> JSON.decode!(payload["step_data"]) end)
-
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
@@ -381,9 +382,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
         input_date_range: :month
       )
 
-    site
-    |> Plausible.Stats.Funnel.suggest(query, steps, goals, input)
+    {suggestions, unmatched_goals} =
+      Plausible.Stats.Funnel.suggest(site, query, steps, goals, input)
+
+    (suggestions ++ unmatched_goals)
     |> Enum.map(&{to_step_data(&1), to_string(&1)})
+    |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
     |> maybe_prepend_creatable(input)
   end
 
