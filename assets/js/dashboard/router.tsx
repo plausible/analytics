@@ -18,7 +18,6 @@ import {
 import { LocationsDetails } from './stats/locations/details'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
-import FilterModal from './stats/modals/filter-modal'
 import DashboardStateContextProvider from './dashboard-state-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
@@ -203,11 +202,6 @@ export const customPropsRoute = {
   element: <PropsModal />
 }
 
-export const filterRoute = {
-  path: 'filter/:field',
-  element: <FilterModal />
-}
-
 export function getRouterBasepath(
   site: Pick<PlausibleSite, 'shared' | 'domain'>
 ): string {
@@ -262,7 +256,6 @@ export function createAppRouter(site: PlausibleSite) {
           screenSizesRoute,
           conversionsRoute,
           customPropsRoute,
-          filterRoute,
           { path: '*', element: null }
         ]
       }

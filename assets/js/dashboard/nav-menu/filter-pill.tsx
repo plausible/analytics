@@ -8,35 +8,61 @@ import React, {
 import { createPortal } from 'react-dom'
 import { Popover, Transition } from '@headlessui/react'
 import { usePopper } from 'react-popper'
-import {
-  AppNavigationLink,
-  AppNavigationTarget
-} from '../navigation/use-app-navigate'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import { BlurMenuButtonOnEscape, popover } from '../components/popover'
+import { Filter, FilterClauseLabels, FilterOperator } from '../dashboard-state'
+import {
+  EVENT_PROPS_PREFIX,
+  getPropertyKeyFromFilterKey,
+  getSupportedOperations
+} from '../util/filters'
+import { getFilterTextParts, plainFilterText } from '../util/filter-text'
+import {
+  useFilterEditorContext,
+  FilterEditorPart
+} from '../filtering/filter-editor-context'
+import { FilterPillPopover } from './filter-pill-popover'
+import { FilterOperatorList } from './filter-operator-list'
+import { FilterValuePicker } from './filter-value-picker'
 
 type RenderMenu = (closeMenu: () => void) => ReactNode
 
 export type FilterPillAction =
-  | { type: 'link'; navigationTarget: AppNavigationTarget }
+  | { type: 'edit' }
   | { type: 'menu'; renderMenu: RenderMenu }
 
 export type FilterPillProps = {
-  plainText: string
+  position: number
+  filter: Filter
+  labels: FilterClauseLabels
   action?: FilterPillAction
   onRemoveClick?: () => void
-  children: ReactNode
 }
 
-const PillContent = ({ children }: { children?: ReactNode }) => (
-  <span className="inline-block max-w-2xs md:max-w-xs truncate">
-    {children}
-  </span>
+const partClassName = 'flex items-center h-full px-2 whitespace-nowrap'
+
+const buttonPartClassName = classNames(
+  partClassName,
+  'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750 aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-750'
 )
 
-const contentBaseClassName =
-  'flex w-full h-full items-center rounded-l-md pl-2.5'
+const PillValues = ({ values }: { values: string[] }) => (
+  <span className="inline-block max-w-2xs md:max-w-xs truncate">
+    {values.length ? (
+      values.map((value, index) => (
+        <React.Fragment key={index}>
+          {index > 0 && (
+            <span className="text-gray-500 dark:text-gray-400"> or </span>
+          )}
+          {value}
+        </React.Fragment>
+      ))
+    ) : (
+      <span className="text-gray-500 dark:text-gray-400">Select...</span>
+    )}
+  </span>
+)
 
 const PillMenuPanel = ({
   open,
@@ -96,12 +122,12 @@ const PillMenuPanel = ({
 
 const PillMenu = ({
   className,
-  plainText,
+  label,
   renderMenu,
   children
 }: {
   className: string
-  plainText: string
+  label: string
   renderMenu: RenderMenu
   children: ReactNode
 }) => {
@@ -121,10 +147,10 @@ const PillMenu = ({
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={setButton}
-            className={classNames(className, 'cursor-pointer')}
-            title={plainText}
+            className={className}
+            aria-label={label}
           >
-            <PillContent>{children}</PillContent>
+            {children}
           </Popover.Button>
           <PillMenuPanel open={open} buttonElement={buttonElement}>
             {renderMenu(close)}
@@ -136,47 +162,146 @@ const PillMenu = ({
 }
 
 export function FilterPill({
-  plainText,
-  children,
-  onRemoveClick,
-  action
+  position,
+  filter,
+  labels,
+  action,
+  onRemoveClick
 }: FilterPillProps) {
-  const contentClassName = classNames(
-    contentBaseClassName,
-    !onRemoveClick && 'rounded-r-md pr-2.5'
+  const editor = useFilterEditorContext()
+  const [containerElement, setContainerElement] =
+    useState<HTMLDivElement | null>(null)
+  const [operatorButton, setOperatorButton] =
+    useState<HTMLButtonElement | null>(null)
+  const [valuesButton, setValuesButton] = useState<HTMLButtonElement | null>(
+    null
   )
 
+  const { dimension, operation, values } = getFilterTextParts(
+    { labels },
+    filter
+  )
+  const plainText = plainFilterText({ labels }, filter)
+  const dimensionLabel = filter[1].startsWith(EVENT_PROPS_PREFIX)
+    ? getPropertyKeyFromFilterKey(filter[1])
+    : dimension
+  const canChangeOperation =
+    action?.type === 'edit' && getSupportedOperations(filter[1]).length > 1
+  const openPart = editor.openPosition === position ? editor.openPart : null
+
+  const toggle = (part: FilterEditorPart) =>
+    openPart === part ? editor.close() : editor.open(position, part)
+
+  const closeEditor = useCallback(
+    ({ refocus }: { refocus: boolean }) => {
+      const anchor =
+        editor.openPart === 'operator' ? operatorButton : valuesButton
+      editor.close()
+      if (refocus) {
+        anchor?.focus()
+      }
+    },
+    [editor, operatorButton, valuesButton]
+  )
+
+  const onOperationSelect = (newOperation: FilterOperator) => {
+    const [_operation, filterKey, clauses] = filter
+    editor.update([newOperation, filterKey, clauses])
+    if (clauses.length) {
+      editor.close()
+      operatorButton?.focus()
+    } else {
+      editor.open(position, 'values')
+    }
+  }
+
+  const roundedRight = !onRemoveClick && 'rounded-r-md'
+
   return (
-    <div className="flex h-8 rounded-md bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm items-center">
-      {action?.type === 'link' ? (
-        <AppNavigationLink
-          className={contentClassName}
-          title={`Edit filter: ${plainText}`}
-          {...action.navigationTarget}
+    <div
+      ref={setContainerElement}
+      role="group"
+      aria-label={plainText}
+      className="flex h-8 shrink-0 items-center rounded-md bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm divide-x divide-gray-200 dark:divide-gray-700"
+    >
+      <span className={classNames(partClassName, 'rounded-l-md')}>
+        {dimensionLabel}
+      </span>
+      {canChangeOperation ? (
+        <button
+          ref={setOperatorButton}
+          type="button"
+          className={buttonPartClassName}
+          aria-label={`Change operator: ${plainText}`}
+          aria-expanded={openPart === 'operator'}
+          onClick={() => toggle('operator')}
         >
-          <PillContent>{children}</PillContent>
-        </AppNavigationLink>
+          {operation}
+        </button>
+      ) : (
+        <span className={partClassName}>{operation}</span>
+      )}
+      {action?.type === 'edit' ? (
+        <button
+          ref={setValuesButton}
+          type="button"
+          className={classNames(buttonPartClassName, roundedRight)}
+          title={plainText}
+          aria-label={`Edit filter: ${plainText}`}
+          aria-expanded={openPart === 'values'}
+          onClick={() => toggle('values')}
+        >
+          <PillValues values={values} />
+        </button>
       ) : action?.type === 'menu' ? (
         <PillMenu
-          className={contentClassName}
-          plainText={plainText}
+          className={classNames(buttonPartClassName, roundedRight)}
+          label={`Open menu: ${plainText}`}
           renderMenu={action.renderMenu}
         >
-          {children}
+          <PillValues values={values} />
         </PillMenu>
       ) : (
-        <div className={contentClassName} title={plainText}>
-          <PillContent>{children}</PillContent>
-        </div>
+        <span
+          className={classNames(partClassName, roundedRight)}
+          title={plainText}
+        >
+          <PillValues values={values} />
+        </span>
       )}
       {!!onRemoveClick && (
         <button
+          type="button"
           title={`Remove filter: ${plainText}`}
-          className="flex items-center h-full rounded-r-md pl-1.5 pr-2.5 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
+          className="w-7.5 flex items-center justify-center h-full rounded-r-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750"
           onClick={onRemoveClick}
         >
           <XMarkIcon className="size-4" />
         </button>
+      )}
+      {openPart === 'operator' && (
+        <FilterPillPopover
+          anchorElement={operatorButton}
+          containerElement={containerElement}
+          onClose={closeEditor}
+          className="w-44"
+        >
+          <FilterOperatorList filter={filter} onSelect={onOperationSelect} />
+        </FilterPillPopover>
+      )}
+      {openPart === 'values' && (
+        <FilterPillPopover
+          anchorElement={valuesButton}
+          containerElement={containerElement}
+          onClose={closeEditor}
+          className="w-80 max-w-[calc(100vw-1rem)]"
+        >
+          <FilterValuePicker
+            filter={filter}
+            labels={labels}
+            onChange={editor.update}
+          />
+        </FilterPillPopover>
       )}
     </div>
   )
