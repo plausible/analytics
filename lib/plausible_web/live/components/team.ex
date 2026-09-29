@@ -90,6 +90,7 @@ defmodule PlausibleWeb.Live.Components.Team do
           <.delete_button
             id={"#{:erlang.phash2(@user.email)}-remove"}
             disabled={@disabled or @remove_disabled}
+            class="disabled:!text-gray-300 dark:disabled:!text-gray-600"
             aria-label={"Remove member #{@user.email}"}
             phx-click="remove-member"
             phx-value-email={@user.email}
