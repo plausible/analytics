@@ -188,12 +188,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/
+                 ~s/input[type="hidden"][name="funnel[steps][1][step_data]"]#submit-step-1/
                )
 
         step_setup_controls = [
-          ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/,
-          ~s/input[type="hidden"][name="funnel[steps][2][goal_id]"]#submit-step-2/,
+          ~s/input[type="hidden"][name="funnel[steps][1][step_data]"]#submit-step-1/,
+          ~s/input[type="hidden"][name="funnel[steps][2][step_data]"]#submit-step-2/,
           ~s/input[type="text"][name="display-step-1"]#step-1/,
           ~s/input[type="text"][name="display-step-2"]#step-2/,
           ~s/a[phx-click="add-step"]/
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/input[type="hidden"][name="funnel[steps][3][goal_id]"]#submit-step-3/
+                 ~s/input[type="hidden"][name="funnel[steps][3][step_data]"]#submit-step-3/
                )
 
         assert element_exists?(doc, ~s/input[type="text"][name="display-step-1"]#step-1/)
@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn: conn,
         site: site
       } do
-        setup_goals(site)
+        {:ok, [g1, g2]} = setup_goals(site)
         lv = get_liveview(conn, site)
         lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
 
@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> render_click()
 
         lv
-        |> element("li#dropdown-step-2-option-1 a")
+        |> element("li#dropdown-step-2-option-2 a")
         |> render_click()
 
         lv
@@ -316,8 +316,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
           funnel: %{
             name: "My test funnel",
             steps: [
-              %{goal_id: 1},
-              %{goal_id: 2}
+              %{step_data: JSON.encode!(%{goal_id: g1.id})},
+              %{step_data: JSON.encode!(%{goal_id: g2.id})}
             ]
           }
         })
@@ -542,8 +542,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn: conn,
         site: site
       } do
-        {:ok, [f1_id, _]} = setup_funnels(site)
+        {:ok, [f1_id, _]} = setup_funnels(site, ["Existing funnel"])
         {:ok, %{id: goal_id}} = Plausible.Goals.create(site, %{"page_path" => "/"})
+        %{steps: [%{id: step1_goal_id}, _]} = Plausible.Funnels.get(site, "Existing funnel")
 
         lv = get_liveview(conn, site)
 
@@ -554,7 +555,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert lv = find_live_child(lv, "funnels-form")
 
         lv
-        |> element("li#dropdown-step-2-option-1 a")
+        |> element("li#dropdown-step-2-option-2 a")
         |> render_click()
 
         lv
@@ -563,8 +564,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
           funnel: %{
             name: "Updated funnel",
             steps: [
-              %{goal_id: 1},
-              %{goal_id: goal_id}
+              %{step_data: JSON.encode!(%{goal_id: step1_goal_id})},
+              %{step_data: JSON.encode!(%{goal_id: goal_id})}
             ]
           }
         })
