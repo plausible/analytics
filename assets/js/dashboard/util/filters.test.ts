@@ -1,4 +1,8 @@
-import { getAvailableFilterDimensions, serializeApiFilters } from './filters'
+import {
+  getAvailableFilterDimensions,
+  getSupportedOperations,
+  serializeApiFilters
+} from './filters'
 
 const ALL_DIMENSIONS = [
   'browser',
@@ -47,6 +51,19 @@ describe(`${getAvailableFilterDimensions.name}`, () => {
         })
       )
     ).toEqual(ALL_DIMENSIONS)
+  })
+})
+
+describe(`${getSupportedOperations.name}`, () => {
+  it.each([
+    ['page', ['is', 'is_not', 'contains', 'contains_not']],
+    ['props:author', ['is', 'is_not', 'contains', 'contains_not']],
+    ['goal', ['is', 'has_not_done', 'contains']],
+    ['country', ['is', 'is_not']],
+    ['screen', ['is', 'is_not']],
+    ['segment', ['is']]
+  ])('for %s returns %p', (filterKey, expectedOperations) => {
+    expect(getSupportedOperations(filterKey)).toEqual(expectedOperations)
   })
 })
 
