@@ -22,9 +22,19 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
         ]
       )
 
+    goals =
+      site
+      |> Plausible.Goals.for_site()
+      |> Enum.map(fn goal ->
+        struct!(
+          Plausible.Goal,
+          Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
+        )
+      end)
+
     socket =
       socket
-      |> assign(site: site, evaluation_result: nil)
+      |> assign(site: site, goals: goals, evaluation_result: nil)
       |> prepare_socket(site, session["funnel_id"])
 
     {:ok, socket}
@@ -131,7 +141,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
-                    suggest_fun={fn input, _choices -> suggest(input, @site, @steps, step_idx) end}
+                    suggest_fun={fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end}
                     on_selection_made={
                       fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
@@ -358,7 +368,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     {:noreply, evaluate_funnel(socket)}
   end
 
-  defp suggest(input, site, steps, step_idx) do
+  defp suggest(input, site, goals, steps, step_idx) do
     steps =
       steps
       |> Enum.sort_by(&elem(&1, 0))
@@ -372,7 +382,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       )
 
     site
-    |> Plausible.Stats.Funnel.suggest(query, steps, input)
+    |> Plausible.Stats.Funnel.suggest(query, steps, goals, input)
     |> Enum.map(&{to_step_data(&1), to_string(&1)})
     |> maybe_prepend_creatable(input)
   end
@@ -439,12 +449,21 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
   end
 
   defp to_step_data(%Plausible.Goal{} = goal) do
-    JSON.encode!(%{
-      event_name: if(goal.event_name != "pageview", do: goal.event_name),
+    data = %{
+      event_name: goal.event_name,
       page_path: goal.page_path,
       scroll_threshold: goal.scroll_threshold,
       currency: goal.currency
-    })
+    }
+
+    data =
+      if is_integer(goal.id) and goal.id > 0 do
+        Map.put(data, :goal_id, goal.id)
+      else
+        data
+      end
+
+    JSON.encode!(data)
   end
 
   defp find_sequence_break(input) do

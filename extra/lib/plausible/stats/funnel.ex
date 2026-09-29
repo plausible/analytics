@@ -18,9 +18,10 @@ defmodule Plausible.Stats.Funnel do
   alias Plausible.Stats.Exploration
   alias Plausible.Stats.Goal.Revenue
 
-  def suggest(site, query, goals, search_term) do
+  def suggest(site, query, steps, all_goals, search_term) do
     search_term = search_term
-    journey = Enum.map(goals, &Exploration.Journey.Step.from/1)
+    journey = Enum.map(steps, &Exploration.Journey.Step.from/1)
+    goals_map = Map.new(all_goals, fn g -> {{g.event_name || "pageview", g.page_path}, g} end)
 
     {:ok, suggestions} =
       site
@@ -29,13 +30,20 @@ defmodule Plausible.Stats.Funnel do
         include_wildard?: false
       )
 
-    Enum.map(suggestions, &step_to_goal(Map.fetch!(&1, :step)))
+    Enum.map(suggestions, &step_to_goal(Map.fetch!(&1, :step), goals_map))
   end
 
-  def step_to_goal(step) do
-    %Plausible.Goal{}
-    |> Plausible.Goal.changeset(%{event_name: step.name, page_path: step.pathname})
-    |> Ecto.Changeset.apply_changes()
+  def step_to_goal(step, goals_map) do
+    if goal = goals_map[{step.name, step.pathname}] do
+      goal
+    else
+      %Plausible.Goal{}
+      |> Plausible.Goal.changeset(%{
+        event_name: if(step.name != "pageview", do: step.name),
+        page_path: step.pathname
+      })
+      |> Ecto.Changeset.apply_changes()
+    end
   end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
