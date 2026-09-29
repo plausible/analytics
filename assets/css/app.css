@@ -256,6 +256,9 @@
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Prima components mark their disabled state with `data-disabled` rather than
+   the native attribute, so `disabled:` covers both. */
+@custom-variant disabled (&:disabled, &[data-disabled]);
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-hook-loading (.phx-hook-loading&, .phx-hook-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
