@@ -1,15 +1,22 @@
 import React, { CSSProperties } from 'react'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { FilterPill, FilterPillAction } from './filter-pill'
-import { cleanLabels, EVENT_PROPS_PREFIX } from '../util/filters'
-import { styledFilterText, plainFilterText } from '../util/filter-text'
-import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
-import { filterRoute } from '../router'
 import { canRemoveFilter, isSegmentFilter } from '../filtering/segments'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { SegmentPillMenu } from './segments/segment-pill-menu'
 import { Filter } from '../dashboard-state'
+import { useFilterEditorContext } from '../filtering/filter-editor-context'
+
+// new filters are inserted before existing ones, so index keys would move
+// the state of one pill to another
+const getPillKeys = (filters: Filter[]) => {
+  const counts: Record<string, number> = {}
+  return filters.map(([_operation, key]) => {
+    counts[key] = (counts[key] ?? 0) + 1
+    return `${key}:${counts[key]}`
+  })
+}
 
 export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
@@ -17,22 +24,13 @@ export const AppliedFilterPillsList = React.forwardRef<
 >(({ className, style }, ref) => {
   const { dashboardState } = useDashboardStateContext()
   const { segments, limitedToSegment } = useSegmentsContext()
-  const navigate = useAppNavigate()
+  const editor = useFilterEditorContext()
+  const filters = editor.renderedFilters
+  const keys = getPillKeys(filters)
 
   const getPillAction = (filter: Filter): FilterPillAction | undefined => {
     if (!isSegmentFilter(filter)) {
-      return {
-        type: 'link',
-        navigationTarget: {
-          path: filterRoute.path,
-          search: (s) => s,
-          params: {
-            field: filter[1].startsWith(EVENT_PROPS_PREFIX)
-              ? 'props'
-              : filter[1]
-          }
-        }
-      }
+      return { type: 'edit' }
     }
     const [_operation, _dimension, [id]] = filter
     const segment = segments.find((s) => String(s.id) === String(id))
@@ -56,31 +54,19 @@ export const AppliedFilterPillsList = React.forwardRef<
         className={classNames('flex gap-x-1 p-1', className)}
         style={style}
       >
-        {dashboardState.filters.map((filter, index) => (
+        {filters.map((filter, index) => (
           <FilterPill
-            key={index}
-            plainText={plainFilterText(dashboardState, filter)}
+            key={keys[index]}
+            position={index}
+            filter={filter}
+            labels={dashboardState.labels}
             action={getPillAction(filter)}
             onRemoveClick={
               canRemoveFilter(filter, limitedToSegment)
-                ? () => {
-                    const newFilters = dashboardState.filters.filter(
-                      (_, i) => i !== index
-                    )
-
-                    navigate({
-                      search: (searchRecord) => ({
-                        ...searchRecord,
-                        filters: newFilters,
-                        labels: cleanLabels(newFilters, dashboardState.labels)
-                      })
-                    })
-                  }
+                ? () => editor.remove(index)
                 : undefined
             }
-          >
-            {styledFilterText(dashboardState, filter)}
-          </FilterPill>
+          />
         ))}
       </div>
     </div>

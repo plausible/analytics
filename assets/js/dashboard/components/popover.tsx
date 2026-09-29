@@ -39,7 +39,7 @@ const toggleButton = {
     outline:
       'border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:hover:text-gray-100',
     ghost:
-      'gap-x-1.5 px-2.5 font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
+      'gap-x-1.5 px-2.5 text-gray-800 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
     truncatedText: 'truncate block',
     linkLike:
       'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150'

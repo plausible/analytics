@@ -8,6 +8,7 @@ import React, {
   useState
 } from 'react'
 import { AppliedFilterPillsList } from './filter-pills-list'
+import { useFilterEditorContext } from '../filtering/filter-editor-context'
 import { FilterMenu } from './filter-menu'
 import { SegmentMenu } from './segments/segment-menu'
 import { useDashboardStateContext } from '../dashboard-state-context'
@@ -42,6 +43,7 @@ const canShowSaveAsSegmentAction = ({
 
 export const FiltersBar = () => {
   const { dashboardState, expandedSegment } = useDashboardStateContext()
+  const { renderedFilters } = useFilterEditorContext()
   const user = useUserContext()
 
   const showingClearAll = canShowClearAllAction({
@@ -56,7 +58,7 @@ export const FiltersBar = () => {
 
   const hasActions = showingSaveAsSegment || showingClearAll
 
-  if (!dashboardState.filters.length) {
+  if (!renderedFilters.length) {
     return (
       <div className="flex flex-1 justify-end">
         <FilterMenu />
@@ -100,13 +102,13 @@ const getFadeMask = ({ start, end }: ScrollOverflow) => {
 }
 
 const ScrollableFilterPills = () => {
-  const { dashboardState } = useDashboardStateContext()
+  const { renderedFilters } = useFilterEditorContext()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [overflow, setOverflow] = useState<ScrollOverflow>({
     start: false,
     end: false
   })
-  const filtersCount = dashboardState.filters.length
+  const filtersCount = renderedFilters.length
   const previousFiltersCount = useRef(filtersCount)
 
   const updateOverflow = (element: HTMLElement) => {
@@ -142,7 +144,7 @@ const ScrollableFilterPills = () => {
     }
     previousFiltersCount.current = filtersCount
     updateOverflow(element)
-  }, [dashboardState.filters, filtersCount])
+  }, [renderedFilters, filtersCount])
 
   return (
     <AppliedFilterPillsList
