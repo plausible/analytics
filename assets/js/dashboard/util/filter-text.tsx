@@ -1,4 +1,4 @@
-import React, { ReactNode, isValidElement, Fragment } from 'react'
+import React, { ReactNode, Fragment } from 'react'
 import { DashboardState, Filter } from '../dashboard-state'
 import {
   EVENT_PROPS_PREFIX,
@@ -41,17 +41,35 @@ export function styledFilterText(
   )
 }
 
-/** e.g. { subject: 'Country is', values: 'Germany or Poland' } */
-export function plainFilterTextParts(
+/** e.g. { dimension: 'Country', operation: 'is', values: ['Germany', 'Poland'] } */
+export function getFilterTextParts(
   dashboardState: Pick<DashboardState, 'labels'>,
   [operation, filterKey, clauses]: Filter
 ) {
-  const operationName = FILTER_OPERATIONS_DISPLAY_NAMES[operation]
+  return {
+    dimension: getDimensionName(filterKey),
+    operation: FILTER_OPERATIONS_DISPLAY_NAMES[operation],
+    values: clauses.map((value) =>
+      getLabel(dashboardState.labels, filterKey, value)
+    )
+  }
+}
+
+/** e.g. 'Country is Germany or Poland' */
+export function plainFilterText(
+  dashboardState: Pick<DashboardState, 'labels'>,
+  filter: Filter
+) {
+  const { dimension, operation, values } = getFilterTextParts(
+    dashboardState,
+    filter
+  )
+  return [dimension, operation, values.join(' or ')].filter(Boolean).join(' ')
+}
+
+function getDimensionName(filterKey: string): string {
   if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    return {
-      subject: `Property ${getPropertyKeyFromFilterKey(filterKey)} ${operationName}`,
-      values: clauses.join(' or ')
-    }
+    return `Property '${getPropertyKeyFromFilterKey(filterKey)}'`
   }
   const formattedFilter = (
     formattedFilters as Record<string, string | undefined>
@@ -59,19 +77,7 @@ export function plainFilterTextParts(
   if (!formattedFilter) {
     throw new Error(`Unknown filter: ${filterKey}`)
   }
-  return {
-    subject: `${capitalize(formattedFilter)} ${operationName}`,
-    values: clauses
-      .map((value) => getLabel(dashboardState.labels, filterKey, value))
-      .join(' or ')
-  }
-}
-
-export function plainFilterText(
-  dashboardState: Pick<DashboardState, 'labels'>,
-  filter: Filter
-) {
-  return reactNodeToString(styledFilterText(dashboardState, filter))
+  return capitalize(formattedFilter)
 }
 
 function formatClauses(labels: Array<string | number>): ReactNode[] {
@@ -85,20 +91,4 @@ function formatClauses(labels: Array<string | number>): ReactNode[] {
 
 function capitalize(str: string): string {
   return str[0].toUpperCase() + str.slice(1)
-}
-
-function reactNodeToString(reactNode: ReactNode): string {
-  let string = ''
-  if (typeof reactNode === 'string') {
-    string = reactNode
-  } else if (typeof reactNode === 'number') {
-    string = reactNode.toString()
-  } else if (reactNode instanceof Array) {
-    reactNode.forEach(function (child) {
-      string += reactNodeToString(child)
-    })
-  } else if (isValidElement(reactNode)) {
-    string += reactNodeToString(reactNode.props.children)
-  }
-  return string
 }
