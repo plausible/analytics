@@ -140,7 +140,7 @@ export function IntervalPicker({
 
   return (
     <div className="flex justify-between items-center gap-x-2 w-full pl-4 pr-2 py-1">
-      <span className="shrink-0 text-sm font-medium text-gray-700 dark:text-gray-100">
+      <span className="shrink-0 text-sm text-gray-800 dark:text-gray-100">
         Graph interval
       </span>
       <SegmentedControl

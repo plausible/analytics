@@ -25,6 +25,7 @@ export type FilterDimension = keyof typeof formattedFilters
 
 export type FilterMenuRow =
   | { kind: 'segments'; key: 'segment'; label: string; Icon: IconComponent }
+  | { kind: 'properties'; key: 'props'; label: string; Icon: IconComponent }
   | {
       kind: 'item'
       key: FilterGroupKey
@@ -71,7 +72,11 @@ export function getFilterMenuRows({
     .filter(
       (key) => key !== SEGMENTS_ROW.key && (key !== 'props' || propsAvailable)
     )
-    .map((key) => {
+    .map((key): FilterMenuRow => {
+      if (key === 'props') {
+        return { kind: 'properties', key, ...GROUPS[key] }
+      }
+
       const dimensions = FILTER_GROUP_TO_DIMENSIONS[key] as FilterDimension[]
 
       return dimensions.length > 1
