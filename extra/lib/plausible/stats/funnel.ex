@@ -31,7 +31,9 @@ defmodule Plausible.Stats.Funnel do
       )
 
     {suggestions, unmatched_goals} =
-      Enum.reduce(suggestions, {[], goals_map}, fn suggestion, {suggestions, goals_map} ->
+      suggestions
+      |> Enum.reject(&(&1.step.name == Exploration.Journey.Step.journey_end_event()))
+      |> Enum.reduce({[], goals_map}, fn suggestion, {suggestions, goals_map} ->
         case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
           {goal, :static, key} ->
             {[goal | suggestions], Map.delete(goals_map, key)}
