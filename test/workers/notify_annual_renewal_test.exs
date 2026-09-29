@@ -169,7 +169,49 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     )
   end
 
+  test "sends renewal notification to user on a yearly enterprise plan", %{user: user} do
+    subscribe_to_enterprise_plan(user,
+      billing_interval: :yearly,
+      subscription: [next_bill_date: Date.shift(Date.utc_today(), day: 7)]
+    )
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_email_delivered_with(
+      to: [{user.name, user.email}],
+      subject: "Your Plausible subscription is up for renewal"
+    )
+  end
+
+  test "ignores user on a monthly enterprise plan", %{user: user} do
+    subscribe_to_enterprise_plan(user,
+      billing_interval: :monthly,
+      subscription: [next_bill_date: Date.shift(Date.utc_today(), day: 7)]
+    )
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_no_emails_delivered()
+  end
+
   describe "expiration" do
+    test "notifies user on a cancelled yearly enterprise plan about expiration", %{user: user} do
+      subscribe_to_enterprise_plan(user,
+        billing_interval: :yearly,
+        subscription: [
+          next_bill_date: Date.shift(Date.utc_today(), day: 7),
+          status: Subscription.Status.deleted()
+        ]
+      )
+
+      NotifyAnnualRenewal.perform(nil)
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Your Plausible subscription is about to expire"
+      )
+    end
+
     test "if user subscription is 'deleted', notify them about expiration instead", %{user: user} do
       subscribe_to_plan(user, @yearly_plan,
         next_bill_date: Date.shift(Date.utc_today(), day: 7),
