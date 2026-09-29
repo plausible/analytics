@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Live.Components.Team do
     <form id={"role-form-#{:erlang.phash2(@user.email)}"} phx-change={@change}>
       <input type="hidden" name="email" value={@user.email} />
 
-      <PrimaListbox.listbox id={@id} name="role" value={@role} disabled={@disabled}>
+      <PrimaListbox.listbox id={@id} name="role" value={@role}>
         <PrimaListbox.listbox_trigger
           id={"#{@id}-trigger"}
           theme="ghost"
@@ -136,7 +136,6 @@ defmodule PlausibleWeb.Live.Components.Team do
             id={"option-#{:erlang.phash2(@user.email)}-#{role}"}
             value={role}
             display={role_to_capitalized_string(role)}
-            disabled={@disabled or @role == role}
             phx-hook="Confirm"
             data-confirm-message={
               if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
@@ -149,7 +148,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
               />
             </div>
-            <PrimaListbox.option_description disabled={@disabled or @role == role}>
+            <PrimaListbox.option_description>
               {description}
             </PrimaListbox.option_description>
           </PrimaListbox.listbox_option>

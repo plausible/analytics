@@ -22,26 +22,19 @@ defmodule PlausibleWeb.Components.PrimaListbox do
 
   @disabled_class "data-disabled:cursor-not-allowed data-disabled:text-gray-300 dark:data-disabled:text-gray-600"
   @options_base_class "relative z-50 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5 focus:outline-none"
-  @option_class "group block rounded-md text-sm/6 text-gray-900 dark:text-gray-100 px-3 py-1.5 cursor-pointer data-focus:bg-gray-100 dark:data-focus:bg-gray-700/80 #{@disabled_class}"
+  @option_class "group block rounded-md text-sm/6 text-gray-900 dark:text-gray-100 px-3 py-1.5 cursor-pointer data-focus:bg-gray-100 dark:data-focus:bg-gray-700/80"
 
   defdelegate listbox_value(assigns), to: Listbox
 
   attr(:id, :string, required: true)
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
-  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def listbox(assigns) do
     ~H"""
-    <Listbox.listbox
-      id={@id}
-      name={@name}
-      value={@value}
-      class={@disabled && "cursor-not-allowed"}
-      {@rest}
-    >
+    <Listbox.listbox id={@id} name={@name} value={@value} {@rest}>
       {render_slot(@inner_block)}
     </Listbox.listbox>
     """
@@ -108,7 +101,6 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   attr(:id, :string, required: true)
   attr(:value, :any, required: true)
   attr(:display, :string, default: nil)
-  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -120,7 +112,6 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       id={@id}
       value={@value}
       display={@display}
-      disabled={@disabled}
       class={@option_class}
       {@rest}
     >
@@ -130,19 +121,11 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   end
 
   attr(:class, :string, default: "")
-  attr(:disabled, :boolean, default: false)
   slot(:inner_block, required: true)
 
   def option_description(assigns) do
     ~H"""
-    <div class={[
-      "text-xs/5",
-      if(@disabled,
-        do: "text-gray-300 dark:text-gray-600",
-        else: "text-gray-500 dark:text-gray-400"
-      ),
-      @class
-    ]}>
+    <div class={["text-xs/5 text-gray-500 dark:text-gray-400", @class]}>
       {render_slot(@inner_block)}
     </div>
     """

@@ -142,3 +142,38 @@ test('lowering your own role asks for confirmation', async ({
     await expect(trigger).toContainText('Owner')
   })
 })
+
+test('choosing the current role again just closes the listbox', async ({
+  page,
+  request
+}) => {
+  await setupSite({ page, request })
+  await createTeam(page)
+
+  const viewerEmail = `viewer-${randomID()}@example.com`
+  await submitInviteForm(page, {
+    email: viewerEmail,
+    roleOptionName: /^Viewer/
+  })
+
+  const trigger = page.getByRole('button', { name: `Role for ${viewerEmail}:` })
+  const options = page.getByRole('listbox', {
+    name: `Role for ${viewerEmail}:`
+  })
+
+  await expect(trigger).toContainText('Viewer')
+
+  const dialogs: string[] = []
+  page.on('dialog', async (dialog) => {
+    dialogs.push(dialog.message())
+    await dialog.dismiss()
+  })
+
+  await trigger.click()
+  await options.getByRole('option', { name: /^Viewer/ }).click()
+
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  await expect(trigger).toContainText('Viewer')
+  expect(dialogs).toHaveLength(0)
+  await hasNoFlashMessage(page)
+})
