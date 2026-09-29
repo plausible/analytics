@@ -5,20 +5,24 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
 
   @dropdown_item_icon_base_class "text-gray-600 dark:text-gray-400 group-hover/item:text-gray-900 group-data-focus/item:text-gray-900 dark:group-hover/item:text-gray-100 dark:group-data-focus/item:text-gray-100"
 
-  @trigger_button_base_class "whitespace-nowrap truncate inline-flex items-center justify-between gap-x-2 text-sm font-medium rounded-md cursor-pointer disabled:cursor-not-allowed"
+  # Themes/sizes/base are defined as component classes in
+  # assets/css/app.css, shared with the Phoenix `button` component
+  # (lib/plausible_web/components/generic.ex). Update there only.
+  @trigger_base_class "btn-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
 
-  @trigger_button_themes %{
-    "primary" =>
-      "border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-400/60 disabled:dark:bg-indigo-600/30 disabled:dark:text-white/35",
-    "secondary" =>
-      "border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:border-gray-400/60 hover:text-gray-900 dark:hover:border-gray-500 dark:hover:text-white disabled:text-gray-700/40 dark:disabled:text-gray-500 dark:disabled:bg-gray-800 dark:disabled:border-gray-800",
-    "ghost" =>
-      "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 disabled:text-gray-500 disabled:dark:text-gray-600"
+  @trigger_icon_class "btn-icon"
+
+  @trigger_themes %{
+    "primary" => "btn-theme-primary",
+    "secondary" => "btn-theme-secondary",
+    "ghost" => "btn-theme-ghost",
+    "link" => "btn-theme-link"
   }
 
-  @trigger_button_sizes %{
-    "sm" => "px-3 py-2",
-    "md" => "px-3.5 py-2.5"
+  @trigger_sizes %{
+    "xs" => "btn-xs",
+    "sm" => "btn-sm",
+    "md" => "btn-md"
   }
 
   defdelegate dropdown(assigns), to: Prima.Dropdown
@@ -26,6 +30,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
   attr(:id, :string, required: true)
   attr(:theme, :string, default: "secondary")
   attr(:size, :string, default: "md")
+  attr(:icon?, :boolean, default: false)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block, required: true)
@@ -34,9 +39,10 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     assigns =
       assign(assigns,
         computed_class: [
-          @trigger_button_base_class,
-          @trigger_button_sizes[assigns.size],
-          @trigger_button_themes[assigns.theme],
+          @trigger_base_class,
+          @trigger_sizes[assigns.size],
+          @trigger_themes[assigns.theme],
+          if(assigns.icon?, do: @trigger_icon_class, else: "justify-between"),
           assigns.class
         ]
       )

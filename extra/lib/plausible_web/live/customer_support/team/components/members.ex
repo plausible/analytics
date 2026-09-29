@@ -4,6 +4,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   """
   use PlausibleWeb, :live_component
   import PlausibleWeb.CustomerSupport.Live
+  import PlausibleWeb.CustomerSupport.Components.SuppressionWarning
   alias Plausible.Teams
 
   def update(%{team: team}, socket) do
@@ -22,7 +23,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
         </:thead>
         <:tbody :let={{_, member}}>
           <.td truncate>
-            <div :if={member.id != 0}>
+            <div :if={member.id != 0} class="flex items-center">
               <.styled_link
                 patch={~p"/cs/users/user/#{member.id}"}
                 class="cursor-pointer flex block items-center"
@@ -33,13 +34,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
                 />
                 {member.name} &lt;{member.email}&gt;
               </.styled_link>
+              <.suppression_warning email={member.email} />
             </div>
             <div :if={member.id == 0} class="flex items-center">
               <img
                 src={Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})}
                 class="mr-4 w-6 rounded-full bg-gray-300"
               />
-              {member.name} &lt;{member.email}&gt;
+              {member.name} &lt;{member.email}&gt; <.suppression_warning email={member.email} />
             </div>
           </.td>
           <.td>
@@ -49,16 +51,21 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
             <div class="flex items-center gap-x-1">
               <span :if={member.type == :membership && member.meta.user.type == :sso}>SSO </span>{member.type}
 
-              <.delete_button
+              <.button
                 :if={member.type == :membership && member.meta.user.type == :sso}
                 id={"deprovision-sso-user-#{member.id}"}
+                theme="ghost"
+                size="sm"
+                icon?={true}
+                mt?={false}
+                class="btn-text-danger"
                 phx-click="deprovision-sso-user"
                 phx-value-identifier={member.id}
                 phx-target={@myself}
-                class="text-sm"
-                icon={:user_minus}
                 data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
-              />
+              >
+                <Heroicons.user_minus class="size-4" />
+              </.button>
             </div>
           </.td>
           <.td>
