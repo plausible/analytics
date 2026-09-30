@@ -65,8 +65,6 @@ defmodule Plausible.Stats.Goals do
 
   @type goal_join_data() :: %{
           indices: [non_neg_integer()],
-          types: [String.t()],
-          event_names_imports: [String.t()],
           event_names_by_type: [String.t()],
           page_regexes: [String.t()],
           scroll_thresholds: [non_neg_integer()],
@@ -74,47 +72,61 @@ defmodule Plausible.Stats.Goals do
           custom_props_values: [[String.t()]]
         }
 
+  @type goal_join_imported_data() :: %{
+          indices: [non_neg_integer()],
+          types: [String.t()],
+          event_names: [String.t()],
+          page_regexes: [String.t()]
+        }
+
   @doc """
   Returns data needed to perform a GROUP BY on goals in an ecto query.
   """
   @spec goal_join_data(Plausible.Stats.Query.t()) :: goal_join_data()
   def goal_join_data(query) do
-    goals = query.preloaded_goals.matching_toplevel_filters
+    {goals, indices} =
+      query.preloaded_goals.matching_toplevel_filters
+      |> Enum.with_index(1)
+      |> Enum.unzip()
 
-    goals
-    |> Enum.with_index(1)
-    |> Enum.reduce(
-      %{
-        indices: [],
-        types: [],
-        event_names_imports: [],
-        event_names_by_type: [],
-        page_regexes: [],
-        scroll_thresholds: [],
-        custom_props_keys: [],
-        custom_props_values: []
-      },
-      fn {goal, idx}, acc ->
-        goal_type = Plausible.Goal.type(goal)
-        {prop_keys, prop_values} = Enum.unzip(goal.custom_props)
+    {custom_props_keys, custom_props_values} =
+      goals
+      |> Enum.map(fn goal -> Enum.unzip(goal.custom_props) end)
+      |> Enum.unzip()
 
-        %{
-          indices: [idx | acc.indices],
-          types: [to_string(goal_type) | acc.types],
-          # This will contain "" for non-event goals
-          event_names_imports: [to_string(goal.event_name) | acc.event_names_imports],
-          event_names_by_type: [event_name_by_type(goal_type, goal) | acc.event_names_by_type],
-          # Event goals are considered to match everything for the sake of efficient queries in query_builder.ex
-          # See also Plausible.Stats.SQL.Expression.event_goal_join/1
-          page_regexes: [page_regex_for_goal(goal_type, goal) | acc.page_regexes],
-          scroll_thresholds: [goal.scroll_threshold | acc.scroll_thresholds],
-          custom_props_keys: [prop_keys | acc.custom_props_keys],
-          custom_props_values: [prop_values | acc.custom_props_values]
-        }
-      end
-    )
-    |> Enum.map(fn {key, list} -> {key, Enum.reverse(list)} end)
-    |> Map.new()
+    %{
+      indices: indices,
+      event_names_by_type:
+        Enum.map(goals, fn goal -> event_name_by_type(Plausible.Goal.type(goal), goal) end),
+      # Event goals are considered to match everything for the sake of efficient queries in query_builder.ex
+      # See also Plausible.Stats.SQL.Expression.event_goal_join/1
+      page_regexes:
+        Enum.map(goals, fn goal -> page_regex_for_goal(Plausible.Goal.type(goal), goal) end),
+      scroll_thresholds: Enum.map(goals, fn goal -> goal.scroll_threshold end),
+      custom_props_keys: custom_props_keys,
+      custom_props_values: custom_props_values
+    }
+  end
+
+  @doc """
+  Returns data needed to perform a GROUP BY on goals in an imported data query.
+  """
+  @spec goal_join_imported_data(Plausible.Stats.Query.t()) :: goal_join_imported_data()
+  def goal_join_imported_data(query) do
+    {goals, indices} =
+      query.preloaded_goals.matching_toplevel_filters
+      # Keep indices aligned with the complete preloaded goal list.
+      |> Enum.with_index(1)
+      |> Enum.reject(fn {goal, _idx} -> Plausible.Goal.has_custom_props?(goal) end)
+      |> Enum.unzip()
+
+    %{
+      indices: indices,
+      types: Enum.map(goals, fn goal -> goal |> Plausible.Goal.type() |> to_string() end),
+      event_names: Enum.map(goals, fn goal -> to_string(goal.event_name) end),
+      page_regexes:
+        Enum.map(goals, fn goal -> page_regex_for_goal(Plausible.Goal.type(goal), goal) end)
+    }
   end
 
   defp event_name_by_type(:event, goal), do: goal.event_name

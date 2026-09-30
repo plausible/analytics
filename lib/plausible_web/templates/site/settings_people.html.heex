@@ -36,7 +36,7 @@
               <div class="shrink-0">
                 <img
                   src={Plausible.Auth.User.profile_img_url(membership.user)}
-                  class="h-8 w-8 rounded-full"
+                  class="size-8 rounded-full"
                 />
               </div>
               <div class="flex-1 min-w-0">
@@ -52,9 +52,9 @@
               </div>
 
               <.dropdown>
-                <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+                <:button theme="ghost" size="sm">
                   {site_role(membership)}
-                  <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+                  <Heroicons.chevron_down mini class="size-4" />
                 </:button>
                 <:menu class="max-w-60">
                   <%= if membership.role == :owner do %>

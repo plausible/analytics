@@ -44,7 +44,7 @@ defmodule Plausible.CustomerSupport.TrialProspects do
   @kind_rank %{starter: 0, growth: 1, business: 2}
 
   @page_size 100
-  @sortable_columns ~w(mrr trial_start)
+  @sortable_columns ~w(mrr traffic trial_start)
   @max_expired_days 30
 
   @spec sortable_columns() :: [String.t()]
@@ -84,6 +84,8 @@ defmodule Plausible.CustomerSupport.TrialProspects do
       base
       |> preload_team()
       |> order_prospects(sort_by, sort_direction)
+      # Unique final key keeps offset pagination stable across ties
+      |> order_by([p], asc: p.team_id)
       |> limit(^@page_size)
       |> offset(^((page_number - 1) * @page_size))
       |> Repo.all()
@@ -112,6 +114,10 @@ defmodule Plausible.CustomerSupport.TrialProspects do
 
   defp order_prospects(q, "trial_start", direction) do
     order_by(q, [team: t], [{^direction, t.inserted_at}])
+  end
+
+  defp order_prospects(q, "traffic", direction) do
+    order_by(q, [p], [{^direction, p.estimated_monthly}])
   end
 
   # Over-the-top-tier (Custom/Enterprise) prospects rank first

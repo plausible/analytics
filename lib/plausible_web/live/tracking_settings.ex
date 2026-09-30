@@ -187,8 +187,9 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     <.tooltip centered?={true} interactive?={false}>
       <:tooltip_content>Learn more</:tooltip_content>
       <.button_link
-        theme="icon"
+        theme="link"
         size="xs"
+        icon?={true}
         mt?={false}
         href={@href}
         target="_blank"

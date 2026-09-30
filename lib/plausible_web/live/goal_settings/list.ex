@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
           <PrimaDropdown.dropdown id="add-goal-dropdown">
             <PrimaDropdown.dropdown_trigger id="add-goal-dropdown-trigger" theme="primary">
-              Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+              Add goal <Heroicons.chevron_down mini class="size-4" />
             </PrimaDropdown.dropdown_trigger>
 
             <PrimaDropdown.dropdown_menu id="add-goal-dropdown-menu">
@@ -115,7 +115,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 data-test-id="edit-goal-button"
                 phx-click="edit-goal"
                 phx-value-goal-id={goal.id}
-                class="mt-1"
                 id={"edit-goal-#{goal.id}"}
               />
               <.edit_button
@@ -123,7 +122,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 id={"edit-goal-#{goal.id}-disabled"}
                 data-test-id="edit-goal-button"
                 disabled
-                class="cursor-not-allowed mt-1"
               />
               <.delete_button
                 id={"delete-goal-#{goal.id}"}
@@ -131,7 +129,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 phx-value-goal-id={goal.id}
                 phx-value-goal-name={goal.event_name}
                 data-confirm={delete_confirmation_text(goal)}
-                class="mt-1"
               />
             </.td>
           </:tbody>
@@ -172,7 +169,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           id="add-goal-dropdown-empty-trigger"
           theme="primary"
         >
-          Add goal <Heroicons.chevron_down mini class="size-4 mt-0.5" />
+          Add goal <Heroicons.chevron_down mini class="size-4" />
         </PrimaDropdown.dropdown_trigger>
 
         <PrimaDropdown.dropdown_menu id="add-goal-dropdown-empty-menu">

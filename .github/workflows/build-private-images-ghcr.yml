@@ -75,8 +75,9 @@ jobs:
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -n1 | xargs)
-          co_authors=$(printf '%s\n' "$COMMIT_MSG" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | xargs)
+          trim() { sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -n1 | trim)
+          co_authors=$(printf '%s\n' "$COMMIT_MSG" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | trim)
           {
             echo "first_line=$first_line"
             echo "co_authors=$co_authors"

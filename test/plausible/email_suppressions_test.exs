@@ -6,8 +6,8 @@ defmodule Plausible.EmailSuppressionsTest do
 
   @moduletag :ee_only
 
-  # Suppressions without Bounce ID (backfilled) 
-  # go through delete suppressions API call on reactivate. 
+  # Suppressions without Bounce ID (backfilled)
+  # go through delete suppressions API call on reactivate.
   # Tests that expect different result may override this.
   setup do
     Req.Test.stub(Postmark, fn conn ->
@@ -234,6 +234,46 @@ defmodule Plausible.EmailSuppressionsTest do
                EmailSuppressions.list([], %{"limit" => "1", "after" => cursor})
 
       assert second.email == "hard@example.com"
+    end
+  end
+
+  describe "create_from_unsubscribe/1" do
+    test "sets reason to :unsubscribe" do
+      {:ok, suppression} =
+        EmailSuppressions.create_from_unsubscribe(%{
+          email: "unsubscribed@example.com",
+          source: :webhook,
+          details: "Unsubscribed via Postmark (origin: Recipient)"
+        })
+
+      assert suppression.reason == :unsubscribe
+      assert suppression.details == "Unsubscribed via Postmark (origin: Recipient)"
+      assert EmailSuppressions.suppressed?("unsubscribed@example.com")
+    end
+
+    test "an unsubscribe webhook clears a reactivation left by an earlier bounce" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "flip-flop@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      {:ok, _} = EmailSuppressions.reactivate("flip-flop@example.com", user)
+      refute EmailSuppressions.suppressed?("flip-flop@example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_unsubscribe(%{
+          email: "flip-flop@example.com",
+          source: :webhook
+        })
+
+      assert EmailSuppressions.suppressed?("flip-flop@example.com")
+      assert suppression.reason == :unsubscribe
+      assert is_nil(suppression.reactivated_at)
+      assert is_nil(suppression.reactivated_by_user_id)
     end
   end
 

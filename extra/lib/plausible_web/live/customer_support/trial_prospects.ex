@@ -54,7 +54,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
             />
             <.th>Feature tier</.th>
             <.th>Forced by</.th>
-            <.th>Traffic estimate</.th>
+            <.sort_th
+              label="Traffic estimate"
+              by="traffic"
+              sort_by={@sort_by}
+              sort_direction={@sort_direction}
+            />
             <.sort_th
               label="Trial start"
               by="trial_start"
@@ -62,6 +67,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
               sort_direction={@sort_direction}
             />
             <.th>Trial expiry</.th>
+            <.th>Notes</.th>
           </:thead>
           <:tbody :let={p}>
             <.td>
@@ -87,6 +93,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
             <.td>{StatsView.large_number_format(p.estimated_monthly)}</.td>
             <.td>{format_date(trial_start(p.team))}</.td>
             <.td>{format_date(p.team.trial_expiry_date)}</.td>
+            <.td truncate max_width="max-w-40" title={p.team.notes}>{p.team.notes}</.td>
           </:tbody>
         </.table>
 
