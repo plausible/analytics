@@ -13,11 +13,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
 
       doc = type_into_combo(lv, 1, "hello")
 
-      assert text_of_element(doc, "#dropdown-step-1-option-2") == "Hello World"
+      assert text_of_element(doc, "#dropdown-step-1-option-1") == "Hello World"
 
       doc = type_into_combo(lv, 1, "plausible")
 
-      assert text_of_element(doc, "#dropdown-step-1-option-2") == "Plausible"
+      assert text_of_element(doc, "#dropdown-step-1-option-1") == "Plausible"
     end
 
     test "selecting an option prefills input values", %{conn: conn, site: site} do
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       refute element_exists?(doc, ~s/input[type="text"][value="Another World"]/)
 
       lv
-      |> element("li#dropdown-step-1-option-2 a")
+      |> element("li#dropdown-step-1-option-1 a")
       |> render_click()
 
       assert lv
@@ -46,13 +46,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       type_into_combo(lv, 1, "another")
 
       lv
-      |> element("li#dropdown-step-1-option-2 a")
+      |> element("li#dropdown-step-1-option-1 a")
       |> render_click()
 
       doc = type_into_combo(lv, 2, "another")
 
-      refute text_of_element(doc, "ul#dropdown-step-1 li") =~ "Another World"
       refute text_of_element(doc, "ul#dropdown-step-2 li") =~ "Another World"
+
+      doc = type_into_combo(lv, 1, "a")
+
+      refute text_of_element(doc, "ul#dropdown-step-1 li") =~ "Another World"
     end
 
     test "removing one option alters suggestions for other", %{conn: conn, site: site} do
