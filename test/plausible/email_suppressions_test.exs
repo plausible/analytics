@@ -20,6 +20,12 @@ defmodule Plausible.EmailSuppressionsTest do
     :ok
   end
 
+  defp touch_updated_at(suppression, naive_datetime) do
+    suppression
+    |> Ecto.Changeset.change(updated_at: naive_datetime)
+    |> Repo.update!()
+  end
+
   describe "suppressed?/1" do
     test "false when no record exists" do
       refute EmailSuppressions.suppressed?("nobody@example.com")
@@ -311,6 +317,169 @@ defmodule Plausible.EmailSuppressionsTest do
       assert suppression.reason == :recipient_rejected
       assert is_nil(suppression.reactivated_at)
       assert is_nil(suppression.reactivated_by_user_id)
+    end
+  end
+
+  describe "list_orphaned/2" do
+    test "returns a suppression with no matching user, invitation or transfer, stale enough" do
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "orphaned@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert [%{email: "orphaned@example.com"}] =
+               EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100)
+    end
+
+    test "excludes a suppression that isn't stale enough yet" do
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "fresh@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -13)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "excludes a suppression matching an existing user's email" do
+      user = insert(:user, email: "still-a-user@example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: user.email,
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "excludes a suppression matching a pending team invitation's email" do
+      owner = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+
+      insert(:team_invitation,
+        team: team,
+        inviter: owner,
+        email: "invited@example.com",
+        role: :guest
+      )
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "invited@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "excludes a suppression matching a pending site transfer's email" do
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      insert(:site_transfer, email: "transferee@example.com", site: site, initiator: owner)
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "transferee@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "matches case-insensitively, since all relevant email columns are citext" do
+      insert(:user, email: "MixedCase@Example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "mixedcase@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "returns the oldest candidates first, bounded by limit" do
+      now = NaiveDateTime.utc_now(:second)
+
+      for n <- 1..3 do
+        {:ok, suppression} =
+          EmailSuppressions.create_from_bounce(%{
+            email: "orphan-#{n}@example.com",
+            reason: :hard_bounce,
+            source: :backfill
+          })
+
+        touch_updated_at(suppression, NaiveDateTime.shift(now, day: -20 + n))
+      end
+
+      assert [%{email: "orphan-1@example.com"}] =
+               EmailSuppressions.list_orphaned(Duration.new!(day: -14), 1)
+    end
+  end
+
+  describe "delete_all/1" do
+    test "removes exactly the given suppressions" do
+      {:ok, keep} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "keep@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      {:ok, remove} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "remove@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      assert EmailSuppressions.delete_all([remove]) == 1
+
+      assert Repo.get(Plausible.EmailSuppression, keep.id)
+      refute Repo.get(Plausible.EmailSuppression, remove.id)
+    end
+
+    test "returns 0 for an empty list" do
+      assert EmailSuppressions.delete_all([]) == 0
     end
   end
 

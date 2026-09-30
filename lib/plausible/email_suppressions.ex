@@ -111,6 +111,47 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
+  Finds suppressions we no longer have any records for
+  """
+  @spec list_orphaned(Duration.t(), pos_integer()) :: [EmailSuppression.t()]
+  def list_orphaned(stale_after, limit) do
+    cutoff = NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(stale_after)
+
+    from(s in EmailSuppression, as: :suppression)
+    |> where([s], s.updated_at < ^cutoff)
+    |> where(
+      [s],
+      not exists(from(u in Plausible.Auth.User, where: u.email == parent_as(:suppression).email))
+    )
+    |> where(
+      [s],
+      not exists(
+        from(i in Plausible.Teams.Invitation, where: i.email == parent_as(:suppression).email)
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(t in Plausible.Teams.SiteTransfer, where: t.email == parent_as(:suppression).email)
+      )
+    )
+    |> order_by([s], asc: s.updated_at, asc: s.id)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
+  @doc """
+  Deletes the given suppressions locally
+  """
+  @spec delete_all([EmailSuppression.t()]) :: non_neg_integer()
+  def delete_all(suppressions) do
+    ids = Enum.map(suppressions, & &1.id)
+
+    {count, _} = Repo.delete_all(from(s in EmailSuppression, where: s.id in ^ids))
+    count
+  end
+
+  @doc """
   Records (or refreshes) a suppression originating from Postmark's
   Subscription Change webhook (an address unsubscribing).
   """
