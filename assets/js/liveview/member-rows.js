@@ -2,167 +2,67 @@
 // waiting on a server round trip - this is a JS hook rather than plain
 // LiveView because that latency would be noticeable for something the
 // server doesn't need to know about until the form is actually submitted.
-
-const ROW_ID_PLACEHOLDER = '__ROW_ID__'
-
-const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+//
+// Every row up to the team member limit is rendered by the server on
+// mount, all but the first one hidden - that way each row's role picker
+// (Prima.Listbox, see prima_listbox.ex) mounts as an ordinary LiveView
+// hook the normal way. No row is ever created or destroyed after mount:
+// "add" reveals the next hidden row, "remove" hides one and moves it to
+// the end so a later "add" doesn't re-insert it in the middle.
 
 export default {
   mounted() {
-    this.template = this.el.querySelector('template[data-row-template]')
     this.list = this.el.querySelector('[data-row-list]')
-    this.maxRows = parseInt(this.el.dataset.maxRows, 10)
     this.addButton = this.el.querySelector('[data-add-row]')
 
     this.addButton.addEventListener('click', () => this.addRow())
 
     this.list.addEventListener('click', (e) => {
       const removeButton = e.target.closest('[data-remove-row]')
-      if (removeButton) return this.removeRow(removeButton)
-
-      const roleItem = e.target.closest('[data-role-item]')
-      if (roleItem) return this.selectRole(roleItem)
+      if (removeButton) this.removeRow(removeButton)
     })
 
-    // Native <details> only closes on a second click on <summary> - close it
-    // on an outside click too, like any other dropdown.
-    this.handleOutsideClick = (e) => {
-      this.list
-        .querySelectorAll('[data-role-picker][open]')
-        .forEach((details) => {
-          if (!details.contains(e.target)) this.closeRolePicker(details)
-        })
-    }
-    document.addEventListener('click', this.handleOutsideClick)
-
-    this.list
-      .querySelectorAll('[data-role-picker]')
-      .forEach((details) => this.wireRolePicker(details))
-
     this.updateAddButtonState()
-  },
-
-  destroyed() {
-    document.removeEventListener('click', this.handleOutsideClick)
   },
 
   addRow() {
-    if (this.list.children.length >= this.maxRows) return
+    const nextRow = [...this.list.children].find((row) =>
+      row.classList.contains('hidden')
+    )
+    if (!nextRow) return
 
-    const rowId =
-      window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
-
-    const html = this.template.innerHTML.replaceAll(ROW_ID_PLACEHOLDER, rowId)
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = html
-    const row = wrapper.firstElementChild
-
-    this.list.appendChild(row)
-    this.wireRolePicker(row.querySelector('[data-role-picker]'))
+    nextRow.classList.remove('hidden')
+    nextRow.classList.add('flex')
+    nextRow.querySelector('input[type="email"]').focus()
     this.updateAddButtonState()
-    row.querySelector('input[type="email"]').focus()
-  },
-
-  updateAddButtonState() {
-    const atLimit = this.list.children.length >= this.maxRows
-
-    this.addButton.classList.toggle('hidden', atLimit)
-    this.addButton.classList.toggle('inline-flex', !atLimit)
   },
 
   removeRow(button) {
-    button.closest('[data-row]').remove()
+    const row = button.closest('[data-row]')
+
+    row.classList.remove('flex')
+    row.classList.add('hidden')
+    this.resetRow(row)
+    this.list.appendChild(row)
     this.updateAddButtonState()
   },
 
-  selectRole(item) {
-    const row = item.closest('[data-row]')
-    const details = row.querySelector('[data-role-picker]')
-    const items = [...details.querySelectorAll('[data-role-item]')]
-    const role = item.dataset.roleItem
+  resetRow(row) {
+    row.querySelector('input[type="email"]').value = ''
 
-    row.querySelector('[data-role-value]').value = role
-    row.querySelector('[data-role-label]').textContent = capitalize(role)
-    items.forEach((i) => i.setAttribute('aria-selected', i === item))
-
-    this.closeRolePicker(details)
-    details.querySelector('summary').focus()
+    // Goes through the same click handling Prima's Listbox hook wires up on
+    // its options, so both the hidden form value and the displayed label end
+    // up in sync exactly like a real user selection would - the row is
+    // already hidden at this point, so the focus() that follows a selection
+    // is a no-op instead of stealing focus.
+    row.querySelector('[role="option"][data-value="viewer"]')?.click()
   },
 
-  // Wires up the WAI-ARIA listbox-button keyboard pattern for a role picker:
-  // arrow keys move a roving tabindex between options (opening the listbox on
-  // first use if needed), Home/End jump to the ends, Escape closes and
-  // returns focus to the trigger, and Tab closes the listbox on its way out.
-  wireRolePicker(details) {
-    const summary = details.querySelector('summary')
-    const items = [...details.querySelectorAll('[data-role-item]')]
+  updateAddButtonState() {
+    const visibleRows = this.list.querySelectorAll('[data-row]:not(.hidden)')
+    const atLimit = visibleRows.length >= this.list.children.length
 
-    details.addEventListener('toggle', () => {
-      summary.setAttribute('aria-expanded', details.open)
-      this.setRovingIndex(items, 0)
-    })
-
-    details.addEventListener('keydown', (e) => {
-      const currentIndex = items.indexOf(document.activeElement)
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          details.open = true
-          this.focusItem(
-            items,
-            currentIndex === -1 ? 0 : (currentIndex + 1) % items.length
-          )
-          break
-
-        case 'ArrowUp':
-          e.preventDefault()
-          details.open = true
-          this.focusItem(
-            items,
-            currentIndex === -1
-              ? items.length - 1
-              : (currentIndex - 1 + items.length) % items.length
-          )
-          break
-
-        case 'Home':
-          if (!details.open) return
-          e.preventDefault()
-          this.focusItem(items, 0)
-          break
-
-        case 'End':
-          if (!details.open) return
-          e.preventDefault()
-          this.focusItem(items, items.length - 1)
-          break
-
-        case 'Escape':
-          if (!details.open) return
-          this.closeRolePicker(details)
-          summary.focus()
-          break
-
-        case 'Tab':
-          this.closeRolePicker(details)
-          break
-      }
-    })
-  },
-
-  focusItem(items, index) {
-    this.setRovingIndex(items, index)
-    items[index].focus()
-  },
-
-  setRovingIndex(items, index) {
-    items.forEach((item, i) =>
-      item.setAttribute('tabindex', i === index ? '0' : '-1')
-    )
-  },
-
-  closeRolePicker(details) {
-    details.removeAttribute('open')
+    this.addButton.classList.toggle('hidden', atLimit)
+    this.addButton.classList.toggle('inline-flex', !atLimit)
   }
 }

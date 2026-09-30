@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Live.Components.Team do
           disabled={@disabled}
         >
           <span class="sr-only">Role for {@user.email}:</span>
-          <PrimaListbox.listbox_value data-test-id="role">
+          <PrimaListbox.listbox_value data-testid="role">
             {role_to_capitalized_string(@role)}
           </PrimaListbox.listbox_value>
           <Heroicons.chevron_down mini class="size-4" />
@@ -179,7 +179,7 @@ defmodule PlausibleWeb.Live.Components.Team do
     <PrimaListbox.listbox id={@id} name={@name} value={@role}>
       <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} class="w-[100px]">
         <span class="sr-only">Role:</span>
-        <PrimaListbox.listbox_value>
+        <PrimaListbox.listbox_value data-testid="role">
           {role_to_capitalized_string(@role)}
         </PrimaListbox.listbox_value>
         <Heroicons.chevron_down mini class="size-4" />
