@@ -386,41 +386,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       Plausible.Stats.Funnel.suggest(site, query, steps, goals, input)
 
     (suggestions ++ unmatched_goals)
+    |> exclude_existing_steps(steps)
     |> Enum.map(&{to_step_data(&1), to_string(&1)})
     |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
-    |> maybe_prepend_creatable(input)
   end
 
-  defp maybe_prepend_creatable(results, input) when input in [nil, ""] do
-    results
-  end
-
-  defp maybe_prepend_creatable([], input) do
-    {value, label} = generate_creatable(input)
-    [{value, {label, :creatable}}]
-  end
-
-  defp maybe_prepend_creatable([{_, first_match_label} | _] = results, input) do
-    {value, label} = generate_creatable(input)
-
-    if label != first_match_label do
-      [{value, {label, :creatable}} | results]
-    else
-      results
-    end
-  end
-
-  defp generate_creatable(input) do
-    normalized = String.downcase(input)
-
-    if String.starts_with?(input, "/") or String.starts_with?(normalized, "visit /") do
-      [_, path] = String.split(input, "/", parts: 2)
-      path = "/" <> path
-
-      {JSON.encode!(%{page_path: path}), "Visit #{path}"}
-    else
-      {JSON.encode!(%{event_name: input}), input}
-    end
+  defp exclude_existing_steps(goals, steps) do
+    existing_steps = MapSet.new(steps, &{&1.event_name, &1.page_path})
+    Enum.reject(goals, &MapSet.member?(existing_steps, {&1.event_name, &1.page_path}))
   end
 
   defp has_steps_errors?(f) do
