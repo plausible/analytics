@@ -275,6 +275,32 @@ defmodule Plausible.Factory do
     }
   end
 
+  @doc """
+  Takes the plaintext `:code` and `:verifier` a test will present at the token
+  endpoint, and stores what the server keeps for them - the code's hash and the
+  verifier's S256 challenge. Both default to fresh random values.
+  """
+  def oauth_authorization_code_factory(attrs) do
+    {code, attrs} =
+      Map.pop_lazy(attrs, :code, fn -> Plausible.OAuth.Token.generate(:code).raw end)
+
+    {verifier, attrs} =
+      Map.pop_lazy(attrs, :verifier, fn ->
+        :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+      end)
+
+    auth_code = %Plausible.OAuth.AuthorizationCode{
+      code_hash: Plausible.OAuth.Token.hash(code),
+      code_challenge: :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false),
+      code_challenge_method: "S256",
+      client_id: "https://client.example.com/oauth-metadata",
+      redirect_uri: "https://client.example.com/callback",
+      expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 600, :second)
+    }
+
+    merge_attributes(auth_code, attrs)
+  end
+
   def imported_visitors_factory do
     %{
       table: "imported_visitors",
