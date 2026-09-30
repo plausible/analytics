@@ -277,6 +277,43 @@ defmodule Plausible.EmailSuppressionsTest do
     end
   end
 
+  describe "create_from_rejected_send/1" do
+    test "sets reason to :recipient_rejected and source to :rejected" do
+      {:ok, suppression} =
+        EmailSuppressions.create_from_rejected_send(%{
+          email: "rejected@example.com",
+          details: "Rejected by Postmark on send: some reason"
+        })
+
+      assert suppression.reason == :recipient_rejected
+      assert suppression.source == :rejected
+      assert suppression.details == "Rejected by Postmark on send: some reason"
+      assert EmailSuppressions.suppressed?("rejected@example.com")
+    end
+
+    test "a rejected send clears a reactivation left by an earlier bounce" do
+      user = insert(:user)
+
+      {:ok, _} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "flip-flop@example.com",
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      {:ok, _} = EmailSuppressions.reactivate("flip-flop@example.com", user)
+      refute EmailSuppressions.suppressed?("flip-flop@example.com")
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_rejected_send(%{email: "flip-flop@example.com"})
+
+      assert EmailSuppressions.suppressed?("flip-flop@example.com")
+      assert suppression.reason == :recipient_rejected
+      assert is_nil(suppression.reactivated_at)
+      assert is_nil(suppression.reactivated_by_user_id)
+    end
+  end
+
   describe "reactivate/2" do
     test "returns :not_found when there is no suppression for the address" do
       user = insert(:user)

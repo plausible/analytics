@@ -124,6 +124,21 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
+  Records (or refreshes) a suppression detected after send attempt
+  was rejected by Postmark (406) - for when Postmark suppression exists still.
+  See: `Plausible.Mailer`.
+  """
+  @spec create_from_rejected_send(map()) ::
+          {:ok, EmailSuppression.t()} | {:error, Ecto.Changeset.t()}
+  def create_from_rejected_send(attrs) do
+    attrs
+    |> Map.take([:email, :details])
+    |> Map.put(:reason, :recipient_rejected)
+    |> Map.put(:source, :rejected)
+    |> upsert()
+  end
+
+  @doc """
   Lifts a suppression after manual review, recording who did it.
   Encapsulates suppression remote deletion at Postmark - can't be done for spam complaints.
   """
