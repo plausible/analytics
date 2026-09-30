@@ -322,6 +322,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       ) do
     steps =
       Enum.map(params["steps"], fn {_idx, payload} -> JSON.decode!(payload["step_data"]) end)
+
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
@@ -373,7 +374,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     steps =
       steps
       |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx}" end)
+      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx + 1}" end)
       |> Enum.map(&elem(&1, 1))
 
     query =
