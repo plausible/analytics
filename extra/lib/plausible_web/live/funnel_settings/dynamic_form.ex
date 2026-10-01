@@ -423,7 +423,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       |> Enum.sort_by(fn {k, _} ->
         case k do
           :custom_event -> 0
-          :pencil -> 1
+          :pageview -> 1
           _ -> 2
         end
       end)
