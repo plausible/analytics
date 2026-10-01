@@ -107,6 +107,14 @@ This runs on [Cabotage](https://github.com/cabotage/cabotage-app), the PSF's Paa
 
 Image builds happen automatically from the `v3.0.1-psf` branch. To deploy, trigger a build and deploy through the Cabotage UI.
 
+### Storybook security update
+
+This fork backports the upstream removal of Storybook for [GHSA-mhcv-h7gf-57cf](https://github.com/plausible/analytics/security/advisories/GHSA-mhcv-h7gf-57cf). Deploy a newly built image containing the fix; the branch name alone does not identify patched code.
+
+Until the patched image is deployed, block `/storybook` and its subpaths at every ingress, including direct-origin access. Preserve access logs and incident evidence. After deployment, verify the running commit and image digest and confirm that Storybook is unavailable.
+
+If credentials were disclosed or compromise is suspected, rotate or revoke all secrets accessible to the container after containment and assess downstream access with PSRT. Use the supported rotation procedure for encryption keys. Deploying this patch does not invalidate stolen credentials.
+
 ## Upstream Sync
 
 This fork tracks `plausible/analytics:master` as the `upstream` remote.

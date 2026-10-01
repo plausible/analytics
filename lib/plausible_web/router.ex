@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
   use Plausible
   import Phoenix.LiveView.Router
-  import PhoenixStorybook.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -107,15 +106,6 @@ defmodule PlausibleWeb.Router do
   if Mix.env() in [:dev, :ce_dev, :e2e_test] do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
     forward "/sent-emails-api", Bamboo.SentEmailApiPlug
-  end
-
-  scope "/" do
-    storybook_assets()
-  end
-
-  scope "/", PlausibleWeb do
-    pipe_through :browser
-    live_storybook("/storybook", backend_module: PlausibleWeb.Storybook)
   end
 
   on_ee do

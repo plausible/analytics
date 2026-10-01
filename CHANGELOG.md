@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Backport upstream Storybook removal ([`ce6c8468`](https://github.com/plausible/analytics/commit/ce6c8468e7f9c2a57fd09000f80c2ef8d922a0d6)) to fix unauthenticated remote code execution, [GHSA-mhcv-h7gf-57cf / CVE-2026-8467](https://github.com/plausible/analytics/security/advisories/GHSA-mhcv-h7gf-57cf).
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
