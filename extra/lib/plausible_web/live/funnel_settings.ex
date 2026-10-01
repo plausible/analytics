@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         <%= if @setup_funnel? do %>
           {live_render(
             @socket,
-            PlausibleWeb.Live.FunnelSettings.Form,
+            PlausibleWeb.Live.FunnelSettings.DynamicForm,
             id: "funnels-form",
             session: %{
               "domain" => @domain,
