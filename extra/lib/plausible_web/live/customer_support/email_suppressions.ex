@@ -223,11 +223,13 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
   defp reason_label(:spam_notification), do: "Spam notification"
   defp reason_label(:unsubscribe), do: "Unsubscribed"
   defp reason_label(:manual), do: "Manual"
+  defp reason_label(:recipient_rejected), do: "Recipient rejected"
 
   defp reason_color(:spam_complaint), do: :red
   defp reason_color(:spam_notification), do: :red
   defp reason_color(:hard_bounce), do: :red
   defp reason_color(:blocked), do: :red
+  defp reason_color(:recipient_rejected), do: :red
   defp reason_color(:bad_email_address), do: :yellow
   defp reason_color(:unsubscribe), do: :yellow
   defp reason_color(:manual), do: :gray
