@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
             offset={4}
             class={
               Enum.join([
-                "relative max-h-60 w-64 overflow-y-auto overflow-x-hidden rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-gray-200 focus:outline-none sm:text-sm z-50",
+                "relative max-h-60 w-80 overflow-y-auto overflow-x-hidden rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-gray-200 focus:outline-none sm:text-sm z-50",
                 @dropdown_class
               ])
             }
