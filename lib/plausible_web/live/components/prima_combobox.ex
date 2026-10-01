@@ -70,9 +70,14 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
             }
           >
             <%= for {idx, {value, display_name, opts}} <- @streams.suggestions do %>
-              <hr class="mt-2" :if={opts[:separator?]} />
+              <hr :if={opts[:separator?]} class="mt-2" />
 
-              <div class="m-2 truncate text-left text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold" :if={opts[:title]}>{opts[:title]}</div>
+              <div
+                :if={opts[:title]}
+                class="m-2 truncate text-left text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold"
+              >
+                {opts[:title]}
+              </div>
 
               <.combobox_option
                 id={"input-picker-dropdown-#{@id}-option-#{idx}"}
