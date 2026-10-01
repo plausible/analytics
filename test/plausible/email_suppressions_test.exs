@@ -419,6 +419,69 @@ defmodule Plausible.EmailSuppressionsTest do
       assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
     end
 
+    test "excludes a suppression matching a weekly report recipient" do
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      insert(:weekly_report, site: site, recipients: ["weekly@example.com"])
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "weekly@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "excludes a suppression matching a monthly report recipient" do
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      insert(:monthly_report, site: site, recipients: ["monthly@example.com"])
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "monthly@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
+    test "excludes a suppression matching a traffic change (spike/drop) notification recipient" do
+      owner = new_user()
+      site = new_site(owner: owner)
+
+      insert(:spike_notification, site: site, recipients: ["spike@example.com"])
+
+      {:ok, suppression} =
+        EmailSuppressions.create_from_bounce(%{
+          email: "spike@example.com",
+          reason: :hard_bounce,
+          source: :backfill
+        })
+
+      touch_updated_at(
+        suppression,
+        NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -15)
+      )
+
+      assert EmailSuppressions.list_orphaned(Duration.new!(day: -14), 100) == []
+    end
+
     test "matches case-insensitively, since all relevant email columns are citext" do
       insert(:user, email: "MixedCase@Example.com")
 

@@ -111,7 +111,10 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
-  Finds suppressions we no longer have any records for
+  Finds suppressions we no longer have any records for: not a user, a
+  pending team invitation, a pending site transfer, or a recipient on a
+  weekly report, monthly report, or traffic change (spike/drop)
+  notification.
   """
   @spec list_orphaned(Duration.t(), pos_integer()) :: [EmailSuppression.t()]
   def list_orphaned(stale_after, limit) do
@@ -133,6 +136,30 @@ defmodule Plausible.EmailSuppressions do
       [s],
       not exists(
         from(t in Plausible.Teams.SiteTransfer, where: t.email == parent_as(:suppression).email)
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.WeeklyReport,
+          where: parent_as(:suppression).email in r.recipients
+        )
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.MonthlyReport,
+          where: parent_as(:suppression).email in r.recipients
+        )
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.TrafficChangeNotification,
+          where: parent_as(:suppression).email in r.recipients
+        )
       )
     )
     |> order_by([s], asc: s.updated_at, asc: s.id)
