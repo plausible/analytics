@@ -138,18 +138,18 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
               <div :for={step_idx <- @step_ids} class="flex items-center my-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
-                    selected={selected_option(@steps, @funnel_modified?, step_idx)}
+                    id={"step-#{step_idx}"}
+                    module={PlausibleWeb.Live.Components.PrimaCombobox}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
-                    module={PlausibleWeb.Live.Components.ComboBox}
+                    selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     suggest_fun={
                       fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
                     }
-                    on_selection_made={
+                    on_selection_added={
                       fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
                       end
                     }
-                    id={"step-#{step_idx}"}
                   />
                 </div>
 
