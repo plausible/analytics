@@ -2,7 +2,7 @@ name: NPM CI
 
 on:
   push:
-    branches: [master, stable]
+    branches: [master, stable, 'v*-psf']
   pull_request:
   merge_group:
 
