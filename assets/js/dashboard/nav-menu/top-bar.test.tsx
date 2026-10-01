@@ -129,12 +129,14 @@ test('user can open and close filters dropdown', async () => {
     'Goal'
   ])
 
-  // rows without a submenu link straight to their dimension
-  expect(screen.getByRole('link', { name: 'Hostname' })).toHaveAttribute(
-    'href',
-    `/${domain}/filter/hostname`
+  // only rows with a submenu can expand
+  expect(screen.getByRole('button', { name: 'Hostname' })).not.toHaveAttribute(
+    'aria-expanded'
   )
-  expect(screen.queryByRole('link', { name: 'Page' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Page' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  )
 
   await userEvent.click(toggleFilters)
   expect(screen.queryByTestId('filtermenu')).not.toBeInTheDocument()
@@ -181,16 +183,8 @@ test.each([
 
   const submenu = screen.getByTestId('filtermenu-submenu')
   expect(
-    Array.from(submenu.querySelectorAll('a')).map((el) => [
-      el.textContent,
-      el.getAttribute('href')
-    ])
-  ).toEqual(
-    expectedItems.map(([label, dimension]) => [
-      label,
-      `/${domain}/filter/${dimension}`
-    ])
-  )
+    Array.from(submenu.querySelectorAll('button')).map((el) => el.textContent)
+  ).toEqual(expectedItems.map(([label]) => label))
 })
 
 test('user can walk the filter menu and a submenu with Tab', async () => {
@@ -203,12 +197,14 @@ test('user can walk the filter menu and a submenu with Tab', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
 
   await userEvent.tab()
-  const pageRow = screen.getByRole('button', { name: 'Page' })
+  const pageRow = within(screen.getByTestId('filtermenu')).getByRole('button', {
+    name: 'Page',
+    expanded: true
+  })
   expect(pageRow).toHaveFocus()
-  expect(pageRow).toHaveAttribute('aria-expanded', 'true')
 
   const submenuLinks = Array.from(
-    screen.getByTestId('filtermenu-submenu').querySelectorAll('a')
+    screen.getByTestId('filtermenu-submenu').querySelectorAll('button')
   )
   await userEvent.tab()
   expect(submenuLinks[0]).toHaveFocus()
@@ -233,7 +229,7 @@ test('property row only shows when props are available', async () => {
   })
   await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
   expect(
-    screen.queryByRole('link', { name: 'Property' })
+    screen.queryByRole('button', { name: 'Property' })
   ).not.toBeInTheDocument()
   unmount()
 
@@ -246,9 +242,9 @@ test('property row only shows when props are available', async () => {
     )
   })
   await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
-  expect(screen.getByRole('link', { name: 'Property' })).toHaveAttribute(
-    'href',
-    `/${domain}/filter/props`
+  expect(screen.getByRole('button', { name: 'Property' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
   )
 })
 
@@ -454,18 +450,21 @@ describe('narrow viewport (no room for a submenu beside the menu)', () => {
 
     const submenu = screen.getByTestId('filtermenu-submenu')
     expect(
-      Array.from(submenu.querySelectorAll('a')).map((el) => el.textContent)
+      Array.from(submenu.querySelectorAll('button')).map((el) => el.textContent)
     ).toEqual(['Page', 'Entry page', 'Exit page'])
 
     // The main list is replaced, not shown beside the submenu.
     expect(
-      screen.queryByRole('link', { name: 'Hostname' })
+      screen.queryByRole('button', { name: 'Hostname' })
     ).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Page' }))
+    const backButton = screen
+      .getAllByRole('button', { name: 'Page' })
+      .find((button) => !submenu.contains(button))
+    await userEvent.click(backButton!)
 
     expect(screen.queryByTestId('filtermenu-submenu')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Hostname' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Hostname' })).toBeInTheDocument()
   })
 
   test('tabbing onto a submenu row does not drill down', async () => {
@@ -499,4 +498,37 @@ test('current visitors renders when visitors are present and disappears after vi
   await waitForElementToBeRemoved(() =>
     screen.queryByRole('link', { name: /current visitors/ })
   )
+})
+
+test('current visitors is hidden while there are filters, also if it is a new filter with no values yet', async () => {
+  mockAPI.get(`/api/stats/${domain}/current-visitors`, 500)
+  mockAPI.get(`/api/stats/${domain}/suggestions/hostname/`, [])
+  render(<TopBar showCurrentVisitors={true} />, {
+    wrapper: (props) => (
+      <TestContextProviders siteOptions={{ domain }} {...props} />
+    )
+  })
+
+  await waitFor(() => {
+    expect(
+      screen.queryByRole('link', { name: /500 current visitors/ })
+    ).toBeVisible()
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Hostname' }))
+
+  expect(screen.getByRole('group', { name: 'Hostname is' })).toBeVisible()
+  expect(
+    screen.queryByRole('link', { name: /current visitors/ })
+  ).not.toBeInTheDocument()
+
+  await userEvent.keyboard('{Escape}')
+
+  expect(
+    screen.queryByRole('group', { name: 'Hostname is' })
+  ).not.toBeInTheDocument()
+  expect(
+    screen.getByRole('link', { name: /500 current visitors/ })
+  ).toBeVisible()
 })

@@ -8,6 +8,7 @@ import React, {
   useState
 } from 'react'
 import { AppliedFilterPillsList } from './filter-pills-list'
+import { useFilterEditorContext } from '../filtering/filter-editor-context'
 import { FilterMenu } from './filter-menu'
 import { SegmentMenu } from './segments/segment-menu'
 import { useDashboardStateContext } from '../dashboard-state-context'
@@ -20,42 +21,29 @@ import {
   isSegmentFilter
 } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
-import { DashboardState } from '../dashboard-state'
 import { useUserContext } from '../user-context'
 
 const SCROLL_FADE_PX = 32
 
 type ScrollOverflow = { start: boolean; end: boolean }
 
-const canShowClearAllAction = ({
-  filters,
-  isEditingSegment
-}: Pick<DashboardState, 'filters'> & { isEditingSegment: boolean }): boolean =>
-  filters.length >= 1 && !isEditingSegment
-
-const canShowSaveAsSegmentAction = ({
-  filters,
-  isEditingSegment
-}: Pick<DashboardState, 'filters'> & { isEditingSegment: boolean }): boolean =>
-  filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
-
 export const FiltersBar = () => {
   const { dashboardState, expandedSegment } = useDashboardStateContext()
+  const { renderedFilters } = useFilterEditorContext()
   const user = useUserContext()
 
-  const showingClearAll = canShowClearAllAction({
-    filters: dashboardState.filters,
-    isEditingSegment: !!expandedSegment
-  })
+  const isEditingSegment = !!expandedSegment
+  const hasActiveFilters = dashboardState.filters.length > 0
+  const showingClearAll = hasActiveFilters && !isEditingSegment
   const showingSaveAsSegment =
-    canShowSaveAsSegmentAction({
-      filters: dashboardState.filters,
-      isEditingSegment: !!expandedSegment
-    }) && canSeeSaveAsSegmentAction({ user })
+    hasActiveFilters &&
+    !isEditingSegment &&
+    !dashboardState.filters.some(isSegmentFilter) &&
+    canSeeSaveAsSegmentAction({ user })
 
   const hasActions = showingSaveAsSegment || showingClearAll
 
-  if (!dashboardState.filters.length) {
+  if (!renderedFilters.length) {
     return (
       <div className="flex flex-1 justify-end">
         <FilterMenu />
@@ -67,8 +55,8 @@ export const FiltersBar = () => {
     <div className="flex items-center gap-x-1 md:min-w-0">
       <ScrollableFilterPills />
       <div className="flex shrink-0 items-center gap-x-1">
-        <FilterMenu compact />
-        {(hasActions || !!expandedSegment) && (
+        {hasActiveFilters && <FilterMenu compact />}
+        {(hasActions || isEditingSegment) && (
           <div
             aria-hidden="true"
             className="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600"
@@ -99,13 +87,13 @@ const getFadeMask = ({ start, end }: ScrollOverflow) => {
 }
 
 const ScrollableFilterPills = () => {
-  const { dashboardState } = useDashboardStateContext()
+  const { renderedFilters } = useFilterEditorContext()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [overflow, setOverflow] = useState<ScrollOverflow>({
     start: false,
     end: false
   })
-  const filtersCount = dashboardState.filters.length
+  const filtersCount = renderedFilters.length
   const previousFiltersCount = useRef(filtersCount)
 
   const updateOverflow = (element: HTMLElement) => {
@@ -141,7 +129,7 @@ const ScrollableFilterPills = () => {
     }
     previousFiltersCount.current = filtersCount
     updateOverflow(element)
-  }, [dashboardState.filters, filtersCount])
+  }, [renderedFilters, filtersCount])
 
   return (
     <AppliedFilterPillsList

@@ -32,11 +32,14 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left text-xs uppercase', {
-      'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 font-semibold cursor-pointer':
-        !active,
-      'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
-    })}
+    className={classNames(
+      'truncate text-left text-xs font-semibold uppercase',
+      {
+        'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 cursor-pointer':
+          !active,
+        'text-gray-900 dark:text-gray-100': active
+      }
+    )}
   >
     <span data-active={active ? 'true' : 'false'} data-testid="tab-button">
       {children}
