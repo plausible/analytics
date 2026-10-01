@@ -388,7 +388,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
 
     (suggestions ++ unmatched_goals)
     |> exclude_existing_steps(steps)
-    |> Enum.map(&{to_step_data(&1), to_string(&1)})
+    |> Enum.map(
+      &{to_step_data(&1), to_string(&1),
+       if(is_integer(&1.id) and &1.id > 0,
+         do: [icon: if(&1.event_name, do: :cursor, else: :pencil)],
+         else: []
+       )}
+    )
     |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
   end
 

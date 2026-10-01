@@ -255,4 +255,20 @@ defmodule PlausibleWeb.Components.Icons do
     </svg>
     """
   end
+
+  attr :class, :any, default: []
+
+  def cursor_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class={@class}>
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+        d="m4.63 3.711 15.23 5.565c.641.235.623 1.148-.028 1.358l-6.97 2.23-2.232 6.971c-.208.65-1.122.67-1.357.028L3.71 4.631a.717.717 0 0 1 .92-.92"
+      />
+    </svg>
+    """
+  end
 end
