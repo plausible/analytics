@@ -329,6 +329,33 @@ test('the segment pill has no remove button when the dashboard is limited to the
   ).not.toBeInTheDocument()
 })
 
+test('a segment that is not found has a menu that explains it', async () => {
+  const segment = makeSegment()
+
+  renderFiltersBar({
+    searchRecord: {
+      filters: [
+        ['is', 'segment', [segment.id]],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: getSegmentFilterSearch(segment).labels
+    },
+    preloaded: { segments: [] }
+  })
+
+  await userEvent.click(
+    screen.getByRole('button', {
+      name: 'Open menu: Segment is Mac users (Segment not found)'
+    })
+  )
+  expect(screen.getByText('Segment not found')).toBeVisible()
+  expect(
+    screen.getByText(
+      'It may have been deleted. Remove this filter to see your stats.'
+    )
+  ).toBeVisible()
+})
+
 test('shows Add filter, Save and Cancel in segment edit mode', async () => {
   const segment = makeSegment({
     name: 'Country, source, page',
