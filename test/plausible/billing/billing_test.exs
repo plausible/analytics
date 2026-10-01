@@ -364,6 +364,43 @@ defmodule Plausible.BillingTest do
     end
   end
 
+  describe "create_manual_subscription" do
+    @describetag :ee_only
+
+    test "creates an active subscription for a manual subscription" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123456")
+
+      attrs = %{
+        "currency_code" => "EUR",
+        "next_bill_amount" => "1000",
+        "last_bill_date" => "2026-09-30",
+        "next_bill_date" => "2027-09-30"
+      }
+
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan, attrs)
+
+      subscription = Repo.get_by!(Subscription, team_id: team.id)
+      assert Subscription.manual_subscription?(subscription)
+      assert is_nil(subscription.paddle_subscription_id)
+      assert subscription.status == :active
+      assert subscription.paddle_plan_id == "manual-subscription"
+      assert Repo.reload!(plan).paddle_plan_id == subscription.paddle_plan_id
+      assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
+      assert is_nil(subscription.update_url)
+    end
+
+    test "returns error changeset when details are missing" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id)
+      original_id = plan.paddle_plan_id
+
+      assert {:error, %Ecto.Changeset{}} = Billing.create_manual_subscription(team, plan, %{})
+      refute Repo.get_by(Subscription, team_id: team.id)
+      assert Repo.reload!(plan).paddle_plan_id == original_id
+    end
+  end
+
   describe "subscription_updated" do
     test "updates an existing subscription" do
       user = new_user()

@@ -1068,6 +1068,46 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
       end
 
+      test "plan can be manually subscribed", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-original",
+            monthly_pageview_limit: 1_000_000
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="show-manual-subscribe-form"]|)
+        |> render_click()
+
+        html = render(lv)
+        refute element_exists?(html, ~s|input[name="manual[paddle_subscription_id]"]|)
+
+        html =
+          lv
+          |> form("form#manual-subscribe", %{
+            "manual" => %{
+              "currency_code" => "EUR",
+              "next_bill_amount" => "1000",
+              "last_bill_date" => "2026-09-30",
+              "next_bill_date" => "2027-09-30"
+            }
+          })
+          |> render_submit()
+
+        plan = Plausible.Repo.reload!(plan)
+        assert plan.paddle_plan_id == "manual-subscription"
+
+        subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
+        assert subscription.paddle_plan_id == plan.paddle_plan_id
+        assert is_nil(subscription.paddle_subscription_id)
+        assert html =~ "MANUAL SUBSCRIPTION"
+      end
+
       defp open_custom_plan(conn, team) do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
         render(lv)
