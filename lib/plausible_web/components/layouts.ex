@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Layouts do
   require Plausible.Billing
 
   alias PlausibleWeb.Components.Billing.Notice
+  alias PlausibleWeb.Components.Icons
   alias PlausibleWeb.Components.Layout
 
   embed_templates "layouts/*.html"
@@ -24,6 +25,10 @@ defmodule PlausibleWeb.Layouts do
   attr :teams, :list, default: []
   attr :my_team, :any, default: nil
   attr :site, :any, default: nil
+  attr :site_role, :any, default: nil
+  attr :nav_sites, :list, default: []
+  attr :nav_team_meta, :map, default: %{}
+  attr :conn, :any, default: nil
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -35,11 +40,15 @@ defmodule PlausibleWeb.Layouts do
         <.header
           current_user={@current_user}
           site={@site}
+          site_role={@site_role}
           current_team={@current_team}
           current_team_role={@current_team_role}
           trial_badge?={@trial_badge?}
           teams={@teams}
           my_team={@my_team}
+          nav_sites={@nav_sites}
+          nav_team_meta={@nav_team_meta}
+          conn={@conn}
         />
 
         <.team_notices :if={@global_notices?} current_team={@current_team} />
@@ -84,6 +93,10 @@ defmodule PlausibleWeb.Layouts do
   attr :teams, :list, default: []
   attr :my_team, :any, default: nil
   attr :site, :any, default: nil
+  attr :site_role, :any, default: nil
+  attr :nav_sites, :list, default: []
+  attr :nav_team_meta, :map, default: %{}
+  attr :conn, :any, default: nil
   slot :inner_block, required: true
 
   def legacy(assigns) do
@@ -102,6 +115,10 @@ defmodule PlausibleWeb.Layouts do
       teams={@teams}
       my_team={@my_team}
       site={@site}
+      site_role={@site_role}
+      nav_sites={@nav_sites}
+      nav_team_meta={@nav_team_meta}
+      conn={@conn}
     >
       {render_slot(@inner_block)}
     </.app>

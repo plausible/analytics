@@ -172,6 +172,10 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
     if (containerRef.current && topBar) {
       resizeObserver.observe(topBar)
+
+      if (leftSection) {
+        resizeObserver.observe(leftSection)
+      }
     }
 
     return () => {
