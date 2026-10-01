@@ -380,7 +380,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     query =
       QueryBuilder.build!(site,
         metrics: [:pageviews],
-        input_date_range: :month
+        input_date_range: {:last_n_days, 30}
       )
 
     {suggestions, unmatched_goals} =
