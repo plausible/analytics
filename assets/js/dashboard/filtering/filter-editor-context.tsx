@@ -19,8 +19,9 @@ export type FilterEditorPart = 'operator' | 'values'
 /**
  * `position` is the index of the pill in `renderedFilters`.
  * Filters without values are not written to the URL: a new filter only
- * appears there when it gets its first value, and a filter whose values
- * are all removed stays in the URL until the editor closes.
+ * appears there when it gets its first value, and a filter is removed from
+ * the URL when its last value is removed. The pill stays until the editor
+ * closes.
  */
 type EditingFilter = {
   position: number
@@ -72,12 +73,8 @@ const canHaveMultipleFilters = (filterKey: string) => filterKey === 'goal'
 const getNewFilterPosition = (filters: Filter[]) =>
   filters.length && isSegmentFilter(filters[0]) ? 1 : 0
 
-/** A filter without values is not in the URL after the editor closes */
-const getUrlIndexAfterClose = (
-  editing: EditingFilter | null,
-  position: number
-) =>
-  editing && editing.position < position && !hasValues(editing.filter)
+const getUrlIndex = (editing: EditingFilter | null, position: number) =>
+  editing && editing.position < position && !editing.inUrl
     ? position - 1
     : position
 
@@ -125,20 +122,11 @@ export const FilterEditorContextProvider = ({
     [navigate, dashboardState.labels]
   )
 
-  /** Closes the editor and returns the URL filters as they are after closing */
+  /** Closes the editor and returns the URL filters */
   const close = useCallback((): Filter[] => {
-    const current = editingRef.current
-    if (!current) {
-      return dashboardState.filters
-    }
     setEditing(null)
-    if (current.inUrl && !hasValues(current.filter)) {
-      const filters = removeAt(dashboardState.filters, current.position)
-      navigateToFilters(filters, { replace: current.hasPushedHistoryEntry })
-      return filters
-    }
     return dashboardState.filters
-  }, [setEditing, dashboardState.filters, navigateToFilters])
+  }, [setEditing, dashboardState.filters])
 
   const open = useCallback(
     (position: number, part: FilterEditorPart) => {
@@ -147,7 +135,7 @@ export const FilterEditorContextProvider = ({
         setEditing({ ...current, part })
         return
       }
-      const index = getUrlIndexAfterClose(current, position)
+      const index = getUrlIndex(current, position)
       const filter = close()[index]
       if (filter) {
         setEditing({
@@ -169,7 +157,20 @@ export const FilterEditorContextProvider = ({
         return
       }
       if (!hasValues(filter)) {
-        setEditing({ ...current, filter })
+        if (current.inUrl) {
+          navigateToFilters(
+            removeAt(dashboardState.filters, current.position),
+            {
+              replace: current.hasPushedHistoryEntry
+            }
+          )
+        }
+        setEditing({
+          ...current,
+          filter,
+          inUrl: false,
+          hasPushedHistoryEntry: current.hasPushedHistoryEntry || current.inUrl
+        })
         return
       }
       const filters = current.inUrl
@@ -202,7 +203,7 @@ export const FilterEditorContextProvider = ({
         }
         return
       }
-      const index = getUrlIndexAfterClose(current, position)
+      const index = getUrlIndex(current, position)
       navigateToFilters(removeAt(close(), index), { replace: false })
     },
     [setEditing, close, dashboardState.filters, navigateToFilters]
@@ -238,10 +239,15 @@ export const FilterEditorContextProvider = ({
   // the URL can change while editing, for example with the browser back button
   useEffect(() => {
     const current = editingRef.current
-    if (
-      current?.inUrl &&
-      dashboardState.filters[current.position]?.[1] !== current.filter[1]
-    ) {
+    if (!current) {
+      return
+    }
+    const filterKey = current.filter[1]
+    const isOutdated = current.inUrl
+      ? dashboardState.filters[current.position]?.[1] !== filterKey
+      : !canHaveMultipleFilters(filterKey) &&
+        dashboardState.filters.some(([_operation, key]) => key === filterKey)
+    if (isOutdated) {
       setEditing(null)
     }
   }, [setEditing, dashboardState.filters])

@@ -610,6 +610,14 @@ describe('inline filter editing', () => {
     await waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Values' })).toHaveFocus()
     )
+    expect(
+      screen.queryByRole('button', { name: 'Add filter' })
+    ).not.toBeInTheDocument()
+    for (const action of ['Save as segment', 'Clear all filters']) {
+      expect(
+        screen.queryByRole('link', { name: action })
+      ).not.toBeInTheDocument()
+    }
 
     await userEvent.keyboard('{Escape}')
     expect(getPillNames()).toEqual([])
