@@ -115,19 +115,20 @@ export function useSubmenu<K extends string>() {
 
 type Submenu = ReturnType<typeof useSubmenu>
 
+type SubmenuRowContent =
+  | { label: string; Icon: ComponentType<{ className?: string }> }
+  | { children: ReactNode }
+
 export const SubmenuRow = ({
-  label,
-  Icon,
   expanded,
   submenuId,
-  onOpen
+  onOpen,
+  ...content
 }: {
-  label: string
-  Icon: ComponentType<{ className?: string }>
   expanded: boolean
   submenuId: string
   onOpen: (anchor: HTMLElement) => void
-}) => {
+} & SubmenuRowContent) => {
   const handleOpen = useCallback(
     (event: React.SyntheticEvent<HTMLButtonElement>) =>
       onOpen(event.currentTarget),
@@ -156,8 +157,16 @@ export const SubmenuRow = ({
       onMouseEnter={handleHoverOrFocus}
       onFocus={handleHoverOrFocus}
     >
-      <Icon className={submenuIconClassName} />
-      <span className={popover.items.classNames.label}>{label}</span>
+      {'children' in content ? (
+        content.children
+      ) : (
+        <>
+          <content.Icon className={submenuIconClassName} />
+          <span className={popover.items.classNames.label}>
+            {content.label}
+          </span>
+        </>
+      )}
       <ChevronRightIcon className={submenuIconClassName} />
     </button>
   )
