@@ -31,6 +31,7 @@ defmodule Plausible.Billing.Subscription do
     field :next_bill_date, :date
     field :last_bill_date, :date
     field :currency_code, :string
+    field :paid_by_transfer, :boolean, default: false
 
     belongs_to :team, Plausible.Teams.Team
 
@@ -48,6 +49,23 @@ defmodule Plausible.Billing.Subscription do
     |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:paddle_subscription_id)
+  end
+
+  @transfer_required_fields [
+    :paddle_subscription_id,
+    :paddle_plan_id,
+    :next_bill_amount,
+    :next_bill_date,
+    :last_bill_date,
+    :currency_code
+  ]
+
+  def transfer_changeset(team, attrs \\ %{}) do
+    %__MODULE__{status: Subscription.Status.active(), paid_by_transfer: true}
+    |> cast(attrs, @transfer_required_fields)
+    |> validate_required(@transfer_required_fields)
+    |> unique_constraint(:paddle_subscription_id)
+    |> put_assoc(:team, team)
   end
 
   def free(team, attrs \\ %{}) do

@@ -36,6 +36,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
        plan_form: plan_form,
        show_plan_form?: false,
        editing_plan: nil,
+       transfer_plan: nil,
+       transfer_form: nil,
        cost_estimate: 0
      )}
   end
@@ -121,6 +123,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               >
                 CURRENT
               </span>
+              <span
+                :if={
+                  current_plan?(@team, plan.paddle_plan_id) and @team.subscription.paid_by_transfer
+                }
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
+              >
+                PAID BY TRANSFER
+              </span>
             </.td>
             <.td max_width="max-w-40">
               <.table rows={[
@@ -140,6 +150,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top">
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
+              <.button
+                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                id={"paid-by-transfer-#{plan.paddle_plan_id}"}
+                theme="secondary"
+                phx-click="show-transfer-form"
+                phx-value-id={plan.id}
+                phx-target={@myself}
+              >
+                Paid by transfer
+              </.button>
               <.delete_button
                 :if={not current_plan?(@team, plan.paddle_plan_id)}
                 data-test-id={"delete-plan-#{plan.paddle_plan_id}"}
@@ -151,6 +171,36 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
           </:tbody>
         </.table>
+
+        <.form
+          :let={f}
+          :if={@transfer_plan}
+          for={@transfer_form}
+          as={:transfer}
+          id="paid-by-transfer"
+          phx-submit="save-transfer"
+          phx-target={@myself}
+        >
+          <h1 class="mt-8 mb-2 text-xs font-semibold">
+            Mark {@transfer_plan.paddle_plan_id} as paid by transfer
+          </h1>
+          <.input
+            field={f[:paddle_subscription_id]}
+            label="Subscription / transfer reference (unique, e.g. Paddle invoice ID)"
+            autocomplete="off"
+          />
+          <.input field={f[:currency_code]} label="Currency code (e.g. EUR)" autocomplete="off" />
+          <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
+          <.input type="date" field={f[:last_bill_date]} label="Paid on" />
+          <.input type="date" field={f[:next_bill_date]} label="Next bill date" />
+
+          <div class="mt-8 flex align-center gap-x-4">
+            <.button theme="secondary" phx-click="hide-transfer-form" phx-target={@myself}>
+              Cancel
+            </.button>
+            <.button type="submit">Mark as paid</.button>
+          </div>
+        </.form>
 
         <.form
           :let={f}
@@ -251,6 +301,49 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
   def handle_event("show-plan-form", _, socket) do
     {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+  end
+
+  def handle_event("show-transfer-form", %{"id" => plan_id}, socket) do
+    plan = Enum.find(socket.assigns.plans, &(&1.id == String.to_integer(plan_id)))
+
+    if plan do
+      today = Date.utc_today()
+      interval_months = if plan.billing_interval == :yearly, do: 12, else: 1
+
+      form =
+        to_form(
+          %{
+            "paddle_subscription_id" => "transfer-#{plan.paddle_plan_id}",
+            "currency_code" => "EUR",
+            "last_bill_date" => Date.to_iso8601(today),
+            "next_bill_date" => Date.to_iso8601(Date.shift(today, month: interval_months))
+          },
+          as: :transfer
+        )
+
+      {:noreply, assign(socket, transfer_plan: plan, transfer_form: form)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("hide-transfer-form", _, socket) do
+    {:noreply, assign(socket, transfer_plan: nil, transfer_form: nil)}
+  end
+
+  def handle_event("save-transfer", %{"transfer" => params}, socket) do
+    %{team: team, transfer_plan: plan} = socket.assigns
+
+    case Plausible.Billing.subscription_paid_by_transfer(team, plan, sanitize_params(params)) do
+      {:ok, _team} ->
+        success("Subscription created (paid by transfer)")
+        team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
+        {:noreply, assign(socket, team: team, transfer_plan: nil, transfer_form: nil)}
+
+      {:error, changeset} ->
+        failure("Error saving subscription: #{inspect(changeset.errors)}")
+        {:noreply, socket}
+    end
   end
 
   def handle_event("edit-plan", %{"id" => plan_id}, socket) do

@@ -364,6 +364,39 @@ defmodule Plausible.BillingTest do
     end
   end
 
+  describe "subscription_paid_by_transfer" do
+    @describetag :ee_only
+
+    test "creates an active subscription flagged as paid by transfer" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "transfer-plan")
+
+      attrs = %{
+        "paddle_subscription_id" => "inv-123",
+        "currency_code" => "EUR",
+        "next_bill_amount" => "1000",
+        "last_bill_date" => "2026-09-30",
+        "next_bill_date" => "2027-09-30"
+      }
+
+      assert {:ok, _} = Billing.subscription_paid_by_transfer(team, plan, attrs)
+
+      subscription = Repo.get_by!(Subscription, team_id: team.id)
+      assert subscription.paid_by_transfer
+      assert subscription.status == :active
+      assert subscription.paddle_plan_id == "transfer-plan"
+      assert is_nil(subscription.update_url)
+    end
+
+    test "returns error changeset when details are missing" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id)
+
+      assert {:error, %Ecto.Changeset{}} = Billing.subscription_paid_by_transfer(team, plan, %{})
+      refute Repo.get_by(Subscription, team_id: team.id)
+    end
+  end
+
   describe "subscription_updated" do
     test "updates an existing subscription" do
       user = new_user()

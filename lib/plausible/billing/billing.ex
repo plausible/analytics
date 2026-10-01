@@ -38,6 +38,20 @@ defmodule Plausible.Billing do
     end)
   end
 
+  @doc """
+  Creates a subscription for a custom plan paid by bank transfer.
+  """
+  def subscription_paid_by_transfer(team, enterprise_plan, attrs) do
+    attrs = Map.put(attrs, "paddle_plan_id", enterprise_plan.paddle_plan_id)
+
+    Repo.transaction(fn ->
+      case Repo.insert(Subscription.transfer_changeset(team, attrs)) do
+        {:ok, subscription} -> after_subscription_update(subscription)
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
   def change_plan_preview(subscription, new_plan_id) do
     case paddle_api().update_subscription_preview(
            subscription.paddle_subscription_id,
