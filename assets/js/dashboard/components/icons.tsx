@@ -82,7 +82,7 @@ export const RefreshIcon = ({ className }: { className?: string }) => (
 export const PencilIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 18 18"
+    viewBox="0 0 24 24"
     fill="none"
     className={className}
   >
@@ -91,7 +91,7 @@ export const PencilIcon = ({ className }: { className?: string }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"
-      d="m10.547 4.422 3.031 3.031M2.75 15.25s3.599-.568 4.546-1.515l7.327-7.327a2.142 2.142 0 1 0-3.03-3.03l-7.327 7.327c-.947.947-1.515 4.546-1.515 4.546h0Z"
+      d="m14.25 5.25 5 5M9.25 20.25l-7 2 2-7L16.664 2.836a2 2 0 0 1 2.828 0l2.172 2.172a2 2 0 0 1 0 2.828z"
     />
   </svg>
 )

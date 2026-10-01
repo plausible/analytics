@@ -4,7 +4,7 @@ import {
   DeleteSegmentModal,
   UpdateSegmentModal
 } from './segment-modals'
-import { getSegmentNamePlaceholder } from '../filtering/segments'
+import { getSegmentNamePlaceholder, SavedSegments } from '../filtering/segments'
 import { useSiteContext } from '../site-context'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { useUserContext } from '../user-context'
@@ -16,9 +16,9 @@ import {
 } from './use-segment-mutations'
 
 export type RoutelessSegmentModal =
-  | { type: 'create-segment' }
+  | { type: 'create-segment'; segment?: SavedSegments[number] }
   | { type: 'update-segment' }
-  | { type: 'delete-segment' }
+  | { type: 'delete-segment'; segment: SavedSegments[number] }
 
 export const RoutelessSegmentModals = () => {
   const site = useSiteContext()
@@ -65,8 +65,10 @@ export const RoutelessSegmentModals = () => {
         <CreateSegmentModal
           user={user}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
-          suggestedName={getSegmentNamePlaceholder(dashboardState)}
-          segment={expandedSegment ?? undefined}
+          suggestedName={getSegmentNamePlaceholder(
+            modal.segment?.segment_data ?? dashboardState
+          )}
+          segment={modal.segment}
           onClose={() => {
             setModal(null)
             createSegment.reset()
@@ -75,7 +77,7 @@ export const RoutelessSegmentModals = () => {
             createSegment.mutate({
               name,
               type,
-              segment_data: {
+              segment_data: modal.segment?.segment_data ?? {
                 filters: dashboardState.filters,
                 labels: dashboardState.labels
               }
@@ -86,9 +88,9 @@ export const RoutelessSegmentModals = () => {
           reset={createSegment.reset}
         />
       )}
-      {modal?.type === 'delete-segment' && expandedSegment && (
+      {modal?.type === 'delete-segment' && (
         <DeleteSegmentModal
-          segment={expandedSegment}
+          segment={modal.segment}
           onClose={() => {
             setModal(null)
             deleteSegment.reset()
