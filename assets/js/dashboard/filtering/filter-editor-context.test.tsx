@@ -69,6 +69,36 @@ test('removing a pill while an emptied filter is open removes the correct filter
   expect(result.current.editor.openPosition).toBeNull()
 })
 
+test('removing the last value removes the filter from the URL at once and keeps the pill open', () => {
+  const { result } = renderEditor([page, source])
+
+  act(() => result.current.editor.open(0, 'values'))
+  act(() => result.current.editor.update(['is', 'page', []]))
+  expect(result.current.urlFilters).toEqual([source])
+  expect(result.current.editor.renderedFilters).toEqual([
+    ['is', 'page', []],
+    source
+  ])
+  expect(result.current.editor.openPosition).toBe(0)
+
+  act(() => result.current.editor.update(page))
+  expect(result.current.urlFilters).toEqual([page, source])
+})
+
+test('the editor closes when the browser goes back to the filter before its values were removed', () => {
+  const { result } = renderEditor([page])
+
+  act(() => result.current.editor.open(0, 'values'))
+  act(() => result.current.editor.update(['is', 'page', []]))
+  expect(result.current.urlFilters).toEqual([])
+
+  act(() => result.current.navigate(-1))
+
+  expect(result.current.urlFilters).toEqual([page])
+  expect(result.current.editor.openPosition).toBeNull()
+  expect(result.current.editor.renderedFilters).toEqual([page])
+})
+
 test('the editor closes when the URL filters change while it is open', () => {
   const { result } = renderEditor([page])
 
