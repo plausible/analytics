@@ -124,9 +124,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 CURRENT
               </span>
               <span
-                :if={
-                  current_plan?(@team, plan.paddle_plan_id) and @team.subscription.paid_by_transfer
-                }
+                :if={Plausible.Billing.Subscription.paid_by_transfer?(@team.subscription)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
               >
                 PAID BY TRANSFER
@@ -182,13 +180,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           phx-target={@myself}
         >
           <h1 class="mt-8 mb-2 text-xs font-semibold">
-            Mark {@transfer_plan.paddle_plan_id} as paid by transfer
+            Mark plan as paid by transfer
           </h1>
-          <.input
-            field={f[:paddle_subscription_id]}
-            label="Subscription / transfer reference (unique, e.g. Paddle invoice ID)"
-            autocomplete="off"
-          />
           <.input field={f[:currency_code]} label="Currency code (e.g. EUR)" autocomplete="off" />
           <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
           <.input type="date" field={f[:last_bill_date]} label="Paid on" />
@@ -313,7 +306,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
       form =
         to_form(
           %{
-            "paddle_subscription_id" => "transfer-#{plan.paddle_plan_id}",
             "currency_code" => "EUR",
             "last_bill_date" => Date.to_iso8601(today),
             "next_bill_date" => Date.to_iso8601(Date.shift(today, month: interval_months))

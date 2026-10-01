@@ -369,10 +369,9 @@ defmodule Plausible.BillingTest do
 
     test "creates an active subscription flagged as paid by transfer" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
-      plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "transfer-plan")
+      plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123456")
 
       attrs = %{
-        "paddle_subscription_id" => "inv-123",
         "currency_code" => "EUR",
         "next_bill_amount" => "1000",
         "last_bill_date" => "2026-09-30",
@@ -382,18 +381,23 @@ defmodule Plausible.BillingTest do
       assert {:ok, _} = Billing.subscription_paid_by_transfer(team, plan, attrs)
 
       subscription = Repo.get_by!(Subscription, team_id: team.id)
-      assert subscription.paid_by_transfer
+      assert Subscription.paid_by_transfer?(subscription)
+      assert is_nil(subscription.paddle_subscription_id)
       assert subscription.status == :active
-      assert subscription.paddle_plan_id == "transfer-plan"
+      assert subscription.paddle_plan_id =~ ~r/^manual-transfer-[0-9a-f]{12}$/
+      assert Repo.reload!(plan).paddle_plan_id == subscription.paddle_plan_id
+      assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
       assert is_nil(subscription.update_url)
     end
 
     test "returns error changeset when details are missing" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
       plan = insert(:enterprise_plan, team_id: team.id)
+      original_id = plan.paddle_plan_id
 
       assert {:error, %Ecto.Changeset{}} = Billing.subscription_paid_by_transfer(team, plan, %{})
       refute Repo.get_by(Subscription, team_id: team.id)
+      assert Repo.reload!(plan).paddle_plan_id == original_id
     end
   end
 

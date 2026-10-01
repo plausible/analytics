@@ -40,11 +40,20 @@ defmodule Plausible.Billing do
 
   @doc """
   Creates a subscription for a custom plan paid by bank transfer.
+
+  The enterprise plan's `paddle_plan_id` is rewritten to a generated
+  `manual-transfer-*` ID, which is also what the subscription gets, so the two
+  stay linked. `paddle_subscription_id` is left empty.
   """
   def subscription_paid_by_transfer(team, enterprise_plan, attrs) do
-    attrs = Map.put(attrs, "paddle_plan_id", enterprise_plan.paddle_plan_id)
+    plan_id = Subscription.generate_transfer_plan_id()
+    attrs = Map.put(attrs, "paddle_plan_id", plan_id)
 
     Repo.transaction(fn ->
+      enterprise_plan
+      |> Ecto.Changeset.change(paddle_plan_id: plan_id)
+      |> Repo.update!()
+
       case Repo.insert(Subscription.transfer_changeset(team, attrs)) do
         {:ok, subscription} -> after_subscription_update(subscription)
         {:error, changeset} -> Repo.rollback(changeset)
