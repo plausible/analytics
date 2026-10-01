@@ -86,7 +86,6 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
                 display={display_name}
               >
                 <.icon :if={opts[:icon]} name={opts[:icon]} />
-                <span :if={!opts[:icon]} class="size-4"></span>
                 {display_name}
               </.combobox_option>
             <% end %>
@@ -105,7 +104,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   defp icon(assigns) do
     {name, assigns} = Map.pop(assigns, :name)
 
-    assigns = assign(assigns, :class, "size-4")
+    assigns = assign(assigns, :class, "inline-block size-4")
 
     if icon_component = @icons[name] do
       icon_component.(assigns)
