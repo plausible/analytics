@@ -118,6 +118,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               {plan.paddle_plan_id}
               <br/>
 
+              <.button
+                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                id={"manual-subscribe-#{plan.paddle_plan_id}"}
+                theme="secondary"
+                size="sm"
+                phx-click="show-manual-subscribe-form"
+                phx-value-id={plan.id}
+                phx-target={@myself}
+              >
+                Manual Subscribe
+              </.button>
+
               <span
                 :if={current_plan?(@team, plan.paddle_plan_id)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
@@ -152,16 +164,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top">
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
-              <.button
-                :if={not current_plan?(@team, plan.paddle_plan_id)}
-                id={"manual-subscribe-#{plan.paddle_plan_id}"}
-                theme="secondary"
-                phx-click="show-manual-subscribe-form"
-                phx-value-id={plan.id}
-                phx-target={@myself}
-              >
-                Manual Subscribe
-              </.button>
               <.delete_button
                 :if={not current_plan?(@team, plan.paddle_plan_id)}
                 data-test-id={"delete-plan-#{plan.paddle_plan_id}"}
@@ -170,6 +172,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 phx-value-id={plan.id}
                 phx-target={@myself}
               />
+
             </.td>
           </:tbody>
         </.table>
@@ -186,6 +189,17 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           <h1 class="mt-8 mb-2 text-xs font-semibold">
             Manually subscribe to this plan
           </h1>
+
+          <.notice title="Manual Subscribe">
+    <p>
+    Manually subscribing a customer to this enterprise plan creates a subscription outside of Paddle.
+    Paddle will have no information about it. Use it only when the customer pays by bank transfer against an invoice.
+    </p>
+    <p>
+    Once the subscription is created, the plan's Paddle Plan ID is overwritten with
+    <code>manual-subscription-XXXXX</code>. This can't be undone.
+    </p>
+          </.notice>
           <.input field={f[:currency_code]} label="Currency code (e.g. EUR)" autocomplete="off" />
           <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
           <.input type="date" field={f[:last_bill_date]} label="Paid on" />
