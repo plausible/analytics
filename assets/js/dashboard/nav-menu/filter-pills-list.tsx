@@ -4,7 +4,11 @@ import { FilterPill, FilterPillAction } from './filter-pill'
 import classNames from 'classnames'
 import { canRemoveFilter, isSegmentFilter } from '../filtering/segments'
 import { useSegmentsContext } from '../filtering/segments-context'
-import { SegmentPillMenu } from './segments/segment-pill-menu'
+import {
+  MissingSegmentPillMenu,
+  SegmentPillMenu,
+  SEGMENT_NOT_FOUND
+} from './segments/segment-pill-menu'
 import { Filter } from '../dashboard-state'
 import { useFilterEditorContext } from '../filtering/filter-editor-context'
 
@@ -28,20 +32,27 @@ export const AppliedFilterPillsList = React.forwardRef<
   const filters = editor.renderedFilters
   const keys = getPillKeys(filters)
 
-  const getPillAction = (filter: Filter): FilterPillAction | undefined => {
+  const getPillProps = (
+    filter: Filter
+  ): { action: FilterPillAction; error?: string } => {
     if (!isSegmentFilter(filter)) {
-      return { type: 'edit' }
+      return { action: { type: 'edit' } }
     }
     const [_operation, _dimension, [id]] = filter
     const segment = segments.find((s) => String(s.id) === String(id))
     if (!segment) {
-      return undefined
+      return {
+        action: { type: 'menu', renderMenu: () => <MissingSegmentPillMenu /> },
+        error: SEGMENT_NOT_FOUND
+      }
     }
     return {
-      type: 'menu',
-      renderMenu: (closeMenu) => (
-        <SegmentPillMenu segment={segment} closeMenu={closeMenu} />
-      )
+      action: {
+        type: 'menu',
+        renderMenu: (closeMenu) => (
+          <SegmentPillMenu segment={segment} closeMenu={closeMenu} />
+        )
+      }
     }
   }
 
@@ -60,7 +71,7 @@ export const AppliedFilterPillsList = React.forwardRef<
             position={index}
             filter={filter}
             labels={dashboardState.labels}
-            action={getPillAction(filter)}
+            {...getPillProps(filter)}
             onRemoveClick={
               canRemoveFilter(filter, limitedToSegment)
                 ? () => editor.remove(index)
