@@ -9,6 +9,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   require Plausible.Billing.Subscription.Status
 
   alias Money.Subscription
+  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
@@ -25,6 +26,15 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
         where: s.timestamp > fragment("now() - INTERVAL '1 month'")
       )
 
+    yearly_enterprise_plan =
+      from(
+        ep in EnterprisePlan,
+        where: ep.team_id == parent_as(:team).id,
+        where: ep.paddle_plan_id == parent_as(:subscription).paddle_plan_id,
+        where: ep.billing_interval == :yearly,
+        select: 1
+      )
+
     teams =
       Repo.all(
         from t in Teams.Team,
@@ -32,11 +42,12 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           inner_join: o in assoc(t, :owners),
           left_join: bm in assoc(t, :billing_members),
           inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+          as: :subscription,
           on: true,
           left_join: sent in ^sent_notification,
           on: o.id == sent.user_id,
           where: is_nil(sent.id),
-          where: s.paddle_plan_id in @yearly_plans,
+          where: s.paddle_plan_id in @yearly_plans or exists(yearly_enterprise_plan),
           where:
             s.next_bill_date > fragment("now()::date") and
               s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
