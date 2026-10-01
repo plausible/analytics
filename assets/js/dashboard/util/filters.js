@@ -54,6 +54,21 @@ export function supportsHasDoneNot(filterName) {
   return filterName === 'goal'
 }
 
+export function getSupportedOperations(filterKey) {
+  if (filterKey === 'segment') {
+    return [FILTER_OPERATIONS.is]
+  }
+  const supported = {
+    [FILTER_OPERATIONS.is]: true,
+    [FILTER_OPERATIONS.isNot]: supportsIsNot(filterKey),
+    [FILTER_OPERATIONS.has_not_done]: supportsHasDoneNot(filterKey),
+    [FILTER_OPERATIONS.contains]: supportsContains(filterKey),
+    [FILTER_OPERATIONS.contains_not]:
+      supportsContains(filterKey) && supportsIsNot(filterKey)
+  }
+  return Object.keys(supported).filter((operation) => supported[operation])
+}
+
 export function isFreeChoiceFilterOperation(operation) {
   return [FILTER_OPERATIONS.contains, FILTER_OPERATIONS.contains_not].includes(
     operation
@@ -61,15 +76,14 @@ export function isFreeChoiceFilterOperation(operation) {
 }
 
 export function getLabel(labels, filterKey, value) {
+  let label = value
   if (['country', 'region', 'city'].includes(filterKey)) {
-    return labels[value]
+    label = labels[value]
   }
-
   if (filterKey === 'segment') {
-    return labels[formatSegmentIdAsLabelKey(value)]
+    label = labels[formatSegmentIdAsLabelKey(value)]
   }
-
-  return value
+  return String(label ?? value)
 }
 
 export function getPropertyKeyFromFilterKey(filterKey) {
