@@ -558,6 +558,7 @@ defmodule PlausibleWeb.EmailTest do
                "Your first visitor on #{site.domain} is now visible in Plausible."
 
       assert email.html_body =~ "/#{URI.encode_www_form(site.domain)}\""
+      end
     end
 
   describe "import emails" do
