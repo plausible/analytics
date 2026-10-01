@@ -116,7 +116,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top" data-test-id={"plan-entry-#{plan.paddle_plan_id}"}>
               {plan.paddle_plan_id}
-              <br/>
+              <br />
 
               <.button
                 :if={not current_plan?(@team, plan.paddle_plan_id)}
@@ -172,7 +172,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 phx-value-id={plan.id}
                 phx-target={@myself}
               />
-
             </.td>
           </:tbody>
         </.table>
@@ -191,16 +190,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           </h1>
 
           <.notice title="Manual Subscribe">
-    <p>
-    Manually subscribing a customer to this enterprise plan creates a subscription outside of Paddle.
-    Paddle will have no information about it. Use it only when the customer pays by bank transfer against an invoice.
-    </p>
-    <p>
-    Once the subscription is created, the plan's Paddle Plan ID is overwritten with
-    <code>manual-subscription-XXXXX</code>. This can't be undone.
-    </p>
+            <p>
+              Manually subscribing a customer to this enterprise plan creates a subscription outside of Paddle.
+              Paddle will have no information about it. Use it only when the customer pays by bank transfer against an invoice.
+            </p>
+            <p>
+              Once the subscription is created, the Enterprise Plan's <code>Paddle Plan ID</code>
+              will be replaced with <code>manual-subscription</code>. This can't be undone.
+            </p>
           </.notice>
-          <.input field={f[:currency_code]} label="Currency code (e.g. EUR)" autocomplete="off" />
+          <.input field={f[:currency_code]} label="Currency" autocomplete="off" />
           <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
           <.input type="date" field={f[:last_bill_date]} label="Paid on" />
           <.input type="date" field={f[:next_bill_date]} label="Next bill date" />

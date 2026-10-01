@@ -50,7 +50,7 @@ defmodule Plausible.Billing.Subscription do
     |> unique_constraint(:paddle_subscription_id)
   end
 
-  @manual_plan_id_prefix "manual-subscription-"
+  @manual_plan_id "manual-subscription"
 
   @manual_required_fields [
     :paddle_plan_id,
@@ -61,20 +61,18 @@ defmodule Plausible.Billing.Subscription do
   ]
 
   @doc """
-  Generates a unique plan ID marking a custom plan as manually subscribed.
+  The plan ID marking a custom plan as manually subscribed (outside of Paddle).
   """
-  def generate_manual_plan_id() do
-    @manual_plan_id_prefix <> Base.encode16(:crypto.strong_rand_bytes(6), case: :lower)
-  end
+  def manual_plan_id(), do: @manual_plan_id
 
-  def manual_subscription?(%__MODULE__{paddle_plan_id: @manual_plan_id_prefix <> _}), do: true
+  def manual_subscription?(%__MODULE__{paddle_plan_id: @manual_plan_id}), do: true
   def manual_subscription?(_), do: false
 
   def manual_changeset(team, attrs \\ %{}) do
     %__MODULE__{status: Subscription.Status.active()}
     |> cast(attrs, @manual_required_fields)
     |> validate_required(@manual_required_fields)
-    |> validate_format(:paddle_plan_id, ~r/^#{@manual_plan_id_prefix}/)
+    |> validate_inclusion(:paddle_plan_id, [@manual_plan_id])
     |> put_assoc(:team, team)
   end
 

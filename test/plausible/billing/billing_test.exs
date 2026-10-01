@@ -384,7 +384,7 @@ defmodule Plausible.BillingTest do
       assert Subscription.manual_subscription?(subscription)
       assert is_nil(subscription.paddle_subscription_id)
       assert subscription.status == :active
-      assert subscription.paddle_plan_id =~ ~r/^manual-subscription-[0-9a-f]{12}$/
+      assert subscription.paddle_plan_id == "manual-subscription"
       assert Repo.reload!(plan).paddle_plan_id == subscription.paddle_plan_id
       assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
       assert is_nil(subscription.update_url)

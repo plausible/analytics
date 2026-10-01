@@ -41,12 +41,12 @@ defmodule Plausible.Billing do
   @doc """
   Creates a subscription for a custom plan without Paddle checkout (for example, paid by bank transfer).
 
-  The enterprise plan's `paddle_plan_id` is rewritten to a generated
-  `manual-subscription-*` ID, which is also what the subscription gets, so the two
+  The enterprise plan's `paddle_plan_id` is rewritten to a conventional
+  `manual-subscription` ID, which is also what the subscription gets, so the two
   stay linked. `paddle_subscription_id` is left empty.
   """
   def create_manual_subscription(team, enterprise_plan, attrs) do
-    plan_id = Subscription.generate_manual_plan_id()
+    plan_id = Subscription.manual_plan_id()
     attrs = Map.put(attrs, "paddle_plan_id", plan_id)
 
     Repo.transaction(fn ->

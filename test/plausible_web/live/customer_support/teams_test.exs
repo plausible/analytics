@@ -1100,7 +1100,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           |> render_submit()
 
         plan = Plausible.Repo.reload!(plan)
-        assert plan.paddle_plan_id =~ ~r/^manual-subscription-/
+        assert plan.paddle_plan_id == "manual-subscription"
 
         subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
         assert subscription.paddle_plan_id == plan.paddle_plan_id
