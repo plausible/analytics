@@ -554,9 +554,12 @@ defmodule PlausibleWeb.EmailTest do
     test "site setup success email", %{user: user, site: site} do
       email = PlausibleWeb.Email.site_setup_success(user, site)
 
-      assert email.html_body =~ "Your first visitor is now visible in Plausible."
+      assert email.html_body =~
+               "Your first visitor on #{site.domain} is now visible in Plausible."
+
+      assert email.html_body =~ "/#{URI.encode_www_form(site.domain)}\""
+      end
     end
-  end
 
   describe "import emails" do
     setup do
