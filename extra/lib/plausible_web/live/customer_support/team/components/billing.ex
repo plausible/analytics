@@ -124,7 +124,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 CURRENT
               </span>
               <span
-                :if={Plausible.Billing.Subscription.paid_by_transfer?(@team.subscription)}
+                :if={current_plan?(@team, plan.paddle_plan_id) and Plausible.Billing.Subscription.paid_by_transfer?(@team.subscription)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
               >
                 PAID BY TRANSFER
