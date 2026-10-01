@@ -100,7 +100,7 @@
 - regex: '(?:FBAV|com\.facebook\.katana|facebook-mobile/1\.0|facebook-mobile/|Facebook/)(?:[ /]([\d.]+))?'
   name: 'Facebook'
   version: '$1'
-- regex: '(?:FBAN|FBSV|FBID|FBBV)/'
+- regex: '(?:FBAN|FBSV|FBID|FBBV)/|MetaIAB'
   name: 'Facebook'
   version: ''
 
@@ -161,6 +161,11 @@
 - regex: 'com\.google\.android\.googlequicksearchbox'
   name: 'Google'
   version: ''
+
+# Google News (https://play.google.com/store/apps/details?id=com.google.android.apps.magazines | https://apps.apple.com/us/app/google-news/id459182288)
+- regex: 'GNews (?:Android|iOS)/(\d+[.\d]+)'
+  name: 'Google News'
+  version: '$1'
 
 # WeCom (https://work.weixin.qq.com/ | https://play.google.com/store/apps/details?id=com.tencent.wework | https://apps.apple.com/app/id1087897068)
 - regex: 'wxwork/(\d+[.\d]+)'
@@ -689,6 +694,11 @@
 - regex: 'Yandex/([\d.]+)'
   name: 'Yandex'
   version: ''
+
+# Yandex AI (https://play.google.com/store/apps/details?id=com.yandex.yazeka)
+- regex: 'YaBrowser/([\d.]+).+YazekaApp/'
+  name: 'Yandex AI'
+  version: '$1'
 
 # Zen (Дзен) (https://play.google.com/store/apps/details?id=ru.zen.android)
 - regex: 'ZenKit/([\d.]+)'
@@ -2770,6 +2780,76 @@
 # Redline (https://redline.com.tr/)
 - regex: 'REDLINECLIENT.+V([\d.]+)'
   name: 'Redline'
+  version: '$1'
+
+# General Motors
+- regex: 'GM-Android/([\d.]+)'
+  name: 'General Motors'
+  version: '$1'
+
+# ESPN
+- regex: 'espn/([\d.]+)'
+  name: 'ESPN'
+  version: '$1'
+
+# Amazon Prime Video (https://apps.apple.com/us/app/amazon-prime-video/id545519333)
+- regex: 'PrimeVideo/([\d.]+)'
+  name: 'Amazon Prime Video'
+  version: '$1'
+
+# Citrix VPN
+- regex: 'Citrix(?:SSO|VPN)(?:[ -](\d+[.\d]+))?'
+  name: 'Citrix VPN'
+  version: '$1'
+
+# Citrix Workspace (https://www.citrix.com/downloads/citrix-receiver/)
+- regex: '(?:Citrix(?:Receiver| Workspace)|CWA(?:WEBVIEW)?)(?:/(\d+[.\d]+))?'
+  name: 'Citrix Workspace'
+  version: '$1'
+
+# Kobo eReader (https://www.kobo.com/)
+- regex: 'Kobo.+/(\d+[.\d]+)'
+  name: 'Kobo eReader'
+  version: '$1'
+
+# Grok (https://apps.apple.com/us/app/grok-ai/id6670324846)
+- regex: 'GrokApp/([\d.]+)'
+  name: 'Grok'
+  version: '$1'
+
+# QuickBooks (https://quickbooks.intuit.com/)
+- regex: 'QuickBooks/([\d.]+)'
+  name: 'QuickBooks'
+  version: '$1'
+
+# Latina (https://play.google.com/store/apps/details?id=com.applicaster.pe.frecuencia)
+- regex: 'Latina/([\d.]+)'
+  name: 'Latina'
+  version: '$1'
+
+# HuffPost (https://apps.apple.com/us/app/huffpost-news-politics/id306621789)
+- regex: 'HuffPost/ios/([\d.]+)'
+  name: 'HuffPost'
+  version: '$1'
+
+# Phantom (https://apps.apple.com/us/app/phantom-trade-markets/id1598432977)
+- regex: 'Phantom/ios/([\d.]+)'
+  name: 'Phantom'
+  version: '$1'
+
+# poq (https://www.poqcommerce.com/)
+- regex: 'poq\.ios/([\d.]+)'
+  name: 'poq'
+  version: '$1'
+
+# YuanBao (https://yuanbao.tencent.com/)
+- regex: 'YuanBao/.+app_version/([\d.]+)'
+  name: 'YuanBao'
+  version: '$1'
+
+# Yahoo Search (https://play.google.com/store/apps/details?id=com.yahoo.mobile.client.android.search)
+- regex: 'YahooSearch/([\d.]+)'
+  name: 'Yahoo Search'
   version: '$1'
 
 # Electron generic apps
