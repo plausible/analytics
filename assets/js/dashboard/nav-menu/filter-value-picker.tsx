@@ -12,15 +12,19 @@ import {
   Suggestion
 } from '../util/fetch-suggestions'
 import { Combobox, ComboboxOption, isSameValue } from '../components/combobox'
+import { Button } from '../components/button'
+import { MenuSeparator } from './nav-menu-components'
 
 export const FilterValuePicker = ({
   filter,
   labels,
-  onChange
+  onChange,
+  onDone
 }: {
   filter: Filter
   labels: FilterClauseLabels
   onChange: (filter: Filter, labels?: FilterClauseLabels) => void
+  onDone: () => void
 }) => {
   const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
@@ -55,19 +59,35 @@ export const FilterValuePicker = ({
   }
 
   return (
-    <Combobox
-      request={getValueSuggestionsRequest(site, filter)}
-      pinned={pinned}
-      multiple
-      freeChoice={isFreeChoiceFilterOperation(operation)}
-      isSelected={isSelected}
-      onSelect={onSelect}
-      label={
-        filterKey.startsWith(EVENT_PROPS_PREFIX)
-          ? `Values for ${getPropertyKeyFromFilterKey(filterKey)}`
-          : 'Values'
-      }
-      focusOnMount
-    />
+    <>
+      <Combobox
+        request={getValueSuggestionsRequest(site, filter)}
+        pinned={pinned}
+        multiple
+        freeChoice={isFreeChoiceFilterOperation(operation)}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        label={
+          filterKey.startsWith(EVENT_PROPS_PREFIX)
+            ? `Values for ${getPropertyKeyFromFilterKey(filterKey)}`
+            : 'Values'
+        }
+        focusOnMount
+      />
+      <MenuSeparator />
+      <div className="flex items-center gap-x-2 px-3 py-2">
+        <Button size="xs" theme="secondary" onClick={onDone}>
+          Done
+        </Button>
+        <Button
+          size="xs"
+          theme="ghost"
+          disabled={!clauses.length}
+          onClick={() => onChange([operation, filterKey, []])}
+        >
+          Deselect all
+        </Button>
+      </div>
+    </>
   )
 }

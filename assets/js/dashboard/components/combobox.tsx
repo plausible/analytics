@@ -128,7 +128,7 @@ export const Combobox = ({
       highlight(activeIndex + 1)
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
-      highlight(activeIndex - 1)
+      highlight(Math.max(activeIndex, 0) - 1)
     } else if (event.key === 'Enter') {
       event.preventDefault()
       select(options[activeIndex])
@@ -163,7 +163,7 @@ export const Combobox = ({
           aria-controls={listboxId}
           aria-autocomplete="list"
           aria-activedescendant={
-            options.length ? optionId(activeIndex) : undefined
+            activeIndex >= 0 ? optionId(activeIndex) : undefined
           }
           placeholder="Search..."
           className="flex-1 min-w-0 border-none bg-transparent px-2.5 py-1.5 text-sm dark:text-gray-100 dark:placeholder:text-gray-400 focus:outline-hidden focus:ring-0"
@@ -186,6 +186,7 @@ export const Combobox = ({
         aria-label={label}
         aria-multiselectable={multiple || undefined}
         className="flex flex-col gap-y-0.5 max-h-60 overflow-y-auto empty:hidden"
+        onMouseLeave={() => setHighlightedIndex(-1)}
       >
         {options.map((option, index) => {
           const selected = isSelected(option)
