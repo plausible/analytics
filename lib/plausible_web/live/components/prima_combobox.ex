@@ -42,7 +42,6 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
         <div class="relative pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:outline-none focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25 focus-within:border-indigo-500">
           <.combobox_input
             name={@submit_name}
-            value={@selected}
             class={
               Enum.join(
                 [
@@ -71,12 +70,13 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
             }
           >
             <.combobox_option
-              :for={{idx, {value, display_name}} <- @streams.suggestions}
+              :for={{idx, {value, display_name, opts}} <- @streams.suggestions}
               id={"input-picker-dropdown-#{@id}-option-#{idx}"}
-              class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-focus:bg-indigo-600 data-focus:text-white"
+              class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-focus:bg-indigo-600 data-focus:text-white flex gap-2"
               value={value}
               display={display_name}
             >
+              <.icon :if={opts[:icon]} name={opts[:icon]} />
               {display_name}
             </.combobox_option>
           </.combobox_options>
@@ -84,6 +84,23 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
       </.combobox>
     </div>
     """
+  end
+
+  @icons %{
+    cursor: &PlausibleWeb.Components.Icons.cursor_icon/1,
+    pencil: &PlausibleWeb.Components.Icons.pencil_icon/1
+  }
+
+  defp icon(assigns) do
+    {name, assigns} = Map.pop(assigns, :name)
+
+    assigns = assign(assigns, :class, "size-4")
+
+    if icon_component = @icons[name] do
+      icon_component.(assigns)
+    else
+      ~H""
+    end
   end
 
   def handle_event("async_combobox_search", params, socket) do
@@ -98,12 +115,6 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
           String.contains?(String.downcase(option), String.downcase(input))
         end)
       end
-
-    if selected = socket.assigns.selected do
-      [selected, suggestions]
-    else
-      suggestions
-    end
 
     {:noreply, stream(socket, :suggestions, suggestions, reset: true)}
   end
