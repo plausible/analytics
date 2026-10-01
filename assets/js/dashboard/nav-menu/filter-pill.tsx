@@ -37,6 +37,7 @@ export type FilterPillProps = {
   filter: Filter
   labels: FilterClauseLabels
   action?: FilterPillAction
+  error?: string
   onRemoveClick?: () => void
 }
 
@@ -47,8 +48,19 @@ const buttonPartClassName = classNames(
   'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750 aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-750'
 )
 
-const PillValues = ({ values }: { values: string[] }) => (
-  <span className="inline-block max-w-2xs md:max-w-xs truncate">
+const PillValues = ({
+  values,
+  error
+}: {
+  values: string[]
+  error?: string
+}) => (
+  <span
+    className={classNames(
+      'inline-block max-w-2xs md:max-w-xs truncate',
+      !!error && 'text-red-600 dark:text-red-400'
+    )}
+  >
     {values.length ? (
       values.map((value, index) => (
         <React.Fragment key={index}>
@@ -166,6 +178,7 @@ export function FilterPill({
   filter,
   labels,
   action,
+  error,
   onRemoveClick
 }: FilterPillProps) {
   const editor = useFilterEditorContext()
@@ -256,10 +269,10 @@ export function FilterPill({
       ) : action?.type === 'menu' ? (
         <PillMenu
           className={classNames(buttonPartClassName, roundedRight)}
-          label={`Open menu: ${plainText}`}
+          label={`Open menu: ${plainText}${error ? ` (${error})` : ''}`}
           renderMenu={action.renderMenu}
         >
-          <PillValues values={values} />
+          <PillValues values={values} error={error} />
         </PillMenu>
       ) : (
         <span
