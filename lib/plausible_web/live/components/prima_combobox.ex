@@ -69,16 +69,22 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
               ])
             }
           >
-            <.combobox_option
-              :for={{idx, {value, display_name, opts}} <- @streams.suggestions}
-              id={"input-picker-dropdown-#{@id}-option-#{idx}"}
-              class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-focus:bg-indigo-600 data-focus:text-white flex gap-2"
-              value={value}
-              display={display_name}
-            >
-              <.icon :if={opts[:icon]} name={opts[:icon]} />
-              {display_name}
-            </.combobox_option>
+            <%= for {idx, {value, display_name, opts}} <- @streams.suggestions do %>
+              <hr class="mt-2" :if={opts[:separator?]} />
+
+              <div class="m-2 truncate text-left text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold" :if={opts[:title]}>{opts[:title]}</div>
+
+              <.combobox_option
+                id={"input-picker-dropdown-#{@id}-option-#{idx}"}
+                class="relative whitespace-nowrap cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-focus:bg-indigo-600 data-focus:text-white flex gap-2"
+                value={value}
+                display={display_name}
+              >
+                <.icon :if={opts[:icon]} name={opts[:icon]} />
+                <span :if={!opts[:icon]} class="inline-block size-4"></span>
+                <span class="inline-block">{display_name}</span>
+              </.combobox_option>
+            <% end %>
           </.combobox_options>
         </div>
       </.combobox>
@@ -94,7 +100,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   defp icon(assigns) do
     {name, assigns} = Map.pop(assigns, :name)
 
-    assigns = assign(assigns, :class, "size-4")
+    assigns = assign(assigns, :class, "inline-block size-4")
 
     if icon_component = @icons[name] do
       icon_component.(assigns)
