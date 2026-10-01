@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add `CLICKHOUSE_QUERY_TIMEOUT_MS` and `CLICKHOUSE_MAX_EXECUTION_TIME_SEC` env vars to make the stats query timeout (default `15000`) and ClickHouse `max_execution_time` (default: timeout in seconds + 5) configurable plausible/community-edition#277
 - Annotations feature
 - Pages report can now be broken down by URL (hostname + path) in addition to path only
 - New "AI Assistants" acquisition channel + improved recognized sources database
