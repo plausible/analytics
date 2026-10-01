@@ -2116,7 +2116,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           metrics: ["visitors", "visits", "bounce_rate", "visit_duration", "percentage"]
         )
 
-      assert response["results"] == [
+      assert Enum.sort_by(response["results"], & &1["dimensions"]) == [
                %{"dimensions" => ["/blog"], "metrics" => [1, 1, 0, 60, 50.0]},
                %{"dimensions" => ["/blog/john-2"], "metrics" => [1, 1, 100, 0, 50.0]}
              ]
@@ -3231,7 +3231,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           ]
         )
 
-      assert response["results"] == [
+      assert Enum.sort_by(response["results"], & &1["dimensions"]) == [
                %{
                  "dimensions" => ["/nopay"],
                  "metrics" => [

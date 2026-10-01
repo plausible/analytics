@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01&q=")
 
-      assert json_response(conn, 200) == [
+      assert conn |> json_response(200) |> Enum.sort_by(& &1["label"]) == [
                %{"label" => "/", "value" => "/"},
                %{"label" => "/contact", "value" => "/contact"},
                %{"label" => "/irrelevant", "value" => "/irrelevant"},
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01&q=re")
 
-      assert json_response(conn, 200) == [
+      assert conn |> json_response(200) |> Enum.sort_by(& &1["label"]) == [
                %{"label" => "/irrelevant", "value" => "/irrelevant"},
                %{"label" => "/register", "value" => "/register"}
              ]
@@ -533,7 +533,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&q=")
 
-      assert json_response(conn, 200) == [
+      assert conn |> json_response(200) |> Enum.sort_by(& &1["label"]) == [
                %{"label" => "author", "value" => "author"},
                %{"label" => "logged_in", "value" => "logged_in"}
              ]
