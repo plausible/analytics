@@ -459,6 +459,56 @@ describe('inline filter editing', () => {
     expect(getPillNames()).toEqual(['Page is /blog'])
   })
 
+  test('Done closes the value list and focuses the pill', async () => {
+    mockSuggestions('source', ['Bing', 'Google'])
+    renderFiltersBar({
+      searchRecord: { filters: [['is', 'source', ['Google']]] }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Edit filter: Source is Google' })
+    )
+    await userEvent.click(getOption('Bing'))
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(getPillNames()).toEqual(['Source is Google or Bing'])
+    expect(
+      screen.getByRole('button', {
+        name: 'Edit filter: Source is Google or Bing'
+      })
+    ).toHaveFocus()
+  })
+
+  test('Deselect all clears the values, and Done then removes the filter', async () => {
+    mockSuggestions('source', ['Bing', 'Google'])
+    renderFiltersBar({
+      searchRecord: {
+        filters: [
+          ['is', 'source', ['Google', 'Bing']],
+          ['is', 'page', ['/blog']]
+        ]
+      }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: 'Edit filter: Source is Google or Bing'
+      })
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Deselect all' }))
+
+    expect(getPillNames()).toEqual(['Source is', 'Page is /blog'])
+    expect(getOptionStates()).toEqual([
+      ['Google', 'false'],
+      ['Bing', 'false']
+    ])
+    expect(screen.getByRole('button', { name: 'Deselect all' })).toBeDisabled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }))
+    expect(getPillNames()).toEqual(['Page is /blog'])
+  })
+
   test('the operator can be changed', async () => {
     renderFiltersBar({
       searchRecord: { filters: [['is', 'source', ['Google']]] }

@@ -313,6 +313,7 @@ export function FilterPill({
             filter={filter}
             labels={labels}
             onChange={editor.update}
+            onDone={() => closeEditor({ refocus: true })}
           />
         </FilterPillPopover>
       )}
