@@ -196,7 +196,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </p>
             <p>
               Once the subscription is created, the Enterprise Plan's <code>Paddle Plan ID</code>
-              will be replaced with <code>manual-subscription</code>. This can't be undone.
+              will be replaced with <code>manual-subscription</code>.
             </p>
           </.notice>
           <.input field={f[:currency_code]} label="Currency" autocomplete="off" />
