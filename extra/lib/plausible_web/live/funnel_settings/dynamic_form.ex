@@ -391,11 +391,64 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     |> Enum.map(
       &{to_step_data(&1), to_string(&1),
        if(is_integer(&1.id) and &1.id > 0,
-         do: [icon: if(&1.event_name, do: :cursor, else: :pencil)],
+         do: [type: if(&1.event_name, do: :custom_event, else: :pageview)],
          else: []
        )}
     )
+    |> set_icons()
+    |> segment()
     |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
+  end
+
+  defp set_icons(suggestions) do
+    Enum.map(suggestions, fn {value, display_name, opts} ->
+      icon =
+        case opts[:type] do
+          :custom_event -> :cursor
+          :pageview -> :pencil
+          _other -> nil
+        end
+
+      {value, display_name, Keyword.put(opts, :icon, icon)}
+    end)
+  end
+
+  defp segment(suggestions) do
+    segments =
+      suggestions
+      |> Enum.group_by(fn {_, _, opts} -> opts[:type] end)
+
+    if map_size(segments) > 1 do
+      segments
+      |> Enum.sort_by(fn {k, _} ->
+        case k do
+          :custom_event -> 0
+          :pencil -> 1
+          _ -> 2
+        end
+      end)
+      |> Enum.reduce([], fn {_, segment}, acc ->
+        [{value, display_name, opts} | rest] = segment
+
+        separator? = acc != []
+
+        title =
+          case opts[:type] do
+            :custom_event -> "Custom events"
+            :pageview -> "Pageviews"
+            _ -> "From stats"
+          end
+
+        opts =
+          opts
+          |> Keyword.put(:title, title)
+          |> Keyword.put(:separator?, separator?)
+
+        acc ++ [{value, display_name, opts} | rest]
+      end)
+    else
+      suggestions
+    end
   end
 
   defp exclude_existing_steps(goals, steps) do
