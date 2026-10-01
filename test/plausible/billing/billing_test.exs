@@ -364,10 +364,10 @@ defmodule Plausible.BillingTest do
     end
   end
 
-  describe "subscription_paid_by_transfer" do
+  describe "create_manual_subscription" do
     @describetag :ee_only
 
-    test "creates an active subscription flagged as paid by transfer" do
+    test "creates an active subscription for a manual subscription" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
       plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123456")
 
@@ -378,13 +378,13 @@ defmodule Plausible.BillingTest do
         "next_bill_date" => "2027-09-30"
       }
 
-      assert {:ok, _} = Billing.subscription_paid_by_transfer(team, plan, attrs)
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan, attrs)
 
       subscription = Repo.get_by!(Subscription, team_id: team.id)
-      assert Subscription.paid_by_transfer?(subscription)
+      assert Subscription.manual_subscription?(subscription)
       assert is_nil(subscription.paddle_subscription_id)
       assert subscription.status == :active
-      assert subscription.paddle_plan_id =~ ~r/^manual-transfer-[0-9a-f]{12}$/
+      assert subscription.paddle_plan_id =~ ~r/^manual-subscription-[0-9a-f]{12}$/
       assert Repo.reload!(plan).paddle_plan_id == subscription.paddle_plan_id
       assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
       assert is_nil(subscription.update_url)
@@ -395,7 +395,7 @@ defmodule Plausible.BillingTest do
       plan = insert(:enterprise_plan, team_id: team.id)
       original_id = plan.paddle_plan_id
 
-      assert {:error, %Ecto.Changeset{}} = Billing.subscription_paid_by_transfer(team, plan, %{})
+      assert {:error, %Ecto.Changeset{}} = Billing.create_manual_subscription(team, plan, %{})
       refute Repo.get_by(Subscription, team_id: team.id)
       assert Repo.reload!(plan).paddle_plan_id == original_id
     end

@@ -36,8 +36,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
        plan_form: plan_form,
        show_plan_form?: false,
        editing_plan: nil,
-       transfer_plan: nil,
-       transfer_form: nil,
+       manual_plan: nil,
+       manual_form: nil,
        cost_estimate: 0
      )}
   end
@@ -124,10 +124,13 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 CURRENT
               </span>
               <span
-                :if={current_plan?(@team, plan.paddle_plan_id) and Plausible.Billing.Subscription.paid_by_transfer?(@team.subscription)}
+                :if={
+                  current_plan?(@team, plan.paddle_plan_id) and
+                    Plausible.Billing.Subscription.manual_subscription?(@team.subscription)
+                }
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
               >
-                PAID BY TRANSFER
+                MANUAL SUBSCRIPTION
               </span>
             </.td>
             <.td max_width="max-w-40">
@@ -150,13 +153,13 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
               <.button
                 :if={not current_plan?(@team, plan.paddle_plan_id)}
-                id={"paid-by-transfer-#{plan.paddle_plan_id}"}
+                id={"manual-subscribe-#{plan.paddle_plan_id}"}
                 theme="secondary"
-                phx-click="show-transfer-form"
+                phx-click="show-manual-subscribe-form"
                 phx-value-id={plan.id}
                 phx-target={@myself}
               >
-                Paid by transfer
+                Manual Subscribe
               </.button>
               <.delete_button
                 :if={not current_plan?(@team, plan.paddle_plan_id)}
@@ -172,15 +175,15 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
         <.form
           :let={f}
-          :if={@transfer_plan}
-          for={@transfer_form}
-          as={:transfer}
-          id="paid-by-transfer"
-          phx-submit="save-transfer"
+          :if={@manual_plan}
+          for={@manual_form}
+          as={:manual}
+          id="manual-subscribe"
+          phx-submit="save-manual-subscribe"
           phx-target={@myself}
         >
           <h1 class="mt-8 mb-2 text-xs font-semibold">
-            Mark plan as paid by transfer
+            Manually subscribe to this plan
           </h1>
           <.input field={f[:currency_code]} label="Currency code (e.g. EUR)" autocomplete="off" />
           <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
@@ -188,10 +191,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           <.input type="date" field={f[:next_bill_date]} label="Next bill date" />
 
           <div class="mt-8 flex align-center gap-x-4">
-            <.button theme="secondary" phx-click="hide-transfer-form" phx-target={@myself}>
+            <.button theme="secondary" phx-click="hide-manual-subscribe-form" phx-target={@myself}>
               Cancel
             </.button>
-            <.button type="submit">Mark as paid</.button>
+            <.button type="submit">Subscribe</.button>
           </div>
         </.form>
 
@@ -296,7 +299,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
   end
 
-  def handle_event("show-transfer-form", %{"id" => plan_id}, socket) do
+  def handle_event("show-manual-subscribe-form", %{"id" => plan_id}, socket) do
     plan = Enum.find(socket.assigns.plans, &(&1.id == String.to_integer(plan_id)))
 
     if plan do
@@ -310,27 +313,34 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             "last_bill_date" => Date.to_iso8601(today),
             "next_bill_date" => Date.to_iso8601(Date.shift(today, month: interval_months))
           },
-          as: :transfer
+          as: :manual
         )
 
-      {:noreply, assign(socket, transfer_plan: plan, transfer_form: form)}
+      {:noreply, assign(socket, manual_plan: plan, manual_form: form)}
     else
       {:noreply, socket}
     end
   end
 
-  def handle_event("hide-transfer-form", _, socket) do
-    {:noreply, assign(socket, transfer_plan: nil, transfer_form: nil)}
+  def handle_event("hide-manual-subscribe-form", _, socket) do
+    {:noreply, assign(socket, manual_plan: nil, manual_form: nil)}
   end
 
-  def handle_event("save-transfer", %{"transfer" => params}, socket) do
-    %{team: team, transfer_plan: plan} = socket.assigns
+  def handle_event("save-manual-subscribe", %{"manual" => params}, socket) do
+    %{team: team, manual_plan: plan} = socket.assigns
 
-    case Plausible.Billing.subscription_paid_by_transfer(team, plan, sanitize_params(params)) do
+    case Plausible.Billing.create_manual_subscription(team, plan, sanitize_params(params)) do
       {:ok, _team} ->
-        success("Subscription created (paid by transfer)")
+        success("Subscription created (manual)")
         team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
-        {:noreply, assign(socket, team: team, transfer_plan: nil, transfer_form: nil)}
+
+        {:noreply,
+         assign(socket,
+           team: team,
+           plans: get_plans(team.id),
+           manual_plan: nil,
+           manual_form: nil
+         )}
 
       {:error, changeset} ->
         failure("Error saving subscription: #{inspect(changeset.errors)}")

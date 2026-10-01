@@ -1068,7 +1068,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
       end
 
-      test "plan can be marked as paid by transfer", %{conn: conn, user: user} do
+      test "plan can be manually subscribed", %{conn: conn, user: user} do
         team = team_of(user)
 
         plan =
@@ -1081,16 +1081,16 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
 
         lv
-        |> element(~s|button[phx-click="show-transfer-form"]|)
+        |> element(~s|button[phx-click="show-manual-subscribe-form"]|)
         |> render_click()
 
         html = render(lv)
-        refute element_exists?(html, ~s|input[name="transfer[paddle_subscription_id]"]|)
+        refute element_exists?(html, ~s|input[name="manual[paddle_subscription_id]"]|)
 
         html =
           lv
-          |> form("form#paid-by-transfer", %{
-            "transfer" => %{
+          |> form("form#manual-subscribe", %{
+            "manual" => %{
               "currency_code" => "EUR",
               "next_bill_amount" => "1000",
               "last_bill_date" => "2026-09-30",
@@ -1100,12 +1100,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           |> render_submit()
 
         plan = Plausible.Repo.reload!(plan)
-        assert plan.paddle_plan_id =~ ~r/^manual-transfer-/
+        assert plan.paddle_plan_id =~ ~r/^manual-subscription-/
 
         subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
         assert subscription.paddle_plan_id == plan.paddle_plan_id
         assert is_nil(subscription.paddle_subscription_id)
-        assert html =~ "PAID BY TRANSFER"
+        assert html =~ "MANUAL SUBSCRIPTION"
       end
 
       defp open_custom_plan(conn, team) do

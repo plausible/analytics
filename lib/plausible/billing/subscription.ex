@@ -50,9 +50,9 @@ defmodule Plausible.Billing.Subscription do
     |> unique_constraint(:paddle_subscription_id)
   end
 
-  @transfer_plan_id_prefix "manual-transfer-"
+  @manual_plan_id_prefix "manual-subscription-"
 
-  @transfer_required_fields [
+  @manual_required_fields [
     :paddle_plan_id,
     :next_bill_amount,
     :next_bill_date,
@@ -61,20 +61,20 @@ defmodule Plausible.Billing.Subscription do
   ]
 
   @doc """
-  Generates a unique plan ID marking a custom plan as paid by bank transfer.
+  Generates a unique plan ID marking a custom plan as manually subscribed.
   """
-  def generate_transfer_plan_id() do
-    @transfer_plan_id_prefix <> Base.encode16(:crypto.strong_rand_bytes(6), case: :lower)
+  def generate_manual_plan_id() do
+    @manual_plan_id_prefix <> Base.encode16(:crypto.strong_rand_bytes(6), case: :lower)
   end
 
-  def paid_by_transfer?(%__MODULE__{paddle_plan_id: @transfer_plan_id_prefix <> _}), do: true
-  def paid_by_transfer?(_), do: false
+  def manual_subscription?(%__MODULE__{paddle_plan_id: @manual_plan_id_prefix <> _}), do: true
+  def manual_subscription?(_), do: false
 
-  def transfer_changeset(team, attrs \\ %{}) do
+  def manual_changeset(team, attrs \\ %{}) do
     %__MODULE__{status: Subscription.Status.active()}
-    |> cast(attrs, @transfer_required_fields)
-    |> validate_required(@transfer_required_fields)
-    |> validate_format(:paddle_plan_id, ~r/^#{@transfer_plan_id_prefix}/)
+    |> cast(attrs, @manual_required_fields)
+    |> validate_required(@manual_required_fields)
+    |> validate_format(:paddle_plan_id, ~r/^#{@manual_plan_id_prefix}/)
     |> put_assoc(:team, team)
   end
 
