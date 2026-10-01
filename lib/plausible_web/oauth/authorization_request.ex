@@ -1,16 +1,22 @@
 defmodule PlausibleWeb.OAuth.AuthorizationRequest do
   @moduledoc """
-  Validates an incoming [authorization request](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-request)
-  into the context the consent screen renders and the decision is taken against.
+  ### Responsibilities
 
-  `build/1` is the only place the client's metadata document is fetched during a
-  consent round trip. The context it returns travels from the controller into
-  the LiveView that takes the decision, so nothing downstream re-reads a
-  document the client is free to change in between.
+  - parse query params submitted by the application that is requesting for authorization
+  - fetch the app's metadata document
+  - validate that the document and params make up a valid [authorization request](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-request)
+  - provide utils to ensure that the valid request can be passed through the user's browser, without being tampered with
+
   """
 
   alias Plausible.OAuth.CIMD
   alias Plausible.OAuth.ProtectedResources
+
+  @salt "oauth_authorization_request"
+  @max_age_seconds 600
+
+  @typedoc "A validated request, sealed for the round trip by `sign/3`."
+  @type signed_request() :: String.t()
 
   @type t() :: %{
           client_id: String.t(),
@@ -21,31 +27,54 @@ defmodule PlausibleWeb.OAuth.AuthorizationRequest do
           code_challenge_method: String.t(),
           scopes: [String.t()],
           resource: String.t(),
-          state: String.t() | nil,
-          team: String.t() | nil
+          state: String.t() | nil
         }
 
   @doc """
-  Builds the authorization context from request parameters.
-
-  Returns `{:redirect_error, request, error}` for a failure the client is
-  entitled to hear about at its `redirect_uri`, and `{:render_error, message}`
-  for one that must not be redirected anywhere - an unverified `client_id` or an
-  unregistered `redirect_uri` - since that would make this server an open
-  redirector for a URL it has not authenticated.
+  Builds the authorization request from the parameters the client sent.
+  It has three possible outcomes:
+  - Valid request, application may be trustworthy, show to user to either approve or deny
+  - Invalid request, application may be trustworthy, redirect to application with issue
+  - Invalid request, application can't be trusted, no redirect, show error to user
   """
   @spec build(map()) ::
           {:ok, t()} | {:redirect_error, map(), String.t()} | {:render_error, String.t()}
   def build(params) do
-    request = authorization_request(params)
+    unvalidated = unvalidated_request(params)
 
-    with {:ok, metadata} <- fetch_client_metadata(request.client_id),
-         :ok <- validate_redirect_uri(request.redirect_uri, metadata) do
-      build_with_validated_redirect_uri(request, metadata)
+    with {:ok, metadata} <- fetch_client_metadata(unvalidated.client_id),
+         :ok <- validate_redirect_uri(unvalidated.redirect_uri, metadata) do
+      validate_request(unvalidated, metadata)
     end
   end
 
-  defp authorization_request(params) do
+  @doc """
+  Encodes and signs the validated authorization request.
+  Needed because the data is passed through the user's browser.
+  """
+  @spec sign(Plug.Conn.t(), Plausible.Auth.User.t(), t()) :: signed_request()
+  def sign(conn, user, request) do
+    Phoenix.Token.sign(conn, @salt, %{user_id: user.id, request: request})
+  end
+
+  @doc """
+  Decodes the validated authorization request.
+
+  Fails for one that is missing, tampered with, older than `#{@max_age_seconds}`
+  seconds, or signed for a different user.
+  """
+  @spec verify(Plug.Conn.t(), Plausible.Auth.User.t(), term()) ::
+          {:ok, t()} | {:error, :invalid_signed_request}
+  def verify(conn, user, signed_request) when is_binary(signed_request) do
+    case Phoenix.Token.verify(conn, @salt, signed_request, max_age: @max_age_seconds) do
+      {:ok, %{user_id: user_id, request: request}} when user_id == user.id -> {:ok, request}
+      _ -> {:error, :invalid_signed_request}
+    end
+  end
+
+  def verify(_conn, _user, _signed_request), do: {:error, :invalid_signed_request}
+
+  defp unvalidated_request(params) do
     %{
       client_id: params["client_id"],
       redirect_uri: params["redirect_uri"],
@@ -54,42 +83,40 @@ defmodule PlausibleWeb.OAuth.AuthorizationRequest do
       code_challenge_method: params["code_challenge_method"],
       scope: params["scope"],
       resource: params["resource"],
-      state: params["state"],
-      team: params["team"]
+      state: params["state"]
     }
   end
 
-  defp build_with_validated_redirect_uri(request, metadata) do
+  defp validate_request(unvalidated, metadata) do
     cond do
-      request.response_type != "code" ->
-        {:redirect_error, request, "unsupported_response_type"}
+      unvalidated.response_type != "code" ->
+        {:redirect_error, unvalidated, "unsupported_response_type"}
 
-      blank?(request.code_challenge) ->
-        {:redirect_error, request, "invalid_request"}
+      blank?(unvalidated.code_challenge) ->
+        {:redirect_error, unvalidated, "invalid_request"}
 
-      request.code_challenge_method != "S256" ->
-        {:redirect_error, request, "invalid_request"}
+      unvalidated.code_challenge_method != "S256" ->
+        {:redirect_error, unvalidated, "invalid_request"}
 
       true ->
-        with {:ok, resource} <- ProtectedResources.get_by_url(request.resource),
+        with {:ok, resource} <- ProtectedResources.get_by_url(unvalidated.resource),
              {:ok, scopes} <-
-               ProtectedResources.normalize_requested_scopes(request.scope, resource) do
+               ProtectedResources.normalize_requested_scopes(unvalidated.scope, resource) do
           {:ok,
            %{
-             client_id: request.client_id,
-             redirect_uri: request.redirect_uri,
-             response_type: request.response_type,
-             code_challenge: request.code_challenge,
-             code_challenge_method: request.code_challenge_method,
+             client_id: unvalidated.client_id,
+             redirect_uri: unvalidated.redirect_uri,
+             response_type: unvalidated.response_type,
+             code_challenge: unvalidated.code_challenge,
+             code_challenge_method: unvalidated.code_challenge_method,
              scopes: scopes,
              resource: ProtectedResources.get_resource_url(resource),
-             state: request.state,
-             team: request.team,
+             state: unvalidated.state,
              client_name: metadata["client_name"]
            }}
         else
-          {:error, :not_found} -> {:redirect_error, request, "invalid_target"}
-          {:error, :invalid_scope} -> {:redirect_error, request, "invalid_scope"}
+          {:error, :not_found} -> {:redirect_error, unvalidated, "invalid_target"}
+          {:error, :invalid_scope} -> {:redirect_error, unvalidated, "invalid_scope"}
         end
     end
   end

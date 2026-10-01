@@ -1,8 +1,88 @@
 <Layouts.auth heading="Authorize access" flash={@flash}>
   <.auth_container>
-    {live_render(@conn, PlausibleWeb.Live.OAuthAuthorize,
-      container: {:div, class: "contents"},
-      session: %{"ctx" => @ctx}
-    )}
+    <div class="flex flex-col gap-y-6">
+      <p
+        class="text-sm text-gray-600 dark:text-gray-400 text-center"
+        data-test-id="client-identity"
+      >
+        <span class="font-semibold break-all">{@request.client_name || @request.client_id}</span>
+        wants to connect to your Plausible account
+        <span
+          :if={@request.client_name}
+          class="block text-xs text-gray-500 dark:text-gray-500 mt-1 break-all"
+        >
+          Client ID: {@request.client_id}
+        </span>
+      </p>
+
+      <div class="rounded-md bg-gray-50 dark:bg-gray-900 p-4">
+        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          This will allow the application to:
+        </p>
+        <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+          <li :for={scope <- @request.scopes}>{Plausible.Auth.Scopes.description(scope)}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@conn}
+        action={~p"/login/oauth/authorize"}
+        method="post"
+        class="flex flex-col gap-y-4"
+      >
+        <input type="hidden" name="signed_request" value={@signed_request} />
+
+        <div class="flex flex-col gap-y-2" data-test-id="grant-team">
+          <%= if length(@grantable_teams) > 1 do %>
+            <label for="team" class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Grant access to team
+            </label>
+            <select
+              id="team"
+              name="team"
+              class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 text-sm"
+            >
+              <option
+                :for={team <- @grantable_teams}
+                value={team.identifier}
+                selected={team.identifier == @selected_team.identifier}
+              >
+                {team.name}
+              </option>
+            </select>
+          <% else %>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              Grant access to team
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 break-all">
+              {@selected_team.name}
+            </p>
+            <input type="hidden" name="team" value={@selected_team.identifier} />
+          <% end %>
+          <p class="text-xs text-gray-500 dark:text-gray-500">
+            The connection will only be able to access the data of the selected team.
+          </p>
+        </div>
+
+        <div class="flex gap-x-3 mt-2">
+          <button
+            type="submit"
+            name="action"
+            value="deny"
+            class="btn-base btn-md btn-theme-secondary flex-1"
+          >
+            Deny
+          </button>
+          <button
+            type="submit"
+            name="action"
+            value="approve"
+            class="btn-base btn-md btn-theme-primary flex-1"
+          >
+            Approve
+          </button>
+        </div>
+      </.form>
+    </div>
   </.auth_container>
 </Layouts.auth>

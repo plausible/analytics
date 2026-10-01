@@ -6,8 +6,6 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Test.Support.DNS
 
-  import Phoenix.LiveViewTest
-
   alias Plausible.OAuth.ProtectedResources
   alias Plausible.OAuth.Token
 
@@ -306,7 +304,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     valid_doc: valid_doc
   } do
     stub_dns()
-    stub_metadata(Map.delete(valid_doc, "client_name"))
+    stub_metadata(valid_doc |> Map.delete("client_name"))
 
     html = conn |> get_authorize(valid_params) |> html_response(200)
 
@@ -340,9 +338,59 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     assert html =~ team.name
     refute element_exists?(html, "select#team")
+
+    assert text_of_attr(html, "form input[type=hidden][name=team]", "value") ==
+             team.identifier
   end
 
-  test "__team=... in the authorize URL does not switch team", %{
+  test "offers every team the user can grant, personal team included, excludes teams where they are a guest",
+       %{
+         conn: conn,
+         team: team,
+         user: user,
+         valid_params: valid_params,
+         valid_doc: valid_doc
+       } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    assert team.name =~ "My personal sites"
+
+    {first, second} = grantable_teams(user)
+
+    guest_team = insert(:team, name: "Guest Team", identifier: Ecto.UUID.generate())
+    add_member(guest_team, user: user, role: :guest)
+
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+    options = text_of_element(html, "select#team")
+
+    assert options =~ "My personal sites"
+    assert options =~ first.name
+    assert options =~ second.name
+    refute options =~ guest_team.name
+  end
+
+  test "`__team` param in URL is ignored if it's not one of the user's teams", %{
+    conn: conn,
+    team: team,
+    user: user,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    grantable_teams(user)
+    other_team = insert(:team, identifier: Ecto.UUID.generate())
+    params = Map.put(valid_params, "__team", other_team.identifier)
+
+    html = conn |> get_authorize(params) |> html_response(200)
+
+    # one of user's own teams is selected
+    assert selected_team(html) == team.identifier
+  end
+
+  test "preselects the team the user was last working in", %{
     conn: conn,
     user: user,
     valid_params: valid_params,
@@ -351,18 +399,14 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     stub_dns()
     stub_metadata(valid_doc)
 
-    other_owner = new_user()
-    {:ok, other_team} = Plausible.Teams.get_or_create(other_owner)
-    add_member(other_team, user: user, role: :editor)
+    {_first, second} = grantable_teams(user)
 
-    before = Plausible.Repo.reload!(user).last_team_identifier
+    conn = get(conn, "/sites?__team=#{second.identifier}")
+    assert conn.assigns.current_team.id == second.id
 
-    get_authorize(
-      conn,
-      Map.put(valid_params, "__team", other_team.identifier)
-    )
+    html = conn |> get_authorize(valid_params) |> html_response(200)
 
-    assert Plausible.Repo.reload!(user).last_team_identifier == before
+    assert text_of_element(html, "select#team option[selected]") == second.name
   end
 
   test "approving the application redirects back with a code and the original state query param",
@@ -376,14 +420,19 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     stub_dns()
     fetches = stub_metadata(valid_doc)
 
-    lv = render_consent_screen(conn, valid_params)
-    click(lv, "approve")
-    {redirect_url, _flash} = assert_redirect(lv)
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => selected_team(html),
+        "action" => "approve"
+      })
 
     # client metadata is fetched exactly once
     assert fetches |> :atomics.get(1) == 1
 
-    [base, qs] = String.split(redirect_url, "?")
+    [base, qs] = String.split(redirected_to(conn, 302), "?")
     decoded_qs = URI.decode_query(qs)
 
     assert base == valid_params["redirect_uri"]
@@ -416,11 +465,16 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     stub_dns()
     stub_metadata(valid_doc)
 
-    lv = render_consent_screen(conn, valid_params)
-    click(lv, "deny")
-    {redirect_url, _flash} = assert_redirect(lv)
+    html = conn |> get_authorize(valid_params) |> html_response(200)
 
-    [base, qs] = String.split(redirect_url, "?")
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => selected_team(html),
+        "action" => "deny"
+      })
+
+    [base, qs] = String.split(redirected_to(conn, 302), "?")
 
     assert base == valid_params["redirect_uri"]
 
@@ -428,6 +482,92 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                      URI.decode_query(qs)
 
     assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+  end
+
+  test "redirects with access_denied if no action in submitted", %{
+    conn: conn,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => selected_team(html)
+      })
+
+    assert redirected_to(conn, 302) =~ "error=access_denied"
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+  end
+
+  test "renders an error page for a signed request that does not verify, issuing no code", %{
+    conn: conn,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+
+    for signed_request <- [
+          nil,
+          "",
+          "invalid",
+          signed_request(html) <> "invalid"
+        ] do
+      assert conn
+             |> post_authorize(%{
+               "action" => "approve",
+               "team" => selected_team(html),
+               "signed_request" => signed_request
+             })
+             |> html_response(400) =~
+               "Authorization error"
+    end
+
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+  end
+
+  test "refuses a signed request issued to a different user", %{
+    conn: conn,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    other_user = new_user()
+    FunWithFlags.enable(:mcp, for_actor: other_user)
+    {:ok, _} = Plausible.Teams.get_or_create(other_user)
+    {:ok, conn: other_conn} = log_in(%{user: other_user, conn: build_conn() |> prepare_conn()})
+
+    other_html = other_conn |> get_authorize(valid_params) |> html_response(200)
+
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(other_html),
+        "team" => selected_team(other_html),
+        "action" => "approve"
+      })
+
+    assert html_response(conn, 400) =~ "Authorization error"
+
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+
+    # it works for the other user
+    other_conn =
+      post_authorize(other_conn, %{
+        "signed_request" => signed_request(other_html),
+        "team" => selected_team(other_html),
+        "action" => "approve"
+      })
+
+    assert redirected_to(other_conn, 302)
   end
 
   test "a user with an unverified email cannot reach the screen, let alone approve",
@@ -440,6 +580,31 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
+  test "rate limits a decision before verifying it", %{
+    conn: conn,
+    user: user,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+
+    Enum.each(1..30, fn _ -> Plausible.Auth.rate_limit(:oauth_authorize_user, user) end)
+
+    # The signature would not verify, so answering 429 rather than 400 is what
+    # shows the limiter ran first.
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html) <> "invalid",
+        "team" => selected_team(html),
+        "action" => "approve"
+      })
+
+    assert html_response(conn, 429) =~ "Too many authorization requests"
+  end
+
   test "refuses an approval once the user is over the rate limit", %{
     conn: conn,
     user: user,
@@ -449,37 +614,24 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     stub_dns()
     stub_metadata(valid_doc)
 
-    lv = render_consent_screen(conn, valid_params)
+    html = conn |> get_authorize(valid_params) |> html_response(200)
 
     Enum.each(1..30, fn _ -> Plausible.Auth.rate_limit(:oauth_authorize_user, user) end)
 
-    assert click(lv, "approve") =~ "Too many authorization requests"
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => selected_team(html),
+        "action" => "approve"
+      })
+
+    assert html_response(conn, 429) =~ "Too many authorization requests"
+
     assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
-  test "offers every team the user can grant, personal team included", %{
+  test "refuses to issue code if there's no team in the payload", %{
     conn: conn,
-    team: team,
-    user: user,
-    valid_params: valid_params,
-    valid_doc: valid_doc
-  } do
-    stub_dns()
-    stub_metadata(valid_doc)
-
-    {first, second} = grantable_teams(user)
-
-    html = conn |> get_authorize(valid_params) |> html_response(200)
-    options = text_of_element(html, "select#team")
-
-    assert options =~ team.name
-    assert options =~ first.name
-    assert options =~ second.name
-  end
-
-  test "approving without touching the picker binds the team it preselected", %{
-    conn: conn,
-    team: team,
     user: user,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -490,47 +642,19 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     grantable_teams(user)
 
     html = conn |> get_authorize(valid_params) |> html_response(200)
-    assert text_of_element(html, "select#team option[selected]") == team.name
 
-    lv = render_consent_screen(conn, valid_params)
-    click(lv, "approve")
-    {redirect_url, _flash} = assert_redirect(lv)
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "action" => "approve"
+      })
 
-    [base, qs] = String.split(redirect_url, "?")
-
-    assert base == valid_params["redirect_uri"]
-    assert %{"code" => _} = URI.decode_query(qs)
-
-    assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == team.id
+    assert html_response(conn, 400) =~ "You cannot grant access to the selected team"
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
-  test "binds the code to the selected team", %{
+  test "refuses to issue code to a team that's not one of the user's teams", %{
     conn: conn,
-    user: user,
-    valid_params: valid_params,
-    valid_doc: valid_doc
-  } do
-    stub_dns()
-    stub_metadata(valid_doc)
-
-    {_first, second} = grantable_teams(user)
-    params = Map.put(valid_params, "team", second.identifier)
-
-    lv = render_consent_screen(conn, params)
-    click(lv, "approve")
-    {redirect_url, _flash} = assert_redirect(lv)
-
-    [base, qs] = String.split(redirect_url, "?")
-
-    assert base == valid_params["redirect_uri"]
-    assert %{"code" => _} = URI.decode_query(qs)
-
-    assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == second.id
-  end
-
-  test "ignores unknown team provided as param, binds to default instead", %{
-    conn: conn,
-    team: team,
     user: user,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -540,18 +664,43 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     grantable_teams(user)
     other_team = insert(:team, identifier: Ecto.UUID.generate())
-    params = Map.put(valid_params, "team", other_team.identifier)
 
-    lv = render_consent_screen(conn, params)
-    click(lv, "approve")
-    {redirect_url, _flash} = assert_redirect(lv)
+    html = conn |> get_authorize(valid_params) |> html_response(200)
 
-    [base, qs] = String.split(redirect_url, "?")
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => other_team.identifier,
+        "action" => "approve"
+      })
 
-    assert base == valid_params["redirect_uri"]
-    assert %{"code" => _} = URI.decode_query(qs)
+    assert html_response(conn, 400) =~ "You cannot grant access to the selected team"
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
+  end
 
-    assert Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode).team_id == team.id
+  test "refuses to issue code to a team the user is only a guest on", %{
+    conn: conn,
+    user: user,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+    stub_metadata(valid_doc)
+
+    guest_team = insert(:team, name: "Guest Team", identifier: Ecto.UUID.generate())
+    add_member(guest_team, user: user, role: :guest)
+
+    html = conn |> get_authorize(valid_params) |> html_response(200)
+
+    conn =
+      post_authorize(conn, %{
+        "signed_request" => signed_request(html),
+        "team" => guest_team.identifier,
+        "action" => "approve"
+      })
+
+    assert html_response(conn, 400) =~ "You cannot grant access to the selected team"
+    assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
   defp grantable_teams(user) do
@@ -579,21 +728,14 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
   defp get_authorize(conn, params),
     do: get(conn, "/login/oauth/authorize?" <> URI.encode_query(params))
 
-  # The screen is a LiveView embedded in a dead render, so `live/1` has no live
-  # route to connect through. The controller still does the work: it is what
-  # runs the request and builds the context, and the socket mounts with the very
-  # ctx the dead render put on the page.
-  defp render_consent_screen(conn, params) do
-    rendered = get_authorize(conn, params)
-    assert html_response(rendered, 200)
+  defp post_authorize(conn, params),
+    do: post(conn, "/login/oauth/authorize", params)
 
-    {:ok, lv, _html} =
-      live_isolated(conn, PlausibleWeb.Live.OAuthAuthorize,
-        session: %{"ctx" => rendered.assigns.ctx}
-      )
+  defp signed_request(html),
+    do: text_of_attr(html, "input[name=signed_request]", "value")
 
-    lv
-  end
-
-  defp click(lv, action), do: lv |> element("button[phx-click=#{action}]") |> render_click()
+  defp selected_team(html),
+    do:
+      text_of_attr(html, "select#team option[selected]", "value") ||
+        text_of_attr(html, "input[name=team]", "value")
 end

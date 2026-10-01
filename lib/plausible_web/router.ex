@@ -496,13 +496,13 @@ defmodule PlausibleWeb.Router do
 
   scope "/login/oauth", PlausibleWeb do
     pipe_through [
-      PlausibleWeb.Plugs.IgnoreTeamParam,
       :browser,
       :csrf,
       PlausibleWeb.RequireAccountPlug
     ]
 
     get "/authorize", OAuth.AuthorizeController, :authorize_form
+    post "/authorize", OAuth.AuthorizeController, :authorize
   end
 
   scope "/login/oauth", PlausibleWeb do
