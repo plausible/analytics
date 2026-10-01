@@ -116,6 +116,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top" data-test-id={"plan-entry-#{plan.paddle_plan_id}"}>
               {plan.paddle_plan_id}
+              <br/>
 
               <span
                 :if={current_plan?(@team, plan.paddle_plan_id)}
