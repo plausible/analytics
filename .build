@@ -348,6 +348,7 @@ Plausible.Timezones.html
 Plausible.Users.html
 Plausible.Workers.AcceptTrafficUntil.html
 Plausible.Workers.CheckUsage.html
+Plausible.Workers.CleanEmailSuppressions.html
 Plausible.Workers.CleanInvitations.html
 Plausible.Workers.CleanUserSessions.html
 Plausible.Workers.ClickhouseCleanSites.html
@@ -615,8 +616,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-E63F017B.js
-dist/sidebar_items-000A1A27.js
+dist/search_data-665573B9.js
+dist/sidebar_items-64F969EE.js
 index.html
 readme.html
 search.html
