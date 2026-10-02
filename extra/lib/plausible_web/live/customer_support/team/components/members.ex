@@ -57,7 +57,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
                 theme="ghost"
                 size="sm"
                 icon?={true}
-                mt?={false}
                 class="btn-text-danger"
                 phx-click="deprovision-sso-user"
                 phx-value-identifier={member.id}

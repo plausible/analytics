@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         use_custom_props={@use_custom_props}
       />
 
-      <.button type="submit" class="w-full">
+      <.button type="submit" class="w-full mt-6">
         Update goal
       </.button>
     </.form>
@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         These events have been sent from your site in the past 6 months but aren't yet configured as goals. Add them instantly or set one up manually.
       </p>
 
-      <div class="flex justify-end gap-3">
+      <div class="flex justify-end gap-3 mt-6">
         <.button
           theme="secondary"
           phx-click="add-manually"
@@ -223,7 +223,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         use_custom_props={@use_custom_props}
       />
 
-      <.button type="submit" class="w-full">
+      <.button type="submit" class="w-full mt-6">
         Add goal
       </.button>
     </.form>
@@ -286,6 +286,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         type="text"
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+        wrapper_class="mt-6"
       />
 
       <.custom_property_section
@@ -368,6 +369,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         step="1"
         x-model="scrollThreshold"
         x-on:change="updateDisplayName"
+        wrapper_class="mt-6"
       />
 
       <.label for={"scroll_page_path_input_#{@suffix}"} class="mt-3">
@@ -399,6 +401,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-model="displayName"
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+        wrapper_class="mt-6"
       />
 
       <.custom_property_section
@@ -473,7 +476,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           </.error>
         </div>
 
-        <div class="mt-2">
+        <div class="mt-6">
           <.input
             label="Display name"
             id="custom_event_display_name_input"
@@ -595,7 +598,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </label>
       <% end %>
       <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
-        <.input :if={not is_nil(@goal)} type="text" field={@f[:currency]} disabled={true} mt?={false} />
+        <.input :if={not is_nil(@goal)} type="text" field={@f[:currency]} disabled={true} />
         <.live_component
           :if={is_nil(@goal)}
           id={"currency_input_#{@suffix}"}

@@ -48,7 +48,6 @@ defmodule PlausibleWeb.Components.TwoFactor do
         :if={@show_button?}
         type="submit"
         id={@id}
-        mt?={false}
         class="w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">
@@ -145,7 +144,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
               <.button
                 type="button"
                 x-on:click={"#{@state_param} = false"}
-                class="w-full sm:w-auto mr-2"
+                class="w-full sm:w-auto mr-2 mt-6"
                 theme="secondary"
               >
                 Cancel

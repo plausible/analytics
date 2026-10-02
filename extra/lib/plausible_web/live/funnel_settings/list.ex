@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
     <div class="flex flex-col gap-4 sm:gap-6">
       <%= if @searching? or Enum.count(@funnels) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
-          <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
+          <.button id="add-funnel-button" phx-click="add-funnel">
             Add funnel
           </.button>
         </.filter_bar>
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
       <.button
         id="add-funnel-button"
         phx-click="add-funnel"
-        class="mt-4"
+        class="mt-6"
       >
         Add funnel
       </.button>
