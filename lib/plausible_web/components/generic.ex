@@ -86,7 +86,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:icon?, :boolean, default: false)
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
-  attr(:mt?, :boolean, default: true)
   attr(:rest, :global, include: ~w(name))
 
   slot(:inner_block)
@@ -105,7 +104,6 @@ defmodule PlausibleWeb.Components.Generic do
       type={@type}
       disabled={@disabled}
       class={[
-        @mt? && "mt-6",
         @button_base_class,
         @size_class,
         @theme_class,
@@ -126,7 +124,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:icon?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:method, :string, default: "get")
-  attr(:mt?, :boolean, default: true)
   attr(:rest, :global)
 
   slot(:inner_block)
@@ -173,7 +170,6 @@ defmodule PlausibleWeb.Components.Generic do
       href={@href}
       onclick={@onclick}
       class={[
-        @mt? && "mt-6",
         @button_base_class,
         @size_class,
         @theme_class,
@@ -370,7 +366,6 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:click="toggle()"
         theme={@button_theme}
         size={@button_size}
-        mt?={false}
         class={@button_class}
       >
         {render_slot(@button)}
@@ -627,7 +622,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr :label, :string, required: true
   attr :help_text, :string, default: nil
   attr :show_help_text_only_when_active?, :boolean, default: false
-  attr :mt?, :boolean, default: true
 
   attr(:rest, :global)
 
@@ -640,7 +634,7 @@ defmodule PlausibleWeb.Components.Generic do
   """
   def toggle_field(assigns) do
     ~H"""
-    <div class={["flex items-start justify-between gap-5 w-full", @mt? && "mt-6"]}>
+    <div class="flex items-start justify-between gap-5 w-full">
       <div class="flex-1">
         <span
           x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
@@ -1041,7 +1035,6 @@ defmodule PlausibleWeb.Components.Generic do
       theme="ghost"
       size="sm"
       icon?={true}
-      mt?={false}
       class={"btn-text-primary #{@class}"}
       {@rest}
     >
@@ -1062,7 +1055,6 @@ defmodule PlausibleWeb.Components.Generic do
       theme="ghost"
       size="sm"
       icon?={true}
-      mt?={false}
       class={"btn-text-danger #{@class}"}
       {@rest}
     >
@@ -1073,7 +1065,6 @@ defmodule PlausibleWeb.Components.Generic do
       theme="ghost"
       size="sm"
       icon?={true}
-      mt?={false}
       class={"btn-text-danger #{@class}"}
       {@rest}
     >

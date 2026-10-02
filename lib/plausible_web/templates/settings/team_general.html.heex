@@ -18,10 +18,13 @@
         field={f[:name]}
         label="Name"
         width="w-1/2"
-        mt?={false}
       />
 
-      <.button type="submit" disabled={@current_team_role not in [:owner, :admin]}>
+      <.button
+        type="submit"
+        disabled={@current_team_role not in [:owner, :admin]}
+        class="mt-6"
+      >
         Change name
       </.button>
     </.form>
@@ -64,7 +67,6 @@
         <.button
           theme="danger"
           x-on:click="disableTeamForce2FAOpen = true; $refs.disableTeamForce2FAPassword.value = ''"
-          mt?={false}
         >
           Stop Forcing 2FA
         </.button>
@@ -80,7 +82,7 @@
             <Heroicons.shield_exclamation class="h-6 w-6" />
           </:icon>
           <:buttons>
-            <.button type="submit" class="w-full sm:w-auto">
+            <.button type="submit" class="w-full sm:w-auto mt-6">
               Stop enforcing 2FA
             </.button>
           </:buttons>
@@ -93,7 +95,7 @@
             Enter your password to stop enforcing 2FA.
           </div>
 
-          <div class="mt-3">
+          <div class="mt-6">
             <.input
               type="password"
               id="disable_team_force_2fa_password"
@@ -116,7 +118,6 @@
         <.button
           data-confirm="All team members, including you, will need to set up 2FA. Are you sure you want to enforce it?"
           type="submit"
-          mt?={false}
         >
           Enforce 2FA
         </.button>
@@ -131,7 +132,6 @@
       href={~p"/settings/team/leave"}
       method="post"
       theme="danger"
-      mt?={false}
     >
       Leave team
     </.button_link>

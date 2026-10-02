@@ -49,38 +49,40 @@
       You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.
     </:subtitle>
 
-    <.input
-      name="embed-link"
-      id="embed-link"
-      label="Enter shared link (only public shared links without password can be embedded)"
-      value=""
-      width="w-1/2"
-      mt?={false}
-    />
+    <div class="flex flex-col gap-6">
+      <.input
+        name="embed-link"
+        id="embed-link"
+        label="Enter shared link (only public shared links without password can be embedded)"
+        value=""
+        width="w-1/2"
+      />
 
-    <.input
-      type="select"
-      name="theme"
-      id="theme"
-      label="Select theme"
-      options={["Light", "Dark", "System"]}
-      value="Light"
-      width="w-1/2"
-    />
+      <.input
+        type="select"
+        name="theme"
+        id="theme"
+        label="Select theme"
+        options={["Light", "Dark", "System"]}
+        value="Light"
+        width="w-1/2"
+      />
 
-    <.input
-      name="background"
-      id="background"
-      label="Custom background color (optional). Try using `transparent` background to blend the dashboard with your site."
-      value=""
-      placeholder="e.g. #F9FAFB"
-      width="w-1/2"
-    />
+      <.input
+        name="background"
+        id="background"
+        label="Custom background color (optional). Try using `transparent` background to blend the dashboard with your site."
+        value=""
+        placeholder="e.g. #F9FAFB"
+        width="w-1/2"
+      />
+
+      <.button id="generate-embed" class="self-start">
+        Generate embed code
+      </.button>
+    </div>
 
     <.input name="base-url" type="hidden" id="base-url" value={plausible_url()} />
-    <.button id="generate-embed" mt?={false}>
-      Generate embed code
-    </.button>
 
     <.label for="embed-code" class="mt-4">Embed code</.label>
 
