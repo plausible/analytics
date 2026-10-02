@@ -190,7 +190,6 @@ defmodule PlausibleWeb.Live.TrackingSettings do
         theme="link"
         size="xs"
         icon?={true}
-        mt?={false}
         href={@href}
         target="_blank"
         rel="noopener noreferrer"

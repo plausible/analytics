@@ -63,7 +63,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           id="new-custom-plan"
           phx-click="show-plan-form"
           phx-target={@myself}
-          class="ml-auto"
+          class="ml-auto mt-6"
         >
           New Custom Plan
         </.button>
@@ -161,65 +161,69 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           phx-target={@myself}
           phx-change="estimate-cost"
         >
-          <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
-          <.input
-            type="select"
-            options={["monthly", "yearly"]}
-            field={f[:billing_interval]}
-            label="Billing Interval"
-            autocomplete="off"
-          />
-
-          <div class="flex items-center gap-x-4">
+          <div class="flex flex-col gap-6 mt-6">
+            <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
             <.input
-              field={f[:monthly_pageview_limit]}
-              label="Monthly Pageview Limit"
+              type="select"
+              options={["monthly", "yearly"]}
+              field={f[:billing_interval]}
+              label="Billing Interval"
               autocomplete="off"
-              width="w-[500]"
             />
-            <.preview for={f[:monthly_pageview_limit]} />
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:monthly_pageview_limit]}
+                label="Monthly Pageview Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:monthly_pageview_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input width="w-[500]" field={f[:site_limit]} label="Site Limit" autocomplete="off" />
+              <.preview for={f[:site_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:team_member_limit]}
+                label="Team Member Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:team_member_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:hourly_api_request_limit]}
+                label="Hourly API Request Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:hourly_api_request_limit]} />
+            </div>
           </div>
 
-          <div class="flex items-center gap-x-4">
-            <.input width="w-[500]" field={f[:site_limit]} label="Site Limit" autocomplete="off" />
-            <.preview for={f[:site_limit]} />
-          </div>
-
-          <div class="flex items-center gap-x-4">
+          <div class="flex flex-col gap-2 mt-2">
             <.input
-              field={f[:team_member_limit]}
-              label="Team Member Limit"
-              autocomplete="off"
-              width="w-[500]"
+              :for={
+                mod <-
+                  Plausible.Billing.Feature.list()
+                  |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
+              }
+              :if={mod not in Teams.Billing.free_features()}
+              x-on:change="featureChangeCallback(event)"
+              type="checkbox"
+              value={mod in (f.source.changes[:features] || f.source.data.features || [])}
+              name={"#{f.name}[features[]][#{mod.name()}]"}
+              label={mod.display_name()}
             />
-            <.preview for={f[:team_member_limit]} />
           </div>
 
-          <div class="flex items-center gap-x-4">
-            <.input
-              field={f[:hourly_api_request_limit]}
-              label="Hourly API Request Limit"
-              autocomplete="off"
-              width="w-[500]"
-            />
-            <.preview for={f[:hourly_api_request_limit]} />
-          </div>
-
-          <.input
-            :for={
-              mod <-
-                Plausible.Billing.Feature.list()
-                |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
-            }
-            :if={mod not in Teams.Billing.free_features()}
-            x-on:change="featureChangeCallback(event)"
-            type="checkbox"
-            value={mod in (f.source.changes[:features] || f.source.data.features || [])}
-            name={"#{f.name}[features[]][#{mod.name()}]"}
-            label={mod.display_name()}
-          />
-
-          <div class="mt-8 flex align-center gap-x-4">
+          <div class="mt-10 flex align-center gap-x-4">
             <.input
               type="checkbox"
               field={f[:managed_proxy_price_modifier]}
@@ -235,11 +239,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               value={@cost_estimate}
             />
 
-            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself}>
+            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself} class="mt-6">
               Cancel
             </.button>
 
-            <.button type="submit">
+            <.button type="submit" class="mt-6">
               {if @editing_plan, do: "Update Plan", else: "Save Custom Plan"}
             </.button>
           </div>

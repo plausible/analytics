@@ -11,6 +11,7 @@
       action={~p"/settings/security/email"}
       for={@email_changeset}
       method="post"
+      class="flex flex-col gap-6"
     >
       <.input
         type="text"
@@ -18,7 +19,6 @@
         value={f.data.email}
         label="Current email"
         width="w-1/2"
-        mt?={false}
         disabled
       />
 
@@ -26,7 +26,7 @@
 
       <.input type="password" field={f[:password]} label="Confirm with password" width="w-1/2" />
 
-      <.button type="submit">
+      <.button type="submit" class="self-start">
         Change email
       </.button>
     </.form>
@@ -46,7 +46,6 @@
         value={f.data.email}
         label="Current email"
         width="w-1/2"
-        mt?={false}
         disabled
       />
     </.form>
@@ -64,6 +63,7 @@
       action={~p"/settings/security/password"}
       for={@password_changeset}
       method="post"
+      class="flex flex-col gap-6"
     >
       <.input
         type="password"
@@ -71,7 +71,6 @@
         field={f[:old_password]}
         label="Old password"
         width="w-1/2"
-        mt?={false}
       />
 
       <.input
@@ -91,7 +90,7 @@
         width="w-1/2"
       />
 
-      <div :if={@totp_enabled?} class="mt-6">
+      <div :if={@totp_enabled?}>
         <.label for={f[:two_factor_code].id} class="mb-2">
           Verify with 2FA Code
         </.label>
@@ -103,7 +102,7 @@
         />
       </div>
 
-      <.button type="submit">
+      <.button type="submit" class="self-start">
         Change password
       </.button>
     </.form>
@@ -123,7 +122,6 @@
           disabled={Plausible.Users.type(@current_user) == :sso}
           x-on:click="disable2FAOpen = true; $refs.disable2FAPassword.value = ''"
           theme="danger"
-          mt?={false}
         >
           Disable 2FA
         </.button>
@@ -146,7 +144,7 @@
           for={@conn.params}
           method="post"
         >
-          <.button type="submit" mt?={false}>
+          <.button type="submit" class="mt-6">
             Enable 2FA
           </.button>
         </.form>
@@ -163,7 +161,7 @@
           <Heroicons.shield_exclamation class="h-6 w-6" />
         </:icon>
         <:buttons>
-          <.button type="submit" class="w-full sm:w-auto">
+          <.button type="submit" class="w-full sm:w-auto mt-6">
             Disable 2FA
           </.button>
         </:buttons>
@@ -176,7 +174,7 @@
           Enter your password to disable 2FA.
         </div>
 
-        <div class="mt-3">
+        <div class="mt-6">
           <.input
             type="password"
             id="disable_2fa_password"
@@ -204,7 +202,7 @@
           <.button
             id="generate-2fa-recovery-button"
             type="submit"
-            class="w-full sm:w-auto [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+            class="w-full sm:w-auto mt-6 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
           >
             <span class="label-enabled pointer-events-none">
               Generate New Codes
@@ -225,7 +223,7 @@
           Enter your password to continue.
         </div>
 
-        <div class="mt-3 w-full">
+        <div class="mt-6 w-full">
           <.input
             type="password"
             id="regenerate_2fa_password"

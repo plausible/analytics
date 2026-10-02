@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             first, then return here to build your first funnel.
           </p>
           <.button_link
-            class="mt-4"
+            class="mt-6"
             href={~p"/#{@domain}/settings/goals"}
           >
             Set up goals →

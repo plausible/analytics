@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <.button
                 id="save"
                 type="submit"
-                class="w-full"
+                class="w-full mt-6"
                 disabled={
                   has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
                     length(@step_ids) > map_size(@selections_made)
