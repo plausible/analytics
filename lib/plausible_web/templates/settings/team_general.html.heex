@@ -46,84 +46,9 @@
       session: %{"mode" => "team-management"}
     )}
   </.tile>
-  <.tile :if={@current_team_role == :owner} docs="2fa#require-all-team-members-to-enable-2fa">
-    <:title>
-      <a id="force-2fa">Force Two-Factor Authentication (2FA)</a>
-    </:title>
-    <:subtitle>
-      Increase account security by requiring all team members to enable 2FA.
-    </:subtitle>
-
-    <div
-      :if={@force_2fa_enabled? and @current_team_role == :owner}
-      id="disable-force-2fa"
-      x-data="{disableTeamForce2FAOpen: false}"
-    >
-      <.form
-        action={~p"/settings/team/force_2fa/disable"}
-        for={@conn.params}
-        method="post"
-      >
-        <.button
-          theme="danger"
-          x-on:click="disableTeamForce2FAOpen = true; $refs.disableTeamForce2FAPassword.value = ''"
-        >
-          Stop Forcing 2FA
-        </.button>
-
-        <PlausibleWeb.Components.TwoFactor.modal
-          id="disable-force-2fa-modal"
-          state_param="disableTeamForce2FAOpen"
-          form_data={@conn.params}
-          form_target={~p"/settings/team/force_2fa/disable"}
-          title="Stop enforcing 2FA?"
-        >
-          <:icon>
-            <Heroicons.shield_exclamation class="h-6 w-6" />
-          </:icon>
-          <:buttons>
-            <.button type="submit" class="w-full sm:w-auto mt-6">
-              Stop enforcing 2FA
-            </.button>
-          </:buttons>
-
-          <div class="text-sm mt-2">
-            This will remove the 2FA requirement for all team members.
-          </div>
-
-          <div class="text-sm mt-2">
-            Enter your password to stop enforcing 2FA.
-          </div>
-
-          <div class="mt-6">
-            <.input
-              type="password"
-              id="disable_team_force_2fa_password"
-              name="password"
-              value=""
-              placeholder="Enter password"
-              x-ref="disableTeamForce2FAPassword"
-            />
-          </div>
-        </PlausibleWeb.Components.TwoFactor.modal>
-      </.form>
-    </div>
-
-    <div :if={not @force_2fa_enabled? and @current_team_role == :owner} id="enable-force-2fa">
-      <.form
-        action={~p"/settings/team/force_2fa/enable"}
-        for={@conn.params}
-        method="post"
-      >
-        <.button
-          data-confirm="All team members, including you, will need to set up 2FA. Are you sure you want to enforce it?"
-          type="submit"
-        >
-          Enforce 2FA
-        </.button>
-      </.form>
-    </div>
-  </.tile>
+  <div :if={@current_team_role == :owner}>
+    {live_render(@conn, PlausibleWeb.Live.TeamForce2FASettings, id: "team-force-2fa-settings")}
+  </div>
   <.tile docs="users-roles#leaving-team">
     <:title>Leave team</:title>
     <:subtitle>Remove yourself from this team as a member.</:subtitle>
