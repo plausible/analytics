@@ -6,9 +6,16 @@ on:
     branches: [master, stable]
   merge_group:
 
+# Superseded pull request runs are cancelled. Pushes to master/stable get a
+# group per commit, so they are never cancelled or replaced while queued:
+# every landed commit gets a result and saves a fresh build cache.
+# Merge-queue refs are unique per entry already.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   CACHE_VERSION: v19
@@ -16,8 +23,11 @@ env:
 
 jobs:
   build:
-    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }})"
+    # Every matrix job needs a unique name: the "All checks pass" gate keeps only
+    # the most recently started check run per name, so duplicates hide failures.
+    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }}, ${{ matrix.mix_test_partition }})"
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
     strategy:
       matrix:
         mix_env: ["test", "ce_test"]
@@ -33,71 +43,74 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       clickhouse:
         image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
-        options: >-
-          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
-          --health-start-period 2m
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          filter: blob:none
+          persist-credentials: false
 
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
-        id: versions
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ steps.versions.outputs.elixir }}
-          otp-version: ${{ steps.versions.outputs.erlang }}
+          version-file: .tool-versions
+          version-type: strict
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # Pull requests and merge-queue entries restore the newest master snapshot.
+      # Only master pushes save (see the end of the job), so the snapshot follows
+      # master instead of freezing until mix.lock changes.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: build-cache
         with:
           path: |
             deps
             _build
             tracker/node_modules
-            priv/tracker/js
-            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
-          key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
-            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-
 
-      - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        id: changes
+      # The tracker bundle is compiled into PlausibleWeb.Tracker, so it must be
+      # built from this commit's tracker sources. Keying it on those sources
+      # replaces the old "did this diff touch tracker/**" check, which reused a
+      # stale bundle whenever tracker changes landed after the cache snapshot.
+      # CE builds skip the ee_only variants (tracker/compiler/index.js), hence
+      # the edition in the key.
+      - name: Restore tracker bundle
+        id: tracker-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          filters: |
-            tracker:
-              - 'tracker/**'
-      - name: Check if tracker and verifier are built already
-        run: |
-          if [ -f priv/tracker/js/plausible-web.js ] && [ -f priv/tracker/installation_support/verifier.js ]; then
-            echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
-          else
-            echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
-          fi
+          path: |
+            priv/tracker/js/plausible*.js*
+            priv/tracker/installation_support/*.js
+          key: tracker-bundle-v1-${{ startsWith(env.MIX_ENV, 'ce') && 'ce' || 'ee' }}-${{ hashFiles('tracker/src/**', 'tracker/installation_support/**', 'tracker/compiler/**', 'tracker/compile.js', 'tracker/package.json', 'tracker/package-lock.json') }}
       - run: npm install --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
       - run: npm run deploy --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
+      # Saved straight after the build, not at the end of the job, so the entry
+      # can never miss files that later steps remove.
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            priv/tracker/js/plausible*.js*
+            priv/tracker/installation_support/*.js
+          key: ${{ steps.tracker-cache.outputs.cache-primary-key }}
 
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
+      # The services have no health check, so the runner starts the job without
+      # waiting for them and they boot while the steps above run.
+      - name: Wait for Postgres and ClickHouse
+        run: |
+          timeout 120 bash -c 'until docker exec ${{ job.services.postgres.id }} pg_isready -h 127.0.0.1 -U postgres -q; do sleep 0.5; done'
+          timeout 120 bash -c 'until curl -sf http://127.0.0.1:8123/ping > /dev/null; do sleep 0.5; done'
       - run: mix do ecto.create, ecto.migrate
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
@@ -115,6 +128,18 @@ jobs:
         env:
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 
+      # One partition per env saves; the other five would build the same archive
+      # only to lose the race for the key.
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.mix_test_partition == 1
+        with:
+          path: |
+            deps
+            _build
+            tracker/node_modules
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: ${{ steps.build-cache.outputs.cache-primary-key }}
+
   e2e:
     name: End-to-end tests
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -129,23 +154,12 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       clickhouse:
         image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
-        options: >-
-          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
-          --health-start-period 2m
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     strategy:
       fail-fast: false
       matrix:
@@ -154,31 +168,26 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
-        id: versions
+          persist-credentials: false
 
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ steps.versions.outputs.elixir }}
-          otp-version: ${{ steps.versions.outputs.erlang }}
+          version-file: .tool-versions
+          version-type: strict
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: build-cache
         with:
           path: |
             deps
             _build
             assets/node_modules
             tracker/node_modules
-            priv/tracker/js
-            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
-          key: e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          key: e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
           restore-keys: |
-            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
-            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-
+            e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-
 
       - name: Cache E2E dependencies and Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -192,28 +201,37 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        id: changes
+      - name: Restore tracker bundle
+        id: tracker-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          filters: |
-            tracker:
-              - 'tracker/**'
-      - name: Check if tracker and verifier are built already
-        run: |
-          if [ -f priv/tracker/js/plausible-web.js ] && [ -f priv/tracker/installation_support/verifier.js ]; then
-            echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
-          else
-            echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
-          fi
+          path: |
+            priv/tracker/js/plausible*.js*
+            priv/tracker/installation_support/*.js
+          key: tracker-bundle-v1-${{ startsWith(env.MIX_ENV, 'ce') && 'ce' || 'ee' }}-${{ hashFiles('tracker/src/**', 'tracker/installation_support/**', 'tracker/compiler/**', 'tracker/compile.js', 'tracker/package.json', 'tracker/package-lock.json') }}
       - run: npm install --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
       - run: npm run deploy --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
+      # Saved straight after the build, not at the end of the job, so the entry
+      # can never miss files that later steps remove.
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.tracker-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            priv/tracker/js/plausible*.js*
+            priv/tracker/installation_support/*.js
+          key: ${{ steps.tracker-cache.outputs.cache-primary-key }}
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: npm install --prefix ./assets
       - run: mix assets.deploy
+      # The services have no health check, so the runner starts the job without
+      # waiting for them and they boot while the steps above run.
+      - name: Wait for Postgres and ClickHouse
+        run: |
+          timeout 120 bash -c 'until docker exec ${{ job.services.postgres.id }} pg_isready -h 127.0.0.1 -U postgres -q; do sleep 0.5; done'
+          timeout 120 bash -c 'until curl -sf http://127.0.0.1:8123/ping > /dev/null; do sleep 0.5; done'
       - run: mix do ecto.create, ecto.migrate
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
@@ -232,8 +250,11 @@ jobs:
         working-directory: ./e2e
         run: npx playwright install --with-deps chromium
 
+      # `list` prints each shard's results in its own log, which makes the old
+      # merge-reports job redundant. The blob keeps the traces of retried
+      # (flaky) tests for download.
       - name: Run E2E Playwright tests
-        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=list,blob
 
       - name: Upload E2E blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
@@ -241,63 +262,46 @@ jobs:
         with:
           name: e2e-blob-report-${{ matrix.shardIndex }}
           path: e2e/blob-report
-          retention-days: 1
+          retention-days: 7
 
-  merge-sharded-e2e-test-report:
-    if: ${{ !cancelled() }}
-    needs: [e2e]
-    timeout-minutes: 15
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.shardIndex == 1
         with:
-          node-version: 24.17.0
-          cache: 'npm'
-          cache-dependency-path: e2e/package-lock.json
-      - name: Install dependencies
-        run: npm --prefix ./e2e ci
-
-      - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          path: all-e2e-blob-reports
-          pattern: e2e-blob-report-*
-          merge-multiple: true
-
-      - name: Merge into list report
-        working-directory: ./e2e
-        run: npx playwright merge-reports --reporter list ../all-e2e-blob-reports
+          path: |
+            deps
+            _build
+            assets/node_modules
+            tracker/node_modules
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
   static:
     name: Static checks (format, credo, dialyzer)
     env:
       MIX_ENV: test
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
-        id: versions
+          persist-credentials: false
 
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ steps.versions.outputs.elixir }}
-          otp-version: ${{ steps.versions.outputs.erlang }}
+          version-file: .tool-versions
+          version-type: strict
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: build-cache
         with:
           path: |
             deps
             _build
             priv/plts
-          key: static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          key: static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
           restore-keys: |
-            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
-            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-
 
       - run: mix deps.get
       - run: mix compile --warnings-as-errors --all-warnings
@@ -306,3 +310,12 @@ jobs:
       - run: mix generate_countries_meta && git diff --exit-code -- assets/data/countries_meta.json
       - run: mix credo
       - run: mix dialyzer
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        with:
+          path: |
+            deps
+            _build
+            priv/plts
+          key: ${{ steps.build-cache.outputs.cache-primary-key }}

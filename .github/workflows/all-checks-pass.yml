@@ -14,3 +14,10 @@ jobs:
         uses: poseidon/wait-for-status-checks@e7e24423722c5b8e97a6dd5848827d2a412f812d # v0.7.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          # The action sleeps `interval` after fetching check runs and again
+          # before the next poll, so the default of 10 s turns green ~25 s after
+          # the last check. At 6 s the busiest hour seen (13 gates at once)
+          # makes ~530 of the token's 1,000 requests per hour.
+          # It also keeps only one check run per name, so matrix jobs must have
+          # unique names (see elixir.yml).
+          interval: 6
