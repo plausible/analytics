@@ -20,6 +20,10 @@ permissions:
 env:
   CACHE_VERSION: v19
   PERSISTENT_CACHE_DIR: cached
+  # CI never acts on npm's audit report, and it makes every npm install and
+  # npm ci wait on npmjs.org's audit endpoint (39 s per call on 4 Oct 2026).
+  npm_config_audit: "false"
+  npm_config_fund: "false"
 
 jobs:
   build:
