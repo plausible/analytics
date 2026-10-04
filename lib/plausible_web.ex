@@ -9,7 +9,7 @@ defmodule PlausibleWeb do
       use Phoenix.LiveView, global_prefixes: ~w(x-)
       use PlausibleWeb.Live.Flash
       use PlausibleWeb.VerifiedRoutes
-      use PlausibleWeb.Live.AuthContext
+      on_mount PlausibleWeb.Live.AuthContext
 
       unless :no_sentry_context in unquote(opts) do
         use PlausibleWeb.Live.SentryContext

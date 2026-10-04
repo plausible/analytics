@@ -10,12 +10,6 @@ defmodule PlausibleWeb.Live.AuthContext do
 
   alias PlausibleWeb.UserAuth
 
-  defmacro __using__(_) do
-    quote do
-      on_mount unquote(__MODULE__)
-    end
-  end
-
   def on_mount(:default, _params, session, socket) do
     socket =
       socket

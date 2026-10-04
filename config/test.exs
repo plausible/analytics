@@ -6,6 +6,10 @@ config :plausible, PlausibleWeb.Endpoint, server: false
 
 config :bcrypt_elixir, :log_rounds, 4
 
+# Initialize plugs at runtime so the router and controllers don't depend on
+# every plug at compile time. Keeps incremental compilation small.
+config :phoenix, :plug_init_mode, :runtime
+
 config :plausible, Plausible.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online()
