@@ -69,11 +69,19 @@ jobs:
             deps
             _build
             tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
           key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
           restore-keys: |
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-
+
+      # The path list matches the caches saved before this workflow, so their
+      # snapshots keep restoring (the cache version is a hash of the paths).
+      # Those snapshots also carry the committed priv/tracker/js/p.js, so put
+      # this commit's copy back.
+      - run: git checkout -- priv/tracker
 
       # The tracker bundle is compiled into PlausibleWeb.Tracker, so it must be
       # built from this commit's tracker sources. Keying it on those sources
@@ -137,6 +145,8 @@ jobs:
             deps
             _build
             tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
           key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
@@ -183,11 +193,19 @@ jobs:
             _build
             assets/node_modules
             tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
           key: e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
           restore-keys: |
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ hashFiles('mix.lock') }}-
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-
+
+      # The path list matches the caches saved before this workflow, so their
+      # snapshots keep restoring (the cache version is a hash of the paths).
+      # Those snapshots also carry the committed priv/tracker/js/p.js, so put
+      # this commit's copy back.
+      - run: git checkout -- priv/tracker
 
       - name: Cache E2E dependencies and Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -272,6 +290,8 @@ jobs:
             _build
             assets/node_modules
             tracker/node_modules
+            priv/tracker/js
+            priv/tracker/installation_support
             ${{ env.PERSISTENT_CACHE_DIR }}
           key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
