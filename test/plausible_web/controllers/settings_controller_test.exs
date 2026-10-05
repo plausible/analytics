@@ -80,7 +80,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
       html = conn |> get(~p"/settings/billing/subscription") |> html_response(200)
 
       assert html =~ "20M monthly pageviews"
-      assert html =~ "Renews on Oct 5, 2027"
+      assert html =~ "Paid until Oct 5, 2027"
+      refute html =~ "Renews on"
       refute html =~ "€"
       refute html =~ "-1 /"
       refute html =~ "/ year"

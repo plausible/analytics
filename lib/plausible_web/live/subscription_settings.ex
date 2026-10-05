@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                   <%= cond do %>
                     <% Plausible.Billing.Subscription.manual_subscription?(@subscription) && @subscription.next_bill_date -> %>
                       <p class="text-sm text-gray-600 dark:text-gray-400">
-                        Renews on {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
+                        Paid until {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
                       </p>
                     <% @subscription.next_bill_amount && @subscription.next_bill_date -> %>
                       <p class="text-sm text-gray-600 dark:text-gray-400">
