@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-64F969EE.js"></script>
+    <script src="dist/sidebar_items-4FB24F37.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -4755,11 +4755,36 @@ stateless <code class="inline">2026-07-28</code> revision of the protocol.</p></
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="PlausibleWeb.OAuth.AuthorizationRequest.html" translate="no">PlausibleWeb.OAuth.AuthorizationRequest</a>
+
+  </div>
+
+    <div class="summary-synopsis"><h3 id="responsibilities" class="section-heading">
+  <a href="#responsibilities" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Responsibilities</span>
+</h3>
+<ul><li>parse query params submitted by the application that is requesting for authorization</li><li>fetch the app's metadata document</li><li>validate that the document and params make up a valid <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-request">authorization request</a></li><li>provide utils to ensure that the valid request can be passed through the user's browser, without being tampered with</li></ul></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="PlausibleWeb.OAuth.AuthorizationResponse.html" translate="no">PlausibleWeb.OAuth.AuthorizationResponse</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Builds the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-response">authorization response</a>
+URL the user agent is redirected to, carrying either a code or an error.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="PlausibleWeb.OAuth.AuthorizeController.html" translate="no">PlausibleWeb.OAuth.AuthorizeController</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>OAuth 2.1 authorization module.</p></div>
+    <div class="summary-synopsis"><p>OAuth 2.1 authorization controller.</p></div>
 
 </div>
 <div class="summary-row">
