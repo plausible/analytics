@@ -33,23 +33,12 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       clickhouse:
         image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
-        options: >-
-          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
-          --health-start-period 2m
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -98,6 +87,10 @@ jobs:
 
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
+      - name: Wait for Postgres and ClickHouse
+        run: |
+          timeout 120 bash -c 'until docker exec ${{ job.services.postgres.id }} pg_isready -h 127.0.0.1 -U postgres -q; do sleep 0.5; done'
+          timeout 120 bash -c 'until curl -sf http://127.0.0.1:8123/ping > /dev/null; do sleep 0.5; done'
       - run: mix do ecto.create, ecto.migrate
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
@@ -129,23 +122,12 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       clickhouse:
         image: clickhouse/clickhouse-server:25.11.5.8-alpine
         ports:
           - 8123:8123
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
-        options: >-
-          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
-          --health-start-period 2m
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     strategy:
       fail-fast: false
       matrix:
@@ -214,6 +196,10 @@ jobs:
       - run: mix compile --warnings-as-errors --all-warnings
       - run: npm install --prefix ./assets
       - run: mix assets.deploy
+      - name: Wait for Postgres and ClickHouse
+        run: |
+          timeout 120 bash -c 'until docker exec ${{ job.services.postgres.id }} pg_isready -h 127.0.0.1 -U postgres -q; do sleep 0.5; done'
+          timeout 120 bash -c 'until curl -sf http://127.0.0.1:8123/ping > /dev/null; do sleep 0.5; done'
       - run: mix do ecto.create, ecto.migrate
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
