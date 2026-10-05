@@ -13,6 +13,8 @@ concurrency:
 env:
   CACHE_VERSION: v19
   PERSISTENT_CACHE_DIR: cached
+  npm_config_audit: false
+  npm_config_fund: false
 
 jobs:
   build:
