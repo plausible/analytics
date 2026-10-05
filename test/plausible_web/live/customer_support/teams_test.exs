@@ -1105,6 +1105,43 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         refute element_exists?(html, button)
       end
 
+      test "new plan can't be created while on a manual subscription", %{conn: conn, user: user} do
+        team = team_of(user)
+        plan = insert(:enterprise_plan, team: team)
+        {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv |> element("button#new-custom-plan") |> render_click()
+        html = render(lv)
+
+        assert text(html) =~
+                 "Creating a new plan is prohibited due to a manual subscription. Edit the existing enterprise plan instead."
+
+        refute element_exists?(html, ~s|form[phx-submit="save-plan"]|)
+      end
+
+      test "only the latest plan can be manually subscribed to", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        older_plan =
+          insert(:enterprise_plan,
+            team: team,
+            inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+          )
+
+        insert(:enterprise_plan, team: team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="manual-subscribe"][phx-value-id="#{older_plan.id}"]|)
+        |> render_click()
+
+        assert text(render(lv)) =~ "Only the latest enterprise plan can get a manual subscription"
+        refute Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
+      end
+
       defp open_custom_plan(conn, team) do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
         render(lv)

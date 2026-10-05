@@ -390,6 +390,83 @@ defmodule Plausible.BillingTest do
       assert Repo.reload!(plan).paddle_plan_id == "manual-subscription"
       assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
     end
+
+    test "refuses to subscribe to a plan that is not the latest one" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+
+      older_plan =
+        insert(:enterprise_plan,
+          team_id: team.id,
+          inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+        )
+
+      insert(:enterprise_plan, team_id: team.id)
+
+      assert {:error, :not_latest_plan} = Billing.create_manual_subscription(team, older_plan)
+
+      refute Repo.get_by(Subscription, team_id: team.id)
+      refute Repo.reload!(older_plan).paddle_plan_id == "manual-subscription"
+    end
+
+    test "refuses to create a second manual subscription" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id)
+
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan)
+
+      assert {:error, :already_manual} =
+               Billing.create_manual_subscription(team, Repo.reload!(plan))
+
+      assert Repo.aggregate(from(s in Subscription, where: s.team_id == ^team.id), :count) == 1
+    end
+
+    for status <- [:active, :past_due, :paused] do
+      test "refuses when the team has a #{status} Paddle subscription" do
+        team = new_user() |> subscribe_to_growth_plan(status: unquote(status)) |> team_of()
+        plan = insert(:enterprise_plan, team_id: team.id)
+
+        assert {:error, :active_subscription} = Billing.create_manual_subscription(team, plan)
+
+        refute Subscription.manual_subscription?(Repo.get_by!(Subscription, team_id: team.id))
+        refute Repo.reload!(plan).paddle_plan_id == "manual-subscription"
+      end
+    end
+
+    test "allows replacing a cancelled Paddle subscription" do
+      team =
+        new_user()
+        |> subscribe_to_growth_plan(
+          status: :deleted,
+          inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+        )
+        |> team_of()
+
+      plan = insert(:enterprise_plan, team_id: team.id)
+
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan)
+
+      assert Subscription.manual_subscription?(
+               Plausible.Teams.with_subscription(team).subscription
+             )
+    end
+
+    test "allows replacing a legacy free subscription" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+
+      insert(:subscription,
+        team: team,
+        paddle_plan_id: "free_10k",
+        inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+      )
+
+      plan = insert(:enterprise_plan, team_id: team.id)
+
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan)
+
+      assert Subscription.manual_subscription?(
+               Plausible.Teams.with_subscription(team).subscription
+             )
+    end
   end
 
   describe "subscription_updated" do

@@ -273,7 +273,15 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   end
 
   def handle_event("show-plan-form", _, socket) do
-    {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+    if Plausible.Billing.Subscription.manual_subscription?(socket.assigns.team.subscription) do
+      failure(
+        "Creating a new plan is prohibited due to a manual subscription. Edit the existing enterprise plan instead."
+      )
+
+      {:noreply, socket}
+    else
+      {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+    end
   end
 
   def handle_event("manual-subscribe", %{"id" => plan_id}, socket) do
@@ -286,6 +294,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           success("Subscription created (manual)")
           team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
           {:noreply, assign(socket, team: team, plans: get_plans(team.id))}
+
+        {:error, :already_manual} ->
+          failure("A team can only have one manual subscription")
+          {:noreply, socket}
+
+        {:error, :active_subscription} ->
+          failure("The team has an active Paddle subscription. Cancel it in Paddle first.")
+          {:noreply, socket}
+
+        {:error, :not_latest_plan} ->
+          failure("Only the latest enterprise plan can get a manual subscription")
+          {:noreply, socket}
 
         {:error, changeset} ->
           failure("Error saving subscription: #{inspect(changeset.errors)}")

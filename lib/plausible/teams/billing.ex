@@ -94,15 +94,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   def latest_enterprise_plan_with_price(team, customer_ip) do
-    enterprise_plan =
-      Repo.one!(
-        from(e in EnterprisePlan,
-          where: e.team_id == ^team.id,
-          order_by: [desc: e.inserted_at],
-          limit: 1
-        )
-      )
-
+    %EnterprisePlan{} = enterprise_plan = Plausible.Billing.latest_enterprise_plan(team)
     {enterprise_plan, Plausible.Billing.Plans.get_price_for(enterprise_plan, customer_ip)}
   end
 

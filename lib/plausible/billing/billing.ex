@@ -1,14 +1,14 @@
 defmodule Plausible.Billing do
   @moduledoc """
-  Handles Plausible billing subscription lifecycle events (creation, update, cancellation, payment success), 
-  Paddle API, team assignment, and notification logic. Provides helpers for formatting prices, 
+  Handles Plausible billing subscription lifecycle events (creation, update, cancellation, payment success),
+  Paddle API, team assignment, and notification logic. Provides helpers for formatting prices,
   managing subscription status, and updating team-related billing state.
   """
   use Plausible
   use Plausible.Repo
 
   alias Plausible.Auth
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Subscriptions}
   alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
@@ -45,8 +45,31 @@ defmodule Plausible.Billing do
   `manual-subscription` ID, which is also what the subscription gets, so the two
   stay linked. `paddle_subscription_id` is left empty. See
   `Subscription.manual_changeset/2` for the remaining values.
+
+  Only the team's latest enterprise plan can be manually subscribed to, and a team can
+  have only one manual subscription. Teams with a resumable (active, past due or paused)
+  Paddle subscription must have it cancelled first. Legacy free subscriptions don't block.
   """
-  def create_manual_subscription(team, enterprise_plan) do
+  def create_manual_subscription(team, %{id: plan_id} = enterprise_plan) do
+    subscription =
+      Repo.one(from(s in Teams.last_subscription_query(), where: s.team_id == ^team.id))
+
+    already_manual? = Subscription.manual_subscription?(subscription)
+
+    already_subscriber? =
+      Subscriptions.resumable?(subscription) and subscription.paddle_plan_id != "free_10k"
+
+    latest_plan? = match?(%{id: ^plan_id}, latest_enterprise_plan(team))
+
+    cond do
+      already_manual? -> {:error, :already_manual}
+      already_subscriber? -> {:error, :active_subscription}
+      not latest_plan? -> {:error, :not_latest_plan}
+      true -> do_create_manual_subscription(team, enterprise_plan)
+    end
+  end
+
+  defp do_create_manual_subscription(team, enterprise_plan) do
     plan_id = Subscription.manual_plan_id()
 
     Repo.transaction(fn ->
@@ -59,6 +82,19 @@ defmodule Plausible.Billing do
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
+  end
+
+  @doc """
+  Returns the team's most recently created enterprise plan, or `nil` if it has none.
+  """
+  def latest_enterprise_plan(team) do
+    Repo.one(
+      from(ep in Plausible.Billing.EnterprisePlan,
+        where: ep.team_id == ^team.id,
+        order_by: [desc: ep.inserted_at, desc: ep.id],
+        limit: 1
+      )
+    )
   end
 
   def change_plan_preview(subscription, new_plan_id) do
