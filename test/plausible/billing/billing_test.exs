@@ -382,7 +382,7 @@ defmodule Plausible.BillingTest do
       assert is_nil(subscription.paddle_subscription_id)
       assert is_nil(subscription.update_url)
       assert is_nil(subscription.cancel_url)
-      assert subscription.currency_code == "EUR"
+      assert subscription.currency_code == "XXX"
       assert subscription.next_bill_amount == "-1"
       assert subscription.last_bill_date == today
       assert subscription.next_bill_date == Date.shift(today, year: 1)

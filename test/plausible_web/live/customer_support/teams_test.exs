@@ -1095,7 +1095,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
         assert subscription.paddle_plan_id == plan.paddle_plan_id
-        assert subscription.currency_code == "EUR"
+        assert subscription.currency_code == "XXX"
         assert subscription.next_bill_amount == "-1"
         assert subscription.last_bill_date == Date.utc_today()
         assert subscription.next_bill_date == Date.shift(Date.utc_today(), year: 1)

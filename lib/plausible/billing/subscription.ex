@@ -71,7 +71,7 @@ defmodule Plausible.Billing.Subscription do
     %__MODULE__{
       paddle_plan_id: @manual_plan_id,
       status: Subscription.Status.active(),
-      currency_code: "EUR",
+      currency_code: "XXX",
       next_bill_amount: "-1",
       last_bill_date: today,
       next_bill_date: Date.shift(today, year: 1)
