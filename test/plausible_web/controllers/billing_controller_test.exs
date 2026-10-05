@@ -280,7 +280,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     @tag :ee_only
     test "renders contact note", %{conn: conn, team: team} do
-      plan = insert(:enterprise_plan, team: team)
+      plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
       {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
 
       doc =

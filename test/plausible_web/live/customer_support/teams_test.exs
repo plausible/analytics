@@ -1078,6 +1078,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           insert(:enterprise_plan,
             team: team,
             paddle_plan_id: "plan-original",
+            billing_interval: :yearly,
             monthly_pageview_limit: 1_000_000
           )
 
@@ -1113,7 +1114,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
       test "new plan can't be created while on a manual subscription", %{conn: conn, user: user} do
         team = team_of(user)
-        plan = insert(:enterprise_plan, team: team)
+        plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
         {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
 
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))

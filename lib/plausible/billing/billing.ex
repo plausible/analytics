@@ -46,9 +46,12 @@ defmodule Plausible.Billing do
   stay linked. `paddle_subscription_id` is left empty. See
   `Subscription.manual_changeset/2` for the remaining values.
 
-  Only the team's latest enterprise plan can be manually subscribed to, and a team can
-  have only one manual subscription. Teams with a resumable (active, past due or paused)
-  Paddle subscription must have it cancelled first. Legacy free subscriptions don't block.
+  ## Limitations for creating a manual subscription:
+
+  * Only the team's latest enterprise plan can be manually subscribed to
+  * A team can only have one manual subscription
+  * Teams with a resumable (active, past due or paused) Paddle subscription must have it cancelled first.
+  * The enterprise plan must have yearly billing
   """
   def create_manual_subscription(team, %{id: plan_id} = enterprise_plan) do
     subscription =
@@ -65,6 +68,7 @@ defmodule Plausible.Billing do
       already_manual? -> {:error, :already_manual}
       already_subscriber? -> {:error, :active_subscription}
       not latest_plan? -> {:error, :not_latest_plan}
+      enterprise_plan.billing_interval != :yearly -> {:error, :not_yearly}
       true -> do_create_manual_subscription(team, enterprise_plan)
     end
   end

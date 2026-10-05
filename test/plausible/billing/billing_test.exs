@@ -400,7 +400,13 @@ defmodule Plausible.BillingTest do
 
     test "creates an active subscription outside of Paddle and relabels the plan" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
-      plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123456")
+
+      plan =
+        insert(:enterprise_plan,
+          team_id: team.id,
+          paddle_plan_id: "123456",
+          billing_interval: :yearly
+        )
 
       assert {:ok, _} = Billing.create_manual_subscription(team, plan)
 
@@ -439,9 +445,19 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(older_plan).paddle_plan_id == "manual-subscription"
     end
 
+    test "refuses to subscribe to a monthly plan" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :monthly)
+
+      assert {:error, :not_yearly} = Billing.create_manual_subscription(team, plan)
+
+      refute Repo.get_by(Subscription, team_id: team.id)
+      refute Repo.reload!(plan).paddle_plan_id == "manual-subscription"
+    end
+
     test "refuses to create a second manual subscription" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
-      plan = insert(:enterprise_plan, team_id: team.id)
+      plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :yearly)
 
       assert {:ok, _} = Billing.create_manual_subscription(team, plan)
 
@@ -472,7 +488,7 @@ defmodule Plausible.BillingTest do
         )
         |> team_of()
 
-      plan = insert(:enterprise_plan, team_id: team.id)
+      plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :yearly)
 
       assert {:ok, _} = Billing.create_manual_subscription(team, plan)
 
@@ -490,7 +506,7 @@ defmodule Plausible.BillingTest do
         inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
       )
 
-      plan = insert(:enterprise_plan, team_id: team.id)
+      plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :yearly)
 
       assert {:ok, _} = Billing.create_manual_subscription(team, plan)
 

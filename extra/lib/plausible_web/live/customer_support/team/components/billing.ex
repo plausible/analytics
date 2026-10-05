@@ -322,6 +322,13 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           failure("Only the latest enterprise plan can get a manual subscription")
           {:noreply, socket}
 
+        {:error, :not_yearly} ->
+          failure(
+            "Manual subscriptions are only possible for yearly plans. Change the plan's billing interval to yearly first."
+          )
+
+          {:noreply, socket}
+
         {:error, changeset} ->
           failure("Error saving subscription: #{inspect(changeset.errors)}")
           {:noreply, socket}
