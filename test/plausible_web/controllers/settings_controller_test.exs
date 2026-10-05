@@ -64,6 +64,29 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    test "shows manual subscription without currency and price", %{conn: conn, user: user} do
+      configure_enterprise_plan(user,
+        paddle_plan_id: "manual-subscription",
+        subscription: [
+          paddle_subscription_id: nil,
+          update_url: nil,
+          cancel_url: nil,
+          currency_code: "EUR",
+          next_bill_amount: "-1",
+          next_bill_date: ~D[2027-10-05]
+        ]
+      )
+
+      html = conn |> get(~p"/settings/billing/subscription") |> html_response(200)
+
+      assert html =~ "20M monthly pageviews"
+      assert html =~ "Renews on Oct 5, 2027"
+      refute html =~ "€"
+      refute html =~ "-1 /"
+      refute html =~ "/ year"
+    end
+
+    @tag :ee_only
     test "shows current enterprise plan subscription when user has a new one to upgrade to", %{
       conn: conn,
       user: user

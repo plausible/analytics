@@ -52,14 +52,6 @@ defmodule Plausible.Billing.Subscription do
 
   @manual_plan_id "manual-subscription"
 
-  @manual_required_fields [
-    :paddle_plan_id,
-    :next_bill_amount,
-    :next_bill_date,
-    :last_bill_date,
-    :currency_code
-  ]
-
   @doc """
   The plan ID marking a custom plan as manually subscribed (outside of Paddle).
   """
@@ -68,11 +60,23 @@ defmodule Plausible.Billing.Subscription do
   def manual_subscription?(%__MODULE__{paddle_plan_id: @manual_plan_id}), do: true
   def manual_subscription?(_), do: false
 
-  def manual_changeset(team, attrs \\ %{}) do
-    %__MODULE__{status: Subscription.Status.active()}
-    |> cast(attrs, @manual_required_fields)
-    |> validate_required(@manual_required_fields)
-    |> validate_inclusion(:paddle_plan_id, [@manual_plan_id])
+  @doc """
+  Builds a subscription created manually from the CRM, outside of Paddle.
+
+  There is no known price, so `next_bill_amount` is a `-1` placeholder and
+  the UI doesn't present it. The subscription is considered paid today and
+  renews in a year.
+  """
+  def manual_changeset(team, today \\ Date.utc_today()) do
+    %__MODULE__{
+      paddle_plan_id: @manual_plan_id,
+      status: Subscription.Status.active(),
+      currency_code: "EUR",
+      next_bill_amount: "-1",
+      last_bill_date: today,
+      next_bill_date: Date.shift(today, year: 1)
+    }
+    |> change()
     |> put_assoc(:team, team)
   end
 

@@ -109,12 +109,18 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     Up to {PlausibleWeb.AuthView.subscription_quota(@subscription)} monthly pageviews
                   </p>
-                  <%= if @subscription.next_bill_amount && @subscription.next_bill_date do %>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                      {PlausibleWeb.BillingView.present_currency(@subscription.currency_code)}{@subscription.next_bill_amount} / {present_subscription_interval(
-                        @subscription
-                      )} • Renews on {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
-                    </p>
+                  <%= cond do %>
+                    <% Plausible.Billing.Subscription.manual_subscription?(@subscription) && @subscription.next_bill_date -> %>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Renews on {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
+                      </p>
+                    <% @subscription.next_bill_amount && @subscription.next_bill_date -> %>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {PlausibleWeb.BillingView.present_currency(@subscription.currency_code)}{@subscription.next_bill_amount} / {present_subscription_interval(
+                          @subscription
+                        )} • Renews on {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
+                      </p>
+                    <% true -> %>
                   <% end %>
                 </div>
                 <div class="flex gap-2">

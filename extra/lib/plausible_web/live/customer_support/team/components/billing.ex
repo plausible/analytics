@@ -36,8 +36,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
        plan_form: plan_form,
        show_plan_form?: false,
        editing_plan: nil,
-       manual_plan: nil,
-       manual_form: nil,
        cost_estimate: 0
      )}
   end
@@ -123,7 +121,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
                 id={"manual-subscribe-#{plan.paddle_plan_id}"}
                 theme="secondary"
                 size="sm"
-                phx-click="show-manual-subscribe-form"
+                data-confirm={manual_subscribe_confirmation()}
+                phx-click="manual-subscribe"
                 phx-value-id={plan.id}
                 phx-target={@myself}
               >
@@ -175,42 +174,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
           </:tbody>
         </.table>
-
-        <.form
-          :let={f}
-          :if={@manual_plan}
-          for={@manual_form}
-          as={:manual}
-          id="manual-subscribe"
-          phx-submit="save-manual-subscribe"
-          phx-target={@myself}
-        >
-          <h1 class="mt-8 mb-2 text-xs font-semibold">
-            Manually subscribe to this plan
-          </h1>
-
-          <.notice title="Manual Subscribe">
-            <p>
-              Manually subscribing a customer to this enterprise plan creates a subscription outside of Paddle.
-              Paddle will have no information about it. Use it only when the customer pays by bank transfer against an invoice.
-            </p>
-            <p>
-              Once the subscription is created, the Enterprise Plan's <code>Paddle Plan ID</code>
-              will be replaced with <code>manual-subscription</code>.
-            </p>
-          </.notice>
-          <.input field={f[:currency_code]} label="Currency" autocomplete="off" />
-          <.input field={f[:next_bill_amount]} label="Next bill amount" autocomplete="off" />
-          <.input type="date" field={f[:last_bill_date]} label="Paid on" />
-          <.input type="date" field={f[:next_bill_date]} label="Next bill date" />
-
-          <div class="mt-8 flex align-center gap-x-4">
-            <.button theme="secondary" phx-click="hide-manual-subscribe-form" phx-target={@myself}>
-              Cancel
-            </.button>
-            <.button type="submit">Subscribe</.button>
-          </div>
-        </.form>
 
         <.form
           :let={f}
@@ -313,52 +276,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
   end
 
-  def handle_event("show-manual-subscribe-form", %{"id" => plan_id}, socket) do
-    plan = Enum.find(socket.assigns.plans, &(&1.id == String.to_integer(plan_id)))
+  def handle_event("manual-subscribe", %{"id" => plan_id}, socket) do
+    %{team: team, plans: plans} = socket.assigns
+    plan = Enum.find(plans, &(&1.id == String.to_integer(plan_id)))
 
-    if plan do
-      today = Date.utc_today()
-      interval_months = if plan.billing_interval == :yearly, do: 12, else: 1
+    if plan && not current_plan?(team, plan.paddle_plan_id) do
+      case Plausible.Billing.create_manual_subscription(team, plan) do
+        {:ok, _team} ->
+          success("Subscription created (manual)")
+          team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
+          {:noreply, assign(socket, team: team, plans: get_plans(team.id))}
 
-      form =
-        to_form(
-          %{
-            "currency_code" => "EUR",
-            "last_bill_date" => Date.to_iso8601(today),
-            "next_bill_date" => Date.to_iso8601(Date.shift(today, month: interval_months))
-          },
-          as: :manual
-        )
-
-      {:noreply, assign(socket, manual_plan: plan, manual_form: form)}
+        {:error, changeset} ->
+          failure("Error saving subscription: #{inspect(changeset.errors)}")
+          {:noreply, socket}
+      end
     else
       {:noreply, socket}
-    end
-  end
-
-  def handle_event("hide-manual-subscribe-form", _, socket) do
-    {:noreply, assign(socket, manual_plan: nil, manual_form: nil)}
-  end
-
-  def handle_event("save-manual-subscribe", %{"manual" => params}, socket) do
-    %{team: team, manual_plan: plan} = socket.assigns
-
-    case Plausible.Billing.create_manual_subscription(team, plan, sanitize_params(params)) do
-      {:ok, _team} ->
-        success("Subscription created (manual)")
-        team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
-
-        {:noreply,
-         assign(socket,
-           team: team,
-           plans: get_plans(team.id),
-           manual_plan: nil,
-           manual_form: nil
-         )}
-
-      {:error, changeset} ->
-        failure("Error saving subscription: #{inspect(changeset.errors)}")
-        {:noreply, socket}
     end
   end
 
@@ -562,6 +496,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
       value={preview_number(@for.value)}
       class="bg-transparent border-0 p-0 m-0 text-sm w-full"
     />
+    """
+  end
+
+  defp manual_subscribe_confirmation() do
+    """
+    Manually subscribe the customer to this enterprise plan?
+
+    This creates a subscription outside of Paddle, which will have no information about it. \
+    Use it only when the customer pays by bank transfer against an invoice.
+
+    The plan's Paddle Plan ID will be replaced with "manual-subscription". \
+    The subscription will be valid for one year starting today.
     """
   end
 

@@ -43,18 +43,18 @@ defmodule Plausible.Billing do
 
   The enterprise plan's `paddle_plan_id` is rewritten to a conventional
   `manual-subscription` ID, which is also what the subscription gets, so the two
-  stay linked. `paddle_subscription_id` is left empty.
+  stay linked. `paddle_subscription_id` is left empty. See
+  `Subscription.manual_changeset/2` for the remaining values.
   """
-  def create_manual_subscription(team, enterprise_plan, attrs) do
+  def create_manual_subscription(team, enterprise_plan) do
     plan_id = Subscription.manual_plan_id()
-    attrs = Map.put(attrs, "paddle_plan_id", plan_id)
 
     Repo.transaction(fn ->
       enterprise_plan
       |> Ecto.Changeset.change(paddle_plan_id: plan_id)
       |> Repo.update!()
 
-      case Repo.insert(Subscription.manual_changeset(team, attrs)) do
+      case Repo.insert(Subscription.manual_changeset(team)) do
         {:ok, subscription} -> after_subscription_update(subscription)
         {:error, changeset} -> Repo.rollback(changeset)
       end

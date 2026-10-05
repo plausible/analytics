@@ -367,37 +367,28 @@ defmodule Plausible.BillingTest do
   describe "create_manual_subscription" do
     @describetag :ee_only
 
-    test "creates an active subscription for a manual subscription" do
+    test "creates an active subscription outside of Paddle and relabels the plan" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
       plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123456")
 
-      attrs = %{
-        "currency_code" => "EUR",
-        "next_bill_amount" => "1000",
-        "last_bill_date" => "2026-09-30",
-        "next_bill_date" => "2027-09-30"
-      }
-
-      assert {:ok, _} = Billing.create_manual_subscription(team, plan, attrs)
+      assert {:ok, _} = Billing.create_manual_subscription(team, plan)
 
       subscription = Repo.get_by!(Subscription, team_id: team.id)
+      today = Date.utc_today()
+
       assert Subscription.manual_subscription?(subscription)
-      assert is_nil(subscription.paddle_subscription_id)
       assert subscription.status == :active
       assert subscription.paddle_plan_id == "manual-subscription"
-      assert Repo.reload!(plan).paddle_plan_id == subscription.paddle_plan_id
-      assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
+      assert is_nil(subscription.paddle_subscription_id)
       assert is_nil(subscription.update_url)
-    end
+      assert is_nil(subscription.cancel_url)
+      assert subscription.currency_code == "EUR"
+      assert subscription.next_bill_amount == "-1"
+      assert subscription.last_bill_date == today
+      assert subscription.next_bill_date == Date.shift(today, year: 1)
 
-    test "returns error changeset when details are missing" do
-      {:ok, team} = Plausible.Teams.get_or_create(new_user())
-      plan = insert(:enterprise_plan, team_id: team.id)
-      original_id = plan.paddle_plan_id
-
-      assert {:error, %Ecto.Changeset{}} = Billing.create_manual_subscription(team, plan, %{})
-      refute Repo.get_by(Subscription, team_id: team.id)
-      assert Repo.reload!(plan).paddle_plan_id == original_id
+      assert Repo.reload!(plan).paddle_plan_id == "manual-subscription"
+      assert Plausible.Billing.Plans.get_subscription_plan(subscription).id == plan.id
     end
   end
 
