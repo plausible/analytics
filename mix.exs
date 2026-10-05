@@ -134,7 +134,7 @@ defmodule Plausible.MixProject do
       {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, git: "https://github.com/plausible/prima.git", branch: "callacks"},
+      {:prima, git: "https://github.com/plausible/prima.git", branch: "combobox-improvements"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.22.2"},

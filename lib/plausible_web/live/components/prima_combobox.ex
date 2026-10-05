@@ -7,20 +7,23 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   def mount(socket) do
     socket =
       socket
-      |> stream_configure(:suggestions, dom_id: &"suggestions-#{hash(&1)}")
       |> stream(:suggestions, socket.assigns[:options] || [])
 
     {:ok, socket}
   end
 
   def update(assigns, socket) do
+    selected =
+      case assigns[:selected] do
+        {value, display_name} -> %{value: value, display: display_name}
+        _ -> socket.assigns[:selected]
+      end
+
     socket =
       socket
       |> assign(assigns)
-      |> assign(
-        :enable_callbacks,
-        !!(assigns[:on_selection_added] || assigns[:on_selection_removed])
-      )
+      |> assign(:selected, selected)
+      |> assign_new(:suggestions, fn -> [] end)
 
     {:ok, socket}
   end
@@ -33,15 +36,14 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   attr(:dropdown_class, :string, default: "")
   attr(:submit_name, :string, required: true)
   attr(:options, :list, default: [])
-  attr(:callbacks, :boolean, default: false)
 
   def render(assigns) do
     ~H"""
     <div id={"combobox-container-#{@id}"}>
-      <.combobox id={@id} class={@class} callbacks={@enable_callbacks}>
+      <.combobox name={@submit_name} id={@id} class={@class} selections={@selected} :let={input_value}>
         <div class="relative pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:outline-none focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25 focus-within:border-indigo-500">
           <.combobox_input
-            name={@submit_name}
+            value={input_value}
             class={
               Enum.join(
                 [
@@ -51,7 +53,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
                 " "
               )
             }
-            phx-change="async_combobox_search"
+            on_search="async_combobox_search"
             phx-target={@myself}
             placeholder={@placeholder}
           />
@@ -69,7 +71,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
               ])
             }
           >
-            <%= for {idx, {value, display_name, opts}} <- @streams.suggestions do %>
+            <%= for {idx, {value, display_name, opts}} <- @suggestions do %>
               <hr :if={opts[:separator?]} class="mt-2" />
 
               <div
@@ -113,36 +115,20 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
     end
   end
 
-  def handle_event("async_combobox_search", params, socket) do
-    input = get_in(params, params["_target"])
+  def handle_event("async_combobox_search", %{"query" => query}, socket) do
     options = socket.assigns[:options] || []
 
     suggestions =
       if suggest_fun = socket.assigns[:suggest_fun] do
-        suggest_fun.(input, options)
+        suggest_fun.(query, options)
       else
         Enum.filter(options, fn option ->
-          String.contains?(String.downcase(option), String.downcase(input))
+          String.contains?(String.downcase(option), String.downcase(query))
         end)
       end
+      |> Enum.map(&{hash(&1), &1})
 
-    {:noreply, stream(socket, :suggestions, suggestions, reset: true)}
-  end
-
-  def handle_event("add_selection", %{"id" => id, "value" => value}, socket) do
-    if cb = socket.assigns[:on_selection_added] do
-      cb.(value, id)
-    end
-
-    {:noreply, socket}
-  end
-
-  def handle_event("remove_selection", %{"id" => id, "value" => value}, socket) do
-    if cb = socket.assigns[:on_selection_removed] do
-      cb.(value, id)
-    end
-
-    {:noreply, socket}
+    {:noreply, assign(socket, :suggestions, suggestions)}
   end
 
   defp hash(value) do
