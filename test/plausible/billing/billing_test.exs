@@ -364,6 +364,37 @@ defmodule Plausible.BillingTest do
     end
   end
 
+  describe "latest_enterprise_plan" do
+    test "returns the most recently created enterprise plan of the team" do
+      now = NaiveDateTime.utc_now()
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+
+      insert(:enterprise_plan, team: team, paddle_plan_id: "123", inserted_at: now)
+
+      insert(:enterprise_plan,
+        team: team,
+        paddle_plan_id: "456",
+        inserted_at: NaiveDateTime.shift(now, hour: -10)
+      )
+
+      insert(:enterprise_plan,
+        team: team,
+        paddle_plan_id: "789",
+        inserted_at: NaiveDateTime.shift(now, minute: -2)
+      )
+
+      assert Billing.latest_enterprise_plan(team).paddle_plan_id == "123"
+    end
+
+    test "returns nil when the team has no enterprise plans" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+      {:ok, other_team} = Plausible.Teams.get_or_create(new_user())
+      insert(:enterprise_plan, team: other_team)
+
+      refute Billing.latest_enterprise_plan(team)
+    end
+  end
+
   describe "create_manual_subscription" do
     @describetag :ee_only
 

@@ -93,11 +93,6 @@ defmodule Plausible.Teams.Billing do
     |> Repo.exists?()
   end
 
-  def latest_enterprise_plan_with_price(team, customer_ip) do
-    %EnterprisePlan{} = enterprise_plan = Plausible.Billing.latest_enterprise_plan(team)
-    {enterprise_plan, Plausible.Billing.Plans.get_price_for(enterprise_plan, customer_ip)}
-  end
-
   def has_active_subscription?(nil), do: false
 
   def has_active_subscription?(team) do
