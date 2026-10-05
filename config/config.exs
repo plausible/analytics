@@ -88,7 +88,7 @@ config :sentry,
 config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
 config :peep, :bucket_calculator, Plausible.PromEx.Buckets
 
-config :plausible, Plausible.Auth.ApiKey,
+config :plausible, PlausibleWeb.Api.RateLimit,
   legacy_per_user_hourly_request_limit: 600,
   burst_request_limit: 60,
   burst_period_seconds: 10
