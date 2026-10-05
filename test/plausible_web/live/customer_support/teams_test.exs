@@ -1103,6 +1103,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert html =~ "MANUAL SUBSCRIPTION"
         refute element_exists?(html, button)
+
+        assert text_of_element(html, ~s|[data-test-id="last-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.last_bill_date)
+
+        assert text_of_element(html, ~s|[data-test-id="next-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.next_bill_date)
       end
 
       test "new plan can't be created while on a manual subscription", %{conn: conn, user: user} do

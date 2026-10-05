@@ -70,7 +70,19 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
       </div>
 
       <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
-        <h1 class="text-xs font-semibold">Usage</h1>
+        <.title :if={@team.subscription} class="mb-2">Subscription</.title>
+        <.table :if={@team.subscription} rows={[@team.subscription]}>
+          <:thead>
+            <.th>Last bill date</.th>
+            <.th>Next bill date</.th>
+          </:thead>
+          <:tbody :let={subscription}>
+            <.td data-test-id="last-bill-date">{format_bill_date(subscription.last_bill_date)}</.td>
+            <.td data-test-id="next-bill-date">{format_bill_date(subscription.next_bill_date)}</.td>
+          </:tbody>
+        </.table>
+
+        <.title class="mt-8 mb-2">Usage</.title>
         <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
           <:thead>
             <.th invisible>Cycle</.th>
@@ -90,16 +102,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           </:tbody>
         </.table>
 
-        <p :if={@usage.features != []} class="mt-6 mb-4">
-          <h1 class="text-xs font-semibold">Features Used</h1>
+        <%= if @usage.features != [] do %>
+          <.title class="mt-8 mb-2">Features Used</.title>
           <span class="text-sm">
             {@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
           </span>
-        </p>
+        <% end %>
 
-        <h1 :if={!@show_plan_form? and @plans != []} class="mt-8 text-xs font-semibold">
-          Custom Plans
-        </h1>
+        <.title :if={!@show_plan_form? and @plans != []} class="mt-8 mb-2">Custom Plans</.title>
         <.table :if={!@show_plan_form?} rows={@plans}>
           <:thead>
             <.th invisible>Interval</.th>
@@ -456,6 +466,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
         order_by: [desc: :id]
     )
   end
+
+  defp format_bill_date(nil), do: "--"
+  defp format_bill_date(date), do: PlausibleWeb.TextHelpers.format_date(date)
 
   defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
     "unlimited"
