@@ -145,11 +145,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     suggest_fun={
                       fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
                     }
-                    on_selection_added={
-                      fn value, by_id ->
-                        send(self(), {:selection_made, %{submit_value: value, by: by_id}})
-                      end
-                    }
                   />
                 </div>
 
@@ -289,24 +284,26 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
   def handle_event("validate", %{"funnel" => params}, socket) do
     funnel_type = socket.assigns.funnel_type
 
-    steps_from_assigns =
-      socket.assigns.step_ids
-      |> Enum.reduce([], fn step_id, acc ->
-        goal = Map.get(socket.assigns.steps, "step-#{step_id}")
-        if goal, do: [%{"goal_id" => goal.id} | acc], else: acc
-      end)
-      |> Enum.reverse()
+    steps_with_idx =
+      params
+      |> Map.get("steps", [])
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(fn {idx, payload} -> {idx, JSON.decode!(payload["step_data"])} end)
 
     changeset =
       socket.assigns.site
       |> Funnels.create_changeset(
         params["name"],
-        steps_from_assigns,
+        Enum.map(steps_with_idx, &elem(&1, 1)),
         funnel_type: funnel_type
       )
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    steps = store_steps(socket.assigns, steps_with_idx)
+
+    send(self(), :evaluate_funnel)
+
+    {:noreply, assign(socket, form: to_form(changeset), steps: steps)}
   end
 
   def handle_event(
@@ -356,14 +353,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
   def handle_event("cancel-add-funnel", _value, socket) do
     send(socket.parent_pid, :cancel_setup_funnel)
     {:noreply, socket}
-  end
-
-  def handle_info({:selection_made, %{submit_value: step_data, by: id}}, socket) do
-    steps = store_step(socket.assigns, id, step_data)
-
-    send(self(), :evaluate_funnel)
-
-    {:noreply, assign(socket, steps: steps)}
   end
 
   def handle_info(:evaluate_funnel, socket) do
@@ -460,12 +449,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     not f.source.valid?
   end
 
-  defp store_step(assigns, id, step_data) do
-    Map.put(assigns.steps, id, to_goal(step_data))
+  defp store_steps(assigns, steps_with_idx) do
+    Enum.reduce(steps_with_idx, assigns.steps, fn {idx, step_data}, steps ->
+      Map.put(steps, "step-#{idx}", to_goal(step_data))
+    end)
   end
 
-  defp drop_step(steps, step_idx) do
-    step_input_id = "step-#{step_idx}"
+  defp drop_step(steps, idx) do
+    step_input_id = "step-#{idx}"
     Map.delete(steps, step_input_id)
   end
 
@@ -477,9 +468,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
 
   defp selected_option(_, _, _), do: nil
 
-  defp to_goal(step_data) when is_binary(step_data) and step_data != "" do
+  defp to_goal(%{"goal_id" => goal_id} = step_data) do
     step_data
-    |> JSON.decode!()
+    |> Map.delete("goal_id")
+    |> to_goal()
+    |> Map.put(:id, goal_id)
+  end
+
+  defp to_goal(step_data) do
+    step_data
     |> Funnel.DynamicStep.changeset()
     |> Ecto.Changeset.apply_changes()
     |> Funnel.DynamicStep.as_goal()
@@ -489,6 +486,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     data = %{
       event_name: goal.event_name,
       page_path: goal.page_path,
+      display_name: goal.display_name,
       scroll_threshold: goal.scroll_threshold,
       currency: goal.currency
     }
