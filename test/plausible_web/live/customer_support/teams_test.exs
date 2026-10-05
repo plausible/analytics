@@ -836,7 +836,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_change(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "updated-plan-456",
+            "paddle_plan_id" => "original-plan",
             "billing_interval" => "yearly",
             "monthly_pageview_limit" => "15000000",
             "site_limit" => "500",
@@ -862,7 +862,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Plan updated"
 
         updated_plan = Plausible.Repo.reload!(plan)
-        assert updated_plan.paddle_plan_id == "updated-plan-456"
+        assert updated_plan.paddle_plan_id == "original-plan"
         assert updated_plan.billing_interval == :yearly
         assert updated_plan.monthly_pageview_limit == 15_000_000
         assert updated_plan.site_limit == 500
@@ -876,7 +876,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         refute element_exists?(html, ~s|form#save-plan|)
 
-        assert text(html) =~ "updated-plan-456"
+        assert text(html) =~ "original-plan"
         assert text(html) =~ "yearly"
         assert text(html) =~ "15,000,000"
         assert text(html) =~ "500"
@@ -908,9 +908,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_submit(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "",
+            "paddle_plan_id" => "valid-plan",
             "billing_interval" => "monthly",
-            "monthly_pageview_limit" => "1000000",
+            "monthly_pageview_limit" => "",
             "site_limit" => "100",
             "team_member_limit" => "10",
             "hourly_api_request_limit" => "1000"
@@ -923,7 +923,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert element_exists?(html, ~s|form#save-plan|)
 
         unchanged_plan = Plausible.Repo.reload!(plan)
-        assert unchanged_plan.paddle_plan_id == "valid-plan"
+        assert unchanged_plan.monthly_pageview_limit == 1_000_000
       end
 
       test "cancel edit returns to plan list", %{conn: conn, user: user} do

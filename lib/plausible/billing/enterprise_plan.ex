@@ -32,9 +32,24 @@ defmodule Plausible.Billing.EnterprisePlan do
 
   @max round(:math.pow(2, 31))
 
-  def changeset(model, attrs \\ %{}) do
+  def create_changeset(model, attrs \\ %{}) do
     model
     |> cast(attrs, @required_fields)
+    |> validate()
+  end
+
+  @doc """
+  Updates an existing plan. `paddle_plan_id` is never changed, because
+  subscriptions are linked to the plan by it.
+  """
+  def update_changeset(plan, attrs \\ %{}) do
+    plan
+    |> cast(attrs, @required_fields -- [:paddle_plan_id])
+    |> validate()
+  end
+
+  defp validate(changeset) do
+    changeset
     |> validate_number(:monthly_pageview_limit, less_than: @max)
     |> validate_number(:site_limit, less_than: @max)
     |> validate_number(:hourly_api_request_limit, less_than: @max)

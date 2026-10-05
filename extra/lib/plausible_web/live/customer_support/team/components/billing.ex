@@ -24,7 +24,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     plan = Plans.get_subscription_plan(team.subscription)
 
     attrs = get_plan_attrs(plan)
-    plan_form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, attrs))
+    plan_form = to_form(EnterprisePlan.create_changeset(%EnterprisePlan{}, attrs))
 
     {:ok,
      assign(socket,
@@ -184,7 +184,12 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           phx-target={@myself}
           phx-change="estimate-cost"
         >
-          <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
+          <.input
+            field={f[:paddle_plan_id]}
+            label="Paddle Plan ID"
+            autocomplete="off"
+            readonly={not is_nil(@editing_plan)}
+          />
           <.input
             type="select"
             options={["monthly", "yearly"]}
@@ -321,7 +326,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
 
     if plan do
-      plan_form = to_form(EnterprisePlan.changeset(plan, %{}))
+      plan_form = to_form(EnterprisePlan.update_changeset(plan))
       {:noreply, assign(socket, show_plan_form?: true, editing_plan: plan, plan_form: plan_form)}
     else
       {:noreply, socket}
@@ -345,7 +350,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
     params = update_features_to_list(params)
 
-    form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, params))
+    form = to_form(EnterprisePlan.create_changeset(%EnterprisePlan{}, params))
 
     params = sanitize_params(params)
 
@@ -365,7 +370,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
-    changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
+
+    changeset =
+      EnterprisePlan.create_changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
     case Plausible.Repo.insert(changeset) do
       {:ok, _plan} ->
@@ -388,7 +395,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
   def handle_event("update-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
-    changeset = EnterprisePlan.changeset(socket.assigns.editing_plan, params)
+    changeset = EnterprisePlan.update_changeset(socket.assigns.editing_plan, params)
 
     case Plausible.Repo.update(changeset) do
       {:ok, _plan} ->
