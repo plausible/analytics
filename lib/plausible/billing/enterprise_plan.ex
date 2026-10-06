@@ -44,7 +44,7 @@ defmodule Plausible.Billing.EnterprisePlan do
   """
   def update_changeset(plan, attrs \\ %{}) do
     plan
-    |> cast(attrs, @required_fields -- [:paddle_plan_id])
+    |> cast(attrs, List.delete(@required_fields, :paddle_plan_id))
     |> validate()
   end
 
