@@ -8,6 +8,7 @@
     </:subtitle>
     <.form
       :let={f}
+      id="update_email_form"
       action={~p"/settings/security/email"}
       for={@email_changeset}
       method="post"
@@ -60,6 +61,7 @@
     </:subtitle>
     <.form
       :let={f}
+      id="update_password_form"
       action={~p"/settings/security/password"}
       for={@password_changeset}
       method="post"
