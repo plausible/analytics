@@ -18,11 +18,7 @@ defmodule Plausible.OAuthTest do
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 
-  setup do
-    user = new_user()
-    {:ok, team} = Plausible.Teams.get_or_create(user)
-    {:ok, user: user, team: team}
-  end
+  setup [:create_user, :create_team]
 
   describe "Step 1: create_authorization_code/3" do
     test "refuses a resource this server does not know", %{user: user, team: team} do
