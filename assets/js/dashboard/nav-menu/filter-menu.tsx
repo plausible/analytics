@@ -195,7 +195,6 @@ const FilterMenuItems = ({
           ) : (
             <div
               className="flex flex-col gap-y-0.5"
-              onMouseLeave={scheduleClose}
               onKeyDown={handleEscape}
             >
               {rows.map((row) => (
@@ -227,7 +226,6 @@ const FilterMenuItems = ({
                             popover.panel.classNames.roundedSheet,
                             'z-20 w-72'
                           )}
-                          onMouseEnter={cancelScheduledClose}
                         >
                           {submenuBody}
                         </div>
