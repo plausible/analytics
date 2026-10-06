@@ -22,21 +22,20 @@ jobs:
           token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
           fetch-depth: 1
 
-      - name: Checkout master for comparison
+      - name: Checkout PR base for comparison
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: master
-          path: master-branch
+          ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}
+          path: base-branch
 
       - name: Install jq and clickhouse-local
         run: |
-          sudo apt-get install apt-transport-https ca-certificates dirmngr
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8919F6BD2B48D754
-          echo "deb https://packages.clickhouse.com/deb stable main" | sudo tee \
-              /etc/apt/sources.list.d/clickhouse.list
+          curl -fsSL 'https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key' \
+            | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/clickhouse-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/clickhouse-archive-keyring.gpg] https://packages.clickhouse.com/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/clickhouse.list
           sudo apt-get update
-
-          sudo apt-get install jq clickhouse-server -y
+          sudo apt-get install -y jq clickhouse-server
 
       - name: Compare and increment tracker_script_version
         id: increment
@@ -45,21 +44,21 @@ jobs:
           # Get current version from PR branch
           PR_VERSION=$(jq '.tracker_script_version' package.json)
 
-          # Get version from master, default to 0 if not present
-          MASTER_VERSION=$(jq '.tracker_script_version // 0' ../master-branch/tracker/package.json)
+          # Get version from the PR base, default to 0 if not present
+          BASE_VERSION=$(jq '.tracker_script_version // 0' ../base-branch/tracker/package.json)
 
           echo "PR tracker_script_version: $PR_VERSION"
-          echo "Master tracker_script_version: $MASTER_VERSION"
+          echo "Base tracker_script_version: $BASE_VERSION"
 
           # Calculate new version
           NEW_VERSION=$((PR_VERSION + 1))
 
           # Check version conditions
-          if [ $PR_VERSION -lt $MASTER_VERSION ]; then
-            echo "::error::PR tracker tracker_script_version ($PR_VERSION) is less than master ($MASTER_VERSION) and cannot be incremented."
-            echo "::error::Rebase or merge master into your PR to fix this."
+          if [ $PR_VERSION -lt $BASE_VERSION ]; then
+            echo "::error::PR tracker tracker_script_version ($PR_VERSION) is less than the PR base ($BASE_VERSION) and cannot be incremented."
+            echo "::error::Rebase or merge the base branch into your PR to fix this."
             exit 1
-          elif [ $NEW_VERSION -eq $((MASTER_VERSION + 1)) ]; then
+          elif [ $NEW_VERSION -eq $((BASE_VERSION + 1)) ]; then
             echo "Incrementing version from $PR_VERSION to $NEW_VERSION"
             jq ".tracker_script_version = $NEW_VERSION" package.json > package.json.tmp
             mv package.json.tmp package.json
@@ -82,9 +81,9 @@ jobs:
 
       - name: Compile tracker code
         run: |
-          cd master-branch/tracker
+          cd base-branch/tracker
           npm install
-          node compile.js --suffix master
+          node compile.js --suffix base
           cp ../priv/tracker/js/plausible* ../../priv/tracker/js/
 
           cd ../../tracker
@@ -95,7 +94,7 @@ jobs:
         id: analyze
         run: |
           cd tracker
-          OUT=$(node compiler/analyze-sizes.js --baselineSuffix master --currentSuffix pr)
+          OUT=$(node compiler/analyze-sizes.js --baselineSuffix base --currentSuffix pr)
           # Set multiline output
           echo "sizes<<EOF" >> $GITHUB_OUTPUT
           echo "$OUT" >> $GITHUB_OUTPUT
@@ -122,7 +121,7 @@ jobs:
 
       - name: Get changed files
         id: changelog_changed
-        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323
         with:
           files: |
             tracker/npm_package/CHANGELOG.md

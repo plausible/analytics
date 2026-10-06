@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Restore upstream ancestry, reconcile CE v3.2.1 without changing PSF application code, and prepare CI and deployment instructions for the `v3.2.1-psf` branch.
 - Keybind hints are hidden on smaller screens
 - Site index is sortable alphanumerically and by traffic
 
@@ -26,6 +27,12 @@ All notable changes to this project will be documented in this file.
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
 - Fixed issue with all non-interactive events being counted as interactive
 - Fixed countries map countries staying highlighted on Chrome
+
+## v3.2.1 - 2026-05-12
+
+### Removed
+
+- Removed phoenix storybook dependency
 
 ## v3.2.0 - 2026-01-16
 

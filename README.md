@@ -4,13 +4,18 @@ This is the Python Software Foundation's fork of [Plausible Analytics](https://p
 running at [analytics.python.org](https://analytics.python.org). 
 It tracks traffic across PSF infrastructure sites with privacy-friendly, cookie-free analytics.
 
-The fork adds a few things on top of upstream Plausible CE:
+The fork adds:
 - A custom landing page at `/` with links to public dashboards
 - Unix domain socket support for Cabotage deployments
 - PSF-specific Procfile and Dockerfile configuration
+- ClickHouse migration and replication settings for the PSF database topology
+- Google API and GA4 import adjustments
 
-We try to sync with [upstream](https://github.com/plausible/analytics) periodically. 
-PSF-specific changes live on the `v3.0.1-psf` branch.
+The deployment branch for this baseline is `v3.2.1-psf`, incorporating upstream
+[v3.2.1](https://github.com/plausible/analytics/releases/tag/v3.2.1).
+The name identifies the latest incorporated CE release, not an unmodified release
+tree: this fork also retains the previously imported upstream `master` snapshot
+`dc51b4cc9c7107d9bed63fbe594c7c81fe702238` and subsequent PSF changes.
 
 ## Examples of Public Dashboards
 
@@ -44,8 +49,9 @@ The landing page at `/` is a static HTML file at `landing/index.html`.
 It gets baked into the Docker image and served by the Phoenix app through `PageController`. 
 Logged-in users get redirected to `/sites` as usual.
 
-To edit the landing page, change `landing/index.html` and push to `v3.0.1-psf`. 
-The next image build and deploy picks it up.
+To edit the landing page, change `landing/index.html` and open a PR against the
+deployment branch. Merge only after CI passes; Cabotage builds from its configured
+branch.
 
 ## Local Development
 
@@ -105,7 +111,20 @@ This runs on [Cabotage](https://github.com/cabotage/cabotage-app), the PSF's Paa
 - `web` — the Plausible Phoenix app, binds to a unix socket via `HTTPS_UDS`
 - `release` — runs database migrations on deploy
 
-Image builds happen automatically from the `v3.0.1-psf` branch. To deploy, trigger a build and deploy through the Cabotage UI.
+Cabotage builds from its configured deployment branch. The transition from
+`v3.0.1-psf` to `v3.2.1-psf` requires an explicit operator cutover; merging code or
+editing this README does not change Cabotage's branch setting.
+
+After the reconciliation PR passes CI and is merged **with a merge commit**:
+
+1. Pause automatic deployment while changing branch references.
+2. Rename the deployment branch from `v3.0.1-psf` to `v3.2.1-psf`, keeping its
+   reviewed history. Update GitHub's default branch and applicable branch rules.
+3. Change Cabotage's tracked branch to `v3.2.1-psf`, then resume automatic deployment.
+4. Build and deploy through Cabotage. Verify the deployed source commit and image
+   digest, migration completion, and application health.
+
+Before this cutover, production continues to track the existing branch.
 
 ### Storybook security update
 
@@ -117,17 +136,31 @@ If credentials were disclosed or compromise is suspected, rotate or revoke all s
 
 ## Upstream Sync
 
-This fork tracks `plausible/analytics:master` as the `upstream` remote.
+Track published upstream CE release tags, not the moving `master` branch.
+For each release, create a review branch from the current PSF deployment branch
+and merge the selected upstream tag into it. Keep the PSF and previously imported
+upstream changes unless a reviewed migration deliberately replaces them.
 
-```bash
-git fetch upstream
-git checkout v3.0.1-psf
-git merge upstream/master
-# resolve any conflicts in PSF-specific files
-git push
-```
+The reconciliation to v3.2.1 restores the ancestry lost when PR #2 was
+squash-merged: original merge `ec3f81de488b7aa9a6dcffc03cb9b33bcb53cda1`
+has the same tree as squash commit `2d3391215fd26fe3a4a2e54c083e4ffb5ebe7b60`.
+The ancestry repair preserves the current PSF tree, then incorporates the
+upstream v3.2.1 tag.
 
-PSF-specific changes are minimal (landing page, PageController, unix socket patch, Procfile/Dockerfile) so conflicts are rare.
+**Use merge commits for upstream synchronization PRs, including this ancestry
+repair. Do not squash or rebase them.** A repository administrator must enable
+merge commits before merging if the repository only permits squash merges.
+
+Review the landing page and controller, Unix socket configuration, Dockerfile and
+Procfile, ClickHouse migrations and replication paths, Google API/GA4 import
+adjustments, Storybook removal, and MinIO test setup during every synchronization.
+Preserve applied migration history; do not reset the fork to a stock release tree.
+
+Require CI and a production-image build before merging. If migrations change,
+validate them against a restored database copy before production deployment.
+After review, rename the deployment branch to `v<upstream-version>-psf` and update
+GitHub, Cabotage, and these instructions together. Record the upstream tag, PSF
+commit, and deployed image digest for each deployment.
 
 ## License
 
