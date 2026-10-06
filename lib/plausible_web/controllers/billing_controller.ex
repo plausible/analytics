@@ -3,11 +3,10 @@ defmodule PlausibleWeb.BillingController do
   use Plausible.Repo
 
   require Logger
-  require Plausible.Billing.Subscription.Status
   require Plausible.Billing
 
   alias Plausible.Billing
-  alias Plausible.Billing.{Plans, Subscription}
+  alias Plausible.Billing.{Plans, Subscription, Subscriptions}
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -40,8 +39,7 @@ defmodule PlausibleWeb.BillingController do
     subscription = Plausible.Teams.Billing.get_subscription(team)
     latest_enterprise_plan = Billing.latest_enterprise_plan(team)
 
-    subscription_resumable? =
-      Plausible.Billing.Subscriptions.resumable?(subscription)
+    subscription_resumable? = Subscriptions.resumable?(subscription)
 
     subscribed_to_latest? =
       subscription_resumable? and not is_nil(latest_enterprise_plan) and
@@ -51,10 +49,7 @@ defmodule PlausibleWeb.BillingController do
       is_nil(latest_enterprise_plan) ->
         redirect(conn, to: ~p"/billing/choose-plan")
 
-      Subscription.Status.in?(subscription, [
-        Subscription.Status.past_due(),
-        Subscription.Status.paused()
-      ]) ->
+      Subscriptions.halted?(subscription) ->
         redirect(conn, to: ~p"/settings/billing/subscription")
 
       subscribed_to_latest? or Subscription.manual_subscription?(subscription) ->
