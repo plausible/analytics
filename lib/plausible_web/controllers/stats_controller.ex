@@ -343,20 +343,14 @@ defmodule PlausibleWeb.StatsController do
 
     cond do
       Teams.locked?(shared_link.site.team) ->
-        owners = Plausible.Repo.preload(shared_link.site, :owners)
-
         render(conn, "site_locked.html",
-          owners: owners,
           site: shared_link.site,
           dogfood_page_path: "/share/:dashboard"
         )
 
       not shared_links_feature_access? ->
-        owners = Plausible.Repo.preload(shared_link.site, :owners)
-
         render(conn, "site_locked.html",
           only_shared_link_access_missing?: true,
-          owners: owners,
           site: shared_link.site,
           dogfood_page_path: "/share/:dashboard"
         )
@@ -364,7 +358,7 @@ defmodule PlausibleWeb.StatsController do
       not Teams.locked?(shared_link.site.team) ->
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
-        shared_link = Plausible.Repo.preload(shared_link, :segment, site: [:owners])
+        shared_link = Plausible.Repo.preload(shared_link, :segment)
 
         shared_link = %{
           shared_link
