@@ -193,10 +193,7 @@ const FilterMenuItems = ({
               </div>
             </div>
           ) : (
-            <div
-              className="flex flex-col gap-y-0.5"
-              onKeyDown={handleEscape}
-            >
+            <div className="flex flex-col gap-y-0.5" onKeyDown={handleEscape}>
               {rows.map((row) => (
                 <React.Fragment key={row.key}>
                   {row.kind === 'item' ? (
