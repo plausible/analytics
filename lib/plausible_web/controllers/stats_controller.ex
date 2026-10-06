@@ -47,10 +47,7 @@ defmodule PlausibleWeb.StatsController do
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    site =
-      site
-      |> Plausible.Repo.preload(:owners)
-      |> Plausible.Sites.ensure_stats_start_date()
+    site = Plausible.Sites.ensure_stats_start_date(site)
 
     site_role = conn.assigns[:site_role]
     current_user = conn.assigns[:current_user]
@@ -82,7 +79,6 @@ defmodule PlausibleWeb.StatsController do
         redirect(conn, to: ~p"/sites")
 
       not can_see_stats? ->
-        site = Plausible.Repo.preload(site, :owners)
         render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
 
       true ->

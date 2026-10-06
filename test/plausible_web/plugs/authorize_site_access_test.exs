@@ -390,4 +390,28 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     refute conn.halted
     assert conn.assigns.site.id == site.id
   end
+
+  describe "site preloads" do
+    test "preloads imports and team subscription, not owners", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      subscribe_to_growth_plan(site.team)
+      %{id: site_import_id} = insert(:site_import, site: site)
+
+      opts = AuthorizeSiteAccess.init(:all_roles)
+
+      conn =
+        conn
+        |> bypass_through(PlausibleWeb.Router)
+        |> get("/plug-tests/#{site.domain}/with-domain")
+        |> AuthorizeSiteAccess.call(opts)
+
+      assert %Plausible.Site{
+               completed_imports: [%{id: ^site_import_id}],
+               team: %Plausible.Teams.Team{subscription: %Plausible.Billing.Subscription{}}
+             } = conn.assigns.site
+
+      refute Ecto.assoc_loaded?(conn.assigns.site.owners)
+      refute Ecto.assoc_loaded?(conn.assigns.site.team.owners)
+    end
+  end
 end
