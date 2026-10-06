@@ -100,7 +100,9 @@ export interface PlausibleEventOptions {
   url?: string
 }
 
-export type CustomProperties = Record<string, string>
+export type CustomPropertyValue = string | number | boolean
+
+export type CustomProperties = Record<string, CustomPropertyValue>
 
 export type PlausibleEventRevenue = {
   /** Revenue amount in `currency` */
