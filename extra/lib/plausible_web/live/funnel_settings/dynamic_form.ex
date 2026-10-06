@@ -385,8 +385,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
        )}
     )
     |> set_icons()
-    |> segment()
     |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
+    |> segment()
   end
 
   defp set_icons(suggestions) do
@@ -394,7 +394,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       icon =
         case opts[:type] do
           :custom_event -> :cursor
-          :pageview -> :pencil
+          :pageview -> :eye
           _other -> nil
         end
 
@@ -403,41 +403,34 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
   end
 
   defp segment(suggestions) do
-    segments =
-      suggestions
-      |> Enum.group_by(fn {_, _, opts} -> opts[:type] end)
+    suggestions
+    |> Enum.group_by(fn {_, _, opts} -> opts[:type] end)
+    |> Enum.sort_by(fn {k, _} ->
+      case k do
+        :custom_event -> 0
+        :pageview -> 1
+        _ -> 2
+      end
+    end)
+    |> Enum.reduce([], fn {_, segment}, acc ->
+      [{value, display_name, opts} | rest] = segment
 
-    if map_size(segments) > 1 do
-      segments
-      |> Enum.sort_by(fn {k, _} ->
-        case k do
-          :custom_event -> 0
-          :pageview -> 1
-          _ -> 2
+      separator? = acc != []
+
+      title =
+        case opts[:type] do
+          :custom_event -> "Custom events"
+          :pageview -> "Pageviews"
+          _ -> "From stats"
         end
-      end)
-      |> Enum.reduce([], fn {_, segment}, acc ->
-        [{value, display_name, opts} | rest] = segment
 
-        separator? = acc != []
+      opts =
+        opts
+        |> Keyword.put(:title, title)
+        |> Keyword.put(:separator?, separator?)
 
-        title =
-          case opts[:type] do
-            :custom_event -> "Custom events"
-            :pageview -> "Pageviews"
-            _ -> "From stats"
-          end
-
-        opts =
-          opts
-          |> Keyword.put(:title, title)
-          |> Keyword.put(:separator?, separator?)
-
-        acc ++ [{value, display_name, opts} | rest]
-      end)
-    else
-      suggestions
-    end
+      acc ++ [{value, display_name, opts} | rest]
+    end)
   end
 
   defp exclude_existing_steps(goals, steps) do

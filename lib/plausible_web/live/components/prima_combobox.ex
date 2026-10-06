@@ -39,60 +39,78 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
 
   def render(assigns) do
     ~H"""
-    <div id={"combobox-container-#{@id}"}>
-      <.combobox name={@submit_name} id={@id} class={@class} selections={@selected} :let={input_value}>
-        <div class="relative pl-2 pr-8 py-1 w-full dark:bg-gray-750 dark:text-gray-300 rounded-md shadow-xs border border-gray-300 dark:border-gray-750 focus-within:outline-none focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25 focus-within:border-indigo-500">
-          <.combobox_input
-            value={input_value}
-            class={
-              Enum.join(
-                [
-                  "text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-hidden focus:ring-0",
-                  @input_class
-                ],
-                " "
-              )
-            }
-            on_search="async_combobox_search"
-            phx-target={@myself}
-            placeholder={@placeholder}
-          />
+    <div
+      id={"combobox-container-#{@id}"}
+      class="relative [&_[data-prima-ref=options-wrapper]]:w-full"
+    >
+      <.combobox :let={input_value} name={@submit_name} id={@id} class={@class} selections={@selected}>
+        <.combobox_input
+          value={input_value}
+          class={
+            Enum.join(
+              [
+                "peer input-base input-md w-full pr-10",
+                @input_class
+              ],
+              " "
+            )
+          }
+          on_search="async_combobox_search"
+          phx-target={@myself}
+          placeholder={@placeholder}
+        />
 
-          <.spinner class="spinner absolute inset-y-3 right-8 invisible peer-[.phx-change-loading]:visible" />
+        <.spinner class="absolute inset-y-3 right-3.5 invisible phx-hook-loading:peer-focus:visible" />
 
-          <.combobox_options
-            id={"input-picker-dropdown-#{@id}"}
-            phx-update="replace"
-            offset={4}
-            class={
-              Enum.join([
-                "relative max-h-60 w-80 overflow-y-auto overflow-x-hidden rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-gray-200 focus:outline-none sm:text-sm z-50",
+        <.combobox_options
+          id={"input-picker-dropdown-#{@id}"}
+          phx-update="replace"
+          offset={4}
+          class={
+            Enum.join(
+              [
+                "relative z-50 max-h-60 w-full overflow-y-auto overflow-x-hidden p-1 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 focus:outline-hidden",
                 @dropdown_class
-              ])
-            }
-          >
+              ],
+              " "
+            )
+          }
+        >
+          <div class="flex flex-col gap-0.5">
             <%= for {idx, {value, display_name, opts}} <- @suggestions do %>
-              <hr :if={opts[:separator?]} class="mt-2" />
+              <div
+                :if={opts[:separator?]}
+                class="my-0.5 -mx-1 border-b border-gray-200 dark:border-gray-700"
+              />
 
               <div
                 :if={opts[:title]}
-                class="m-2 truncate text-left text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold"
+                class="px-4 py-2.5 truncate text-xs uppercase font-medium text-gray-500 dark:text-gray-400"
               >
                 {opts[:title]}
               </div>
 
               <.combobox_option
                 id={"input-picker-dropdown-#{@id}-option-#{idx}"}
-                class="relative whitespace-nowrap cursor-default select-none py-2 pl-3 pr-9 text-gray-900 data-focus:bg-indigo-600 data-focus:text-white flex gap-2"
+                class="px-4 py-2.5 leading-5 rounded-md text-sm text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none data-focus:bg-gray-100 data-focus:text-gray-900 dark:data-focus:bg-gray-700 dark:data-focus:text-gray-100 data-selected:bg-gray-100 data-selected:text-gray-900 dark:data-selected:bg-gray-700 dark:data-selected:text-gray-100"
                 value={value}
                 display={display_name}
               >
-                <.icon :if={opts[:icon]} name={opts[:icon]} />
-                {display_name}
+                <span class="flex items-center gap-2">
+                  <.icon :if={opts[:icon]} name={opts[:icon]} />
+                  <span class="truncate">{display_name}</span>
+                </span>
               </.combobox_option>
             <% end %>
-          </.combobox_options>
-        </div>
+
+            <div
+              :if={@suggestions == []}
+              class="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 cursor-default select-none"
+            >
+              No matches found. Try searching for something different.
+            </div>
+          </div>
+        </.combobox_options>
       </.combobox>
     </div>
     """
@@ -100,13 +118,13 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
 
   @icons %{
     cursor: &PlausibleWeb.Components.Icons.cursor_icon/1,
-    pencil: &PlausibleWeb.Components.Icons.pencil_icon/1
+    eye: &Heroicons.eye/1
   }
 
   defp icon(assigns) do
     {name, assigns} = Map.pop(assigns, :name)
 
-    assigns = assign(assigns, :class, "inline-block size-4")
+    assigns = assign(assigns, :class, "size-4 shrink-0")
 
     if icon_component = @icons[name] do
       icon_component.(assigns)
