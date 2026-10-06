@@ -72,8 +72,6 @@ defmodule PlausibleWeb.MCP.MCPController do
         handle_request(conn, message, method, id)
 
       :error ->
-        log_rejection(conn, "body is not a single JSON-RPC request", body: conn.body_params)
-
         send_json(conn, 400, error_response(nil, -32_600, "Invalid Request"))
     end
   end
@@ -101,34 +99,8 @@ defmodule PlausibleWeb.MCP.MCPController do
       end
     else
       {:error, status, code, error_message, data} ->
-        log_rejection(conn, error_message, jsonrpc_code: code, method: method, meta: meta)
-
         send_json(conn, status, error_response(id, code, error_message, data))
     end
-  end
-
-  defp log_rejection(conn, reason, details) do
-    Logger.debug(fn ->
-      headers =
-        for name <- ~w(mcp-protocol-version mcp-method mcp-name mcp-session-id last-event-id),
-            value = header(conn, name),
-            do: "#{name}: #{value}"
-
-      details =
-        Enum.map(details, fn
-          {key, value} when is_map(value) -> {key, value |> Map.keys() |> Enum.sort()}
-          pair -> pair
-        end)
-
-      [
-        "MCP request rejected: ",
-        reason,
-        "\n  details: ",
-        inspect(details),
-        "\n  mcp headers: ",
-        if(headers == [], do: "(none sent)", else: Enum.join(headers, ", "))
-      ]
-    end)
   end
 
   defp validate_headers_present(conn, method) do
