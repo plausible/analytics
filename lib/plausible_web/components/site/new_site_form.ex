@@ -32,7 +32,6 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
           field={f[:domain]}
           label="Domain"
           disabled={@site_limit_exceeded?}
-          mt?={false}
           autofocus="autofocus"
         />
 
@@ -47,13 +46,12 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
         </script>
 
         <div class="flex justify-end items-center gap-x-2">
-          <.button_link theme="ghost" href={@back_button_href} mt?={false}>
+          <.button_link theme="ghost" href={@back_button_href}>
             {@back_button_text}
           </.button_link>
           <.button
             disabled={@site_limit_exceeded?}
             type="submit"
-            mt?={false}
             class="disabled:cursor-not-allowed"
           >
             Add site

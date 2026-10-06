@@ -20,7 +20,6 @@
           oninvalid="document.getElementById('use-code-button').disabled = false"
           required="required"
           placeholder="Recovery code"
-          mt?={false}
         />
         <p :if={@error} class="text-xs text-red-500 text-center">
           {@error}
@@ -30,7 +29,6 @@
       <.button
         id="use-code-button"
         type="submit"
-        mt?={false}
         class="w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">

@@ -28,17 +28,28 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
       />
 
       <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
-        <.input field={f[:trial_expiry_date]} type="date" label="Trial Expiry Date" />
-        <.input field={f[:accept_traffic_until]} type="date" label="Accept traffic Until" />
+        <.input
+          field={f[:trial_expiry_date]}
+          type="date"
+          label="Trial Expiry Date"
+          wrapper_class="mt-6"
+        />
+        <.input
+          field={f[:accept_traffic_until]}
+          type="date"
+          label="Accept traffic Until"
+          wrapper_class="mt-6"
+        />
         <.input
           type="checkbox"
           field={f[:allow_next_upgrade_override]}
           label="Allow Next Upgrade Override"
+          wrapper_class="mt-2"
         />
 
-        <.input type="textarea" field={f[:notes]} label="Notes" />
+        <.input type="textarea" field={f[:notes]} label="Notes" wrapper_class="mt-6" />
 
-        <div class="flex justify-between">
+        <div class="flex justify-between mt-6">
           <.button type="submit">
             Save
           </.button>
@@ -74,7 +85,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
           </p>
 
           <.button
-            class="mt-2"
+            class="mt-6"
             phx-click="unsnooze-schedule"
             phx-target={@myself}
             data-confirm="Resume the deletion schedule now? This restarts the notice cycle."
@@ -89,7 +100,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
           for={@snooze_form}
           phx-submit="snooze-schedule"
           phx-target={@myself}
-          class="mt-3 flex items-end gap-x-4"
+          class="mt-9 flex items-end gap-x-4"
         >
           <.input field={f[:snoozed_until]} type="date" label="Snooze until" />
           <.input field={f[:snooze_note]} type="text" label="Note (optional)" />

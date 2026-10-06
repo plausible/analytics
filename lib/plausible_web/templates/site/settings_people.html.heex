@@ -16,10 +16,7 @@
     <:subtitle>Invite your friends or coworkers</:subtitle>
 
     <.filter_bar :if={@site_role in [:owner, :admin]} filtering_enabled?={false}>
-      <.button_link
-        mt?={false}
-        href={~p"/sites/#{@site.domain}/memberships/invite"}
-      >
+      <.button_link href={~p"/sites/#{@site.domain}/memberships/invite"}>
         Invite new guest
       </.button_link>
     </.filter_bar>

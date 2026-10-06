@@ -80,7 +80,6 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
             </div>
             <.button_link
               href={~p"/billing/choose-plan"}
-              mt?={false}
               id="upgrade-or-change-plan-link"
             >
               {trial_button_label(@current_team)}
@@ -131,7 +130,6 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                     }
                     theme="secondary"
                     href={@subscription.update_url}
-                    mt?={false}
                     id="billing-details-link"
                   >
                     Billing details
@@ -142,7 +140,6 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                              Plausible.Billing.Subscriptions.halted?(@subscription))
                     }
                     href={~p"/billing/choose-plan"}
-                    mt?={false}
                     id="upgrade-or-change-plan-link"
                   >
                     {change_plan_button_label(@subscription)}
@@ -278,6 +275,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
                       theme="secondary"
                       x-on:click="showAll = true"
                       x-show="!showAll"
+                      class="mt-6"
                     >
                       Show more
                     </.button>
@@ -291,7 +289,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
 
     <%= if Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url do %>
       <div class="flex gap-2">
-        <.button_link theme="danger" href={@subscription.cancel_url} mt?={false}>
+        <.button_link theme="danger" href={@subscription.cancel_url}>
           Cancel plan
         </.button_link>
         <%= if Application.get_env(:plausible, :environment) == "dev" do %>
@@ -299,7 +297,6 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
             href={@subscription.update_url}
             theme="secondary"
             class="text-yellow-600 dark:text-yellow-400"
-            mt?={false}
           >
             [DEV ONLY] Change status
           </.button_link>

@@ -166,7 +166,6 @@ defmodule PlausibleWeb.Live.Sites do
           <.button_link
             :if={!@consolidated_view_cta_dismissed?}
             href={~p"/sites/new?#{[flow: PlausibleWeb.Flows.provisioning()]}"}
-            mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
           </.button_link>
@@ -199,7 +198,6 @@ defmodule PlausibleWeb.Live.Sites do
           <.button_link
             href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"}
             theme="primary"
-            mt?={false}
           >
             <Heroicons.plus class="size-4" /> Add website
           </.button_link>
@@ -207,7 +205,6 @@ defmodule PlausibleWeb.Live.Sites do
             :if={not Teams.setup?(@current_team) and @has_sites? and length(@teams) == 1}
             href={~p"/sites?#{[__team: hd(@teams).identifier]}"}
             theme="secondary"
-            mt?={false}
           >
             Go to team sites
           </.button_link>
@@ -343,16 +340,12 @@ defmodule PlausibleWeb.Live.Sites do
           To create a consolidated view, you'll need to set up a team.
         </p>
         <div class="flex gap-x-2">
-          <.button_link
-            href={~p"/team/setup"}
-            mt?={false}
-          >
+          <.button_link href={~p"/team/setup"}>
             Create team
           </.button_link>
           <.button_link
             theme="secondary"
             href="https://plausible.io/docs/consolidated-views"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -381,7 +374,6 @@ defmodule PlausibleWeb.Live.Sites do
           <.button_link
             :if={@can_manage_consolidated_view?}
             href={url(~p"/billing/choose-plan")}
-            mt?={false}
           >
             Upgrade
           </.button_link>
@@ -389,7 +381,6 @@ defmodule PlausibleWeb.Live.Sites do
           <.button_link
             theme="secondary"
             href="https://plausible.io/docs/consolidated-views"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -405,17 +396,13 @@ defmodule PlausibleWeb.Live.Sites do
         </p>
 
         <div class="flex gap-x-2">
-          <.button_link
-            href="mailto:hello@plausible.io"
-            mt?={false}
-          >
+          <.button_link href="mailto:hello@plausible.io">
             Contact us
           </.button_link>
 
           <.button_link
             theme="secondary"
             href="https://plausible.io/docs/consolidated-views"
-            mt?={false}
           >
             Learn more
           </.button_link>

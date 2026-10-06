@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 id="add-country-rule"
                 x-data
                 x-on:click={Modal.JS.open("country-rule-form-modal")}
-                class="mt-4"
+                class="mt-6"
               >
                 Add country
               </.button>
@@ -68,7 +68,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 id="add-country-rule"
                 x-data
                 x-on:click={Modal.JS.open("country-rule-form-modal")}
-                mt?={false}
               >
                 Add country
               </.button>
@@ -151,7 +150,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 Once added, we will start rejecting traffic from this country within a few minutes.
               </p>
-              <.button type="submit" class="w-full">
+              <.button type="submit" class="w-full mt-6">
                 Add country
               </.button>
             </.form>
