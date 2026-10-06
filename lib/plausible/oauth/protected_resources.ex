@@ -68,4 +68,18 @@ defmodule Plausible.OAuth.ProtectedResources do
   end
 
   def normalize_granted_scopes(_scopes, _resource), do: {:error, :invalid_scope}
+
+  @doc """
+  Returns `scope` if `resource` supports it, raising otherwise.
+  Useful for ensuring a tool's required scope and a resource's supported scopes
+  are in sync at compile time.
+  """
+  @spec scope!(t(), String.t()) :: String.t()
+  def scope!(resource, scope) do
+    if scope in resource.scopes_supported do
+      scope
+    else
+      raise ArgumentError, "unknown scope: #{inspect(scope)}"
+    end
+  end
 end
