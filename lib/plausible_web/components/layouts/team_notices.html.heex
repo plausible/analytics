@@ -1,10 +1,13 @@
 <div :if={assigns[:current_team]} class="flex flex-col gap-y-2">
   <Notice.active_grace_period
     :if={Plausible.Teams.GracePeriod.active?(@current_team)}
-    enterprise?={Plausible.Teams.Billing.enterprise_configured?(@current_team)}
+    current_team_role={assigns[:current_team_role]}
   />
 
-  <Notice.dashboard_locked :if={Plausible.Teams.GracePeriod.expired?(@current_team)} />
+  <Notice.dashboard_locked
+    :if={Plausible.Teams.GracePeriod.expired?(@current_team)}
+    current_team_role={assigns[:current_team_role]}
+  />
 
   <Notice.subscription_cancelled subscription={@current_team.subscription} />
 

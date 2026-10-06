@@ -3,46 +3,27 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   use PlausibleWeb, :component
 
+  require Plausible.Billing
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
+  attr(:current_team_role, :atom, default: nil)
+
   def active_grace_period(assigns) do
-    if assigns.enterprise? do
-      ~H"""
-      <aside class="container">
-        <.notice
-          title={Plausible.Billing.active_grace_period_notice_title()}
-          class="shadow-md dark:shadow-none"
-        >
-          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
-          <.link
-            href={~p"/billing/choose-plan"}
-            class="whitespace-nowrap font-semibold"
-          >
-            Upgrade now <span aria-hidden="true"> &rarr;</span>
-          </.link>
-        </.notice>
-      </aside>
-      """
-    else
-      ~H"""
-      <aside class="container">
-        <.notice
-          title={Plausible.Billing.active_grace_period_notice_title()}
-          class="shadow-md dark:shadow-none"
-        >
-          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
-          <.link
-            href={~p"/billing/choose-plan"}
-            class="whitespace-nowrap font-semibold"
-          >
-            Upgrade now <span aria-hidden="true"> &rarr;</span>
-          </.link>
-        </.notice>
-      </aside>
-      """
-    end
+    ~H"""
+    <aside class="container">
+      <.notice
+        title={Plausible.Billing.active_grace_period_notice_title()}
+        class="shadow-md dark:shadow-none"
+      >
+        To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
+        <.upgrade_link_or_owner_hint current_team_role={@current_team_role} />
+      </.notice>
+    </aside>
+    """
   end
+
+  attr(:current_team_role, :atom, default: nil)
 
   def dashboard_locked(assigns) do
     ~H"""
@@ -52,14 +33,33 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         class="shadow-md dark:shadow-none"
       >
         Since you’ve outgrown your current subscription tier, it’s time to upgrade to match your growing usage.
-        <.link
-          href={~p"/billing/choose-plan"}
-          class="whitespace-nowrap font-semibold"
-        >
-          Upgrade now <span aria-hidden="true"> &rarr;</span>
-        </.link>
+        <.upgrade_link_or_owner_hint current_team_role={@current_team_role} />
       </.notice>
     </aside>
+    """
+  end
+
+  # A nil role means the role is unknown, in which case we keep the link.
+  defp upgrade_link_or_owner_hint(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :can_upgrade?,
+        is_nil(assigns.current_team_role) or
+          assigns.current_team_role in Plausible.Billing.allowed_roles()
+      )
+
+    ~H"""
+    <.link
+      :if={@can_upgrade?}
+      href={~p"/billing/choose-plan"}
+      class="whitespace-nowrap font-semibold"
+    >
+      Upgrade now <span aria-hidden="true"> &rarr;</span>
+    </.link>
+    <span :if={!@can_upgrade?} class="font-semibold" data-test="owner-upgrade-hint">
+      Please ask a team owner to upgrade the subscription.
+    </span>
     """
   end
 
