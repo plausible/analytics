@@ -1089,7 +1089,14 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text_of_attr(html, button, "data-confirm") =~ "outside of Paddle"
         refute element_exists?(html, "form#manual-subscribe")
 
-        html = lv |> element(button) |> render_click()
+        assert text(html) =~ "Subscription statusOn trial"
+
+        lv |> element(button) |> render_click()
+
+        flash = assert_redirect(lv, open_team(team.id, tab: :billing))
+        assert flash["success"] == "Subscription created (manual)"
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: :billing))
 
         plan = Plausible.Repo.reload!(plan)
         assert plan.paddle_plan_id == "manual-subscription"
@@ -1102,6 +1109,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert subscription.next_bill_date == Date.shift(Date.utc_today(), year: 1)
         assert is_nil(subscription.paddle_subscription_id)
 
+        assert text(html) =~ "Subscription statusActive"
+        assert text(html) =~ "Subscription planManually billed enterprise"
         assert html =~ "MANUAL SUBSCRIPTION"
         refute element_exists?(html, button)
 

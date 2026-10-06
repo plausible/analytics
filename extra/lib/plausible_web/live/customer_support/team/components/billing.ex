@@ -306,9 +306,13 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     if plan && not current_plan?(team, plan.paddle_plan_id) do
       case Plausible.Billing.create_manual_subscription(team, plan) do
         {:ok, _team} ->
-          success("Subscription created (manual)")
-          team = team |> Plausible.Repo.reload!() |> Teams.with_subscription()
-          {:noreply, assign(socket, team: team, plans: get_plans(team.id))}
+          # Reload the whole page, so that e.g. the subscription status in the header updates too
+          navigate_with_success(
+            ~p"/cs/teams/team/#{team.id}?tab=billing",
+            "Subscription created (manual)"
+          )
+
+          {:noreply, socket}
 
         {:error, :already_manual} ->
           failure("A team can only have one manual subscription")
