@@ -43,7 +43,10 @@ defmodule PlausibleWeb.Live.TwoFactorSettings do
             </button>
           </p>
 
-          <PrimaModal.modal id="disable-2fa-modal">
+          <PrimaModal.modal
+            id="disable-2fa-modal"
+            on_close={JS.dispatch("reset", to: "#disable_2fa_form")}
+          >
             <div class="p-5 sm:p-6 max-w-md">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <button
@@ -64,7 +67,13 @@ defmodule PlausibleWeb.Live.TwoFactorSettings do
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Enter your password to continue.
                 </p>
-                <.form action={~p"/2fa/disable"} for={%{}} method="post" class="flex flex-col gap-y-6">
+                <.form
+                  action={~p"/2fa/disable"}
+                  id="disable_2fa_form"
+                  for={%{}}
+                  method="post"
+                  class="flex flex-col gap-y-6"
+                >
                   <.input
                     data-autofocus
                     type="password"
@@ -81,7 +90,10 @@ defmodule PlausibleWeb.Live.TwoFactorSettings do
             </div>
           </PrimaModal.modal>
 
-          <PrimaModal.modal id="regenerate-2fa-modal">
+          <PrimaModal.modal
+            id="regenerate-2fa-modal"
+            on_close={JS.dispatch("reset", to: "#regenerate_2fa_form")}
+          >
             <div class="p-5 sm:p-6 max-w-md">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <button
@@ -101,6 +113,7 @@ defmodule PlausibleWeb.Live.TwoFactorSettings do
                   Enter your password to continue.
                 </p>
                 <.form
+                  id="regenerate_2fa_form"
                   action={~p"/2fa/recovery_codes"}
                   for={%{}}
                   method="post"

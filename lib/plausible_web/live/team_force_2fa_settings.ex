@@ -33,7 +33,10 @@ defmodule PlausibleWeb.Live.TeamForce2FASettings do
             Stop enforcing 2FA
           </.button>
 
-          <PrimaModal.modal id="disable-force-2fa-modal">
+          <PrimaModal.modal
+            id="disable-force-2fa-modal"
+            on_close={JS.dispatch("reset", to: "#disable_team_force_2fa_form")}
+          >
             <div class="p-5 sm:p-6 max-w-md">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <button
@@ -53,6 +56,7 @@ defmodule PlausibleWeb.Live.TeamForce2FASettings do
                   Enter your password to stop enforcing 2FA.
                 </p>
                 <.form
+                  id="disable_team_force_2fa_form"
                   action={~p"/settings/team/force_2fa/disable"}
                   for={%{}}
                   method="post"
