@@ -457,6 +457,11 @@ defmodule Plausible.BillingTest do
 
     test "refuses to create a second manual subscription" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
+
+      # Intentionally preload and make it stale. The function under test
+      # should not use the preloaded value as it might be outdated.
+      team = Plausible.Teams.with_subscription(team)
+
       plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :yearly)
 
       assert {:ok, _} = Billing.create_manual_subscription(team, plan)
