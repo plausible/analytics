@@ -118,6 +118,15 @@ defmodule PlausibleWeb.BillingControllerTest do
 
   @configured_enterprise_plan_paddle_plan_id "123"
 
+  describe "GET /upgrade-to-enterprise-plan (no enterprise plan configured)" do
+    setup [:create_user, :log_in, :create_team]
+
+    test "redirects to the choose plan page", %{conn: conn} do
+      conn = get(conn, ~p"/billing/upgrade-to-enterprise-plan")
+      assert redirected_to(conn) == ~p"/billing/choose-plan"
+    end
+  end
+
   describe "GET /upgrade-to-enterprise-plan (no existing subscription)" do
     setup [:create_user, :log_in, :configure_enterprise_plan]
 
@@ -263,6 +272,23 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       assert LazyHTML.text(LazyHTML.from_document(doc)) =~
                "please contact us at hello@plausible.io"
+    end
+  end
+
+  describe "GET /upgrade-to-enterprise-plan (manual subscription)" do
+    setup [:create_user, :log_in, :create_team]
+
+    @tag :ee_only
+    test "renders contact note", %{conn: conn, team: team} do
+      plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
+      {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
+
+      doc =
+        conn
+        |> get(~p"/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ "Looking to adjust your plan?"
     end
   end
 

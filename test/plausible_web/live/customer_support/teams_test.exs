@@ -836,7 +836,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_change(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "updated-plan-456",
+            "paddle_plan_id" => "original-plan",
             "billing_interval" => "yearly",
             "monthly_pageview_limit" => "15000000",
             "site_limit" => "500",
@@ -862,7 +862,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Plan updated"
 
         updated_plan = Plausible.Repo.reload!(plan)
-        assert updated_plan.paddle_plan_id == "updated-plan-456"
+        assert updated_plan.paddle_plan_id == "original-plan"
         assert updated_plan.billing_interval == :yearly
         assert updated_plan.monthly_pageview_limit == 15_000_000
         assert updated_plan.site_limit == 500
@@ -876,7 +876,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         refute element_exists?(html, ~s|form#save-plan|)
 
-        assert text(html) =~ "updated-plan-456"
+        assert text(html) =~ "original-plan"
         assert text(html) =~ "yearly"
         assert text(html) =~ "15,000,000"
         assert text(html) =~ "500"
@@ -908,9 +908,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_submit(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "",
+            "paddle_plan_id" => "valid-plan",
             "billing_interval" => "monthly",
-            "monthly_pageview_limit" => "1000000",
+            "monthly_pageview_limit" => "",
             "site_limit" => "100",
             "team_member_limit" => "10",
             "hourly_api_request_limit" => "1000"
@@ -923,7 +923,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert element_exists?(html, ~s|form#save-plan|)
 
         unchanged_plan = Plausible.Repo.reload!(plan)
-        assert unchanged_plan.paddle_plan_id == "valid-plan"
+        assert unchanged_plan.monthly_pageview_limit == 1_000_000
       end
 
       test "cancel edit returns to plan list", %{conn: conn, user: user} do
@@ -1066,6 +1066,96 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         refute Plausible.Repo.get(Plausible.Billing.EnterprisePlan, inactive_plan.id)
         refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
+      end
+
+      test "plan can be manually subscribed with a single confirmed click", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-original",
+            billing_interval: :yearly,
+            monthly_pageview_limit: 1_000_000
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id, tab: :billing))
+
+        button = ~s|button[phx-click="manual-subscribe"][phx-value-id="#{plan.id}"]|
+        assert element_exists?(html, button)
+        assert text_of_attr(html, button, "data-confirm") =~ "outside of Paddle"
+        refute element_exists?(html, "form#manual-subscribe")
+
+        assert text(html) =~ "Subscription statusOn trial"
+
+        lv |> element(button) |> render_click()
+
+        flash = assert_redirect(lv, open_team(team.id, tab: :billing))
+        assert flash["success"] == "Subscription created (manual)"
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: :billing))
+
+        plan = Plausible.Repo.reload!(plan)
+        assert plan.paddle_plan_id == "manual-subscription"
+
+        subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
+        assert subscription.paddle_plan_id == plan.paddle_plan_id
+        assert subscription.currency_code == "XXX"
+        assert subscription.next_bill_amount == "-1"
+        assert subscription.last_bill_date == Date.utc_today()
+        assert subscription.next_bill_date == Date.shift(Date.utc_today(), year: 1)
+        assert is_nil(subscription.paddle_subscription_id)
+
+        assert text(html) =~ "Subscription statusActive"
+        assert text(html) =~ "Subscription planManually billed enterprise"
+        assert html =~ "MANUAL SUBSCRIPTION"
+        refute element_exists?(html, button)
+
+        assert text_of_element(html, ~s|[data-test-id="last-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.last_bill_date)
+
+        assert text_of_element(html, ~s|[data-test-id="next-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.next_bill_date)
+      end
+
+      test "new plan can't be created while on a manual subscription", %{conn: conn, user: user} do
+        team = team_of(user)
+        plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
+        {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv |> element("button#new-custom-plan") |> render_click()
+        html = render(lv)
+
+        assert text(html) =~
+                 "Creating a new plan is prohibited due to a manual subscription. Edit the existing enterprise plan instead."
+
+        refute element_exists?(html, ~s|form[phx-submit="save-plan"]|)
+      end
+
+      test "only the latest plan can be manually subscribed to", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        older_plan =
+          insert(:enterprise_plan,
+            team: team,
+            inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+          )
+
+        insert(:enterprise_plan, team: team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="manual-subscribe"][phx-value-id="#{older_plan.id}"]|)
+        |> render_click()
+
+        assert text(render(lv)) =~ "Only the latest enterprise plan can get a manual subscription"
+        refute Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       end
 
       defp open_custom_plan(conn, team) do
