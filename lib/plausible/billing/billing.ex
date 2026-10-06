@@ -8,7 +8,7 @@ defmodule Plausible.Billing do
   use Plausible.Repo
 
   alias Plausible.Auth
-  alias Plausible.Billing.{Subscription, Subscriptions}
+  alias Plausible.Billing.{EnterprisePlan, Subscription, Subscriptions}
   alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
@@ -74,15 +74,12 @@ defmodule Plausible.Billing do
   end
 
   defp do_create_manual_subscription(team, enterprise_plan) do
-    plan_id = Subscription.manual_plan_id()
-
     Repo.transaction(fn ->
-      enterprise_plan
-      |> Ecto.Changeset.change(paddle_plan_id: plan_id)
-      |> Repo.update!()
-
-      case Repo.insert(Subscription.manual_changeset(team)) do
-        {:ok, subscription} -> after_subscription_update(subscription)
+      with {:ok, _plan} <-
+             Repo.update(EnterprisePlan.manual_subscription_changeset(enterprise_plan)),
+           {:ok, subscription} <- Repo.insert(Subscription.manual_changeset(team)) do
+        after_subscription_update(subscription)
+      else
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)

@@ -48,11 +48,26 @@ defmodule Plausible.Billing.EnterprisePlan do
     |> validate()
   end
 
+  @doc """
+  Marks the plan as manually subscribed to, see
+  `Plausible.Billing.create_manual_subscription/2`.
+  """
+  def manual_subscription_changeset(plan) do
+    plan
+    |> change(paddle_plan_id: Plausible.Billing.Subscription.manual_plan_id())
+    |> unique_paddle_plan_id_constraint()
+  end
+
   defp validate(changeset) do
     changeset
     |> validate_number(:monthly_pageview_limit, less_than: @max)
     |> validate_number(:site_limit, less_than: @max)
     |> validate_number(:hourly_api_request_limit, less_than: @max)
     |> validate_required(@required_fields)
+    |> unique_paddle_plan_id_constraint()
+  end
+
+  defp unique_paddle_plan_id_constraint(changeset) do
+    unique_constraint(changeset, [:team_id, :paddle_plan_id], error_key: :paddle_plan_id)
   end
 end

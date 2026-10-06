@@ -445,6 +445,24 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(older_plan).paddle_plan_id == "manual-subscription"
     end
 
+    test "returns an error when another plan of the team already has the manual plan ID" do
+      {:ok, team} = Plausible.Teams.get_or_create(new_user())
+
+      insert(:enterprise_plan,
+        team_id: team.id,
+        paddle_plan_id: "manual-subscription",
+        inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+      )
+
+      plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :yearly)
+
+      assert {:error, changeset} = Billing.create_manual_subscription(team, plan)
+      assert {"has already been taken", _} = changeset.errors[:paddle_plan_id]
+
+      refute Repo.get_by(Subscription, team_id: team.id)
+      refute Repo.reload!(plan).paddle_plan_id == "manual-subscription"
+    end
+
     test "refuses to subscribe to a monthly plan" do
       {:ok, team} = Plausible.Teams.get_or_create(new_user())
       plan = insert(:enterprise_plan, team_id: team.id, billing_interval: :monthly)

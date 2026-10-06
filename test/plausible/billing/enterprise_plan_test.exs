@@ -61,4 +61,23 @@ defmodule Plausible.Billing.EnterprisePlanTest do
              |> EnterprisePlan.update_changeset(%{paddle_plan_id: "456", site_limit: 50})
              |> Plausible.Repo.update()
   end
+
+  test "create_changeset/2 refuses a duplicate paddle_plan_id within a team" do
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    other_team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+
+    insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123")
+
+    assert {:error, changeset} =
+             build(:enterprise_plan, team_id: team.id)
+             |> EnterprisePlan.create_changeset(%{paddle_plan_id: "123"})
+             |> Plausible.Repo.insert()
+
+    assert {"has already been taken", _} = changeset.errors[:paddle_plan_id]
+
+    assert {:ok, _} =
+             build(:enterprise_plan, team_id: other_team.id)
+             |> EnterprisePlan.create_changeset(%{paddle_plan_id: "123"})
+             |> Plausible.Repo.insert()
+  end
 end
