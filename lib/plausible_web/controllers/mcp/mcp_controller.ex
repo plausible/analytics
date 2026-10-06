@@ -294,7 +294,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   defp invalid_params(message), do: {:error, 400, -32_602, message, nil}
 
   defp text_content(value) when is_binary(value), do: %{type: "text", text: value}
-  defp text_content(value), do: %{type: "text", text: Jason.encode!(value)}
+  defp text_content(value), do: %{type: "text", text: JSON.encode!(value)}
 
   # `params` and `_meta` are client-supplied and need not be objects. `get_in/2`
   # raises on a scalar or a list, so neither is ever indexed into directly.
