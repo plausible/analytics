@@ -43,6 +43,127 @@ By default, dashboards are private (team-only).
 To make one publicly visible, ask the infra team to toggle the "Public" setting for that site. 
 Once public, anyone can view the dashboard at `analytics.python.org/<domain>` without logging in.
 
+## AI Assistant Access (MCP)
+
+Query analytics.python.org from Claude, Codex, omp, or any [MCP](https://modelcontextprotocol.io)
+client with [getsentry/plausible-mcp](https://github.com/getsentry/plausible-mcp) (read-only tools:
+`get_timeseries`, `get_breakdown`, `get_conversions`, `compare_periods`).
+
+**You need an account and a personal API key.** A key reads only the sites its owner belongs to;
+public dashboards do not open the API. Ask the infra team for an invite.
+
+1. **Create a key** at [Settings → API Keys](https://analytics.python.org/settings/api-keys).
+   Copy it from the form *before* you click **Create API key**; it is not shown again.
+2. **Build the server** (Node.js 20+). Do not use the hosted `plausible-mcp.sentry.dev` (it only
+   talks to plausible.io) or the unrelated npm package `plausible-mcp`.
+
+   ```bash
+   git clone https://github.com/getsentry/plausible-mcp.git
+   cd plausible-mcp && pnpm install && pnpm build
+   ```
+
+3. **Register it** with your client. Set `PLAUSIBLE_BASE_URL`, because the default is plausible.io.
+   Replace `/path/to/plausible-mcp` with your clone.
+
+<details>
+<summary>Claude Code</summary>
+
+```bash
+claude mcp add -s user plausible-psf \
+  -e PLAUSIBLE_API_KEY=your-key -e PLAUSIBLE_BASE_URL=https://analytics.python.org \
+  -- node /path/to/plausible-mcp/dist/index.js
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+```bash
+codex mcp add plausible-psf \
+  --env PLAUSIBLE_API_KEY=your-key --env PLAUSIBLE_BASE_URL=https://analytics.python.org \
+  -- node /path/to/plausible-mcp/dist/index.js
+```
+
+</details>
+
+<details>
+<summary>omp</summary>
+
+Add to `~/.omp/agent/mcp.json`. `${PLAUSIBLE_API_KEY}` expands from your shell environment.
+
+```json
+{
+  "mcpServers": {
+    "plausible-psf": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/path/to/plausible-mcp/dist/index.js"],
+      "env": {
+        "PLAUSIBLE_API_KEY": "${PLAUSIBLE_API_KEY}",
+        "PLAUSIBLE_BASE_URL": "https://analytics.python.org"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Claude Desktop / Cursor / other JSON clients</summary>
+
+```json
+{
+  "mcpServers": {
+    "plausible-psf": {
+      "command": "node",
+      "args": ["/path/to/plausible-mcp/dist/index.js"],
+      "env": {
+        "PLAUSIBLE_API_KEY": "your-key",
+        "PLAUSIBLE_BASE_URL": "https://analytics.python.org"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Keep the key out of config files (macOS Keychain)</summary>
+
+Store the key once, then point any client at this launcher instead of `node …/index.js`:
+
+```bash
+security add-generic-password -U -s plausible-psf-mcp -a "$USER" -w   # paste key
+```
+
+```sh
+#!/bin/sh
+export PLAUSIBLE_API_KEY="$(security find-generic-password -s plausible-psf-mcp -w)"
+export PLAUSIBLE_BASE_URL=https://analytics.python.org
+exec node /path/to/plausible-mcp/dist/index.js
+```
+
+</details>
+
+<details>
+<summary>Test your key</summary>
+
+```bash
+curl -sS -X POST https://analytics.python.org/api/v2/query \
+  -H "Authorization: Bearer $PLAUSIBLE_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"site_id":"python.org","metrics":["visitors"],"date_range":"7d"}'
+```
+
+A `401 Invalid API key or site ID` means a bad key or a site you are not a member of.
+
+</details>
+
+Then ask things like *"Compare docs.python.org visitors this week vs last week."* To revoke a key,
+delete it on the API Keys page.
+
 ## Landing Page
 
 The landing page at `/` is a static HTML file at `landing/index.html`. 
