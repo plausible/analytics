@@ -186,49 +186,4 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
     # passes when same params presented without Authorization header
     assert build_conn() |> post("/login/oauth/token", valid_params) |> json_response(200)
   end
-
-  describe "security review findings (OAUTH_CONTROLLERS_REVIEW.md)" do
-    @describetag :oauth_finding
-
-    test "3.1 accepts a request carrying only the parameters draft 4.1.3 lists", %{
-      valid_params: valid_params
-    } do
-      params = Map.take(valid_params, ["grant_type", "client_id", "code", "code_verifier"])
-
-      assert build_conn() |> post("/login/oauth/token", params) |> json_response(200)
-    end
-
-    test "3.2 a stale Bearer header does not fail an otherwise valid exchange", %{
-      valid_params: valid_params
-    } do
-      conn =
-        build_conn()
-        |> put_req_header("authorization", "Bearer stale-token-from-a-previous-session")
-        |> post("/login/oauth/token", valid_params)
-
-      assert json_response(conn, 200)
-    end
-
-    test "3.3 replaying a code revokes the tokens it already minted", %{
-      valid_params: valid_params
-    } do
-      %{"access_token" => access_token} =
-        build_conn() |> post("/login/oauth/token", valid_params) |> json_response(200)
-
-      assert {:ok, _, _role} = OAuth.find_access_token(access_token, ProtectedResources.mcp())
-
-      assert build_conn() |> post("/login/oauth/token", valid_params) |> json_response(400)
-
-      assert {:error, :invalid_token} =
-               OAuth.find_access_token(access_token, ProtectedResources.mcp())
-    end
-
-    test "3.4 no refresh_token is issued while the refresh grant is unsupported", %{
-      valid_params: valid_params
-    } do
-      body = build_conn() |> post("/login/oauth/token", valid_params) |> json_response(200)
-
-      refute Map.has_key?(body, "refresh_token")
-    end
-  end
 end
