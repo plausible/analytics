@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   alias Plausible.Stats.{Query, QueryError}
 
   def query(conn, params) do
-    site = Repo.preload(conn.assigns.site, :owners)
+    site = Repo.preload(conn.assigns.site, :team)
 
     case Query.parse_and_build(site, params,
            debug_metadata: debug_metadata(conn),
