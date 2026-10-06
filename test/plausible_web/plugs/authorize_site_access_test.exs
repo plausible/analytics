@@ -413,5 +413,25 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
       refute Ecto.assoc_loaded?(conn.assigns.site.owners)
       refute Ecto.assoc_loaded?(conn.assigns.site.team.owners)
     end
+
+    test "loads only :site_preloads and still switches current team", %{conn: conn, user: user} do
+      site = new_site()
+      add_member(site.team, user: user, role: :viewer)
+
+      opts = AuthorizeSiteAccess.init(:all_roles)
+
+      conn =
+        conn
+        |> bypass_through(PlausibleWeb.Router)
+        |> get("/plug-tests/#{site.domain}/with-domain")
+        |> put_private(:site_preloads, [:team])
+        |> AuthorizeSiteAccess.call(opts)
+
+      refute Ecto.assoc_loaded?(conn.assigns.site.completed_imports)
+      refute Ecto.assoc_loaded?(conn.assigns.site.team.subscription)
+      assert get_session(conn, "current_team_id") == site.team.identifier
+      assert conn.assigns.current_team.id == site.team.id
+      assert conn.assigns.site_team.id == site.team.id
+    end
   end
 end

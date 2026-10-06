@@ -31,6 +31,9 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   ```elixir
   plug AuthorizeSiteAccess, {:all_roles, "site_id"}
   ```
+
+  Routes can limit the site preloads with `private: %{site_preloads: [...]}`,
+  which must include `:team`.
   """
 
   use Plausible.Repo
@@ -110,12 +113,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
         Plausible.OpenTelemetry.add_site_attributes(site)
 
-        site =
-          site
-          |> Repo.preload([
-            :completed_imports,
-            team: [subscription: Teams.last_subscription_query()]
-          ])
+        site = Repo.preload(site, site_preloads(conn))
 
         conn = merge_assigns(conn, site: site, site_role: role, shared_link: shared_link)
 
@@ -136,6 +134,12 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         error_not_found(conn)
       end
     end
+  end
+
+  defp site_preloads(%{private: %{site_preloads: preloads}}), do: preloads
+
+  defp site_preloads(_conn) do
+    [:completed_imports, team: [subscription: Teams.last_subscription_query()]]
   end
 
   defp set_current_team(conn, team) do
