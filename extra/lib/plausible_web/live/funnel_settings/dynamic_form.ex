@@ -379,10 +379,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     |> exclude_existing_steps(steps)
     |> Enum.map(
       &{to_step_data(&1), to_string(&1),
-       if(is_integer(&1.id) and &1.id > 0,
-         do: [type: if(&1.event_name, do: :custom_event, else: :pageview)],
-         else: []
-       )}
+       [type: if(&1.event_name, do: :custom_event, else: :pageview)]}
     )
     |> set_icons()
     |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
@@ -395,7 +392,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
         case opts[:type] do
           :custom_event -> :cursor
           :pageview -> :eye
-          _other -> nil
         end
 
       {value, display_name, Keyword.put(opts, :icon, icon)}
@@ -409,7 +405,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
       case k do
         :custom_event -> 0
         :pageview -> 1
-        _ -> 2
       end
     end)
     |> Enum.reduce([], fn {_, segment}, acc ->
@@ -421,7 +416,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
         case opts[:type] do
           :custom_event -> "Custom events"
           :pageview -> "Pageviews"
-          _ -> "From stats"
         end
 
       opts =
