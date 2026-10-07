@@ -142,6 +142,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
                     module={PlausibleWeb.Live.Components.PrimaCombobox}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
+                    suggest_trigger={@steps}
                     suggest_fun={
                       fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
                     }

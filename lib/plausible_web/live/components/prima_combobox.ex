@@ -24,8 +24,19 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
       |> assign(assigns)
       |> assign(:selected, selected)
       |> assign_new(:suggestions, fn -> [] end)
+      |> assign_new(:last_query, fn -> "" end)
 
-    {:ok, socket}
+    suggest_trigger = assigns[:suggest_trigger] && hash(assigns[:suggest_trigger])
+
+    socket =
+      if suggest_trigger && suggest_trigger != socket.assigns[:suggest_trigger] do
+        suggestions = handle_suggest(socket, socket.assigns.last_query)
+        assign(socket, :suggestions, suggestions)
+      else
+        socket
+      end
+
+    {:ok, assign(socket, :suggest_trigger, suggest_trigger)}
   end
 
   attr(:id, :string, required: true)
@@ -134,19 +145,22 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   end
 
   def handle_event("async_combobox_search", %{"query" => query}, socket) do
+    suggestions = handle_suggest(socket, query)
+
+    {:noreply, assign(socket, suggestions: suggestions, last_query: query)}
+  end
+
+  defp handle_suggest(socket, query) do
     options = socket.assigns[:options] || []
 
-    suggestions =
-      if suggest_fun = socket.assigns[:suggest_fun] do
-        suggest_fun.(query, options)
-      else
-        Enum.filter(options, fn option ->
-          String.contains?(String.downcase(option), String.downcase(query))
-        end)
-      end
-      |> Enum.map(&{hash(&1), &1})
-
-    {:noreply, assign(socket, :suggestions, suggestions)}
+    if suggest_fun = socket.assigns[:suggest_fun] do
+      suggest_fun.(query, options)
+    else
+      Enum.filter(options, fn option ->
+        String.contains?(String.downcase(option), String.downcase(query))
+      end)
+    end
+    |> Enum.map(&{hash(&1), &1})
   end
 
   defp hash(value) do
