@@ -134,7 +134,7 @@ defmodule Plausible.MixProject do
       {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, github: "plausible/prima", ref: "ae793f57c72f784673559a1aabe96c8c63e73540"},
+      {:prima, github: "plausible/prima", ref: "89970d989c07bae823e84cd371db63c26e81f3a0"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.22.2"},
