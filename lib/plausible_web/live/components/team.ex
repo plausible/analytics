@@ -116,12 +116,11 @@ defmodule PlausibleWeb.Live.Components.Team do
     <form id={"role-form-#{:erlang.phash2(@user.email)}"} phx-change={@change}>
       <input type="hidden" name="email" value={@user.email} />
 
-      <PrimaListbox.listbox id={@id} name="role" value={@role}>
+      <PrimaListbox.listbox id={@id} name="role" value={@role} disabled={@disabled}>
         <PrimaListbox.listbox_trigger
           id={"#{@id}-trigger"}
           theme="ghost"
           size="sm"
-          disabled={@disabled}
         >
           <span class="sr-only">Role for {@user.email}:</span>
           <PrimaListbox.listbox_value data-test-id="role">

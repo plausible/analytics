@@ -28,12 +28,13 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   attr(:id, :string, required: true)
   attr(:name, :string, required: true)
   attr(:value, :any, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def listbox(assigns) do
     ~H"""
-    <Listbox.listbox id={@id} name={@name} value={@value} {@rest}>
+    <Listbox.listbox id={@id} name={@name} value={@value} disabled={@disabled} {@rest}>
       {render_slot(@inner_block)}
     </Listbox.listbox>
     """
@@ -43,7 +44,6 @@ defmodule PlausibleWeb.Components.PrimaListbox do
   attr(:theme, :string, default: "secondary")
   attr(:size, :string, default: "md")
   attr(:class, :string, default: "")
-  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -59,12 +59,7 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       )
 
     ~H"""
-    <Listbox.listbox_trigger
-      id={@id}
-      class={@computed_class}
-      disabled={@disabled}
-      {@rest}
-    >
+    <Listbox.listbox_trigger id={@id} class={@computed_class} {@rest}>
       {render_slot(@inner_block)}
     </Listbox.listbox_trigger>
     """
