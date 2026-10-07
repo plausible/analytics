@@ -109,10 +109,7 @@ const FilterMenuPanelContent = ({
   }
 
   return (
-    <div
-      className="flex flex-col gap-y-0.5"
-      onKeyDown={submenu.handleEscape}
-    >
+    <div className="flex flex-col gap-y-0.5" onKeyDown={submenu.handleEscape}>
       {rows.map((row) => (
         <React.Fragment key={row.key}>
           {row.kind === 'item' ? (
