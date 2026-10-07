@@ -363,7 +363,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.DynamicForm do
     steps =
       steps
       |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx + 1}" end)
+      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx}" end)
       |> Enum.map(&elem(&1, 1))
 
     query =
