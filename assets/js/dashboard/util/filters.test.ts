@@ -1,55 +1,52 @@
-import { getAvailableFilterModals, serializeApiFilters } from './filters'
+import { getAvailableFilterDimensions, serializeApiFilters } from './filters'
 
-describe(`${getAvailableFilterModals.name}`, () => {
-  it('gives limited object when props are not available', () => {
+const ALL_DIMENSIONS = [
+  'browser',
+  'browser_version',
+  'channel',
+  'city',
+  'country',
+  'entry_page',
+  'exit_page',
+  'goal',
+  'hostname',
+  'os',
+  'os_version',
+  'page',
+  'props',
+  'referrer',
+  'region',
+  'screen',
+  'segment',
+  'source',
+  'utm_campaign',
+  'utm_content',
+  'utm_medium',
+  'utm_source',
+  'utm_term'
+]
+
+const sorted = (dimensions: string[]) => [...dimensions].sort()
+
+describe(`${getAvailableFilterDimensions.name}`, () => {
+  it('omits props when props are not available', () => {
     expect(
-      getAvailableFilterModals({
-        propsAvailable: false
-      })
-    ).toEqual({
-      browser: ['browser', 'browser_version'],
-      goal: ['goal'],
-      hostname: ['hostname'],
-      location: ['country', 'region', 'city'],
-      os: ['os', 'os_version'],
-      page: ['page', 'entry_page', 'exit_page'],
-      screen: ['screen'],
-      source: ['source', 'channel', 'referrer'],
-      utm: [
-        'utm_medium',
-        'utm_source',
-        'utm_campaign',
-        'utm_term',
-        'utm_content'
-      ],
-      segment: ['segment']
-    })
+      sorted(
+        getAvailableFilterDimensions({
+          propsAvailable: false
+        })
+      )
+    ).toEqual(ALL_DIMENSIONS.filter((dimension) => dimension !== 'props'))
   })
 
-  it('gives full object when props and segments are available', () => {
+  it('includes props when props are available', () => {
     expect(
-      getAvailableFilterModals({
-        propsAvailable: true
-      })
-    ).toEqual({
-      browser: ['browser', 'browser_version'],
-      goal: ['goal'],
-      hostname: ['hostname'],
-      location: ['country', 'region', 'city'],
-      os: ['os', 'os_version'],
-      page: ['page', 'entry_page', 'exit_page'],
-      screen: ['screen'],
-      source: ['source', 'channel', 'referrer'],
-      utm: [
-        'utm_medium',
-        'utm_source',
-        'utm_campaign',
-        'utm_term',
-        'utm_content'
-      ],
-      props: ['props'],
-      segment: ['segment']
-    })
+      sorted(
+        getAvailableFilterDimensions({
+          propsAvailable: true
+        })
+      )
+    ).toEqual(ALL_DIMENSIONS)
   })
 })
 

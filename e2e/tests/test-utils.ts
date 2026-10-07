@@ -88,8 +88,40 @@ export const closeModalButton = (page: Page) =>
 export const filterButton = (page: Page) =>
   page.getByRole('button', { name: 'Filter', exact: true })
 
+const filterMenu = (page: Page) => page.getByTestId('filtermenu')
+
+const filterSubmenu = (page: Page) => page.getByTestId('filtermenu-submenu')
+
 export const filterItemButton = (page: Page, label: HasTextArg) =>
-  page.getByTestId('filtermenu').getByRole('link', { name: label, exact: true })
+  filterMenu(page).getByRole('link', { name: label, exact: true })
+
+export const filterSubmenuButton = (page: Page, label: HasTextArg) =>
+  filterMenu(page).getByRole('button', { name: label, exact: true })
+
+export const filterSubmenuItemButton = (page: Page, label: HasTextArg) =>
+  filterSubmenu(page).getByRole('link', { name: label, exact: true })
+
+export const filterSubmenuSegmentItem = (page: Page, name: HasTextArg) =>
+  filterSubmenu(page).getByRole('link').filter({ hasText: name })
+
+export const openFilterSubmenuItem = async (
+  page: Page,
+  row: string,
+  item: string
+) => {
+  await filterSubmenuButton(page, row).click()
+  await filterSubmenuItemButton(page, item).click()
+}
+
+export const openSegmentsSubmenu = (page: Page) =>
+  filterSubmenuButton(page, 'Segment').click()
+
+// Waits for the panel to unmount. Reopening the menu during its closing
+// animation leaves the panel unmounted.
+export const closeFilterMenu = async (page: Page) => {
+  await filterButton(page).click()
+  await expect(filterMenu(page)).toBeHidden()
+}
 
 export const applyFilterButton = (page: Page, { disabled = false } = {}) =>
   page.getByRole('button', {
