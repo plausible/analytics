@@ -168,7 +168,10 @@ const FilterMenuItems = ({
       >
         <div className="fixed top-0 left-0 w-full h-full"></div>
         <Popover.Panel
-          className={classNames(popover.panel.classNames.roundedSheet, 'relative')}
+          className={classNames(
+            popover.panel.classNames.roundedSheet,
+            'relative'
+          )}
           data-testid="filtermenu"
         >
           {openRow && !besideMenu ? (
