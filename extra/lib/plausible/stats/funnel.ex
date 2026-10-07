@@ -21,7 +21,9 @@ defmodule Plausible.Stats.Funnel do
   def suggest(site, query, steps, all_goals, search_term) do
     search_term = search_term
     journey = Enum.map(steps, &Exploration.Journey.Step.from/1)
-    goals_map = Map.new(all_goals, fn g -> {{g.event_name || "pageview", g.page_path}, g} end)
+
+    goals_map =
+      Map.new(all_goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
 
     {:ok, suggestions} =
       site
@@ -47,7 +49,9 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def step_to_goal(step, goals_map) do
-    if goal = goals_map[{step.name, step.pathname}] do
+    goal = goals_map[{step.name, step.pathname}]
+
+    if not is_nil(goal) and step.is_goal do
       {goal, :static, {step.name, step.pathname}}
     else
       goal =
