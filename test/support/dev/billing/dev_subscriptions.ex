@@ -13,13 +13,6 @@ defmodule Plausible.Billing.DevSubscriptions do
     alias Plausible.{Repo, Billing}
     alias Plausible.Billing.{Plan, EnterprisePlan, DevPaddleApiMock}
 
-    def create_after_1s(team_id, plan_id) do
-      Task.start(fn ->
-        Process.sleep(1000)
-        create(team_id, plan_id)
-      end)
-    end
-
     def create(team_id, plan_id, opts \\ []) do
       plan_or_enterprise_plan = get_plan_or_enterprise_plan(plan_id)
 

@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   use PlausibleWeb, :live_view
 
+  import PlausibleWeb.Live.Components.Team, only: [role_select_input: 1]
+
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
 
@@ -78,13 +80,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
               required
             />
 
-            <div id="member-rows-container" phx-hook="MemberRows" data-max-rows={@max_new_members}>
+            <div id="member-rows-container" phx-hook="MemberRows">
               <.label class="mb-2 mt-4">
                 Team members
               </.label>
 
               <div id="member-rows" data-row-list>
-                <.member_row row={%{id: "1", email: "", role: :viewer}} />
+                <.member_row
+                  :for={n <- 1..@max_new_members//1}
+                  row={%{id: n, email: "", role: :viewer}}
+                  hidden?={n > 1}
+                />
               </div>
 
               <button
@@ -94,10 +100,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
               >
                 <Heroicons.plus class="size-4" /> Add another
               </button>
-
-              <template data-row-template>
-                <.member_row row={%{id: "__ROW_ID__", email: "", role: :viewer}} />
-              </template>
             </div>
 
             <.button id="create-team-submit" type="submit" class="mt-8 w-full">
@@ -111,10 +113,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   attr(:row, :map, required: true)
+  attr(:hidden?, :boolean, default: false)
 
   defp member_row(assigns) do
     ~H"""
-    <div id={"member-row-#{@row.id}"} data-row class="flex items-center gap-x-3 mt-3">
+    <div
+      id={"member-row-#{@row.id}"}
+      data-row
+      class={["items-center gap-x-3 mt-3", if(@hidden?, do: "hidden", else: "flex")]}
+    >
       <div class="flex-1">
         <.input
           type="email"
@@ -124,43 +131,12 @@ defmodule PlausibleWeb.Live.TeamSetup do
         />
       </div>
 
-      <details
-        name="role-picker-group"
-        data-role-picker
-        class="relative inline-block text-left"
-      >
-        <summary
-          id={"role-picker-#{@row.id}-trigger"}
-          role="button"
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150"
-        >
-          <span data-role-label>{@row.role |> Atom.to_string() |> String.capitalize()}</span>
-          <Heroicons.chevron_down mini class="size-4" />
-        </summary>
-
-        <div
-          role="listbox"
-          aria-labelledby={"role-picker-#{@row.id}-trigger"}
-          class="absolute right-0 z-50 mt-2 w-max p-1.5 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5"
-        >
-          <button
-            :for={{role, description} <- PlausibleWeb.Live.Components.Team.role_descriptions()}
-            type="button"
-            role="option"
-            aria-selected={to_string(role == @row.role)}
-            tabindex="-1"
-            data-role-item={role}
-            class="block w-full max-w-60 text-left rounded-md text-sm/6 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/80 px-3 py-1.5"
-          >
-            <div>{role |> Atom.to_string() |> String.capitalize()}</div>
-            <div class="text-gray-500 dark:text-gray-400 text-xs/5">{description}</div>
-          </button>
-        </div>
-      </details>
-
-      <input type="hidden" name={"rows[#{@row.id}][role]"} value={@row.role} data-role-value />
+      <.role_select_input
+        id={"role-select-#{@row.id}"}
+        name={"rows[#{@row.id}][role]"}
+        role={@row.role}
+        my_role={:owner}
+      />
 
       <button
         type="button"
