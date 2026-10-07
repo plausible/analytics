@@ -47,6 +47,11 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
+      - name: Start MinIO
+        id: minio
+        run: make minio
+        background: true
+
       - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
         id: versions
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -96,8 +101,8 @@ jobs:
       - run: mix do ecto.create, ecto.migrate
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
-      - run: make minio
-        if: env.MIX_ENV == 'test'
+      - name: Wait for MinIO
+        wait: minio
       - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6
         if: env.MIX_ENV == 'test'
         env:
@@ -176,6 +181,22 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
+      - name: Install E2E dependencies and Playwright browsers
+        id: e2e-deps
+        background: true
+        env:
+          PLAYWRIGHT_CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
+        run: |
+          npm --prefix ./e2e ci
+          if [ "$PLAYWRIGHT_CACHE_HIT" != "true" ]; then
+            cd e2e && npx playwright install --with-deps chromium
+          fi
+
+      - name: Install assets dependencies
+        id: assets-deps
+        background: true
+        run: npm install --prefix ./assets
+
       - name: Check for changes in tracker/**
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
@@ -196,7 +217,8 @@ jobs:
         if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
-      - run: npm install --prefix ./assets
+      - name: Wait for assets dependencies
+        wait: assets-deps
       - run: mix assets.deploy
       - name: Wait for Postgres and ClickHouse
         run: |
@@ -206,19 +228,15 @@ jobs:
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
-      - name: Install E2E dependencies
-        run: npm --prefix ./e2e ci
+      - name: Wait for E2E dependencies and Playwright browsers
+        wait: e2e-deps
 
-      - name: Check format
-        run: npm --prefix ./e2e run check-format
+      - parallel:
+          - name: Check format
+            run: npm --prefix ./e2e run check-format
 
-      - name: Check types
-        run: npm --prefix ./e2e run typecheck
-
-      - name: Install E2E Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: ./e2e
-        run: npx playwright install --with-deps chromium
+          - name: Check types
+            run: npm --prefix ./e2e run typecheck
 
       - name: Run E2E Playwright tests
         run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
@@ -289,8 +307,9 @@ jobs:
 
       - run: mix deps.get
       - run: mix compile --warnings-as-errors --all-warnings
-      - run: mix format --check-formatted
-      - run: mix deps.unlock --check-unused
-      - run: mix generate_countries_meta && git diff --exit-code -- assets/data/countries_meta.json
-      - run: mix credo
-      - run: mix dialyzer
+      - parallel:
+          - run: mix format --check-formatted
+          - run: mix deps.unlock --check-unused
+          - run: mix generate_countries_meta && git diff --exit-code -- assets/data/countries_meta.json
+          - run: mix credo
+          - run: mix dialyzer
