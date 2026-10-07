@@ -51,6 +51,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 :if={@ip_rules_count < Shields.maximum_ip_rules()}
                 id="add-ip-rule"
                 phx-click={Prima.Modal.JS.open("ip-rule-form-modal")}
+                class="mt-6"
               >
                 Add IP address
               </.button>
@@ -60,7 +61,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               <.button
                 id="add-ip-rule"
                 phx-click={Prima.Modal.JS.open("ip-rule-form-modal")}
-                mt?={false}
               >
                 Add IP address
               </.button>
@@ -174,6 +174,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       field={f[:inet]}
                       label="IP address"
                       placeholder="e.g. 192.168.127.12"
+                      wrapper_class="mt-6"
                     />
                   </div>
 
@@ -181,12 +182,13 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                     field={f[:description]}
                     label="Description (optional)"
                     placeholder="e.g. The Office"
+                    wrapper_class="mt-6"
                   />
 
                   <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                     Once added, we will start rejecting traffic from this IP within a few minutes.
                   </p>
-                  <.button type="submit" class="w-full">
+                  <.button type="submit" class="w-full mt-6">
                     Add IP address
                   </.button>
                 </.form>

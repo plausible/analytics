@@ -11,7 +11,6 @@
             autocomplete="username"
             placeholder="example@email.com"
             field={f[:email]}
-            mt?={false}
             autofocus="autofocus"
           />
         </div>
@@ -28,7 +27,6 @@
           id="current-password"
           autocomplete="current-password"
           field={f[:password]}
-          mt?={false}
         />
         <.styled_link href="/password/request-reset" class="text-sm absolute top-0 right-0">
           Forgot password?
@@ -44,7 +42,7 @@
       <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
 
       <div class="flex flex-col gap-y-6">
-        <.button class="w-full" type="submit">Sign in</.button>
+        <.button class="w-full mt-6" type="submit">Sign in</.button>
 
         <div class="flex flex-col gap-y-2">
           <p

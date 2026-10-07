@@ -1,56 +1,34 @@
 import React, { useMemo, useRef } from 'react'
-import {
-  FILTER_MODAL_TO_FILTER_GROUP,
-  formatFilterGroup
-} from '../util/filters'
-import { PlausibleSite, useSiteContext } from '../site-context'
+import { formattedFilters } from '../util/filters'
+import { useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { FilterIcon } from '../components/icons'
 import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { SearchableSegmentsSection } from './segments/searchable-segments-section'
-import { useSegmentsContext } from '../filtering/segments-context'
-
-export function getFilterListItems({
-  propsAvailable
-}: Pick<PlausibleSite, 'propsAvailable'>): Array<
-  Array<{
-    title: string
-    modals: Array<false | keyof typeof FILTER_MODAL_TO_FILTER_GROUP>
-  }>
-> {
-  return [
-    [
-      {
-        title: 'URL',
-        modals: ['page', 'hostname']
-      },
-      {
-        title: 'Acquisition',
-        modals: ['source', 'utm']
-      }
-    ],
-    [
-      {
-        title: 'Device',
-        modals: ['location', 'screen', 'browser', 'os']
-      },
-      {
-        title: 'Behaviour',
-        modals: ['goal', !!propsAvailable && 'props']
-      }
-    ]
-  ]
-}
+import {
+  SegmentsSubmenu,
+  useListableSegments
+} from './segments/segments-submenu'
+import {
+  FilterGroupKey,
+  FilterMenuRow,
+  FilterSubmenuRow,
+  getFilterMenuRows,
+  SEGMENTS_ROW
+} from './filter-menu-rows'
+import { MenuSeparator } from './nav-menu-components'
+import {
+  SubmenuInPlace,
+  SubmenuPanel,
+  SubmenuRow,
+  submenuIconClassName as iconClassName,
+  useSubmenu
+} from './submenu'
 
 const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
-  const site = useSiteContext()
-  const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const { limitedToSegment } = useSegmentsContext()
 
   return (
     <>
@@ -59,7 +37,8 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.ghost
+          popover.toggleButton.classNames.ghost,
+          'relative z-20'
         )}
       >
         <FilterIcon className="block size-3.5" />
@@ -72,50 +51,149 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         {...popover.transition.props}
         className={classNames(
           popover.transition.classNames.fullwidth,
-          'mt-2 md:left-auto md:w-80 md:origin-top-right'
+          'mt-2 md:left-auto md:w-56 md:origin-top-right'
         )}
       >
+        <div className="fixed top-0 left-0 w-full h-full"></div>
         <Popover.Panel
-          ref={panelRef}
-          className={classNames(popover.panel.classNames.roundedSheet)}
+          className={classNames(
+            popover.panel.classNames.roundedSheet,
+            'relative'
+          )}
           data-testid="filtermenu"
         >
-          <div className="flex">
-            {columns.map((filterGroups, index) => (
-              <div key={index} className="flex flex-col w-1/2">
-                {filterGroups.map(({ title, modals }) => (
-                  <div key={title}>
-                    <div className={titleClassName}>{title}</div>
-                    {modals
-                      .filter((m) => !!m)
-                      .map((modalKey) => (
-                        <AppNavigationLink
-                          className={classNames(
-                            popover.items.classNames.navigationLink,
-                            popover.items.classNames.hoverLink
-                          )}
-                          onClick={() => closeDropdown()}
-                          key={modalKey}
-                          path={filterRoute.path}
-                          params={{ field: modalKey }}
-                          search={(s) => s}
-                        >
-                          {formatFilterGroup(modalKey)}
-                        </AppNavigationLink>
-                      ))}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          {limitedToSegment === null && (
-            <SearchableSegmentsSection
-              closeList={closeDropdown}
-              tooltipContainerRef={panelRef}
-            />
-          )}
+          <FilterMenuPanelContent closeDropdown={closeDropdown} />
         </Popover.Panel>
       </Transition>
+    </>
+  )
+}
+
+const FilterMenuPanelContent = ({
+  closeDropdown
+}: {
+  closeDropdown: () => void
+}) => {
+  const site = useSiteContext()
+  const segments = useListableSegments()
+  const submenu = useSubmenu<FilterGroupKey>()
+
+  const rows = useMemo(() => {
+    const filterRows = getFilterMenuRows(site)
+    return segments.visible ? [SEGMENTS_ROW, ...filterRows] : filterRows
+  }, [site, segments.visible])
+
+  const openRow = useMemo(
+    () =>
+      rows.find(
+        (row): row is FilterSubmenuRow =>
+          row.kind !== 'item' && row.key === submenu.openKey
+      ) ?? null,
+    [rows, submenu.openKey]
+  )
+
+  const submenuBody = openRow && (
+    <SubmenuBody row={openRow} closeDropdown={closeDropdown} />
+  )
+
+  if (openRow && !submenu.besideMenu) {
+    return (
+      <SubmenuInPlace
+        submenu={submenu}
+        label={openRow.label}
+        testId="filtermenu-submenu"
+      >
+        {submenuBody}
+      </SubmenuInPlace>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-y-0.5" onKeyDown={submenu.handleEscape}>
+      {rows.map((row) => (
+        <React.Fragment key={row.key}>
+          {row.kind === 'item' ? (
+            <ItemRow
+              row={row}
+              onPointerOrFocus={submenu.scheduleClose}
+              closeDropdown={closeDropdown}
+            />
+          ) : (
+            <>
+              <SubmenuRow
+                label={row.label}
+                Icon={row.Icon}
+                expanded={submenu.openKey === row.key}
+                submenuId={submenu.submenuId}
+                onOpen={(anchor) => submenu.openWith(row.key, anchor)}
+              />
+              {openRow?.key === row.key && (
+                <SubmenuPanel
+                  submenu={submenu}
+                  label={openRow.label}
+                  testId="filtermenu-submenu"
+                >
+                  {submenuBody}
+                </SubmenuPanel>
+              )}
+            </>
+          )}
+          {row.kind === 'segments' && <MenuSeparator />}
+        </React.Fragment>
+      ))}
+    </div>
+  )
+}
+
+const ItemRow = ({
+  row,
+  onPointerOrFocus,
+  closeDropdown
+}: {
+  row: Extract<FilterMenuRow, { kind: 'item' }>
+  onPointerOrFocus: () => void
+  closeDropdown: () => void
+}) => (
+  <AppNavigationLink
+    className={popover.items.classNames.iconRow}
+    onClick={closeDropdown}
+    onMouseEnter={onPointerOrFocus}
+    onFocus={onPointerOrFocus}
+    path={filterRoute.path}
+    params={{ field: row.dimension }}
+    search={(s) => s}
+  >
+    <row.Icon className={iconClassName} />
+    <span className={popover.items.classNames.label}>{row.label}</span>
+  </AppNavigationLink>
+)
+
+const SubmenuBody = ({
+  row,
+  closeDropdown
+}: {
+  row: FilterSubmenuRow
+  closeDropdown: () => void
+}) => {
+  if (row.kind === 'segments') {
+    return <SegmentsSubmenu closeList={closeDropdown} />
+  }
+  return (
+    <>
+      {row.dimensions.map((dimension) => (
+        <AppNavigationLink
+          key={dimension}
+          className={popover.items.classNames.iconRow}
+          onClick={closeDropdown}
+          path={filterRoute.path}
+          params={{ field: dimension }}
+          search={(s) => s}
+        >
+          <span className={popover.items.classNames.label}>
+            {formattedFilters[dimension]}
+          </span>
+        </AppNavigationLink>
+      ))}
     </>
   )
 }
@@ -125,6 +203,3 @@ export const FilterMenu = () => (
     {({ close }) => <FilterMenuItems closeDropdown={close} />}
   </Popover>
 )
-
-const titleClassName =
-  'text-sm pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400'

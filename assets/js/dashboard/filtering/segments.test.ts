@@ -10,7 +10,9 @@ import {
   SegmentType,
   SavedSegment,
   SegmentData,
-  canExpandSegment
+  canExpandSegment,
+  getSegmentAuthorship,
+  getAttributionDateLabel
 } from './segments'
 import { Filter } from '../dashboard-state'
 import { PlausibleSite } from '../site-context'
@@ -38,6 +40,64 @@ describe('segment labels in URL search params', () => {
     const formatted = formatSegmentIdAsLabelKey(5)
     expect(formatted).toEqual('segment-5')
     expect(isSegmentIdLabelKey(formatted)).toEqual(true)
+  })
+})
+
+describe(`${getSegmentAuthorship.name}`, () => {
+  it('returns the owner name for a site segment with an owner', () => {
+    expect(
+      getSegmentAuthorship({
+        segment: { type: SegmentType.site, owner_name: 'Alice' },
+        showOnlyPublicData: false
+      })
+    ).toBe('Alice')
+  })
+
+  it('returns "Site segment" for a site segment with a dangling owner', () => {
+    expect(
+      getSegmentAuthorship({
+        segment: { type: SegmentType.site, owner_name: null },
+        showOnlyPublicData: false
+      })
+    ).toBe('Site segment')
+  })
+
+  it('returns "Site segment" for a site segment when the owner must stay hidden', () => {
+    expect(
+      getSegmentAuthorship({
+        segment: { type: SegmentType.site, owner_name: 'Alice' },
+        showOnlyPublicData: true
+      })
+    ).toBe('Site segment')
+  })
+
+  it('returns "Personal segment" for a personal segment regardless of owner (we assume personal segments are served only to the author)', () => {
+    expect(
+      getSegmentAuthorship({
+        segment: { type: SegmentType.personal, owner_name: 'Alice' },
+        showOnlyPublicData: false
+      })
+    ).toBe('Personal segment')
+  })
+})
+
+describe(`${getAttributionDateLabel.name}`, () => {
+  it('returns the created date when the segment was never edited', () => {
+    expect(
+      getAttributionDateLabel({
+        inserted_at: '2025-02-01 14:00:00',
+        updated_at: '2025-02-01 14:00:00'
+      })
+    ).toBe('1 Feb')
+  })
+
+  it('returns the edited date when the segment was edited', () => {
+    expect(
+      getAttributionDateLabel({
+        inserted_at: '2025-02-01 14:00:00',
+        updated_at: '2025-03-13 16:00:00'
+      })
+    ).toBe('Edited 13 Mar')
   })
 })
 

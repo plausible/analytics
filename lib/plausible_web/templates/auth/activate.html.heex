@@ -26,7 +26,7 @@
           </p>
         </div>
 
-        <.button type="submit" class="w-full" mt?={false}>
+        <.button type="submit" class="w-full">
           Activate account
         </.button>
       </.form>
@@ -64,7 +64,7 @@
       </div>
     <% else %>
       <div class="flex flex-col gap-y-2">
-        <.button_link method="post" class="w-full" href="/activate/request-code">
+        <.button_link method="post" class="w-full mt-6" href="/activate/request-code">
           Send activation code
         </.button_link>
         <p :if={@error} class="text-xs text-red-500 text-center">

@@ -52,7 +52,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
               placeholder="Enter e-mail"
               phx-debounce={200}
               readonly={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
-              mt?={false}
             />
           </div>
 
@@ -66,7 +65,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
           <.button
             id="invite-member"
             type="submit"
-            mt?={false}
             disabled={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
           >
             Invite

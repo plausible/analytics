@@ -24,6 +24,8 @@ defmodule Plausible.Auth do
       @activation_request_limit 100_000
       @totp_setup_limit 100_000
       @totp_setup_ip_limit 100_000
+      @oauth_authorize_limit 100_000
+      @oauth_authorize_ip_limit 100_000
 
     env when env in [:test, :ce_test] ->
       @ip_rate_limit 5
@@ -33,6 +35,8 @@ defmodule Plausible.Auth do
       @activation_ip_limit 100_000
       @totp_setup_ip_limit 100_000
       @activation_request_limit 100_000
+      @oauth_authorize_limit 10
+      @oauth_authorize_ip_limit 100_000
 
     _ ->
       @ip_rate_limit 5
@@ -42,6 +46,8 @@ defmodule Plausible.Auth do
       @activation_ip_limit 2
       @totp_setup_ip_limit 2
       @activation_request_limit 5
+      @oauth_authorize_limit 10
+      @oauth_authorize_ip_limit 30
   end
 
   @rate_limits %{
@@ -94,6 +100,16 @@ defmodule Plausible.Auth do
       prefix: "totp-setup:user",
       limit: @totp_setup_limit,
       interval: :timer.minutes(5)
+    },
+    oauth_authorize_ip: %{
+      prefix: "oauth-authorize:ip",
+      limit: @oauth_authorize_ip_limit,
+      interval: :timer.minutes(1)
+    },
+    oauth_authorize_user: %{
+      prefix: "oauth-authorize:user",
+      limit: @oauth_authorize_limit,
+      interval: :timer.minutes(1)
     }
   }
 

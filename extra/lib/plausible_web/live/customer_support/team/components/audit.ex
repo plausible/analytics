@@ -44,7 +44,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           label="Audit Entry Identifier"
           value={@revealed_audit_entry_id}
         />
-        <div class="relative">
+        <div class="relative mt-6">
           <.input
             rows="16"
             type="textarea"
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           is_nil(@revealed_audit_entry_id) &&
             (@audit_page.metadata.before || @audit_page.metadata.after)
         }
-        class="flex justify-between items-center mt-4"
+        class="flex justify-between items-center mt-10"
       >
         <.button
           :if={@audit_page.metadata.before}
