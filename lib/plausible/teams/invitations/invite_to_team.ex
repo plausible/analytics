@@ -85,7 +85,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   defp validate_emails(emails) do
     cond do
       not Enum.all?(emails, &valid_email?/1) -> {:error, :invalid_email}
-      Enum.uniq(emails) != emails -> {:error, :duplicate_emails}
+      # emails are case-insensitive in the database (citext)
+      Enum.uniq_by(emails, &String.downcase/1) != emails -> {:error, :duplicate_emails}
       true -> :ok
     end
   end

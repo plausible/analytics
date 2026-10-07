@@ -312,6 +312,20 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
     end
 
+    test "treats emails differing only in case as duplicates" do
+      inviter = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      assert {:error, :duplicate_emails} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: "first@example.com", role: :viewer},
+                 %{email: "First@Example.com", role: :editor}
+               ])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
+    end
+
     on_ee do
       test "counts invitations in the same call towards team member limit" do
         owner = new_user()
