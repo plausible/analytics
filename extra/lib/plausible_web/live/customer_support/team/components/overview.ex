@@ -154,8 +154,10 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
         # Prolonging trial_expiry_date (or otherwise making the team
-        # eligible again) cancels any pending deletion schedule.
+        # eligible again) cancels any pending deletion schedule and
+        # unlocks the team without waiting for the nightly lock check.
         TeamDeletionSchedules.cancel_for_team(team)
+        Plausible.Billing.SiteLocker.update_for(team)
         schedule = TeamDeletionSchedules.active_schedule_for_team(team)
 
         success("Team saved")
