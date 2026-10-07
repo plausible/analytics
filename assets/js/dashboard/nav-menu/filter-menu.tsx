@@ -150,7 +150,8 @@ const FilterMenuItems = ({
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.ghost
+          popover.toggleButton.classNames.ghost,
+          'relative z-20'
         )}
       >
         <FilterIcon className="block size-3.5" />
