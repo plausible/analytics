@@ -261,12 +261,9 @@ const RelatedSharedLinks = ({ sharedLinks }: { sharedLinks: string[] }) => {
       <p className={inModalSectionLabelClassName}>Shared links</p>
       <FilterPillsList
         className="flex-wrap"
-        direction="horizontal"
         pills={sharedLinks.map((name) => ({
-          className: 'dark:!shadow-gray-950/60',
           plainText: name,
-          children: name,
-          interactive: false
+          children: name
         }))}
       />
     </div>
@@ -430,12 +427,9 @@ const FiltersInSegment = ({
       <p className={inModalSectionLabelClassName}>Filters in segment</p>
       <FilterPillsList
         className="flex-wrap"
-        direction="horizontal"
         pills={segment_data.filters.map((filter) => ({
-          className: 'dark:!shadow-gray-950/60',
           plainText: plainFilterText({ labels: segment_data.labels }, filter),
-          children: styledFilterText({ labels: segment_data.labels }, filter),
-          interactive: false
+          children: styledFilterText({ labels: segment_data.labels }, filter)
         }))}
       />
     </div>

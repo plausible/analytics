@@ -1,4 +1,11 @@
-import React, { CSSProperties, ReactNode, RefObject, useState } from 'react'
+import React, {
+  CSSProperties,
+  ReactNode,
+  RefObject,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import { usePopper } from 'react-popper'
 import classNames from 'classnames'
 import { createPortal } from 'react-dom'
@@ -9,7 +16,8 @@ export function Tooltip({
   className,
   onClick,
   boundary,
-  containerRef
+  containerRef,
+  interactive = false
 }: {
   info: ReactNode
   children: ReactNode
@@ -19,8 +27,11 @@ export function Tooltip({
   boundary?: HTMLElement | null
   /** if defined, the tooltip is rendered in a portal to this element */
   containerRef?: RefObject<HTMLElement>
+  /** if true, the tooltip stays open while hovered, so its content can be clicked */
+  interactive?: boolean
 }) {
   const [visible, setVisible] = useState(false)
+  const hideTimeout = useRef<ReturnType<typeof setTimeout>>()
   const [referenceElement, setReferenceElement] =
     useState<HTMLDivElement | null>(null)
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
@@ -49,12 +60,28 @@ export function Tooltip({
     ]
   })
 
+  useEffect(() => () => clearTimeout(hideTimeout.current), [])
+
+  const show = () => {
+    clearTimeout(hideTimeout.current)
+    setVisible(true)
+  }
+
+  const hide = () => {
+    if (interactive) {
+      // lets the pointer move onto the tooltip before it hides
+      hideTimeout.current = setTimeout(() => setVisible(false))
+    } else {
+      setVisible(false)
+    }
+  }
+
   return (
     <div className={classNames('relative', className)}>
       <div
         ref={setReferenceElement}
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
+        onMouseEnter={show}
+        onMouseLeave={hide}
         onClick={onClick}
       >
         {children}
@@ -65,6 +92,9 @@ export function Tooltip({
           popperStyle={styles.popper}
           popperAttributes={attributes.popper}
           setPopperElement={setPopperElement}
+          interactive={interactive}
+          onMouseEnter={interactive ? show : undefined}
+          onMouseLeave={interactive ? hide : undefined}
         >
           {info}
         </TooltipMessage>
@@ -78,12 +108,18 @@ function TooltipMessage({
   popperStyle,
   popperAttributes,
   setPopperElement,
+  interactive,
+  onMouseEnter,
+  onMouseLeave,
   children
 }: {
   containerRef?: RefObject<HTMLElement>
   popperStyle: CSSProperties
   popperAttributes?: Record<string, string>
   setPopperElement: (element: HTMLDivElement) => void
+  interactive: boolean
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
   children: ReactNode
 }) {
   const messageElement = (
@@ -91,8 +127,15 @@ function TooltipMessage({
       ref={setPopperElement}
       style={popperStyle}
       {...popperAttributes}
-      className="pointer-events-none z-[99] [body:has(.modal.is-open)_&]:z-[1000] px-2 py-1 rounded-sm text-sm text-gray-100 font-medium bg-gray-800 dark:bg-gray-700"
+      className={classNames(
+        'z-[99] [body:has(.modal.is-open)_&]:z-[1000] px-2 py-1 rounded-sm text-sm text-gray-100 font-medium bg-gray-800 dark:bg-gray-700',
+        interactive
+          ? 'before:absolute before:inset-x-0 before:top-full before:h-1.5 [&[data-popper-placement^=bottom]]:before:top-auto [&[data-popper-placement^=bottom]]:before:bottom-full'
+          : 'pointer-events-none'
+      )}
       role="tooltip"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {children}
     </div>
