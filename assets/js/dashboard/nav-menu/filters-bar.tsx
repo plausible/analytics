@@ -1,12 +1,6 @@
 import { StarIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
-import React, {
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState
-} from 'react'
+import React, { ReactNode, useEffect, useRef } from 'react'
 import { AppliedFilterPillsList } from './filter-pills-list'
 import { FilterMenu } from './filter-menu'
 import { useDashboardStateContext } from '../dashboard-state-context'
@@ -21,10 +15,7 @@ import {
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardState } from '../dashboard-state'
 import { useUserContext } from '../user-context'
-
-const SCROLL_FADE_PX = 32
-
-type ScrollOverflow = { start: boolean; end: boolean }
+import { useScrollFadeMask } from '../hooks/use-scroll-fade-mask'
 
 const canShowClearAllAction = ({
   filters
@@ -77,56 +68,14 @@ export const FiltersBar = () => {
   )
 }
 
-const getScrollOverflow = (element: HTMLElement): ScrollOverflow => ({
-  start: element.scrollLeft > 1,
-  end: element.scrollLeft + element.clientWidth < element.scrollWidth - 1
-})
-
-const getFadeMask = ({ start, end }: ScrollOverflow) => {
-  if (!start && !end) {
-    return undefined
-  }
-  const from = start ? `transparent, black ${SCROLL_FADE_PX}px` : 'black'
-  const to = end
-    ? `black calc(100% - ${SCROLL_FADE_PX}px), transparent`
-    : 'black'
-  return `linear-gradient(to right, ${from}, ${to})`
-}
-
 const ScrollableFilterPills = () => {
   const { dashboardState } = useDashboardStateContext()
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [overflow, setOverflow] = useState<ScrollOverflow>({
-    start: false,
-    end: false
-  })
+  const { ref, maskImage, update } = useScrollFadeMask<HTMLDivElement>()
   const filtersCount = dashboardState.filters.length
   const previousFiltersCount = useRef(filtersCount)
 
-  const updateOverflow = (element: HTMLElement) => {
-    const next = getScrollOverflow(element)
-    setOverflow((current) =>
-      current.start === next.start && current.end === next.end ? current : next
-    )
-  }
-
-  useLayoutEffect(() => {
-    const element = scrollRef.current
-    if (!element) {
-      return
-    }
-    const onChange = () => updateOverflow(element)
-    const resizeObserver = new ResizeObserver(onChange)
-    resizeObserver.observe(element)
-    element.addEventListener('scroll', onChange, { passive: true })
-    return () => {
-      resizeObserver.disconnect()
-      element.removeEventListener('scroll', onChange)
-    }
-  }, [])
-
   useEffect(() => {
-    const element = scrollRef.current
+    const element = ref.current
     if (!element) {
       return
     }
@@ -135,14 +84,14 @@ const ScrollableFilterPills = () => {
       element.scrollLeft = 0
     }
     previousFiltersCount.current = filtersCount
-    updateOverflow(element)
-  }, [dashboardState.filters, filtersCount])
+    update()
+  }, [ref, update, dashboardState.filters, filtersCount])
 
   return (
     <AppliedFilterPillsList
-      ref={scrollRef}
+      ref={ref}
       className="md:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      style={{ maskImage: getFadeMask(overflow) }}
+      style={{ maskImage }}
     />
   )
 }

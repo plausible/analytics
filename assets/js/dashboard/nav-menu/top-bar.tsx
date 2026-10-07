@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { CSSProperties, ReactNode } from 'react'
 import { SiteSwitcher } from '../site-switcher'
 import { useSiteContext } from '../site-context'
 import CurrentVisitors from '../stats/current-visitors'
@@ -8,6 +8,7 @@ import { FiltersBar } from './filters-bar'
 import { DashboardPeriodPicker } from './query-periods/dashboard-period-picker'
 import { SegmentMenu } from './segments/segment-menu'
 import { DashboardOptionsMenu } from './dashboard-options-menu'
+import { useScrollFadeMask } from '../hooks/use-scroll-fade-mask'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -43,8 +44,14 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
 }
 
 function TopBarInner({ showCurrentVisitors }: TopBarProps) {
+  const { ref, maskImage } = useScrollFadeMask<HTMLDivElement>()
+
   return (
-    <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0">
+    <div
+      ref={ref}
+      className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto md:overflow-visible w-full touch-pan-x md:touch-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 -my-1 md:py-0 md:my-0 max-md:[mask-image:var(--scroll-fade-mask)]"
+      style={{ '--scroll-fade-mask': maskImage } as CSSProperties}
+    >
       <div className="flex shrink-0 items-center sm:gap-x-1 md:gap-x-2.5">
         <SiteSwitcher />
         {showCurrentVisitors && <CurrentVisitors />}
