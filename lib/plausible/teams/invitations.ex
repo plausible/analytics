@@ -660,19 +660,19 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def ensure_no_guest_invitation(%Teams.Team{} = team, invitee_email) do
-    guest_invitation_exists? =
-      Repo.exists?(
+  def ensure_not_already_invited(%Teams.Team{} = team, invitee_email) do
+    pending_invitation_role =
+      Repo.one(
         from ti in Teams.Invitation,
           where: ti.team_id == ^team.id,
           where: ti.email == ^invitee_email,
-          where: ti.role == :guest
+          select: ti.role
       )
 
-    if guest_invitation_exists? do
-      {:error, :already_invited_guest}
-    else
-      :ok
+    case pending_invitation_role do
+      nil -> :ok
+      :guest -> {:error, :already_invited_guest}
+      _ -> {:error, :already_invited}
     end
   end
 

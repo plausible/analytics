@@ -312,6 +312,25 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
     end
 
+    test "returns an error when inviting an email with a pending team invitation" do
+      inviter = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      existing_invitation =
+        invite_member(team, "invitee@example.com", role: :viewer, inviter: inviter)
+
+      assert {:error, :already_invited} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: "Invitee@Example.com", role: :admin}
+               ])
+
+      invitation = Repo.reload!(existing_invitation)
+      assert invitation.role == :viewer
+      assert invitation.updated_at == existing_invitation.updated_at
+      assert_no_emails_delivered()
+    end
+
     test "treats emails differing only in case as duplicates" do
       inviter = new_user()
       _site = new_site(owner: inviter)
