@@ -643,7 +643,7 @@ defmodule Plausible.Teams.Invitations do
 
   def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
     case Teams.Memberships.team_role(team, invitee) do
-      {:ok, :guest} -> :ok
+      {:ok, :guest} -> {:error, :already_a_guest}
       {:error, :not_a_member} -> :ok
       {:ok, _} -> {:error, :already_a_member}
     end
@@ -657,6 +657,22 @@ defmodule Plausible.Teams.Invitations do
       :ok
     else
       {:error, :already_a_member}
+    end
+  end
+
+  def ensure_no_guest_invitation(%Teams.Team{} = team, invitee_email) do
+    guest_invitation_exists? =
+      Repo.exists?(
+        from ti in Teams.Invitation,
+          where: ti.team_id == ^team.id,
+          where: ti.email == ^invitee_email,
+          where: ti.role == :guest
+      )
+
+    if guest_invitation_exists? do
+      {:error, :already_invited_guest}
+    else
+      :ok
     end
   end
 

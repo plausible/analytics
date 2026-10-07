@@ -194,8 +194,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
       {:error, :duplicate_emails} ->
         {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
 
-      # A team that's not set up yet has no members other than its owner
-      # (guests can be invited), so this can only mean inviting yourself.
+      {:error, reason} when reason in [:already_a_guest, :already_invited_guest] ->
+        {:noreply,
+         put_live_flash(
+           socket,
+           :error,
+           "Some of these e-mails belong to site guests who cannot be invited at this stage. Please invite them later in team settings"
+         )}
+
       {:error, :already_a_member} ->
         {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
 

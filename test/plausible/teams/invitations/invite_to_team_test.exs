@@ -152,14 +152,14 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       end
     end
 
-    test "succeeds when existing user is only a guest member" do
+    test "returns error when existing user is a guest member" do
       inviter = new_user()
       invitee = new_user()
       site = new_site(owner: inviter)
       team = team_of(inviter)
       add_guest(site, user: invitee, role: :viewer)
 
-      assert {:ok, _team_invitation} =
+      assert {:error, :already_a_guest} =
                InviteToTeam.invite(team, inviter, invitee.email, :viewer)
     end
 
@@ -265,6 +265,37 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
         refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
       end
+    end
+
+    test "returns an error when inviting a guest member" do
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
+      team = team_of(inviter)
+      add_guest(site, user: invitee, role: :viewer)
+
+      assert {:error, :already_a_guest} =
+               InviteToTeam.invite_all(team, inviter, [%{email: invitee.email, role: :viewer}])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: invitee.email)
+    end
+
+    test "returns an error when inviting an email with a pending guest invitation" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      team = team_of(inviter)
+      invite_guest(site, "guest@example.com", role: :viewer, inviter: inviter)
+
+      assert {:error, :already_invited_guest} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: "guest@example.com", role: :editor}
+               ])
+
+      assert %Teams.Invitation{role: :guest} =
+               team_invitation =
+               Repo.get_by(Teams.Invitation, team_id: team.id, email: "guest@example.com")
+
+      assert [_] = Repo.preload(team_invitation, :guest_invitations).guest_invitations
     end
 
     test "returns an error for duplicate emails without creating any invitations" do

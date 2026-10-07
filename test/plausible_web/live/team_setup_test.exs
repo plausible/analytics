@@ -244,6 +244,20 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "My personal sites"
     end
 
+    test "rejects inviting a guest member", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      guest = new_user()
+      add_guest(site, role: :viewer, user: guest)
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, rows: %{"1" => %{"email" => guest.email, "role" => "admin"}}) =~
+               "Some of these e-mails belong to site guests"
+
+      refute Repo.reload!(team).setup_complete
+      assert [] = Teams.Invitations.pending_team_invitations_for(team)
+    end
+
     @tag :ee_only
     test "fails to create the team when the plan's member limit is breached", %{
       conn: conn,
