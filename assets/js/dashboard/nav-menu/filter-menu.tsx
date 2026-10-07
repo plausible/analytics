@@ -111,7 +111,6 @@ const FilterMenuPanelContent = ({
   return (
     <div
       className="flex flex-col gap-y-0.5"
-      onMouseLeave={submenu.scheduleClose}
       onKeyDown={submenu.handleEscape}
     >
       {rows.map((row) => (
