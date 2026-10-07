@@ -166,8 +166,9 @@ const FilterMenuItems = ({
           'mt-2 md:left-auto md:w-56 md:origin-top-right'
         )}
       >
+        <div className="fixed top-0 left-0 w-full h-full"></div>
         <Popover.Panel
-          className={popover.panel.classNames.roundedSheet}
+          className={classNames(popover.panel.classNames.roundedSheet, 'relative')}
           data-testid="filtermenu"
         >
           {openRow && !besideMenu ? (
