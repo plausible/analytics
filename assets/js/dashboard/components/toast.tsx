@@ -11,7 +11,7 @@ type Toast = {
 const TOAST_TTL_MS = 4000
 const TOAST_LEAVE_MS = 100
 
-type Phase = 'enter' | 'shown' | 'leave'
+type Phase = 'shown' | 'leave'
 type Listener = (toast: Toast) => void
 
 const listeners = new Set<Listener>()
@@ -22,36 +22,18 @@ export function showToast(toast: Toast) {
 
 export function ToastHost() {
   const [toast, setToast] = useState<Toast | null>(null)
-  const [phase, setPhase] = useState<Phase>('enter')
+  const [phase, setPhase] = useState<Phase>('shown')
 
   useEffect(() => {
     const listener: Listener = (next) => {
       setToast(next)
-      setPhase('enter')
+      setPhase('shown')
     }
     listeners.add(listener)
     return () => {
       listeners.delete(listener)
     }
   }, [])
-
-  useEffect(() => {
-    if (!toast || phase !== 'enter') {
-      return
-    }
-    let cancelled = false
-    const frame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        if (!cancelled) {
-          setPhase('shown')
-        }
-      })
-    })
-    return () => {
-      cancelled = true
-      window.cancelAnimationFrame(frame)
-    }
-  }, [toast, phase])
 
   useEffect(() => {
     if (!toast || phase !== 'shown') {
@@ -79,13 +61,10 @@ export function ToastHost() {
         role="status"
         className={classNames(
           'max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto',
-          phase === 'leave'
-            ? 'transition ease-in duration-100'
-            : 'transform transition ease-out duration-300',
-          phase === 'enter' &&
-            'translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2',
-          phase === 'shown' && 'translate-y-0 opacity-100 sm:translate-x-0',
-          phase === 'leave' && 'opacity-0'
+          'starting:translate-y-2 starting:opacity-0 sm:starting:translate-y-0 sm:starting:translate-x-2',
+          phase === 'shown' &&
+            'transform transition ease-out duration-300 translate-y-0 opacity-100 sm:translate-x-0',
+          phase === 'leave' && 'transition ease-in duration-100 opacity-0'
         )}
       >
         <div className="rounded-lg ring-1/5 ring-black overflow-hidden">
