@@ -200,7 +200,7 @@ defmodule PlausibleWeb.Components.Generic do
           target="_blank"
           class="flex"
         >
-          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-500 size-4.5 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors duration-150" />
+          <Heroicons.information_circle class="text-gray-400 dark:text-indigo-400 size-4.5 hover:text-indigo-500 dark:hover:text-indigo-300" />
         </a>
       </.tooltip>
     </div>
@@ -662,10 +662,16 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  @tooltip_sizes %{
+    "xs" => "tooltip-xs",
+    "sm" => "tooltip-sm"
+  }
+
   attr(:sticky?, :boolean, default: true)
   attr(:enabled?, :boolean, default: true)
   attr(:centered?, :boolean, default: false)
   attr(:interactive?, :boolean, default: true)
+  attr(:size, :string, default: "xs", values: Map.keys(@tooltip_sizes))
   attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
@@ -698,7 +704,8 @@ defmodule PlausibleWeb.Components.Generic do
       assign(assigns,
         wrapper_data: wrapper_data,
         show_inner: show_inner,
-        tooltip_position_classes: tooltip_position_classes
+        tooltip_position_classes: tooltip_position_classes,
+        size_class: @tooltip_sizes[assigns.size]
       )
 
     if assigns.enabled? do
@@ -721,7 +728,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-transition:leave-start="opacity-100"
           x-transition:leave-end="opacity-0"
         >
-          <div class="bg-gray-800 text-white rounded-sm px-2.5 py-1.5 text-xs font-medium whitespace-normal">
+          <div class={["tooltip", @size_class, "whitespace-normal"]}>
             {render_slot(@tooltip_content)}
           </div>
         </div>
