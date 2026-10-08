@@ -10,10 +10,36 @@ import { usePopper } from 'react-popper'
 import classNames from 'classnames'
 import { createPortal } from 'react-dom'
 
+export type TooltipSize = 'xs' | 'sm'
+
+const tooltipSizes: Record<TooltipSize, string> = {
+  xs: 'tooltip-xs',
+  sm: 'tooltip-sm'
+}
+
+export type TooltipTheme = 'default' | 'darker'
+
+const tooltipThemes: Record<TooltipTheme, string | null> = {
+  default: null,
+  darker: 'tooltip-theme-darker'
+}
+
+export const tooltipClassName = ({
+  size = 'xs',
+  theme = 'default',
+  className
+}: {
+  size?: TooltipSize
+  theme?: TooltipTheme
+  className?: string
+} = {}): string =>
+  classNames('tooltip', tooltipSizes[size], tooltipThemes[theme], className)
+
 export function Tooltip({
   children,
   info,
   className,
+  size = 'xs',
   onClick,
   boundary,
   containerRef,
@@ -22,6 +48,7 @@ export function Tooltip({
   info: ReactNode
   children: ReactNode
   className?: string
+  size?: TooltipSize
   onClick?: () => void
   /** if provided, the tooltip is confined to the particular element */
   boundary?: HTMLElement | null
@@ -44,7 +71,7 @@ export function Tooltip({
       {
         name: 'offset',
         options: {
-          offset: [0, 6]
+          offset: [0, 8]
         }
       },
       ...(boundary
@@ -88,6 +115,7 @@ export function Tooltip({
       </div>
       {info && visible && (
         <TooltipMessage
+          size={size}
           containerRef={containerRef}
           popperStyle={styles.popper}
           popperAttributes={attributes.popper}
@@ -104,6 +132,7 @@ export function Tooltip({
 }
 
 function TooltipMessage({
+  size,
   containerRef,
   popperStyle,
   popperAttributes,
@@ -113,6 +142,7 @@ function TooltipMessage({
   onMouseLeave,
   children
 }: {
+  size: TooltipSize
   containerRef?: RefObject<HTMLElement>
   popperStyle: CSSProperties
   popperAttributes?: Record<string, string>
@@ -127,12 +157,15 @@ function TooltipMessage({
       ref={setPopperElement}
       style={popperStyle}
       {...popperAttributes}
-      className={classNames(
-        'z-[99] [body:has(.modal.is-open)_&]:z-[1000] px-2 py-1 rounded-sm text-sm text-gray-100 font-medium bg-gray-800 dark:bg-gray-700',
-        interactive
-          ? 'before:absolute before:inset-x-0 before:top-full before:h-1.5 [&[data-popper-placement^=bottom]]:before:top-auto [&[data-popper-placement^=bottom]]:before:bottom-full'
-          : 'pointer-events-none'
-      )}
+      className={tooltipClassName({
+        size,
+        className: classNames(
+          'z-[99] [body:has(.modal.is-open)_&]:z-[1000]',
+          interactive
+            ? 'before:absolute before:inset-x-0 before:top-full before:h-2 [&[data-popper-placement^=bottom]]:before:top-auto [&[data-popper-placement^=bottom]]:before:bottom-full'
+            : 'pointer-events-none'
+        )
+      })}
       role="tooltip"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

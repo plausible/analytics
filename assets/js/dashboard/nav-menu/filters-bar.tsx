@@ -15,6 +15,7 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { popover } from '../components/popover'
 import { QuestionMarkCircleIcon, TrashIcon } from '../components/icons'
 import { Tooltip } from '../util/tooltip'
+import { KeybindHint } from '../keybinding'
 import {
   canSeeSaveAsSegmentAction,
   isSegmentFilter
@@ -175,11 +176,7 @@ const ActionTooltip = ({
     info={
       <span className="flex items-center gap-x-2 whitespace-nowrap">
         {label}
-        {keybind && (
-          <kbd className="rounded-sm border border-gray-600 dark:border-gray-500 px-1 font-sans text-xs text-gray-300">
-            {keybind}
-          </kbd>
-        )}
+        {keybind && <KeybindHint>{keybind}</KeybindHint>}
         {docsLink && (
           <a
             href={docsLink.href}

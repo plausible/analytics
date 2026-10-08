@@ -16,12 +16,12 @@ export default function CurrentVisitors({ className = '' }) {
       <Tooltip
         info={
           <div>
-            <p className="whitespace-nowrap text-small">
+            <p className="whitespace-nowrap">
               Last updated{' '}
               <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s
               ago
             </p>
-            <p className="whitespace-nowrap font-normal text-xs">
+            <p className="whitespace-nowrap font-normal text-gray-500 dark:text-gray-400">
               Click to view realtime dashboard
             </p>
           </div>

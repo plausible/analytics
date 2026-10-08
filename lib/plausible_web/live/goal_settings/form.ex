@@ -545,7 +545,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
             current_user={@current_user}
             current_team={@site_team}
-            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
+            link_class="!inline dark:!text-indigo-400 dark:hover:!text-indigo-300"
           />
         </:tooltip_content>
         <.toggle_switch
@@ -726,7 +726,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <PlausibleWeb.Components.Billing.upgrade_call_to_action
             current_user={@current_user}
             current_team={@site_team}
-            link_class="!inline !text-indigo-400 hover:!text-indigo-300"
+            link_class="!inline dark:!text-indigo-400 dark:hover:!text-indigo-300"
           />
         </:tooltip_content>
         <PlausibleWeb.Components.Generic.toggle_switch

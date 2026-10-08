@@ -168,6 +168,28 @@
   .input-multiline {
     @apply h-auto py-2.5;
   }
+
+  /*
+   * Tooltip classes shared between the React `Tooltip`, the main graph and map
+   * tooltips and the Phoenix `tooltip` component.
+   */
+  .tooltip {
+    @apply rounded-md font-medium bg-white text-gray-800 ring-1
+      ring-black/5 dark:ring-gray-700 dark:bg-gray-750 dark:text-gray-100;
+  }
+
+  .tooltip-xs {
+    @apply px-2.5 py-1.5 shadow-md text-[0.8125rem]/5;
+  }
+
+  .tooltip-sm {
+    @apply px-3 py-2 shadow-lg text-sm;
+  }
+
+  /* Keep after the size classes so the dark shadow override wins. */
+  .tooltip-theme-darker {
+    @apply dark:bg-gray-950 dark:ring-gray-900 dark:shadow-none;
+  }
 }
 
 @utility btn-text-primary {

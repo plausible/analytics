@@ -1,5 +1,5 @@
-import classNames from 'classnames'
 import React from 'react'
+import { tooltipClassName } from '../../util/tooltip'
 
 interface MapTooltipProps {
   name: string
@@ -11,31 +11,20 @@ interface MapTooltipProps {
 
 export const MapTooltip = ({ name, value, label, x, y }: MapTooltipProps) => (
   <div
-    className={classNames(
-      'absolute',
-      'z-50',
-      'p-2',
-      'translate-x-2',
-      'translate-y-2',
-      'pointer-events-none',
-      'rounded-sm',
-      'bg-white',
-      'dark:bg-gray-800',
-      'shadow',
-      'dark:border-gray-850',
-      'dark:text-gray-200',
-      'dark:shadow-gray-850',
-      'shadow-gray-200'
-    )}
+    className={tooltipClassName({
+      size: 'sm',
+      theme: 'darker',
+      className: 'absolute z-50 translate-x-2 translate-y-2 pointer-events-none'
+    })}
     style={{
       left: x,
       top: y
     }}
   >
-    <div className="text-sm font-semibold">{name}</div>
-    <div className="flex items-center gap-x-1 text-sm">
-      <strong className="dark:text-indigo-400">{value}</strong>
-      {label}
+    <div className="font-semibold">{name}</div>
+    <div className="flex items-center gap-x-1">
+      <span className="font-semibold">{value}</span>
+      <span className="font-normal">{label}</span>
     </div>
   </div>
 )

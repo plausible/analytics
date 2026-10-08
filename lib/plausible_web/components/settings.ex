@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Components.Settings do
       <.docs_info :if={@docs} slug={@docs} />
       <.tooltip :if={@tooltip} centered?={true}>
         <:tooltip_content>{@tooltip}</:tooltip_content>
-        <Heroicons.information_circle class="size-4.5 text-gray-400 dark:text-gray-500" />
+        <Heroicons.information_circle class="size-4.5 text-gray-400 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300" />
       </.tooltip>
     </div>
     """
