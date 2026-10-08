@@ -1,5 +1,5 @@
 import React, { ComponentProps } from 'react'
-import { render, screen } from '../../../test-utils'
+import { render, screen, within } from '../../../test-utils'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import { FiltersBar } from './filters-bar'
@@ -315,4 +315,59 @@ test('shows Add filter, Save and Cancel in segment edit mode', async () => {
   for (const action of ['Save as segment', 'Clear all filters']) {
     expect(screen.queryByRole('link', { name: action })).not.toBeInTheDocument()
   }
+})
+
+describe('segment switch', () => {
+  const segments = [
+    makeSegment(),
+    { ...makeSegment({ name: 'Windows users' }), id: 2 }
+  ]
+
+  test('the segment title opens a list of segments to switch to', async () => {
+    renderFiltersBar({
+      searchRecord: {
+        filters: [
+          ['is', 'segment', [1]],
+          ['is', 'page', ['/blog']]
+        ],
+        labels: { [formatSegmentIdAsLabelKey(1)]: 'Mac users' }
+      },
+      preloaded: { segments }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Segment is Mac users' })
+    )
+    await userEvent.click(screen.getByRole('button', { name: /^Mac users/ }))
+
+    const list = screen.getByRole('group', { name: 'Switch segment' })
+    expect(
+      within(list).getByRole('link', { name: /Mac users/ })
+    ).toHaveAttribute('aria-current', 'true')
+
+    await userEvent.click(
+      within(list).getByRole('link', { name: /Windows users/ })
+    )
+    expect(
+      screen.getByRole('button', { name: 'Segment is Windows users' })
+    ).toBeVisible()
+    expect(
+      screen.getByRole('link', { hidden: false, name: 'Page is /blog' })
+    ).toBeVisible()
+  })
+
+  test('the segment title is static when there is no other segment', async () => {
+    renderFiltersBar({
+      searchRecord: getSegmentFilterSearch(segments[0]),
+      preloaded: { segments: [segments[0]] }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Segment is Mac users' })
+    )
+    expect(screen.getByTitle('Mac users')).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: /^Mac users/ })
+    ).not.toBeInTheDocument()
+  })
 })

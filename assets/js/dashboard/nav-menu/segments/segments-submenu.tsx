@@ -47,7 +47,13 @@ export const useListableSegments = (): {
   }
 }
 
-export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
+export const SegmentsSubmenu = ({
+  closeList,
+  selectedId
+}: {
+  closeList: () => void
+  selectedId?: number | string
+}) => {
   const user = useUserContext()
   const site = useSiteContext()
   const { segments } = useListableSegments()
@@ -88,6 +94,7 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
           <SegmentLink
             key={segment.id}
             segment={segment}
+            selected={String(segment.id) === String(selectedId)}
             showAuthorship={showAuthorship}
             showOnlyPublicData={isPublicListQuery}
             closeList={closeList}
@@ -113,11 +120,13 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
 
 const SegmentLink = ({
   segment,
+  selected,
   showAuthorship,
   showOnlyPublicData,
   closeList
 }: {
   segment: SavedSegment | SavedSegmentPublic
+  selected: boolean
   showAuthorship: boolean
   showOnlyPublicData: boolean
   closeList: () => void
@@ -130,7 +139,12 @@ const SegmentLink = ({
 
   return (
     <AppNavigationLink
-      className={popover.items.classNames.iconRow}
+      className={classNames(
+        popover.items.classNames.iconRow,
+        popover.items.classNames.selectedOption
+      )}
+      data-selected={selected}
+      aria-current={selected || undefined}
       onClick={closeList}
       search={getSearchToSetSegmentFilter({ id, name })}
     >
