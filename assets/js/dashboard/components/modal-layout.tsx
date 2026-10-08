@@ -7,7 +7,7 @@ export function ModalLayout({
   title,
   onClose,
   children,
-  maxWidth = '460px'
+  maxWidth = '500px'
 }: {
   title: ReactNode
   onClose: () => void
