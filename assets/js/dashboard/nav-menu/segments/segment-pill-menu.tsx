@@ -7,7 +7,7 @@ import {
   getNavigationToExpandSegment,
   SavedSegments
 } from '../../filtering/segments'
-import { plainFilterTextParts } from '../../util/filter-text'
+import { getFilterTextParts } from '../../util/filter-text'
 import { SegmentAuthorship } from '../../segments/segment-authorship'
 import { Role, useUserContext } from '../../user-context'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
@@ -36,7 +36,7 @@ const deleteClassName = classNames(
 const SegmentFilters = ({ segment }: { segment: SavedSegments[number] }) => (
   <>
     {segment.segment_data.filters.map((filter, index) => {
-      const { subject, values } = plainFilterTextParts(
+      const { dimension, operation, values } = getFilterTextParts(
         segment.segment_data,
         filter
       )
@@ -49,9 +49,9 @@ const SegmentFilters = ({ segment }: { segment: SavedSegments[number] }) => (
           )}
         >
           <span className={popover.items.classNames.description}>
-            {subject}
+            {`${dimension} ${operation}`}
           </span>
-          <span className="break-words">{values}</span>
+          <span className="break-words">{values.join(' or ')}</span>
         </div>
       )
     })}
