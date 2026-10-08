@@ -118,10 +118,11 @@ const PillMenu = ({
     <Popover className="flex h-full">
       {({ open, close }) => (
         <>
+          {open && <div className="fixed top-0 left-0 w-full h-full"></div>}
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={setButton}
-            className={classNames(className, 'cursor-pointer')}
+            className={classNames(className, 'cursor-pointer relative')}
             title={plainText}
           >
             <PillContent>{children}</PillContent>
