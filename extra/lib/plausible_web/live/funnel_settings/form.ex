@@ -482,8 +482,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   defp find_preselected(%Funnel{} = funnel, false, idx) do
-    if step = Enum.at(funnel.steps, idx - 1) do
-      {step.goal.id, to_string(step.goal)}
+    if goal = Enum.at(Funnel.goals(funnel), idx - 1) do
+      {goal.id, to_string(goal)}
     end
   end
 
@@ -491,18 +491,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   defp prepare_socket(socket, site, funnel_id) when is_integer(funnel_id) do
     funnel = Funnels.get(site.id, funnel_id)
+    goals = Funnel.goals(funnel)
 
     form =
       funnel
-      |> Funnels.edit_changeset(
-        funnel.name,
-        Enum.map(funnel.steps, &%{goal_id: &1.goal.id})
-      )
+      |> Funnels.edit_changeset(funnel.name, goals)
       |> to_form()
 
     selections_made =
-      Enum.reduce(Enum.with_index(funnel.steps, 1), %{}, fn {step, idx}, acc ->
-        Map.put(acc, "step-#{idx}", step.goal)
+      Enum.reduce(Enum.with_index(goals, 1), %{}, fn {goal, idx}, acc ->
+        Map.put(acc, "step-#{idx}", goal)
       end)
 
     socket =
@@ -513,7 +511,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         funnel_type: funnel.funnel_type,
         funnel_modified?: false,
         selections_made: selections_made,
-        step_ids: Enum.to_list(1..Enum.count(funnel.steps))
+        step_ids: Enum.to_list(1..Enum.count(goals))
       )
 
     evaluate_funnel(socket)
