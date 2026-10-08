@@ -3,13 +3,7 @@ defmodule PlausibleWeb.Api.RateLimit do
   Rate limits are imposed on API callers to prevent overloading the server.
   """
 
-  use Plausible
-
-  @default_hourly_request_limit_per_team on_ee(do: 600, else: 1_000_000)
-
   defp config(), do: Application.fetch_env!(:plausible, __MODULE__)
-
-  def default_hourly_request_limit(), do: @default_hourly_request_limit_per_team
 
   def limit_key(team), do: "api_request:team:#{team.identifier}"
 

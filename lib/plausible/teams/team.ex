@@ -26,6 +26,8 @@ defmodule Plausible.Teams.Team do
   @suggested_name_suffix "'s team"
   @suggested_name_fallback "My team"
 
+  @default_hourly_api_request_limit on_ee(do: 600, else: 1_000_000)
+
   on_ee do
     @derive {Plausible.Audit.Encoder,
              only: [
@@ -55,8 +57,7 @@ defmodule Plausible.Teams.Team do
     field :setup_at, :naive_datetime
 
     # Field synced from current subscription plan, if any. The value of this field is treated as the source of truth when out of sync
-    field :hourly_api_request_limit, :integer,
-      default: PlausibleWeb.Api.RateLimit.default_hourly_request_limit()
+    field :hourly_api_request_limit, :integer, default: @default_hourly_api_request_limit
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
@@ -228,6 +229,8 @@ defmodule Plausible.Teams.Team do
       changeset
     end
   end
+
+  def default_hourly_api_request_limit(), do: @default_hourly_api_request_limit
 
   def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
 
