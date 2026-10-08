@@ -5,30 +5,16 @@ import {
   SaveButton
 } from '../components/modal-layout'
 import {
-  canRemoveFilter,
-  getSearchToRemoveSegmentFilter,
-  canExpandSegment,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
-  SegmentData,
   SegmentType
 } from '../filtering/segments'
-import {
-  AppNavigationLink,
-  useAppNavigate
-} from '../navigation/use-app-navigate'
-import { plainFilterText, styledFilterText } from '../util/filter-text'
-import { rootRoute } from '../router'
-import { FilterPillsList } from '../nav-menu/filter-pills-list'
-import classNames from 'classnames'
-import { SegmentAuthorship } from './segment-authorship'
 import { MutationStatus, useQuery } from '@tanstack/react-query'
 import { ApiError, get } from '../api'
 import { ErrorPanel } from '../components/error-panel'
-import { useSegmentsContext } from '../filtering/segments-context'
-import { Role, UserContextValue, useUserContext } from '../user-context'
+import { Role, UserContextValue } from '../user-context'
 import { useSiteContext } from '../site-context'
-import { Button, buttonClassName } from '../components/button'
+import { Button } from '../components/button'
 import {
   Checkbox,
   getOptionDisabledMessage,
@@ -36,10 +22,7 @@ import {
   OptionDisabledMessageType,
   TypeSelector
 } from '../components/form-elements'
-import { Placeholder } from '../components/placeholder'
 import { UpgradePill } from '../components/pill'
-
-const inModalSectionLabelClassName = 'text-sm font-semibold dark:text-gray-100'
 
 const nameInputProps = { id: 'name', label: 'Segment name' }
 
@@ -411,141 +394,8 @@ export const UpdateSegmentModal = ({
   )
 }
 
-const FiltersInSegment = ({
-  segment_data,
-  className
-}: {
-  segment_data: SegmentData
-  className?: string
-}) => {
-  return (
-    <div className={classNames('flex flex-col gap-y-2', className)}>
-      <p className={inModalSectionLabelClassName}>Filters in segment</p>
-      <FilterPillsList
-        className="flex-wrap"
-        pills={segment_data.filters.map((filter) => ({
-          plainText: plainFilterText({ labels: segment_data.labels }, filter),
-          children: styledFilterText({ labels: segment_data.labels }, filter)
-        }))}
-      />
-    </div>
-  )
-}
-
 const hasSiteSegmentPermission = (user: UserContextValue) => {
   return [Role.admin, Role.owner, Role.editor, 'super_admin'].includes(
     user.role
-  )
-}
-
-export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
-  const user = useUserContext()
-  const { segments, limitedToSegment } = useSegmentsContext()
-  const navigate = useAppNavigate()
-
-  const segment = segments.find((s) => String(s.id) === String(id))
-
-  let error: ApiError | null = null
-
-  if (!segment) {
-    error = new ApiError(
-      `Segment not found with with ID "${id}"`,
-      {
-        error: `Segment not found with with ID "${id}"`
-      },
-      404
-    )
-  }
-
-  const data = !error ? segment : null
-
-  const showClearButton = canRemoveFilter(
-    ['is', 'segment', [id]],
-    limitedToSegment
-  )
-
-  const onClose = () => navigate({ path: rootRoute.path, search: (s) => s })
-
-  return (
-    <ModalLayout title="Segment details" onClose={onClose}>
-      <div className="flex flex-col gap-y-6 dark:text-gray-100">
-        <div className="text-sm flex flex-col gap-y-0.5">
-          <h2 className="font-semibold break-all">
-            <Placeholder placeholder="Segment name">
-              {data?.name ?? false}
-            </Placeholder>
-          </h2>
-          <div className="text-gray-500 dark:text-gray-400">
-            <Placeholder placeholder="Segment type">
-              {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
-            </Placeholder>
-            {!!data?.segment_data && (
-              <>
-                {' • '}
-                <SegmentAuthorship
-                  segment={data}
-                  showOnlyPublicData={
-                    !user.loggedIn || user.role === Role.public
-                  }
-                />
-              </>
-            )}
-          </div>
-        </div>
-        {!!data?.segment_data && (
-          <>
-            <FiltersInSegment
-              segment_data={data.segment_data}
-              className="mb-4"
-            />
-
-            <ModalFooter>
-              {showClearButton && (
-                <Button
-                  theme="secondary"
-                  size="sm"
-                  onClick={() =>
-                    navigate({
-                      path: rootRoute.path,
-                      search: getSearchToRemoveSegmentFilter()
-                    })
-                  }
-                >
-                  Remove filter
-                </Button>
-              )}
-
-              {canExpandSegment({ segment: data, user }) && (
-                <AppNavigationLink
-                  className={buttonClassName({ size: 'sm' })}
-                  path={rootRoute.path}
-                  search={(s) => ({
-                    ...s,
-                    filters: data.segment_data.filters,
-                    labels: data.segment_data.labels
-                  })}
-                  state={{
-                    expandedSegment: data
-                  }}
-                >
-                  Edit segment
-                </AppNavigationLink>
-              )}
-            </ModalFooter>
-          </>
-        )}
-        {error !== null && (
-          <ErrorPanel
-            className="mt-4"
-            errorMessage={
-              error instanceof ApiError
-                ? error.message
-                : 'Something went wrong loading segment'
-            }
-            onRetry={() => window.location.reload()}
-          />
-        )}
-      </div>
-    </ModalLayout>
   )
 }

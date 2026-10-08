@@ -9,6 +9,7 @@ import React, {
 } from 'react'
 import { AppliedFilterPillsList } from './filter-pills-list'
 import { FilterMenu } from './filter-menu'
+import { SegmentMenu } from './segments/segment-menu'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { popover } from '../components/popover'
@@ -27,8 +28,10 @@ const SCROLL_FADE_PX = 32
 type ScrollOverflow = { start: boolean; end: boolean }
 
 const canShowClearAllAction = ({
-  filters
-}: Pick<DashboardState, 'filters'>): boolean => filters.length >= 1
+  filters,
+  isEditingSegment
+}: Pick<DashboardState, 'filters'> & { isEditingSegment: boolean }): boolean =>
+  filters.length >= 1 && !isEditingSegment
 
 const canShowSaveAsSegmentAction = ({
   filters,
@@ -41,7 +44,8 @@ export const FiltersBar = () => {
   const user = useUserContext()
 
   const showingClearAll = canShowClearAllAction({
-    filters: dashboardState.filters
+    filters: dashboardState.filters,
+    isEditingSegment: !!expandedSegment
   })
   const showingSaveAsSegment =
     canShowSaveAsSegmentAction({
@@ -64,7 +68,7 @@ export const FiltersBar = () => {
       <ScrollableFilterPills />
       <div className="flex shrink-0 items-center gap-x-1">
         <FilterMenu compact />
-        {hasActions && (
+        {(hasActions || !!expandedSegment) && (
           <div
             aria-hidden="true"
             className="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600"
@@ -72,6 +76,7 @@ export const FiltersBar = () => {
         )}
         {showingSaveAsSegment && <SaveAsSegmentAction />}
         {showingClearAll && <ClearAction />}
+        <SegmentMenu />
       </div>
     </div>
   )

@@ -17,7 +17,9 @@ import {
   mockIntersectionObserver,
   mockViewportForTestGroup
 } from 'jsdom-testing-mocks'
-import { SegmentType } from '../filtering/segments'
+import { SavedSegment, SegmentData, SegmentType } from '../filtering/segments'
+import { getRouterBasepath } from '../router'
+import { stringifySearch } from '../util/url-search-params'
 
 mockAnimationsApi()
 mockResizeObserver()
@@ -375,6 +377,64 @@ test.each([
     )
   }
 )
+
+describe('segment edit mode', () => {
+  const segment: SavedSegment & { segment_data: SegmentData } = {
+    id: 1,
+    name: 'Blog',
+    type: SegmentType.personal,
+    owner_id: 1,
+    owner_name: 'Test User',
+    inserted_at: '2025-02-26T10:00:00',
+    updated_at: '2025-02-26T10:00:00',
+    segment_data: {
+      filters: [['is', 'page', ['/blog']]],
+      labels: {}
+    }
+  }
+
+  const renderTopBarWithSegmentFilters = ({ editing }: { editing: boolean }) =>
+    render(<TopBar showCurrentVisitors={false} />, {
+      wrapper: (props) => (
+        <TestContextProviders
+          siteOptions={{ domain }}
+          preloaded={{ segments: [segment] }}
+          routerProps={{
+            initialEntries: [
+              {
+                pathname: getRouterBasepath({ domain, shared: false }),
+                search: stringifySearch(segment.segment_data),
+                state: editing ? { expandedSegment: segment } : undefined
+              }
+            ]
+          }}
+          {...props}
+        />
+      )
+    })
+
+  const querySiteControls = () => [
+    screen.queryByRole('button', { name: domain }),
+    screen.queryByTestId('query-period-picker'),
+    screen.queryByTestId('dashboard-options-menu')
+  ]
+
+  test('shows the site switcher, period picker and options menu outside edit mode', () => {
+    renderTopBarWithSegmentFilters({ editing: false })
+
+    for (const control of querySiteControls()) {
+      expect(control).toBeInTheDocument()
+    }
+  })
+
+  test('hides the site switcher, period picker and options menu in edit mode', () => {
+    renderTopBarWithSegmentFilters({ editing: true })
+
+    for (const control of querySiteControls()) {
+      expect(control).not.toBeInTheDocument()
+    }
+  })
+})
 
 describe('narrow viewport (no room for a submenu beside the menu)', () => {
   mockViewportForTestGroup({ width: '500px', height: '800px' })

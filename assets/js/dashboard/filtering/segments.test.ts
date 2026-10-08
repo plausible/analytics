@@ -11,6 +11,7 @@ import {
   SavedSegment,
   SegmentData,
   canExpandSegment,
+  getNavigationToExpandSegment,
   getSegmentAuthorship,
   getAttributionDateLabel
 } from './segments'
@@ -382,4 +383,35 @@ describe(`${canExpandSegment.name}`, () => {
       ).toBe(false)
     }
   )
+})
+
+describe(`${getNavigationToExpandSegment.name}`, () => {
+  it('sets filters from segment data and puts the segment in location state', () => {
+    const segment: SavedSegment & { segment_data: SegmentData } = {
+      id: 9,
+      name: 'Blog',
+      type: SegmentType.personal,
+      owner_id: 1,
+      owner_name: 'Jane',
+      inserted_at: '2025-03-13T13:00:00',
+      updated_at: '2025-03-13T13:00:00',
+      segment_data: {
+        filters: [['is', 'page', ['/blog']]],
+        labels: {}
+      }
+    }
+
+    const navigation = getNavigationToExpandSegment(segment)
+
+    expect(navigation.state.expandedSegment).toBe(segment)
+    expect(
+      navigation.search!({
+        filters: [['is', 'segment', [9]]],
+        labels: { 'segment-9': 'Blog' }
+      })
+    ).toEqual({
+      filters: [['is', 'page', ['/blog']]],
+      labels: {}
+    })
+  })
 })
