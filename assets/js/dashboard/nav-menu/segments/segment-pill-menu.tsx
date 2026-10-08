@@ -110,10 +110,7 @@ export const SegmentPillMenu = ({
   }
 
   return (
-    <div
-      className="flex flex-col gap-y-0.5"
-      onKeyDown={submenu.handleEscape}
-    >
+    <div className="flex flex-col gap-y-0.5" onKeyDown={submenu.handleEscape}>
       {canSwitch ? (
         <>
           <SubmenuRow
