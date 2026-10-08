@@ -30,7 +30,6 @@ defmodule Plausible.Auth.ApiKey do
   Only team members can use team-scoped keys.
   """
 
-  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -38,8 +37,6 @@ defmodule Plausible.Auth.ApiKey do
 
   @required [:user_id, :name]
   @optional [:key, :scopes]
-
-  @default_hourly_request_limit_per_team on_ee(do: 600, else: 1_000_000)
 
   schema "api_keys" do
     field :name, :string
@@ -56,28 +53,6 @@ defmodule Plausible.Auth.ApiKey do
 
     timestamps()
   end
-
-  defp config(), do: Application.fetch_env!(:plausible, __MODULE__)
-
-  def default_hourly_request_limit(), do: @default_hourly_request_limit_per_team
-  def limit_key(team), do: "api_request:team:#{team.identifier}"
-
-  def legacy_hourly_request_limit() do
-    config()
-    |> Keyword.fetch!(:legacy_per_user_hourly_request_limit)
-  end
-
-  def legacy_limit_key(user), do: "api_request:legacy_user:#{user.id}"
-
-  def burst_request_limit(),
-    do:
-      config()
-      |> Keyword.fetch!(:burst_request_limit)
-
-  def burst_period_seconds(),
-    do:
-      config()
-      |> Keyword.fetch!(:burst_period_seconds)
 
   def changeset(struct, team, attrs) when not is_nil(team) do
     struct

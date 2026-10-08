@@ -212,7 +212,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         user = new_user()
         api_key = insert_api_key(unquote(key_type), user: user, scopes: ["sites:read:*"])
 
-        limit = Plausible.Auth.ApiKey.burst_request_limit()
+        limit = PlausibleWeb.Api.RateLimit.burst_request_limit()
 
         # The limiter uses a fixed time window, so a client straddling a window
         # boundary can legitimately get up to `2 * limit` requests through in
@@ -245,7 +245,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
             :team_scope_api_key -> {1, 100}
           end
 
-        patch_env(Plausible.Auth.ApiKey,
+        patch_env(PlausibleWeb.Api.RateLimit,
           legacy_per_user_hourly_request_limit: legacy_hourly_limit,
           # relax burst request limit to check hourly request limit
           burst_request_limit: 1_000,
@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     end
 
     test "legacy API key requests are rate limited to configured requests per hour _per user_, but their team's team-scoped keys are on an independent rate limit" do
-      patch_env(Plausible.Auth.ApiKey,
+      patch_env(PlausibleWeb.Api.RateLimit,
         legacy_per_user_hourly_request_limit: 100,
         # relax burst request limit to check hourly request limit
         burst_request_limit: 200,
@@ -363,7 +363,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
       _site = new_site(owner: legacy_api_key_user)
       legacy_api_key = insert_api_key(:legacy_api_key, user: legacy_api_key_user)
 
-      1..Plausible.Auth.ApiKey.legacy_hourly_request_limit()
+      1..PlausibleWeb.Api.RateLimit.legacy_hourly_request_limit()
       |> Enum.map(fn _ ->
         conn =
           get_fresh_conn()
