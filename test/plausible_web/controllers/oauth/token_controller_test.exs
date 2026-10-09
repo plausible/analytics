@@ -139,7 +139,7 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
 
     refute resp["refresh_token"] == resp["access_token"]
 
-    assert {:ok, grant} = OAuth.find_access_token(resp["access_token"], resource)
+    assert {:ok, grant, _role} = OAuth.find_access_token(resp["access_token"], resource)
 
     assert_matches %{
                      user: %{id: ^auth_code.user_id},

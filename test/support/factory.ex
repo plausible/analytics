@@ -301,6 +301,39 @@ defmodule Plausible.Factory do
     merge_attributes(auth_code, attrs)
   end
 
+  @doc """
+  Takes the plaintext `:access_token` and `:refresh_token` a test will present,
+  and stores what the server keeps for them - the hash and the hint. Both
+  default to fresh random values.
+
+  Defaults describe a live grant for the MCP resource, carrying every scope that
+  resource supports.
+  """
+  def oauth_grant_factory(attrs) do
+    {access_token, attrs} =
+      Map.pop_lazy(attrs, :access_token, fn -> Plausible.OAuth.Token.generate(:access).raw end)
+
+    {refresh_token, attrs} =
+      Map.pop_lazy(attrs, :refresh_token, fn -> Plausible.OAuth.Token.generate(:refresh).raw end)
+
+    resource = Plausible.OAuth.ProtectedResources.mcp()
+    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(:second), 3600, :second)
+
+    grant = %Plausible.OAuth.Grant{
+      client_id: "https://client.example.com/oauth-metadata",
+      scopes: resource.scopes_supported,
+      resource: Plausible.OAuth.ProtectedResources.get_resource_url(resource),
+      access_token_hash: Plausible.OAuth.Token.hash(access_token),
+      access_token_hint: Plausible.OAuth.Token.hint(access_token),
+      access_token_expires_at: expires_at,
+      refresh_token_hash: Plausible.OAuth.Token.hash(refresh_token),
+      refresh_token_hint: Plausible.OAuth.Token.hint(refresh_token),
+      refresh_token_expires_at: expires_at
+    }
+
+    merge_attributes(grant, attrs)
+  end
+
   def imported_visitors_factory do
     %{
       table: "imported_visitors",

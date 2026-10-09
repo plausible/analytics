@@ -22,8 +22,15 @@ defmodule Plausible.OAuth.Token do
   def generate(kind) do
     raw = "#{plaintext_prefix(kind)}-#{random_value()}"
 
-    %{raw: raw, hash: hash(raw), hint: String.slice(raw, -@hint_length, @hint_length)}
+    %{raw: raw, hash: hash(raw), hint: hint(raw)}
   end
+
+  @doc """
+  The trailing characters of a raw token, kept alongside the hash so a grant can
+  be told apart from another in a list without storing the token itself.
+  """
+  @spec hint(String.t()) :: String.t()
+  def hint(raw), do: String.slice(raw, -@hint_length, @hint_length)
 
   @doc """
   Hashes a raw token or code.
