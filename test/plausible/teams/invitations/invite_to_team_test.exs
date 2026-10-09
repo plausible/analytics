@@ -217,7 +217,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
     end
   end
 
-  describe "invite_all/3,4" do
+  describe "invite_all/3" do
     test "creates invitations with a role per entry, without sending e-mails" do
       inviter = new_user()
       invitee = new_user()
@@ -364,14 +364,27 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       end
     end
 
-    test "raises on invalid role" do
+    test "returns error for an invalid role" do
       inviter = new_user()
       _site = new_site(owner: inviter)
       team = team_of(inviter)
 
-      assert_raise RuntimeError, ~r/Invalid role/, fn ->
-        InviteToTeam.invite_all(team, inviter, [%{email: "new@example.com", role: :guest}])
-      end
+      assert {:error, :invalid_role} =
+               InviteToTeam.invite_all(team, inviter, [%{email: "new@example.com", role: :guest}])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
+    end
+
+    test "returns error when the inviter isn't allowed to give the role" do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+      admin = add_member(team, role: :admin)
+
+      assert {:error, :permission_denied} =
+               InviteToTeam.invite_all(team, admin, [%{email: "new@example.com", role: :owner}])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
     end
   end
 
