@@ -130,13 +130,13 @@ defmodule Plausible.Stats.QueryRunner do
   defp build_comparison_results(%__MODULE__{main_query: query} = runner) do
     main_map = index_by_dimensions(runner.main_results)
 
-    comp_label_to_main_label =
-      Enum.zip(Time.time_labels(runner.comparison_query), Time.time_labels(query))
+    comp_key_to_main_key =
+      Enum.zip(Time.time_keys(runner.comparison_query), Time.time_keys(query))
       |> Map.new()
 
-    Enum.map(runner.comparison_results, fn %{dimensions: [comp_label]} = comp_row ->
-      main_label = Map.get(comp_label_to_main_label, comp_label)
-      main_metrics = main_label && Map.get(main_map, [main_label])
+    Enum.map(runner.comparison_results, fn %{dimensions: [comp_key]} = comp_row ->
+      main_key = Map.get(comp_key_to_main_key, comp_key)
+      main_metrics = main_key && Map.get(main_map, [main_key])
       change = calculate_metric_changes(query, main_metrics, comp_row.metrics)
 
       Map.put(comp_row, :change, change)
