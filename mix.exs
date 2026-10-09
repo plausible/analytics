@@ -134,7 +134,7 @@ defmodule Plausible.MixProject do
       {:phoenix_live_view, "~> 1.1.17"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
-      {:prima, "~> 0.2.6"},
+      {:prima, github: "plausible/prima", ref: "89970d989c07bae823e84cd371db63c26e81f3a0"},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.22.2"},
@@ -215,6 +215,8 @@ defmodule Plausible.MixProject do
       ],
       "assets.deploy": [
         "tailwind default --minify",
+        # TEMPORARY: see the :prima esbuild profile in config/config.exs
+        "esbuild prima",
         "esbuild default --minify",
         # already minified upstream, so no --minify here
         "esbuild friendly_captcha",

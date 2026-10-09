@@ -283,6 +283,11 @@
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
+/* Prima components usually mark their disabled state with `data-disabled` rather than
+   the native attribute, so `disabled:` covers both. */
+
+@custom-variant disabled (&:disabled, &[data-disabled="true"], [data-disabled="true"] &);
+
 [x-cloak] {
   display: none;
 }
