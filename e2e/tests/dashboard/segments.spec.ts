@@ -6,10 +6,10 @@ import {
   openFilterSubmenuItem,
   openSegmentsSubmenu,
   closeFilterMenu,
-  filterSubmenuButton,
-  applyFilterButton,
-  filterRow,
-  suggestedItem,
+  filterItemButton,
+  filterPill,
+  pickFilterValue,
+  closeFilterEditor,
   modal
 } from '../test-utils'
 
@@ -43,7 +43,10 @@ const setupSiteAndStats = async ({
 
 const openSegmentPillMenu = async (page: Page, segmentName: string) => {
   await page
-    .getByRole('button', { name: `Segment is ${segmentName}`, exact: true })
+    .getByRole('button', {
+      name: `Open menu: Segment is ${segmentName}`,
+      exact: true
+    })
     .click()
 }
 
@@ -60,32 +63,22 @@ const segmentItemButton = (page: Page, name: string) =>
   filterSubmenuSegmentItem(page, name)
 
 const addSourceFilter = async (page: Page, sourceLabel: string) => {
-  const sourceFilterRow = filterRow(page, 'source')
-  const sourceInput = page.getByPlaceholder('Select a Source')
-
   await filterButton(page).click()
   await openFilterSubmenuItem(page, 'Source', 'Source')
 
-  await sourceInput.click()
-  await suggestedItem(sourceFilterRow, sourceLabel).click()
-
-  await applyFilterButton(page).click()
+  await pickFilterValue(page, { value: sourceLabel })
+  await closeFilterEditor(page)
 
   const url = new RegExp(`f=is,source,${sourceLabel}`)
   await expect(page).toHaveURL(url)
 }
 
 const addUtmSourceFilter = async (page: Page, utmSource: string) => {
-  const utmSourceFilterRow = filterRow(page, 'utm_source')
-  const utmSourceInput = page.getByPlaceholder('Select a UTM Source')
-
   await filterButton(page).click()
   await openFilterSubmenuItem(page, 'UTM tags', 'UTM source')
 
-  await utmSourceInput.click()
-  await suggestedItem(utmSourceFilterRow, utmSource).click()
-
-  await applyFilterButton(page).click()
+  await pickFilterValue(page, { value: utmSource })
+  await closeFilterEditor(page)
 
   const url = new RegExp(`f=is,utm_source,${utmSource}`)
   await expect(page).toHaveURL(url)
@@ -250,9 +243,7 @@ test('creating a segment from a combination of segment and a filter is not allow
   await createPersonalSegment(page, 'Traffic from Google')
   await addUtmSourceFilter(page, 'Adwords')
 
-  await expect(
-    page.getByRole('link', { name: 'UTM source is Adwords' })
-  ).toBeVisible()
+  await expect(filterPill(page, 'UTM source is Adwords')).toBeVisible()
   await expect(
     page.getByRole('button', {
       name: 'Remove filter: Segment is Traffic from Google'
@@ -301,12 +292,8 @@ test('editing an existing segment', async ({ page, request }) => {
 
   await enterEditMode(page, 'Ads from Google')
 
-  await expect(
-    page.getByRole('link', { name: 'UTM source is Adwords' })
-  ).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: 'Source is Google' })
-  ).toBeVisible()
+  await expect(filterPill(page, 'UTM source is Adwords')).toBeVisible()
+  await expect(filterPill(page, 'Source is Google')).toBeVisible()
 
   await page.getByRole('link', { name: 'Cancel' }).click()
 
@@ -351,9 +338,7 @@ test('duplicating a segment', async ({ page, request }) => {
 
   await enterEditMode(page, 'Google copy')
 
-  await expect(
-    page.getByRole('link', { name: 'Source is Google' })
-  ).toBeVisible()
+  await expect(filterPill(page, 'Source is Google')).toBeVisible()
 
   await page.getByRole('link', { name: 'Cancel' }).click()
 
@@ -391,7 +376,7 @@ test('deleting segment', async ({ page, request }) => {
   await filterButton(page).click()
 
   // The only segment is gone, so the filter menu no longer offers segments at all.
-  await expect(filterSubmenuButton(page, 'Segment')).toBeHidden()
+  await expect(filterItemButton(page, 'Segment')).toBeHidden()
 })
 
 test('cancelling edited segment without saving', async ({ page, request }) => {
@@ -413,10 +398,6 @@ test('cancelling edited segment without saving', async ({ page, request }) => {
 
   await enterEditMode(page, 'Traffic from Google')
 
-  await expect(
-    page.getByRole('link', { name: 'UTM source is Adwords' })
-  ).toBeHidden()
-  await expect(
-    page.getByRole('link', { name: 'Source is Google' })
-  ).toBeVisible()
+  await expect(filterPill(page, 'UTM source is Adwords')).toBeHidden()
+  await expect(filterPill(page, 'Source is Google')).toBeVisible()
 })

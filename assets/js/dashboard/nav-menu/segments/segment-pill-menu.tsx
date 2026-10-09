@@ -15,6 +15,7 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { popover } from '../../components/popover'
 import { PencilIcon, TrashIcon } from '../../components/icons'
 import { MenuSeparator } from '../nav-menu-components'
+import { Notice } from '../../components/notice'
 import {
   SubmenuInPlace,
   SubmenuPanel,
@@ -73,6 +74,17 @@ const SegmentTitle = ({ segment }: { segment: SavedSegments[number] }) => {
     </div>
   )
 }
+
+export const SEGMENT_NOT_FOUND = 'Segment not found'
+
+export const MissingSegmentPillMenu = () => (
+  <Notice
+    className="m-1"
+    theme="red"
+    title={SEGMENT_NOT_FOUND}
+    description="It may have been deleted. Remove this filter to see your stats."
+  />
+)
 
 export const SegmentPillMenu = ({
   segment,
