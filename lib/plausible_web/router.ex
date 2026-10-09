@@ -304,7 +304,10 @@ defmodule PlausibleWeb.Router do
         post "/:domain/query", StatsController, :query
         post "/:domain/export", StatsController, :csv_export
         get "/:domain/google-search-terms", StatsController, :google_search_terms
-        get "/:domain/current-visitors", StatsController, :current_visitors
+
+        get "/:domain/current-visitors", StatsController, :current_visitors,
+          private: %{site_preloads: [:team]}
+
         get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
 
         get "/:domain/suggestions/custom-prop-values/:prop_key",
