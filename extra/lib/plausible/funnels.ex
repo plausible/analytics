@@ -94,11 +94,16 @@ defmodule Plausible.Funnels do
   def list(%Plausible.Site{} = site) do
     q =
       from(f in Funnel,
-        inner_join: steps in assoc(f, :steps),
+        left_join: steps in assoc(f, :steps),
         where: f.site_id == ^site.id,
         group_by: f.id,
         order_by: [desc: :id],
-        select: %{name: f.name, id: f.id, steps_count: count(steps)}
+        select: %{
+          name: f.name,
+          id: f.id,
+          steps_count:
+            count(steps) + fragment("coalesce(jsonb_array_length(?), 0)", f.dynamic_steps)
+        }
       )
 
     Repo.all(q)
@@ -137,7 +142,6 @@ defmodule Plausible.Funnels do
   @spec with_goals_query(Plausible.Site.t()) :: Ecto.Query.t()
   def with_goals_query(site) do
     from(f in Funnel,
-      inner_join: steps in assoc(f, :steps),
       where: f.site_id == ^site.id,
       group_by: f.id,
       order_by: [desc: :id],
@@ -148,8 +152,8 @@ defmodule Plausible.Funnels do
   defp base_get_query(site_id) do
     from(f in Funnel,
       where: f.site_id == ^site_id,
-      inner_join: steps in assoc(f, :steps),
-      inner_join: goal in assoc(steps, :goal),
+      left_join: steps in assoc(f, :steps),
+      left_join: goal in assoc(steps, :goal),
       order_by: steps.step_order,
       preload: [
         steps: {steps, goal: goal}

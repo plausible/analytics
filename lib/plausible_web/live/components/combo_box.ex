@@ -208,7 +208,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           {{submit_value, display_value}, idx} <-
             Enum.with_index(
               @suggestions,
-              fn {option_value, option}, idx -> {{option_value, to_string(option)}, idx + 1} end
+              fn
+                {option_value, {option, :creatable}}, idx ->
+                  {{option_value, {to_string(option), :creatable}}, idx + 1}
+
+                {option_value, option}, idx ->
+                  {{option_value, to_string(option)}, idx + 1}
+              end
             )
         }
         :if={@suggestions != []}
@@ -236,14 +242,25 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   end
 
   attr(:display_value, :string, required: true)
-  attr(:submit_value, :string, required: true)
+  attr(:submit_value, :any, required: true)
   attr(:ref, :string, required: true)
   attr(:target, :any)
   attr(:idx, :integer, required: true)
   attr(:creatable, :boolean, default: false)
 
   def option(assigns) do
-    assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
+    {display_value, creatable} =
+      case assigns.display_value do
+        {display_value, :creatable} -> {display_value, true}
+        display_value -> {display_value, assigns.creatable}
+      end
+
+    assigns =
+      assign(assigns,
+        suggestions_limit: suggestions_limit(assigns),
+        display_value: display_value,
+        creatable: creatable
+      )
 
     ~H"""
     <li
