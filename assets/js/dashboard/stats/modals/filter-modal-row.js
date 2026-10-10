@@ -40,9 +40,13 @@ export default function FilterModalRow({
   )
 
   function onComboboxSelect(selection) {
-    const newClauses = selection.map(({ value }) => value)
+    // Clauses are always strings internally: filters parsed from the URL
+    // come back as strings, while suggestions can return numeric values
+    // (e.g. city geoname IDs). Mixing both types in a single clause list
+    // produces a filter the stats API rejects.
+    const newClauses = selection.map(({ value }) => String(value))
     const newLabels = Object.fromEntries(
-      selection.map(({ label, value }) => [value, label])
+      selection.map(({ label, value }) => [String(value), label])
     )
 
     onUpdate([operation, filterKey, newClauses], newLabels)
