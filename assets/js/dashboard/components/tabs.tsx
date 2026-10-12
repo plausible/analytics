@@ -93,6 +93,9 @@ export const DropdownTabButton = ({
     <Popover className={className}>
       {({ close: closeDropdown }) => (
         <>
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <div
             className={classNames('-mb-px pb-4', {
@@ -101,7 +104,10 @@ export const DropdownTabButton = ({
           >
             <Popover.Button
               data-testid="tab-button-with-dropdown"
-              className="group/tab relative inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              className={classNames(
+                popover.toggleButton.classNames.aboveBackdrop,
+                "group/tab inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              )}
               ref={dropdownButtonRef}
             >
               <TabButtonText active={active}>{children}</TabButtonText>

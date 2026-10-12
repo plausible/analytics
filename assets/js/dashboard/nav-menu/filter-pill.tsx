@@ -156,11 +156,16 @@ const PillMenu = ({
     <Popover className="flex h-full">
       {({ open, close }) => (
         <>
-          {open && <div className="fixed top-0 left-0 w-full h-full"></div>}
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={setButton}
-            className={classNames(className, 'relative')}
+            className={classNames(
+              className,
+              popover.toggleButton.classNames.aboveBackdrop
+            )}
             aria-label={label}
           >
             {children}
@@ -232,92 +237,103 @@ export function FilterPill({
   const roundedRight = !onRemoveClick && 'rounded-r-md'
 
   return (
-    <div
-      ref={setContainerElement}
-      role="group"
-      aria-label={plainText}
-      className="flex h-8 shrink-0 items-center rounded-md bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm divide-x divide-gray-200 dark:divide-gray-700"
-    >
-      <span className={classNames(partClassName, 'rounded-l-md')}>
-        {dimensionLabel}
-      </span>
-      {canChangeOperation ? (
-        <button
-          ref={setOperatorButton}
-          type="button"
-          className={buttonPartClassName}
-          aria-label={`Change operator: ${plainText}`}
-          aria-expanded={openPart === 'operator'}
-          onClick={() => toggle('operator')}
-        >
-          {operation}
-        </button>
-      ) : (
-        <span className={partClassName}>{operation}</span>
+    <>
+      {!!openPart && (
+        <div
+          aria-hidden="true"
+          className={popover.backdrop.classNames.transparent}
+        />
       )}
-      {action?.type === 'edit' ? (
-        <button
-          ref={setValuesButton}
-          type="button"
-          className={classNames(buttonPartClassName, roundedRight)}
-          title={plainText}
-          aria-label={`Edit filter: ${plainText}`}
-          aria-expanded={openPart === 'values'}
-          onClick={() => toggle('values')}
-        >
-          <PillValues values={values} />
-        </button>
-      ) : action?.type === 'menu' ? (
-        <PillMenu
-          className={classNames(buttonPartClassName, roundedRight)}
-          label={`Open menu: ${plainText}${error ? ` (${error})` : ''}`}
-          renderMenu={action.renderMenu}
-        >
-          <PillValues values={values} error={error} />
-        </PillMenu>
-      ) : (
-        <span
-          className={classNames(partClassName, roundedRight)}
-          title={plainText}
-        >
-          <PillValues values={values} />
+      <div
+        ref={setContainerElement}
+        role="group"
+        aria-label={plainText}
+        className={classNames(
+          'flex h-8 shrink-0 items-center rounded-md bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm divide-x divide-gray-200 dark:divide-gray-700',
+          !!openPart && 'relative z-10'
+        )}
+      >
+        <span className={classNames(partClassName, 'rounded-l-md')}>
+          {dimensionLabel}
         </span>
-      )}
-      {!!onRemoveClick && (
-        <button
-          type="button"
-          title={`Remove filter: ${plainText}`}
-          className="w-7.5 flex items-center justify-center h-full rounded-r-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750"
-          onClick={onRemoveClick}
-        >
-          <XMarkIcon className="size-4" />
-        </button>
-      )}
-      {openPart === 'operator' && (
-        <FilterPillPopover
-          anchorElement={operatorButton}
-          containerElement={containerElement}
-          onClose={closeEditor}
-          className="w-44"
-        >
-          <FilterOperatorList filter={filter} onSelect={onOperationSelect} />
-        </FilterPillPopover>
-      )}
-      {openPart === 'values' && (
-        <FilterPillPopover
-          anchorElement={valuesButton}
-          containerElement={containerElement}
-          onClose={closeEditor}
-          className="w-80 max-w-[calc(100vw-1rem)]"
-        >
-          <FilterValuePicker
-            filter={filter}
-            labels={labels}
-            onChange={editor.update}
-            onDone={() => closeEditor({ refocus: true })}
-          />
-        </FilterPillPopover>
-      )}
-    </div>
+        {canChangeOperation ? (
+          <button
+            ref={setOperatorButton}
+            type="button"
+            className={buttonPartClassName}
+            aria-label={`Change operator: ${plainText}`}
+            aria-expanded={openPart === 'operator'}
+            onClick={() => toggle('operator')}
+          >
+            {operation}
+          </button>
+        ) : (
+          <span className={partClassName}>{operation}</span>
+        )}
+        {action?.type === 'edit' ? (
+          <button
+            ref={setValuesButton}
+            type="button"
+            className={classNames(buttonPartClassName, roundedRight)}
+            title={plainText}
+            aria-label={`Edit filter: ${plainText}`}
+            aria-expanded={openPart === 'values'}
+            onClick={() => toggle('values')}
+          >
+            <PillValues values={values} />
+          </button>
+        ) : action?.type === 'menu' ? (
+          <PillMenu
+            className={classNames(buttonPartClassName, roundedRight)}
+            label={`Open menu: ${plainText}${error ? ` (${error})` : ''}`}
+            renderMenu={action.renderMenu}
+          >
+            <PillValues values={values} error={error} />
+          </PillMenu>
+        ) : (
+          <span
+            className={classNames(partClassName, roundedRight)}
+            title={plainText}
+          >
+            <PillValues values={values} />
+          </span>
+        )}
+        {!!onRemoveClick && (
+          <button
+            type="button"
+            title={`Remove filter: ${plainText}`}
+            className="w-7.5 flex items-center justify-center h-full rounded-r-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750"
+            onClick={onRemoveClick}
+          >
+            <XMarkIcon className="size-4" />
+          </button>
+        )}
+        {openPart === 'operator' && (
+          <FilterPillPopover
+            anchorElement={operatorButton}
+            containerElement={containerElement}
+            onClose={closeEditor}
+            className="w-44"
+          >
+            <FilterOperatorList filter={filter} onSelect={onOperationSelect} />
+          </FilterPillPopover>
+        )}
+        {openPart === 'values' && (
+          <FilterPillPopover
+            anchorElement={valuesButton}
+            containerElement={containerElement}
+            onClose={closeEditor}
+            className="w-80 max-w-[calc(100vw-1rem)]"
+          >
+            <FilterValuePicker
+              filter={filter}
+              labels={labels}
+              onChange={editor.update}
+              onDone={() => closeEditor({ refocus: true })}
+            />
+          </FilterPillPopover>
+        )}
+      </div>
+    </>
   )
 }

@@ -137,11 +137,13 @@ export const ComparisonPeriodMenu = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
+          popover.toggleButton.classNames.aboveBackdrop,
           'bg-gray-150/80 dark:bg-gray-800'
         )}
         ref={buttonRef}
@@ -169,6 +171,7 @@ export const ComparisonCalendarMenu = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
       <Popover.Button
         className={hiddenCalendarButtonClassName}
