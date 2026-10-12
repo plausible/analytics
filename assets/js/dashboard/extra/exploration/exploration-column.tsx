@@ -8,7 +8,7 @@ import {
   roundedNumberFormatter
 } from '../../util/number-formatter'
 import { CursorIcon, FolderIcon } from '../../components/icons'
-import { popover } from '../../components/popover'
+import { popover, SelectedCheckmark } from '../../components/popover'
 import {
   ChevronUpDownIcon,
   EllipsisHorizontalIcon
@@ -69,7 +69,7 @@ function DirectionDropdown({
 
       {open && (
         <div
-          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
+          className={`absolute -left-1 top-full mt-1 z-10 min-w-44 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
         >
           {DIRECTION_OPTIONS.map(({ value, label }) => (
             <button
@@ -83,6 +83,7 @@ function DirectionDropdown({
               className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${direction === value ? popover.items.classNames.selectedOption : ''}`}
             >
               {label}
+              <SelectedCheckmark selected={direction === value} />
             </button>
           ))}
         </div>

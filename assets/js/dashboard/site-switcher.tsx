@@ -7,7 +7,11 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Cog8ToothIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import { isModifierPressed, isTyping, Keybind, KeybindHint } from './keybinding'
-import { popover, BlurMenuButtonOnEscape } from './components/popover'
+import {
+  popover,
+  BlurMenuButtonOnEscape,
+  SelectedCheckmark
+} from './components/popover'
 import { ConsolidatedViewIcon, Favicon } from './components/site-icon'
 import { useQuery } from '@tanstack/react-query'
 import { Role, useUserContext } from './user-context'
@@ -23,7 +27,7 @@ const menuItemClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
   popover.items.classNames.hoverLink,
-  'gap-x-2'
+  'leading-5.5'
 )
 
 const buttonLinkClassName = classNames(
@@ -239,7 +243,12 @@ export const SiteSwitcher = () => {
                   onClick={() => closePopover()}
                 >
                   <ConsolidatedViewIcon />
-                  <span className="truncate mr-auto">All sites</span>
+                  <span className={popover.items.classNames.label}>
+                    All sites
+                  </span>
+                  <SelectedCheckmark
+                    selected={currentSite.isConsolidatedView}
+                  />
                   <KeybindHint>0</KeybindHint>
                 </a>
               )}
@@ -262,7 +271,12 @@ export const SiteSwitcher = () => {
                     }
                   >
                     <Favicon domain={domain} />
-                    <span className="truncate mr-auto">{domain}</span>
+                    <span className={popover.items.classNames.label}>
+                      {domain}
+                    </span>
+                    <SelectedCheckmark
+                      selected={currentSite.domain === domain}
+                    />
                     {sitesInDropdown.length > 1 && (
                       <KeybindHint>{index + 1}</KeybindHint>
                     )}

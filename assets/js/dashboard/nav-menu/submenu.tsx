@@ -13,7 +13,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 import { popover } from '../components/popover'
 import { MenuSeparator } from './nav-menu-components'
 
-export const submenuIconClassName = 'size-4 shrink-0'
+export const submenuIconClassName = classNames(
+  'w-4',
+  popover.items.classNames.rowIcon
+)
 
 const SUBMENU_CLOSE_DELAY_MS = 150
 

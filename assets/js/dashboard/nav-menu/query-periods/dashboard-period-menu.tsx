@@ -25,7 +25,11 @@ import {
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
-import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
+import {
+  popover,
+  BlurMenuButtonOnEscape,
+  SelectedCheckmark
+} from '../../components/popover'
 import {
   DateMenuCalendarIcon,
   PopoverMenuProps,
@@ -198,15 +202,19 @@ const DashboardPeriodMenuInner = ({
                   { search, isActive, onEvent, hidden }
                 ]) => {
                   if (!hidden) {
+                    const selected = isActive({ site, dashboardState })
                     return (
                       <AppNavigationLink
                         key={label}
-                        data-selected={isActive({ site, dashboardState })}
+                        data-selected={selected}
                         className={linkClassName}
                         search={search}
                         onClick={onEvent && ((e) => onEvent(e))}
                       >
-                        {label}
+                        <span className={popover.items.classNames.label}>
+                          {label}
+                        </span>
+                        <SelectedCheckmark selected={selected} />
                         {!!keyboardKey && (
                           <KeybindHint>{keyboardKey}</KeybindHint>
                         )}

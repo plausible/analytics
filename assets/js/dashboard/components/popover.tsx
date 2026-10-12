@@ -46,7 +46,7 @@ const toggleButton = {
   }
 }
 
-const staticRow = 'px-4 py-2.5 text-sm rounded-md'
+const staticRow = 'px-3 py-2 text-sm rounded-md'
 
 const navigationLink = classNames(
   'flex items-center justify-between',
@@ -72,10 +72,15 @@ const items = {
     navigationLink,
     hoverLink,
     label: 'flex-1 min-w-0 truncate',
+    /** Use with a width. Keeps an svg icon on the first line of the row. */
+    rowIcon: 'shrink-0 self-start h-lh',
     description: 'font-normal text-xs text-gray-500 dark:text-gray-400',
+    sectionTitle:
+      'px-3 py-2 text-xs font-medium uppercase whitespace-nowrap text-gray-500 dark:text-gray-400',
     /** Full-width row that holds a leading icon and a `label` span. */
     iconRow: classNames(navigationLink, hoverLink, 'gap-x-2 w-full text-left'),
     selectedOption: classNames(
+      'gap-x-2',
       'data-[selected=true]:bg-gray-100',
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
@@ -96,7 +101,10 @@ export function SelectedCheckmark({ selected }: { selected: boolean }) {
     return null
   }
   return (
-    <CheckIcon className="size-3.5 shrink-0 ml-2 stroke-2" aria-hidden="true" />
+    <CheckIcon
+      className={classNames('w-3.5', items.classNames.rowIcon)}
+      aria-hidden="true"
+    />
   )
 }
 
