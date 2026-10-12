@@ -192,6 +192,7 @@ export async function createSharedLink({
   const table = page.locator('#shared-links-table')
 
   await page.goto(`/${domain}/settings/visibility`, { waitUntil: 'commit' })
+  await expectLiveViewConnected(page)
 
   await page.getByRole('button', { name: 'Add shared link' }).click()
 
