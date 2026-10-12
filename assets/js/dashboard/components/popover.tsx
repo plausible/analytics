@@ -27,28 +27,30 @@ const transition = {
 const panel = {
   classNames: {
     roundedSheet:
-      'flex flex-col gap-0.5 p-1 focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 font-medium text-gray-800 dark:text-gray-200'
+      'flex flex-col gap-0.5 p-1 focus:outline-hidden rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 text-gray-800 dark:text-gray-200'
   }
 }
 
 const toggleButton = {
   classNames: {
-    rounded: 'flex items-center rounded-md text-sm leading-tight h-8',
+    rounded: 'flex items-center rounded-md text-sm h-8',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
     outline:
-      'border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:hover:text-gray-100',
+      'border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:hover:text-gray-100',
     ghost:
-      'gap-x-1.5 px-2.5 font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
+      'gap-x-1.5 px-2.5 font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
     truncatedText: 'truncate block',
     linkLike:
       'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150'
   }
 }
 
+const staticRow = 'px-3 py-2 text-sm rounded-md'
+
 const navigationLink = classNames(
   'flex items-center justify-between',
-  'px-4 py-2.5 text-sm leading-tight rounded-md',
+  staticRow,
   'cursor-pointer'
 )
 
@@ -66,12 +68,19 @@ const hoverLink = classNames(
 
 const items = {
   classNames: {
+    staticRow,
     navigationLink,
     hoverLink,
     label: 'flex-1 min-w-0 truncate',
+    /** Use with a width. Keeps an svg icon on the first line of the row. */
+    rowIcon: 'shrink-0 self-start h-lh',
+    description: 'font-normal text-xs text-gray-500 dark:text-gray-400',
+    sectionTitle:
+      'px-3 py-2 text-xs font-medium uppercase whitespace-nowrap text-gray-500 dark:text-gray-400',
     /** Full-width row that holds a leading icon and a `label` span. */
     iconRow: classNames(navigationLink, hoverLink, 'gap-x-2 w-full text-left'),
     selectedOption: classNames(
+      'gap-x-2',
       'data-[selected=true]:bg-gray-100',
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
@@ -92,7 +101,10 @@ export function SelectedCheckmark({ selected }: { selected: boolean }) {
     return null
   }
   return (
-    <CheckIcon className="size-3.5 shrink-0 ml-2 stroke-2" aria-hidden="true" />
+    <CheckIcon
+      className={classNames('w-3.5', items.classNames.rowIcon)}
+      aria-hidden="true"
+    />
   )
 }
 

@@ -25,7 +25,11 @@ import {
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
-import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
+import {
+  popover,
+  BlurMenuButtonOnEscape,
+  SelectedCheckmark
+} from '../../components/popover'
 import {
   DateMenuCalendarIcon,
   PopoverMenuProps,
@@ -109,7 +113,7 @@ export const DashboardPeriodMenu = ({
         <Popover.Button
           ref={buttonRef}
           className={classNames(
-            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-700 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
+            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-800 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
             periodsWithArrows.includes(dashboardState.period)
               ? 'pr-1.5'
               : 'pr-2.5'
@@ -198,15 +202,19 @@ const DashboardPeriodMenuInner = ({
                   { search, isActive, onEvent, hidden }
                 ]) => {
                   if (!hidden) {
+                    const selected = isActive({ site, dashboardState })
                     return (
                       <AppNavigationLink
                         key={label}
-                        data-selected={isActive({ site, dashboardState })}
+                        data-selected={selected}
                         className={linkClassName}
                         search={search}
                         onClick={onEvent && ((e) => onEvent(e))}
                       >
-                        {label}
+                        <span className={popover.items.classNames.label}>
+                          {label}
+                        </span>
+                        <SelectedCheckmark selected={selected} />
                         {!!keyboardKey && (
                           <KeybindHint>{keyboardKey}</KeybindHint>
                         )}

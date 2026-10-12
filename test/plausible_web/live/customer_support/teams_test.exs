@@ -172,14 +172,37 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         assert text(html) =~ "Deletion scheduled"
 
+        future_date = Date.utc_today() |> Date.add(30) |> Date.to_iso8601()
+
         lv
         |> element(~s|form[phx-submit="save-team"]|)
-        |> render_submit(%{"team" => %{"trial_expiry_date" => "2029-01-01"}})
+        |> render_submit(%{"team" => %{"trial_expiry_date" => future_date}})
 
         html = render(lv)
         refute text(html) =~ "Deletion scheduled"
 
         assert Plausible.Repo.reload!(schedule).status == :cancelled
+      end
+
+      test "prolonging an expired trial unlocks the team straight away", %{conn: conn, user: user} do
+        team =
+          user
+          |> team_of()
+          |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
+          |> Plausible.Repo.update!()
+
+        Plausible.Billing.SiteLocker.update_for(team, send_email?: false)
+        assert Plausible.Repo.reload!(team).locked
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        future_date = Date.utc_today() |> Date.add(30) |> Date.to_iso8601()
+
+        lv
+        |> element(~s|form[phx-submit="save-team"]|)
+        |> render_submit(%{"team" => %{"trial_expiry_date" => future_date}})
+
+        refute Plausible.Repo.reload!(team).locked
       end
 
       test "404", %{conn: conn} do

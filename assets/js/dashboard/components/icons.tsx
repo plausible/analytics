@@ -82,7 +82,7 @@ export const RefreshIcon = ({ className }: { className?: string }) => (
 export const PencilIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 18 18"
+    viewBox="0 0 24 24"
     fill="none"
     className={className}
   >
@@ -91,7 +91,58 @@ export const PencilIcon = ({ className }: { className?: string }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.5"
-      d="m10.547 4.422 3.031 3.031M2.75 15.25s3.599-.568 4.546-1.515l7.327-7.327a2.142 2.142 0 1 0-3.03-3.03l-7.327 7.327c-.947.947-1.515 4.546-1.515 4.546h0Z"
+      d="m14.25 5.25 5 5M9.25 20.25l-7 2 2-7L16.664 2.836a2 2 0 0 1 2.828 0l2.172 2.172a2 2 0 0 1 0 2.828z"
+    />
+  </svg>
+)
+
+export const TrashIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="m4.75 6.5.905 12.89a2 2 0 0 0 1.995 1.86h8.7a2 2 0 0 0 1.995-1.86L19.25 6.5M3.25 5.75h17.5M8.523 5.583a3.5 3.5 0 0 1 6.951 0"
+    />
+  </svg>
+)
+
+export const QuestionMarkCircleIcon = ({
+  className
+}: {
+  className?: string
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeMiterlimit="10"
+      strokeWidth="1.5"
+      d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+    />
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeMiterlimit="10"
+      strokeWidth="1.5"
+      d="M9 10a3 3 0 1 1 6 0c0 1.31-.839 2.11-2.008 2.389-.538.128-.992.559-.992 1.111"
+    />
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth="2.5"
+      d="M12 17.01V17"
     />
   </svg>
 )

@@ -16,7 +16,7 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { Role, useUserContext } from '../../user-context'
 import { useSegmentsContext } from '../../filtering/segments-context'
 import { useSearchableItems } from '../../hooks/use-searchable-items'
-import { popover } from '../../components/popover'
+import { popover, SelectedCheckmark } from '../../components/popover'
 
 const mutedRowClassName = classNames(
   popover.items.classNames.iconRow,
@@ -47,7 +47,13 @@ export const useListableSegments = (): {
   }
 }
 
-export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
+export const SegmentsSubmenu = ({
+  closeList,
+  selectedId
+}: {
+  closeList: () => void
+  selectedId?: number | string
+}) => {
   const user = useUserContext()
   const site = useSiteContext()
   const { segments } = useListableSegments()
@@ -74,7 +80,7 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
   })
 
   return (
-    <>
+    <div className="flex flex-col gap-y-1">
       {showSearch && (
         <SearchInput
           searchRef={searchRef}
@@ -88,6 +94,7 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
           <SegmentLink
             key={segment.id}
             segment={segment}
+            selected={String(segment.id) === String(selectedId)}
             showAuthorship={showAuthorship}
             showOnlyPublicData={isPublicListQuery}
             closeList={closeList}
@@ -98,7 +105,9 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
             <span className={popover.items.classNames.label}>
               {`Show ${countOfMoreToShow} more`}
             </span>
-            <EllipsisHorizontalIcon className="block w-5 h-5 shrink-0" />
+            <EllipsisHorizontalIcon
+              className={classNames('w-5', popover.items.classNames.rowIcon)}
+            />
           </button>
         )}
       </div>
@@ -107,17 +116,19 @@ export const SegmentsSubmenu = ({ closeList }: { closeList: () => void }) => {
           No segments found. Clear search to show all.
         </button>
       )}
-    </>
+    </div>
   )
 }
 
 const SegmentLink = ({
   segment,
+  selected,
   showAuthorship,
   showOnlyPublicData,
   closeList
 }: {
   segment: SavedSegment | SavedSegmentPublic
+  selected: boolean
   showAuthorship: boolean
   showOnlyPublicData: boolean
   closeList: () => void
@@ -130,7 +141,12 @@ const SegmentLink = ({
 
   return (
     <AppNavigationLink
-      className={popover.items.classNames.iconRow}
+      className={classNames(
+        popover.items.classNames.iconRow,
+        popover.items.classNames.selectedOption
+      )}
+      data-selected={selected}
+      aria-current={selected || undefined}
       onClick={closeList}
       search={getSearchToSetSegmentFilter({ id, name })}
     >
@@ -138,7 +154,12 @@ const SegmentLink = ({
         <div className="truncate" title={name}>
           {name}
         </div>
-        <div className="flex items-baseline gap-x-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+        <div
+          className={classNames(
+            'flex items-baseline gap-x-1',
+            popover.items.classNames.description
+          )}
+        >
           {!!authorship && (
             <span className="truncate min-w-0">{authorship}</span>
           )}
@@ -147,6 +168,7 @@ const SegmentLink = ({
           </span>
         </div>
       </div>
+      <SelectedCheckmark selected={selected} />
     </AppNavigationLink>
   )
 }

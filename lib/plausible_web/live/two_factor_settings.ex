@@ -34,13 +34,9 @@ defmodule PlausibleWeb.Live.TwoFactorSettings do
 
           <p class="mt-2 text-gray-600 text-sm dark:text-gray-400">
             Lost your recovery codes?
-            <button
-              type="button"
-              phx-click={Prima.Modal.JS.open("regenerate-2fa-modal")}
-              class="underline text-indigo-600"
-            >
+            <.styled_link phx-click={Prima.Modal.JS.open("regenerate-2fa-modal")}>
               Generate new
-            </button>
+            </.styled_link>
           </p>
 
           <PrimaModal.modal

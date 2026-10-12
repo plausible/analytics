@@ -138,30 +138,28 @@ export function MetricValueTooltipContent({
         <div>
           <div className="flex gap-x-4">
             <div className="flex flex-col">
-              <span className="font-medium text-sm/6 text-white">
+              <span className="font-semibold">
                 {longFormatter(value)}
                 {label}
               </span>
-              <div className="font-normal text-xs text-white">
-                {dateRangeLabel}
-              </div>
+              <div className="font-normal">{dateRangeLabel}</div>
             </div>
             {comparison.change != null && (
               <ChangeArrow
                 metric={metric}
                 change={comparison.change}
-                className="text-xs/6 font-medium text-white"
+                className="text-xs/5"
               />
             )}
           </div>
         </div>
-        <div className="w-full border-t border-gray-600" />
+        <div className="w-full border-t border-gray-200 dark:border-gray-600" />
         <div>
-          <div className="font-medium text-sm/6 text-gray-300/80">
+          <div className="font-semibold text-gray-500 dark:text-gray-400">
             {longFormatter(comparison.value)}
             {label}
           </div>
-          <div className="font-normal text-xs text-gray-300/80">
+          <div className="font-normal text-gray-500 dark:text-gray-400">
             {comparisonDateRangeLabel}
           </div>
         </div>

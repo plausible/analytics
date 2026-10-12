@@ -42,7 +42,11 @@ defmodule PlausibleWeb.Layouts do
           my_team={@my_team}
         />
 
-        <.team_notices :if={@global_notices?} current_team={@current_team} />
+        <.team_notices
+          :if={@global_notices?}
+          current_team={@current_team}
+          current_team_role={@current_team_role}
+        />
       <% end %>
 
       <main class="flex-1 flex flex-col">

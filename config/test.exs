@@ -6,6 +6,8 @@ config :plausible, PlausibleWeb.Endpoint, server: false
 
 config :bcrypt_elixir, :log_rounds, 4
 
+config :sentry, test_mode: true
+
 config :plausible, Plausible.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online()

@@ -41,7 +41,20 @@ const setupSiteAndStats = async ({
   return context
 }
 
-const segmentMenu = (page: Page) => page.getByTestId('segment-menu')
+const openSegmentPillMenu = async (page: Page, segmentName: string) => {
+  await page
+    .getByRole('button', { name: `Segment is ${segmentName}`, exact: true })
+    .click()
+}
+
+const saveEditedSegmentButton = (page: Page) =>
+  page.getByRole('button', { name: 'Save', exact: true })
+
+const enterEditMode = async (page: Page, segmentName: string) => {
+  await openSegmentPillMenu(page, segmentName)
+  await page.getByRole('link', { name: 'Edit segment' }).click()
+  await expect(saveEditedSegmentButton(page)).toBeVisible()
+}
 
 const segmentItemButton = (page: Page, name: string) =>
   filterSubmenuSegmentItem(page, name)
@@ -79,8 +92,6 @@ const addUtmSourceFilter = async (page: Page, utmSource: string) => {
 }
 
 const createPersonalSegment = async (page: Page, name: string) => {
-  await page.getByRole('button', { name: 'See actions' }).click()
-
   await page.getByRole('link', { name: 'Save as segment' }).click()
 
   await modal(page).getByLabel('Segment name').fill(name)
@@ -98,17 +109,15 @@ test('saving a segment', async ({ page, request }) => {
   await test.step('creating personal segment using defaults', async () => {
     await addSourceFilter(page, 'Facebook')
 
-    await page.getByRole('button', { name: 'See actions' }).click()
-
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
     await expect(
       modal(page).getByRole('heading', { name: 'Create segment' })
     ).toBeVisible()
 
-    await expect(
-      modal(page).getByPlaceholder('Source is Facebook')
-    ).toHaveAccessibleName('Segment name')
+    await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+      'Source is Facebook'
+    )
 
     await expect(
       modal(page).getByRole('radio', { name: 'Personal segment' })
@@ -119,7 +128,9 @@ test('saving a segment', async ({ page, request }) => {
     await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
 
     await expect(
-      page.getByRole('link', { name: 'Segment is Source is Facebook' })
+      page.getByRole('button', {
+        name: 'Remove filter: Segment is Source is Facebook'
+      })
     ).toBeVisible()
 
     await page
@@ -139,8 +150,6 @@ test('saving a segment', async ({ page, request }) => {
   await test.step('creating a personal segment with a custom name', async () => {
     await addSourceFilter(page, 'Google')
 
-    await page.getByRole('button', { name: 'See actions' }).click()
-
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
     await expect(
@@ -158,7 +167,9 @@ test('saving a segment', async ({ page, request }) => {
     await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
 
     await expect(
-      page.getByRole('link', { name: 'Segment is Traffic from Google' })
+      page.getByRole('button', {
+        name: 'Remove filter: Segment is Traffic from Google'
+      })
     ).toBeVisible()
 
     await page
@@ -180,17 +191,15 @@ test('saving a segment', async ({ page, request }) => {
     await addSourceFilter(page, 'Google')
     await addUtmSourceFilter(page, 'Adwords')
 
-    await page.getByRole('button', { name: 'See actions' }).click()
-
     await page.getByRole('link', { name: 'Save as segment' }).click()
 
     await expect(
       modal(page).getByRole('heading', { name: 'Create segment' })
     ).toBeVisible()
 
-    await expect(
-      modal(page).getByPlaceholder('UTM source is Adwords and Source is Google')
-    ).toHaveAccessibleName('Segment name')
+    await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+      'UTM source is Adwords and Source is Google'
+    )
 
     await modal(page).getByLabel('Segment name').fill('Ads from Google')
 
@@ -207,7 +216,9 @@ test('saving a segment', async ({ page, request }) => {
     await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
 
     await expect(
-      page.getByRole('link', { name: 'Segment is Ads from Google' })
+      page.getByRole('button', {
+        name: 'Remove filter: Segment is Ads from Google'
+      })
     ).toBeVisible()
 
     await page
@@ -239,33 +250,13 @@ test('creating a segment from a combination of segment and a filter is not allow
   await createPersonalSegment(page, 'Traffic from Google')
   await addUtmSourceFilter(page, 'Adwords')
 
-  // Add UTM medium and campaign filters. Every new filter is prepended, so
-  // Segment ends up as the last pill and overflows into "See more".
-  const utmMediumFilterRow = filterRow(page, 'utm_medium')
-  const utmCampaignFilterRow = filterRow(page, 'utm_campaign')
-
-  await filterButton(page).click()
-  await openFilterSubmenuItem(page, 'UTM tags', 'UTM medium')
-  await page.getByPlaceholder('Select a UTM Medium').click()
-  await suggestedItem(utmMediumFilterRow, 'email').click()
-  await applyFilterButton(page).click()
-
-  await filterButton(page).click()
-  await openFilterSubmenuItem(page, 'UTM tags', 'UTM campaign')
-  await page.getByPlaceholder('Select a UTM Campaign').click()
-  await suggestedItem(utmCampaignFilterRow, 'promo').click()
-  await applyFilterButton(page).click()
-
-  await expect(
-    page.getByRole('link', { name: 'UTM campaign is promo' })
-  ).toBeVisible()
-
-  await page.getByRole('button', { name: /See.*more/ }).click()
   await expect(
     page.getByRole('link', { name: 'UTM source is Adwords' })
   ).toBeVisible()
   await expect(
-    page.getByRole('link', { name: 'Segment is Traffic from Google' })
+    page.getByRole('button', {
+      name: 'Remove filter: Segment is Traffic from Google'
+    })
   ).toBeVisible()
 
   await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
@@ -284,34 +275,46 @@ test('editing an existing segment', async ({ page, request }) => {
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
 
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
-
-  await expect(
-    modal(page).getByRole('heading', { name: 'Traffic from Google' })
-  ).toBeVisible()
-
-  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
+  await enterEditMode(page, 'Traffic from Google')
 
   await addUtmSourceFilter(page, 'Adwords')
 
-  await page.getByRole('link', { name: 'Update segment' }).click()
+  await saveEditedSegmentButton(page).click()
 
   await expect(
     modal(page).getByRole('heading', { name: 'Update segment' })
   ).toBeVisible()
 
+  await expect(modal(page).getByLabel('Segment name')).toHaveValue(
+    'Traffic from Google'
+  )
+
   await modal(page).getByLabel('Segment name').fill('Ads from Google')
 
   await modal(page).getByRole('button', { name: 'Save' }).click()
 
-  await page.getByRole('link', { name: 'Segment is Ads from Google' }).click()
+  await expect(
+    page.getByRole('button', {
+      name: 'Remove filter: Segment is Ads from Google'
+    })
+  ).toBeVisible()
 
-  await expect(modal(page)).toContainText('UTM source is Adwords')
-  await expect(modal(page)).toContainText('Source is Google')
+  await enterEditMode(page, 'Ads from Google')
 
-  await modal(page).getByRole('button', { name: 'Remove filter' }).click()
+  await expect(
+    page.getByRole('link', { name: 'UTM source is Adwords' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: 'Source is Google' })
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Cancel' }).click()
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Segment is Ads from Google'
+    })
+    .click()
 
   await expect(page).not.toHaveURL(/f=is,segment,[0-9]+/)
 
@@ -322,7 +325,7 @@ test('editing an existing segment', async ({ page, request }) => {
   await expect(segmentItemButton(page, 'Traffic from Google')).toBeHidden()
 })
 
-test('saving edited segment as new', async ({ page, request }) => {
+test('duplicating a segment', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
@@ -330,17 +333,9 @@ test('saving edited segment as new', async ({ page, request }) => {
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
 
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
+  await openSegmentPillMenu(page, 'Traffic from Google')
 
-  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
-
-  await addUtmSourceFilter(page, 'Adwords')
-
-  await segmentMenu(page).click()
-
-  await page.getByRole('link', { name: 'Save as a new segment' }).click()
+  await page.getByRole('button', { name: 'Duplicate segment' }).click()
 
   await expect(
     modal(page).getByRole('heading', { name: 'Create segment' })
@@ -350,31 +345,29 @@ test('saving edited segment as new', async ({ page, request }) => {
     'Copy of Traffic from Google'
   )
 
-  await modal(page).getByLabel('Segment name').fill('Ads from Google')
+  await modal(page).getByLabel('Segment name').fill('Google copy')
 
   await modal(page).getByRole('button', { name: 'Save' }).click()
 
-  await page.getByRole('link', { name: 'Segment is Ads from Google' }).click()
+  await enterEditMode(page, 'Google copy')
 
-  await expect(modal(page)).toContainText('UTM source is Adwords')
-  await expect(modal(page)).toContainText('Source is Google')
+  await expect(
+    page.getByRole('link', { name: 'Source is Google' })
+  ).toBeVisible()
 
-  await modal(page).getByRole('button', { name: 'Remove filter' }).click()
+  await page.getByRole('link', { name: 'Cancel' }).click()
+
+  await page
+    .getByRole('button', {
+      name: 'Remove filter: Segment is Google copy'
+    })
+    .click()
 
   await filterButton(page).click()
   await openSegmentsSubmenu(page)
 
-  await expect(segmentItemButton(page, 'Ads from Google')).toBeVisible()
+  await expect(segmentItemButton(page, 'Google copy')).toBeVisible()
   await expect(segmentItemButton(page, 'Traffic from Google')).toBeVisible()
-
-  await segmentItemButton(page, 'Traffic from Google').click()
-
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
-
-  await expect(modal(page)).not.toContainText('UTM source is Adwords')
-  await expect(modal(page)).toContainText('Source is Google')
 })
 
 test('deleting segment', async ({ page, request }) => {
@@ -385,15 +378,9 @@ test('deleting segment', async ({ page, request }) => {
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
 
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
+  await openSegmentPillMenu(page, 'Traffic from Google')
 
-  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
-
-  await segmentMenu(page).click()
-
-  await page.getByRole('link', { name: 'Delete segment' }).click()
+  await page.getByRole('button', { name: 'Delete segment' }).click()
 
   await expect(
     modal(page).getByRole('heading', { name: 'Delete personal segment' })
@@ -407,7 +394,7 @@ test('deleting segment', async ({ page, request }) => {
   await expect(filterSubmenuButton(page, 'Segment')).toBeHidden()
 })
 
-test('closing edited segment without saving', async ({ page, request }) => {
+test('cancelling edited segment without saving', async ({ page, request }) => {
   const { domain } = await setupSiteAndStats({ page, request })
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
@@ -415,27 +402,21 @@ test('closing edited segment without saving', async ({ page, request }) => {
   await addSourceFilter(page, 'Google')
   await createPersonalSegment(page, 'Traffic from Google')
 
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
-
-  await modal(page).getByRole('link', { name: 'Edit segment' }).click()
+  await enterEditMode(page, 'Traffic from Google')
 
   await addUtmSourceFilter(page, 'Adwords')
 
-  await segmentMenu(page).click()
+  await page.getByRole('link', { name: 'Cancel' }).click()
 
-  await page.getByRole('link', { name: 'Close without saving' }).click()
+  await expect(page).toHaveURL(/f=is,segment,[0-9]+/)
+  await expect(page).not.toHaveURL(/f=is,utm_source,Adwords/)
 
-  await filterButton(page).click()
-  await openSegmentsSubmenu(page)
+  await enterEditMode(page, 'Traffic from Google')
 
-  await segmentItemButton(page, 'Traffic from Google').click()
-
-  await page
-    .getByRole('link', { name: 'Segment is Traffic from Google' })
-    .click()
-
-  await expect(modal(page)).not.toContainText('UTM source is Adwords')
-  await expect(modal(page)).toContainText('Source is Google')
+  await expect(
+    page.getByRole('link', { name: 'UTM source is Adwords' })
+  ).toBeHidden()
+  await expect(
+    page.getByRole('link', { name: 'Source is Google' })
+  ).toBeVisible()
 })

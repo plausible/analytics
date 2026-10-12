@@ -16,8 +16,6 @@ import { isModifierPressed, isTyping } from '../../keybinding'
 import FilterModalDimension from './filter-modal-dimension'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-import { SegmentModal } from '../../segments/segment-modals'
-import { findAppliedSegmentFilter } from '../../filtering/segments'
 import { Button } from '../../components/button'
 
 function partitionFilters(dimension, filters) {
@@ -219,16 +217,11 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { dashboardState } = useDashboardStateContext()
   const site = useSiteContext()
-  if (!getAvailableFilterDimensions(site).includes(field)) {
+  if (
+    field === 'segment' ||
+    !getAvailableFilterDimensions(site).includes(field)
+  ) {
     return null
-  }
-  const appliedSegmentFilter =
-    field === 'segment'
-      ? findAppliedSegmentFilter({ filters: dashboardState.filters })
-      : null
-  if (appliedSegmentFilter) {
-    const [_operation, _dimension, [segmentId]] = appliedSegmentFilter
-    return <SegmentModal id={segmentId} />
   }
   return (
     <FilterModal

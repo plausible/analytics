@@ -144,7 +144,7 @@ defmodule Plausible.MixProject do
       {:recon, "~> 2.5"},
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
-      {:sentry, "~> 11.0.4"},
+      {:sentry, "~> 13.5"},
       {:simple_saml, "~> 1.2"},
       {:xml_builder, "~> 2.1"},
       {:siphash, "~> 3.2"},

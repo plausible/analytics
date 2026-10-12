@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 
@@ -52,20 +52,36 @@ export const LabeledTextInput = ({
   value,
   onChange,
   placeholder,
-  maxLength
-}: LabeledFieldProps) => (
-  <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
-    <input
-      autoComplete="off"
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
-      className={fieldClassName}
-    />
-  </LabeledField>
-)
+  maxLength,
+  focusOnMount = false
+}: LabeledFieldProps & {
+  focusOnMount?: boolean
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const input = inputRef.current
+    if (focusOnMount && input) {
+      input.focus()
+      input.setSelectionRange(input.value.length, input.value.length)
+    }
+  }, [focusOnMount])
+
+  return (
+    <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
+      <input
+        ref={inputRef}
+        autoComplete="off"
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
+        className={fieldClassName}
+      />
+    </LabeledField>
+  )
+}
 
 export const LabeledTextarea = ({
   label,

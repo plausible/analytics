@@ -3,7 +3,7 @@ import { Filter, FilterClauseLabels } from '../dashboard-state'
 import { plainFilterText, styledFilterText } from './filter-text'
 import { render, screen } from '@testing-library/react'
 
-describe('styledFilterText() and plainFilterText()', () => {
+describe('plainFilterText()', () => {
   it.each<[Filter, FilterClauseLabels, string]>([
     [['is', 'page', ['/docs', '/blog']], {}, 'Page is /docs or /blog'],
     [
@@ -15,6 +15,33 @@ describe('styledFilterText() and plainFilterText()', () => {
     [
       ['is', 'props:browser_language', ['en-US']],
       {},
+      "Property 'browser_language' is en-US"
+    ],
+    [
+      ['has_not_done', 'goal', ['Signup', 'Login']],
+      {},
+      'Goal is not Signup or Login'
+    ],
+    [['is', 'source', []], {}, 'Source is']
+  ])(
+    'when filter is %p and labels are %p, returns %p',
+    (filter, labels, expectedPlainText) => {
+      expect(plainFilterText({ labels }, filter)).toBe(expectedPlainText)
+    }
+  )
+})
+
+describe('styledFilterText()', () => {
+  it.each<[Filter, FilterClauseLabels, string]>([
+    [['is', 'page', ['/docs', '/blog']], {}, 'Page is /docs or /blog'],
+    [
+      ['is', 'country', ['US']],
+      { US: 'United States' },
+      'Country is United States'
+    ],
+    [
+      ['is', 'props:browser_language', ['en-US']],
+      {},
       'Property browser_language is en-US'
     ],
     [
@@ -23,20 +50,12 @@ describe('styledFilterText() and plainFilterText()', () => {
       'Goal is not Signup or Login'
     ]
   ])(
-    'when filter is %p and labels are %p, functions return %p',
-    (filter, labels, expectedPlainText) => {
-      const dashboardState = { labels }
-
-      expect(plainFilterText(dashboardState, filter)).toBe(expectedPlainText)
-
+    'when filter is %p and labels are %p, renders %p',
+    (filter, labels, expectedText) => {
       render(
-        <p data-testid="filter-text">
-          {styledFilterText(dashboardState, filter)}
-        </p>
+        <p data-testid="filter-text">{styledFilterText({ labels }, filter)}</p>
       )
-      expect(screen.getByTestId('filter-text')).toHaveTextContent(
-        expectedPlainText
-      )
+      expect(screen.getByTestId('filter-text')).toHaveTextContent(expectedText)
     }
   )
 })
