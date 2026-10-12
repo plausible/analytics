@@ -3,13 +3,15 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   import Phoenix.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 
+  require Plausible.Billing
+
   describe "global upgrade notices" do
     for {fun, title} <- [
           {:active_grace_period, "grace period"},
           {:dashboard_locked, "locked dashboard"}
         ] do
       test "#{fun}/1 links owners and billing members to the plan flow (#{title})" do
-        for role <- [:owner, :billing] do
+        for role <- Plausible.Billing.allowed_roles() do
           rendered = render_component(&(Notice.unquote(fun) / 1), current_team_role: role)
 
           assert rendered =~ "Upgrade now"
@@ -19,7 +21,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       end
 
       test "#{fun}/1 tells admins and other members to ask an owner (#{title})" do
-        for role <- [:admin, :editor, :viewer, :guest] do
+        for role <- Plausible.Teams.Membership.roles() -- Plausible.Billing.allowed_roles() do
           rendered = render_component(&(Notice.unquote(fun) / 1), current_team_role: role)
 
           assert rendered =~ "ask a team owner to upgrade the subscription"
