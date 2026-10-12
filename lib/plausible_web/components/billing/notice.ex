@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
-  attr(:current_team_role, :atom, default: nil)
+  attr(:current_team_role, :atom, required: true)
 
   def active_grace_period(assigns) do
     ~H"""
@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:current_team_role, :atom, default: nil)
+  attr(:current_team_role, :atom, required: true)
 
   def dashboard_locked(assigns) do
     ~H"""
@@ -39,14 +39,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  # A nil role means the role is unknown, in which case we keep the link.
   defp upgrade_link_or_owner_hint(assigns) do
     assigns =
       assign(
         assigns,
         :can_upgrade?,
-        is_nil(assigns.current_team_role) or
-          assigns.current_team_role in Plausible.Billing.allowed_roles()
+        assigns.current_team_role in Plausible.Billing.allowed_roles()
       )
 
     ~H"""

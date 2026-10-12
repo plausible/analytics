@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
           {:dashboard_locked, "locked dashboard"}
         ] do
       test "#{fun}/1 links owners and billing members to the plan flow (#{title})" do
-        for role <- [:owner, :billing, nil] do
+        for role <- [:owner, :billing] do
           rendered = render_component(&(Notice.unquote(fun) / 1), current_team_role: role)
 
           assert rendered =~ "Upgrade now"
