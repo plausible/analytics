@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth.User
+  alias Plausible.Teams.TeamRolePermissions
   alias PlausibleWeb.Components.PrimaListbox
 
   @role_descriptions [
@@ -137,7 +138,7 @@ defmodule PlausibleWeb.Live.Components.Team do
             display={role_to_capitalized_string(role)}
             phx-hook="Confirm"
             data-confirm-message={
-              if @me? and role in [:editor, :billing, :viewer], do: lower_role_warning()
+              if @me? and not TeamRolePermissions.can_manage_team?(role), do: lower_role_warning()
             }
           >
             <div class="flex items-center justify-between gap-x-2">
@@ -208,7 +209,9 @@ defmodule PlausibleWeb.Live.Components.Team do
   end
 
   defp role_change_disabled?(my_role, :owner), do: my_role != :owner
-  defp role_change_disabled?(my_role, _role), do: my_role not in [:owner, :admin]
+
+  defp role_change_disabled?(my_role, _role),
+    do: not TeamRolePermissions.can_manage_team?(my_role)
 
   defp lower_role_warning() do
     "You're about to lower your own role. Some team management features will no longer be accessible to you, and you'll need to ask a team owner to restore your access. Do you want to continue?"

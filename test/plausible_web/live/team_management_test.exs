@@ -117,6 +117,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
+      assert text(html) =~ "new@example.com has been invited"
+
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
       assert member_row1 =~ "Pending invitation"
@@ -147,6 +149,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       html = render(lv)
 
       assert text_of_element(html, "#{member2_row} #{role_el()}") == "Viewer"
+      assert text(html) =~ "#{member2.email}'s role has been changed to Viewer"
 
       assert_no_emails_delivered()
 
@@ -187,7 +190,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert Enum.count(Plausible.Teams.Invitations.pending_team_invitations_for(team)) == 3
     end
 
-    test "fails to accept invitation to already existing e-mail", %{
+    test "fails to invite an e-mail belonging to an existing team member (e.g. yourself)", %{
       conn: conn,
       user: user
     } do
@@ -195,7 +198,95 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       add_invite(lv, user.email, "admin")
 
       assert lv |> render() |> text() =~
-               "Error! Make sure the e-mail is valid and is not taken already"
+               "Error! Make sure the e-mail is valid and not already taken by an existing member or invitation"
+    end
+
+    test "fails to invite an e-mail that already has a pending invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      add_invite(lv, "Sent@Example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "Error! Make sure the e-mail is valid and not already taken by an existing member or invitation"
+
+      assert Plausible.Repo.reload!(invitation).role == :viewer
+    end
+
+    test "fails to invite a guest's e-mail", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      lv = get_liveview(conn)
+      add_invite(lv, "guest@example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "This e-mail belongs to a guest. Please change their role below"
+
+      assert [] =
+               team
+               |> Plausible.Teams.Invitations.pending_team_invitations_for()
+               |> Enum.filter(&(&1.role != :guest))
+    end
+
+    test "fails to invite an e-mail with a pending guest invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      site = new_site(team: team)
+      invite_guest(site, "guest@example.com", role: :viewer, inviter: user)
+
+      lv = get_liveview(conn)
+      add_invite(lv, "guest@example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
+
+      assert [%{role: :guest}] = Plausible.Teams.Invitations.pending_team_invitations_for(team)
+    end
+
+    test "allows updating a pending invitation's role in place", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      change_role(lv, "sent@example.com", "editor")
+
+      assert lv |> render() |> text() =~
+               "The invitation for sent@example.com now has the Editor role"
+
+      assert Plausible.Repo.reload!(invitation).role == :editor
+      assert_no_emails_delivered()
+    end
+
+    test "shows a success message after removing a member", %{conn: conn, team: team} do
+      member = add_member(team, role: :viewer)
+
+      lv = get_liveview(conn)
+      remove_member(lv, member.email)
+
+      assert lv |> render() |> text() =~ "#{member.email} has been removed from the team"
+    end
+
+    test "shows a success message after removing a pending invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      remove_member(lv, "sent@example.com")
+
+      assert lv |> render() |> text() =~ "The invitation for sent@example.com has been removed"
     end
 
     @tag :ee_only
@@ -204,8 +295,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       user: user,
       team: team
     } do
-      insert(:growth_subscription, team: team)
-
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
@@ -257,6 +346,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert elem_count(html, member_el()) == 1
       refute element_exists?(html, "#guest-list")
+
+      assert_email_delivered_with(
+        to: [nil: "pending@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+      )
 
       assert_email_delivered_with(
         to: [nil: member2.email],
@@ -435,7 +529,9 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       remove_member(lv, user.email)
 
-      assert_redirect(lv, "/sites?__team=none")
+      flash = assert_redirect(lv, "/sites?__team=none")
+      assert flash["success"] == "You have left the team"
+      assert {:error, :not_a_member} = Plausible.Teams.Memberships.team_role(team, user)
     end
 
     test "demotes self to billing, redirecting to team general", %{
