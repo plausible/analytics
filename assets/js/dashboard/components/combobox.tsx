@@ -7,8 +7,10 @@ import {
   Suggestion,
   SuggestionsRequest
 } from '../util/fetch-suggestions'
-import { useDebounce } from '../custom-hooks'
 import { Spinner } from './icons'
+import { popover } from './popover'
+import { SearchInput } from './search-input'
+import { checkboxClassName } from './form-elements'
 
 export type ComboboxOption = Suggestion & { freeChoice?: boolean }
 
@@ -49,7 +51,6 @@ export const Combobox = ({
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
-  const debouncedSetSearch = useDebounce(setSearch)
 
   useEffect(() => {
     if (focusOnMount) {
@@ -153,32 +154,32 @@ export const Combobox = ({
 
   return (
     <div className="flex flex-col gap-y-1">
-      <div className="flex items-center gap-x-2 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 pr-2 focus-within:border-indigo-500 focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25">
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-label={label}
-          aria-expanded={options.length > 0}
-          aria-controls={listboxId}
-          aria-autocomplete="list"
-          aria-activedescendant={
-            activeIndex >= 0 ? optionId(activeIndex) : undefined
-          }
-          placeholder="Search..."
-          className="flex-1 min-w-0 border-none bg-transparent px-2.5 py-1.5 text-sm dark:text-gray-100 dark:placeholder:text-gray-400 focus:outline-hidden focus:ring-0"
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value)
-            setHighlightedIndex(0)
-            debouncedSetSearch(event.target.value)
-          }}
-          onKeyDown={onKeyDown}
-        />
-        {!!request && suggestionsQuery.isFetching && (
-          <Spinner className="animate-spin size-4 shrink-0 text-indigo-500" />
-        )}
-      </div>
+      <SearchInput
+        searchRef={inputRef}
+        className="!max-w-none"
+        value={input}
+        onChange={(value) => {
+          setInput(value)
+          setHighlightedIndex(0)
+        }}
+        onSearch={setSearch}
+        inputProps={{
+          role: 'combobox',
+          'aria-label': label,
+          'aria-expanded': options.length > 0,
+          'aria-controls': listboxId,
+          'aria-autocomplete': 'list',
+          'aria-activedescendant':
+            activeIndex >= 0 ? optionId(activeIndex) : undefined,
+          onKeyDown
+        }}
+        trailing={
+          !!request &&
+          suggestionsQuery.isFetching && (
+            <Spinner className="animate-spin size-4 text-indigo-500" />
+          )
+        }
+      />
       <ul
         ref={listRef}
         id={listboxId}
@@ -202,13 +203,14 @@ export const Combobox = ({
               aria-selected={selected}
               aria-disabled={disabled || undefined}
               className={classNames(
-                'flex items-center gap-x-2 px-3 py-2 text-sm rounded-md select-none',
+                popover.items.classNames.staticRow,
+                'flex items-center gap-x-2 select-none',
                 disabled
                   ? 'cursor-default text-gray-400 dark:text-gray-500'
                   : 'cursor-pointer',
                 index === activeIndex &&
                   !disabled &&
-                  'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                  popover.items.classNames.highlightedOption
               )}
               onMouseEnter={() => setHighlightedIndex(index)}
               onMouseDown={(event) => event.preventDefault()}
@@ -221,10 +223,13 @@ export const Combobox = ({
                   aria-hidden="true"
                   readOnly
                   checked={selected}
-                  className="block size-4 shrink-0 rounded-sm pointer-events-none dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+                  className={checkboxClassName({
+                    size: 'sm',
+                    className: 'pointer-events-none'
+                  })}
                 />
               )}
-              <span className="flex-1 min-w-0 truncate" title={text}>
+              <span className={popover.items.classNames.label} title={text}>
                 {text}
               </span>
             </li>
@@ -232,7 +237,12 @@ export const Combobox = ({
         })}
       </ul>
       {statusMessage && (
-        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+        <div
+          className={classNames(
+            popover.items.classNames.staticRow,
+            'text-gray-500 dark:text-gray-400'
+          )}
+        >
           {statusMessage}
         </div>
       )}

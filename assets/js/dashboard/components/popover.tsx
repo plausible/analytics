@@ -85,7 +85,10 @@ const items = {
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
       'data-[selected=true]:dark:text-gray-100'
-    )
+    ),
+    /** For options that are highlighted by keyboard, not by hover or focus. */
+    highlightedOption:
+      'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
   }
 }
 
