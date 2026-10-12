@@ -24,14 +24,14 @@ export function SegmentAuthorship({
   return (
     <span className={className}>
       <span>
-        {`Created at ${formatDayShort(parseNaiveDate(inserted_at))}`}
+        {`Created on ${formatDayShort(parseNaiveDate(inserted_at))}`}
         {!showUpdatedAt && !!authorLabel && ` by ${authorLabel}`}
       </span>
       {showUpdatedAt && (
         <>
           {' • '}
           <span>
-            {`Last updated at ${formatDayShort(parseNaiveDate(updated_at))}`}
+            {`last updated on ${formatDayShort(parseNaiveDate(updated_at))}`}
             {!!authorLabel && ` by ${authorLabel}`}
           </span>
         </>

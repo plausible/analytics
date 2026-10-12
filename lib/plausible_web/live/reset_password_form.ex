@@ -49,14 +49,13 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
             field={f[:password]}
             strength={@password_strength}
             phx-debounce={200}
-            mt?={false}
           />
         </div>
         <.password_length_hint minimum={12} field={f[:password]} hide_when_used?={true} />
       </div>
 
       <div class="flex flex-col gap-y-4">
-        <.button id="set" type="submit" class="w-full" mt?={false}>
+        <.button id="set" type="submit" class="w-full">
           Update password
         </.button>
 

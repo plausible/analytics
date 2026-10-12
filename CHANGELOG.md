@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
+- Added light-mode support to tooltips
 
 ### Removed
 
@@ -47,6 +48,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Stats API `/api/v1/stats/breakdown` now returns a `400` error for an invalid `page` parameter instead of crashing with a `500`
 - Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2

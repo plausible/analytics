@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 id="add-page-rule"
                 x-data
                 x-on:click={Modal.JS.open("page-rule-form-modal")}
-                class="mt-4"
+                class="mt-6"
               >
                 Add page
               </.button>
@@ -72,7 +72,6 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 id="add-page-rule"
                 x-data
                 x-on:click={Modal.JS.open("page-rule-form-modal")}
-                mt?={false}
               >
                 Add page
               </.button>
@@ -168,7 +167,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 will match <code>/blog/post</code>.
                 Once added, we will start rejecting traffic from this page within a few minutes.
               </p>
-              <.button type="submit" class="w-full">
+              <.button type="submit" class="w-full mt-6">
                 Add page
               </.button>
             </.form>

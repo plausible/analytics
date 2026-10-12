@@ -134,7 +134,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
                   :if={is_nil(s.reactivated_at) and s.reason != :spam_complaint}
                   theme="ghost"
                   size="sm"
-                  mt?={false}
                   phx-click="reactivate"
                   phx-value-email={s.email}
                   data-confirm={"Reactivate #{s.email}? Plausible will start sending mail to this address again."}

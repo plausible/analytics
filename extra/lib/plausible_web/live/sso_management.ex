@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         Single Sign-On (SSO) enables team members to sign in without having to register an account. For more details, <.styled_link href="https://plausible.io/docs/sso">see our documentation</.styled_link>.
       </p>
 
-      <.button type="submit">Start Configuring SSO</.button>
+      <.button type="submit" class="mt-6">Start Configuring SSO</.button>
     </form>
     """
   end
@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       <form id="sso-idp-form" for={} phx-submit="show-idp-form">
         <p class="text-sm">Click below to start setting up Single Sign-On for your team.</p>
 
-        <.button type="submit">Start Configuring</.button>
+        <.button type="submit" class="mt-6">Start Configuring</.button>
       </form>
     </div>
     """
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         :let={f}
         id="sso-idp-config"
         for={@config_changeset}
-        class="flex-col space-y-4"
+        class="flex flex-col gap-6"
         phx-submit="update-integration"
       >
         <.input
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
         <.input field={f[:idp_cert_pem]} type="textarea" label="Signing Certificate in PEM format" />
 
-        <.button type="submit">Save</.button>
+        <.button type="submit" class="self-start mt-4">Save</.button>
       </.form>
     </div>
     """
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       >
         <.input field={f[:domain]} label="Domain" placeholder="example.com" />
 
-        <.button type="submit">Add Domain</.button>
+        <.button type="submit" class="mt-6">Add Domain</.button>
       </.form>
     </div>
     """
@@ -225,11 +225,14 @@ defmodule PlausibleWeb.Live.SSOManagement do
         <.button
           :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
           type="submit"
+          class="mt-6"
         >
           Run Verification Now
         </.button>
 
-        <.button :if={@domain.status == Status.pending()} type="submit">Continue</.button>
+        <.button :if={@domain.status == Status.pending()} type="submit" class="mt-6">
+          Continue
+        </.button>
       </form>
     </div>
     """
@@ -281,7 +284,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
             Current Identity Provider configuration:
           </p>
 
-          <.form :let={f} id="sso-idp-config" for={} class="flex-col space-y-4">
+          <.form :let={f} id="sso-idp-config" for={} class="flex flex-col gap-6 mt-6">
             <.input
               field={f[:idp_signin_url]}
               value={@integration.config.idp_signin_url}
@@ -306,7 +309,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           </.form>
 
           <form id="show-idp-form" for={} phx-submit="show-idp-form">
-            <.button type="submit">Edit</.button>
+            <.button type="submit" class="mt-6">Edit</.button>
           </form>
         </div>
       </div>
@@ -373,7 +376,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         </.table>
 
         <form id="show-domain-setup" for={} phx-submit="show-domain-setup">
-          <.button type="submit">Add Domain</.button>
+          <.button type="submit" class="mt-6">Add Domain</.button>
         </form>
       </div>
     </.tile>
@@ -423,7 +426,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           :let={f}
           id="sso-policy"
           for={@policy_changeset}
-          class="flex-col space-y-4"
+          class="flex flex-col gap-6 mt-6"
           phx-submit="update-policy"
         >
           <.input
@@ -439,7 +442,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
             type="number"
           />
 
-          <.button type="submit">Update</.button>
+          <.button type="submit" class="self-start mt-4">Update</.button>
         </.form>
       </div>
     </.tile>

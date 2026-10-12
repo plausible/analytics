@@ -83,7 +83,6 @@ defmodule PlausibleWeb.Team.Notice do
             theme="ghost"
             size="sm"
             class="order-2 md:order-1"
-            mt?={false}
           >
             Reject
           </.button_link>
@@ -93,7 +92,6 @@ defmodule PlausibleWeb.Team.Notice do
             theme="secondary"
             size="sm"
             class="order-1 md:order-2"
-            mt?={false}
           >
             Accept
           </.button_link>
@@ -165,7 +163,6 @@ defmodule PlausibleWeb.Team.Notice do
           theme="ghost"
           size="sm"
           class="order-3 md:order-1"
-          mt?={false}
         >
           Reject
         </.button_link>
@@ -176,7 +173,6 @@ defmodule PlausibleWeb.Team.Notice do
           theme="secondary"
           size="sm"
           class="order-1 md:order-2"
-          mt?={false}
         >
           Accept
         </.button_link>
@@ -217,7 +213,6 @@ defmodule PlausibleWeb.Team.Notice do
           theme="secondary"
           size="sm"
           class="order-1 md:order-3"
-          mt?={false}
         >
           Upgrade to accept
         </.button_link>
@@ -249,7 +244,6 @@ defmodule PlausibleWeb.Team.Notice do
             theme="ghost"
             size="sm"
             class="order-2 md:order-1"
-            mt?={false}
           >
             Reject
           </.button_link>
@@ -259,7 +253,6 @@ defmodule PlausibleWeb.Team.Notice do
             theme="secondary"
             size="sm"
             class="order-1 md:order-2"
-            mt?={false}
           >
             Accept
           </.button_link>

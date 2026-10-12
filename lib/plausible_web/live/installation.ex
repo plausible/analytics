@@ -208,7 +208,6 @@ defmodule PlausibleWeb.Live.Installation do
               <.secondary_action flow={@flow} return_to={@return_to} domain={@site.domain} />
               <.button
                 type="submit"
-                mt?={false}
                 class={
                   install_method_event(
                     @installation_type.result,
@@ -379,7 +378,7 @@ defmodule PlausibleWeb.Live.Installation do
     assigns = assign(assigns, label: label, href: href)
 
     ~H"""
-    <.button_link theme="ghost" href={@href} mt?={false}>
+    <.button_link theme="ghost" href={@href}>
       {@label}
     </.button_link>
     """

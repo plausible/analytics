@@ -282,8 +282,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         <:tooltip_content>
           <div class="-mx-1 flex flex-col gap-1 text-xs">
             <div :for={{key, value} <- @goal.custom_props} class="truncate">
-              <span class="bg-white/20 px-1 py-0.5 rounded-sm">{key}</span>
-              is <span class="bg-white/20 px-1 py-0.5 rounded-sm">{value}</span>
+              <span class="bg-gray-100 dark:bg-white/20 px-1 py-0.5 rounded-sm">{key}</span>
+              is <span class="bg-gray-100 dark:bg-white/20 px-1 py-0.5 rounded-sm">{value}</span>
             </div>
           </div>
         </:tooltip_content>

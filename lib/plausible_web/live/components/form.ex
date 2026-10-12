@@ -53,8 +53,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   )
 
   attr(:class, :any, default: "")
+  attr(:wrapper_class, :any, default: nil)
 
-  attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
   attr(:resizable, :boolean, default: true)
   slot(:help_content)
@@ -69,7 +69,6 @@ defmodule PlausibleWeb.Live.Components.Form do
       field: nil,
       id: assigns.id || field.id,
       class: assigns.class,
-      mt?: assigns.mt?,
       width: assigns.width
     )
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
@@ -83,7 +82,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, [base, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
@@ -109,9 +108,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       end)
 
     ~H"""
-    <div class={[
-      @mt? && "mt-2"
-    ]}>
+    <div class={@wrapper_class}>
       <.label
         for={@id}
         class="font-normal gap-x-2 flex flex-inline items-center sm:justify-start justify-center "
@@ -135,7 +132,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "radio"} = assigns) do
     ~H"""
     <div class={[
-      "flex flex-inline justify-start gap-x-3"
+      "flex flex-inline justify-start gap-x-3",
+      @wrapper_class
     ]}>
       <input
         type="radio"
@@ -165,7 +163,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, [@multiline_input_class, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} class="mb-1.5" for={@id}>{@label}</.label>
       <textarea
         id={@id}
@@ -194,7 +192,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       |> assign(:class, [@input_class, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
@@ -241,7 +239,6 @@ defmodule PlausibleWeb.Live.Components.Form do
       </div>
       <div class="relative">
         <.input
-          mt?={false}
           id={@id}
           name={@name}
           value={@value}
@@ -270,8 +267,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   """
   attr(:id, :any, default: nil)
   attr(:label, :string, default: nil)
-  attr(:mt?, :boolean, default: true)
   attr(:autocomplete, :string, default: "current-password")
+  attr(:wrapper_class, :any, default: nil)
 
   attr(:field, Phoenix.HTML.FormField, required: true)
 
@@ -286,7 +283,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, "pr-10")
 
     ~H"""
-    <div x-data="{ showPassword: false }">
+    <div x-data="{ showPassword: false }" class={@wrapper_class}>
       <.input
         type="password"
         x-bind:type="showPassword ? 'text' : 'password'"
@@ -294,7 +291,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         label={@label}
         id={@id}
         autocomplete={@autocomplete}
-        mt?={@mt?}
         class={@class}
         {@rest}
       >
@@ -367,7 +363,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:id, :any, default: nil)
   attr(:label, :string, default: nil)
-  attr(:mt?, :boolean, default: true)
+  attr(:wrapper_class, :any, default: nil)
 
   attr(:field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:password]",
@@ -414,7 +410,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       autocomplete="new-password"
       label={@label}
       id={@id}
-      mt?={@mt?}
+      wrapper_class={@wrapper_class}
       {@rest}
     >
       <.strength_meter :if={@show_meter?} {@strength} />
@@ -575,7 +571,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        mt?={false}
       />
     </.form>
     """

@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
               phx-click="add-shared-link"
               x-data
               x-on:click={Modal.JS.preopen("shared-links-form-modal")}
-              class="mt-4"
+              class="mt-6"
             >
               Add shared link
             </.button>
@@ -104,7 +104,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
               <.button
                 id="add-shared-link-button"
                 phx-click="add-shared-link"
-                mt?={false}
                 x-data
                 x-on:click={Modal.JS.preopen("shared-links-form-modal")}
               >

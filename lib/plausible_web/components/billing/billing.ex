@@ -151,7 +151,7 @@ defmodule PlausibleWeb.Components.Billing do
             <:tooltip_content>View billing period in dashboard</:tooltip_content>
             <.link
               href={@total_link}
-              class="text-indigo-500 hover:text-indigo-600"
+              class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
               data-test-id="total-pageviews-dashboard-link"
               x-on:click.stop
             >
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Components.Billing do
                   <:tooltip_content>View billing period in dashboard</:tooltip_content>
                   <.link
                     href={dashboard_url(site.domain, @usage.date_range)}
-                    class="shrink-0 text-indigo-500 hover:text-indigo-600"
+                    class="shrink-0 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
                   >
                     <.external_link_icon class="ml-0.5 size-3.5 [&_path]:stroke-2" />
                   </.link>

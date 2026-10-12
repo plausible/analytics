@@ -61,7 +61,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
         >
           <.flash_messages flash={@flash} />
 
-          <.form :let={f} for={@team_name_form} id="create-team-form" phx-submit="create-team">
+          <.form
+            :let={f}
+            for={@team_name_form}
+            id="create-team-form"
+            phx-submit="create-team"
+            class="mt-6"
+          >
             <.input
               type="text"
               placeholder={"#{@current_user.name}'s team"}
@@ -115,7 +121,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
           name={"rows[#{@row.id}][email]"}
           value={@row.email}
           placeholder="Enter e-mail"
-          mt?={false}
         />
       </div>
 

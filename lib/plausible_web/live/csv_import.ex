@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp confirm_button(assigns) do
     ~H"""
-    <.button type="submit" disabled={not @can_confirm?} class="w-full">
+    <.button type="submit" disabled={not @can_confirm?} class="w-full mt-6">
       <%= if @date_range do %>
         Confirm import <.dates range={@date_range} />
       <% else %>

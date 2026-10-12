@@ -1,77 +1,92 @@
-import React from 'react'
-import { render, screen } from '../../../test-utils'
+import React, { ComponentProps } from 'react'
+import { render, screen, within } from '../../../test-utils'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
-import { FiltersBar, handleVisibility } from './filters-bar'
+import { FiltersBar } from './filters-bar'
+import {
+  formatSegmentIdAsLabelKey,
+  SavedSegment,
+  SegmentData,
+  SegmentType
+} from '../filtering/segments'
+import { Role, UserContextValue } from '../user-context'
 import { getRouterBasepath } from '../router'
 import { stringifySearch } from '../util/url-search-params'
 import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
 
 mockAnimationsApi()
-const resizeObserver = mockResizeObserver()
+mockResizeObserver()
 
 const domain = 'dummy.site'
 
-test('user can see expected filters and clear them one by one or all together on small screens', async () => {
-  const searchRecord = {
-    filters: [
-      ['is', 'country', ['DE']],
-      ['is', 'goal', ['Subscribed to Newsletter']],
-      ['is', 'page', ['/docs', '/blog']]
-    ],
-    labels: { DE: 'Germany' }
-  }
-  const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
+type SegmentWithData = SavedSegment & { segment_data: SegmentData }
 
-  render(
-    <FiltersBar
-      accessors={{
-        topBar: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(600)
-            }) as unknown as HTMLElement
-        ),
-        leftSection: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(200)
-            }) as unknown as HTMLElement
-        ),
-        rightSection: jest.fn(
-          () =>
-            ({
-              getBoundingClientRect: jest.fn().mockReturnValue(300)
-            }) as unknown as HTMLElement
-        )
-      }}
-    />,
-    {
-      wrapper: (props) => (
-        <TestContextProviders
-          routerProps={{ initialEntries: [startUrl] }}
-          siteOptions={{ domain }}
-          {...props}
-        />
-      )
+const makeSegment = (
+  overrides: Partial<
+    Pick<SegmentWithData, 'name' | 'type' | 'segment_data'>
+  > = {}
+): SegmentWithData => ({
+  id: 1,
+  name: 'Mac users',
+  type: SegmentType.personal,
+  owner_id: 1,
+  owner_name: 'Jane Smith',
+  inserted_at: '2025-03-13T13:00:00',
+  updated_at: '2025-03-13T13:00:00',
+  segment_data: {
+    filters: [['is', 'os', ['Mac']]],
+    labels: {}
+  },
+  ...overrides
+})
+
+const getSegmentFilterSearch = (segment: SegmentWithData) => ({
+  filters: [['is', 'segment', [segment.id]]],
+  labels: { [formatSegmentIdAsLabelKey(segment.id)]: segment.name }
+})
+
+const renderFiltersBar = ({
+  searchRecord,
+  expandedSegment,
+  siteOptions,
+  ...providerProps
+}: {
+  searchRecord: Record<string, unknown>
+  expandedSegment?: SegmentWithData
+} & Omit<ComponentProps<typeof TestContextProviders>, 'children'>) =>
+  render(<FiltersBar />, {
+    wrapper: (props) => (
+      <TestContextProviders
+        routerProps={{
+          initialEntries: [
+            {
+              pathname: getRouterBasepath({ domain, shared: false }),
+              search: stringifySearch(searchRecord),
+              state: expandedSegment ? { expandedSegment } : undefined
+            }
+          ]
+        }}
+        siteOptions={{ domain, ...siteOptions }}
+        {...providerProps}
+        {...props}
+      />
+    )
+  })
+
+test('user can see expected filters and clear them one by one or all together', async () => {
+  renderFiltersBar({
+    searchRecord: {
+      filters: [
+        ['is', 'country', ['DE']],
+        ['is', 'goal', ['Subscribed to Newsletter']],
+        ['is', 'page', ['/docs', '/blog']]
+      ],
+      labels: { DE: 'Germany' }
     }
-  )
-
-  // needed to initiate the layout calculation effect of the component
-  resizeObserver.resize()
+  })
 
   const queryFilterPills = () =>
     screen.queryAllByRole('link', { hidden: false, name: /.* is .*/i })
-
-  // all filters appear in See more menu (see the mock widths in props)
-  expect(queryFilterPills().map((m) => m.textContent)).toEqual([])
-
-  await userEvent.click(
-    screen.getByRole('button', {
-      hidden: false,
-      name: 'See 3 more filters and actions'
-    })
-  )
 
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([
     'Country is Germany',
@@ -101,74 +116,258 @@ test('user can see expected filters and clear them one by one or all together on
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([])
 })
 
-describe(`${handleVisibility.name}`, () => {
-  it('is able to fit all exactly, whether "See more" is rendered in the actions or not', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 1000,
-      seeMoreWidth: 100,
-      pillWidths: [200, 200, 200, 200],
-      pillGap: 25,
-      mustShowSeeMoreMenu: true
+test('action tooltips show the keybind and the docs link', async () => {
+  renderFiltersBar({
+    searchRecord: {
+      filters: [['is', 'country', ['DE']]],
+      labels: { DE: 'Germany' }
     }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 900,
-      visibleCount: 4
-    })
-
-    handleVisibility({
-      ...input
-    })
-    expect(setVisibility).toHaveBeenCalledTimes(2)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 900,
-      visibleCount: 4
-    })
-
-    handleVisibility({ ...input, leftoverWidth: 999 })
-    expect(setVisibility).toHaveBeenCalledTimes(3)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 675,
-      visibleCount: 3
-    })
   })
 
-  it('handles 1 filter correctly', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 300,
-      seeMoreWidth: 50,
-      pillWidths: [250],
-      pillGap: 25,
-      mustShowSeeMoreMenu: false
+  const addFilter = screen.getByRole('button', { name: 'Add filter' })
+  await userEvent.hover(addFilter)
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Add filter')
+  await userEvent.unhover(addFilter)
+
+  const clearAll = screen.getByRole('link', { name: 'Clear all filters' })
+  await userEvent.hover(clearAll)
+  expect(screen.getByRole('tooltip')).toHaveTextContent('Clear all filtersESC')
+  await userEvent.unhover(clearAll)
+
+  await userEvent.hover(screen.getByRole('link', { name: 'Save as segment' }))
+  await userEvent.hover(
+    screen.getByRole('link', { name: 'Learn more about segments' })
+  )
+  expect(
+    screen.getByRole('link', { name: 'Learn more about segments' })
+  ).toHaveAttribute(
+    'href',
+    'https://plausible.io/docs/filters-segments#how-to-save-a-segment'
+  )
+})
+
+test('the segment pill opens a menu with the segment details and actions', async () => {
+  const segment = makeSegment({
+    segment_data: {
+      filters: [
+        ['is', 'os', ['Mac']],
+        ['is', 'country', ['DE']],
+        ['is', 'source', ['Google']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { DE: 'Germany' }
     }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 275,
-      visibleCount: 1
-    })
   })
 
-  it('handles 2 filters correctly, shrinking to 0 width', () => {
-    const setVisibility = jest.fn()
-    const input = {
-      setVisibility,
-      leftoverWidth: 300,
-      seeMoreWidth: 50,
-      pillWidths: [250, 200],
-      pillGap: 25,
-      mustShowSeeMoreMenu: true
+  renderFiltersBar({
+    searchRecord: getSegmentFilterSearch(segment),
+    preloaded: { segments: [segment] }
+  })
+
+  expect(screen.getByRole('link', { name: 'Clear all filters' })).toBeVisible()
+  expect(
+    screen.queryByRole('link', { name: 'Save as segment' })
+  ).not.toBeInTheDocument()
+
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Segment is Mac users' })
+  )
+
+  expect(screen.getByText('Created on 13 Mar by Jane Smith')).toBeVisible()
+  expect(screen.queryByText('Country is')).not.toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: 'View filters' }))
+  const filters = screen.getByRole('group', { name: 'View filters' })
+  expect(filters).toHaveTextContent(
+    [
+      'Operating system is',
+      'Mac',
+      'Country is',
+      'Germany',
+      'Source is',
+      'Google',
+      'Page is',
+      '/blog'
+    ].join('')
+  )
+
+  expect(screen.getByRole('link', { name: 'Edit segment' })).toBeVisible()
+  expect(
+    screen.getByRole('button', { name: 'Duplicate segment' })
+  ).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Delete segment' })).toBeVisible()
+
+  await userEvent.click(screen.getByRole('link', { name: 'Edit segment' }))
+  expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+  expect(
+    screen.getByRole('link', { hidden: false, name: 'Page is /blog' })
+  ).toBeVisible()
+})
+
+const loggedInUser = (role: Role): UserContextValue => ({
+  loggedIn: true,
+  role,
+  id: 1,
+  team: { identifier: null, hasConsolidatedView: false }
+})
+
+const publicUser: UserContextValue = {
+  loggedIn: false,
+  role: Role.public,
+  id: null,
+  team: { identifier: null, hasConsolidatedView: false }
+}
+
+describe('segment pill menu actions depend on the user', () => {
+  const segmentActions = ['Edit segment', 'Duplicate segment', 'Delete segment']
+
+  it.each([
+    {
+      case: 'public user sees no actions and no author',
+      user: publicUser,
+      siteSegmentsAvailable: true,
+      authorship: 'Created on 13 Mar',
+      expectedActions: []
+    },
+    {
+      case: 'viewer can only duplicate a site segment',
+      user: loggedInUser(Role.viewer),
+      siteSegmentsAvailable: true,
+      authorship: 'Created on 13 Mar by Jane Smith',
+      expectedActions: ['Duplicate segment']
+    },
+    {
+      case: 'owner can edit a site segment even if site segments are not on the plan',
+      user: loggedInUser(Role.owner),
+      siteSegmentsAvailable: false,
+      authorship: 'Created on 13 Mar by Jane Smith',
+      expectedActions: segmentActions
     }
-    handleVisibility(input)
-    expect(setVisibility).toHaveBeenCalledTimes(1)
-    expect(setVisibility).toHaveBeenLastCalledWith({
-      width: 0,
-      visibleCount: 0
+  ])(
+    '$case',
+    async ({ user, siteSegmentsAvailable, authorship, expectedActions }) => {
+      const segment = makeSegment({ type: SegmentType.site })
+
+      renderFiltersBar({
+        searchRecord: getSegmentFilterSearch(segment),
+        preloaded: { segments: [segment] },
+        siteOptions: { siteSegmentsAvailable },
+        user
+      })
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Segment is Mac users' })
+      )
+
+      expect(screen.getByText(authorship)).toBeVisible()
+      expect(
+        segmentActions.filter((action) => screen.queryByText(action))
+      ).toEqual(expectedActions)
+    }
+  )
+})
+
+test('the segment pill has no remove button when the dashboard is limited to the segment', () => {
+  const segment = makeSegment({ type: SegmentType.site })
+
+  renderFiltersBar({
+    searchRecord: getSegmentFilterSearch(segment),
+    preloaded: { segments: [segment] },
+    limitedToSegment: segment,
+    user: publicUser
+  })
+
+  expect(
+    screen.getByRole('button', { name: 'Segment is Mac users' })
+  ).toBeVisible()
+  expect(
+    screen.queryByRole('button', {
+      name: 'Remove filter: Segment is Mac users'
     })
+  ).not.toBeInTheDocument()
+})
+
+test('shows Add filter, Save and Cancel in segment edit mode', async () => {
+  const segment = makeSegment({
+    name: 'Country, source, page',
+    segment_data: {
+      filters: [
+        ['is', 'country', ['DE']],
+        ['is', 'source', ['Google']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { DE: 'Germany' }
+    }
+  })
+
+  renderFiltersBar({
+    searchRecord: segment.segment_data,
+    expandedSegment: segment,
+    preloaded: { segments: [segment] }
+  })
+
+  expect(
+    screen.getByRole('link', { hidden: false, name: 'Country is Germany' })
+  ).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Add filter' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+  expect(screen.getByRole('link', { name: 'Cancel' })).toBeVisible()
+  for (const action of ['Save as segment', 'Clear all filters']) {
+    expect(screen.queryByRole('link', { name: action })).not.toBeInTheDocument()
+  }
+})
+
+describe('segment switch', () => {
+  const segments = [
+    makeSegment(),
+    { ...makeSegment({ name: 'Windows users' }), id: 2 }
+  ]
+
+  test('the segment title opens a list of segments to switch to', async () => {
+    renderFiltersBar({
+      searchRecord: {
+        filters: [
+          ['is', 'segment', [1]],
+          ['is', 'page', ['/blog']]
+        ],
+        labels: { [formatSegmentIdAsLabelKey(1)]: 'Mac users' }
+      },
+      preloaded: { segments }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Segment is Mac users' })
+    )
+    await userEvent.click(screen.getByRole('button', { name: /^Mac users/ }))
+
+    const list = screen.getByRole('group', { name: 'Switch segment' })
+    expect(
+      within(list).getByRole('link', { name: /Mac users/ })
+    ).toHaveAttribute('aria-current', 'true')
+
+    await userEvent.click(
+      within(list).getByRole('link', { name: /Windows users/ })
+    )
+    expect(
+      screen.getByRole('button', { name: 'Segment is Windows users' })
+    ).toBeVisible()
+    expect(
+      screen.getByRole('link', { hidden: false, name: 'Page is /blog' })
+    ).toBeVisible()
+  })
+
+  test('the segment title is static when there is no other segment', async () => {
+    renderFiltersBar({
+      searchRecord: getSegmentFilterSearch(segments[0]),
+      preloaded: { segments: [segments[0]] }
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Segment is Mac users' })
+    )
+    expect(screen.getByTitle('Mac users')).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: /^Mac users/ })
+    ).not.toBeInTheDocument()
   })
 })
