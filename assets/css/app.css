@@ -193,7 +193,8 @@
 
   /*
    * Checkbox component classes shared between the React `Checkbox` component
-   * and `checkboxClassName` (assets/js/dashboard/components/form-elements.tsx).
+   * and `checkboxClassName` (assets/js/dashboard/components/form-elements.tsx)
+   * and the Phoenix `input` component (lib/plausible_web/live/components/form.ex).
    * Update here only.
    */
   .checkbox-base {
