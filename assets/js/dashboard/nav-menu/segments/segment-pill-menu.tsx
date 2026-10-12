@@ -61,7 +61,7 @@ const SegmentFilters = ({ segment }: { segment: SavedSegments[number] }) => (
 const SegmentTitle = ({ segment }: { segment: SavedSegments[number] }) => {
   const user = useUserContext()
   return (
-    <div className="flex flex-col flex-1 min-w-0 gap-y-0.5 font-semibold">
+    <div className="flex flex-col flex-1 min-w-0 gap-y-0.5 font-medium">
       <span className="truncate" title={segment.name}>
         {segment.name}
       </span>

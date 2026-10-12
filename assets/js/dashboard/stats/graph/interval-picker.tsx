@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import classNames from 'classnames'
 import * as storage from '../../util/storage'
-import { SegmentedControl } from '../../components/segmented-control'
+import { popover, SelectedCheckmark } from '../../components/popover'
 import {
   Interval,
   GetIntervalProps,
@@ -133,25 +134,38 @@ export function IntervalPicker({
     return null
   }
 
-  const controlOptions = options.map((value) => ({
-    value,
-    label: INTERVAL_LABELS[value] ?? value
-  }))
-
   return (
-    <div className="flex justify-between items-center gap-x-2 w-full pl-4 pr-2 py-1">
-      <span className="shrink-0 text-sm font-medium text-gray-700 dark:text-gray-100">
-        Graph interval
-      </span>
-      <SegmentedControl
-        ariaLabel="Graph data interval"
-        options={controlOptions}
-        selected={selectedInterval}
-        onSelect={onIntervalClick}
-        getTestId={(_value, isSelected) =>
-          isSelected ? 'current-graph-interval' : 'graph-interval'
-        }
-      />
-    </div>
+    <>
+      <p className={popover.items.classNames.sectionTitle}>Graph interval</p>
+      <div
+        role="group"
+        aria-label="Graph data interval"
+        className="flex flex-col gap-y-0.5"
+      >
+        {options.map((value) => {
+          const selected = value === selectedInterval
+          return (
+            <button
+              key={value}
+              type="button"
+              data-testid={
+                selected ? 'current-graph-interval' : 'graph-interval'
+              }
+              data-selected={selected}
+              aria-pressed={selected}
+              onClick={() => onIntervalClick(value)}
+              className={classNames(
+                popover.items.classNames.navigationLink,
+                popover.items.classNames.selectedOption,
+                popover.items.classNames.hoverLink
+              )}
+            >
+              {INTERVAL_LABELS[value] ?? value}
+              <SelectedCheckmark selected={selected} />
+            </button>
+          )
+        })}
+      </div>
+    </>
   )
 }

@@ -16,7 +16,7 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { Role, useUserContext } from '../../user-context'
 import { useSegmentsContext } from '../../filtering/segments-context'
 import { useSearchableItems } from '../../hooks/use-searchable-items'
-import { popover } from '../../components/popover'
+import { popover, SelectedCheckmark } from '../../components/popover'
 
 const mutedRowClassName = classNames(
   popover.items.classNames.iconRow,
@@ -80,7 +80,7 @@ export const SegmentsSubmenu = ({
   })
 
   return (
-    <>
+    <div className="flex flex-col gap-y-1">
       {showSearch && (
         <SearchInput
           searchRef={searchRef}
@@ -105,7 +105,9 @@ export const SegmentsSubmenu = ({
             <span className={popover.items.classNames.label}>
               {`Show ${countOfMoreToShow} more`}
             </span>
-            <EllipsisHorizontalIcon className="block w-5 h-5 shrink-0" />
+            <EllipsisHorizontalIcon
+              className={classNames('w-5', popover.items.classNames.rowIcon)}
+            />
           </button>
         )}
       </div>
@@ -114,7 +116,7 @@ export const SegmentsSubmenu = ({
           No segments found. Clear search to show all.
         </button>
       )}
-    </>
+    </div>
   )
 }
 
@@ -166,6 +168,7 @@ const SegmentLink = ({
           </span>
         </div>
       </div>
+      <SelectedCheckmark selected={selected} />
     </AppNavigationLink>
   )
 }
