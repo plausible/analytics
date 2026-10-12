@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   def role_select_input(assigns) do
     ~H"""
-    <PrimaListbox.listbox id={@id} name={@name} value={@role}>
+    <PrimaListbox.listbox id={@id} name={@name} value={@role} data-role-listbox>
       <PrimaListbox.listbox_trigger id={"#{@id}-trigger"} class="w-[100px]">
         <span class="sr-only">Role:</span>
         <PrimaListbox.listbox_value data-testid="role">

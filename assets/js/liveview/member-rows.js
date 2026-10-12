@@ -49,13 +49,11 @@ export default {
 
   resetRow(row) {
     row.querySelector('input[type="email"]').value = ''
-
-    // Goes through the same click handling Prima's Listbox hook wires up on
-    // its options, so both the hidden form value and the displayed label end
-    // up in sync exactly like a real user selection would - the row is
-    // already hidden at this point, so the focus() that follows a selection
-    // is a no-op instead of stealing focus.
-    row.querySelector('[role="option"][data-value="viewer"]')?.click()
+    row.querySelector('[data-role-listbox]').dispatchEvent(
+      new CustomEvent('prima:listbox:set-value', {
+        detail: { value: 'viewer' }
+      })
+    )
   },
 
   updateAddButtonState() {
