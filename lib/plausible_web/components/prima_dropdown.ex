@@ -64,8 +64,7 @@ defmodule PlausibleWeb.Components.PrimaDropdown do
     <Dropdown.dropdown_menu
       id={@id}
       placement="bottom-end"
-      match_trigger_width={true}
-      class="bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800 relative z-10"
+      class="min-w-[var(--reference-width)] bg-white rounded-md shadow-lg ring-1 ring-black/5 focus:outline-none p-1.5 dark:bg-gray-800 relative z-10"
     >
       {render_slot(@inner_block)}
     </Dropdown.dropdown_menu>

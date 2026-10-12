@@ -77,7 +77,6 @@ defmodule PlausibleWeb.Components.PrimaListbox do
       id={@id}
       placement="bottom-end"
       offset={8}
-      match_trigger_width={false}
       transition_enter={
         {"transition ease-out duration-100", "opacity-0 scale-95", "opacity-100 scale-100"}
       }
