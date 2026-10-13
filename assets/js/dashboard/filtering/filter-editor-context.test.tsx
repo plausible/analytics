@@ -99,7 +99,7 @@ test('the editor closes when the browser goes back to the filter before its valu
   expect(result.current.editor.renderedFilters).toEqual([page])
 })
 
-test('the editor closes when the URL filters change while it is open', () => {
+test('the editor closes when the browser goes back to before the new filter was added', () => {
   const { result } = renderEditor([page])
 
   act(() => result.current.editor.add('hostname'))
@@ -111,4 +111,43 @@ test('the editor closes when the URL filters change while it is open', () => {
   expect(result.current.urlFilters).toEqual([page])
   expect(result.current.editor.openPosition).toBeNull()
   expect(result.current.editor.renderedFilters).toEqual([page])
+})
+
+test('the editor closes when the browser goes back to before a value was added', () => {
+  const { result } = renderEditor([page])
+
+  act(() => result.current.editor.open(0, 'values'))
+  act(() => result.current.editor.update(['is', 'page', ['/blog', '/docs']]))
+  act(() => result.current.navigate(-1))
+
+  expect(result.current.urlFilters).toEqual([page])
+  expect(result.current.editor.openPosition).toBeNull()
+  expect(result.current.editor.renderedFilters).toEqual([page])
+})
+
+test('a change after the browser goes back adds a new history entry', () => {
+  const { result } = renderEditor([page])
+
+  act(() => result.current.editor.open(0, 'values'))
+  act(() => result.current.editor.update(['is', 'page', ['/blog', '/docs']]))
+  act(() => result.current.navigate(-1))
+  act(() => result.current.editor.open(0, 'values'))
+  act(() => result.current.editor.update(['is', 'page', ['/blog', '/about']]))
+  act(() => result.current.navigate(-1))
+
+  expect(result.current.urlFilters).toEqual([page])
+})
+
+test('an open pill shows the new URL filter when the URL changes', () => {
+  const { result } = renderEditor([page])
+  const otherPage: Filter = ['is', 'page', ['/docs']]
+
+  act(() => result.current.editor.open(0, 'values'))
+  act(() =>
+    result.current.navigate({
+      search: stringifySearch({ filters: [otherPage] })
+    })
+  )
+
+  expect(result.current.editor.renderedFilters).toEqual([otherPage])
 })

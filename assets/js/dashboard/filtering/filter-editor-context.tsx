@@ -8,6 +8,11 @@ import React, {
   useRef,
   useState
 } from 'react'
+import {
+  NavigationType,
+  useLocation,
+  useNavigationType
+} from 'react-router-dom'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { Filter, FilterClauseLabels } from '../dashboard-state'
@@ -20,14 +25,13 @@ export type FilterEditorPart = 'operator' | 'values'
  * `position` is the index of the pill in `renderedFilters`.
  * Filters without values are not written to the URL: a new filter only
  * appears there when it gets its first value, and a filter is removed from
- * the URL when its last value is removed. The pill stays until the editor
- * closes.
+ * the URL when its last value is removed. While a filter has no values, it
+ * is kept as `draft`, so the pill stays until the editor closes.
  */
 type EditingFilter = {
   position: number
   part: FilterEditorPart
-  filter: Filter
-  inUrl: boolean
+  draft: Filter | null
   hasPushedHistoryEntry: boolean
 }
 
@@ -74,9 +78,7 @@ const getNewFilterPosition = (filters: Filter[]) =>
   filters.length && isSegmentFilter(filters[0]) ? 1 : 0
 
 const getUrlIndex = (editing: EditingFilter | null, position: number) =>
-  editing && editing.position < position && !editing.inUrl
-    ? position - 1
-    : position
+  editing?.draft && editing.position < position ? position - 1 : position
 
 export const FilterEditorContextProvider = ({
   children
@@ -85,6 +87,8 @@ export const FilterEditorContextProvider = ({
 }) => {
   const { dashboardState } = useDashboardStateContext()
   const navigate = useAppNavigate()
+  const location = useLocation()
+  const navigationType = useNavigationType()
   const [editing, setEditingState] = useState<EditingFilter | null>(null)
   const editingRef = useRef<EditingFilter | null>(null)
 
@@ -136,13 +140,11 @@ export const FilterEditorContextProvider = ({
         return
       }
       const index = getUrlIndex(current, position)
-      const filter = close()[index]
-      if (filter) {
+      if (close()[index]) {
         setEditing({
           position: index,
           part,
-          filter,
-          inUrl: true,
+          draft: null,
           hasPushedHistoryEntry: false
         })
       }
@@ -157,7 +159,7 @@ export const FilterEditorContextProvider = ({
         return
       }
       if (!hasValues(filter)) {
-        if (current.inUrl) {
+        if (!current.draft) {
           navigateToFilters(
             removeAt(dashboardState.filters, current.position),
             {
@@ -167,15 +169,14 @@ export const FilterEditorContextProvider = ({
         }
         setEditing({
           ...current,
-          filter,
-          inUrl: false,
-          hasPushedHistoryEntry: current.hasPushedHistoryEntry || current.inUrl
+          draft: filter,
+          hasPushedHistoryEntry: current.hasPushedHistoryEntry || !current.draft
         })
         return
       }
-      const filters = current.inUrl
-        ? replaceAt(dashboardState.filters, current.position, filter)
-        : insertAt(dashboardState.filters, current.position, filter)
+      const filters = current.draft
+        ? insertAt(dashboardState.filters, current.position, filter)
+        : replaceAt(dashboardState.filters, current.position, filter)
       navigateToFilters(filters, {
         replace: current.hasPushedHistoryEntry,
         mergedKey: filter[1],
@@ -183,8 +184,7 @@ export const FilterEditorContextProvider = ({
       })
       setEditing({
         ...current,
-        filter,
-        inUrl: true,
+        draft: null,
         hasPushedHistoryEntry: true
       })
     },
@@ -196,7 +196,7 @@ export const FilterEditorContextProvider = ({
       const current = editingRef.current
       if (current?.position === position) {
         setEditing(null)
-        if (current.inUrl) {
+        if (!current.draft) {
           navigateToFilters(removeAt(dashboardState.filters, position), {
             replace: current.hasPushedHistoryEntry
           })
@@ -219,8 +219,7 @@ export const FilterEditorContextProvider = ({
         setEditing({
           position: existingIndex,
           part: 'values',
-          filter: filters[existingIndex],
-          inUrl: true,
+          draft: null,
           hasPushedHistoryEntry: false
         })
         return
@@ -228,39 +227,27 @@ export const FilterEditorContextProvider = ({
       setEditing({
         position: getNewFilterPosition(filters),
         part: 'values',
-        filter: [FILTER_OPERATIONS.is, filterKey, []],
-        inUrl: false,
+        draft: [FILTER_OPERATIONS.is, filterKey, []],
         hasPushedHistoryEntry: false
       })
     },
     [setEditing, close]
   )
 
-  // the URL can change while editing, for example with the browser back button
+  // the open editor belongs to one history entry, so back and forward close it
   useEffect(() => {
-    const current = editingRef.current
-    if (!current) {
-      return
-    }
-    const filterKey = current.filter[1]
-    const isOutdated = current.inUrl
-      ? dashboardState.filters[current.position]?.[1] !== filterKey
-      : !canHaveMultipleFilters(filterKey) &&
-        dashboardState.filters.some(([_operation, key]) => key === filterKey)
-    if (isOutdated) {
+    if (navigationType === NavigationType.Pop) {
       setEditing(null)
     }
-  }, [setEditing, dashboardState.filters])
+  }, [setEditing, location.key, navigationType])
 
-  const renderedFilters = useMemo(() => {
-    const filters = dashboardState.filters
-    if (!editing) {
-      return filters
-    }
-    return editing.inUrl
-      ? replaceAt(filters, editing.position, editing.filter)
-      : insertAt(filters, editing.position, editing.filter)
-  }, [dashboardState.filters, editing])
+  const renderedFilters = useMemo(
+    () =>
+      editing?.draft
+        ? insertAt(dashboardState.filters, editing.position, editing.draft)
+        : dashboardState.filters,
+    [dashboardState.filters, editing]
+  )
 
   const value = useMemo(
     () => ({
