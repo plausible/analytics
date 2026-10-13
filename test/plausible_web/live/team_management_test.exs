@@ -37,6 +37,28 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert find(resp, "#{guest_el()}:first-of-type") |> text() =~ "guest@example.com"
     end
 
+    test "disables changing the role of a pending guest invitation, but not removing it", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      site = new_site(team: team)
+      invite_guest(site, "pending-guest@example.com", role: :viewer, inviter: user)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      resp =
+        conn
+        |> get(team_general_path())
+        |> html_response(200)
+
+      assert text_of_attr(resp, role_dropdown_el("pending-guest@example.com"), "data-disabled") ==
+               "true"
+
+      refute attr_defined?(resp, remove_button_el("pending-guest@example.com"), "disabled")
+
+      refute attr_defined?(resp, role_dropdown_el("guest@example.com"), "data-disabled")
+    end
+
     test "does not render Guest divider when no guests found", %{conn: conn} do
       resp =
         conn
@@ -632,5 +654,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp role_el() do
     ~s|[data-testid="role"]|
+  end
+
+  defp role_dropdown_el(email) do
+    ~s|[id="role-dropdown-#{email}"]|
+  end
+
+  defp remove_button_el(email) do
+    ~s|[id="#{:erlang.phash2(email)}-remove"]|
   end
 end

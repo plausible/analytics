@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:pending?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:remove_disabled, :boolean, default: false)
+  attr(:role_change_disabled, :boolean, default: false)
 
   def member(assigns) do
     ~H"""
@@ -85,7 +86,7 @@ defmodule PlausibleWeb.Live.Components.Team do
             role={@role}
             my_role={@my_role}
             me?={@me?}
-            disabled={@disabled}
+            disabled={@disabled or @role_change_disabled}
           />
 
           <.delete_button

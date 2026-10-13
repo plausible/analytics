@@ -114,6 +114,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           pending?={entry.type in [:invitation_pending, :invitation_sent]}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
+          role_change_disabled={entry.type in [:invitation_pending, :invitation_sent]}
           disabled={not TeamRolePermissions.can_manage_team?(@my_role)}
         />
       </div>
