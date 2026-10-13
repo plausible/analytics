@@ -113,7 +113,7 @@ defmodule Plausible.Funnel do
 
   defp swap_steps(funnel, nil), do: funnel
 
-  defp swap_steps(funnel, steps) do
+  defp swap_steps(funnel, steps) when length(steps) >= @min_steps do
     {static_steps, dynamic_steps} =
       steps
       |> Enum.with_index(1)

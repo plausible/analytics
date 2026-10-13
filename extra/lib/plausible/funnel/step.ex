@@ -36,6 +36,12 @@ defmodule Plausible.Funnel.Step do
 
   @spec as_goal(t()) :: Plausible.Goal.t()
   def as_goal(step) do
-    step.goal
+    case step.goal do
+      %Plausible.Goal{} = g ->
+        g
+
+      other ->
+        raise "Expected goal, got: #{inspect(other)}"
+    end
   end
 end
