@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
   alias Plausible.Auth.User
   import PlausibleWeb.Live.Components.Team
 
-  alias Plausible.Teams.Management.Layout
+  alias Plausible.Teams.Management.Roster
 
   def mount(_params, _session, socket) do
     {:ok, reset(socket)}
@@ -18,12 +18,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
     {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
-    layout = Layout.init(current_team)
+    roster = Roster.init(current_team)
     team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
 
     assign(socket,
       team_members_limit: team_members_limit,
-      layout: layout,
+      roster: roster,
       my_role: my_role,
       input_email: ""
     )
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
-      :if={@team_members_limit != 0 and at_limit?(@layout, @team_members_limit)}
+      :if={@team_members_limit != 0 and at_limit?(@roster, @team_members_limit)}
       current_user={@current_user}
       current_team={@current_team}
       limit={@team_members_limit}
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               placeholder="Enter e-mail"
               phx-debounce={200}
               readonly={
-                at_limit?(@layout, @team_members_limit) or
+                at_limit?(@roster, @team_members_limit) or
                   not TeamRolePermissions.can_manage_team?(@my_role)
               }
             />
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
             id="invite-member"
             type="submit"
             disabled={
-              at_limit?(@layout, @team_members_limit) or
+              at_limit?(@roster, @team_members_limit) or
                 not TeamRolePermissions.can_manage_team?(@my_role)
             }
           >
@@ -80,23 +80,23 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
       <div id="member-list">
         <.member
-          :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+          :for={{email, entry} <- Roster.sorted_for_display(@roster)}
           :if={entry.role != :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
-          me?={entry.id == @current_user.id}
-          pending?={entry.type in [:invitation_pending, :invitation_sent]}
+          me?={me?(entry, @current_user)}
+          pending?={Roster.Entry.invitation?(entry)}
           my_role={@my_role}
-          remove_disabled={not Layout.removable?(@layout, email)}
+          remove_disabled={not Roster.removable?(@roster, email)}
           disabled={
-            (entry.role == :owner && Layout.owners_count(@layout) == 1) or
+            (entry.role == :owner && Roster.owners_count(@roster) == 1) or
               not TeamRolePermissions.can_manage_team?(@my_role)
           }
         />
       </div>
 
-      <div :if={Layout.has_guests?(@layout)} class="flex items-center mt-4 mb-4" id="guests-hr">
+      <div :if={Roster.has_guests?(@roster)} class="flex items-center mt-4 mb-4" id="guests-hr">
         <hr class="grow border-t border-gray-200 dark:border-gray-700" />
         <span class="mx-4 text-gray-500 text-sm">
           Guests
@@ -104,17 +104,17 @@ defmodule PlausibleWeb.Live.TeamManagement do
         <hr class="grow border-t border-gray-200 dark:border-gray-700" />
       </div>
 
-      <div :if={Layout.has_guests?(@layout)} id="guest-list">
+      <div :if={Roster.has_guests?(@roster)} id="guest-list">
         <.member
-          :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+          :for={{email, entry} <- Roster.sorted_for_display(@roster)}
           :if={entry.role == :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
-          pending?={entry.type in [:invitation_pending, :invitation_sent]}
+          pending?={Roster.Entry.invitation?(entry)}
           my_role={@my_role}
-          remove_disabled={not Layout.removable?(@layout, email)}
-          role_change_disabled={entry.type in [:invitation_pending, :invitation_sent]}
+          remove_disabled={not Roster.removable?(@roster, email)}
+          role_change_disabled={Roster.Entry.invitation?(entry)}
           disabled={not TeamRolePermissions.can_manage_team?(@my_role)}
         />
       </div>
@@ -182,19 +182,19 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, socket}
   end
 
-  def handle_event("remove-member", %{"email" => email}, %{assigns: %{layout: layout}} = socket) do
-    {:noreply, remove(socket, Map.fetch!(layout, email))}
+  def handle_event("remove-member", %{"email" => email}, %{assigns: %{roster: roster}} = socket) do
+    {:noreply, remove(socket, Map.fetch!(roster, email))}
   end
 
   def handle_event(
         "update-role",
         %{"email" => email, "role" => role},
-        %{assigns: %{layout: layout}} = socket
+        %{assigns: %{roster: roster}} = socket
       ) do
-    {:noreply, update_role(socket, Map.fetch!(layout, email), role_to_atom(role))}
+    {:noreply, update_role(socket, Map.fetch!(roster, email), role_to_atom(role))}
   end
 
-  defp remove(socket, %Layout.Entry{type: :membership, meta: membership}) do
+  defp remove(socket, %Roster.Entry{source: %Teams.Membership{} = membership}) do
     %{current_team: team, current_user: current_user} = socket.assigns
     myself? = membership.user.id == current_user.id
 
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     end
   end
 
-  defp remove(socket, %Layout.Entry{type: :invitation_sent, meta: invitation}) do
+  defp remove(socket, %Roster.Entry{source: %Teams.Invitation{} = invitation}) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.RemoveFromTeam.remove(
@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     end
   end
 
-  defp update_role(socket, %Layout.Entry{type: :membership, meta: membership}, role) do
+  defp update_role(socket, %Roster.Entry{source: %Teams.Membership{} = membership}, role) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     demoting_myself? =
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     end
   end
 
-  defp update_role(socket, %Layout.Entry{type: :invitation_sent, meta: invitation}, role) do
+  defp update_role(socket, %Roster.Entry{source: %Teams.Invitation{} = invitation}, role) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.UpdateRole.update(
@@ -326,20 +326,22 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   defp role_name(role), do: role |> to_string() |> String.capitalize()
 
-  defp entry_label(%Layout.Entry{role: :guest, type: :membership}, _), do: nil
-  defp entry_label(%Layout.Entry{type: :invitation_pending}, _), do: "Invitation pending"
-  defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation sent"
+  defp entry_label(%Roster.Entry{role: :guest, source: %Teams.Membership{}}, _), do: nil
+  defp entry_label(%Roster.Entry{source: %Teams.Invitation{}}, _), do: "Invitation sent"
 
-  defp entry_label(%Layout.Entry{meta: %{user: %{id: id, type: :sso}}}, %{id: id}),
+  defp entry_label(%Roster.Entry{source: %{user: %{id: id, type: :sso}}}, %{id: id}),
     do: "You (SSO)"
 
-  defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
-  defp entry_label(%Layout.Entry{meta: %{user: %{type: :sso}}}, _), do: "SSO"
+  defp entry_label(%Roster.Entry{source: %{user: %{id: id}}}, %{id: id}), do: "You"
+  defp entry_label(%Roster.Entry{source: %{user: %{type: :sso}}}, _), do: "SSO"
   defp entry_label(_, _), do: nil
 
-  def at_limit?(layout, limit) do
+  defp me?(%Roster.Entry{source: %Teams.Membership{user: %{id: id}}}, %{id: id}), do: true
+  defp me?(_, _), do: false
+
+  def at_limit?(roster, limit) do
     not Plausible.Billing.Quota.below_limit?(
-      Layout.active_count(layout) - 1,
+      map_size(roster) - 1,
       limit
     )
   end
