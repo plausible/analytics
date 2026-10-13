@@ -588,26 +588,6 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def check_invitation_permissions(%Teams.Team{} = team, inviter, invitation_role, opts) do
-    check_permissions? = Keyword.get(opts, :check_permissions, true)
-
-    if check_permissions? do
-      case Teams.Memberships.team_role(team, inviter) do
-        {:ok, :owner} when invitation_role == :owner ->
-          :ok
-
-        {:ok, inviter_role}
-        when inviter_role in [:owner, :admin] and invitation_role != :owner ->
-          :ok
-
-        _ ->
-          {:error, :permission_denied}
-      end
-    else
-      :ok
-    end
-  end
-
   def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
