@@ -1,6 +1,7 @@
 import React, {
   createContext,
   ReactNode,
+  RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -37,9 +38,16 @@ type EditingFilter = {
 
 type FilterEditorContextValue = {
   renderedFilters: Filter[]
+  pillKeys: string[]
   openPosition: number | null
   openPart: FilterEditorPart | null
   open: (position: number, part: FilterEditorPart) => void
+  /** Like `open`, and also opens the popover of that part */
+  openMenu: (position: number, part: FilterEditorPart) => void
+  registerMenuButton: (
+    key: string,
+    ref: RefObject<HTMLButtonElement>
+  ) => () => void
   close: () => void
   update: (filter: Filter, labels?: FilterClauseLabels) => void
   remove: (position: number) => void
@@ -56,6 +64,30 @@ export const useFilterEditorContext = () => {
     )
   }
   return context
+}
+
+// new filters are inserted before existing ones, so index keys would move
+// the state of one pill to another
+const getPillKeys = (filters: Filter[]) => {
+  const counts: Record<string, number> = {}
+  return filters.map(([_operation, key]) => {
+    counts[key] = (counts[key] ?? 0) + 1
+    return `${key}:${counts[key]}`
+  })
+}
+
+const getMenuButtonKey = (pillKey: string, part: FilterEditorPart) =>
+  `${pillKey}:${part}`
+
+/** A ref for the button of a pill part, so the editor can open its menu */
+export const useMenuButtonRef = (pillKey: string, part: FilterEditorPart) => {
+  const { registerMenuButton } = useFilterEditorContext()
+  const ref = useRef<HTMLButtonElement>(null)
+  useEffect(
+    () => registerMenuButton(getMenuButtonKey(pillKey, part), ref),
+    [registerMenuButton, pillKey, part]
+  )
+  return ref
 }
 
 const insertAt = (filters: Filter[], index: number, filter: Filter) => [
@@ -91,6 +123,8 @@ export const FilterEditorContextProvider = ({
   const navigationType = useNavigationType()
   const [editing, setEditingState] = useState<EditingFilter | null>(null)
   const editingRef = useRef<EditingFilter | null>(null)
+  const menuButtons = useRef(new Map<string, RefObject<HTMLButtonElement>>())
+  const shouldOpenMenu = useRef(false)
 
   const setEditing = useCallback((next: EditingFilter | null) => {
     editingRef.current = next
@@ -136,7 +170,9 @@ export const FilterEditorContextProvider = ({
     (position: number, part: FilterEditorPart) => {
       const current = editingRef.current
       if (current?.position === position) {
-        setEditing({ ...current, part })
+        if (current.part !== part) {
+          setEditing({ ...current, part })
+        }
         return
       }
       const index = getUrlIndex(current, position)
@@ -150,6 +186,26 @@ export const FilterEditorContextProvider = ({
       }
     },
     [setEditing, close]
+  )
+
+  const openMenu = useCallback(
+    (position: number, part: FilterEditorPart) => {
+      shouldOpenMenu.current = true
+      open(position, part)
+    },
+    [open]
+  )
+
+  const registerMenuButton = useCallback(
+    (key: string, ref: RefObject<HTMLButtonElement>) => {
+      menuButtons.current.set(key, ref)
+      return () => {
+        if (menuButtons.current.get(key) === ref) {
+          menuButtons.current.delete(key)
+        }
+      }
+    },
+    []
   )
 
   const update = useCallback(
@@ -212,6 +268,7 @@ export const FilterEditorContextProvider = ({
   const add = useCallback(
     (filterKey: string) => {
       const filters = close()
+      shouldOpenMenu.current = true
       const existingIndex = canHaveMultipleFilters(filterKey)
         ? -1
         : filters.findIndex(([_operation, key]) => key === filterKey)
@@ -249,18 +306,52 @@ export const FilterEditorContextProvider = ({
     [dashboardState.filters, editing]
   )
 
+  const pillKeys = useMemo(
+    () => getPillKeys(renderedFilters),
+    [renderedFilters]
+  )
+
+  // Headless UI popovers can't be opened from code, so this clicks the button
+  useEffect(() => {
+    if (!editing || !shouldOpenMenu.current) {
+      return
+    }
+    shouldOpenMenu.current = false
+    const button = menuButtons.current.get(
+      getMenuButtonKey(pillKeys[editing.position], editing.part)
+    )?.current
+    if (button && button.getAttribute('aria-expanded') !== 'true') {
+      button.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+      button.click()
+    }
+  }, [editing, pillKeys])
+
   const value = useMemo(
     () => ({
       renderedFilters,
+      pillKeys,
       openPosition: editing?.position ?? null,
       openPart: editing?.part ?? null,
       open,
+      openMenu,
+      registerMenuButton,
       close,
       update,
       remove,
       add
     }),
-    [renderedFilters, editing, open, close, update, remove, add]
+    [
+      renderedFilters,
+      pillKeys,
+      editing,
+      open,
+      openMenu,
+      registerMenuButton,
+      close,
+      update,
+      remove,
+      add
+    ]
   )
 
   return (

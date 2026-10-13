@@ -12,16 +12,6 @@ import {
 import { Filter } from '../dashboard-state'
 import { useFilterEditorContext } from '../filtering/filter-editor-context'
 
-// new filters are inserted before existing ones, so index keys would move
-// the state of one pill to another
-const getPillKeys = (filters: Filter[]) => {
-  const counts: Record<string, number> = {}
-  return filters.map(([_operation, key]) => {
-    counts[key] = (counts[key] ?? 0) + 1
-    return `${key}:${counts[key]}`
-  })
-}
-
 export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
   { className?: string; style?: CSSProperties }
@@ -30,7 +20,6 @@ export const AppliedFilterPillsList = React.forwardRef<
   const { segments, limitedToSegment } = useSegmentsContext()
   const editor = useFilterEditorContext()
   const filters = editor.renderedFilters
-  const keys = getPillKeys(filters)
 
   const getPillProps = (
     filter: Filter
@@ -67,7 +56,8 @@ export const AppliedFilterPillsList = React.forwardRef<
       >
         {filters.map((filter, index) => (
           <FilterPill
-            key={keys[index]}
+            key={editor.pillKeys[index]}
+            pillKey={editor.pillKeys[index]}
             position={index}
             filter={filter}
             labels={dashboardState.labels}

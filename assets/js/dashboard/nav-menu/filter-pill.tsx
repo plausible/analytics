@@ -1,8 +1,10 @@
 import React, {
   ReactNode,
+  RefObject,
+  useRef,
   useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -10,7 +12,7 @@ import { Popover, Transition } from '@headlessui/react'
 import { usePopper } from 'react-popper'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
-import { BlurMenuButtonOnEscape, popover } from '../components/popover'
+import { popover } from '../components/popover'
 import { Filter, FilterClauseLabels, FilterOperator } from '../dashboard-state'
 import {
   EVENT_PROPS_PREFIX,
@@ -20,9 +22,9 @@ import {
 import { getFilterTextParts, plainFilterText } from '../util/filter-text'
 import {
   useFilterEditorContext,
-  FilterEditorPart
+  FilterEditorPart,
+  useMenuButtonRef
 } from '../filtering/filter-editor-context'
-import { FilterPillPopover } from './filter-pill-popover'
 import { FilterOperatorList } from './filter-operator-list'
 import { FilterValuePicker } from './filter-value-picker'
 
@@ -33,6 +35,7 @@ export type FilterPillAction =
   | { type: 'menu'; renderMenu: RenderMenu }
 
 export type FilterPillProps = {
+  pillKey: string
   position: number
   filter: Filter
   labels: FilterClauseLabels
@@ -78,26 +81,31 @@ const PillValues = ({
 
 const PillMenuPanel = ({
   open,
-  buttonElement,
+  buttonRef,
+  className,
   children
 }: {
   open: boolean
-  buttonElement: HTMLButtonElement | null
+  buttonRef: RefObject<HTMLButtonElement>
+  className: string
   children: ReactNode
 }) => {
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null)
-
-  const { styles, attributes, update } = usePopper(
-    buttonElement,
-    panelElement,
-    {
-      placement: 'bottom-start',
-      modifiers: [
-        { name: 'offset', options: { offset: [-1, 8] } },
-        { name: 'preventOverflow', options: { padding: 8 } }
-      ]
-    }
+  const anchor = useMemo(
+    () => ({
+      getBoundingClientRect: () =>
+        buttonRef.current?.getBoundingClientRect() ?? new DOMRect()
+    }),
+    [buttonRef]
   )
+
+  const { styles, attributes, update } = usePopper(anchor, panelElement, {
+    placement: 'bottom-start',
+    modifiers: [
+      { name: 'offset', options: { offset: [-1, 8] } },
+      { name: 'preventOverflow', options: { padding: 8 } }
+    ]
+  })
 
   // the pill can move while the menu is closed, e.g. when the top bar changes
   useEffect(() => {
@@ -121,7 +129,8 @@ const PillMenuPanel = ({
         <Popover.Panel
           className={classNames(
             popover.panel.classNames.roundedSheet,
-            'w-72 max-w-[calc(100vw-1rem)]'
+            'max-w-[calc(100vw-1rem)]',
+            className
           )}
         >
           {children}
@@ -132,40 +141,59 @@ const PillMenuPanel = ({
   )
 }
 
+const OpenState = ({
+  open,
+  onChange
+}: {
+  open: boolean
+  onChange: (open: boolean) => void
+}) => {
+  useEffect(() => onChange(open), [open, onChange])
+  return null
+}
+
 const PillMenu = ({
   className,
+  panelClassName,
   label,
+  title,
+  buttonRef,
+  onOpenChange,
   renderMenu,
   children
 }: {
   className: string
+  panelClassName: string
   label: string
+  title?: string
+  buttonRef?: RefObject<HTMLButtonElement>
+  onOpenChange?: (open: boolean) => void
   renderMenu: RenderMenu
   children: ReactNode
 }) => {
-  const buttonRef = useRef<HTMLButtonElement | null>(null)
-  const [buttonElement, setButtonElement] = useState<HTMLButtonElement | null>(
-    null
-  )
-  const setButton = useCallback((element: HTMLButtonElement | null) => {
-    buttonRef.current = element
-    setButtonElement(element)
-  }, [])
+  const ownButtonRef = useRef<HTMLButtonElement>(null)
+  const ref = buttonRef ?? ownButtonRef
 
   return (
     <Popover className="flex h-full">
       {({ open, close }) => (
         <>
-          {open && <div className="fixed top-0 left-0 w-full h-full"></div>}
-          <BlurMenuButtonOnEscape targetRef={buttonRef} />
+          {!!onOpenChange && <OpenState open={open} onChange={onOpenChange} />}
           <Popover.Button
-            ref={setButton}
+            ref={ref}
             className={classNames(className, 'relative')}
             aria-label={label}
+            title={title}
+            // the dashboard clears all filters on Escape keyup
+            onKeyUp={(event: React.KeyboardEvent) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation()
+              }
+            }}
           >
             {children}
           </Popover.Button>
-          <PillMenuPanel open={open} buttonElement={buttonElement}>
+          <PillMenuPanel open={open} buttonRef={ref} className={panelClassName}>
             {renderMenu(close)}
           </PillMenuPanel>
         </>
@@ -175,6 +203,7 @@ const PillMenu = ({
 }
 
 export function FilterPill({
+  pillKey,
   position,
   filter,
   labels,
@@ -183,13 +212,42 @@ export function FilterPill({
   onRemoveClick
 }: FilterPillProps) {
   const editor = useFilterEditorContext()
-  const [containerElement, setContainerElement] =
-    useState<HTMLDivElement | null>(null)
-  const [operatorButton, setOperatorButton] =
-    useState<HTMLButtonElement | null>(null)
-  const [valuesButton, setValuesButton] = useState<HTMLButtonElement | null>(
-    null
+  const { open: openEditor, close: closeEditor } = editor
+  const [openParts, setOpenParts] = useState<FilterEditorPart[]>([])
+
+  const operatorButtonRef = useMenuButtonRef(pillKey, 'operator')
+  const valuesButtonRef = useMenuButtonRef(pillKey, 'values')
+
+  const onOpenChange = useCallback(
+    (part: FilterEditorPart) => (open: boolean) => {
+      if (open) {
+        openEditor(position, part)
+      }
+      setOpenParts((parts) =>
+        open ? [...parts, part] : parts.filter((p) => p !== part)
+      )
+    },
+    [openEditor, position]
   )
+  const onOperatorOpenChange = useMemo(
+    () => onOpenChange('operator'),
+    [onOpenChange]
+  )
+  const onValuesOpenChange = useMemo(
+    () => onOpenChange('values'),
+    [onOpenChange]
+  )
+
+  const isEditing = editor.openPosition === position
+  const anyPartOpen = openParts.length > 0
+
+  // deferred, because one part closes before another part of the pill opens
+  useEffect(() => {
+    if (isEditing && !anyPartOpen) {
+      const timeout = setTimeout(closeEditor)
+      return () => clearTimeout(timeout)
+    }
+  }, [isEditing, anyPartOpen, closeEditor])
 
   const { dimension, operation, values } = getFilterTextParts(
     { labels },
@@ -201,39 +259,26 @@ export function FilterPill({
     : dimension
   const canChangeOperation =
     action?.type === 'edit' && getSupportedOperations(filter[1]).length > 1
-  const openPart = editor.openPosition === position ? editor.openPart : null
 
-  const toggle = (part: FilterEditorPart) =>
-    openPart === part ? editor.close() : editor.open(position, part)
-
-  const closeEditor = useCallback(
-    ({ refocus }: { refocus: boolean }) => {
-      const anchor =
-        editor.openPart === 'operator' ? operatorButton : valuesButton
-      editor.close()
-      if (refocus) {
-        anchor?.focus()
-      }
-    },
-    [editor, operatorButton, valuesButton]
-  )
-
-  const onOperationSelect = (newOperation: FilterOperator) => {
+  const onOperationSelect = (
+    newOperation: FilterOperator,
+    closeMenu: () => void
+  ) => {
     const [_operation, filterKey, clauses] = filter
     editor.update([newOperation, filterKey, clauses])
     if (clauses.length) {
-      editor.close()
-      operatorButton?.focus()
+      closeMenu()
     } else {
-      editor.open(position, 'values')
+      editor.openMenu(position, 'values')
     }
   }
 
   const roundedRight = !onRemoveClick && 'rounded-r-md'
 
   return (
-    <div
-      ref={setContainerElement}
+    // focus can move between the menus of a pill without closing them,
+    // and opening one menu closes the other
+    <Popover.Group
       role="group"
       aria-label={plainText}
       className="flex h-8 shrink-0 items-center rounded-md bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm divide-x divide-gray-200 dark:divide-gray-700"
@@ -242,34 +287,49 @@ export function FilterPill({
         {dimensionLabel}
       </span>
       {canChangeOperation ? (
-        <button
-          ref={setOperatorButton}
-          type="button"
+        <PillMenu
           className={buttonPartClassName}
-          aria-label={`Change operator: ${plainText}`}
-          aria-expanded={openPart === 'operator'}
-          onClick={() => toggle('operator')}
+          panelClassName="w-44"
+          label={`Change operator: ${plainText}`}
+          buttonRef={operatorButtonRef}
+          onOpenChange={onOperatorOpenChange}
+          renderMenu={(closeMenu) => (
+            <FilterOperatorList
+              filter={filter}
+              onSelect={(newOperation) =>
+                onOperationSelect(newOperation, closeMenu)
+              }
+            />
+          )}
         >
           {operation}
-        </button>
+        </PillMenu>
       ) : (
         <span className={partClassName}>{operation}</span>
       )}
       {action?.type === 'edit' ? (
-        <button
-          ref={setValuesButton}
-          type="button"
+        <PillMenu
           className={classNames(buttonPartClassName, roundedRight)}
+          panelClassName="w-80"
+          label={`Edit filter: ${plainText}`}
           title={plainText}
-          aria-label={`Edit filter: ${plainText}`}
-          aria-expanded={openPart === 'values'}
-          onClick={() => toggle('values')}
+          buttonRef={valuesButtonRef}
+          onOpenChange={onValuesOpenChange}
+          renderMenu={(closeMenu) => (
+            <FilterValuePicker
+              filter={filter}
+              labels={labels}
+              onChange={editor.update}
+              onDone={closeMenu}
+            />
+          )}
         >
           <PillValues values={values} />
-        </button>
+        </PillMenu>
       ) : action?.type === 'menu' ? (
         <PillMenu
           className={classNames(buttonPartClassName, roundedRight)}
+          panelClassName="w-72"
           label={`Open menu: ${plainText}${error ? ` (${error})` : ''}`}
           renderMenu={action.renderMenu}
         >
@@ -293,31 +353,6 @@ export function FilterPill({
           <XMarkIcon className="size-4" />
         </button>
       )}
-      {openPart === 'operator' && (
-        <FilterPillPopover
-          anchorElement={operatorButton}
-          containerElement={containerElement}
-          onClose={closeEditor}
-          className="w-44"
-        >
-          <FilterOperatorList filter={filter} onSelect={onOperationSelect} />
-        </FilterPillPopover>
-      )}
-      {openPart === 'values' && (
-        <FilterPillPopover
-          anchorElement={valuesButton}
-          containerElement={containerElement}
-          onClose={closeEditor}
-          className="w-80 max-w-[calc(100vw-1rem)]"
-        >
-          <FilterValuePicker
-            filter={filter}
-            labels={labels}
-            onChange={editor.update}
-            onDone={() => closeEditor({ refocus: true })}
-          />
-        </FilterPillPopover>
-      )}
-    </div>
+    </Popover.Group>
   )
 }
