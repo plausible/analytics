@@ -6,6 +6,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   import PlausibleWeb.CustomerSupport.Live
   import PlausibleWeb.CustomerSupport.Components.SuppressionWarning
   alias Plausible.Teams
+  alias Plausible.Teams.Management.Roster
 
   def update(%{team: team}, socket) do
     {:ok, refresh_members(socket, team)}
@@ -14,7 +15,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   def render(assigns) do
     ~H"""
     <div class="mt-2">
-      <.table rows={Teams.Management.Layout.sorted_for_display(@team_layout)}>
+      <.table rows={Roster.sorted_for_display(@roster)}>
         <:thead>
           <.th>User</.th>
           <.th>Sessions</.th>
@@ -23,9 +24,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
         </:thead>
         <:tbody :let={{_, member}}>
           <.td truncate>
-            <div :if={member.id != 0} class="flex items-center">
+            <div :if={not Roster.Entry.invitation?(member)} class="flex items-center">
               <.styled_link
-                patch={~p"/cs/users/user/#{member.id}"}
+                patch={~p"/cs/users/user/#{member.source.user.id}"}
                 class="cursor-pointer flex block items-center"
               >
                 <img
@@ -36,7 +37,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
               </.styled_link>
               <.suppression_warning email={member.email} />
             </div>
-            <div :if={member.id == 0} class="flex items-center">
+            <div :if={Roster.Entry.invitation?(member)} class="flex items-center">
               <img
                 src={Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})}
                 class="mr-4 w-6 rounded-full bg-gray-300"
@@ -45,21 +46,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
             </div>
           </.td>
           <.td>
-            {if member.type == :membership, do: @session_counts[member.meta.user.id] || 0, else: 0}
+            {if Roster.Entry.invitation?(member),
+              do: 0,
+              else: @session_counts[member.source.user.id] || 0}
           </.td>
           <.td>
             <div class="flex items-center gap-x-1">
-              <span :if={member.type == :membership && member.meta.user.type == :sso}>SSO </span>{member.type}
+              <span :if={sso_member?(member)}>SSO </span>{member_type(member)}
 
               <.button
-                :if={member.type == :membership && member.meta.user.type == :sso}
-                id={"deprovision-sso-user-#{member.id}"}
+                :if={sso_member?(member)}
+                id={"deprovision-sso-user-#{member.source.user.id}"}
                 theme="ghost"
                 size="sm"
                 icon?={true}
                 class="btn-text-danger"
                 phx-click="deprovision-sso-user"
-                phx-value-identifier={member.id}
+                phx-value-identifier={member.source.user.id}
                 phx-target={@myself}
                 data-confirm="Are you sure you want to deprovision SSO user and convert them to a standard user? This will sign them out and force to use regular e-mail/password combination to log in again."
               >
@@ -86,15 +89,22 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   end
 
   defp refresh_members(socket, team) do
-    team_layout = Teams.Management.Layout.init(team)
+    roster = Roster.init(team)
+
+    users = for {_, %Roster.Entry{source: %Teams.Membership{user: user}}} <- roster, do: user
 
     session_counts =
-      team_layout
-      |> Enum.map(fn {_, entry} -> if entry.type == :membership, do: entry.meta.user end)
-      |> Enum.reject(&is_nil/1)
+      users
       |> Plausible.Auth.UserSessions.count_for_users()
       |> Enum.into(%{})
 
-    assign(socket, team: team, team_layout: team_layout, session_counts: session_counts)
+    assign(socket, team: team, roster: roster, session_counts: session_counts)
+  end
+
+  defp sso_member?(%Roster.Entry{source: %Teams.Membership{user: %{type: :sso}}}), do: true
+  defp sso_member?(_), do: false
+
+  defp member_type(member) do
+    if Roster.Entry.invitation?(member), do: "invitation", else: "membership"
   end
 end
