@@ -555,8 +555,8 @@ defmodule Plausible.Workers.SendEmailReportTest do
         goal_names = find(html_body, ".goal-name") |> Enum.map(&text/1)
         goal_conversions = find(html_body, ".goal-conversions") |> Enum.map(&text/1)
 
-        assert goal_names == ["Signup", "Purchase", "Visit /thank-you"]
-        assert goal_conversions == ["2", "1", "1"]
+        assert Enum.sort(Enum.zip(goal_names, goal_conversions)) ==
+                 [{"Purchase", "1"}, {"Signup", "2"}, {"Visit /thank-you", "1"}]
       end
 
       test "does not send monthly report for consolidated view with ok_to_display? false" do

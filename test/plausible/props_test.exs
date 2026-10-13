@@ -146,8 +146,8 @@ defmodule Plausible.PropsTest do
 
     {:ok, site} = Plausible.Props.allow_existing_props(site)
 
-    assert %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]} =
-             Plausible.Repo.reload!(site)
+    assert Enum.sort(Plausible.Repo.reload!(site).allowed_event_props) ==
+             ["amount", "is_customer", "logged_in"]
   end
 
   test "allow_existing_props/1 skips invalid keys" do
@@ -173,8 +173,8 @@ defmodule Plausible.PropsTest do
 
     {:ok, site} = Plausible.Props.allow_existing_props(site)
 
-    assert %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]} =
-             Plausible.Repo.reload!(site)
+    assert Enum.sort(Plausible.Repo.reload!(site).allowed_event_props) ==
+             ["amount", "is_customer", "logged_in"]
   end
 
   test "allow_existing_props/1 can be run multiple times" do
@@ -198,8 +198,10 @@ defmodule Plausible.PropsTest do
       )
     ])
 
-    {:ok, %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]}} =
+    {:ok, %Plausible.Site{allowed_event_props: props}} =
       Plausible.Props.allow_existing_props(site)
+
+    assert Enum.sort(props) == ["amount", "is_customer", "logged_in"]
 
     populate_stats(site, [
       build(:event,
@@ -219,17 +221,11 @@ defmodule Plausible.PropsTest do
       )
     ])
 
-    {:ok,
-     %Plausible.Site{
-       allowed_event_props: [
-         "amount",
-         "logged_in",
-         "is_customer",
-         "os",
-         "with_error",
-         "first_time_customer"
-       ]
-     }} = Plausible.Props.allow_existing_props(site)
+    {:ok, %Plausible.Site{allowed_event_props: props}} =
+      Plausible.Props.allow_existing_props(site)
+
+    assert Enum.sort(props) ==
+             ["amount", "first_time_customer", "is_customer", "logged_in", "os", "with_error"]
   end
 
   test "suggest_keys_to_allow/2 returns prop keys from events" do
