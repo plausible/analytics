@@ -62,6 +62,7 @@ export default function PlausibleCombobox({
   const isEmpty = values.length === 0
   const [options, setOptions] = useState([])
   const [isLoading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(null)
   const [isOpen, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
@@ -86,17 +87,32 @@ export default function PlausibleCombobox({
     setOptions(loadedOptions)
   }, [])
 
+  // Without this, a failing suggestions request would leave the dropdown
+  // stuck on "Loading options..." indefinitely.
+  const onFetchOptionsError = useCallback((error) => {
+    setLoading(false)
+    setHighlightedIndex(0)
+    setOptions([])
+    // Aborted requests are superseded by a newer one, so there's nothing
+    // to report to the user.
+    if (error?.name !== 'AbortError') {
+      setFetchError(error)
+    }
+  }, [])
+
   const initialFetchOptions = useCallback(() => {
     setLoading(true)
-    fetchOptions('').then(afterFetchOptions)
-  }, [fetchOptions, afterFetchOptions])
+    setFetchError(null)
+    fetchOptions('').then(afterFetchOptions, onFetchOptionsError)
+  }, [fetchOptions, afterFetchOptions, onFetchOptionsError])
 
   const searchOptions = useCallback(() => {
     if (isOpen) {
       setLoading(true)
-      fetchOptions(search).then(afterFetchOptions)
+      setFetchError(null)
+      fetchOptions(search).then(afterFetchOptions, onFetchOptionsError)
     }
-  }, [search, isOpen, fetchOptions, afterFetchOptions])
+  }, [search, isOpen, fetchOptions, afterFetchOptions, onFetchOptionsError])
 
   const debouncedSearchOptions = useDebounce(searchOptions)
 
@@ -321,6 +337,14 @@ export default function PlausibleCombobox({
             />
           )
         })
+    }
+
+    if (fetchError) {
+      return (
+        <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
+          Something went wrong when loading options. Please try again.
+        </div>
+      )
     }
 
     if (freeChoice) {
