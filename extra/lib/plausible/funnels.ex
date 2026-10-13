@@ -83,9 +83,13 @@ defmodule Plausible.Funnels do
 
   @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()
   def ephemeral_definition(site, name, steps, opts \\ []) do
-    site
-    |> create_changeset(name, steps, opts)
-    |> Ecto.Changeset.apply_changes()
+    changeset = create_changeset(site, name, steps, opts)
+
+    # Sanity check to ensure the definition is valid.
+    # Should be ensured earlier already.
+    true = changeset.valid?
+
+    Ecto.Changeset.apply_changes(changeset)
   end
 
   @spec list(Plausible.Site.t()) :: [
