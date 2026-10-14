@@ -142,10 +142,7 @@ defmodule PlausibleWeb.Live.Components.Team do
           >
             <div class="flex items-center justify-between gap-x-2">
               <span>{role_to_capitalized_string(role)}</span>
-              <Heroicons.check
-                mini
-                class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
-              />
+              <PrimaListbox.selected_option_check_icon />
             </div>
             <PrimaListbox.option_description>
               {description}
@@ -191,7 +188,10 @@ defmodule PlausibleWeb.Live.Components.Team do
           value={role}
           display={role_to_capitalized_string(role)}
         >
-          <div>{role_to_capitalized_string(role)}</div>
+          <div class="flex items-center justify-between gap-x-2">
+            <span>{role_to_capitalized_string(role)}</span>
+            <PrimaListbox.selected_option_check_icon />
+          </div>
           <PrimaListbox.option_description class="whitespace-nowrap">
             {description}
           </PrimaListbox.option_description>

@@ -112,6 +112,15 @@ defmodule PlausibleWeb.Components.PrimaListbox do
     """
   end
 
+  def selected_option_check_icon(assigns) do
+    ~H"""
+    <Heroicons.check
+      mini
+      class="size-4 text-indigo-600 dark:text-indigo-400 hidden group-data-selected:inline"
+    />
+    """
+  end
+
   attr(:class, :string, default: "")
   slot(:inner_block, required: true)
 
