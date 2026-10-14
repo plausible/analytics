@@ -34,7 +34,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         {goal.id,
          struct!(
            Plausible.Goal,
-           Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
+           Map.take(goal, [
+             :id,
+             :display_name,
+             :event_name,
+             :page_path,
+             :currency,
+             :scroll_threshold,
+             :custom_props
+           ])
          )}
       end)
 
