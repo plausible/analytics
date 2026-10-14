@@ -10,12 +10,18 @@ on:
     paths:
       - 'test/e2e/**.tf'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   terraform:
+    permissions:
+      contents: read
+      pull-requests: write
     concurrency: terraform_checkly
     defaults:
       run:

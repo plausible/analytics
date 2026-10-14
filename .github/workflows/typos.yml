@@ -6,6 +6,9 @@ on:
     branches: [ master ]
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   typos:
     runs-on: ubuntu-latest
