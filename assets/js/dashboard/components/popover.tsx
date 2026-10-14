@@ -31,8 +31,19 @@ const panel = {
   }
 }
 
+/**
+ * Blocks hover and clicks on the rest of the page while a dropdown is open.
+ * Render it before the trigger, and give the trigger `aboveBackdrop`.
+ */
+const backdrop = {
+  classNames: {
+    transparent: 'fixed inset-0 z-10'
+  }
+}
+
 const toggleButton = {
   classNames: {
+    aboveBackdrop: 'relative aria-expanded:z-10',
     rounded: 'flex items-center rounded-md text-sm h-8',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
@@ -93,6 +104,7 @@ const items = {
 }
 
 export const popover = {
+  backdrop,
   toggleButton,
   panel,
   transition,

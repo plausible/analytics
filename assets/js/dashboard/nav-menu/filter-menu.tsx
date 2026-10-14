@@ -42,6 +42,7 @@ const FilterMenuItems = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       {compact ? (
         <Tooltip
@@ -54,7 +55,8 @@ const FilterMenuItems = ({
             className={classNames(
               popover.toggleButton.classNames.rounded,
               popover.toggleButton.classNames.ghost,
-              'justify-center relative z-20'
+              popover.toggleButton.classNames.aboveBackdrop,
+              'justify-center'
             )}
           >
             <PlusIcon className="block size-4" />
@@ -66,7 +68,7 @@ const FilterMenuItems = ({
           className={classNames(
             popover.toggleButton.classNames.rounded,
             popover.toggleButton.classNames.ghost,
-            'relative z-20'
+            popover.toggleButton.classNames.aboveBackdrop
           )}
         >
           <FilterIcon className="block size-3.5" />
@@ -86,12 +88,8 @@ const FilterMenuItems = ({
             : 'md:left-auto md:origin-top-right'
         )}
       >
-        <div className="fixed top-0 left-0 w-full h-full"></div>
         <Popover.Panel
-          className={classNames(
-            popover.panel.classNames.roundedSheet,
-            'relative'
-          )}
+          className={popover.panel.classNames.roundedSheet}
           data-testid="filtermenu"
         >
           <FilterMenuPanelContent closeDropdown={closeDropdown} />

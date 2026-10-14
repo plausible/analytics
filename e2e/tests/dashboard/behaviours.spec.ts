@@ -839,6 +839,8 @@ test('props breakdown', async ({ page, request }) => {
   })
 
   await test.step('props modal', async () => {
+    await propsTabButton.click()
+    await expectDropdownClosed(report)
     await detailsLink(report).click()
 
     await expect(
