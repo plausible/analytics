@@ -23,7 +23,6 @@
             autocomplete="username"
             placeholder="example@email.com"
             field={f[:email]}
-            mt?={false}
             autofocus="autofocus"
           />
         </div>
@@ -38,7 +37,7 @@
       <input type="hidden" name="return_to" value={@conn.params["return_to"]} />
 
       <div class="flex flex-col gap-y-4">
-        <.button class="w-full" type="submit" mt?={false}>Sign in</.button>
+        <.button class="w-full" type="submit">Sign in</.button>
 
         <p class="text-sm text-center text-gray-500 dark:text-gray-400">
           <.styled_link href={

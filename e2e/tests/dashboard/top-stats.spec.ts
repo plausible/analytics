@@ -277,6 +277,7 @@ test('different graph time intervals are available', async ({
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Hours')
   await expect(graphIntervalSegments).toHaveCount(1)
   await graphIntervalSegments.filter({ hasText: 'Min' }).click()
+  await optionsMenu.click()
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Min')
 })
 

@@ -22,13 +22,11 @@
   </:footer>
 
   <div class="flex flex-col sm:flex-row items-center sm:items-start">
-    <div class="mt-8">
-      <div class="border-2 border-gray-300 inline-block p-2 dark:bg-white">
-        <PlausibleWeb.Components.TwoFactor.qr_code text={@totp_uri} />
-      </div>
+    <div class="border-2 border-gray-300 inline-block p-2 dark:bg-white">
+      <PlausibleWeb.Components.TwoFactor.qr_code text={@totp_uri} />
     </div>
 
-    <div class="mt-8 sm:ml-4">
+    <div class="sm:ml-4">
       <.focus_list>
         <:item>
           Open the authenticator application

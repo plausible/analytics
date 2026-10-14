@@ -17,7 +17,11 @@ import {
   getSearchToApplyCustomComparisonDates
 } from '../../dashboard-time-periods'
 import { Popover, Transition } from '@headlessui/react'
-import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
+import {
+  popover,
+  BlurMenuButtonOnEscape,
+  SelectedCheckmark
+} from '../../components/popover'
 import {
   DateMenuCalendarIcon,
   PopoverMenuProps,
@@ -69,6 +73,9 @@ export const ComparisonPeriodMenuItems = ({
             onClick={closeDropdown}
           >
             {COMPARISON_MODES[comparisonMode]}
+            <SelectedCheckmark
+              selected={dashboardState.comparison === comparisonMode}
+            />
           </AppNavigationLink>
         ))}
         <AppNavigationLink
@@ -78,6 +85,9 @@ export const ComparisonPeriodMenuItems = ({
           onClick={toggleCalendar}
         >
           {COMPARISON_MODES[ComparisonMode.custom]}
+          <SelectedCheckmark
+            selected={dashboardState.comparison === ComparisonMode.custom}
+          />
         </AppNavigationLink>
         {dashboardState.comparison !== ComparisonMode.custom && (
           <>
@@ -89,6 +99,9 @@ export const ComparisonPeriodMenuItems = ({
               onClick={closeDropdown}
             >
               {COMPARISON_MATCH_MODE_LABELS[ComparisonMatchMode.MatchDayOfWeek]}
+              <SelectedCheckmark
+                selected={dashboardState.match_day_of_week === true}
+              />
             </AppNavigationLink>
             <AppNavigationLink
               data-selected={dashboardState.match_day_of_week === false}
@@ -97,6 +110,9 @@ export const ComparisonPeriodMenuItems = ({
               onClick={closeDropdown}
             >
               {COMPARISON_MATCH_MODE_LABELS[ComparisonMatchMode.MatchExactDate]}
+              <SelectedCheckmark
+                selected={dashboardState.match_day_of_week === false}
+              />
             </AppNavigationLink>
           </>
         )}
@@ -121,11 +137,13 @@ export const ComparisonPeriodMenu = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
+          popover.toggleButton.classNames.aboveBackdrop,
           'bg-gray-150/80 dark:bg-gray-800'
         )}
         ref={buttonRef}
@@ -153,6 +171,7 @@ export const ComparisonCalendarMenu = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
       <Popover.Button
         className={hiddenCalendarButtonClassName}

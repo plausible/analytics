@@ -96,10 +96,3 @@ jobs:
               "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author(s): ${{ github.event.head_commit.author.name }}<br/>${{ steps.commitmsg.outputs.co_authors}}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
             }
 
-      - name: Set Honeycomb marker on success
-        if: ${{ success() && github.ref == 'refs/heads/master' }}
-        uses: cnkk/honeymarker-action@1bd92aec746e38efe43a0faee94ced1ebb930712
-        with:
-          apikey: ${{ secrets.HONEYCOMB_MARKER_APIKEY }}
-          dataset: 'plausible-prod'
-          message: "${{ github.sha }}"

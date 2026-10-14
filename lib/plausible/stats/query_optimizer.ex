@@ -265,7 +265,7 @@ defmodule Plausible.Stats.QueryOptimizer do
           time_on_page_data:
             Map.merge(query.time_on_page_data, %{
               include_new_metric: false,
-              include_legacy_metric: true,
+              include_legacy_metric: Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
               cutoff: nil
             })
         )

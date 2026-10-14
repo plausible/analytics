@@ -17,9 +17,10 @@ defmodule Plausible.EmailSuppression do
     :spam_complaint,
     :spam_notification,
     :unsubscribe,
-    :manual
+    :manual,
+    :recipient_rejected
   ]
-  @sources [:webhook, :backfill, :manual]
+  @sources [:webhook, :backfill, :manual, :rejected]
 
   schema "email_suppressions" do
     field :email, :string

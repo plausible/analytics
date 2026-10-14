@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
             </.error>
           </div>
 
-          <.button type="submit" class="w-full">
+          <.button type="submit" class="w-full mt-6">
             Add property
           </.button>
 

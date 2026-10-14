@@ -8,7 +8,7 @@ import {
   roundedNumberFormatter
 } from '../../util/number-formatter'
 import { CursorIcon, FolderIcon } from '../../components/icons'
-import { popover } from '../../components/popover'
+import { popover, SelectedCheckmark } from '../../components/popover'
 import {
   ChevronUpDownIcon,
   EllipsisHorizontalIcon
@@ -57,37 +57,47 @@ function DirectionDropdown({
   )?.label
 
   return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        data-testid={`exploration-direction-${direction}`}
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200"
-      >
-        {currentLabel}
-        <ChevronUpDownIcon className="size-3.5 shrink-0" />
-      </button>
-
+    <>
       {open && (
         <div
-          className={`absolute -left-1 top-full mt-1 z-10 min-w-40 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
-        >
-          {DIRECTION_OPTIONS.map(({ value, label }) => (
-            <button
-              key={value}
-              data-testid={`exploration-direction-${value}`}
-              data-selected={direction === value}
-              onClick={() => {
-                onChange(value)
-                setOpen(false)
-              }}
-              className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${direction === value ? popover.items.classNames.selectedOption : ''}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          aria-hidden="true"
+          className={popover.backdrop.classNames.transparent}
+        />
       )}
-    </div>
+      <div ref={containerRef} className="relative shrink-0">
+        <button
+          data-testid={`exploration-direction-${direction}`}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className={`${popover.toggleButton.classNames.aboveBackdrop} flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200`}
+        >
+          {currentLabel}
+          <ChevronUpDownIcon className="size-3.5 shrink-0" />
+        </button>
+
+        {open && (
+          <div
+            className={`absolute -left-1 top-full mt-1 z-10 min-w-44 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
+          >
+            {DIRECTION_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                data-testid={`exploration-direction-${value}`}
+                data-selected={direction === value}
+                onClick={() => {
+                  onChange(value)
+                  setOpen(false)
+                }}
+                className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${direction === value ? popover.items.classNames.selectedOption : ''}`}
+              >
+                {label}
+                <SelectedCheckmark selected={direction === value} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

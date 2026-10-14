@@ -275,7 +275,7 @@ test('csv export column headers match expected metrics for each report', async (
 
     await expect(
       page.getByRole('button', {
-        name: 'Remove filter: Property author is john'
+        name: "Remove filter: Property 'author' is john"
       })
     ).toBeVisible()
 

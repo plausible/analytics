@@ -86,28 +86,87 @@ export const closeModalButton = (page: Page) =>
   page.getByRole('button', { name: 'Close modal' })
 
 export const filterButton = (page: Page) =>
-  page.getByRole('button', { name: 'Filter', exact: true })
+  page.getByRole('button', { name: /^(Filter|Add filter)$/ })
+
+const filterMenu = (page: Page) => page.getByTestId('filtermenu')
+
+const filterSubmenu = (page: Page) => page.getByTestId('filtermenu-submenu')
 
 export const filterItemButton = (page: Page, label: HasTextArg) =>
-  page.getByTestId('filtermenu').getByRole('link', { name: label, exact: true })
+  filterMenu(page).getByRole('button', { name: label, exact: true })
 
-export const applyFilterButton = (page: Page, { disabled = false } = {}) =>
-  page.getByRole('button', {
-    name: 'Apply filter',
-    disabled
-  })
+export const filterSubmenuItemButton = (page: Page, label: HasTextArg) =>
+  filterSubmenu(page).getByRole('button', { name: label, exact: true })
 
-export const filterRow = (page: Page, key: string) =>
-  page.getByTestId(`filter-row-${key}`)
+export const filterSubmenuSegmentItem = (page: Page, name: HasTextArg) =>
+  filterSubmenu(page).getByRole('link').filter({ hasText: name })
 
-export const suggestedItem = (scoped: Locator, url: string) =>
-  scoped.getByRole('listitem').filter({ hasText: url })
+export const openFilterSubmenuItem = async (
+  page: Page,
+  row: string,
+  item: string
+) => {
+  await filterItemButton(page, row).click()
+  await filterSubmenuItemButton(page, item).click()
+}
 
-export const filterOperator = (scoped: Locator) =>
-  scoped.getByTestId('filter-operator')
+export const openSegmentsSubmenu = (page: Page) =>
+  filterItemButton(page, 'Segment').click()
 
-export const filterOperatorOption = (scoped: Locator, option: HasTextArg) =>
-  scoped.getByTestId('filter-operator-option').filter({ hasText: option })
+// Waits for the panel to unmount. Reopening the menu during its closing
+// animation leaves the panel unmounted.
+export const closeFilterMenu = async (page: Page) => {
+  await filterButton(page).click()
+  await expect(filterMenu(page)).toBeHidden()
+}
+
+export const openPropertyKeys = (page: Page) =>
+  filterItemButton(page, 'Property').click()
+
+export const propertyKeySearch = (page: Page) =>
+  page.getByRole('combobox', { name: 'Properties' })
+
+export const propertyKeyOption = (page: Page, key: string) =>
+  page
+    .getByRole('listbox', { name: 'Properties' })
+    .getByRole('option', { name: key, exact: true })
+
+export const filterPill = (page: Page, name: string) =>
+  page.getByRole('group', { name, exact: true })
+
+export const filterPillValuesButton = (page: Page, name: string) =>
+  page.getByRole('button', { name: `Edit filter: ${name}`, exact: true })
+
+export const filterPillOperatorButton = (page: Page, name: string) =>
+  page.getByRole('button', { name: `Change operator: ${name}`, exact: true })
+
+export const filterOperatorOption = (page: Page, option: string) =>
+  page
+    .getByRole('group', { name: 'Operators' })
+    .getByRole('button', { name: option, exact: true })
+
+export const filterValueSearch = (page: Page) =>
+  page.getByRole('combobox', { name: /^Values/ })
+
+export const filterValueOption = (page: Page, label: string) =>
+  page
+    .getByRole('listbox', { name: /^Values/ })
+    .getByRole('option', { name: label, exact: true })
+
+export const pickFilterValue = async (
+  page: Page,
+  { search, value }: { search?: string; value: string }
+) => {
+  if (search !== undefined) {
+    await filterValueSearch(page).fill(search)
+  }
+  await filterValueOption(page, value).click()
+}
+
+export const closeFilterEditor = async (page: Page) => {
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('listbox', { name: /^Values/ })).toBeHidden()
+}
 
 type HaveTextArg = string | RegExp | ReadonlyArray<string | RegExp>
 type HasTextArg = string | RegExp

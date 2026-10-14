@@ -23,12 +23,12 @@ import { CountryData, MetricLabel, WorldMapSvg } from './world-map-svg'
 
 function getMetricLabel(dashboardState: DashboardState): MetricLabel {
   if (hasConversionGoalFilter(dashboardState)) {
-    return { singular: 'Conversion', plural: 'Conversions' }
+    return { singular: 'conversion', plural: 'conversions' }
   }
   if (isRealTimeDashboard(dashboardState)) {
-    return { singular: 'Current visitor', plural: 'Current visitors' }
+    return { singular: 'current visitor', plural: 'current visitors' }
   }
-  return { singular: 'Visitor', plural: 'Visitors' }
+  return { singular: 'visitor', plural: 'visitors' }
 }
 
 const WorldMap = ({

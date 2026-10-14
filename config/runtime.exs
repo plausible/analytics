@@ -868,7 +868,9 @@ cloud_cron = [
   # Daily at 5:00 UTC
   {"0 5 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
   # Daily at 2:00 UTC
-  {"0 2 * * *", Plausible.Workers.ScoreTrialProspects}
+  {"0 2 * * *", Plausible.Workers.ScoreTrialProspects},
+  # Daily at 23:00 UTC
+  {"0 23 * * *", Plausible.Workers.CleanEmailSuppressions}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -888,7 +890,8 @@ base_queues = [
   domain_change_transition: 1,
   check_accept_traffic_until: 1,
   clickhouse_clean_sites: 1,
-  locations_sync: 1
+  locations_sync: 1,
+  clean_email_suppressions: 1
 ]
 
 cloud_queues = [

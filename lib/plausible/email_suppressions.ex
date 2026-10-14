@@ -111,6 +111,74 @@ defmodule Plausible.EmailSuppressions do
   end
 
   @doc """
+  Finds suppressions we no longer have any records for: not a user, a
+  pending team invitation, a pending site transfer, or a recipient on a
+  weekly report, monthly report, or traffic change (spike/drop)
+  notification.
+  """
+  @spec list_orphaned(Duration.t(), pos_integer()) :: [EmailSuppression.t()]
+  def list_orphaned(stale_after, limit) do
+    cutoff = NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(stale_after)
+
+    from(s in EmailSuppression, as: :suppression)
+    |> where([s], s.updated_at < ^cutoff)
+    |> where(
+      [s],
+      not exists(from(u in Plausible.Auth.User, where: u.email == parent_as(:suppression).email))
+    )
+    |> where(
+      [s],
+      not exists(
+        from(i in Plausible.Teams.Invitation, where: i.email == parent_as(:suppression).email)
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(t in Plausible.Teams.SiteTransfer, where: t.email == parent_as(:suppression).email)
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.WeeklyReport,
+          where: parent_as(:suppression).email in r.recipients
+        )
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.MonthlyReport,
+          where: parent_as(:suppression).email in r.recipients
+        )
+      )
+    )
+    |> where(
+      [s],
+      not exists(
+        from(r in Plausible.Site.TrafficChangeNotification,
+          where: parent_as(:suppression).email in r.recipients
+        )
+      )
+    )
+    |> order_by([s], asc: s.updated_at, asc: s.id)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
+  @doc """
+  Deletes the given suppressions locally
+  """
+  @spec delete_all([EmailSuppression.t()]) :: non_neg_integer()
+  def delete_all(suppressions) do
+    ids = Enum.map(suppressions, & &1.id)
+
+    {count, _} = Repo.delete_all(from(s in EmailSuppression, where: s.id in ^ids))
+    count
+  end
+
+  @doc """
   Records (or refreshes) a suppression originating from Postmark's
   Subscription Change webhook (an address unsubscribing).
   """
@@ -120,6 +188,21 @@ defmodule Plausible.EmailSuppressions do
     attrs
     |> Map.take([:email, :source, :details])
     |> Map.put(:reason, :unsubscribe)
+    |> upsert()
+  end
+
+  @doc """
+  Records (or refreshes) a suppression detected after send attempt
+  was rejected by Postmark (406) - for when Postmark suppression exists still.
+  See: `Plausible.Mailer`.
+  """
+  @spec create_from_rejected_send(map()) ::
+          {:ok, EmailSuppression.t()} | {:error, Ecto.Changeset.t()}
+  def create_from_rejected_send(attrs) do
+    attrs
+    |> Map.take([:email, :details])
+    |> Map.put(:reason, :recipient_rejected)
+    |> Map.put(:source, :rejected)
     |> upsert()
   end
 

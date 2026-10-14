@@ -23,6 +23,8 @@ defmodule Plausible.Mailer do
       deliver_now!(email)
     rescue
       e ->
+        maybe_record_rejected_send(e)
+
         # this message is ignored by Sentry, only appears in logs
         log = "Failed to send e-mail:\n\n  " <> Exception.format(:error, e, __STACKTRACE__)
         # Sentry report is built entirely from crash_reason
@@ -33,6 +35,27 @@ defmodule Plausible.Mailer do
     else
       _sent_email -> :ok
     end
+  end
+
+  defp maybe_record_rejected_send(exception)
+
+  on_ce do
+    defp maybe_record_rejected_send(_exception), do: :ok
+  end
+
+  on_ee do
+    defp maybe_record_rejected_send(%Bamboo.PostmarkAdapter.Error{} = e) do
+      if Bamboo.PostmarkAdapter.Error.is_hard_bounce(e) do
+        Plausible.EmailSuppressions.create_from_rejected_send(%{
+          email: sole_recipient(e.email),
+          details: "Rejected by Postmark on send: #{inspect(e.reason)}"
+        })
+      end
+
+      :ok
+    end
+
+    defp maybe_record_rejected_send(_exception), do: :ok
   end
 
   defp suppressed_recipients(email)

@@ -23,6 +23,16 @@ defmodule PlausibleWeb.Live.Components.Form do
   @input_class "input-base input-md"
   @multiline_input_class "input-base input-md input-multiline"
 
+  # Base and sizes are defined as component classes in assets/css/app.css and
+  # mirrored by the React `Checkbox` component in
+  # assets/js/dashboard/components/form-elements.tsx. Update there only.
+  @checkbox_base_class "checkbox-base"
+
+  @checkbox_sizes %{
+    "sm" => "checkbox-sm",
+    "md" => "checkbox-md"
+  }
+
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
@@ -45,16 +55,17 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:prompt, :string, default: nil, doc: "the prompt for select inputs")
   attr(:options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2")
   attr(:multiple, :boolean, default: false, doc: "the multiple flag for select inputs")
+  attr(:size, :string, default: "md", values: ~w(sm md), doc: "the size of checkbox inputs")
 
   attr(:rest, :global,
     include:
       ~w(accept autocomplete autofocus capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step x-bind:type x-model)
+         multiple pattern placeholder readonly required rows step x-bind:type x-model)
   )
 
   attr(:class, :any, default: "")
+  attr(:wrapper_class, :any, default: nil)
 
-  attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
   attr(:resizable, :boolean, default: true)
   slot(:help_content)
@@ -69,7 +80,6 @@ defmodule PlausibleWeb.Live.Components.Form do
       field: nil,
       id: assigns.id || field.id,
       class: assigns.class,
-      mt?: assigns.mt?,
       width: assigns.width
     )
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
@@ -83,7 +93,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, [base, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
@@ -104,14 +114,17 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "checkbox"} = assigns) do
     assigns =
-      assign_new(assigns, :checked, fn ->
+      assigns
+      |> assign_new(:checked, fn ->
         Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
       end)
+      |> assign(
+        checkbox_base_class: @checkbox_base_class,
+        checkbox_size_class: @checkbox_sizes[assigns.size]
+      )
 
     ~H"""
-    <div class={[
-      @mt? && "mt-2"
-    ]}>
+    <div class={@wrapper_class}>
       <.label
         for={@id}
         class="font-normal gap-x-2 flex flex-inline items-center sm:justify-start justify-center "
@@ -123,7 +136,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           checked={@checked}
           id={@id}
           name={@name}
-          class="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+          class={[@checkbox_base_class, @checkbox_size_class]}
           {@rest}
         />
         {@label}
@@ -135,7 +148,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(%{type: "radio"} = assigns) do
     ~H"""
     <div class={[
-      "flex flex-inline justify-start gap-x-3"
+      "flex flex-inline justify-start gap-x-3",
+      @wrapper_class
     ]}>
       <input
         type="radio"
@@ -165,7 +179,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, [@multiline_input_class, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} class="mb-1.5" for={@id}>{@label}</.label>
       <textarea
         id={@id}
@@ -194,7 +208,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       |> assign(:class, [@input_class, assigns.class])
 
     ~H"""
-    <div class={@mt? && "mt-6"}>
+    <div class={@wrapper_class}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-1.5">
         {@label}
       </.label>
@@ -241,7 +255,6 @@ defmodule PlausibleWeb.Live.Components.Form do
       </div>
       <div class="relative">
         <.input
-          mt?={false}
           id={@id}
           name={@name}
           value={@value}
@@ -270,8 +283,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   """
   attr(:id, :any, default: nil)
   attr(:label, :string, default: nil)
-  attr(:mt?, :boolean, default: true)
   attr(:autocomplete, :string, default: "current-password")
+  attr(:wrapper_class, :any, default: nil)
 
   attr(:field, Phoenix.HTML.FormField, required: true)
 
@@ -286,7 +299,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, "pr-10")
 
     ~H"""
-    <div x-data="{ showPassword: false }">
+    <div x-data="{ showPassword: false }" class={@wrapper_class}>
       <.input
         type="password"
         x-bind:type="showPassword ? 'text' : 'password'"
@@ -294,7 +307,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         label={@label}
         id={@id}
         autocomplete={@autocomplete}
-        mt?={@mt?}
         class={@class}
         {@rest}
       >
@@ -367,7 +379,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:id, :any, default: nil)
   attr(:label, :string, default: nil)
-  attr(:mt?, :boolean, default: true)
+  attr(:wrapper_class, :any, default: nil)
 
   attr(:field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:password]",
@@ -414,7 +426,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       autocomplete="new-password"
       label={@label}
       id={@id}
-      mt?={@mt?}
+      wrapper_class={@wrapper_class}
       {@rest}
     >
       <.strength_meter :if={@show_meter?} {@strength} />
@@ -575,7 +587,6 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        mt?={false}
       />
     </.form>
     """

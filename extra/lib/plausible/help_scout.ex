@@ -22,6 +22,8 @@ defmodule Plausible.HelpScout do
 
   @excluded_email_domains ["paddle.com"]
 
+  @manual_plan_id Subscription.manual_plan_id()
+
   @type signature_error() :: unquote(Enum.reduce(@signature_errors, &{:|, [], [&1, &2]}))
 
   def signature_errors(), do: @signature_errors
@@ -183,6 +185,9 @@ defmodule Plausible.HelpScout do
 
   defp plan_link(nil), do: "#"
 
+  # Subscriptions outside of Paddle (manual, free_10k) have nothing to link to
+  defp plan_link(%{paddle_subscription_id: nil}), do: "#"
+
   defp plan_link(%{paddle_subscription_id: paddle_id}) do
     Path.join([
       Billing.PaddleApi.vendors_domain(),
@@ -251,6 +256,15 @@ defmodule Plausible.HelpScout do
     "#{quota} Plan (#{price} #{interval})"
   end
 
+  # Manually invoiced, so there's no Paddle price to fetch
+  defp plan_label(
+         %Subscription{paddle_plan_id: @manual_plan_id} = subscription,
+         %Billing.EnterprisePlan{} = plan
+       ) do
+    quota = PlausibleWeb.AuthView.subscription_quota(subscription, [])
+    "#{quota} Enterprise Plan (manual, #{plan.billing_interval})"
+  end
+
   defp plan_label(subscription, %Billing.EnterprisePlan{} = plan) do
     quota = PlausibleWeb.AuthView.subscription_quota(subscription, [])
     price_amount = Billing.Plans.get_price_for(plan, "127.0.0.1")
@@ -310,7 +324,7 @@ defmodule Plausible.HelpScout do
 
   defp get_emails_with_customer_mapping(customer_id) do
     # We want to explicitly reject customer emails from HS which
-    # are in one of excluded domains. That's why we fetch 
+    # are in one of excluded domains. That's why we fetch
     # emails from HS first before checking the mapping.
     case fetch_customer_emails(customer_id) do
       {:ok, emails} ->

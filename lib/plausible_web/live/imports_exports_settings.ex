@@ -94,7 +94,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
               theme="secondary"
               href={Plausible.Google.API.import_authorize_url(@site)}
               disabled={@import_in_progress? or @at_maximum?}
-              mt?={false}
             >
               Import from
               <img
@@ -106,7 +105,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             <.button_link
               disabled={@import_in_progress? or @at_maximum?}
               href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
-              mt?={false}
             >
               Import from CSV
             </.button_link>
@@ -118,7 +116,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             theme="secondary"
             href={Plausible.Google.API.import_authorize_url(@site)}
             disabled={@import_in_progress? or @at_maximum?}
-            mt?={false}
           >
             Import from
             <img
@@ -130,7 +127,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           <.button_link
             disabled={@import_in_progress? or @at_maximum?}
             href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
-            mt?={false}
           >
             Import from CSV
           </.button_link>
