@@ -178,11 +178,15 @@ function PagesBreakdownMenu({
     <Popover className="relative">
       {({ close }) => (
         <>
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'relative flex rounded !text-gray-500 dark:!text-gray-400 hover:!text-gray-600 dark:hover:!text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
+              popover.toggleButton.classNames.aboveBackdrop,
+              'flex rounded !text-gray-500 dark:!text-gray-400 hover:!text-gray-600 dark:hover:!text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
               popover.toggleButton.classNames.linkLike,
               'justify-center'
             )}

@@ -23,6 +23,16 @@ defmodule PlausibleWeb.Live.Components.Form do
   @input_class "input-base input-md"
   @multiline_input_class "input-base input-md input-multiline"
 
+  # Base and sizes are defined as component classes in assets/css/app.css and
+  # mirrored by the React `Checkbox` component in
+  # assets/js/dashboard/components/form-elements.tsx. Update there only.
+  @checkbox_base_class "checkbox-base"
+
+  @checkbox_sizes %{
+    "sm" => "checkbox-sm",
+    "md" => "checkbox-md"
+  }
+
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
@@ -45,11 +55,12 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:prompt, :string, default: nil, doc: "the prompt for select inputs")
   attr(:options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2")
   attr(:multiple, :boolean, default: false, doc: "the multiple flag for select inputs")
+  attr(:size, :string, default: "md", values: ~w(sm md), doc: "the size of checkbox inputs")
 
   attr(:rest, :global,
     include:
       ~w(accept autocomplete autofocus capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step x-bind:type x-model)
+         multiple pattern placeholder readonly required rows step x-bind:type x-model)
   )
 
   attr(:class, :any, default: "")
@@ -103,9 +114,14 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "checkbox"} = assigns) do
     assigns =
-      assign_new(assigns, :checked, fn ->
+      assigns
+      |> assign_new(:checked, fn ->
         Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
       end)
+      |> assign(
+        checkbox_base_class: @checkbox_base_class,
+        checkbox_size_class: @checkbox_sizes[assigns.size]
+      )
 
     ~H"""
     <div class={@wrapper_class}>
@@ -120,7 +136,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           checked={@checked}
           id={@id}
           name={@name}
-          class="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+          class={[@checkbox_base_class, @checkbox_size_class]}
           {@rest}
         />
         {@label}

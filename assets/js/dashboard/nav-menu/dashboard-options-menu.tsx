@@ -82,6 +82,7 @@ function DashboardOptionsMenuItems({
           shouldIgnoreWhen={[isModifierPressed, isTyping]}
         />
       )}
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button
         ref={buttonRef}
@@ -89,6 +90,7 @@ function DashboardOptionsMenuItems({
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
+          popover.toggleButton.classNames.aboveBackdrop,
           'justify-center'
         )}
       >

@@ -100,6 +100,7 @@ export const DashboardPeriodMenu = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <div
         className={classNames(
@@ -113,7 +114,8 @@ export const DashboardPeriodMenu = ({
         <Popover.Button
           ref={buttonRef}
           className={classNames(
-            'flex items-center gap-x-1.5 pl-2.5 text-sm font-medium text-gray-800 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
+            popover.toggleButton.classNames.aboveBackdrop,
+            'flex items-center gap-x-1.5 pl-2.5 text-sm text-gray-800 dark:text-gray-100 leading-tight h-full rounded-md focus-visible:ring-0 focus-visible:ring-offset-0',
             periodsWithArrows.includes(dashboardState.period)
               ? 'pr-1.5'
               : 'pr-2.5'
@@ -242,6 +244,7 @@ export const MainCalendar = ({
 
   return (
     <>
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
       <Popover.Button
         className={hiddenCalendarButtonClassName}

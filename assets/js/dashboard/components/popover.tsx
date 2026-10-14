@@ -31,15 +31,26 @@ const panel = {
   }
 }
 
+/**
+ * Blocks hover and clicks on the rest of the page while a dropdown is open.
+ * Render it before the trigger, and give the trigger `aboveBackdrop`.
+ */
+const backdrop = {
+  classNames: {
+    transparent: 'fixed inset-0 z-10'
+  }
+}
+
 const toggleButton = {
   classNames: {
+    aboveBackdrop: 'relative aria-expanded:z-10',
     rounded: 'flex items-center rounded-md text-sm h-8',
     shadow:
       'bg-white dark:bg-gray-750 shadow-sm text-gray-800 dark:text-gray-200 dark:hover:bg-gray-700',
     outline:
       'border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750 text-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:hover:text-gray-100',
     ghost:
-      'gap-x-1.5 px-2.5 font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
+      'gap-x-1.5 px-2.5 text-gray-800 dark:text-gray-100 hover:bg-gray-150/80 dark:hover:bg-gray-800 aria-expanded:bg-gray-150/80 dark:aria-expanded:bg-gray-800',
     truncatedText: 'truncate block',
     linkLike:
       'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150'
@@ -85,11 +96,15 @@ const items = {
       'data-[selected=true]:dark:bg-gray-700',
       'data-[selected=true]:text-gray-900',
       'data-[selected=true]:dark:text-gray-100'
-    )
+    ),
+    /** For options that are highlighted by keyboard, not by hover or focus. */
+    highlightedOption:
+      'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
   }
 }
 
 export const popover = {
+  backdrop,
   toggleButton,
   panel,
   transition,

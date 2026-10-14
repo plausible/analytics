@@ -159,12 +159,16 @@ export const SiteSwitcher = () => {
               />
             )}
 
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={buttonRef}
             className={classNames(
               popover.toggleButton.classNames.rounded,
               popover.toggleButton.classNames.ghost,
+              popover.toggleButton.classNames.aboveBackdrop,
               '!px-1.5 sm:!pl-1.5 sm:!pr-2.5'
             )}
             title={currentSite.domain}

@@ -32,11 +32,14 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left text-xs uppercase', {
-      'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 font-semibold cursor-pointer':
-        !active,
-      'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
-    })}
+    className={classNames(
+      'truncate text-left text-xs font-semibold uppercase',
+      {
+        'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 cursor-pointer':
+          !active,
+        'text-gray-900 dark:text-gray-100': active
+      }
+    )}
   >
     <span data-active={active ? 'true' : 'false'} data-testid="tab-button">
       {children}
@@ -90,6 +93,9 @@ export const DropdownTabButton = ({
     <Popover className={className}>
       {({ close: closeDropdown }) => (
         <>
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <div
             className={classNames('-mb-px pb-4', {
@@ -98,7 +104,10 @@ export const DropdownTabButton = ({
           >
             <Popover.Button
               data-testid="tab-button-with-dropdown"
-              className="group/tab relative inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              className={classNames(
+                popover.toggleButton.classNames.aboveBackdrop,
+                "group/tab inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              )}
               ref={dropdownButtonRef}
             >
               <TabButtonText active={active}>{children}</TabButtonText>
