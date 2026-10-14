@@ -5,6 +5,9 @@ on:
   push:
     branches: [ master ]
   merge_group:
+permissions:
+  contents: read
+
 
 jobs:
   codespell:

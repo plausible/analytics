@@ -5,6 +5,9 @@ on:
     branches: [master, stable]
   pull_request:
   merge_group:
+permissions:
+  contents: read
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
