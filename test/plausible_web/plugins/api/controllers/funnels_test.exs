@@ -186,6 +186,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         assert Enum.count(resp.funnels) == 3
       end
 
+      test "retrieves funnels with dynamic steps", %{conn: conn, site: site, token: token} do
+        {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/product/123"})
+
+        {:ok, g3} = Plausible.Goals.create(site, %{"event_name" => "FiveStarReview"})
+
+        for i <- 1..3 do
+          {:ok, _} =
+            Plausible.Funnels.create(
+              site,
+              "Funnel #{i}",
+              [g1, %{"event_name" => "Purchase", "currency" => "EUR"}, g3]
+            )
+        end
+
+        url = url(~p"/api/plugins/v1/funnels")
+
+        resp =
+          conn
+          |> authenticate(site.domain, token)
+          |> get(url)
+          |> json_response(200)
+          |> assert_schema("Funnel.ListResponse", spec())
+
+        assert Enum.count(resp.funnels) == 3
+      end
+
       test "retrieves funnels with pagination", %{conn: conn, site: site, token: token} do
         {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/product/123"})
 
