@@ -6,7 +6,7 @@ test.describe('with revenue script extension', () => {
     await page.goto('/revenue.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#manual-purchase'),
+      action: () => page.locator('#manual-purchase').click(),
       expectedRequests: [
         { n: 'Purchase', $: { amount: 15.99, currency: 'USD' } }
       ]
@@ -19,7 +19,7 @@ test.describe('with revenue script extension', () => {
     await page.goto('/revenue.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#tagged-purchase'),
+      action: () => page.locator('#tagged-purchase').click(),
       expectedRequests: [
         { n: 'Purchase', $: { amount: '13.32', currency: 'EUR' } }
       ]

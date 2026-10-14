@@ -1,8 +1,5 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
-import {
-  mockManyRequests,
-  resolveWithTimestamps
-} from './support/mock-many-requests'
+import { mockManyRequests } from './support/mock-many-requests'
 import {
   expectPlausibleInAction,
   isEngagementEvent,
@@ -53,7 +50,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('a')
+          await page.locator('a').click()
         },
         expectedRequests: [
           {
@@ -100,7 +97,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('a')
+          await page.locator('a').click()
         },
         expectedRequests: [
           {
@@ -127,7 +124,7 @@ for (const mode of ['legacy', 'web'])
       {
         clickName: 'when left clicking on link with Ctrl or Meta key',
         click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
-        skip: (browserName) =>
+        skip: (browserName: string) =>
           test.skip(
             browserName === 'webkit',
             'does not open links with such clicks (works when testing manually in macOS Safari)'
@@ -175,7 +172,9 @@ for (const mode of ['legacy', 'web'])
 
         await expectPlausibleInAction(page, {
           action: () =>
-            page.click(click.element, { modifiers: click.modifiers }),
+            page.locator(click.element).click({
+              ...(click.modifiers && { modifiers: click.modifiers })
+            }),
           expectedRequests: [
             { n: 'Outbound Link: Click', p: { url: outboundUrl } }
           ]
@@ -222,13 +221,17 @@ for (const mode of ['legacy', 'web'])
         bodyContent: /* HTML */ `<a href="${outboundUrl}">>➡️</a>`
       })
       await page.goto(url)
-      await page.click('a')
+      await page.locator('a').click()
       const [
         [trackingRequestList, trackingResponseTime],
         [outboundMockRequestList, outboundRequestTime]
-      ] = await resolveWithTimestamps([
-        eventsApiMock.getRequestList(),
-        outboundMock.getRequestList()
+      ] = await Promise.all([
+        eventsApiMock
+          .getRequestList()
+          .then((requestList) => [requestList, Date.now()] as const),
+        outboundMock
+          .getRequestList()
+          .then((requestList) => [requestList, Date.now()] as const)
       ])
 
       expect(outboundRequestTime).toBeLessThan(trackingResponseTime)
@@ -283,7 +286,7 @@ for (const mode of ['legacy', 'web'])
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         refutedRequests: [{ n: 'Outbound Link: Click' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -306,7 +309,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       linkAttributes: '',
       click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
       expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 },
-      skip: (browserName) =>
+      skip: (browserName: string) =>
         test.skip(
           browserName === 'webkit',
           'does not open links with such clicks (works when testing manually in macOS Safari)'
@@ -366,7 +369,10 @@ test.describe('outbound links feature when using legacy .compat extension', () =
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click(click.element, { modifiers: click.modifiers }),
+        action: () =>
+          page.locator(click.element).click({
+            ...(click.modifiers && { modifiers: click.modifiers })
+          }),
         expectedRequests: [
           { n: 'Outbound Link: Click', p: { url: outboundUrl } }
         ]
@@ -408,16 +414,15 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     })
     await page.goto(url)
 
-    const navigationPromise = page.waitForRequest(outboundUrl, {
-      timeout: 2000
-    })
-    const trackingPromise = page.waitForResponse('**/api/event', {
-      timeout: 2000
-    })
-
-    await page.click('a')
-    const [[, trackingResponseTime], [, navigationTime]] =
-      await resolveWithTimestamps([trackingPromise, navigationPromise])
+    const [trackingResponseTime, navigationTime] = await Promise.all([
+      page
+        .waitForResponse('**/api/event', { timeout: 2000 })
+        .then(() => Date.now()),
+      page
+        .waitForRequest(outboundUrl, { timeout: 2000 })
+        .then(() => Date.now()),
+      page.locator('a').click()
+    ])
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)
@@ -462,7 +467,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     const navigationPromise = page.waitForRequest(outboundUrl, {
       timeout: 6000
     })
-    await page.click('a')
+    await page.locator('a').click()
     await navigationPromise
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
@@ -508,7 +513,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await page.goto(url)
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('a'),
+      action: () => page.locator('a').click(),
       refutedRequests: [{ n: 'Outbound Link: Click' }]
     })
 

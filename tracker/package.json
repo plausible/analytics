@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint",
+    "typecheck": "tsc --noEmit --pretty",
     "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "deploy": "node compile.js",
     "test": "npx playwright test",
