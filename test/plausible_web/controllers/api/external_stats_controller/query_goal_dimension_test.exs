@@ -184,7 +184,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
              ]
     end
 
-    test "does not count custom events towards pageview goals on the same path", %{
+    test "counts pageview goals on path P and custom event goals that happen on path P separately", %{
       conn: conn,
       site: site
     } do
