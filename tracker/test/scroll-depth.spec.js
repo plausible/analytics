@@ -19,7 +19,7 @@ test.describe('scroll depth (engagement events)', () => {
     await page.evaluate(() => window.scrollBy(0, 0))
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20 }
       ]
@@ -33,7 +33,7 @@ test.describe('scroll depth (engagement events)', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#about-link'),
+      action: () => page.locator('#about-link').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -48,7 +48,7 @@ test.describe('scroll depth (engagement events)', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#home-link'),
+      action: () => page.locator('#home-link').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -74,7 +74,7 @@ test.describe('scroll depth (engagement events)', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -95,7 +95,7 @@ test.describe('scroll depth (engagement events)', () => {
 
     // The link appears dynamically after 500ms.
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -126,7 +126,7 @@ test.describe('scroll depth (engagement events)', () => {
     await page.evaluate(() => window.scrollBy(0, 1000))
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         {
           n: 'engagement',

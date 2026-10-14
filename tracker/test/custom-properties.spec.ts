@@ -93,7 +93,7 @@ for (const mode of ['web', 'esm']) {
     }, { testId }) => {
       const config = {
         ...DEFAULT_CONFIG,
-        customProperties: (eventName) => ({
+        customProperties: (eventName: string) => ({
           author: 'John Smith',
           eventName: eventName,
           documentTitle: document.title
@@ -173,7 +173,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
         },
         shouldIgnoreRequest: [isEngagementEvent],
         expectedRequests: [
@@ -224,7 +224,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
         },
         shouldIgnoreRequest: [isEngagementEvent],
         expectedRequests: [
@@ -271,7 +271,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
         },
         shouldIgnoreRequest: [isEngagementEvent],
         expectedRequests: [

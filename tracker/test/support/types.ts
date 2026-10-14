@@ -1,3 +1,5 @@
+import type { PlausibleRequestPayload } from '../../npm_package/plausible'
+
 export type Options = {
   hashBasedRouting: boolean
   outboundLinks: boolean
@@ -7,7 +9,7 @@ export type Options = {
   autoCapturePageviews: boolean
   customProperties:
     Record<string, unknown> | ((eventName: string) => Record<string, unknown>)
-  transformRequest: (payload: unknown) => unknown
+  transformRequest: (payload: PlausibleRequestPayload) => unknown
   logging: boolean
 }
 
@@ -82,5 +84,5 @@ export type VerifierResult = {
           }
         }
       }
-    | { completed: false; error: { message: string } }
+    | { completed: false; attempts?: number; error: { message: string } }
 }

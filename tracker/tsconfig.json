@@ -1,0 +1,35 @@
+{
+  // Based on e2e/tsconfig.json
+  // Visit https://aka.ms/tsconfig to read more about this file
+  // Only the tests are type-checked. JS files they import are included through imports.
+  "include": ["playwright.config.ts", "test"],
+  "compilerOptions": {
+    // Environment Settings
+    // See also https://aka.ms/tsconfig/module
+    // Tests import without file extensions, which Playwright resolves like a bundler
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    // Tests run code in the browser via page.evaluate
+    "lib": ["esnext", "dom"],
+    "types": ["node"],
+    // Tests import helpers written in JavaScript
+    "allowJs": true,
+    "resolveJsonModule": true,
+
+    // Stricter Typechecking Options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Recommended Options
+    "strict": true,
+    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+
+    "noEmit": true,
+    "pretty": true
+  }
+}

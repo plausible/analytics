@@ -31,7 +31,7 @@ test('does not track form submissions when the feature is disabled', async ({
   await expectPlausibleInAction(page, {
     action: async () => {
       await page.goto(url)
-      await page.click('input[type="submit"]')
+      await page.locator('input[type="submit"]').click()
     },
     shouldIgnoreRequest: isEngagementEvent,
     expectedRequests: [{ n: 'pageview' }],
@@ -62,8 +62,8 @@ test.describe('form submissions feature is enabled', () => {
       action: async () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
-        await page.fill('input[type="text"]', 'Any Name')
-        await page.click('input[type="submit"]')
+        await page.locator('input[type="text"]').fill('Any Name')
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
@@ -93,7 +93,7 @@ test.describe('form submissions feature is enabled', () => {
       action: async () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
-        await page.click('input[type="submit"]')
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
@@ -135,8 +135,8 @@ test.describe('form submissions feature is enabled', () => {
       action: async () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
-        await page.click('button#dynamically-insert-form')
-        await page.click('input[type="submit"]')
+        await page.locator('button#dynamically-insert-form').click()
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
@@ -168,8 +168,8 @@ test.describe('form submissions feature is enabled', () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
 
-        await page.fill('input[type="email"]', 'invalid email')
-        await page.click('input[type="submit"]')
+        await page.locator('input[type="email"]').fill('invalid email')
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
@@ -200,8 +200,8 @@ test.describe('form submissions feature is enabled', () => {
       action: async () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
-        await page.fill('input[type="email"]', 'invalid email')
-        await page.click('input[type="submit"]')
+        await page.locator('input[type="email"]').fill('invalid email')
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: isEngagementEvent,
       expectedRequests: [{ n: 'pageview' }],
@@ -237,7 +237,7 @@ test.describe('form submissions feature is enabled', () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
 
-        await page.click('button#trigger-FormElement-submit')
+        await page.locator('button#trigger-FormElement-submit').click()
       },
       shouldIgnoreRequest: isEngagementEvent,
       expectedRequests: [{ n: 'pageview' }],
@@ -271,7 +271,7 @@ test.describe('form submissions feature is enabled', () => {
       action: async () => {
         await page.goto(url)
         await ensurePlausibleInitialized(page)
-        await page.click('input[type="submit"]')
+        await page.locator('input[type="submit"]').click()
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
@@ -285,7 +285,7 @@ test.describe('form submissions feature is enabled', () => {
 
     await expectPlausibleInAction(page, {
       action: async () => {
-        await page.fill('input[type="email"]', 'customer@example.com')
+        await page.locator('input[type="email"]').fill('customer@example.com')
         await page.keyboard.press('Enter')
       },
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
