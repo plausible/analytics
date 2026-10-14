@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
       assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"]|)
       assert element_exists?(html, "#create-team-submit")
-      assert elem_count(html, row_el()) == 1
+      assert elem_count(html, visible_row_el()) == 1
     end
 
     test "marks the name input as required so the browser blocks a blank submit", %{conn: conn} do
@@ -163,8 +163,10 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
     test "starts out with a single empty row defaulting to viewer", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
-      assert elem_count(html, row_el()) == 1
-      assert text_of_attr(html, ~s|#member-rows input[type="hidden"]|, "value") == "viewer"
+      assert elem_count(html, visible_row_el()) == 1
+
+      assert text_of_attr(html, ~s|#{visible_row_el()} input[type="hidden"]|, "value") ==
+               "viewer"
     end
 
     test "creating the team sends out an invitation for a filled row with the given role", %{
@@ -265,7 +267,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
   # The client-side row cap itself (assets/js/liveview/member-rows.js) can't
   # be exercised here since ExUnit's LiveViewTest can't drive that JS - these
-  # tests cover the server-computed limit it's seeded from via `data-max-rows`.
+  # tests cover the server-computed limit instead, by counting how many rows
+  # (visible or not) it renders up front for the JS to reveal on "add".
   describe "/team/setup - member row limit" do
     setup [:create_user, :log_in, :create_team]
 
@@ -273,7 +276,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "defaults to the trial team member limit", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "10"
+      assert elem_count(html, row_el()) == 10
     end
 
     @tag :ee_only
@@ -283,7 +286,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "10"
+      assert elem_count(html, row_el()) == 10
     end
 
     @tag :ee_only
@@ -292,11 +295,25 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, "#member-rows-container", "data-max-rows") == "20"
+      assert elem_count(html, row_el()) == 20
+    end
+
+    @tag :ee_only
+    test "renders no rows for a solo team (member limit 0)", %{conn: conn, user: user} do
+      subscribe_to_starter_plan(user)
+
+      # Normally, starter tier accounts shouldn't even be setting up teams because
+      # there's no point to do so. However, their access to the team setup page is
+      # not restricted on the plug level, so this test makes sure it behaves
+      # correctly and doesn't crash even in that scenario.
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 0
     end
   end
 
   defp row_el(), do: ~s|#member-rows > div|
+  defp visible_row_el(), do: ~s|#member-rows > div:not(.hidden)|
 
   defp finish_setup(lv, opts) do
     name = Keyword.get(opts, :name, "Jane Smith's team")

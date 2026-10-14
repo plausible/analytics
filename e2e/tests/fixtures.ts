@@ -192,6 +192,7 @@ export async function createSharedLink({
   const table = page.locator('#shared-links-table')
 
   await page.goto(`/${domain}/settings/visibility`, { waitUntil: 'commit' })
+  await expectLiveViewConnected(page)
 
   await page.getByRole('button', { name: 'Add shared link' }).click()
 
@@ -517,6 +518,22 @@ export async function addFunnel({
   })
 
   expect(response.ok()).toBeTruthy()
+}
+
+export async function subscribeToPlan({
+  page,
+  planId
+}: {
+  page: Page
+  planId: string
+}) {
+  await page.goto(`/dev/billing/create-subscription-form/${planId}`, {
+    waitUntil: 'commit'
+  })
+
+  await page.getByRole('link', { name: 'Subscribe to plan' }).click()
+
+  await expect(page).toHaveURL(/\/settings\/billing\/subscription/)
 }
 
 export async function setupSite({
