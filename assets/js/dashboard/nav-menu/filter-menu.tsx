@@ -1,14 +1,14 @@
 import React, { useMemo, useRef } from 'react'
-import { formattedFilters } from '../util/filters'
+import { EVENT_PROPS_PREFIX, formattedFilters } from '../util/filters'
 import { useSiteContext } from '../site-context'
-import { filterRoute } from '../router'
 import { FilterIcon } from '../components/icons'
 import { Popover, Transition } from '@headlessui/react'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { Tooltip } from '../util/tooltip'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { useFilterEditorContext } from '../filtering/filter-editor-context'
+import { PropertyKeyPicker } from './property-key-picker'
 import {
   SegmentsSubmenu,
   useListableSegments
@@ -185,20 +185,24 @@ const ItemRow = ({
   row: Extract<FilterMenuRow, { kind: 'item' }>
   onPointerOrFocus: () => void
   closeDropdown: () => void
-}) => (
-  <AppNavigationLink
-    className={popover.items.classNames.iconRow}
-    onClick={closeDropdown}
-    onMouseEnter={onPointerOrFocus}
-    onFocus={onPointerOrFocus}
-    path={filterRoute.path}
-    params={{ field: row.dimension }}
-    search={(s) => s}
-  >
-    <row.Icon className={iconClassName} />
-    <span className={popover.items.classNames.label}>{row.label}</span>
-  </AppNavigationLink>
-)
+}) => {
+  const { add } = useFilterEditorContext()
+  return (
+    <button
+      type="button"
+      className={popover.items.classNames.iconRow}
+      onClick={() => {
+        closeDropdown()
+        add(row.dimension)
+      }}
+      onMouseEnter={onPointerOrFocus}
+      onFocus={onPointerOrFocus}
+    >
+      <row.Icon className={iconClassName} />
+      <span className={popover.items.classNames.label}>{row.label}</span>
+    </button>
+  )
+}
 
 const SubmenuBody = ({
   row,
@@ -207,24 +211,36 @@ const SubmenuBody = ({
   row: FilterSubmenuRow
   closeDropdown: () => void
 }) => {
+  const { add } = useFilterEditorContext()
   if (row.kind === 'segments') {
     return <SegmentsSubmenu closeList={closeDropdown} />
+  }
+  if (row.kind === 'properties') {
+    return (
+      <PropertyKeyPicker
+        onSelect={(propKey) => {
+          closeDropdown()
+          add(`${EVENT_PROPS_PREFIX}${propKey}`)
+        }}
+      />
+    )
   }
   return (
     <>
       {row.dimensions.map((dimension) => (
-        <AppNavigationLink
+        <button
           key={dimension}
+          type="button"
           className={popover.items.classNames.iconRow}
-          onClick={closeDropdown}
-          path={filterRoute.path}
-          params={{ field: dimension }}
-          search={(s) => s}
+          onClick={() => {
+            closeDropdown()
+            add(dimension)
+          }}
         >
           <span className={popover.items.classNames.label}>
             {formattedFilters[dimension]}
           </span>
-        </AppNavigationLink>
+        </button>
       ))}
     </>
   )

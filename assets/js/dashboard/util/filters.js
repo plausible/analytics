@@ -40,18 +40,18 @@ export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.has_not_done]: 'is not'
 }
 
-export function supportsIsNot(filterName) {
-  return !['goal', 'prop_key'].includes(filterName)
+function supportsIsNot(filterKey) {
+  return filterKey !== 'goal'
 }
 
-export function supportsContains(filterName) {
+function supportsContains(filterKey) {
   return !['screen']
     .concat(FILTER_GROUP_TO_DIMENSIONS['location'])
-    .includes(filterName)
+    .includes(filterKey)
 }
 
-export function supportsHasDoneNot(filterName) {
-  return filterName === 'goal'
+function supportsHasDoneNot(filterKey) {
+  return filterKey === 'goal'
 }
 
 export function getSupportedOperations(filterKey) {
@@ -271,15 +271,9 @@ function remapToApiFilter([operation, filterKey, clauses, ...modifiers]) {
   }
 }
 
-export function getFilterDimension([_operation, filterKey, _clauses]) {
-  return filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
-}
-
 export const formattedFilters = {
   goal: 'Goal',
   props: 'Property',
-  prop_key: 'Property',
-  prop_value: 'Value',
   source: 'Source',
   channel: 'Channel',
   utm_medium: 'UTM medium',
