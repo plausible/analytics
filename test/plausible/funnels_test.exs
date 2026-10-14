@@ -316,6 +316,19 @@ defmodule Plausible.FunnelsTest do
         assert [%{name: "Funnel 2", steps_count: 3}, %{name: "Funnel 1", steps_count: 2}] =
                  funnels_list
       end
+
+      test "funnels with dynamic steps are listed correctly", %{
+        site: site,
+        steps: [g1, _g2, g3 | _]
+      } do
+        Funnels.create(site, "Funnel 1", [g3, %{"page_path" => "/go/to/blog/**"}])
+        Funnels.create(site, "Funnel 2", [%{"event_name" => "Signup"}, g1, g3])
+
+        funnels_list = Funnels.list(site)
+
+        assert [%{name: "Funnel 2", steps_count: 3}, %{name: "Funnel 1", steps_count: 2}] =
+                 funnels_list
+      end
     end
 
     describe "Plausible.Stats.Funnel" do
@@ -403,6 +416,12 @@ defmodule Plausible.FunnelsTest do
                     }
                   ]
                 }} = funnel_data
+      end
+
+      test "ephemeral definition creation crashes when passed data are invalid", %{site: site} do
+        assert_raise MatchError, fn ->
+          Funnels.ephemeral_definition(site, "Empty", [])
+        end
       end
 
       test "mixed funnels can be evaluated per site within a time range against an ephemeral definition",
