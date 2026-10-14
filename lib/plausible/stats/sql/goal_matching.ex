@@ -36,21 +36,32 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   # on goals keep each event name and exact page path to one goal without custom
   # props, so a lookup by either finds at most one goal.
   defp partition(goals) do
-    keyed = for {goal, index} <- Enum.with_index(goals, 1), do: {lookup_key(goal), goal, index}
+    classified =
+      for {goal, index} <- Enum.with_index(goals, 1), do: {matching_strategy(goal), goal, index}
 
     %{
-      by_name: for({{:name, name}, _goal, index} <- keyed, do: {name, index}),
-      by_pathname: for({{:pathname, path}, _goal, index} <- keyed, do: {path, index}),
-      scanned: for({nil, goal, index} <- keyed, do: {goal, index})
+      by_name: for({{:name, name}, _goal, index} <- classified, do: {name, index}),
+      by_pathname: for({{:pathname, path}, _goal, index} <- classified, do: {path, index}),
+      scanned: for({:scan, goal, index} <- classified, do: {goal, index})
     }
   end
 
-  defp lookup_key(goal) do
-    cond do
-      Goal.has_custom_props?(goal) -> nil
-      Goal.type(goal) == :event -> {:name, goal.event_name}
-      Goal.type(goal) == :page and exact_path?(goal.page_path) -> {:pathname, goal.page_path}
-      true -> nil
+  defp matching_strategy(goal) do
+    case {Goal.type(goal), Goal.has_custom_props?(goal)} do
+      {:event, false} ->
+        {:name, goal.event_name}
+
+      {:event, true} ->
+        :scan
+
+      {:page, false} ->
+        if exact_path?(goal.page_path), do: {:pathname, goal.page_path}, else: :scan
+
+      {:page, true} ->
+        :scan
+
+      {:scroll, _has_custom_props?} ->
+        :scan
     end
   end
 
