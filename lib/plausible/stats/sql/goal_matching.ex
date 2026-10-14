@@ -93,9 +93,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
     |> keep_expected_events(goals, expected_names, distinct_names)
     |> keep_matching_custom_props(goals)
     |> to_goal_indices(goal_indices)
-    |> only_if(
-      dynamic([e], fragment("has(?, ?)", type(^distinct_names, {:array, :string}), e.name))
-    )
+    |> only_if(dynamic([e], e.name in ^distinct_names))
   end
 
   # The outer name guard is sufficient when all scanned goals expect the same name.
