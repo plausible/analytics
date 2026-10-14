@@ -31,6 +31,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
         ep in EnterprisePlan,
         where: ep.team_id == parent_as(:team).id,
         where: ep.paddle_plan_id == parent_as(:subscription).paddle_plan_id,
+        where: ep.paddle_plan_id != ^Subscription.manual_plan_id(),
         where: ep.billing_interval == :yearly,
         select: 1
       )

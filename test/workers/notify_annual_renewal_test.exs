@@ -183,6 +183,18 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     )
   end
 
+  test "ignores user with a manual enterprise subscription", %{user: user} do
+    subscribe_to_enterprise_plan(user,
+      billing_interval: :yearly,
+      paddle_plan_id: Subscription.manual_plan_id(),
+      subscription: [next_bill_date: Date.shift(Date.utc_today(), day: 7)]
+    )
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_no_emails_delivered()
+  end
+
   test "ignores user on a monthly enterprise plan", %{user: user} do
     subscribe_to_enterprise_plan(user,
       billing_interval: :monthly,
