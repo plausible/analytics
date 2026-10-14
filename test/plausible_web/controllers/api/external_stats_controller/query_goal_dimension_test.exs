@@ -184,10 +184,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
              ]
     end
 
-    test "counts pageview goals on path P and custom event goals that happen on path P separately", %{
-      conn: conn,
-      site: site
-    } do
+    test "counts pageview goals on path P and custom event goals that happen on path P separately",
+         %{
+           conn: conn,
+           site: site
+         } do
       insert(:goal, %{site: site, event_name: "Signup"})
       insert(:goal, %{site: site, page_path: "/blog/**"})
       insert(:goal, %{site: site, page_path: "/pricing"})
