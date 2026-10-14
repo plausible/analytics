@@ -671,6 +671,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:enabled?, :boolean, default: true)
   attr(:centered?, :boolean, default: false)
   attr(:interactive?, :boolean, default: true)
+  attr(:touch?, :boolean, default: true)
   attr(:size, :string, default: "xs", values: Map.keys(@tooltip_sizes))
   attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
@@ -690,7 +691,8 @@ defmodule PlausibleWeb.Components.Generic do
       "z-[1000]",
       "sm:max-w-64",
       "w-max",
-      if(!assigns.interactive?, do: "pointer-events-none")
+      if(!assigns.interactive?, do: "pointer-events-none"),
+      if(!assigns.touch?, do: "pointer-coarse:hidden")
     ]
 
     tooltip_position_classes =

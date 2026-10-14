@@ -428,25 +428,29 @@ defmodule PlausibleWeb.Live.Sites do
     >
       <div class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150">
         <div class="flex flex-col flex-1 justify-between gap-y-5">
-          <div class="flex flex-col gap-y-2 mb-auto">
-            <div class="flex items-start justify-between gap-x-2">
-              <span class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+          <div class="flex items-start justify-between gap-x-2 mb-auto">
+            <div class="flex flex-col gap-y-2">
+              <span
+                aria-hidden="true"
+                class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
+              >
                 <.globe_icon />
               </span>
-              <div
-                :if={@can_manage_consolidated_view?}
-                data-card-actions
-                class={["relative z-10 -mt-1", reveal_on_hover()]}
-              >
-                <.site_settings_button site={@consolidated_view} />
-              </div>
+              <h3 class="text-gray-900 font-medium text-md leading-tight dark:text-gray-100">
+                <.card_link href={stats_path(@consolidated_view.domain)}>All sites</.card_link>
+              </h3>
             </div>
-            <h3 class="text-gray-900 font-medium text-md leading-tight dark:text-gray-100">
-              <.card_link href={stats_path(@consolidated_view.domain)}>All sites</.card_link>
-            </h3>
+            <div
+              :if={@can_manage_consolidated_view?}
+              data-card-actions
+              class={["relative z-10 -mt-1", reveal_on_hover()]}
+            >
+              <.site_settings_button site={@consolidated_view} />
+            </div>
           </div>
           <span
             :if={is_map(@consolidated_sparkline)}
+            aria-hidden="true"
             class="h-[48px] max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
@@ -597,7 +601,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp card_link(assigns) do
     ~H"""
-    <.unstyled_link href={@href} class="after:absolute after:inset-0 after:rounded-md">
+    <.unstyled_link
+      href={@href}
+      class="after:absolute after:inset-0 after:rounded-md focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:after:ring-2 focus-visible:after:ring-indigo-500"
+    >
       {render_slot(@inner_block)}
     </.unstyled_link>
     """
@@ -607,7 +614,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp site_settings_button(assigns) do
     ~H"""
-    <.tooltip centered?={true} sticky?={false} interactive?={false}>
+    <.tooltip centered?={true} sticky?={false} interactive?={false} touch?={false}>
       <:tooltip_content>Site settings</:tooltip_content>
       <.button_link
         href={~p"/#{@site.domain}/settings/general"}
@@ -629,7 +636,7 @@ defmodule PlausibleWeb.Live.Sites do
       assign(assigns, :label, if(assigns.site.pinned_at, do: "Unpin site", else: "Pin site"))
 
     ~H"""
-    <.tooltip centered?={true} sticky?={false} interactive?={false}>
+    <.tooltip centered?={true} sticky?={false} interactive?={false} touch?={false}>
       <:tooltip_content>{@label}</:tooltip_content>
       <.button
         theme="ghost"
@@ -670,7 +677,7 @@ defmodule PlausibleWeb.Live.Sites do
     </div>
     <div :if={is_map(@sparkline)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="h-[48px] max-w-sm sm:max-w-none text-indigo-500">
+        <span aria-hidden="true" class="h-[48px] max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@sparkline.intervals}
             height={80}
@@ -702,8 +709,11 @@ defmodule PlausibleWeb.Live.Sites do
   def percentage_change(assigns) do
     ~H"""
     <p class="text-sm text-gray-900 dark:text-gray-100">
+      <span :if={@change > 0} class="sr-only">Up</span>
+      <span :if={@change < 0} class="sr-only">Down</span>
       <svg
         :if={@change > 0}
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
@@ -718,6 +728,7 @@ defmodule PlausibleWeb.Live.Sites do
       </svg>
       <svg
         :if={@change < 0}
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
