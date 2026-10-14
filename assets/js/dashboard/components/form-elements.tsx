@@ -250,8 +250,9 @@ export const getOptionDisabledMessage = ({
 }
 
 /**
- * The actual Tailwind classes live in `assets/css/app.css` (.checkbox-base,
- * .checkbox-{sm,md}).
+ * Sizes are kept in sync with the Phoenix `input` component in
+ * `lib/plausible_web/live/components/form.ex`. The actual Tailwind classes live
+ * in `assets/css/app.css` (.checkbox-base, .checkbox-{sm,md}).
  */
 export type CheckboxSize = 'sm' | 'md'
 
