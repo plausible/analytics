@@ -110,6 +110,7 @@ defmodule PlausibleWeb.Live.Flash do
         @class,
         "mb-4 max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto"
       ]}
+      data-testid="live-flash"
       {@rest}
     >
       <div class="rounded-lg ring-1/5 ring-black overflow-hidden">
