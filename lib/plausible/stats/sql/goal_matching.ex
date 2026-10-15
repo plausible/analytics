@@ -15,6 +15,8 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   alias Plausible.Goal
   alias Plausible.Stats.Goals
 
+  @typep keyed_goal() :: {String.t(), pos_integer()}
+
   @doc """
   An `Array(UInt64)` expression of the indices of the goals the event completes.
   """
@@ -69,17 +71,18 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   # alternation, so paths with either aren't matched exactly
   defp exact_path?(page_path), do: not String.contains?(page_path, ["*", "|"])
 
-  defp lookup(_value, []), do: nil
+  # Look up the goal index matching `event_field`. transform() is a hash lookup,
+  # while has() on a constant array would scan it on every row.
+  @spec lookup(%Ecto.Query.DynamicExpr{}, [keyed_goal()]) :: %Ecto.Query.DynamicExpr{} | nil
+  defp lookup(_event_field, []), do: nil
 
-  # The goal whose key is `value`, if any. transform() is a hash lookup, while
-  # has() on a constant array would scan it on every row.
-  defp lookup(value, table) do
-    {keys, goal_indices} = Enum.unzip(table)
+  defp lookup(event_field, keyed_goals) do
+    {keys, goal_indices} = Enum.unzip(keyed_goals)
 
     dynamic(
       fragment(
         "arrayFilter(i -> i != 0, [transform(?, ?, CAST(? AS Array(UInt64)), toUInt64(0))])",
-        ^value,
+        ^event_field,
         type(^keys, {:array, :string}),
         type(^goal_indices, {:array, :integer})
       )
