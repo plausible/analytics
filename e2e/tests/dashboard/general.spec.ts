@@ -85,7 +85,7 @@ test('site switcher is not shown when viewing without being logged in', async ({
   await expect(siteSwitcherStatic).not.toHaveRole('button')
 
   await siteSwitcherStatic.click()
-  await expect(page.getByTestId('sitemenu')).not.toBeVisible()
+  await expect(page.getByTestId('sitemenu')).toBeHidden()
 })
 
 test('dashboard renders with imported data', async ({ page, request }) => {
