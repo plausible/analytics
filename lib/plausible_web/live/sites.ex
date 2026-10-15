@@ -105,7 +105,10 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :searching?, assigns.filter_text != "")
+    assigns =
+      assigns
+      |> assign(:searching?, assigns.filter_text != "")
+      |> assign(:pinnable?, length(assigns.index_state.ordered_ids) > 1)
 
     ~H"""
     <.flash_messages flash={@flash} />
@@ -258,6 +261,7 @@ defmodule PlausibleWeb.Live.Sites do
             <.site
               site={site}
               sparkline={Map.get(@sparklines, site.domain, :loading)}
+              pinnable?={@pinnable?}
             />
           <% end %>
         </ul>
@@ -420,23 +424,33 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       data-test-id="consolidated-view-card"
-      class="relative row-span-2"
+      class="group relative isolate row-span-2 has-[[data-card-actions]:hover]:z-10"
     >
-      <.unstyled_link
-        href={stats_path(@consolidated_view.domain)}
-        class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-150"
-      >
+      <div class="flex flex-col justify-between gap-6 h-full bg-white p-5 dark:bg-gray-900 rounded-md shadow-sm hover:shadow-md transition-shadow duration-150">
         <div class="flex flex-col flex-1 justify-between gap-y-5">
-          <div class="flex flex-col gap-y-2 mb-auto">
-            <span class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
-              <.globe_icon />
-            </span>
-            <h3 class="text-gray-900 font-medium text-md sm:text-lg leading-tight dark:text-gray-100">
-              All sites
-            </h3>
+          <div class="flex items-start justify-between gap-x-2 mb-auto">
+            <div class="flex flex-col gap-y-2">
+              <span
+                aria-hidden="true"
+                class="size-8 sm:size-10 bg-indigo-600 ring-2 ring-inset ring-white/25 dark:ring-white/15 text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
+              >
+                <.globe_icon />
+              </span>
+              <h3 class="text-gray-900 font-medium text-md leading-tight dark:text-gray-100">
+                <.card_link href={stats_path(@consolidated_view.domain)}>All sites</.card_link>
+              </h3>
+            </div>
+            <div
+              :if={@can_manage_consolidated_view?}
+              data-card-actions
+              class={["relative z-10 -mt-1", reveal_on_hover()]}
+            >
+              <.site_settings_button site={@consolidated_view} />
+            </div>
           </div>
           <span
             :if={is_map(@consolidated_sparkline)}
+            aria-hidden="true"
             class="h-[48px] max-w-sm sm:max-w-none text-indigo-500 my-auto"
             data-test-id="consolidated-view-chart-loaded"
           >
@@ -487,9 +501,6 @@ defmodule PlausibleWeb.Live.Sites do
             <div class="w-full h-full dark:bg-gray-750 bg-gray-100 rounded-md"></div>
           </div>
         </div>
-      </.unstyled_link>
-      <div :if={@can_manage_consolidated_view?} class="absolute right-1 top-3.5">
-        <.ellipsis_menu site={@consolidated_view} can_manage?={true} />
       </div>
     </li>
     """
@@ -518,6 +529,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr(:site, Plausible.Site, required: true)
   attr(:sparkline, :map, required: true)
+  attr(:pinnable?, :boolean, default: true)
 
   def site(assigns) do
     assigns =
@@ -529,7 +541,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     ~H"""
     <li
-      class="group relative group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
+      class="group relative isolate has-[[data-card-actions]:hover]:z-10 group-has-[[data-sort-trigger].phx-click-loading]/sort:opacity-75"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       data-pin-toggled={
@@ -545,52 +557,93 @@ defmodule PlausibleWeb.Live.Sites do
         )
       }
     >
-      <.unstyled_link
-        href={
-          stats_path(
-            @site.domain,
-            if(@needs_verification?,
-              do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
-              else: []
-            )
-          )
-        }
-        class="block group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none"
-      >
-        <div class="col-span-1 flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm p-5 group-hover:shadow-lg cursor-pointer transition duration-100">
-          <div class="w-full flex items-center justify-between gap-x-2.5">
-            <.favicon domain={@site.domain} />
-            <div class="flex-1 w-full">
-              <h3
-                class="text-gray-900 font-medium text-md sm:text-lg leading-[22px] truncate dark:text-gray-100"
-                style="width: calc(100% - 4rem)"
-              >
-                {@site.domain}
-              </h3>
+      <div class="flex flex-col gap-y-5 bg-white dark:bg-gray-900 rounded-md shadow-sm py-4 px-5 group-hover:shadow-lg transition duration-100 group-has-[.phx-click-loading]/sort:animate-pulse group-has-[.phx-click-loading]/sort:pointer-events-none">
+        <div class="flex items-center min-h-8 gap-x-2">
+          <.favicon domain={@site.domain} />
+          <h3 class="flex-1 min-w-0 truncate text-gray-900 font-medium text-md leading-[22px] dark:text-gray-100">
+            <.card_link href={
+              stats_path(
+                @site.domain,
+                if(@needs_verification?,
+                  do: [verify_installation: true, flow: PlausibleWeb.Flows.provisioning()],
+                  else: []
+                )
+              )
+            }>
+              {@site.domain}
+            </.card_link>
+          </h3>
+          <div data-card-actions class="relative z-10 flex shrink-0 gap-x-1">
+            <div
+              :if={List.first(@site.memberships).role in [:owner, :admin, :editor]}
+              class={reveal_on_hover()}
+            >
+              <.site_settings_button site={@site} />
+            </div>
+            <div :if={@pinnable?} class={!@site.pinned_at && reveal_on_hover()}>
+              <.pin_button site={@site} />
             </div>
           </div>
-          <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
         </div>
-      </.unstyled_link>
-
-      <div class="absolute right-1 top-3.5">
-        <.ellipsis_menu
-          site={@site}
-          can_manage?={List.first(@site.memberships).role in [:owner, :admin, :editor]}
-        />
+        <.site_stats sparkline={@sparkline} needs_verification?={@needs_verification?} />
       </div>
     </li>
     """
   end
 
-  def ellipsis_menu(assigns) do
-    assigns = assign(assigns, %{dropdown_id: "site-#{assigns[:site].domain}-dropdown"})
+  # Touch screens have no hover, so the buttons stay visible there.
+  defp reveal_on_hover do
+    "hidden group-hover:block group-focus-within:block pointer-coarse:block"
+  end
+
+  attr(:href, :string, required: true)
+  slot(:inner_block, required: true)
+
+  defp card_link(assigns) do
+    ~H"""
+    <.unstyled_link
+      href={@href}
+      class="after:absolute after:inset-0 after:rounded-md focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:after:ring-2 focus-visible:after:ring-indigo-500"
+    >
+      {render_slot(@inner_block)}
+    </.unstyled_link>
+    """
+  end
+
+  attr(:site, Plausible.Site, required: true)
+
+  defp site_settings_button(assigns) do
+    ~H"""
+    <.tooltip centered?={true} hover_only?={true} interactive?={false}>
+      <:tooltip_content>Site settings</:tooltip_content>
+      <.button_link
+        href={~p"/#{@site.domain}/settings/general"}
+        theme="ghost"
+        size="xs"
+        icon?={true}
+        aria-label="Site settings"
+      >
+        <Heroicons.cog_6_tooth class="size-4.5" />
+      </.button_link>
+    </.tooltip>
+    """
+  end
+
+  attr(:site, Plausible.Site, required: true)
+
+  defp pin_button(assigns) do
+    assigns =
+      assign(assigns, :label, if(assigns.site.pinned_at, do: "Unpin site", else: "Pin site"))
 
     ~H"""
-    <div class="flex items-center">
-      <button
-        :if={@site.pinned_at}
-        data-test-id="site-card-pin-icon"
+    <.tooltip centered?={true} hover_only?={true} interactive?={false}>
+      <:tooltip_content>{@label}</:tooltip_content>
+      <.button
+        theme="ghost"
+        size="xs"
+        icon?={true}
+        aria-label={@label}
+        data-test-id="site-card-pin-button"
         phx-click={
           JS.hide(
             transition: {"duration-500", "opacity-100", "opacity-0"},
@@ -600,62 +653,13 @@ defmodule PlausibleWeb.Live.Sites do
           |> JS.push("pin-toggle")
         }
         phx-value-domain={@site.domain}
-        class="cursor-pointer p-1"
       >
         <PlausibleWeb.Components.Icons.pin_icon
-          filled={true}
-          class="size-4.5 pb-px shrink-0 text-indigo-600 dark:text-indigo-500"
+          filled={!!@site.pinned_at}
+          class={["size-4.5", @site.pinned_at && "text-indigo-600 dark:text-indigo-500"]}
         />
-      </button>
-
-      <PrimaDropdown.dropdown id={@dropdown_id}>
-        <PrimaDropdown.dropdown_trigger
-          id={"#{@dropdown_id}-trigger"}
-          theme="link"
-          size="sm"
-          icon?={true}
-        >
-          <Heroicons.ellipsis_vertical class="size-5" />
-        </PrimaDropdown.dropdown_trigger>
-
-        <PrimaDropdown.dropdown_menu id={"#{@dropdown_id}-menu"}>
-          <PrimaDropdown.dropdown_item
-            :if={@can_manage?}
-            id={"#{@dropdown_id}-item-1"}
-            as={&link/1}
-            href={~p"/#{@site.domain}/settings/general"}
-          >
-            <Heroicons.cog_6_tooth class={PrimaDropdown.dropdown_item_icon_class()} /> Settings
-          </PrimaDropdown.dropdown_item>
-
-          <PrimaDropdown.dropdown_item
-            :if={Sites.regular?(@site)}
-            id={"#{@dropdown_id}-item-2"}
-            data-test-id="ellipsis-menu-pin-item"
-            phx-click={
-              JS.hide(
-                transition: {"duration-500", "opacity-100", "opacity-0"},
-                to: "#site-card-#{hash_domain(@site.domain)}",
-                time: 500
-              )
-              |> JS.push("pin-toggle")
-            }
-            phx-value-domain={@site.domain}
-          >
-            <PlausibleWeb.Components.Icons.pin_icon
-              :if={@site.pinned_at}
-              filled={true}
-              class={PrimaDropdown.dropdown_item_icon_class()}
-            />
-            <PlausibleWeb.Components.Icons.pin_icon
-              :if={!@site.pinned_at}
-              class={PrimaDropdown.dropdown_item_icon_class()}
-            />
-            {if @site.pinned_at, do: "Unpin site", else: "Pin site"}
-          </PrimaDropdown.dropdown_item>
-        </PrimaDropdown.dropdown_menu>
-      </PrimaDropdown.dropdown>
-    </div>
+      </.button>
+    </.tooltip>
     """
   end
 
@@ -673,7 +677,7 @@ defmodule PlausibleWeb.Live.Sites do
     </div>
     <div :if={is_map(@sparkline)}>
       <span class="flex flex-col gap-y-5 text-gray-600 dark:text-gray-400 text-sm truncate">
-        <span class="h-[48px] max-w-sm sm:max-w-none text-indigo-500">
+        <span aria-hidden="true" class="h-[48px] max-w-sm sm:max-w-none text-indigo-500">
           <PlausibleWeb.Live.Components.Visitors.chart
             intervals={@sparkline.intervals}
             height={80}
@@ -705,8 +709,11 @@ defmodule PlausibleWeb.Live.Sites do
   def percentage_change(assigns) do
     ~H"""
     <p class="text-sm text-gray-900 dark:text-gray-100">
+      <span :if={@change > 0} class="sr-only">Up</span>
+      <span :if={@change < 0} class="sr-only">Down</span>
       <svg
         :if={@change > 0}
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
@@ -721,6 +728,7 @@ defmodule PlausibleWeb.Live.Sites do
       </svg>
       <svg
         :if={@change < 0}
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
@@ -803,8 +811,8 @@ defmodule PlausibleWeb.Live.Sites do
       )
 
     ~H"""
-    <img src={@light_src} alt="" class="shrink-0 size-6 rounded-md dark:hidden" />
-    <img src={@dark_src} alt="" class="shrink-0 size-6 rounded-md hidden dark:block" />
+    <img src={@light_src} alt="" class="shrink-0 size-5.5 rounded-md dark:hidden" />
+    <img src={@dark_src} alt="" class="shrink-0 size-5.5 rounded-md hidden dark:block" />
     """
   end
 
