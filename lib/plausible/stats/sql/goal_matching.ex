@@ -91,6 +91,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
 
   defp scan([]), do: nil
 
+  # Regex matches are 1-based positions within this scanned subset of goals.
   defp scan(indexed_goals) do
     {goals, goal_indices} = Enum.unzip(indexed_goals)
     expected_names = Enum.map(goals, &Goals.expected_event_name/1)
@@ -116,7 +117,10 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   defp keep_expected_events(positions, goals, expected_names, distinct_names) do
     name_check =
       if length(distinct_names) > 1 do
-        dynamic([e], fragment("?[i] = ?", type(^expected_names, {:array, :string}), e.name))
+        dynamic(
+          [e],
+          fragment("?[goal_pos] = ?", type(^expected_names, {:array, :string}), e.name)
+        )
       end
 
     threshold_check =
@@ -126,14 +130,21 @@ defmodule Plausible.Stats.SQL.GoalMatching do
         dynamic(
           [e],
           fragment(
-            "(? BETWEEN ?[i] AND 100)",
+            "(? BETWEEN ?[goal_pos] AND 100)",
             e.scroll_depth,
             type(^thresholds, {:array, :integer})
           )
         )
       end
 
-    keep_positions(positions, Enum.reject([name_check, threshold_check], &is_nil/1))
+    case Enum.reject([name_check, threshold_check], &is_nil/1) do
+      [] ->
+        positions
+
+      checks ->
+        condition = chain_conditions(checks)
+        dynamic(fragment("arrayFilter(goal_pos -> ?, ?)", ^condition, ^positions))
+    end
   end
 
   # Check custom properties only for positions that survived the earlier filters.
@@ -149,7 +160,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
         dynamic(
           [e],
           fragment(
-            "(empty(?[i]) OR arrayAll((k, v) -> ?[indexOf(?, k)] = v, ?[i], ?[i]))",
+            "(empty(?[goal_pos]) OR arrayAll((k, v) -> ?[indexOf(?, k)] = v, ?[goal_pos], ?[goal_pos]))",
             type(^keys, {:array, {:array, :string}}),
             field(e, :"meta.value"),
             field(e, :"meta.key"),
@@ -158,24 +169,20 @@ defmodule Plausible.Stats.SQL.GoalMatching do
           )
         )
 
-      keep_positions(positions, [props_check])
+      dynamic(fragment("arrayFilter(goal_pos -> ?, ?)", ^props_check, ^positions))
     else
       positions
     end
   end
 
-  # Each check references `i`, bound here to a 1-based position in the scanned goals.
-  defp keep_positions(positions, []), do: positions
-
-  defp keep_positions(positions, checks) do
-    condition = Enum.reduce(checks, fn check, acc -> dynamic(^acc and ^check) end)
-    dynamic(fragment("arrayFilter(i -> ?, ?)", ^condition, ^positions))
+  defp chain_conditions(conditions) do
+    Enum.reduce(conditions, fn condition, acc -> dynamic(^acc and ^condition) end)
   end
 
   defp to_goal_indices(positions, goal_indices) do
     dynamic(
       fragment(
-        "arrayMap(i -> CAST(? AS Array(UInt64))[i], ?)",
+        "arrayMap(goal_pos -> CAST(? AS Array(UInt64))[goal_pos], ?)",
         type(^goal_indices, {:array, :integer}),
         ^positions
       )
