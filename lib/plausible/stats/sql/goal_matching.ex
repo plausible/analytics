@@ -68,7 +68,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
 
   # Look up the goal index matching `event_field`. transform() is a hash lookup,
   # while has() on a constant array would scan it on every row.
-  @spec lookup(%Ecto.Query.DynamicExpr{}, [keyed_goal()]) :: %Ecto.Query.DynamicExpr{} | nil
+  @spec lookup(Ecto.Query.dynamic_expr(), [keyed_goal()]) :: Ecto.Query.dynamic_expr() | nil
   defp lookup(_event_field, []), do: nil
 
   defp lookup(event_field, keyed_goals) do

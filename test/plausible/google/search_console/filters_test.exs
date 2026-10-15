@@ -104,6 +104,20 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
            ]
   end
 
+  test "preserves escaped pipes in wildcard page filters" do
+    filters = [[:matches_wildcard, "visit:entry_page", ["/post*\\|1|/plans"]]]
+
+    {:ok, [%{filters: [%{expression: expression}]}]} =
+      Filters.transform("sc-domain:plausible.io", filters, "")
+
+    regex = Regex.compile!(expression)
+
+    assert Regex.match?(regex, "https://plausible.io/post|1")
+    assert Regex.match?(regex, "https://plausible.io/plans")
+    refute Regex.match?(regex, "https://plausible.io/post|2")
+    refute Regex.match?(regex, "https://plausible.io/1")
+  end
+
   test "transforms event:page exactly like visit:entry_page" do
     filters = [
       [:matches_wildcard, "event:page", ["/pageA*", "/pageB*"]]

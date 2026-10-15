@@ -6,6 +6,15 @@ defmodule Plausible.Stats.FiltersTest do
   doctest Plausible.Stats.Filters.Utils
 
   describe "page regex" do
+    test "matches escaped pipes literally" do
+      regex = Regex.compile!(Filters.Utils.page_regex("/post\\|1"))
+
+      assert Regex.match?(regex, "/post|1")
+      refute Regex.match?(regex, "/post")
+      refute Regex.match?(regex, "1")
+      refute Regex.match?(regex, "/post|1/more")
+    end
+
     test "anchors every alternative to the whole path" do
       regex = Regex.compile!(Filters.Utils.page_regex("/pricing|/plans"))
 
