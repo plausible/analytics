@@ -214,7 +214,8 @@ defmodule Plausible.Teams do
           [InviteToTeam.invite_entry()],
           Auth.User.t()
         ) :: {:ok, Teams.Team.t()} | {:error, any()}
-  def setup(team, name, invite_entries, inviter) do
+  def setup(%Teams.Team{} = team, name, invite_entries, %Auth.User{} = inviter)
+      when is_list(invite_entries) and is_binary(name) do
     result =
       Repo.transact(fn ->
         with {:ok, team} <- Repo.update(Teams.Team.name_changeset(team, %{name: name})),
