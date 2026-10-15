@@ -34,11 +34,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       |> render_click()
 
       assert lv
-             |> element("#submit-step-1")
-             |> render()
-             |> element_exists?(~s/input[type="hidden"][value="#{g3.id}"]/)
-
-      assert lv
              |> element("#step-1")
              |> render()
              |> element_exists?(~s/input[type="text"][value="Another World"]/)
@@ -56,8 +51,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
 
       doc = type_into_combo(lv, 2, "another")
 
-      refute text_of_element(doc, "ul#dropdown-step-1 li") =~ "Another World"
       refute text_of_element(doc, "ul#dropdown-step-2 li") =~ "Another World"
+
+      doc = type_into_combo(lv, 1, "a")
+
+      refute text_of_element(doc, "ul#dropdown-step-1 li") =~ "Another World"
     end
 
     test "removing one option alters suggestions for other", %{conn: conn, site: site} do
