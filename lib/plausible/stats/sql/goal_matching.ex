@@ -26,8 +26,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
 
     [
       lookup(dynamic([e], e.name), by_name),
-      lookup(dynamic([e], e.pathname), by_pathname)
-      |> only_if(dynamic([e], e.name == "pageview")),
+      lookup_by_pathname(by_pathname),
       scan(scanned)
     ]
     |> Enum.reject(&is_nil/1)
@@ -89,6 +88,17 @@ defmodule Plausible.Stats.SQL.GoalMatching do
     )
   end
 
+  defp lookup_by_pathname([]), do: nil
+
+  defp lookup_by_pathname(keyed_goals) do
+    goal_indices_expr = lookup(dynamic([e], e.pathname), keyed_goals)
+
+    dynamic(
+      [e],
+      fragment("if(?, ?, CAST([] AS Array(UInt64)))", e.name == "pageview", ^goal_indices_expr)
+    )
+  end
+
   defp scan([]), do: nil
 
   # Regex matches are 1-based positions within this scanned subset of goals.
@@ -97,18 +107,27 @@ defmodule Plausible.Stats.SQL.GoalMatching do
     expected_names = Enum.map(goals, &Goals.expected_event_name/1)
     distinct_names = Enum.uniq(expected_names)
 
+    goal_indices_expr =
+      dynamic(
+        [e],
+        fragment(
+          "multiMatchAllIndices(?, ?)",
+          e.pathname,
+          type(^Enum.map(goals, &Goals.pathname_regex/1), {:array, :string})
+        )
+      )
+      |> keep_expected_events(goals, expected_names, distinct_names)
+      |> keep_matching_custom_props(goals)
+      |> to_goal_indices(goal_indices)
+
     dynamic(
       [e],
       fragment(
-        "multiMatchAllIndices(?, ?)",
-        e.pathname,
-        type(^Enum.map(goals, &Goals.pathname_regex/1), {:array, :string})
+        "if(?, ?, CAST([] AS Array(UInt64)))",
+        e.name in ^distinct_names,
+        ^goal_indices_expr
       )
     )
-    |> keep_expected_events(goals, expected_names, distinct_names)
-    |> keep_matching_custom_props(goals)
-    |> to_goal_indices(goal_indices)
-    |> only_if(dynamic([e], e.name in ^distinct_names))
   end
 
   # The outer name guard is sufficient when all scanned goals expect the same name.
@@ -187,12 +206,6 @@ defmodule Plausible.Stats.SQL.GoalMatching do
         ^positions
       )
     )
-  end
-
-  defp only_if(nil, _condition), do: nil
-
-  defp only_if(goal_indices_expr, condition) do
-    dynamic(fragment("if(?, ?, CAST([] AS Array(UInt64)))", ^condition, ^goal_indices_expr))
   end
 
   defp concat([]), do: dynamic(fragment("CAST([] AS Array(UInt64))"))
