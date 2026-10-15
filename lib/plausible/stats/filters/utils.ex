@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Filters.Utils do
   @moduledoc false
 
+  def uses_page_regex?(path), do: String.contains?(path, ["*", "|"])
+
   def page_regex(expr) do
     escaped =
       expr
@@ -9,6 +11,6 @@ defmodule Plausible.Stats.Filters.Utils do
       |> String.replace("\\*\\*", ".*")
       |> String.replace("\\*", ".*")
 
-    "^#{escaped}$"
+    "^(?:#{escaped})$"
   end
 end

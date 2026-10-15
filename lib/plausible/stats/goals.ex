@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Goals do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
+  import Plausible.Stats.Filters.Utils, only: [page_regex: 1, uses_page_regex?: 1]
 
   alias Plausible.Stats.Filters
 
@@ -231,7 +231,7 @@ defmodule Plausible.Stats.Goals do
   defp page_path_condition(page_path, imported?) do
     db_field = page_path_db_field(imported?)
 
-    if String.contains?(page_path, "*") do
+    if uses_page_regex?(page_path) do
       dynamic([e], fragment("match(?, ?)", field(e, ^db_field), ^page_regex(page_path)))
     else
       dynamic([e], field(e, ^db_field) == ^page_path)

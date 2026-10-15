@@ -35,7 +35,9 @@ defmodule Plausible.Google.SearchConsole.Filters do
   defp transform_filter(property, [:matches_wildcard, "visit:entry_page", pages | _])
        when is_list(pages) do
     expression =
-      Enum.map_join(pages, "|", fn page -> page_regex(property_url(property, page)) end)
+      pages
+      |> Enum.flat_map(&String.split(&1, "|"))
+      |> Enum.map_join("|", fn page -> page_regex(property_url(property, page)) end)
 
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end

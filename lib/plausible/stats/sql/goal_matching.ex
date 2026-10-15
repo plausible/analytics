@@ -11,6 +11,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   """
 
   import Ecto.Query
+  import Plausible.Stats.Filters.Utils, only: [uses_page_regex?: 1]
 
   alias Plausible.Goal
   alias Plausible.Stats.Goals
@@ -56,7 +57,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
         :scan
 
       {:page, false} ->
-        if exact_path?(goal.page_path), do: {:pathname, goal.page_path}, else: :scan
+        if uses_page_regex?(goal.page_path), do: :scan, else: {:pathname, goal.page_path}
 
       {:page, true} ->
         :scan
@@ -65,10 +66,6 @@ defmodule Plausible.Stats.SQL.GoalMatching do
         :scan
     end
   end
-
-  # Filters.Utils.page_regex/1 turns `*` into wildcards and `|` into regex
-  # alternation, so paths with either aren't matched exactly
-  defp exact_path?(page_path), do: not String.contains?(page_path, ["*", "|"])
 
   # Look up the goal index matching `event_field`. transform() is a hash lookup,
   # while has() on a constant array would scan it on every row.

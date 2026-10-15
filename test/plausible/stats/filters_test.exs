@@ -5,6 +5,44 @@ defmodule Plausible.Stats.FiltersTest do
   doctest Plausible.Stats.Filters
   doctest Plausible.Stats.Filters.Utils
 
+  describe "page regex" do
+    test "anchors every alternative to the whole path" do
+      regex = Regex.compile!(Filters.Utils.page_regex("/pricing|/plans"))
+
+      for path <- ["/pricing", "/plans"], do: assert(Regex.match?(regex, path))
+
+      for path <- ["/pricing/enterprise", "/legacy/plans", "/pricing|/plans", "/about"] do
+        refute Regex.match?(regex, path)
+      end
+    end
+
+    test "matches * within a whole path" do
+      regex = Regex.compile!(Filters.Utils.page_regex("/pricing/*"))
+
+      assert Regex.match?(regex, "/pricing/")
+      assert Regex.match?(regex, "/pricing/team")
+      assert Regex.match?(regex, "/pricing/team/monthly")
+      refute Regex.match?(regex, "/legacy/pricing/team")
+      refute Regex.match?(regex, "/pricing")
+    end
+
+    test "matches ** within a whole path" do
+      regex = Regex.compile!(Filters.Utils.page_regex("/plans/**"))
+
+      assert Regex.match?(regex, "/plans/")
+      assert Regex.match?(regex, "/plans/team/monthly")
+      refute Regex.match?(regex, "/legacy/plans/team")
+    end
+
+    test "escapes other regex syntax" do
+      regex = Regex.compile!(Filters.Utils.page_regex("/file.json"))
+
+      assert Regex.match?(regex, "/file.json")
+      refute Regex.match?(regex, "/fileXjson")
+      refute Regex.match?(regex, "/file.json/more")
+    end
+  end
+
   def assert_parsed(input, expected_output) do
     assert Filters.parse(input) == expected_output
   end

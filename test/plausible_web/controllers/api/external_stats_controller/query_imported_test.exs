@@ -588,6 +588,45 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
   end
 
   describe "imported data" do
+    test "aligns goal filters and breakdowns for alternative paths with imported pages", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, page_path: "/pricing|/plans")
+      site_import = insert(:site_import, site: site)
+
+      imported_pages =
+        for path <- ["/pricing", "/plans", "/pricing/more", "/legacy/plans", "/pricing|/plans"] do
+          build(:imported_pages, page: path, visitors: 2, pageviews: 2, date: ~D[2021-01-01])
+        end
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/pricing", timestamp: ~N[2021-01-01 00:00:01])
+        | imported_pages
+      ])
+
+      for {dimensions, filters} <- [
+            {["event:goal"], []},
+            {[], [["is", "event:goal", ["Visit /pricing|/plans"]]]}
+          ] do
+        conn =
+          post(conn, "/api/v2/query", %{
+            "site_id" => site.domain,
+            "date_range" => "all",
+            "metrics" => ["visitors"],
+            "dimensions" => dimensions,
+            "filters" => filters,
+            "include" => %{"imports" => true}
+          })
+
+        expected_dimensions = if dimensions == [], do: [], else: ["Visit /pricing|/plans"]
+
+        assert json_response(conn, 200)["results"] == [
+                 %{"dimensions" => expected_dimensions, "metrics" => [5]}
+               ]
+      end
+    end
+
     test "returns screen sizes breakdown when filtering by screen size", %{conn: conn, site: site} do
       site_import = insert(:site_import, site: site)
 

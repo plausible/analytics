@@ -35,7 +35,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
                  %{
                    dimension: "page",
                    operator: "includingRegex",
-                   expression: "^https://plausible\\.io.*page.*$"
+                   expression: "^(?:https://plausible\\.io.*page.*)$"
                  }
                ]
              }
@@ -62,6 +62,27 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
            ]
   end
 
+  test "prefixes and anchors each alternative in wildcard page filters" do
+    filters = [[:matches_wildcard, "visit:entry_page", ["/pricing*|/plans"]]]
+
+    {:ok, [%{filters: [%{expression: expression}]}]} =
+      Filters.transform("sc-domain:plausible.io", filters, "")
+
+    regex = Regex.compile!(expression)
+
+    for url <- ["https://plausible.io/pricing/team", "https://plausible.io/plans"] do
+      assert Regex.match?(regex, url)
+    end
+
+    for url <- [
+          "https://plausible.io/legacy/plans",
+          "https://plausible.io/plans/more",
+          "https://other.io/plans"
+        ] do
+      refute Regex.match?(regex, url)
+    end
+  end
+
   test "transforms matches multiple page filter" do
     filters = [
       [:matches_wildcard, "visit:entry_page", ["/pageA*", "/pageB*"]]
@@ -75,7 +96,8 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
                  %{
                    dimension: "page",
                    operator: "includingRegex",
-                   expression: "^https://plausible\\.io/pageA.*$|^https://plausible\\.io/pageB.*$"
+                   expression:
+                     "^(?:https://plausible\\.io/pageA.*)$|^(?:https://plausible\\.io/pageB.*)$"
                  }
                ]
              }
@@ -95,7 +117,8 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
                  %{
                    dimension: "page",
                    operator: "includingRegex",
-                   expression: "^https://plausible\\.io/pageA.*$|^https://plausible\\.io/pageB.*$"
+                   expression:
+                     "^(?:https://plausible\\.io/pageA.*)$|^(?:https://plausible\\.io/pageB.*)$"
                  }
                ]
              }
@@ -178,7 +201,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
                  %{
                    dimension: "page",
                    operator: "includingRegex",
-                   expression: "^https://plausible\\.io.*web\\-analytics.*$"
+                   expression: "^(?:https://plausible\\.io.*web\\-analytics.*)$"
                  },
                  %{dimension: "country", operator: "includingRegex", expression: "EST|POL"}
                ]

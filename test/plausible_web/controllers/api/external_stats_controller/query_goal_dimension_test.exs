@@ -168,7 +168,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
       populate_stats(site, [
         build(:pageview, pathname: "/pricing", user_id: 1),
         build(:pageview, pathname: "/plans", user_id: 2),
-        build(:pageview, pathname: "/about", user_id: 3)
+        build(:pageview, pathname: "/about", user_id: 3),
+        build(:pageview, pathname: "/pricing/enterprise", user_id: 4),
+        build(:pageview, pathname: "/legacy/plans", user_id: 5),
+        build(:pageview, pathname: "/pricing|/plans", user_id: 6),
+        build(:event, name: "Signup", pathname: "/pricing", user_id: 7)
       ])
 
       conn =
@@ -181,6 +185,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["Visit /pricing|/plans"], "metrics" => [2]}
+             ]
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [["is", "event:goal", ["Visit /pricing|/plans"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2]}
              ]
     end
 
