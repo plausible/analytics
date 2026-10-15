@@ -172,7 +172,9 @@ defmodule PlausibleWeb.E2EController do
 
     defp maybe_set_import_id(events, site) do
       if Enum.any?(events, &Map.has_key?(&1, :table)) do
-        import = Plausible.Factory.insert(:site_import, site: site)
+        [owner | _] = Plausible.Repo.preload(site, :owners).owners
+
+        import = Plausible.Factory.insert(:site_import, site: site, imported_by: owner)
 
         Enum.map(events, &set_import_id(&1, import.id))
       else
