@@ -72,7 +72,7 @@ defmodule Plausible.Teams.TeamRolePermissions do
   def ensure_can_change_role(type, granter_role, current_role)
 
   def ensure_can_change_role(type, _granter_role, _current_role) when type not in @types,
-    do: {:error, :permission_denied}
+    do: raise(ArgumentError, "unknown type: #{inspect(type)}")
 
   def ensure_can_change_role(_type, :owner, _current_role), do: :ok
 

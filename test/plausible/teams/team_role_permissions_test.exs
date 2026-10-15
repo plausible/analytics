@@ -16,9 +16,10 @@ defmodule Plausible.Teams.TeamRolePermissionsTest do
   }
 
   describe "ensure_can_change_role/3" do
-    test "returns error for an unknown type" do
-      assert {:error, :permission_denied} =
-               TeamRolePermissions.ensure_can_change_role(:unknown, :owner, :viewer)
+    test "raises for an unknown type" do
+      assert_raise ArgumentError, "unknown type: :unknown", fn ->
+        TeamRolePermissions.ensure_can_change_role(:unknown, :owner, :viewer)
+      end
     end
   end
 
