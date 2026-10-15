@@ -160,19 +160,22 @@ defmodule Plausible.Teams.TeamRolePermissionsTest do
 
     for granter_role <- @roles do
       test "as #{@as[granter_role]}, I cannot grant the guest role" do
-        assert {:error, :invalid_role} =
-                 TeamRolePermissions.ensure_can_grant_role(unquote(granter_role), :guest)
+        assert_raise ArgumentError, "invalid role: :guest", fn ->
+          TeamRolePermissions.ensure_can_grant_role(unquote(granter_role), :guest)
+        end
       end
     end
 
     test "as an owner, I cannot grant an invalid role" do
-      assert {:error, :invalid_role} =
-               TeamRolePermissions.ensure_can_grant_role(:owner, :unknown)
+      assert_raise ArgumentError, "invalid role: :unknown", fn ->
+        TeamRolePermissions.ensure_can_grant_role(:owner, :unknown)
+      end
     end
 
     test "as an owner, I cannot grant a role given as a string" do
-      assert {:error, :invalid_role} =
-               TeamRolePermissions.ensure_can_grant_role(:owner, "admin")
+      assert_raise ArgumentError, ~s(invalid role: "admin"), fn ->
+        TeamRolePermissions.ensure_can_grant_role(:owner, "admin")
+      end
     end
   end
 
@@ -196,20 +199,21 @@ defmodule Plausible.Teams.TeamRolePermissionsTest do
     end
 
     for invalid_role <- [:guest, :unknown, "admin"] do
-      test "returns error for an invalid role (#{inspect(invalid_role)})", %{
+      test "raises for an invalid role (#{inspect(invalid_role)})", %{
         user: owner,
         team: team
       } do
         member = add_member(team, role: :viewer)
         membership = get_membership(team, member)
 
-        assert {:error, :invalid_role} =
-                 TeamRolePermissions.ensure_can_grant_for_member(
-                   team,
-                   owner,
-                   membership,
-                   unquote(invalid_role)
-                 )
+        assert_raise ArgumentError, fn ->
+          TeamRolePermissions.ensure_can_grant_for_member(
+            team,
+            owner,
+            membership,
+            unquote(invalid_role)
+          )
+        end
       end
     end
 
@@ -261,17 +265,18 @@ defmodule Plausible.Teams.TeamRolePermissionsTest do
     end
 
     for invalid_role <- [:guest, :unknown, "admin"] do
-      test "returns error for an invalid role (#{inspect(invalid_role)})", %{
+      test "raises for an invalid role (#{inspect(invalid_role)})", %{
         user: owner,
         team: team
       } do
-        assert {:error, :invalid_role} =
-                 TeamRolePermissions.ensure_can_grant_for_invitation(
-                   team,
-                   owner,
-                   nil,
-                   unquote(invalid_role)
-                 )
+        assert_raise ArgumentError, fn ->
+          TeamRolePermissions.ensure_can_grant_for_invitation(
+            team,
+            owner,
+            nil,
+            unquote(invalid_role)
+          )
+        end
       end
     end
 

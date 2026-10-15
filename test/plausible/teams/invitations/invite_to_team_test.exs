@@ -364,13 +364,14 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       end
     end
 
-    test "returns error for an invalid role" do
+    test "raises for an invalid role" do
       inviter = new_user()
       _site = new_site(owner: inviter)
       team = team_of(inviter)
 
-      assert {:error, :invalid_role} =
-               InviteToTeam.invite_all(team, inviter, [%{email: "new@example.com", role: :guest}])
+      assert_raise ArgumentError, "invalid role: :guest", fn ->
+        InviteToTeam.invite_all(team, inviter, [%{email: "new@example.com", role: :guest}])
+      end
 
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
     end

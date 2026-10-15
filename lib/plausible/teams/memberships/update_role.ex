@@ -25,7 +25,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
          :ok <- check_owner_can_get_demoted(team, team_membership.role, new_role),
          team_membership = Repo.preload(team_membership, :user),
          :ok <- check_can_promote_to_owner(team, team_membership.user, new_role) do
-      if team_membership.role == :guest and new_role != :guest do
+      if team_membership.role == :guest do
         team_membership.user.email
         |> PlausibleWeb.Email.guest_to_team_member_promotion(
           team,

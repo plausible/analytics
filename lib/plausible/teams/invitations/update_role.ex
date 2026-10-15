@@ -15,7 +15,6 @@ defmodule Plausible.Teams.Invitations.UpdateRole do
           {:ok, Teams.Invitation.t()}
           | {:error,
              :permission_denied
-             | :invalid_role
              | :invitation_not_found
              | :guest_invitation
              | Ecto.Changeset.t()}

@@ -21,6 +21,8 @@ defmodule Plausible.Teams.TeamRolePermissions do
 
   @types [:membership, :invitation]
 
+  @type assignable_role() :: :owner | :admin | :editor | :viewer | :billing
+
   @doc """
   Checks whether `granter` may change `membership`'s role to `to_role`.
 
@@ -31,8 +33,8 @@ defmodule Plausible.Teams.TeamRolePermissions do
           Teams.Team.t(),
           Auth.User.t(),
           Membership.t(),
-          Membership.role()
-        ) :: :ok | {:error, :invalid_role | :permission_denied}
+          assignable_role()
+        ) :: :ok | {:error, :permission_denied}
   def ensure_can_grant_for_member(team, granter, %Membership{} = membership, to_role) do
     with {:ok, granter_role} <- get_granter_role(team, granter),
          :ok <- ensure_can_change_role(:membership, granter_role, membership.role) do
@@ -49,8 +51,8 @@ defmodule Plausible.Teams.TeamRolePermissions do
           Teams.Team.t(),
           Auth.User.t(),
           Teams.Invitation.t() | nil,
-          Membership.role()
-        ) :: :ok | {:error, :invalid_role | :permission_denied}
+          assignable_role()
+        ) :: :ok | {:error, :permission_denied}
   def ensure_can_grant_for_invitation(team, granter, invitation, to_role) do
     with {:ok, granter_role} <- get_granter_role(team, granter),
          :ok <- ensure_can_change_role(:invitation, granter_role, invitation_role(invitation)) do
@@ -95,14 +97,14 @@ defmodule Plausible.Teams.TeamRolePermissions do
   @doc """
   Checks whether someone with `granter_role` may give anyone the role `to_role`.
   A role that can't be assigned (anything other than owner, admin, editor,
-  viewer or billing) returns `{:error, :invalid_role}`, whoever is asking.
+  viewer or billing) raises an `ArgumentError`, whoever is asking.
   """
-  @spec ensure_can_grant_role(Membership.role(), Membership.role()) ::
-          :ok | {:error, :invalid_role | :permission_denied}
+  @spec ensure_can_grant_role(Membership.role(), assignable_role()) ::
+          :ok | {:error, :permission_denied}
   def ensure_can_grant_role(granter_role, to_role)
 
   def ensure_can_grant_role(_granter_role, to_role) when to_role not in @assignable_roles,
-    do: {:error, :invalid_role}
+    do: raise(ArgumentError, "invalid role: #{inspect(to_role)}")
 
   def ensure_can_grant_role(:owner, _to_role), do: :ok
   def ensure_can_grant_role(:admin, to_role) when to_role in @assignable_by_admins, do: :ok
