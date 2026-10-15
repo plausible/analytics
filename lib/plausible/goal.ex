@@ -75,7 +75,6 @@ defmodule Plausible.Goal do
     goal
     |> cast(attrs, @fields)
     |> base_changeset()
-    |> maybe_put_display_name()
     |> unique_constraint(:display_name, name: :goals_display_name_unique)
     |> unique_constraint(:event_name, name: :goals_event_config_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
@@ -102,6 +101,7 @@ defmodule Plausible.Goal do
       message: "Should be -1 (missing) or in range [0, 100]"
     )
     |> maybe_drop_currency()
+    |> maybe_put_display_name()
   end
 
   @spec display_name(t()) :: String.t()
