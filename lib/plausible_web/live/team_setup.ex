@@ -212,16 +212,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
            :error,
            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
          )}
-
-      {:error, other} ->
-        # Team setup is only ever done by the team's sole owner, so
-        # permission check errors are not reachable from here. Anything
-        # else is unexpected.
-        Sentry.capture_message("Unexpected error while creating team via team setup",
-          extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
-        )
-
-        {:noreply, put_live_flash(socket, :error, "Something went wrong. Please try again")}
     end
   end
 
