@@ -72,11 +72,11 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   end
 
   defp do_invite_all(team, inviter, entries, opts) do
-    Repo.transaction(fn ->
-      Enum.map(entries, fn %{email: email, role: role} ->
-        case do_invite(team, inviter, email, role, opts) do
-          {:ok, invitation} -> invitation
-          {:error, reason} -> Repo.rollback(reason)
+    Repo.transact(fn ->
+      Enum.reduce_while(entries, {:ok, []}, fn entry, {:ok, invitations} ->
+        case do_invite(team, inviter, entry.email, entry.role, opts) do
+          {:ok, invitation} -> {:cont, {:ok, invitations ++ [invitation]}}
+          {:error, _} = error -> {:halt, error}
         end
       end)
     end)

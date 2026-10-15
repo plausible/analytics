@@ -216,16 +216,11 @@ defmodule Plausible.Teams do
         ) :: {:ok, Teams.Team.t()} | {:error, any()}
   def setup(team, name, invite_entries, inviter) do
     result =
-      Repo.transaction(fn ->
-        team =
-          case team |> Teams.Team.name_changeset(%{name: name}) |> Repo.update() do
-            {:ok, team} -> complete_setup(team)
-            {:error, changeset} -> Repo.rollback(changeset)
-          end
-
-        case InviteToTeam.invite_all(team, inviter, invite_entries) do
-          {:ok, invitations} -> {team, invitations}
-          {:error, reason} -> Repo.rollback(reason)
+      Repo.transact(fn ->
+        with {:ok, team} <- Repo.update(Teams.Team.name_changeset(team, %{name: name})),
+             team = complete_setup(team),
+             {:ok, invitations} <- InviteToTeam.invite_all(team, inviter, invite_entries) do
+          {:ok, {team, invitations}}
         end
       end)
 
