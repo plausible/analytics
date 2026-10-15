@@ -204,15 +204,10 @@ defmodule PlausibleWeb.Live.Components.Team do
   end
 
   defp selectable_role_descriptions(my_role) do
-    Enum.reject(@role_descriptions, fn {role, _description} ->
-      role_change_disabled?(my_role, role)
+    Enum.filter(@role_descriptions, fn {role, _description} ->
+      TeamRolePermissions.ensure_can_grant_role(my_role, role) == :ok
     end)
   end
-
-  defp role_change_disabled?(my_role, :owner), do: my_role != :owner
-
-  defp role_change_disabled?(my_role, _role),
-    do: not TeamRolePermissions.can_manage_team?(my_role)
 
   defp lower_role_warning() do
     "You're about to lower your own role. Some team management features will no longer be accessible to you, and you'll need to ask a team owner to restore your access. Do you want to continue?"
