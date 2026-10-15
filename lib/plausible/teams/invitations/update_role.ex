@@ -11,16 +11,14 @@ defmodule Plausible.Teams.Invitations.UpdateRole do
 
   alias Plausible.{Repo, Teams}
 
-  @spec update(Teams.Team.t() | nil, String.t(), atom(), Plausible.Auth.User.t()) ::
+  @spec update(Teams.Team.t(), String.t(), atom(), Plausible.Auth.User.t()) ::
           {:ok, Teams.Invitation.t()}
           | {:error,
              :permission_denied
              | :invitation_not_found
              | :guest_invitation
              | Ecto.Changeset.t()}
-  def update(nil, _invitation_id, _new_role, _current_user), do: {:error, :permission_denied}
-
-  def update(team, invitation_id, new_role, current_user) do
+  def update(%Teams.Team{} = team, invitation_id, new_role, current_user) do
     with {:ok, invitation} <- Teams.Invitations.get_team_invitation(team, invitation_id),
          :ok <- ensure_team_invitation(invitation),
          :ok <-

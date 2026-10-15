@@ -50,10 +50,6 @@ defmodule Plausible.Teams.Invitations.UpdateRoleTest do
                UpdateRole.update(team, invitation.invitation_id, :editor, owner)
     end
 
-    test "returns error when there is no team", %{user: owner} do
-      assert {:error, :permission_denied} = UpdateRole.update(nil, "some-id", :editor, owner)
-    end
-
     test "returns error when the granter isn't allowed to make the change", %{
       user: owner,
       team: team

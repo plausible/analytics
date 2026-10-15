@@ -9,9 +9,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   alias Plausible.Teams
   alias Plausible.Teams.Memberships
 
-  def update(nil, _, _, _), do: {:error, :permission_denied}
-
-  def update(team, user_id, new_role_str, current_user) do
+  def update(%Teams.Team{} = team, user_id, new_role_str, current_user) do
     new_role = String.to_existing_atom(new_role_str)
 
     with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
