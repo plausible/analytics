@@ -184,12 +184,12 @@ defmodule Plausible.Stats.SQL.GoalMatching do
 
   defp only_if(nil, _condition), do: nil
 
-  defp only_if(goals, condition) do
-    dynamic(fragment("if(?, ?, CAST([] AS Array(UInt64)))", ^condition, ^goals))
+  defp only_if(goal_indices_expr, condition) do
+    dynamic(fragment("if(?, ?, CAST([] AS Array(UInt64)))", ^condition, ^goal_indices_expr))
   end
 
   defp concat([]), do: dynamic(fragment("CAST([] AS Array(UInt64))"))
-  defp concat([goals]), do: goals
+  defp concat([goal_indices_expr]), do: goal_indices_expr
   defp concat([a, b]), do: dynamic(fragment("arrayConcat(?, ?)", ^a, ^b))
   defp concat([a, b, c]), do: dynamic(fragment("arrayConcat(?, ?, ?)", ^a, ^b, ^c))
 end
