@@ -614,7 +614,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp site_settings_button(assigns) do
     ~H"""
-    <.tooltip centered?={true} sticky?={false} interactive?={false} touch?={false}>
+    <.tooltip centered?={true} hover_only?={true} interactive?={false}>
       <:tooltip_content>Site settings</:tooltip_content>
       <.button_link
         href={~p"/#{@site.domain}/settings/general"}
@@ -636,7 +636,7 @@ defmodule PlausibleWeb.Live.Sites do
       assign(assigns, :label, if(assigns.site.pinned_at, do: "Unpin site", else: "Pin site"))
 
     ~H"""
-    <.tooltip centered?={true} sticky?={false} interactive?={false} touch?={false}>
+    <.tooltip centered?={true} hover_only?={true} interactive?={false}>
       <:tooltip_content>{@label}</:tooltip_content>
       <.button
         theme="ghost"

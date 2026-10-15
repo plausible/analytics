@@ -667,11 +667,10 @@ defmodule PlausibleWeb.Components.Generic do
     "sm" => "tooltip-sm"
   }
 
-  attr(:sticky?, :boolean, default: true)
+  attr(:hover_only?, :boolean, default: false)
   attr(:enabled?, :boolean, default: true)
   attr(:centered?, :boolean, default: false)
   attr(:interactive?, :boolean, default: true)
-  attr(:touch?, :boolean, default: true)
   attr(:size, :string, default: "xs", values: Map.keys(@tooltip_sizes))
   attr(:testid, :string, default: nil)
   slot(:inner_block, required: true)
@@ -679,9 +678,9 @@ defmodule PlausibleWeb.Components.Generic do
 
   def tooltip(assigns) do
     wrapper_data =
-      if assigns[:sticky?], do: "{sticky: false, hovered: false}", else: "{hovered: false}"
+      if assigns.hover_only?, do: "{hovered: false}", else: "{sticky: false, hovered: false}"
 
-    show_inner = if assigns[:sticky?], do: "hovered || sticky", else: "hovered"
+    show_inner = if assigns.hover_only?, do: "hovered", else: "hovered || sticky"
 
     base_classes = [
       "absolute",
@@ -692,7 +691,7 @@ defmodule PlausibleWeb.Components.Generic do
       "sm:max-w-64",
       "w-max",
       if(!assigns.interactive?, do: "pointer-events-none"),
-      if(!assigns.touch?, do: "pointer-coarse:hidden")
+      if(assigns.hover_only?, do: "pointer-coarse:hidden")
     ]
 
     tooltip_position_classes =
@@ -734,7 +733,10 @@ defmodule PlausibleWeb.Components.Generic do
             {render_slot(@tooltip_content)}
           </div>
         </div>
-        <div x-on:click="sticky = true; hovered = true" x-on:click.outside="sticky = false">
+        <div
+          x-on:click={!@hover_only? && "sticky = true; hovered = true"}
+          x-on:click.outside={!@hover_only? && "sticky = false"}
+        >
           {render_slot(@inner_block)}
         </div>
       </div>
