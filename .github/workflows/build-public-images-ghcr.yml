@@ -3,6 +3,10 @@ name: Build Public Images GHCR
 on:
   push:
     tags: ["v*"]
+permissions:
+  contents: read
+  packages: write
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
