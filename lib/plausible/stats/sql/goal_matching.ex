@@ -5,9 +5,8 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   Event names and exact page paths use lookups when no custom properties
   are required. Other goals use regex matching and additional filters.
 
-  Returned indices are 1-based positions in
-  `query.preloaded_goals.matching_toplevel_filters`, used by QueryRunner
-  to identify the matching goals.
+  Goal indices are assigned by `Plausible.Stats.Goals.indexed_goals/1` and
+  decoded by `Plausible.Stats.Goals.goal_at_index/2` in QueryRunner.
   """
 
   import Ecto.Query
@@ -23,7 +22,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   """
   def completed_goals(query) do
     %{by_name: by_name, by_pathname: by_pathname, scanned: scanned} =
-      partition(query.preloaded_goals.matching_toplevel_filters)
+      partition(Goals.indexed_goals(query))
 
     [
       lookup(dynamic([e], e.name), by_name),
@@ -37,9 +36,9 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   # Groups goals, with their indices, by how they are matched. The unique indexes
   # on goals keep each event name and exact page path to one goal without custom
   # props, so a lookup by either finds at most one goal.
-  defp partition(goals) do
+  defp partition(indexed_goals) do
     classified =
-      for {goal, index} <- Enum.with_index(goals, 1), do: {matching_strategy(goal), goal, index}
+      for {goal, index} <- indexed_goals, do: {matching_strategy(goal), goal, index}
 
     %{
       by_name: for({{:name, name}, _goal, index} <- classified, do: {name, index}),

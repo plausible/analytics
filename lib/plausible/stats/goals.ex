@@ -63,8 +63,26 @@ defmodule Plausible.Stats.Goals do
     end)
   end
 
+  @doc """
+  Assigns breakdown goals 1-based indices, matching ClickHouse array positions.
+  Assign indices before partitioning or excluding goals so native and imported
+  queries use the same identifiers, decoded by `goal_at_index/2`.
+  """
+  @spec indexed_goals(Plausible.Stats.Query.t()) :: [{Plausible.Goal.t(), pos_integer()}]
+  def indexed_goals(query) do
+    Enum.with_index(query.preloaded_goals.matching_toplevel_filters, 1)
+  end
+
+  @doc """
+  Retrieves a breakdown goal using the 1-based index assigned by `indexed_goals/1`.
+  """
+  @spec goal_at_index(Plausible.Stats.Query.t(), pos_integer()) :: Plausible.Goal.t() | nil
+  def goal_at_index(query, index) do
+    Enum.at(query.preloaded_goals.matching_toplevel_filters, index - 1)
+  end
+
   @type goal_join_imported_data() :: %{
-          indices: [non_neg_integer()],
+          indices: [pos_integer()],
           types: [String.t()],
           event_names: [String.t()],
           page_regexes: [String.t()]
@@ -76,9 +94,8 @@ defmodule Plausible.Stats.Goals do
   @spec goal_join_imported_data(Plausible.Stats.Query.t()) :: goal_join_imported_data()
   def goal_join_imported_data(query) do
     {goals, indices} =
-      query.preloaded_goals.matching_toplevel_filters
-      # Keep indices aligned with the complete preloaded goal list.
-      |> Enum.with_index(1)
+      query
+      |> indexed_goals()
       |> Enum.reject(fn {goal, _idx} -> Plausible.Goal.has_custom_props?(goal) end)
       |> Enum.unzip()
 
