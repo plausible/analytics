@@ -15,7 +15,61 @@ defmodule Plausible.Stats.Funnel do
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.{Base, Comparisons, DateTimeRange, Query}
+  alias Plausible.Stats.Exploration
   alias Plausible.Stats.Goal.Revenue
+
+  @spec suggest(Plausible.Site.t(), Plausible.Stats.Query.t(), Keyword.t()) ::
+          {[Plausible.Goal.t()], [Plausible.Goal.t()]}
+  def suggest(site, query, opts \\ []) do
+    steps = Keyword.get(opts, :steps, [])
+    goals = Keyword.get(opts, :goals, [])
+    input = Keyword.get(opts, :input, "")
+
+    journey = Enum.map(steps, &Exploration.Journey.Step.from/1)
+
+    goals_map =
+      Map.new(goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
+
+    {:ok, suggestions} =
+      site
+      |> Exploration.next_steps(query, journey,
+        search_term: input,
+        include_wildcard?: false
+      )
+
+    {suggestions, unmatched_goals} =
+      suggestions
+      |> Enum.reject(&(&1.step.name == Exploration.Journey.Step.journey_end_event()))
+      |> Enum.reduce({[], goals_map}, fn suggestion, {suggestions, goals_map} ->
+        case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
+          {goal, :static, key} ->
+            {[goal | suggestions], Map.delete(goals_map, key)}
+
+          {goal, :dynamic} ->
+            {[goal | suggestions], goals_map}
+        end
+      end)
+
+    {Enum.reverse(suggestions), Map.values(unmatched_goals)}
+  end
+
+  def step_to_goal(step, goals_map) do
+    goal = goals_map[{step.name, step.pathname}]
+
+    if not is_nil(goal) and step.is_goal do
+      {goal, :static, {step.name, step.pathname}}
+    else
+      goal =
+        %Plausible.Goal{}
+        |> Plausible.Goal.changeset(%{
+          event_name: if(step.name != "pageview", do: step.name),
+          page_path: step.pathname
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      {goal, :dynamic}
+    end
+  end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
