@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
   Allows fuzzy matching based on Jaro Distance.
   """
 
-  @spec suggest(String.t(), [{any(), any()}]) :: [{any(), any()}]
+  @spec suggest(String.t(), [item]) :: item when item: {any(), any()} | {any(), any(), list()}
   def suggest(input, choices, opts \\ []) do
     input = String.trim(input)
 
@@ -19,6 +19,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
       choices
       |> Enum.map(fn
         {_, value} = choice ->
+          {choice, weight(value, input, opts)}
+
+        {_, value, _} = choice ->
           {choice, weight(value, input, opts)}
 
         value ->
