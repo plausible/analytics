@@ -251,7 +251,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     case Teams.Memberships.UpdateRole.update(
            reload(team),
            membership.user.id,
-           to_string(role),
+           role,
            current_user
          ) do
       {:ok, _} when demoting_myself? ->
