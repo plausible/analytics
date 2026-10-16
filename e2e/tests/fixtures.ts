@@ -9,10 +9,7 @@ type User = {
 }
 
 type EventTimestamp =
-  | { minutesAgo: number }
-  | { hoursAgo: number }
-  | { daysAgo: number }
-  | string
+  { minutesAgo: number } | { hoursAgo: number } | { daysAgo: number } | string
 
 type EventDate = { daysAgo: number } | string
 
@@ -107,7 +104,7 @@ export async function register({
       e.subject.indexOf('is your Plausible email verification code') > -1
   )
 
-  expect(emails.length).toEqual(1)
+  expect(emails).toHaveLength(1)
 
   const [code] = emails[0]!.subject.split(' ')
 
@@ -363,11 +360,11 @@ export async function addPageviewGoal({
   await expectLiveViewConnected(page)
 
   await page.getByRole('button', { name: 'Add goal' }).click()
-  const pageviewEventButton = page.locator(
+  const addPageviewGoalButton = page.locator(
     'button[phx-value-goal-type="pageviews"]'
   )
 
-  await pageviewEventButton.click()
+  await addPageviewGoalButton.click()
 
   await expect(
     page.getByRole('heading', { name: `Add goal for ${domain}` })
