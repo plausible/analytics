@@ -640,7 +640,7 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def ensure_not_already_invited(%Teams.Team{} = team, invitee_email) do
+  def ensure_no_invitations(%Teams.Team{} = team, invitee_email) do
     pending_invitation_role =
       Repo.one(
         from ti in Teams.Invitation,
