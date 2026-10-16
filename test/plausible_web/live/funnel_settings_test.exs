@@ -538,6 +538,87 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 100%"
       end
 
+      test "funnel evaluation respects additional properties like scroll threshold and custom props",
+           %{
+             conn: conn,
+             site: site
+           } do
+        {:ok, g1} =
+          Plausible.Goals.create(site, %{
+            "page_path" => "/go/to/blog/**",
+            "scroll_threshold" => 90
+          })
+
+        {:ok, g3} = Plausible.Goals.create(site, %{"event_name" => "Purchase"})
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Mixed funnel",
+            [
+              %{"goal_id" => g1.id},
+              %{"event_name" => "Signup", "custom_props" => %{"method" => "oauth"}},
+              %{"goal_id" => g3.id}
+            ]
+          )
+
+        ts =
+          NaiveDateTime.utc_now()
+          |> NaiveDateTime.truncate(:second)
+          |> NaiveDateTime.add(-600, :second)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/go/to/blog/foo", user_id: 122, timestamp: ts),
+          build(:engagement,
+            pathname: "/go/to/blog/foo",
+            scroll_depth: 92,
+            user_id: 122,
+            timestamp: NaiveDateTime.add(ts, 1, :second)
+          ),
+          build(:event,
+            name: "Signup",
+            "meta.key": ["method"],
+            "meta.value": ["oauth"],
+            user_id: 122,
+            timestamp: NaiveDateTime.add(ts, 2, :second)
+          ),
+          build(:event,
+            name: "Purchase",
+            user_id: 122,
+            timestamp: NaiveDateTime.add(ts, 3, :second)
+          ),
+          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123, timestamp: ts),
+          build(:engagement,
+            pathname: "/go/to/blog/foo",
+            scroll_depth: 98,
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 1, :second)
+          ),
+          build(:event,
+            name: "Signup",
+            "meta.key": ["method"],
+            "meta.value": ["email"],
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 2, :second)
+          ),
+          build(:event,
+            name: "Purchase",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, 3, :second)
+          )
+        ])
+
+        lv = get_liveview(conn, site)
+
+        lv
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{funnel.id}"]/)
+        |> render_click()
+
+        assert lv = find_live_child(lv, "funnels-form")
+
+        assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 50%"
+      end
+
       test "clicking save after editing the funnel, updates it", %{
         conn: conn,
         site: site

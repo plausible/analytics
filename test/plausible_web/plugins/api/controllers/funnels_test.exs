@@ -100,6 +100,40 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         assert_schema(s2, "Goal.Revenue", spec())
         assert_schema(s3, "Goal.CustomEvent", spec())
       end
+
+      test "retrieves mixed funnel by ID", %{conn: conn, site: site, token: token} do
+        {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/product/123"})
+
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Peek & buy",
+            [
+              g1,
+              %{"event_name" => "Purchase", "currency" => "EUR"},
+              %{"event_name" => "FiveStarReview"}
+            ]
+          )
+
+        url = url(~p"/api/plugins/v1/funnels/#{funnel.id}")
+
+        resp =
+          conn
+          |> authenticate(site.domain, token)
+          |> get(url)
+          |> json_response(200)
+
+        schema = assert_schema(resp, "Funnel", spec())
+
+        assert schema.funnel.id == funnel.id
+        assert schema.funnel.name == "Peek & buy"
+        [_, _, _] = schema.funnel.steps
+        [s1, s2, s3] = resp |> Map.fetch!("funnel") |> Map.fetch!("steps")
+
+        assert_schema(s1, "Goal.Pageview", spec())
+        assert_schema(s2, "Goal.Revenue", spec())
+        assert_schema(s3, "Goal.CustomEvent", spec())
+      end
     end
 
     describe "get /funnels" do
@@ -137,6 +171,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               site,
               "Funnel #{i}",
               [g1, g2, g3]
+            )
+        end
+
+        url = url(~p"/api/plugins/v1/funnels")
+
+        resp =
+          conn
+          |> authenticate(site.domain, token)
+          |> get(url)
+          |> json_response(200)
+          |> assert_schema("Funnel.ListResponse", spec())
+
+        assert Enum.count(resp.funnels) == 3
+      end
+
+      test "retrieves funnels with dynamic steps", %{conn: conn, site: site, token: token} do
+        {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/product/123"})
+
+        {:ok, g3} = Plausible.Goals.create(site, %{"event_name" => "FiveStarReview"})
+
+        for i <- 1..3 do
+          {:ok, _} =
+            Plausible.Funnels.create(
+              site,
+              "Funnel #{i}",
+              [g1, %{"event_name" => "Purchase", "currency" => "EUR"}, g3]
             )
         end
 
