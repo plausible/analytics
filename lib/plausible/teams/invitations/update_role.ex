@@ -21,7 +21,7 @@ defmodule Plausible.Teams.Invitations.UpdateRole do
     with {:ok, invitation} <- Teams.Invitations.get_team_invitation(team, invitation_id),
          :ok <- ensure_team_invitation(invitation),
          :ok <-
-           Teams.TeamRolePermissions.ensure_can_grant_for_invitation(
+           Teams.TeamRolePermissions.ensure_can_change_invitation_role(
              team,
              current_user,
              invitation,

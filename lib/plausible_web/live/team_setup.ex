@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       {:error, :duplicate_emails} ->
         {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
 
-      {:error, reason} when reason in [:already_a_guest, :already_invited_guest] ->
+      {:error, reason} when reason in [:already_a_guest, :invited_as_guest] ->
         {:noreply,
          put_live_flash(
            socket,
