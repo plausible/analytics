@@ -7,11 +7,11 @@ if config_env() in [:dev, :test, :load] do
 end
 
 if config_env() == :ce_dev do
-  Envy.load(["config/.env.dev"])
+  Envy.load(["config/.env.dev", "config/.env.ce_dev"])
 end
 
 if config_env() == :ce_test do
-  Envy.load(["config/.env.test"])
+  Envy.load(["config/.env.test", "config/.env.ce_test"])
 end
 
 if config_env() == :e2e_test do
