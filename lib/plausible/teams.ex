@@ -9,6 +9,7 @@ defmodule Plausible.Teams do
   alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Repo
+  alias Plausible.Teams.Invitations.InviteToTeam
   use Plausible
 
   @accept_traffic_until_free ~D[2135-01-01]
@@ -197,6 +198,36 @@ defmodule Plausible.Teams do
       team
     else
       team
+    end
+  end
+
+  @doc """
+  Sets up a team by renaming it and inviting the given members, all in
+  a single transaction - so that e.g. a member limit error on one of the
+  invitations never leaves the team renamed or marked as set up.
+
+  Invitation e-mails are only sent once the transaction has been committed.
+  """
+  @spec setup(
+          Teams.Team.t(),
+          String.t(),
+          [InviteToTeam.invite_entry()],
+          Auth.User.t()
+        ) :: {:ok, Teams.Team.t()} | {:error, any()}
+  def setup(%Teams.Team{} = team, name, invite_entries, %Auth.User{} = inviter)
+      when is_list(invite_entries) and is_binary(name) do
+    result =
+      Repo.transact(fn ->
+        with {:ok, team} <- Repo.update(Teams.Team.name_changeset(team, %{name: name})),
+             team = complete_setup(team),
+             {:ok, invitations} <- InviteToTeam.invite_all(team, inviter, invite_entries) do
+          {:ok, {team, invitations}}
+        end
+      end)
+
+    with {:ok, {team, invitations}} <- result do
+      InviteToTeam.send_invitation_emails(invitations)
+      {:ok, team}
     end
   end
 

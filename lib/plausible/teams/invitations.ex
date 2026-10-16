@@ -641,21 +641,38 @@ defmodule Plausible.Teams.Invitations do
   @doc false
   def ensure_new_membership(_site_or_team, nil, _role), do: :ok
 
-  def ensure_new_membership(_site_or_team, _invitee, :owner), do: :ok
-
   def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
     case Teams.Memberships.team_role(team, invitee) do
-      {:ok, :guest} -> :ok
+      {:ok, :guest} -> {:error, :already_a_guest}
       {:error, :not_a_member} -> :ok
       {:ok, _} -> {:error, :already_a_member}
     end
   end
+
+  # Site ownership transfers are allowed to target existing site members
+  def ensure_new_membership(%Plausible.Site{}, _invitee, :owner), do: :ok
 
   def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do
       :ok
     else
       {:error, :already_a_member}
+    end
+  end
+
+  def ensure_not_already_invited(%Teams.Team{} = team, invitee_email) do
+    pending_invitation_role =
+      Repo.one(
+        from ti in Teams.Invitation,
+          where: ti.team_id == ^team.id,
+          where: ti.email == ^invitee_email,
+          select: ti.role
+      )
+
+    case pending_invitation_role do
+      nil -> :ok
+      :guest -> {:error, :already_invited_guest}
+      _ -> {:error, :already_invited}
     end
   end
 
