@@ -122,10 +122,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
     """
   end
 
-  @permission_denied_message "Permission denied"
-  @not_found_message "This member or invitation doesn't exist anymore. Please reload the page"
-  @only_one_owner_message "The team has to have at least one owner"
-
   def handle_event("form-changed", params, socket) do
     {:noreply, assign(socket, input_email: params["input-email"])}
   end
@@ -147,36 +143,19 @@ defmodule PlausibleWeb.Live.TeamManagement do
           Teams.Invitations.InviteToTeam.send_invitation_emails(invitations)
           socket |> reset() |> put_live_flash(:success, "#{email} has been invited")
 
-        {:error, reason} when reason in [:invalid_email, :already_a_member, :already_invited] ->
-          put_live_flash(
-            socket,
-            :error,
-            "Make sure the e-mail is valid and not already taken by an existing member or invitation"
-          )
+        {:error, reason}
+        when reason in [
+               :invalid_email,
+               :already_a_member,
+               :already_invited,
+               :already_a_guest,
+               :already_invited_guest,
+               :permission_denied
+             ] ->
+          put_error_flash(socket, reason)
 
-        {:error, :already_a_guest} ->
-          put_live_flash(
-            socket,
-            :error,
-            "This e-mail belongs to a guest. Please change their role below, or delete and invite them again."
-          )
-
-        {:error, :already_invited_guest} ->
-          put_live_flash(
-            socket,
-            :error,
-            "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
-          )
-
-        {:error, :permission_denied} ->
-          put_live_flash(socket, :error, @permission_denied_message)
-
-        {:error, {:over_limit, limit}} ->
-          put_live_flash(
-            socket,
-            :error,
-            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
-          )
+        {:error, {:over_limit, _limit} = reason} ->
+          put_error_flash(socket, reason)
       end
 
     {:noreply, socket}
@@ -209,14 +188,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> reset()
         |> put_live_flash(:success, "#{membership.user.email} has been removed from the team")
 
-      {:error, :membership_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, reason} when reason in [:permission_denied, :not_a_member] ->
-        put_live_flash(socket, :error, @permission_denied_message)
-
-      {:error, :only_one_owner} ->
-        put_live_flash(socket, :error, @only_one_owner_message)
+      {:error, reason}
+      when reason in [:membership_not_found, :permission_denied, :not_a_member, :only_one_owner] ->
+        put_error_flash(socket, reason)
     end
   end
 
@@ -233,11 +207,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> reset()
         |> put_live_flash(:success, "The invitation for #{invitation.email} has been removed")
 
-      {:error, :invitation_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, reason} when reason in [:permission_denied, :not_a_member] ->
-        put_live_flash(socket, :error, @permission_denied_message)
+      {:error, reason}
+      when reason in [:invitation_not_found, :permission_denied, :not_a_member] ->
+        put_error_flash(socket, reason)
     end
   end
 
@@ -268,17 +240,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
         |> animate_role_change(membership.user.email)
 
-      {:error, :membership_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, :permission_denied} ->
-        put_live_flash(socket, :error, @permission_denied_message)
-
-      {:error, :only_one_owner} ->
-        put_live_flash(socket, :error, @only_one_owner_message)
-
-      {:error, :disabled_2fa} ->
-        put_live_flash(socket, :error, "User must have 2FA enabled to become an owner")
+      {:error, reason}
+      when reason in [:membership_not_found, :permission_denied, :only_one_owner, :disabled_2fa] ->
+        put_error_flash(socket, reason)
     end
   end
 
@@ -300,20 +264,44 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
         |> animate_role_change(invitation.email)
 
-      {:error, :invitation_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, :guest_invitation} ->
-        put_live_flash(
-          socket,
-          :error,
-          "A guest invitation can't be changed into a team invitation. Remove it and send a team invitation instead"
-        )
-
-      {:error, :permission_denied} ->
-        put_live_flash(socket, :error, @permission_denied_message)
+      {:error, reason}
+      when reason in [:invitation_not_found, :guest_invitation, :permission_denied] ->
+        put_error_flash(socket, reason)
     end
   end
+
+  defp put_error_flash(socket, reason) do
+    put_live_flash(socket, :error, error_message(reason))
+  end
+
+  defp error_message(reason) when reason in [:membership_not_found, :invitation_not_found],
+    do: "This member or invitation doesn't exist anymore. Please reload the page"
+
+  defp error_message(reason) when reason in [:permission_denied, :not_a_member],
+    do: "Permission denied"
+
+  defp error_message(reason) when reason in [:invalid_email, :already_a_member, :already_invited],
+    do: "Make sure the e-mail is valid and not already taken by an existing member or invitation"
+
+  defp error_message(:already_a_guest),
+    do:
+      "This e-mail belongs to a guest. Please change their role below, or delete and invite them again."
+
+  defp error_message(:already_invited_guest),
+    do:
+      "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
+
+  defp error_message(:guest_invitation),
+    do:
+      "A guest invitation can't be changed into a team invitation. Remove it and send a team invitation instead"
+
+  defp error_message(:only_one_owner), do: "The team has to have at least one owner"
+
+  defp error_message(:disabled_2fa), do: "User must have 2FA enabled to become an owner"
+
+  defp error_message({:over_limit, limit}),
+    do:
+      "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
 
   defp animate_role_change(socket, email) do
     push_event(socket, "js-exec", %{
