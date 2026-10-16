@@ -29,6 +29,15 @@ defmodule Plausible.Teams.Management.Roster do
     Enum.count(roster, fn {_, entry} -> entry.role == :owner end)
   end
 
+  @doc """
+  The users of the roster's memberships. Pending invitations have no user yet,
+  so they're left out.
+  """
+  @spec users(t()) :: [Plausible.Auth.User.t()]
+  def users(roster) do
+    for {_, %Entry{source: %Teams.Membership{user: user}}} <- roster, do: user
+  end
+
   @spec has_guests?(t()) :: boolean()
   def has_guests?(roster) do
     Enum.any?(roster, fn {_, entry} -> entry.role == :guest end)

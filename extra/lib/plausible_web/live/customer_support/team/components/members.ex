@@ -91,10 +91,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   defp refresh_members(socket, team) do
     roster = Roster.init(team)
 
-    users = for {_, %Roster.Entry{source: %Teams.Membership{user: user}}} <- roster, do: user
-
     session_counts =
-      users
+      roster
+      |> Roster.users()
       |> Plausible.Auth.UserSessions.count_for_users()
       |> Enum.into(%{})
 

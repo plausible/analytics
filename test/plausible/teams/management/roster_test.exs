@@ -83,6 +83,18 @@ defmodule Plausible.Teams.Management.RosterTest do
     assert Roster.owners_count(roster) == 3
   end
 
+  test "users/1 returns the users of memberships, leaving out invitations" do
+    current_user = build(:user, name: "Member", email: "member@example.com")
+
+    roster =
+      Roster.build_by_email([
+        membership(role: :viewer, user: current_user),
+        invitation_sent("invitee@example.com")
+      ])
+
+    assert [%{email: "member@example.com"}] = Roster.users(roster)
+  end
+
   test "has_guests?/1" do
     roster = Roster.build_by_email([invitation_sent("invitation-sent@example.com")])
     refute Roster.has_guests?(roster)
