@@ -68,7 +68,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
 
   defp do_invite(team, inviter, invitee_email, role) do
     with :ok <-
-           Teams.TeamRolePermissions.ensure_can_grant_for_invitation(team, inviter, nil, role),
+           Teams.TeamRolePermissions.ensure_can_invite(team, inviter, role),
          :ok <- Teams.Invitations.check_team_member_limit(team, role, invitee_email),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(team, invitee, role),

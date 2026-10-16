@@ -1,10 +1,12 @@
 defmodule Plausible.Teams.TeamRolePermissions do
   @moduledoc """
-  Rules for who is allowed to give which team role to whom.
+  Rules for who is allowed to change which team roles.
 
-  Split into two independent questions: whose role the granter may change
-  at all (`ensure_can_change_role/3`), and which roles they may give
-  (`ensure_can_grant_role/2`). A change is allowed when both pass.
+  A role change is allowed when the actor may modify the member or invitation
+  in its current role (`can_modify_member?/2`, `can_modify_invitation?/2`),
+  and may assign the new role (`can_assign?/2`). The `ensure_*` functions
+  combine both for the services that make the change, and deny anyone who
+  isn't a member of the team.
 
   Rules that depend on the team's state rather than on who's asking (the
   last owner can't be demoted, owners need 2FA when the team enforces it,
@@ -19,8 +21,6 @@ defmodule Plausible.Teams.TeamRolePermissions do
   @assignable_roles List.delete(@roles, :guest)
   @assignable_by_admins List.delete(@assignable_roles, :owner)
 
-  @types [:membership, :invitation]
-
   @type assignable_role() :: :owner | :admin | :editor | :viewer | :billing
 
   @doc """
@@ -31,102 +31,107 @@ defmodule Plausible.Teams.TeamRolePermissions do
   def can_manage_team?(role), do: role in [:owner, :admin]
 
   @doc """
-  Checks whether `granter` may change `membership`'s role to `to_role`.
+  Checks whether `actor` may change `membership`'s role to `new_role`.
 
   Changing your own role follows the same rules as changing the role of
   someone who has the same role as you.
   """
-  @spec ensure_can_grant_for_member(
+  @spec ensure_can_change_member_role(
           Teams.Team.t(),
           Auth.User.t(),
           Membership.t(),
           assignable_role()
         ) :: :ok | {:error, :permission_denied}
-  def ensure_can_grant_for_member(team, granter, %Membership{} = membership, to_role) do
-    with {:ok, granter_role} <- get_granter_role(team, granter),
-         :ok <- ensure_can_change_role(:membership, granter_role, membership.role) do
-      ensure_can_grant_role(granter_role, to_role)
+  def ensure_can_change_member_role(team, actor, %Membership{role: current_role}, new_role) do
+    with {:ok, actor_role} <- Teams.Memberships.team_role(team, actor),
+         true <- can_modify_member?(actor_role, current_role),
+         true <- can_assign?(actor_role, new_role) do
+      :ok
+    else
+      _ -> {:error, :permission_denied}
     end
   end
 
   @doc """
-  Checks whether `granter` may give a team invitation the role `to_role`.
-  `invitation` is the pending invitation being changed, or `nil` when a new
-  invitation is being created.
+  Checks whether `actor` may change a pending team invitation's role to
+  `new_role`.
   """
-  @spec ensure_can_grant_for_invitation(
+  @spec ensure_can_change_invitation_role(
           Teams.Team.t(),
           Auth.User.t(),
-          Teams.Invitation.t() | nil,
+          Teams.Invitation.t(),
           assignable_role()
         ) :: :ok | {:error, :permission_denied}
-  def ensure_can_grant_for_invitation(team, granter, invitation, to_role) do
-    with {:ok, granter_role} <- get_granter_role(team, granter),
-         :ok <- ensure_can_change_role(:invitation, granter_role, invitation_role(invitation)) do
-      ensure_can_grant_role(granter_role, to_role)
+  def ensure_can_change_invitation_role(
+        team,
+        actor,
+        %Teams.Invitation{role: current_role},
+        new_role
+      ) do
+    with {:ok, actor_role} <- Teams.Memberships.team_role(team, actor),
+         true <- can_modify_invitation?(actor_role, current_role),
+         true <- can_assign?(actor_role, new_role) do
+      :ok
+    else
+      _ -> {:error, :permission_denied}
     end
   end
 
   @doc """
-  Checks whether someone with `granter_role` may change the role of a membership
-  or an invitation. `current_role` is `nil` when a new invitation is being
-  created.
+  Checks whether `actor` may invite someone to the team with `role`.
   """
-  @spec ensure_can_change_role(
-          :membership | :invitation,
-          Membership.role(),
-          Membership.role() | nil
-        ) ::
+  @spec ensure_can_invite(Teams.Team.t(), Auth.User.t(), assignable_role()) ::
           :ok | {:error, :permission_denied}
-  def ensure_can_change_role(type, granter_role, current_role)
-
-  def ensure_can_change_role(type, _granter_role, _current_role) when type not in @types,
-    do: raise(ArgumentError, "unknown type: #{inspect(type)}")
-
-  def ensure_can_change_role(_type, :owner, _current_role), do: :ok
-
-  # Creating a new invitation: there's nobody whose role would change yet
-  def ensure_can_change_role(:invitation, :admin, nil), do: :ok
-
-  def ensure_can_change_role(_type, :admin, current_role)
-      when current_role in [:admin, :editor, :viewer],
-      do: :ok
-
-  # Admins can't change a billing member's role: billing members have access to
-  # the subscription, which admins don't. A pending billing invitation doesn't
-  # give access to anything yet, so admins can change it like any other
-  # non-owner invitation.
-  def ensure_can_change_role(:invitation, :admin, :billing), do: :ok
-
-  def ensure_can_change_role(_type, _granter_role, _current_role),
-    do: {:error, :permission_denied}
+  def ensure_can_invite(team, actor, role) do
+    with {:ok, actor_role} <- Teams.Memberships.team_role(team, actor),
+         true <- can_assign?(actor_role, role) do
+      :ok
+    else
+      _ -> {:error, :permission_denied}
+    end
+  end
 
   @doc """
-  Checks whether someone with `granter_role` may give anyone the role `to_role`.
+  Whether someone with `actor_role` may give anyone the role `new_role`.
   A role that can't be assigned (anything other than owner, admin, editor,
   viewer or billing) raises an `ArgumentError`, whoever is asking.
   """
-  @spec ensure_can_grant_role(Membership.role(), assignable_role()) ::
-          :ok | {:error, :permission_denied}
-  def ensure_can_grant_role(granter_role, to_role)
+  @spec can_assign?(Membership.role(), assignable_role()) :: boolean()
+  def can_assign?(actor_role, new_role)
 
-  def ensure_can_grant_role(_granter_role, to_role) when to_role not in @assignable_roles,
-    do: raise(ArgumentError, "invalid role: #{inspect(to_role)}")
+  def can_assign?(_actor_role, new_role) when new_role not in @assignable_roles,
+    do: raise(ArgumentError, "invalid role: #{inspect(new_role)}")
 
-  def ensure_can_grant_role(:owner, _to_role), do: :ok
-  def ensure_can_grant_role(:admin, to_role) when to_role in @assignable_by_admins, do: :ok
+  def can_assign?(:owner, _new_role), do: true
+  def can_assign?(:admin, new_role), do: new_role in @assignable_by_admins
+  def can_assign?(_actor_role, _new_role), do: false
 
-  def ensure_can_grant_role(_granter_role, _to_role),
-    do: {:error, :permission_denied}
+  @doc """
+  Whether someone with `actor_role` may change the role of a member whose
+  role is currently `current_role`.
+  """
+  @spec can_modify_member?(Membership.role(), Membership.role()) :: boolean()
+  def can_modify_member?(actor_role, current_role)
 
-  defp invitation_role(nil), do: nil
-  defp invitation_role(%Teams.Invitation{role: role}), do: role
+  def can_modify_member?(:owner, _current_role), do: true
+  def can_modify_member?(:admin, current_role), do: current_role in [:admin, :editor, :viewer]
+  def can_modify_member?(_actor_role, _current_role), do: false
 
-  # Not being a member of the team counts as not having permission
-  defp get_granter_role(team, granter) do
-    case Teams.Memberships.team_role(team, granter) do
-      {:ok, granter_role} -> {:ok, granter_role}
-      {:error, :not_a_member} -> {:error, :permission_denied}
-    end
-  end
+  @doc """
+  Whether someone with `actor_role` may change the role of a pending
+  invitation whose role is currently `current_role`.
+
+  Unlike billing members, admins may change pending billing invitations:
+  billing members have access to the subscription, which admins don't, but a
+  pending billing invitation doesn't give access to anything yet.
+  """
+  @spec can_modify_invitation?(Membership.role(), Membership.role()) :: boolean()
+  def can_modify_invitation?(actor_role, current_role)
+
+  def can_modify_invitation?(:owner, _current_role), do: true
+
+  def can_modify_invitation?(:admin, current_role),
+    do: current_role in [:admin, :editor, :viewer, :billing]
+
+  def can_modify_invitation?(_actor_role, _current_role), do: false
 end

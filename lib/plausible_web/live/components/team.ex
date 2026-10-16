@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   defp selectable_role_descriptions(my_role) do
     Enum.filter(@role_descriptions, fn {role, _description} ->
-      TeamRolePermissions.ensure_can_grant_role(my_role, role) == :ok
+      TeamRolePermissions.can_assign?(my_role, role)
     end)
   end
 

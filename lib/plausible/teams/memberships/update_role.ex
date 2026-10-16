@@ -12,7 +12,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   def update(%Teams.Team{} = team, user_id, new_role, current_user) do
     with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          :ok <-
-           Teams.TeamRolePermissions.ensure_can_grant_for_member(
+           Teams.TeamRolePermissions.ensure_can_change_member_role(
              team,
              current_user,
              team_membership,
