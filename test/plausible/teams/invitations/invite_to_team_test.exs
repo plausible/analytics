@@ -92,7 +92,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       team = team_of(inviter)
       invite_guest(site, "guest@example.com", role: :viewer, inviter: inviter)
 
-      assert {:error, :already_invited_guest} =
+      assert {:error, :invited_as_guest} =
                InviteToTeam.invite_all(team, inviter, [
                  %{email: "guest@example.com", role: :editor}
                ])
@@ -126,7 +126,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       existing_invitation =
         invite_member(team, "invitee@example.com", role: :viewer, inviter: inviter)
 
-      assert {:error, :already_invited} =
+      assert {:error, :invited_as_member} =
                InviteToTeam.invite_all(team, inviter, [
                  %{email: "Invitee@Example.com", role: :admin}
                ])

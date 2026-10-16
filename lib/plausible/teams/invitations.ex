@@ -651,8 +651,8 @@ defmodule Plausible.Teams.Invitations do
 
     case pending_invitation_role do
       nil -> :ok
-      :guest -> {:error, :already_invited_guest}
-      _ -> {:error, :already_invited}
+      :guest -> {:error, :invited_as_guest}
+      _ -> {:error, :invited_as_member}
     end
   end
 

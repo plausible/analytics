@@ -147,9 +147,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
         when reason in [
                :invalid_email,
                :already_a_member,
-               :already_invited,
+               :invited_as_member,
                :already_a_guest,
-               :already_invited_guest,
+               :invited_as_guest,
                :permission_denied
              ] ->
           put_error_flash(socket, reason)
@@ -280,14 +280,16 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp error_message(reason) when reason in [:permission_denied, :not_a_member],
     do: "Permission denied"
 
-  defp error_message(reason) when reason in [:invalid_email, :already_a_member, :already_invited],
-    do: "Make sure the e-mail is valid and not already taken by an existing member or invitation"
+  defp error_message(reason)
+       when reason in [:invalid_email, :already_a_member, :invited_as_member],
+       do:
+         "Make sure the e-mail is valid and not already taken by an existing member or invitation"
 
   defp error_message(:already_a_guest),
     do:
       "This e-mail belongs to a guest. Please change their role below, or delete and invite them again."
 
-  defp error_message(:already_invited_guest),
+  defp error_message(:invited_as_guest),
     do:
       "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
 
