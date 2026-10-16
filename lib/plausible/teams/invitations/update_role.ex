@@ -16,8 +16,7 @@ defmodule Plausible.Teams.Invitations.UpdateRole do
           | {:error,
              :permission_denied
              | :invitation_not_found
-             | :guest_invitation
-             | Ecto.Changeset.t()}
+             | :guest_invitation}
   def update(%Teams.Team{} = team, invitation_id, new_role, current_user) do
     with {:ok, invitation} <- Teams.Invitations.get_team_invitation(team, invitation_id),
          :ok <- ensure_team_invitation(invitation),
@@ -28,9 +27,8 @@ defmodule Plausible.Teams.Invitations.UpdateRole do
              invitation,
              new_role
            ) do
-      invitation
-      |> Ecto.Changeset.change(role: new_role)
-      |> Repo.update()
+      invitation = Repo.update!(Ecto.Changeset.change(invitation, role: new_role))
+      {:ok, invitation}
     end
   end
 

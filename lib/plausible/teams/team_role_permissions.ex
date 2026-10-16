@@ -24,6 +24,13 @@ defmodule Plausible.Teams.TeamRolePermissions do
   @type assignable_role() :: :owner | :admin | :editor | :viewer | :billing
 
   @doc """
+  Whether someone with `role` may manage the team: invite people, change
+  roles and remove members or invitations.
+  """
+  @spec can_manage_team?(Membership.role()) :: boolean()
+  def can_manage_team?(role), do: role in [:owner, :admin]
+
+  @doc """
   Checks whether `granter` may change `membership`'s role to `to_role`.
 
   Changing your own role follows the same rules as changing the role of

@@ -29,6 +29,9 @@ async function submitInviteForm(
     .getByRole('option', { name: roleOptionName })
     .click()
   await page.getByRole('button', { name: 'Invite' }).click()
+  // so that tests continue without a flash
+  await hasFlashMessage(page, `${email} has been invited`)
+  await closeFlashMessage(page)
 }
 
 test('lowering your own role asks for confirmation', async ({

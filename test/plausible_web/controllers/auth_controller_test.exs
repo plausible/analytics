@@ -826,7 +826,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         add_member(team, role: :owner)
 
         assert {:ok, _} =
-                 Plausible.Teams.Memberships.UpdateRole.update(team, user.id, "editor", user)
+                 Plausible.Teams.Memberships.UpdateRole.update(team, user.id, :editor, user)
 
         assert Plausible.Teams.Memberships.team_role(team, user) == {:ok, :editor}
 
