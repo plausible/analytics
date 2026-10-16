@@ -99,8 +99,8 @@ for (const mode of ['web', 'esm']) {
 
       await expectPlausibleInAction(page, {
         action: async () => {
-          await page.click('#alfa')
-          await page.click('#beta')
+          await page.locator('#alfa').click()
+          await page.locator('#beta').click()
           await hideAndShowCurrentTab(page, { delay: 200 })
         },
         expectedRequests: [
