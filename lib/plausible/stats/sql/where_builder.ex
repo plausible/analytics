@@ -45,13 +45,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp goal_event_names(goals) do
     goals
-    |> Enum.map(fn goal ->
-      case Plausible.Goal.type(goal) do
-        :event -> goal.event_name
-        :page -> "pageview"
-        :scroll -> "engagement"
-      end
-    end)
+    |> Enum.map(&Plausible.Stats.Goals.expected_event_name/1)
     |> Enum.uniq()
   end
 
