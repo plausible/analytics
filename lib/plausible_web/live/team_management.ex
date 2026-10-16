@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     socket = assign(socket, input_email: email)
 
     socket =
-      case Teams.Invitations.InviteToTeam.invite_all(reload(team), current_user, [
+      case Teams.Invitations.InviteToTeam.invite_all(reload!(team), current_user, [
              %{email: email, role: role}
            ]) do
         {:ok, invitations} ->
@@ -177,7 +177,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     %{current_team: team, current_user: current_user} = socket.assigns
     myself? = membership.user.id == current_user.id
 
-    case Teams.Memberships.Remove.remove(reload(team), membership.user.id, current_user) do
+    case Teams.Memberships.Remove.remove(reload!(team), membership.user.id, current_user) do
       {:ok, _} when myself? ->
         socket
         |> put_flash(:success, "You have left the team")
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.RemoveFromTeam.remove(
-           reload(team),
+           reload!(team),
            invitation.invitation_id,
            current_user
          ) do
@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         not TeamRolePermissions.can_manage_team?(role)
 
     case Teams.Memberships.UpdateRole.update(
-           reload(team),
+           reload!(team),
            membership.user.id,
            role,
            current_user
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.UpdateRole.update(
-           reload(team),
+           reload!(team),
            invitation.invitation_id,
            role,
            current_user
@@ -310,7 +310,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     })
   end
 
-  defp reload(team), do: Plausible.Repo.reload!(team)
+  defp reload!(team), do: Plausible.Repo.reload!(team)
 
   defp role_name(role), do: role |> to_string() |> String.capitalize()
 
