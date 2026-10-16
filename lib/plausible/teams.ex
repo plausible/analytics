@@ -204,7 +204,7 @@ defmodule Plausible.Teams do
   @doc """
   Sets up a team by renaming it and inviting the given members, all in
   a single transaction - so that e.g. a member limit error on one of the
-  invitations never leaves the team renamed or marked as set up.
+  invitations never renames the team or marks it as set up.
 
   Invitation e-mails are only sent once the transaction has been committed.
   """
