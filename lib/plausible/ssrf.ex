@@ -75,18 +75,12 @@ defmodule Plausible.SSRF do
     host = uri.host
     pinned_url = %{uri | host: ip |> :inet.ntoa() |> to_string()}
 
-    finch_opts =
-      opts
-      |> Keyword.get(:finch, [])
-      |> Keyword.put_new(:pool_max_idle_time, @default_pool_max_idle_time)
-      |> Keyword.put(:conn_opts, hostname: host)
-
     request_opts =
       Keyword.merge(opts,
         method: :get,
         url: pinned_url,
         headers: [{"host", host}],
-        finch: finch_opts,
+        finch: [pool_max_idle_time: @default_pool_max_idle_time, conn_opts: [hostname: host]],
         redirect: false
       )
 
