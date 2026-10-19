@@ -150,9 +150,6 @@ defmodule Plausible.Funnel do
       length(Ecto.Changeset.get_assoc(changeset, :steps)) +
         length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
 
-    if steps_count < @min_steps or steps_count > @max_steps do
-    end
-
     cond do
       steps_count < @min_steps ->
         add_error(changeset, :steps, "should have at least #{@min_steps} item(s)")
