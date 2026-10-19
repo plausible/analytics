@@ -53,10 +53,12 @@ defmodule Plausible.Stats.Funnel do
     {Enum.reverse(suggestions), Map.values(unmatched_goals)}
   end
 
+  @spec step_to_goal(Exploration.Journey.Step.t(), [Plausible.Goal.t()]) ::
+          {Plausible.Goal.t(), :static, {binary(), binary()}} | {Plausible.Goal.t(), :dynamic}
   def step_to_goal(step, goals_map) do
     goal = goals_map[{step.name, step.pathname}]
 
-    if not is_nil(goal) and step.is_goal do
+    if not is_nil(goal) and step.is_goal and display_name(step) == goal.display_name do
       {goal, :static, {step.name, step.pathname}}
     else
       goal =
@@ -112,6 +114,16 @@ defmodule Plausible.Stats.Funnel do
            do: tz_date_range(query.comparison_utc_time_range, query.timezone)
          )
      })}
+  end
+
+  defp display_name(step) do
+    case step do
+      %{pathname: pathname} when byte_size(pathname) > 0 ->
+        "Visit " <> pathname
+
+      %{name: name} when byte_size(name) > 0 ->
+        name
+    end
   end
 
   defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do
