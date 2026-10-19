@@ -58,7 +58,8 @@ defmodule Plausible.Stats.Funnel do
   def step_to_goal(step, goals_map) do
     goal = goals_map[{step.name, step.pathname}]
 
-    if not is_nil(goal) and step.is_goal and display_name(step) == goal.display_name do
+    if not is_nil(goal) and step.is_goal and
+         Plausible.Goal.display_name(step.name, step.pathname) == goal.display_name do
       {goal, :static, {step.name, step.pathname}}
     else
       goal =
@@ -114,16 +115,6 @@ defmodule Plausible.Stats.Funnel do
            do: tz_date_range(query.comparison_utc_time_range, query.timezone)
          )
      })}
-  end
-
-  defp display_name(step) do
-    case step do
-      %{pathname: pathname} when byte_size(pathname) > 0 ->
-        "Visit " <> pathname
-
-      %{name: name} when byte_size(name) > 0 ->
-        name
-    end
   end
 
   defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do

@@ -109,6 +109,14 @@ defmodule Plausible.Goal do
     goal.display_name
   end
 
+  @spec display_name(event_name :: String.t() | nil, page_path :: String.t() | nil) :: String.t()
+  def display_name(event_name, page_path) do
+    case {event_name, page_path} do
+      {event, path} when event in [nil, "", "pageview"] and is_binary(path) -> "Visit " <> path
+      {event, _} when is_binary(event) -> event
+    end
+  end
+
   @spec type(t()) :: :event | :scroll | :page
   def type(goal) do
     cond do
@@ -217,10 +225,10 @@ defmodule Plausible.Goal do
 
     case clause do
       [nil, path, _] when is_binary(path) ->
-        put_change(changeset, :display_name, "Visit " <> path)
+        put_change(changeset, :display_name, display_name(nil, path))
 
       [nil, _, event_name] when is_binary(event_name) ->
-        put_change(changeset, :display_name, event_name)
+        put_change(changeset, :display_name, display_name(event_name, nil))
 
       _ ->
         changeset
