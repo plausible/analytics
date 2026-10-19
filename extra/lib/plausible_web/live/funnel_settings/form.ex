@@ -376,15 +376,25 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {suggestions, unmatched_goals} =
       Plausible.Stats.Funnel.suggest(site, query, steps: steps, goals: goals, input: input)
 
-    (suggestions ++ unmatched_goals)
+    unmatched_goal_entries =
+      unmatched_goals
+      |> to_suggestion_entries(steps)
+      |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
+
+    suggestions
+    |> to_suggestion_entries(steps)
+    |> Enum.concat(unmatched_goal_entries)
+    |> segment()
+  end
+
+  defp to_suggestion_entries(suggestions, steps) do
+    suggestions
     |> exclude_existing_steps(steps)
     |> Enum.map(
       &{to_step_data(&1), to_string(&1),
        [type: if(&1.event_name, do: :custom_event, else: :pageview)]}
     )
     |> set_icons()
-    |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
-    |> segment()
   end
 
   defp set_icons(suggestions) do
@@ -429,8 +439,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   defp exclude_existing_steps(goals, steps) do
-    existing_steps = MapSet.new(steps, &{&1.event_name, &1.page_path})
-    Enum.reject(goals, &MapSet.member?(existing_steps, {&1.event_name, &1.page_path}))
+    existing_steps =
+      MapSet.new(steps, &{&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props})
+
+    Enum.reject(
+      goals,
+      &MapSet.member?(
+        existing_steps,
+        {&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props}
+      )
+    )
   end
 
   defp has_steps_errors?(f) do
