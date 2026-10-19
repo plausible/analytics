@@ -15,10 +15,10 @@ defmodule Plausible.SSRF do
   @default_max_redirects 4
   @dns_timeout 1_000
 
-  # Every distinct `connect_options: [hostname: ...]` value we pass below
+  # Every distinct `finch: [conn_opts: [hostname: ...]]` value we pass below
   # makes Req start a brand new, dedicated Finch instance under the hood
   # (Req can't vary `conn_opts` per-request on a shared pool, so it forks one
-  # per connect_options fingerprint) - and since these hostnames are
+  # per pool options fingerprint) - and since these hostnames are
   # customer-controlled, that's an unbounded number of them over time. 
   @default_pool_max_idle_time :timer.minutes(5)
 
@@ -75,14 +75,18 @@ defmodule Plausible.SSRF do
     host = uri.host
     pinned_url = %{uri | host: ip |> :inet.ntoa() |> to_string()}
 
-    request_opts =
+    finch_opts =
       opts
+      |> Keyword.get(:finch, [])
       |> Keyword.put_new(:pool_max_idle_time, @default_pool_max_idle_time)
-      |> Keyword.merge(
+      |> Keyword.put(:conn_opts, hostname: host)
+
+    request_opts =
+      Keyword.merge(opts,
         method: :get,
         url: pinned_url,
         headers: [{"host", host}],
-        connect_options: [hostname: host],
+        finch: finch_opts,
         redirect: false
       )
 
