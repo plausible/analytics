@@ -12,7 +12,6 @@ defmodule Plausible.Funnel.DynamicStep do
   @fields [
     :event_name,
     :page_path,
-    :display_name,
     :scroll_threshold,
     :custom_props,
     :currency
@@ -23,7 +22,6 @@ defmodule Plausible.Funnel.DynamicStep do
     field :step_order, :integer
     field :event_name, :string
     field :page_path, :string
-    field :display_name, :string, virtual: true
     field :scroll_threshold, :integer, default: -1
     field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
 
@@ -46,7 +44,7 @@ defmodule Plausible.Funnel.DynamicStep do
   def as_goal(step) do
     %Plausible.Goal{
       id: 0,
-      display_name: step.display_name || display_name(step),
+      display_name: display_name(step),
       event_name: step.event_name,
       page_path: step.page_path,
       scroll_threshold: step.scroll_threshold,
