@@ -372,13 +372,35 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
     unmatched_goal_entries =
       unmatched_goals
+      |> static_suggest(input)
       |> to_suggestion_entries(steps)
-      |> then(&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(input, &1))
 
     suggestions
     |> to_suggestion_entries(steps)
     |> Enum.concat(unmatched_goal_entries)
     |> segment()
+  end
+
+  defp static_suggest(goals, input) do
+    # NOTE: static search for goals logic should be in sync with
+    # `Plausible.Stats.Exploration.maybe_search/2`.
+
+    case String.trim(input) do
+      term when byte_size(term) > 2 ->
+        term = String.downcase(term)
+
+        Enum.filter(goals, fn g ->
+          display_name = String.downcase(g.display_name)
+          event_name = String.downcase(g.event_name || "")
+          page_path = String.downcase(g.page_path || "")
+
+          String.contains?(display_name, term) or String.contains?(event_name, term) or
+            String.contains?(page_path, term)
+        end)
+
+      _ ->
+        goals
+    end
   end
 
   defp to_suggestion_entries(suggestions, steps) do
