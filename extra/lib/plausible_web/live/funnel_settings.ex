@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   # Normally, we'd have to use live_patch which we can't do with views unmounted at the router it seems.
   def render(assigns) do
     ~H"""
-    <div id="funnel-settings-main">
+    <div id="funnel-settings-main" class="group">
       <.flash_messages flash={@flash} />
 
       <.tile
@@ -67,10 +67,15 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         </:subtitle>
         <div
           :if={@setup_funnel?}
-          class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
+          class="fixed flex inset-0 bg-gray-500/75 transition-opacity z-50"
           phx-window-keydown="cancel-setup-funnel"
           phx-key="Escape"
         >
+          <div class="w-full self-center block group-has-[#funnel-form]:hidden">
+            <div class="text-center">
+              <.spinner class="inline-block h-8 w-8" />
+            </div>
+          </div>
         </div>
         <%= if @setup_funnel? do %>
           {live_render(
