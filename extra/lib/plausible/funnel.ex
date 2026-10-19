@@ -10,7 +10,7 @@ defmodule Plausible.Funnel do
   This module defines the database schema for storing funnels
   and changeset helpers for enumerating the steps within.
 
-  Each can step reference a goal (either a Custom Event or Visit; 
+  Each step can reference a goal (either a Custom Event or Visit; 
   see `Plausible.Goal`) or it can be defined fully dynamically.
   """
 
