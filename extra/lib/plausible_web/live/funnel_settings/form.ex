@@ -42,12 +42,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def render(assigns) do
     ~H"""
-    <div
-      class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
-      phx-window-keydown="cancel-add-funnel"
-      phx-key="Escape"
-    >
-    </div>
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
       <div class="md:w-2/3 max-w-xl h-full">
         <div id="funnel-form">

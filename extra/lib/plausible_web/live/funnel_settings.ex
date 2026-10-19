@@ -65,6 +65,13 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         <:subtitle :if={Enum.count(@all_funnels) > 0}>
           Compose goals into funnels to track user flows and conversion rates.
         </:subtitle>
+        <div
+          :if={@setup_funnel?}
+          class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
+          phx-window-keydown="cancel-setup-funnel"
+          phx-key="Escape"
+        >
+        </div>
         <%= if @setup_funnel? do %>
           {live_render(
             @socket,
@@ -126,6 +133,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_event("add-funnel", _value, socket) do
     {:noreply, assign(socket, setup_funnel?: true)}
+  end
+
+  def handle_event("cancel-setup-funnel", _value, socket) do
+    send(self(), :cancel_setup_funnel)
+    {:noreply, socket}
   end
 
   def handle_event("edit-funnel", %{"funnel-id" => id}, socket) do
