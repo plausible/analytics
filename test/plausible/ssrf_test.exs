@@ -161,7 +161,7 @@ defmodule Plausible.SSRFTest do
 
   describe "pool_max_idle_time" do
     test "an idle Finch pool is reaped after pool_max_idle_time, instead of lingering forever" do
-      # This exercises the same connect_options/pool_max_idle_time shape
+      # This exercises the same finch pool options shape
       # SSRF.do_request/3 builds, via a real Finch pool - it can't be driven
       # through SSRF.get/2 itself because the only network target reachable
       # from a test is loopback, which SSRF.resolve_host/1 correctly (and
@@ -188,8 +188,7 @@ defmodule Plausible.SSRFTest do
                Req.request(
                  method: :get,
                  url: "http://localhost:#{bypass.port}/",
-                 connect_options: [hostname: "localhost"],
-                 pool_max_idle_time: 50
+                 finch: [conn_opts: [hostname: "localhost"], pool_max_idle_time: 50]
                )
 
       assert_receive :pool_reaped, 2000
