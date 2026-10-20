@@ -9,9 +9,10 @@ defmodule Plausible.Goals do
 
   import Ecto.Query
 
-  alias Plausible.Goal
-  alias Ecto.Multi
   alias Ecto.Changeset
+  alias Ecto.Multi
+  alias Plausible.Funnel
+  alias Plausible.Goal
 
   @max_goals_per_site 1_000
   @spec max_goals_per_site(Keyword.t()) :: pos_integer()
