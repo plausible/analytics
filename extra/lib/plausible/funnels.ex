@@ -147,7 +147,6 @@ defmodule Plausible.Funnels do
   def with_goals_query(site) do
     from(f in Funnel,
       where: f.site_id == ^site.id,
-      group_by: f.id,
       order_by: [desc: :id],
       preload: [steps: :goal]
     )
