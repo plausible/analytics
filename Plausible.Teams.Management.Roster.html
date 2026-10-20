@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Teams.Management.Layout — Plausible v0.0.1</title>
+    <title>Plausible.Teams.Management.Roster — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-A1F55C48.js"></script>
+    <script src="dist/sidebar_items-9EC934E4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,23 +126,20 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.Teams.Management.Layout</span> 
+    <span translate="no">Plausible.Teams.Management.Roster</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Abstraction for team membership(s) layout - provides a high level CRUD for
-setting up team memberships, including invitations. Persisting the layout,
-effectively takes care of delegating the operations to specialized services
-and sending out e-mail notifications on success, if need be.
-To be used in UIs allowing team memberships adjustments.</p>
+<p>Read-only list of a team's members and pending invitations, keyed by e-mail,
+for rendering the team management screen.</p>
     </section>
 
 </div>
@@ -175,14 +172,6 @@ To be used in UIs allowing team memberships adjustments.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#active_count/1" data-no-tooltip translate="no">active_count(layout)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#build_by_email/1" data-no-tooltip translate="no">build_by_email(entities)</a>
 
       </div>
@@ -191,7 +180,7 @@ To be used in UIs allowing team memberships adjustments.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#has_guests?/1" data-no-tooltip translate="no">has_guests?(layout)</a>
+        <a href="#has_guests?/1" data-no-tooltip translate="no">has_guests?(roster)</a>
 
       </div>
 
@@ -207,7 +196,7 @@ To be used in UIs allowing team memberships adjustments.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#owners_count/1" data-no-tooltip translate="no">owners_count(layout)</a>
+        <a href="#owners_count/1" data-no-tooltip translate="no">owners_count(roster)</a>
 
       </div>
 
@@ -215,7 +204,18 @@ To be used in UIs allowing team memberships adjustments.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#persist/2" data-no-tooltip translate="no">persist(layout, context)</a>
+        <a href="#removable?/2" data-no-tooltip translate="no">removable?(roster, email)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Whether the entry can be removed without leaving the team without an owner.
+Only a hint for rendering: the services doing the removal check this again.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sorted_for_display/1" data-no-tooltip translate="no">sorted_for_display(roster)</a>
 
       </div>
 
@@ -223,57 +223,12 @@ To be used in UIs allowing team memberships adjustments.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#persist_entry/3" data-no-tooltip translate="no">persist_entry(entry, context, acc)</a>
+        <a href="#users/1" data-no-tooltip translate="no">users(roster)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#removable?/2" data-no-tooltip translate="no">removable?(layout, email)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#schedule_delete/2" data-no-tooltip translate="no">schedule_delete(layout, email)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#schedule_send/4" data-no-tooltip translate="no">schedule_send(layout, email, role, entry_attrs \\ [])</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#sorted_for_display/1" data-no-tooltip translate="no">sorted_for_display(layout)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#update_role/3" data-no-tooltip translate="no">update_role(layout, email, role)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#verify_removable/2" data-no-tooltip translate="no">verify_removable(layout, email)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>The users of the roster's memberships. Pending invitations have no user yet,
+so they're left out.</p></div>
 
     </div>
 
@@ -298,7 +253,7 @@ To be used in UIs allowing team memberships adjustments.</p>
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L14" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L10" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -309,7 +264,7 @@ To be used in UIs allowing team memberships adjustments.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="Plausible.Teams.Management.Layout.Entry.html#t:t/0">Plausible.Teams.Management.Layout.Entry.t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="Plausible.Teams.Management.Roster.Entry.html#t:t/0">Plausible.Teams.Management.Roster.Entry.t</a>()}</pre>
 
       </div>
 
@@ -328,32 +283,6 @@ To be used in UIs allowing team memberships adjustments.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="active_count/1">
-
-  <div class="detail-header">
-    <a href="#active_count/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">active_count(layout)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L40" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> active_count(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="build_by_email/1">
 
   <div class="detail-header">
@@ -362,7 +291,7 @@ To be used in UIs allowing team memberships adjustments.</p>
     </a>
     <h1 class="signature" translate="no">build_by_email(entities)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L25" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L20" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -388,9 +317,9 @@ To be used in UIs allowing team memberships adjustments.</p>
     <a href="#has_guests?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">has_guests?(layout)</h1>
+    <h1 class="signature" translate="no">has_guests?(roster)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L50" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -416,7 +345,7 @@ To be used in UIs allowing team memberships adjustments.</p>
     </a>
     <h1 class="signature" translate="no">init(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -440,9 +369,9 @@ To be used in UIs allowing team memberships adjustments.</p>
     <a href="#owners_count/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">owners_count(layout)</h1>
+    <h1 class="signature" translate="no">owners_count(roster)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L45" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L28" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -460,65 +389,15 @@ To be used in UIs allowing team memberships adjustments.</p>
 
   </section>
 </section>
-<section class="detail" id="persist/2">
-
-  <div class="detail-header">
-    <a href="#persist/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">persist(layout, context)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L115" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> persist(<a href="#t:t/0">t</a>(), %{
-  :current_user =&gt; <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
-  :current_team =&gt; <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(),
-  optional(:name_changeset) =&gt; <a href="https://hexdocs.pm/ecto/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
-}) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="persist_entry/3">
-
-  <div class="detail-header">
-    <a href="#persist_entry/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">persist_entry(entry, context, acc)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L180" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="removable?/2">
 
   <div class="detail-header">
     <a href="#removable?/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">removable?(layout, email)</h1>
+    <h1 class="signature" translate="no">removable?(roster, email)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L85" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L51" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -533,61 +412,8 @@ To be used in UIs allowing team memberships adjustments.</p>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="schedule_delete/2">
-
-  <div class="detail-header">
-    <a href="#schedule_delete/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">schedule_delete(layout, email)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L74" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> schedule_delete(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="schedule_send/4">
-
-    <span id="schedule_send/3"></span>
-
-  <div class="detail-header">
-    <a href="#schedule_send/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">schedule_send(layout, email, role, entry_attrs \\ [])</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L68" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> schedule_send(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-
+<p>Whether the entry can be removed without leaving the team without an owner.
+Only a hint for rendering: the services doing the removal check this again.</p>
   </section>
 </section>
 <section class="detail" id="sorted_for_display/1">
@@ -596,9 +422,9 @@ To be used in UIs allowing team memberships adjustments.</p>
     <a href="#sorted_for_display/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">sorted_for_display(layout)</h1>
+    <h1 class="signature" translate="no">sorted_for_display(roster)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L90" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L58" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -610,7 +436,7 @@ To be used in UIs allowing team memberships adjustments.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> sorted_for_display(<a href="#t:t/0">t</a>()) :: [
-  {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="Plausible.Teams.Management.Layout.Entry.html#t:t/0">Plausible.Teams.Management.Layout.Entry.t</a>()}
+  {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="Plausible.Teams.Management.Roster.Entry.html#t:t/0">Plausible.Teams.Management.Roster.Entry.t</a>()}
 ]</pre>
 
       </div>
@@ -618,15 +444,15 @@ To be used in UIs allowing team memberships adjustments.</p>
 
   </section>
 </section>
-<section class="detail" id="update_role/3">
+<section class="detail" id="users/1">
 
   <div class="detail-header">
-    <a href="#update_role/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#users/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">update_role(layout, email, role)</h1>
+    <h1 class="signature" translate="no">users(roster)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L62" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/roster.ex#L37" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -637,37 +463,12 @@ To be used in UIs allowing team memberships adjustments.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> update_role(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="#t:t/0">t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> users(<a href="#t:t/0">t</a>()) :: [<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()]</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="verify_removable/2">
-
-  <div class="detail-header">
-    <a href="#verify_removable/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">verify_removable(layout, email)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/management/layout.ex#L80" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> verify_removable(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}</pre>
-
-      </div>
-
-
+<p>The users of the roster's memberships. Pending invitations have no user yet,
+so they're left out.</p>
   </section>
 </section>
 
