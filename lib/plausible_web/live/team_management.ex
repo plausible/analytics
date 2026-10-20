@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
   alias Plausible.Auth.User
   import PlausibleWeb.Live.Components.Team
 
-  alias Plausible.Teams.Management.Layout
+  alias Plausible.Teams.Management.Roster
 
   def mount(_params, _session, socket) do
     {:ok, reset(socket)}
@@ -18,12 +18,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
     {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
-    layout = Layout.init(current_team)
+    roster = Roster.init(current_team)
     team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
 
     assign(socket,
       team_members_limit: team_members_limit,
-      layout: layout,
+      roster: roster,
       my_role: my_role,
       input_email: ""
     )
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
-      :if={@team_members_limit != 0 and at_limit?(@layout, @team_members_limit)}
+      :if={@team_members_limit != 0 and at_limit?(@roster, @team_members_limit)}
       current_user={@current_user}
       current_team={@current_team}
       limit={@team_members_limit}
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               placeholder="Enter e-mail"
               phx-debounce={200}
               readonly={
-                at_limit?(@layout, @team_members_limit) or
+                at_limit?(@roster, @team_members_limit) or
                   not TeamRolePermissions.can_manage_team?(@my_role)
               }
             />
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
             id="invite-member"
             type="submit"
             disabled={
-              at_limit?(@layout, @team_members_limit) or
+              at_limit?(@roster, @team_members_limit) or
                 not TeamRolePermissions.can_manage_team?(@my_role)
             }
           >
@@ -80,23 +80,23 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
       <div id="member-list">
         <.member
-          :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+          :for={{email, entry} <- Roster.sorted_for_display(@roster)}
           :if={entry.role != :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
-          me?={entry.id == @current_user.id}
-          pending?={entry.type in [:invitation_pending, :invitation_sent]}
+          me?={me?(entry, @current_user)}
+          pending?={Roster.Entry.invitation?(entry)}
           my_role={@my_role}
-          remove_disabled={not Layout.removable?(@layout, email)}
+          remove_disabled={not Roster.removable?(@roster, email)}
           disabled={
-            (entry.role == :owner && Layout.owners_count(@layout) == 1) or
+            (entry.role == :owner && Roster.owners_count(@roster) == 1) or
               not TeamRolePermissions.can_manage_team?(@my_role)
           }
         />
       </div>
 
-      <div :if={Layout.has_guests?(@layout)} class="flex items-center mt-4 mb-4" id="guests-hr">
+      <div :if={Roster.has_guests?(@roster)} class="flex items-center mt-4 mb-4" id="guests-hr">
         <hr class="grow border-t border-gray-200 dark:border-gray-700" />
         <span class="mx-4 text-gray-500 text-sm">
           Guests
@@ -104,27 +104,23 @@ defmodule PlausibleWeb.Live.TeamManagement do
         <hr class="grow border-t border-gray-200 dark:border-gray-700" />
       </div>
 
-      <div :if={Layout.has_guests?(@layout)} id="guest-list">
+      <div :if={Roster.has_guests?(@roster)} id="guest-list">
         <.member
-          :for={{email, entry} <- Layout.sorted_for_display(@layout)}
+          :for={{email, entry} <- Roster.sorted_for_display(@roster)}
           :if={entry.role == :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
-          pending?={entry.type in [:invitation_pending, :invitation_sent]}
+          pending?={Roster.Entry.invitation?(entry)}
           my_role={@my_role}
-          remove_disabled={not Layout.removable?(@layout, email)}
-          role_change_disabled={entry.type in [:invitation_pending, :invitation_sent]}
+          remove_disabled={not Roster.removable?(@roster, email)}
+          role_change_disabled={Roster.Entry.invitation?(entry)}
           disabled={not TeamRolePermissions.can_manage_team?(@my_role)}
         />
       </div>
     </div>
     """
   end
-
-  @permission_denied_message "Permission denied"
-  @not_found_message "This member or invitation doesn't exist anymore. Please reload the page"
-  @only_one_owner_message "The team has to have at least one owner"
 
   def handle_event("form-changed", params, socket) do
     {:noreply, assign(socket, input_email: params["input-email"])}
@@ -140,65 +136,48 @@ defmodule PlausibleWeb.Live.TeamManagement do
     socket = assign(socket, input_email: email)
 
     socket =
-      case Teams.Invitations.InviteToTeam.invite_all(reload(team), current_user, [
+      case Teams.Invitations.InviteToTeam.invite_all(reload!(team), current_user, [
              %{email: email, role: role}
            ]) do
         {:ok, invitations} ->
           Teams.Invitations.InviteToTeam.send_invitation_emails(invitations)
           socket |> reset() |> put_live_flash(:success, "#{email} has been invited")
 
-        {:error, reason} when reason in [:invalid_email, :already_a_member, :already_invited] ->
-          put_live_flash(
-            socket,
-            :error,
-            "Make sure the e-mail is valid and not already taken by an existing member or invitation"
-          )
+        {:error, reason}
+        when reason in [
+               :invalid_email,
+               :already_a_member,
+               :invited_as_member,
+               :already_a_guest,
+               :invited_as_guest,
+               :permission_denied
+             ] ->
+          put_error_flash(socket, reason)
 
-        {:error, :already_a_guest} ->
-          put_live_flash(
-            socket,
-            :error,
-            "This e-mail belongs to a guest. Please change their role below, or delete and invite them again."
-          )
-
-        {:error, :already_invited_guest} ->
-          put_live_flash(
-            socket,
-            :error,
-            "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
-          )
-
-        {:error, :permission_denied} ->
-          put_live_flash(socket, :error, @permission_denied_message)
-
-        {:error, {:over_limit, limit}} ->
-          put_live_flash(
-            socket,
-            :error,
-            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
-          )
+        {:error, {:over_limit, _limit} = reason} ->
+          put_error_flash(socket, reason)
       end
 
     {:noreply, socket}
   end
 
-  def handle_event("remove-member", %{"email" => email}, %{assigns: %{layout: layout}} = socket) do
-    {:noreply, remove(socket, Map.fetch!(layout, email))}
+  def handle_event("remove-member", %{"email" => email}, %{assigns: %{roster: roster}} = socket) do
+    {:noreply, remove(socket, Map.fetch!(roster, email))}
   end
 
   def handle_event(
         "update-role",
         %{"email" => email, "role" => role},
-        %{assigns: %{layout: layout}} = socket
+        %{assigns: %{roster: roster}} = socket
       ) do
-    {:noreply, update_role(socket, Map.fetch!(layout, email), role_to_atom(role))}
+    {:noreply, update_role(socket, Map.fetch!(roster, email), role_to_atom(role))}
   end
 
-  defp remove(socket, %Layout.Entry{type: :membership, meta: membership}) do
+  defp remove(socket, %Roster.Entry{source: %Teams.Membership{} = membership}) do
     %{current_team: team, current_user: current_user} = socket.assigns
     myself? = membership.user.id == current_user.id
 
-    case Teams.Memberships.Remove.remove(reload(team), membership.user.id, current_user) do
+    case Teams.Memberships.Remove.remove(reload!(team), membership.user.id, current_user) do
       {:ok, _} when myself? ->
         socket
         |> put_flash(:success, "You have left the team")
@@ -209,22 +188,17 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> reset()
         |> put_live_flash(:success, "#{membership.user.email} has been removed from the team")
 
-      {:error, :membership_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, reason} when reason in [:permission_denied, :not_a_member] ->
-        put_live_flash(socket, :error, @permission_denied_message)
-
-      {:error, :only_one_owner} ->
-        put_live_flash(socket, :error, @only_one_owner_message)
+      {:error, reason}
+      when reason in [:membership_not_found, :permission_denied, :not_a_member, :only_one_owner] ->
+        put_error_flash(socket, reason)
     end
   end
 
-  defp remove(socket, %Layout.Entry{type: :invitation_sent, meta: invitation}) do
+  defp remove(socket, %Roster.Entry{source: %Teams.Invitation{} = invitation}) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.RemoveFromTeam.remove(
-           reload(team),
+           reload!(team),
            invitation.invitation_id,
            current_user
          ) do
@@ -233,15 +207,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> reset()
         |> put_live_flash(:success, "The invitation for #{invitation.email} has been removed")
 
-      {:error, :invitation_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, reason} when reason in [:permission_denied, :not_a_member] ->
-        put_live_flash(socket, :error, @permission_denied_message)
+      {:error, reason}
+      when reason in [:invitation_not_found, :permission_denied, :not_a_member] ->
+        put_error_flash(socket, reason)
     end
   end
 
-  defp update_role(socket, %Layout.Entry{type: :membership, meta: membership}, role) do
+  defp update_role(socket, %Roster.Entry{source: %Teams.Membership{} = membership}, role) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     demoting_myself? =
@@ -249,7 +221,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         not TeamRolePermissions.can_manage_team?(role)
 
     case Teams.Memberships.UpdateRole.update(
-           reload(team),
+           reload!(team),
            membership.user.id,
            role,
            current_user
@@ -268,25 +240,17 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
         |> animate_role_change(membership.user.email)
 
-      {:error, :membership_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, :permission_denied} ->
-        put_live_flash(socket, :error, @permission_denied_message)
-
-      {:error, :only_one_owner} ->
-        put_live_flash(socket, :error, @only_one_owner_message)
-
-      {:error, :disabled_2fa} ->
-        put_live_flash(socket, :error, "User must have 2FA enabled to become an owner")
+      {:error, reason}
+      when reason in [:membership_not_found, :permission_denied, :only_one_owner, :disabled_2fa] ->
+        put_error_flash(socket, reason)
     end
   end
 
-  defp update_role(socket, %Layout.Entry{type: :invitation_sent, meta: invitation}, role) do
+  defp update_role(socket, %Roster.Entry{source: %Teams.Invitation{} = invitation}, role) do
     %{current_team: team, current_user: current_user} = socket.assigns
 
     case Teams.Invitations.UpdateRole.update(
-           reload(team),
+           reload!(team),
            invitation.invitation_id,
            role,
            current_user
@@ -300,20 +264,46 @@ defmodule PlausibleWeb.Live.TeamManagement do
         )
         |> animate_role_change(invitation.email)
 
-      {:error, :invitation_not_found} ->
-        put_live_flash(socket, :error, @not_found_message)
-
-      {:error, :guest_invitation} ->
-        put_live_flash(
-          socket,
-          :error,
-          "A guest invitation can't be changed into a team invitation. Remove it and send a team invitation instead"
-        )
-
-      {:error, :permission_denied} ->
-        put_live_flash(socket, :error, @permission_denied_message)
+      {:error, reason}
+      when reason in [:invitation_not_found, :guest_invitation, :permission_denied] ->
+        put_error_flash(socket, reason)
     end
   end
+
+  defp put_error_flash(socket, reason) do
+    put_live_flash(socket, :error, error_message(reason))
+  end
+
+  defp error_message(reason) when reason in [:membership_not_found, :invitation_not_found],
+    do: "This member or invitation doesn't exist anymore. Please reload the page"
+
+  defp error_message(reason) when reason in [:permission_denied, :not_a_member],
+    do: "Permission denied"
+
+  defp error_message(reason)
+       when reason in [:invalid_email, :already_a_member, :invited_as_member],
+       do:
+         "Make sure the e-mail is valid and not already taken by an existing member or invitation"
+
+  defp error_message(:already_a_guest),
+    do:
+      "This e-mail belongs to a guest. Please change their role below, or delete and invite them again."
+
+  defp error_message(:invited_as_guest),
+    do:
+      "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
+
+  defp error_message(:guest_invitation),
+    do:
+      "A guest invitation can't be changed into a team invitation. Remove it and send a team invitation instead"
+
+  defp error_message(:only_one_owner), do: "The team has to have at least one owner"
+
+  defp error_message(:disabled_2fa), do: "User must have 2FA enabled to become an owner"
+
+  defp error_message({:over_limit, limit}),
+    do:
+      "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
 
   defp animate_role_change(socket, email) do
     push_event(socket, "js-exec", %{
@@ -322,24 +312,26 @@ defmodule PlausibleWeb.Live.TeamManagement do
     })
   end
 
-  defp reload(team), do: Plausible.Repo.reload!(team)
+  defp reload!(team), do: Plausible.Repo.reload!(team)
 
   defp role_name(role), do: role |> to_string() |> String.capitalize()
 
-  defp entry_label(%Layout.Entry{role: :guest, type: :membership}, _), do: nil
-  defp entry_label(%Layout.Entry{type: :invitation_pending}, _), do: "Invitation pending"
-  defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation sent"
+  defp entry_label(%Roster.Entry{role: :guest, source: %Teams.Membership{}}, _), do: nil
+  defp entry_label(%Roster.Entry{source: %Teams.Invitation{}}, _), do: "Invitation sent"
 
-  defp entry_label(%Layout.Entry{meta: %{user: %{id: id, type: :sso}}}, %{id: id}),
+  defp entry_label(%Roster.Entry{source: %{user: %{id: id, type: :sso}}}, %{id: id}),
     do: "You (SSO)"
 
-  defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
-  defp entry_label(%Layout.Entry{meta: %{user: %{type: :sso}}}, _), do: "SSO"
+  defp entry_label(%Roster.Entry{source: %{user: %{id: id}}}, %{id: id}), do: "You"
+  defp entry_label(%Roster.Entry{source: %{user: %{type: :sso}}}, _), do: "SSO"
   defp entry_label(_, _), do: nil
 
-  def at_limit?(layout, limit) do
+  defp me?(%Roster.Entry{source: %Teams.Membership{user: %{id: id}}}, %{id: id}), do: true
+  defp me?(_, _), do: false
+
+  def at_limit?(roster, limit) do
     not Plausible.Billing.Quota.below_limit?(
-      Layout.active_count(layout) - 1,
+      map_size(roster) - 1,
       limit
     )
   end

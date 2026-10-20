@@ -336,6 +336,25 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     end
 
     describe "members" do
+      test "lists members linking to their user page, and pending invitations without a link",
+           %{conn: conn, user: user} do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "member@example.com"), role: :editor)
+        invite_member(team, "invitee@example.com", role: :viewer, inviter: user)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        assert text_of_element(html, ~s|a[href="#{~p"/cs/users/user/#{member.id}"}"]|) =~
+                 "member@example.com"
+
+        rows = html |> find("tbody tr") |> Enum.map(&text/1)
+
+        assert Enum.any?(rows, &(&1 =~ "member@example.com" and &1 =~ "membership"))
+        assert Enum.any?(rows, &(&1 =~ "invitee@example.com" and &1 =~ "invitation"))
+
+        refute html |> find("tbody a") |> text() =~ "invitee@example.com"
+      end
+
       test "shows no suppression warning for a member whose e-mail isn't suppressed", %{
         conn: conn,
         user: user

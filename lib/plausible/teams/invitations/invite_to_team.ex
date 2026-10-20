@@ -6,35 +6,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  @valid_roles Plausible.Teams.Invitation.roles() -- [:guest]
-  @valid_roles @valid_roles ++ Enum.map(@valid_roles, &to_string/1)
-
   @type invite_entry() :: %{email: String.t(), role: atom() | String.t()}
-
-  # DEPRECATED: to be removed together with `Teams.Management.Layout.persist/2`,
-  # its only caller outside tests. Use `invite_all/4` + `send_invitation_emails/1`
-  # instead. `invite_all/4` duplicates this function's body on purpose, so that
-  # this one can be deleted as-is once nothing calls it anymore.
-  def invite(team, inviter, invitee_email, role, opts \\ [])
-
-  def invite(team, inviter, invitee_email, role, opts) when role in @valid_roles do
-    with team <- Repo.preload(team, [:owners]),
-         :ok <- Teams.Invitations.check_invitation_permissions(team, inviter, role, opts),
-         :ok <- Teams.Invitations.check_team_member_limit(team, role, invitee_email),
-         invitee = Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- Teams.Invitations.ensure_new_membership(team, invitee, role),
-         {:ok, invitation} <- Teams.Invitations.invite(team, invitee_email, role, inviter) do
-      if Keyword.get(opts, :send_email?, true) do
-        send_invitation_email(invitation, invitee)
-      end
-
-      {:ok, invitation}
-    end
-  end
-
-  def invite(_team, _inviter, _invitee_email, role, _opts) do
-    raise "Invalid role passed: #{inspect(role)}"
-  end
 
   @doc """
   Creates team invitations for all given entries in a single transaction.
@@ -96,11 +68,11 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
 
   defp do_invite(team, inviter, invitee_email, role) do
     with :ok <-
-           Teams.TeamRolePermissions.ensure_can_grant_for_invitation(team, inviter, nil, role),
+           Teams.TeamRolePermissions.ensure_can_invite(team, inviter, role),
          :ok <- Teams.Invitations.check_team_member_limit(team, role, invitee_email),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(team, invitee, role),
-         :ok <- Teams.Invitations.ensure_not_already_invited(team, invitee_email) do
+         :ok <- Teams.Invitations.ensure_no_invitations(team, invitee_email) do
       Teams.Invitations.invite(team, invitee_email, role, inviter)
     end
   end

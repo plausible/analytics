@@ -50,7 +50,7 @@ defmodule Plausible.Teams.Invitations.UpdateRoleTest do
                UpdateRole.update(team, invitation.invitation_id, :editor, owner)
     end
 
-    test "returns error when the granter isn't allowed to make the change", %{
+    test "returns error when the actor isn't allowed to make the change", %{
       user: owner,
       team: team
     } do
