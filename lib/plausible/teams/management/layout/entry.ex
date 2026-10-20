@@ -116,7 +116,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
     Plausible.Teams.Memberships.UpdateRole.update(
       context.current_team,
       meta.user.id,
-      "#{role}",
+      role,
       context.current_user
     )
   end
