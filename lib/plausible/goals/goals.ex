@@ -255,7 +255,7 @@ defmodule Plausible.Goals do
         _, %{goal: %{funnels: funnels}} ->
           funnels_to_wipe =
             funnels
-            |> Enum.filter(&(Enum.count(&1.steps) <= Funnel.Const.min_steps()))
+            |> Enum.filter(&(length(Funnel.steps(&1)) <= Funnel.Const.min_steps()))
             |> Enum.map(& &1.id)
 
           {:ok, funnels_to_wipe}
