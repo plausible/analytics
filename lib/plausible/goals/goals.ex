@@ -11,7 +11,6 @@ defmodule Plausible.Goals do
 
   alias Ecto.Changeset
   alias Ecto.Multi
-  alias Plausible.Funnel
   alias Plausible.Goal
 
   @max_goals_per_site 1_000
@@ -240,40 +239,50 @@ defmodule Plausible.Goals do
   defp delete_matching(base_query) do
     goal_query = on_ee(do: preload(base_query, funnels: :steps), else: base_query)
 
-    result =
+    multi =
       Multi.new()
       |> Multi.one(
         :goal,
         goal_query
       )
-      |> Multi.run(:funnel_ids_to_wipe, fn
-        _, %{goal: nil} ->
-          {:error, :not_found}
 
-        _, %{goal: %{funnels: []}} ->
-          {:ok, []}
+    multi =
+      on_ee do
+        multi
+        |> Multi.run(:funnel_ids_to_wipe, fn
+          _, %{goal: nil} ->
+            {:error, :not_found}
 
-        _, %{goal: %{funnels: funnels}} ->
-          funnels_to_wipe =
-            funnels
-            |> Enum.filter(&(length(Funnel.steps(&1)) <= Funnel.Const.min_steps()))
-            |> Enum.map(& &1.id)
+          _, %{goal: %{funnels: []}} ->
+            {:ok, []}
 
-          {:ok, funnels_to_wipe}
-      end)
-      |> Multi.merge(fn
-        %{funnel_ids_to_wipe: []} ->
-          Ecto.Multi.new()
+          _, %{goal: %{funnels: funnels}} ->
+            funnels_to_wipe =
+              funnels
+              |> Enum.filter(&(length(Funnel.steps(&1)) <= Funnel.Const.min_steps()))
+              |> Enum.map(& &1.id)
 
-        %{funnel_ids_to_wipe: [_ | _] = funnel_ids} ->
-          Ecto.Multi.new()
-          |> Multi.delete_all(
-            :delete_funnels,
-            from(f in "funnels",
-              where: f.id in ^funnel_ids
+            {:ok, funnels_to_wipe}
+        end)
+        |> Multi.merge(fn
+          %{funnel_ids_to_wipe: []} ->
+            Ecto.Multi.new()
+
+          %{funnel_ids_to_wipe: [_ | _] = funnel_ids} ->
+            Ecto.Multi.new()
+            |> Multi.delete_all(
+              :delete_funnels,
+              from(f in "funnels",
+                where: f.id in ^funnel_ids
+              )
             )
-          )
-      end)
+        end)
+      else
+        multi
+      end
+
+    result =
+      multi
       |> Multi.delete_all(:delete_goals, fn _ -> base_query end)
       |> Repo.transaction()
 
