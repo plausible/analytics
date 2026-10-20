@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
   import PlausibleWeb.Live.Components.Team, only: [role_select_input: 1]
 
   alias Plausible.Teams
-  alias Plausible.Teams.Management.Layout
 
   def mount(_params, _session, socket) do
     socket =
@@ -151,20 +150,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
-    name_changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
-
-    # Only validated here, not persisted yet - the rename is committed
-    # together with the rest of team creation (including invitations).
-    case Ecto.Changeset.apply_action(name_changeset, :update) do
-      {:ok, _team} ->
-        create_team(socket, name_changeset, Map.get(params, "rows", %{}))
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, team_name_form: to_form(changeset))}
-    end
+    create_team(socket, name, Map.get(params, "rows", %{}))
   end
 
-  defp create_team(socket, name_changeset, rows_params) do
+  defp create_team(socket, name, rows_params) do
     entries =
       rows_params
       |> Map.values()
@@ -178,34 +167,16 @@ defmodule PlausibleWeb.Live.TeamSetup do
       end)
       |> Enum.filter(&(&1.email != ""))
 
-    emails = Enum.map(entries, & &1.email)
-
-    cond do
-      Enum.any?(emails, &(not valid_email?(&1))) ->
-        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
-
-      Enum.uniq(emails) != emails ->
-        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
-
-      socket.assigns.current_user.email in emails ->
-        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
-
-      true ->
-        layout =
-          Enum.reduce(entries, %{}, fn %{email: email, role: role}, layout ->
-            Layout.schedule_send(layout, email, role)
-          end)
-
-        persist_layout(socket, layout, name_changeset)
-    end
+    setup_team(socket, name, entries)
   end
 
-  defp persist_layout(socket, layout, name_changeset) do
-    case Layout.persist(layout, %{
-           current_user: socket.assigns.current_user,
-           current_team: socket.assigns.current_team,
-           name_changeset: name_changeset
-         }) do
+  defp setup_team(socket, name, entries) do
+    case Teams.setup(
+           socket.assigns.current_team,
+           name,
+           entries,
+           socket.assigns.current_user
+         ) do
       {:ok, _} ->
         {:noreply,
          socket
@@ -214,6 +185,26 @@ defmodule PlausibleWeb.Live.TeamSetup do
            to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
          )}
 
+      {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
+        {:noreply, assign(socket, team_name_form: to_form(changeset))}
+
+      {:error, :invalid_email} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
+
+      {:error, :duplicate_emails} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
+
+      {:error, reason} when reason in [:already_a_guest, :already_invited_guest] ->
+        {:noreply,
+         put_live_flash(
+           socket,
+           :error,
+           "Some of these e-mails belong to site guests who cannot be invited at this stage. Please invite them later in team settings"
+         )}
+
+      {:error, :already_a_member} ->
+        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
+
       {:error, {:over_limit, limit}} ->
         {:noreply,
          put_live_flash(
@@ -221,22 +212,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
            :error,
            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
          )}
-
-      {:error, other} ->
-        # Team setup only ever sends brand-new invitations (never updates or
-        # removes existing memberships), so none of Layout.persist/2's other
-        # known error reasons (permission checks, last-owner protection, 2FA
-        # enforcement) are reachable from here. Anything else is unexpected.
-        Sentry.capture_message("Unexpected error while creating team via team setup",
-          extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
-        )
-
-        {:noreply, put_live_flash(socket, :error, "Something went wrong. Please try again")}
     end
-  end
-
-  defp valid_email?(email) do
-    String.contains?(email, "@") and String.contains?(email, ".")
   end
 
   @max_rows_when_unlimited 20
