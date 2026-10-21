@@ -56,6 +56,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
     >
       <.combobox :let={input_value} name={@submit_name} id={@id} class={@class} selections={@selected}>
         <.combobox_input
+          id={"combobox-search-input-#{@id}"}
           value={input_value}
           class={
             Enum.join(
@@ -103,7 +104,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
 
               <.combobox_option
                 id={"input-picker-dropdown-#{@id}-option-#{idx}"}
-                class="px-4 py-2.5 leading-5 rounded-md text-sm text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none data-focus:bg-gray-100 data-focus:text-gray-900 dark:data-focus:bg-gray-700 dark:data-focus:text-gray-100 data-selected:bg-gray-100 data-selected:text-gray-900 dark:data-selected:bg-gray-700 dark:data-selected:text-gray-100"
+                class="input-picker-dropdown-option px-4 py-2.5 leading-5 rounded-md text-sm text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer select-none data-focus:bg-gray-100 data-focus:text-gray-900 dark:data-focus:bg-gray-700 dark:data-focus:text-gray-100 data-selected:bg-gray-100 data-selected:text-gray-900 dark:data-selected:bg-gray-700 dark:data-selected:text-gray-100"
                 value={value}
                 display={display_name}
               >
