@@ -16,6 +16,10 @@ config :plausible, PlausibleWeb.Endpoint,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# hackney 4 defaults to HTTP/2 via the `h2` package, whose modules clash with
+# `chatterbox` (used by the OTel gRPC exporter). Stay on HTTP/1.1 like hackney 1.x.
+config :hackney, default_protocols: [:http1]
+
 config :esbuild,
   version: "0.17.11",
   default: [
