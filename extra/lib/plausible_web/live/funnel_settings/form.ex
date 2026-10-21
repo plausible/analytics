@@ -570,7 +570,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           "goal" => %{
             "id" => goal.id,
             "event_name" => goal.event_name,
-            "page_path" => goal.page_path
+            "page_path" => goal.page_path,
+            "currency" => goal.currency,
+            "scroll_threshold" => goal.scroll_threshold,
+            "custom_props" => goal.custom_props
           }
         }
       end)
