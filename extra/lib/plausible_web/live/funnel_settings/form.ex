@@ -513,7 +513,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   defp to_goal(%{"goal_id" => goal_id} = step_data) do
     step_data
     |> Map.delete("goal_id")
-    |> to_goal()
+    |> then(&Plausible.Goal.changeset(%Plausible.Goal{}, &1))
+    |> Ecto.Changeset.apply_changes()
     |> Map.put(:id, goal_id)
   end
 
