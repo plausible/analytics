@@ -366,4 +366,70 @@ test.describe('funnel settings', () => {
       'Last month conversion rate: 0%'
     )
   })
+
+  test('scroll goal can be picked for a matching pageview event from the previous step', async ({
+    page,
+    request
+  }) => {
+    const { domain } = await setupSite({ page, request })
+
+    await addGoal({
+      request,
+      domain,
+      params: {
+        page_path: '/page1',
+        scroll_threshold: 90,
+        display_name: 'Scroll 90% on /page1'
+      }
+    })
+
+    await populateStats({
+      request,
+      domain,
+      events: [
+        {
+          user_id: 123,
+          name: 'pageview',
+          pathname: '/page1',
+          timestamp: { minutesAgo: 1500 }
+        },
+        {
+          user_id: 123,
+          name: 'engagement',
+          pathname: '/page1',
+          scroll_depth: 90,
+          timestamp: { minutesAgo: 1499 }
+        },
+        {
+          user_id: 123,
+          name: 'pageview',
+          pathname: '/page2',
+          timestamp: { minutesAgo: 1498 }
+        }
+      ]
+    })
+
+    await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+
+    await page.getByRole('button', { name: 'Add funnel' }).click()
+
+    await expect(page.locator('#funnel-form')).toBeVisible()
+
+    await page.locator('#step-1 input').click()
+
+    await page
+      .locator('#step-1 .input-picker-dropdown-option')
+      .getByText('Visit /page1')
+      .click()
+
+    await expect(page.locator('#step-1 input')).toHaveValue('Visit /page1')
+
+    await page.locator('#step-2 input').click()
+
+    await expect(
+      page
+        .locator('#step-2 .input-picker-dropdown-option')
+        .getByText('Scroll 90% on /page1')
+    ).toBeVisible()
+  })
 })
