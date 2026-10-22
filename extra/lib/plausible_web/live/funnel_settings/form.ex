@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     selected={selected_option(@steps, @funnel_modified?, step_idx)}
                     suggest_trigger={@steps}
                     suggest_fun={
-                      fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
+                      fn input, _choices -> suggest(input, @site, @goals) end
                     }
                   />
                 </div>
@@ -362,13 +362,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, evaluate_funnel(socket)}
   end
 
-  defp suggest(input, site, goals, steps, step_idx) do
-    steps =
-      steps
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx}" end)
-      |> Enum.map(&elem(&1, 1))
-
+  defp suggest(input, site, goals) do
     query =
       QueryBuilder.build!(site,
         metrics: [:pageviews],
@@ -386,10 +380,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     unmatched_goal_entries =
       (unmatched_query_goals ++ other_goals)
       |> static_suggest(input)
-      |> to_suggestion_entries(steps)
+      |> to_suggestion_entries()
 
     suggestions
-    |> to_suggestion_entries(steps)
+    |> to_suggestion_entries()
     |> Enum.concat(unmatched_goal_entries)
     |> segment()
   end
@@ -416,9 +410,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     end
   end
 
-  defp to_suggestion_entries(suggestions, steps) do
+  defp to_suggestion_entries(suggestions) do
     suggestions
-    |> exclude_existing_steps(steps)
     |> Enum.map(
       &{to_step_data(&1), to_string(&1),
        [type: if(&1.event_name, do: :custom_event, else: :pageview)]}
@@ -465,19 +458,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
       acc ++ [{value, display_name, opts} | rest]
     end)
-  end
-
-  defp exclude_existing_steps(goals, steps) do
-    existing_steps =
-      MapSet.new(steps, &{&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props})
-
-    Enum.reject(
-      goals,
-      &MapSet.member?(
-        existing_steps,
-        {&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props}
-      )
-    )
   end
 
   defp has_steps_errors?(f) do
