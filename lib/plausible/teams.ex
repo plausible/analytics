@@ -297,6 +297,79 @@ defmodule Plausible.Teams do
     |> Repo.update!()
   end
 
+  @doc """
+  Lifts the team's grace period and unlocks its sites ("Unlock" in the CS
+  admin). Returns the updated team, or `{:error, :no_grace_period}`.
+  """
+  @spec unlock(Teams.Team.t()) :: {:ok, Teams.Team.t()} | {:error, :no_grace_period}
+  def unlock(%Teams.Team{grace_period: nil}), do: {:error, :no_grace_period}
+
+  def unlock(team) do
+    team = remove_grace_period(team)
+    :ok = Billing.SiteLocker.set_lock_status_for(team, false)
+    {:ok, %{team | locked: false}}
+  end
+
+  @doc """
+  Ends the team's grace period and locks its sites ("Lock" in the CS admin).
+  Returns the updated team, or `{:error, :no_grace_period}`.
+  """
+  @spec lock(Teams.Team.t()) :: {:ok, Teams.Team.t()} | {:error, :no_grace_period}
+  def lock(%Teams.Team{grace_period: nil}), do: {:error, :no_grace_period}
+
+  def lock(team) do
+    team = end_grace_period(team)
+    :ok = Billing.SiteLocker.set_lock_status_for(team, true)
+    {:ok, %{team | locked: true}}
+  end
+
+  @doc """
+  Locks the sites of a team whose subscription was cancelled and refunded,
+  and moves the subscription's next bill date to yesterday so its paid
+  period counts as over ("Refund Lock" in the CS admin). Expects the team's
+  subscription to be loaded. Returns the updated team (with the updated
+  subscription), or an error when the team isn't in that state.
+  """
+  @spec refund_lock(Teams.Team.t()) ::
+          {:ok, Teams.Team.t()}
+          | {:error, :subscription_not_cancelled | :has_grace_period | :already_locked}
+  def refund_lock(team) do
+    cond do
+      not match?(%Billing.Subscription{status: :deleted}, team.subscription) ->
+        {:error, :subscription_not_cancelled}
+
+      team.grace_period ->
+        {:error, :has_grace_period}
+
+      team.locked ->
+        {:error, :already_locked}
+
+      true ->
+        Repo.transaction(fn ->
+          yesterday = Date.shift(Date.utc_today(), day: -1)
+          :ok = Billing.SiteLocker.set_lock_status_for(team, true)
+
+          subscription =
+            Repo.update!(
+              Billing.Subscription.changeset(team.subscription, %{next_bill_date: yesterday})
+            )
+
+          %{team | locked: true, subscription: subscription}
+        end)
+    end
+  end
+
+  @doc """
+  To run after a team's trial dates or eligibility changed: prolonging the
+  trial (or otherwise making the team eligible again) cancels any pending
+  deletion schedule and unlocks the team without waiting for the nightly
+  lock check.
+  """
+  def refresh_lock_and_deletion_schedule(team) do
+    Plausible.TeamDeletionSchedules.cancel_for_team(team)
+    Billing.SiteLocker.update_for(team)
+  end
+
   def maybe_reset_next_upgrade_override(%Teams.Team{} = team) do
     if team.allow_next_upgrade_override do
       team

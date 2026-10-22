@@ -48,21 +48,13 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   end
 
   def handle_event("refund-lock", _, socket) do
-    team = socket.assigns.team
+    case Plausible.Teams.refund_lock(socket.assigns.team) do
+      {:ok, team} ->
+        {:noreply, assign(socket, team: team)}
 
-    {:ok, team} =
-      Plausible.Repo.transaction(fn ->
-        yesterday = Date.shift(Date.utc_today(), day: -1)
-        Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-
-        Plausible.Repo.update!(
-          Plausible.Billing.Subscription.changeset(team.subscription, %{next_bill_date: yesterday})
-        )
-
-        Resource.Team.get(team.id)
-      end)
-
-    {:noreply, assign(socket, team: team)}
+      {:error, reason} ->
+        {:noreply, put_live_flash(socket, :error, lock_error_message(reason))}
+    end
   end
 
   def render(assigns) do
@@ -353,29 +345,33 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   end
 
   defp lock_team(socket) do
-    if socket.assigns.team.grace_period do
-      team = Plausible.Teams.end_grace_period(socket.assigns.team)
-      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+    case Plausible.Teams.lock(socket.assigns.team) do
+      {:ok, team} ->
+        socket
+        |> put_live_flash(:success, "Team locked. Grace period ended.")
+        |> assign(team: team)
 
-      put_live_flash(socket, :success, "Team locked. Grace period ended.")
-      assign(socket, team: team)
-    else
-      put_live_flash(socket, :error, "No grace period")
-      socket
+      {:error, reason} ->
+        put_live_flash(socket, :error, lock_error_message(reason))
     end
   end
 
   defp unlock_team(socket) do
-    if socket.assigns.team.grace_period do
-      team = Plausible.Teams.remove_grace_period(socket.assigns.team)
-      Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
+    case Plausible.Teams.unlock(socket.assigns.team) do
+      {:ok, team} ->
+        socket
+        |> put_live_flash(:success, "Team unlocked. Grace period removed.")
+        |> assign(team: team)
 
-      put_live_flash(socket, :success, "Team unlocked. Grace period removed.")
-      assign(socket, team: team)
-    else
-      socket
+      {:error, reason} ->
+        put_live_flash(socket, :error, lock_error_message(reason))
     end
   end
+
+  defp lock_error_message(:no_grace_period), do: "No grace period"
+  defp lock_error_message(:subscription_not_cancelled), do: "Subscription isn't cancelled"
+  defp lock_error_message(:has_grace_period), do: "Team has a grace period"
+  defp lock_error_message(:already_locked), do: "Team is already locked"
 
   defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
     "unlimited"

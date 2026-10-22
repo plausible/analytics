@@ -593,4 +593,47 @@ defmodule Plausible.TeamsTest do
       assert Teams.owned_sites_count(nil) == 0
     end
   end
+
+  describe "lock/1 and unlock/1" do
+    test "refuse a team without a grace period" do
+      team = team_of(new_user(team: [setup_complete: true]))
+
+      assert Teams.lock(team) == {:error, :no_grace_period}
+      assert Teams.unlock(team) == {:error, :no_grace_period}
+    end
+
+    test "return the team with the new lock status" do
+      team = new_user(team: [setup_complete: true]) |> team_of() |> Teams.start_grace_period()
+
+      assert {:ok, locked} = Teams.lock(team)
+      assert locked.locked
+      assert Repo.reload!(team).locked
+
+      assert {:ok, unlocked} = Teams.unlock(locked)
+      refute unlocked.locked
+      refute Repo.reload!(team).locked
+    end
+  end
+
+  describe "refund_lock/1" do
+    test "refuses a team whose subscription isn't cancelled" do
+      user = new_user()
+      subscribe_to_growth_plan(user)
+      team = user |> team_of() |> Teams.with_subscription()
+
+      assert Teams.refund_lock(team) == {:error, :subscription_not_cancelled}
+    end
+
+    test "refuses a team that is already locked" do
+      user = new_user()
+      subscribe_to_growth_plan(user, status: Subscription.Status.deleted())
+      team = user |> team_of() |> Teams.with_subscription()
+
+      assert {:ok, locked} = Teams.refund_lock(team)
+      assert locked.locked
+      assert locked.subscription.next_bill_date == Date.shift(Date.utc_today(), day: -1)
+
+      assert Teams.refund_lock(locked) == {:error, :already_locked}
+    end
+  end
 end

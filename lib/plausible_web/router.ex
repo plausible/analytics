@@ -404,6 +404,42 @@ defmodule PlausibleWeb.Router do
         end
       end
     end
+
+    # Customer support automation API: one action per endpoint, each with an
+    # approval and an audit entry. See PlausibleWeb.Api.CustomerSupport.Helpers.
+    scope "/api/cs/v1", PlausibleWeb.Api.CustomerSupport do
+      pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
+
+      scope assigns: %{api_scope: "cs:read:*"} do
+        get "/teams/:team_id/usage", ReadController, :team_usage
+        get "/teams/:team_id/audit", ReadController, :team_audit
+        get "/email_suppressions", ReadController, :email_suppression
+      end
+
+      scope assigns: %{api_scope: "cs:billing:*"} do
+        post "/teams/:team_id/enterprise_plans", EnterprisePlanController, :create
+        post "/teams/:team_id/unlock", TeamBillingController, :unlock
+        post "/teams/:team_id/lock", TeamBillingController, :lock
+        post "/teams/:team_id/refund_lock", TeamBillingController, :refund_lock
+        post "/teams/:team_id/manual_subscription", TeamBillingController, :manual_subscription
+      end
+
+      scope assigns: %{api_scope: "cs:trials:*"} do
+        post "/teams/:team_id/trial", TeamTrialController, :extend
+        post "/teams/:team_id/block_trial", TeamTrialController, :block
+        post "/teams/:team_id/upgrade_override", TeamTrialController, :upgrade_override
+      end
+
+      scope assigns: %{api_scope: "cs:deletions:*"} do
+        post "/teams/:team_id/deletion_schedule/snooze", DeletionController, :snooze
+        post "/teams/:team_id/deletion_schedule/unsnooze", DeletionController, :unsnooze
+        post "/sites/:site_id/delete", DeletionController, :delete_site
+      end
+
+      scope assigns: %{api_scope: "cs:emails:*"} do
+        post "/email_suppressions/reactivate", EmailSuppressionController, :reactivate_suppression
+      end
+    end
   end
 
   scope "/api", PlausibleWeb do
