@@ -53,7 +53,9 @@ defmodule Plausible.Stats.Funnel do
     {Enum.reverse(suggestions), Map.values(unmatched_goals)}
   end
 
-  @spec step_to_goal(Exploration.Journey.Step.t(), [Plausible.Goal.t()]) ::
+  @spec step_to_goal(Exploration.Journey.Step.t(), %{
+          {String.t(), String.t()} => Plausible.Goal.t()
+        }) ::
           {Plausible.Goal.t(), :static, {binary(), binary()}} | {Plausible.Goal.t(), :dynamic}
   def step_to_goal(step, goals_map) do
     goal = goals_map[{step.name, step.pathname}]
