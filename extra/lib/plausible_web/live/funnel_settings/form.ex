@@ -52,7 +52,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     ~H"""
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
       <div class="md:w-2/3 max-w-xl h-full">
-        <div id="funnel-form" class="group relative">
+        <div
+          id="funnel-form"
+          class="group relative"
+          phx-click-away="cancel-add-funnel"
+          phx-target="#funnel-form"
+        >
           <div class="absolute inset-0 z-10 hidden items-center justify-center rounded-lg bg-white/50 dark:bg-gray-900/50 group-has-[.phx-click-loading]:flex">
             <.spinner class="h-8 w-8" />
           </div>
@@ -63,7 +68,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             phx-change="validate"
             phx-submit="save"
             phx-target="#funnel-form"
-            phx-click-away="cancel-add-funnel"
             onkeydown="return event.key != 'Enter';"
             class="bg-white dark:bg-gray-900 shadow-2xl rounded-lg px-8 pt-6 pb-8 mb-4 mt-8"
           >
