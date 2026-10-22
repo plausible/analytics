@@ -51,17 +51,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def render(assigns) do
     ~H"""
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
-      <div class="group md:w-2/3 max-w-xl h-full">
-          <div class="absolute bg-red-200 opacity-20 w-full right-4 top-4 hidden group-has-[.phx-click-loading]:block">
-              <div class="w-full self-center">
-                <div class="text-right">
-                  <.spinner class="inline-block h-8 w-8" />
-                </div>
-              </div>
-            </div>
+      <div class="md:w-2/3 max-w-xl h-full">
+        <div id="funnel-form" class="group relative">
+          <div class="absolute inset-0 z-10 hidden items-center justify-center rounded-lg bg-white/50 dark:bg-gray-900/50 group-has-[.phx-click-loading]:flex">
+            <.spinner class="h-8 w-8" />
+          </div>
 
-
-        <div id="funnel-form">
           <.form
             :let={f}
             for={@form}
