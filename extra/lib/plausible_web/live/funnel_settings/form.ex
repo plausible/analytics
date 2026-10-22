@@ -375,11 +375,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         input_date_range: {:last_n_days, 30}
       )
 
-    {suggestions, unmatched_goals} =
-      Plausible.Stats.Funnel.suggest(site, query, goals: goals, input: input)
+    {goals_for_query, other_goals} =
+      Enum.split_with(goals, fn g ->
+        g.scroll_threshold == -1 and map_size(g.custom_props) == 0 and is_nil(g.currency)
+      end)
+
+    {suggestions, unmatched_query_goals} =
+      Plausible.Stats.Funnel.suggest(site, query, goals: goals_for_query, input: input)
 
     unmatched_goal_entries =
-      unmatched_goals
+      (unmatched_query_goals ++ other_goals)
       |> static_suggest(input)
       |> to_suggestion_entries(steps)
 
