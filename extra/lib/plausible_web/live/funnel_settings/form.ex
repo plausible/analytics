@@ -373,8 +373,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   defp suggest(input, site, goals, steps, step_idx) do
     steps =
       steps
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.take_while(fn {idx, _} -> idx != "step-#{step_idx}" end)
+      |> Enum.filter(fn {idx, _} -> idx != "step-#{step_idx}" end)
       |> Enum.map(&elem(&1, 1))
 
     query =
