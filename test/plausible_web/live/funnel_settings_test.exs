@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/form[phx-change="validate"][phx-submit="save"][phx-click-away="cancel-add-funnel"]/
+                 ~s/form[phx-change="validate"][phx-submit="save"]/
                )
 
         assert element_exists?(doc, ~s/form input[type="text"][name="funnel[name]"]/)
