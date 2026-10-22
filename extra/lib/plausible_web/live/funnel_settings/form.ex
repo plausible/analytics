@@ -28,7 +28,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Enum.map(fn goal ->
         struct!(
           Plausible.Goal,
-          Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
+          Map.take(goal, [
+            :id,
+            :display_name,
+            :event_name,
+            :page_path,
+            :scroll_threshold,
+            :currency,
+            :custom_props
+          ])
         )
       end)
 
