@@ -368,7 +368,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
 
     {suggestions, unmatched_goals} =
-      Plausible.Stats.Funnel.suggest(site, query, steps: steps, goals: goals, input: input)
+      Plausible.Stats.Funnel.suggest(site, query, goals: goals, input: input)
 
     unmatched_goal_entries =
       unmatched_goals

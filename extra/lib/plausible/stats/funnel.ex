@@ -21,21 +21,14 @@ defmodule Plausible.Stats.Funnel do
   @spec suggest(Plausible.Site.t(), Plausible.Stats.Query.t(), Keyword.t()) ::
           {[Plausible.Goal.t()], [Plausible.Goal.t()]}
   def suggest(site, query, opts \\ []) do
-    steps = Keyword.get(opts, :steps, [])
     goals = Keyword.get(opts, :goals, [])
     input = Keyword.get(opts, :input, "")
-
-    journey = Enum.map(steps, &Exploration.Journey.Step.from/1)
 
     goals_map =
       Map.new(goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
 
     {:ok, suggestions} =
-      site
-      |> Exploration.next_steps(query, journey,
-        search_term: input,
-        include_wildcard?: false
-      )
+      Exploration.next_steps(site, query, [], search_term: input, include_wildcard?: false)
 
     {suggestions, unmatched_goals} =
       suggestions
