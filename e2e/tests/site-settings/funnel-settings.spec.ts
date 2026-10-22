@@ -69,6 +69,70 @@ test.describe('funnel settings', () => {
 
       await expect(page.locator('#funnel-form')).toBeHidden()
     })
+
+    await test.step('selecting one option reduces suggestions in the other', async () => {
+      await page.getByRole('button', { name: 'Add funnel' }).click()
+
+      await expect(page.locator('#funnel-form')).toBeVisible()
+
+      await page.locator('#step-1 input').fill('another')
+
+      await page
+        .locator('#step-1 .input-picker-dropdown-option')
+        .getByText('Another World')
+        .click()
+
+      await page.locator('#step-2 input').fill('a')
+
+      await expect(
+        page
+          .locator('#step-2 .input-picker-dropdown-option')
+          .getByText('Another World')
+      ).toBeHidden()
+
+      await page.keyboard.press('Escape')
+      await page.keyboard.press('Escape')
+
+      await expect(page.locator('#funnel-form')).toBeHidden()
+    })
+
+    await test.step('removing one option alters suggestions for other', async () => {
+      await page.getByRole('button', { name: 'Add funnel' }).click()
+
+      await expect(page.locator('#funnel-form')).toBeVisible()
+
+      await page.locator('a[phx-click=add-step]').click()
+
+      await page.locator('#step-2 input').fill('hello')
+
+      await page
+        .locator('#step-2 .input-picker-dropdown-option')
+        .getByText('Hello World')
+        .click()
+
+      await page.locator('#step-1 input').fill('hello')
+
+      await expect(
+        page
+          .locator('#step-1 .input-picker-dropdown-option')
+          .getByText('Hello World')
+      ).toBeHidden()
+
+      await page.locator('#remove-step-2').click()
+
+      await page.locator('#step-1 input').fill('hello')
+
+      await expect(
+        page
+          .locator('#step-1 .input-picker-dropdown-option')
+          .getByText('Hello World')
+      ).toBeVisible()
+
+      await page.keyboard.press('Escape')
+      await page.keyboard.press('Escape')
+
+      await expect(page.locator('#funnel-form')).toBeHidden()
+    })
   })
 
   test('save button saves a new funnel', async ({ page, request }) => {
@@ -292,7 +356,7 @@ test.describe('funnel settings', () => {
 
     await page.locator('#step-2 input').click()
 
-    await page.locator('#step-2 .input-picker-dropdown-option').nth(1).click()
+    await page.locator('#step-2 .input-picker-dropdown-option').first().click()
 
     await expect(page.locator('#step-2 input')).not.toHaveValue('')
 
