@@ -413,6 +413,7 @@ defmodule PlausibleWeb.Router do
       # One permission for the whole API: the key needs the `cs:*` scope, and
       # its user must be listed in `cs_automation_user_ids`.
       scope assigns: %{api_scope: "cs:*"} do
+        get "/ping", PingController, :ping
         post "/teams/:team_id/enterprise_plans", EnterprisePlanController, :create
         post "/teams/:team_id/enterprise_plans/:plan_id", EnterprisePlanController, :update
         post "/teams/:team_id/unlock", TeamBillingController, :unlock
