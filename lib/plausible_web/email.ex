@@ -741,5 +741,4 @@ defmodule PlausibleWeb.Email do
         nil
     end
   end
-
 end
