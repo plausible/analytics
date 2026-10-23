@@ -733,7 +733,7 @@ defmodule PlausibleWeb.Email do
   defp export_deletion_date(team, expires_at) do
     case Plausible.TeamDeletionSchedules.active_schedule_for_team(team) do
       %{status: status, deletion_date: %Date{} = deletion_date} when status != :snoozed ->
-        if is_nil(expires_at) or Date.compare(deletion_date, to_date(expires_at)) != :gt do
+        if is_nil(expires_at) or Date.compare(deletion_date, DateTime.to_date(expires_at)) != :gt do
           deletion_date
         end
 
@@ -742,6 +742,4 @@ defmodule PlausibleWeb.Email do
     end
   end
 
-  defp to_date(%DateTime{} = datetime), do: DateTime.to_date(datetime)
-  defp to_date(%NaiveDateTime{} = datetime), do: NaiveDateTime.to_date(datetime)
 end
