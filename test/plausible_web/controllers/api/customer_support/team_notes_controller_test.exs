@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamNotesControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:teams:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:*"])
       conn = put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
       customer = new_user()

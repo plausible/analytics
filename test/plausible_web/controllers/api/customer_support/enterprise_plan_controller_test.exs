@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
       } do
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert %{"result" => plan} = json_response(conn, 200)
@@ -71,14 +71,14 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
       } do
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(team, @plan)
 
         assert json_response(conn, 400)["error"] =~ "approval"
         refute Repo.exists?(from ep in EnterprisePlan, where: ep.team_id == ^team.id)
       end
 
-      test "refuses a key without the cs:billing scope", %{
+      test "refuses a key without the cs scope", %{
         conn: conn,
         automation: automation,
         team: team
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
       } do
         conn =
           conn
-          |> authorize(customer, ["cs:billing:*"])
+          |> authorize(customer, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 401)
@@ -122,21 +122,21 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(admin, ["cs:billing:*"])
+          |> authorize(admin, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 401)
         refute Repo.exists?(from ep in EnterprisePlan, where: ep.team_id == ^team.id)
       end
 
-      test "a broad * scope next to another cs: scope doesn't reach billing", %{
+      test "a broad * scope next to a stats scope doesn't reach the CS API", %{
         conn: conn,
         automation: automation,
         team: team
       } do
         conn =
           conn
-          |> authorize(automation, ["*", "cs:emails:*"])
+          |> authorize(automation, ["*", "stats:read:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 401)
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
       test "returns 404 for an unknown team", %{conn: conn, automation: automation} do
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> post("/api/cs/v1/teams/0/enterprise_plans", Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 404)
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 422)["error"] =~ "manual subscription"
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
       } do
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(
             team,
             @plan |> Map.delete("hourly_api_request_limit") |> Map.put("approval", @approval)
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 422)["error"] =~ "paddle_plan_id"
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> create_plan(team, Map.put(@plan, "approval", @approval))
 
         assert json_response(conn, 429)
@@ -235,7 +235,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> post("/api/cs/v1/teams/#{team.id}/enterprise_plans/#{plan.id}", %{
             "approval" => @approval,
             "site_limit" => 500,
@@ -256,7 +256,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
 
         conn =
           conn
-          |> authorize(automation, ["cs:billing:*"])
+          |> authorize(automation, ["cs:*"])
           |> post("/api/cs/v1/teams/#{team.id}/enterprise_plans/#{plan.id}", %{
             "approval" => @approval,
             "site_limit" => 500

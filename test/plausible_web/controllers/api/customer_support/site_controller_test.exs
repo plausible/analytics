@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:sites:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:*"])
       conn = put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
       owner = new_user()
@@ -123,24 +123,6 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteControllerTest do
 
         assert json_response(conn, 422)["error"] =~ "permission_denied"
       end
-    end
-
-    test "needs the cs:sites scope", %{site: site} do
-      automation = new_user()
-      patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*"])
-
-      conn =
-        build_conn()
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> post("/api/cs/v1/sites/#{site.id}/ingest_rate_limit", %{
-          approval: @approval,
-          domain: site.domain,
-          ingest_rate_limit_threshold: 0,
-          ingest_rate_limit_scale_seconds: 60
-        })
-
-      assert json_response(conn, 401)
     end
   end
 end

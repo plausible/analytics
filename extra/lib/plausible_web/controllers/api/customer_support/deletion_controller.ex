@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Api.CustomerSupport.DeletionController do
   alias Plausible.{TeamDeletionSchedule, TeamDeletionSchedules}
   alias PlausibleWeb.Api.CustomerSupport.Helpers, as: H
 
-  @site_deletions_per_day 5
-
   def snooze(conn, params) do
     H.run_team_action(conn, params, "deletion_snoozed", fn team ->
       with {:ok, schedule} <- active_schedule(team),
@@ -68,7 +66,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.DeletionController do
           {:ok, site, %{deleted: true, domain: site.domain}}
         end
       end,
-      limit: @site_deletions_per_day
+      deletion: true
     )
   end
 

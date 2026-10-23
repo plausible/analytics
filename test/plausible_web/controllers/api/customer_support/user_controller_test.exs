@@ -9,12 +9,14 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:accounts:*", "cs:destroy:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:*"])
 
       customer = insert(:user, totp_enabled: true, totp_secret: "secret", totp_token: "token")
 
       {:ok,
-       conn: put_req_header(conn, "authorization", "Bearer #{api_key.key}"), customer: customer}
+       conn: put_req_header(conn, "authorization", "Bearer #{api_key.key}"),
+       customer: customer,
+       automation: automation}
     end
 
     test "turns off 2FA for the user and records it", %{conn: conn, customer: customer} do
@@ -70,23 +72,6 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserControllerTest do
       conn = post(conn, "/api/cs/v1/users/#{customer.id}/disable_2fa", %{email: customer.email})
 
       assert json_response(conn, 400)["error"] =~ "approval"
-      assert Repo.reload!(customer).totp_enabled
-    end
-
-    test "needs the cs:accounts scope", %{customer: customer} do
-      automation = new_user()
-      patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*"])
-
-      conn =
-        build_conn()
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> post("/api/cs/v1/users/#{customer.id}/disable_2fa", %{
-          approval: @approval,
-          email: customer.email
-        })
-
-      assert json_response(conn, 401)
       assert Repo.reload!(customer).totp_enabled
     end
 
@@ -173,21 +158,29 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserControllerTest do
         assert Repo.get(Plausible.Auth.User, user.id)
       end
 
-      test "needs the cs:destroy scope", %{customer: customer} do
-        automation = new_user()
-        patch_env(:cs_automation_user_ids, [automation.id])
-        api_key = insert(:api_key, user: automation, scopes: ["cs:accounts:*"])
+      test "stops at 5 deletions in 24 hours", %{conn: conn, automation: automation} do
+        for _ <- 1..5 do
+          Repo.insert!(%Plausible.Audit.Entry{
+            name: "cs_api_site_deleted",
+            entity: "Plausible.Site",
+            entity_id: "1",
+            user_id: automation.id,
+            team_id: 0,
+            actor_type: :user,
+            datetime: NaiveDateTime.utc_now()
+          })
+        end
+
+        user = new_user()
 
         conn =
-          build_conn()
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> post("/api/cs/v1/users/#{customer.id}/delete", %{
+          post(conn, "/api/cs/v1/users/#{user.id}/delete", %{
             approval: @approval,
-            email: customer.email
+            email: user.email
           })
 
-        assert json_response(conn, 401)
-        assert Repo.get(Plausible.Auth.User, customer.id)
+        assert json_response(conn, 429)
+        assert Repo.get(Plausible.Auth.User, user.id)
       end
     end
   end

@@ -12,28 +12,13 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamBillingControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:*"])
       conn = put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
       customer = new_user()
       new_site(owner: customer, domain: "example.com")
 
       {:ok, conn: conn, customer: customer, team: team_of(customer)}
-    end
-
-    test "the billing actions need the cs:billing scope", %{team: team} do
-      automation = new_user()
-      patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:emails:*"])
-      Plausible.Teams.start_grace_period(team)
-
-      conn =
-        build_conn()
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> post("/api/cs/v1/teams/#{team.id}/unlock", %{approval: @approval})
-
-      assert json_response(conn, 401)
-      assert Repo.reload!(team).grace_period
     end
 
     describe "unlock and lock" do

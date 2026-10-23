@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EmailSuppressionControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:emails:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:*"])
 
       {:ok, conn: put_req_header(conn, "authorization", "Bearer #{api_key.key}")}
     end

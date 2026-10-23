@@ -11,9 +11,6 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
 
   alias PlausibleWeb.Api.CustomerSupport.Helpers, as: H
 
-  @daily_limit 5
-  @deletions_per_day 3
-
   def disable_2fa(conn, params) do
     H.run_user_action(
       conn,
@@ -26,8 +23,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
              {:ok, user} <- Plausible.Auth.TOTP.force_disable(user) do
           {:ok, user, %{user_id: user.id, email: user.email, totp_enabled: false}}
         end
-      end,
-      limit: @daily_limit
+      end
     )
   end
 
@@ -76,7 +72,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
           {:ok, user, %{user_id: user.id, email: user.email, deleted: true}}
         end
       end,
-      limit: @deletions_per_day
+      deletion: true
     )
   end
 

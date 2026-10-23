@@ -23,19 +23,20 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
   @approval_fields ~w(conversation code approved_by)
   @audit_prefix "cs_api_"
   @daily_write_limit 30
+  @daily_deletion_limit 5
 
   @doc """
   Loads the subject with `load`, runs `action` on it and records the audit
   entry `cs_api_{name}`. `action` returns `{:ok, audited_struct, change}`,
   where `change` is a JSON-safe map that is both stored and returned.
 
-  Options: `:limit` (daily limit for this action name, in addition to the
-  overall one).
+  Options: `deletion: true` for a permanent deletion, which also counts
+  against the daily deletion limit.
   """
   def run_action(conn, params, name, load, action, opts \\ []) do
     with {:ok, approval} <- fetch_approval(params),
-         :ok <- check_daily_limit(conn, @audit_prefix, @daily_write_limit),
-         :ok <- maybe_check_action_limit(conn, name, opts[:limit]),
+         :ok <- check_daily_limit(conn, @audit_prefix <> "%", @daily_write_limit),
+         :ok <- maybe_check_deletion_limit(conn, opts[:deletion]),
          {:ok, subject} <- load.(),
          {:ok, result} <- transact(conn, name, approval, fn -> action.(subject) end) do
       json(conn, %{result: result})
@@ -158,16 +159,15 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
   def append_note_line("", line), do: line
   def append_note_line(notes, line), do: notes <> "\n" <> line
 
-  defp maybe_check_action_limit(_conn, _name, nil), do: :ok
-
-  defp maybe_check_action_limit(conn, name, limit) do
-    check_daily_limit(conn, @audit_prefix <> name, limit)
+  defp maybe_check_deletion_limit(conn, true) do
+    check_daily_limit(conn, @audit_prefix <> "%_deleted", @daily_deletion_limit)
   end
 
-  defp check_daily_limit(conn, name_prefix, limit) do
+  defp maybe_check_deletion_limit(_conn, _), do: :ok
+
+  defp check_daily_limit(conn, pattern, limit) do
     since = NaiveDateTime.add(NaiveDateTime.utc_now(), -24 * 3600)
     user_id = conn.assigns.current_user.id
-    pattern = name_prefix <> "%"
 
     count =
       Repo.aggregate(
