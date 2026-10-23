@@ -615,6 +615,20 @@ defmodule PlausibleWeb.EmailTest do
       refute body =~ "Note that this link will expire"
     end
 
+    test "warns when the deletion falls on the same day the link expires", %{
+      user: user,
+      site: site
+    } do
+      insert(:team_deletion_schedule, team: site.team, deletion_date: ~D[2026-10-27])
+
+      %{html_body: body} = Email.export_success(user, site, ~U[2026-10-27 03:10:00Z])
+
+      assert text(body) =~
+               "Your stats for #{site.domain} are scheduled to be deleted on 27 Oct 2026"
+
+      refute body =~ "Note that this link will expire"
+    end
+
     test "says nothing when the deletion falls after the link expires", %{user: user, site: site} do
       insert(:team_deletion_schedule, team: site.team, deletion_date: ~D[2026-11-30])
 
