@@ -416,6 +416,7 @@ defmodule PlausibleWeb.Router do
         post "/teams/:team_id/lock", TeamBillingController, :lock
         post "/teams/:team_id/refund_lock", TeamBillingController, :refund_lock
         post "/teams/:team_id/manual_subscription", TeamBillingController, :manual_subscription
+        post "/teams/:team_id/enterprise_plans/:plan_id", EnterprisePlanController, :update
       end
 
       scope assigns: %{api_scope: "cs:trials:*"} do
@@ -427,7 +428,6 @@ defmodule PlausibleWeb.Router do
       scope assigns: %{api_scope: "cs:deletions:*"} do
         post "/teams/:team_id/deletion_schedule/snooze", DeletionController, :snooze
         post "/teams/:team_id/deletion_schedule/unsnooze", DeletionController, :unsnooze
-        post "/sites/:site_id/delete", DeletionController, :delete_site
       end
 
       scope assigns: %{api_scope: "cs:emails:*"} do
@@ -436,6 +436,23 @@ defmodule PlausibleWeb.Router do
 
       scope assigns: %{api_scope: "cs:accounts:*"} do
         post "/users/:user_id/disable_2fa", UserController, :disable_2fa
+        post "/users/:user_id/email", UserController, :change_email
+      end
+
+      scope assigns: %{api_scope: "cs:teams:*"} do
+        post "/teams/:team_id/notes", TeamNotesController, :update
+      end
+
+      scope assigns: %{api_scope: "cs:sites:*"} do
+        post "/sites/:site_id/ingest_rate_limit", SiteController, :rate_limit
+        post "/sites/:site_id/native_stats_start", SiteController, :native_stats_start
+        post "/sites/:site_id/transfer", SiteController, :transfer
+      end
+
+      # Permanent deletions, in a group of their own so a key only gets them on purpose.
+      scope assigns: %{api_scope: "cs:destroy:*"} do
+        post "/sites/:site_id/delete", DeletionController, :delete_site
+        post "/users/:user_id/delete", UserController, :delete
       end
     end
   end

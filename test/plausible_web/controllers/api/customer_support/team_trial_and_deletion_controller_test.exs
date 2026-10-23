@@ -11,7 +11,10 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamTrialAndDeletionControllerTest do
       patch_env(:cs_automation_user_ids, [automation.id])
 
       api_key =
-        insert(:api_key, user: automation, scopes: ["cs:trials:*", "cs:deletions:*"])
+        insert(:api_key,
+          user: automation,
+          scopes: ["cs:trials:*", "cs:deletions:*", "cs:destroy:*"]
+        )
 
       conn = put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
@@ -172,6 +175,24 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamTrialAndDeletionControllerTest do
         assert json_response(conn, 422)["error"] =~ "domain"
         assert Repo.reload(site)
       end
+    end
+
+    test "deleting a site needs the cs:destroy scope", %{team: team, site: site} do
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -40))
+      |> Repo.update!()
+
+      automation = new_user()
+      patch_env(:cs_automation_user_ids, [automation.id])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:deletions:*"])
+
+      conn =
+        build_conn()
+        |> put_req_header("authorization", "Bearer #{api_key.key}")
+        |> post("/api/cs/v1/sites/#{site.id}/delete", %{approval: @approval, domain: site.domain})
+
+      assert json_response(conn, 401)
+      assert Repo.reload(site)
     end
   end
 end

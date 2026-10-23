@@ -224,5 +224,47 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanControllerTest do
         refute Repo.exists?(from ep in EnterprisePlan, where: ep.team_id == ^team.id)
       end
     end
+
+    describe "POST /api/cs/v1/teams/:team_id/enterprise_plans/:plan_id" do
+      test "updates the plan's limits but never its Paddle plan id", %{
+        conn: conn,
+        automation: automation,
+        team: team
+      } do
+        plan = insert(:enterprise_plan, team: team, paddle_plan_id: "930841", site_limit: 50)
+
+        conn =
+          conn
+          |> authorize(automation, ["cs:billing:*"])
+          |> post("/api/cs/v1/teams/#{team.id}/enterprise_plans/#{plan.id}", %{
+            "approval" => @approval,
+            "site_limit" => 500,
+            "paddle_plan_id" => "999999"
+          })
+
+        assert json_response(conn, 200)["result"]["site_limit"] == 500
+        plan = Repo.reload!(plan)
+        assert plan.site_limit == 500
+        assert plan.paddle_plan_id == "930841"
+        assert Repo.get_by(Plausible.Audit.Entry, name: "cs_api_enterprise_plan_updated")
+      end
+
+      test "refuses another team's plan", %{conn: conn, automation: automation, team: team} do
+        other = new_user()
+        new_site(owner: other)
+        plan = insert(:enterprise_plan, team: team_of(other), site_limit: 50)
+
+        conn =
+          conn
+          |> authorize(automation, ["cs:billing:*"])
+          |> post("/api/cs/v1/teams/#{team.id}/enterprise_plans/#{plan.id}", %{
+            "approval" => @approval,
+            "site_limit" => 500
+          })
+
+        assert json_response(conn, 404)
+        assert Repo.reload!(plan).site_limit == 50
+      end
+    end
   end
 end

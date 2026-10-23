@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanController do
   @moduledoc """
-  Creates a custom (enterprise) plan for a team, as the "Save Custom Plan"
-  button in the CS admin does. Insert only: there is no endpoint to update
-  or delete a plan.
+  Creates a custom (enterprise) plan for a team, or updates one of its
+  existing plans, as "Save Custom Plan" and the plan's edit (pencil) form in
+  the CS admin do. There is no endpoint to delete a plan.
   """
   use PlausibleWeb, :controller
   use Plausible.Repo
@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanController do
       with :ok <-
              H.guard(
                not Subscription.manual_subscription?(team.subscription),
-               "The team has a manual subscription. Edit its existing plan in the CS admin instead."
+               "The team has a manual subscription. Update its existing plan instead."
              ),
            {:ok, plan} <-
              %EnterprisePlan{team_id: team.id}
@@ -28,6 +28,35 @@ defmodule PlausibleWeb.Api.CustomerSupport.EnterprisePlanController do
         {:ok, plan, plan_json(plan)}
       end
     end)
+  end
+
+  @doc """
+  Updates one of the team's plans: limits, interval and features. The Paddle
+  plan id never changes (subscriptions are linked to the plan by it), the
+  same as the CS admin's edit form. This is how a pay-by-invoice customer's
+  terms change once they have a manual subscription.
+  """
+  def update(conn, params) do
+    H.run_team_action(conn, params, "enterprise_plan_updated", fn team ->
+      with {:ok, plan} <- fetch_plan(team, params["plan_id"]),
+           {:ok, plan} <-
+             plan
+             |> EnterprisePlan.update_changeset(
+               Map.take(params, @plan_fields -- ["paddle_plan_id"])
+             )
+             |> Repo.update() do
+        {:ok, plan, plan_json(plan)}
+      end
+    end)
+  end
+
+  defp fetch_plan(team, plan_id) do
+    with {:ok, id} <- H.parse_id(plan_id),
+         %EnterprisePlan{} = plan <- Repo.get_by(EnterprisePlan, id: id, team_id: team.id) do
+      {:ok, plan}
+    else
+      _ -> {:error, :not_found, "The team has no plan with this id"}
+    end
   end
 
   defp plan_json(plan) do
