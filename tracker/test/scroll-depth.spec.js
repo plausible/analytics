@@ -137,6 +137,47 @@ test.describe('scroll depth (engagement events)', () => {
     })
   })
 
+  test('does not read the scroll position inside the scroll listener', async ({
+    page
+  }) => {
+    // Reading window.scrollY forces the browser to finish pending layout, so
+    // the tracker must not do it while a scroll event is being dispatched.
+    await page.addInitScript(() => {
+      const { get } = Object.getOwnPropertyDescriptor(window, 'scrollY')
+      window.scrollYReads = 0
+      Object.defineProperty(window, 'scrollY', {
+        configurable: true,
+        get() {
+          window.scrollYReads++
+          return get.call(window)
+        }
+      })
+    })
+
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/scroll-depth.html'),
+      expectedRequests: [{ n: 'pageview' }]
+    })
+
+    const readsWhileScrolling = await page.evaluate(() => {
+      window.scrollTo(0, 300)
+      const readsBefore = window.scrollYReads
+      for (let i = 0; i < 10; i++) {
+        document.dispatchEvent(new Event('scroll'))
+      }
+      return window.scrollYReads - readsBefore
+    })
+    expect(readsWhileScrolling).toBe(0)
+
+    // The scroll depth is still up to date when the engagement is sent.
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#navigate-away'),
+      expectedRequests: [
+        { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20 }
+      ]
+    })
+  })
+
   test('sends scroll depth when minimizing the tab', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth.html'),
