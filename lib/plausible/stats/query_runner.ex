@@ -210,8 +210,7 @@ defmodule Plausible.Stats.QueryRunner do
   defp get_dimension_goal(entry, query) do
     goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
 
-    query.preloaded_goals.matching_toplevel_filters
-    |> Enum.at(goal_index - 1)
+    Plausible.Stats.Goals.goal_at_index(query, goal_index)
   end
 
   defp merge_with_comparison_results(results_list, runner) do
