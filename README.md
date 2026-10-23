@@ -13,6 +13,10 @@
     <br /><br />
 </p>
 
+<p align="center">
+  <a href="https://app.railyard.run/deploy?repo=https://github.com/plausible/analytics"><img src="https://app.railyard.run/deploy/badge" alt="Deploy to Railyard"></a>
+</p>
+
 [Plausible Analytics](https://plausible.io/) is an open source, privacy-first web analytics tool. Lightweight, cookie-free [alternative to Google Analytics](https://plausible.io/blog/remove-google-analytics). Available in managed cloud or self-hosted community edition.
 
 - 🔐 [Privacy-focused](https://plausible.io/privacy-focused-web-analytics)
