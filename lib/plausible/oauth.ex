@@ -178,37 +178,38 @@ defmodule Plausible.OAuth do
   end
 
   @doc """
-  Looks up the grant a raw access token belongs to, preloading the bound user
-  and team.
+  Looks up the grant a raw access token belongs to, preloading the bound user, team,
+  and their current role in the team. Returns the grant and role.
 
-  `resource` is the protected resource the token is presented to. A token issued
+  The argument `resource` is the protected resource the token is supposed to be for. A token issued
   for a different resource is not found.
 
-  Expired, revoked and wrong-resource tokens all return `{:error, :invalid_token}`
+  Expired, revoked, wrong resource, invalid role tokens all return
+  `{:error, :invalid_token}`
   ([see error codes](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-error-codes)).
   """
   @spec find_access_token(String.t(), ProtectedResources.t()) ::
-          {:ok, Grant.t()} | {:error, :invalid_token}
+          {:ok, Grant.t(), Membership.role()} | {:error, :invalid_token}
   def find_access_token(raw_access, resource) when is_binary(raw_access) do
     resource_url = ProtectedResources.get_resource_url(resource)
 
     query =
       from(g in Grant,
+        inner_join: u in assoc(g, :user),
+        inner_join: t in assoc(g, :team),
+        inner_join: tm in Membership,
+        on: tm.team_id == g.team_id and tm.user_id == g.user_id,
         where:
           g.access_token_hash == ^Token.hash(raw_access) and
             g.resource == ^resource_url and
             g.access_token_expires_at > ^now() and
             is_nil(g.revoked_at),
-        preload: [:user, :team]
+        preload: [user: u, team: t],
+        select: {g, tm.role}
       )
 
-    with %Grant{team_id: team_id, user_id: user_id} = grant <- Repo.one(query),
-         :ok <-
-           [team_id: team_id, user_id: user_id]
-           |> Memberships.team_role()
-           |> validate_role() do
-      {:ok, grant}
-    else
+    case Repo.one(query) do
+      {%Grant{} = grant, role} when role in @roles_with_oauth -> {:ok, grant, role}
       _ -> {:error, :invalid_token}
     end
   end
