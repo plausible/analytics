@@ -596,6 +596,54 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "export_success/3" do
+    setup do
+      user = new_user()
+      site = new_site(owner: user) |> Plausible.Repo.preload(:team)
+
+      {:ok, user: user, site: site}
+    end
+
+    test "warns when the team's deletion falls before the link expires", %{user: user, site: site} do
+      insert(:team_deletion_schedule, team: site.team, deletion_date: ~D[2026-10-21])
+
+      %{html_body: body} = Email.export_success(user, site, ~U[2026-10-27 03:10:00Z])
+
+      assert text(body) =~
+               "Your stats for #{site.domain} are scheduled to be deleted on 21 Oct 2026, and this link stops working then"
+
+      refute body =~ "Note that this link will expire"
+    end
+
+    test "says nothing when the deletion falls after the link expires", %{user: user, site: site} do
+      insert(:team_deletion_schedule, team: site.team, deletion_date: ~D[2026-11-30])
+
+      %{html_body: body} = Email.export_success(user, site, ~U[2026-10-27 03:10:00Z])
+
+      refute body =~ "scheduled to be deleted"
+      assert body =~ "Note that this link will expire"
+    end
+
+    test "says nothing while the deletion is snoozed", %{user: user, site: site} do
+      insert(:team_deletion_schedule,
+        team: site.team,
+        deletion_date: ~D[2026-10-21],
+        status: :snoozed,
+        snoozed_until: ~D[2026-12-01]
+      )
+
+      %{html_body: body} = Email.export_success(user, site, ~U[2026-10-27 03:10:00Z])
+
+      refute body =~ "scheduled to be deleted"
+    end
+
+    test "says nothing when no deletion is scheduled", %{user: user, site: site} do
+      %{html_body: body} = Email.export_success(user, site, ~U[2026-10-27 03:10:00Z])
+
+      refute body =~ "scheduled to be deleted"
+    end
+  end
+
   describe "text_body" do
     test "welcome email" do
       email =
