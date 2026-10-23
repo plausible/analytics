@@ -15,7 +15,59 @@ defmodule Plausible.Stats.Funnel do
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.{Base, Comparisons, DateTimeRange, Query}
+  alias Plausible.Stats.Exploration
   alias Plausible.Stats.Goal.Revenue
+
+  @spec suggest(Plausible.Site.t(), Plausible.Stats.Query.t(), Keyword.t()) ::
+          {[Plausible.Goal.t()], [Plausible.Goal.t()]}
+  def suggest(site, query, opts \\ []) do
+    goals = Keyword.get(opts, :goals, [])
+    input = Keyword.get(opts, :input, "")
+
+    goals_map =
+      Map.new(goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
+
+    {:ok, suggestions} =
+      Exploration.next_steps(site, query, [], search_term: input, include_wildcard?: false)
+
+    {suggestions, unmatched_goals} =
+      suggestions
+      |> Enum.reject(&(&1.step.name == Exploration.Journey.Step.journey_end_event()))
+      |> Enum.reduce({[], goals_map}, fn suggestion, {suggestions, goals_map} ->
+        case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
+          {goal, :static, key} ->
+            {[goal | suggestions], Map.delete(goals_map, key)}
+
+          {goal, :dynamic} ->
+            {[goal | suggestions], goals_map}
+        end
+      end)
+
+    {Enum.reverse(suggestions), Map.values(unmatched_goals)}
+  end
+
+  @spec step_to_goal(Exploration.Journey.Step.t(), %{
+          {String.t(), String.t()} => Plausible.Goal.t()
+        }) ::
+          {Plausible.Goal.t(), :static, {binary(), binary()}} | {Plausible.Goal.t(), :dynamic}
+  def step_to_goal(step, goals_map) do
+    goal = goals_map[{step.name, step.pathname}]
+
+    if not is_nil(goal) and step.is_goal and
+         Plausible.Goal.display_name(step.name, step.pathname) == goal.display_name do
+      {goal, :static, {step.name, step.pathname}}
+    else
+      goal =
+        %Plausible.Goal{}
+        |> Plausible.Goal.changeset(%{
+          event_name: if(step.name != "pageview", do: step.name),
+          page_path: step.pathname
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      {goal, :dynamic}
+    end
+  end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
