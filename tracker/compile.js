@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util'
 import { compileAll, compileWebSnippet } from './compiler/index.js'
-import chokidar from 'chokidar'
+import { watch } from 'node:fs'
 
 const { values } = parseArgs({
   options: {
@@ -53,14 +53,19 @@ await compileAll(compileOptions)
 if (values.watch) {
   console.log('Watching src/ directory for changes...')
 
-  chokidar.watch('./src').on('change', async (_event, path) => {
-    if (path) {
-      console.log(`\nFile changed: ${path}`)
-      console.log('Recompiling...')
+  // fs.watch can fire several events for a single save, so recompile once they settle
+  let timeout
+  watch('./src', { recursive: true }, (_eventType, filename) => {
+    if (filename) {
+      clearTimeout(timeout)
+      timeout = setTimeout(async () => {
+        console.log(`\nFile changed: ${filename}`)
+        console.log('Recompiling...')
 
-      await compileAll(compileOptions)
+        await compileAll(compileOptions)
 
-      console.log('Done. Watching for changes...')
+        console.log('Done. Watching for changes...')
+      }, 100)
     }
   })
 }

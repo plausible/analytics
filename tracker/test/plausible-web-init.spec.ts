@@ -87,7 +87,7 @@ test('handles double-initialization of the script with a console.warn', async ({
   ])
 
   await expectPlausibleInAction(page, {
-    action: () => page.click('button'),
+    action: () => page.locator('button').click(),
     expectedRequests: [{ n: 'Purchase', p: { init: 1 } }]
   })
 })

@@ -11,6 +11,7 @@ import {
   switchByMode
 } from './support/test-utils'
 import { test, expect } from '@playwright/test'
+import type { PlausibleRequestPayload } from '../npm_package/plausible'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
@@ -63,7 +64,7 @@ for (const mode of ['web', 'esm']) {
     }, { testId }) => {
       const config = {
         ...DEFAULT_CONFIG,
-        transformRequest: (payload) => {
+        transformRequest: (payload: PlausibleRequestPayload) => {
           if (payload.n === 'Purchase') {
             return null
           }
@@ -90,7 +91,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
         },
         expectedRequests: [{ n: 'pageview' }],
         refutedRequests: [
@@ -107,7 +108,7 @@ for (const mode of ['web', 'esm']) {
     }, { testId }) => {
       const config = {
         ...DEFAULT_CONFIG,
-        transformRequest: (payload) => {
+        transformRequest: (payload: PlausibleRequestPayload) => {
           return { ...payload, u: '/:masked/path' }
         }
       }
@@ -131,7 +132,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
           await hideAndShowCurrentTab(page, { delay: 200 })
         },
         expectedRequests: [
@@ -147,7 +148,7 @@ for (const mode of ['web', 'esm']) {
     }, { testId }) => {
       const config = {
         ...DEFAULT_CONFIG,
-        transformRequest: (payload) => {
+        transformRequest: (payload: PlausibleRequestPayload) => {
           // @ts-expect-error - defines window.requestCount
           window.requestCount = (window.requestCount ?? 0) + 1
           // @ts-expect-error - window.requestCount is defined
@@ -174,7 +175,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
           await hideAndShowCurrentTab(page, { delay: 200 })
         },
         expectedRequests: [
@@ -193,7 +194,7 @@ for (const mode of ['web', 'esm']) {
         customProperties: () => ({
           author: 'John Smith'
         }),
-        transformRequest: (payload) => {
+        transformRequest: (payload: PlausibleRequestPayload) => {
           return { ...payload, p: { author: 'Jane Doe' } }
         }
       }
@@ -257,7 +258,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('button')
+          await page.locator('button').click()
         },
         shouldIgnoreRequest: [isEngagementEvent],
         expectedRequests: ['not an object', 'not an object']
@@ -290,7 +291,7 @@ test.describe(`transformRequest examples from /docs work`, () => {
   test('you can omit automatically tracked url property from tagged link clicks', async ({
     page
   }, { testId }) => {
-    function omitAutomaticUrlProperty(payload) {
+    function omitAutomaticUrlProperty(payload: PlausibleRequestPayload) {
       if (payload.p && payload.p.url) {
         delete payload.p.url
       }
@@ -313,7 +314,7 @@ test.describe(`transformRequest examples from /docs work`, () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto(url)
-        await page.click('a')
+        await page.locator('a').click()
       },
       expectedRequests: [
         {
@@ -342,7 +343,7 @@ test.describe(`transformRequest examples from /docs work`, () => {
     test(`you can omit UTM properties from pageview urls (hashBasedRouting: ${hashBasedRouting})`, async ({
       page
     }, { testId }) => {
-      function omitUTMProperties(payload) {
+      function omitUTMProperties(payload: PlausibleRequestPayload) {
         const parts = payload.u.split('?')
         let urlWithoutQuery = parts.shift()
 
@@ -354,6 +355,7 @@ test.describe(`transformRequest examples from /docs work`, () => {
               : urlWithoutQuery
         }
 
+        // @ts-expect-error - split always returns at least one part
         payload.u = urlWithoutQuery
         return payload
       }
@@ -394,7 +396,7 @@ test.describe(`transformRequest examples from /docs work`, () => {
   test('you can track pages using their canonical url', async ({ page }, {
     testId
   }) => {
-    function rewriteUrlToCanonicalUrl(payload) {
+    function rewriteUrlToCanonicalUrl(payload: PlausibleRequestPayload) {
       // Get the canonical URL element
       const canonicalMeta = document.querySelector('link[rel="canonical"]')
       // Use the canonical URL if it exists, falling back on the regular URL when it doesn't.

@@ -131,7 +131,7 @@ export async function initializePageDynamically(
     await route.fulfill({
       body: responseBody,
       contentType: 'text/html',
-      headers: options.headers
+      ...(options.headers && { headers: options.headers })
     })
   })
   return { url }
