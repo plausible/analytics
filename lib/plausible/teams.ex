@@ -359,6 +359,12 @@ defmodule Plausible.Teams do
     end
   end
 
+  @doc "A message for an error from `lock/1`, `unlock/1` or `refund_lock/1`."
+  def lock_error_message(:no_grace_period), do: "The team has no grace period"
+  def lock_error_message(:subscription_not_cancelled), do: "The subscription isn't cancelled"
+  def lock_error_message(:has_grace_period), do: "The team has a grace period"
+  def lock_error_message(:already_locked), do: "The team is already locked"
+
   @doc """
   To run after a team's trial dates or eligibility changed: prolonging the
   trial (or otherwise making the team eligible again) cancels any pending

@@ -43,10 +43,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   # API key.
   @implicit_scopes ["stats:read:*", "sites:read:*"]
 
-  # Scopes under these prefixes are only granted by a scope that itself
-  # starts with the prefix: a broad scope like "*" never covers them.
-  @restricted_prefixes ["cs:"]
-
   def init(opts) do
     opts
   end
@@ -151,7 +147,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   # Customer support automation API. The key needs an explicit `cs:` scope
-  # (see `@restricted_prefixes`) and must belong to a user listed in
+  # (see `check_scope/2`) and must belong to a user listed in
   # `cs_automation_user_ids`. Super admins are not let in by that alone:
   # the list is the only way in.
   defp verify_by_scope(conn, api_key, "cs:" <> _ = scope) do
@@ -174,12 +170,13 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp check_scope(api_key, required_scope) do
-    restricted_prefix =
-      Enum.find(@restricted_prefixes, &String.starts_with?(required_scope, &1))
+    # `cs:` scopes are only granted by a scope that itself starts with `cs:`:
+    # a broad scope like "*" never covers them.
+    cs? = String.starts_with?(required_scope, "cs:")
 
     found? =
       Enum.any?(api_key.scopes, fn scope ->
-        (is_nil(restricted_prefix) or String.starts_with?(scope, restricted_prefix)) and
+        (not cs? or String.starts_with?(scope, "cs:")) and
           String.starts_with?(required_scope, String.trim_trailing(scope, "*"))
       end)
 

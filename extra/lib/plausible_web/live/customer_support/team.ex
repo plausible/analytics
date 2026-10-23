@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         {:noreply, assign(socket, team: team)}
 
       {:error, reason} ->
-        {:noreply, put_live_flash(socket, :error, lock_error_message(reason))}
+        {:noreply, put_live_flash(socket, :error, Plausible.Teams.lock_error_message(reason))}
     end
   end
 
@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         |> assign(team: team)
 
       {:error, reason} ->
-        put_live_flash(socket, :error, lock_error_message(reason))
+        put_live_flash(socket, :error, Plausible.Teams.lock_error_message(reason))
     end
   end
 
@@ -364,14 +364,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         |> assign(team: team)
 
       {:error, reason} ->
-        put_live_flash(socket, :error, lock_error_message(reason))
+        put_live_flash(socket, :error, Plausible.Teams.lock_error_message(reason))
     end
   end
-
-  defp lock_error_message(:no_grace_period), do: "No grace period"
-  defp lock_error_message(:subscription_not_cancelled), do: "Subscription isn't cancelled"
-  defp lock_error_message(:has_grace_period), do: "Team has a grace period"
-  defp lock_error_message(:already_locked), do: "Team is already locked"
 
   defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
     "unlimited"

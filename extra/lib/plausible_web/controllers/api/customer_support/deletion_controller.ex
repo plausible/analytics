@@ -47,27 +47,21 @@ defmodule PlausibleWeb.Api.CustomerSupport.DeletionController do
   alone.
   """
   def delete_site(conn, params) do
-    H.run_site_action(
-      conn,
-      params,
-      "site_deleted",
-      fn site ->
-        team = Plausible.Teams.with_subscription(site.team)
+    H.run_site_action(conn, params, "site_deleted", fn site ->
+      team = site |> Plausible.Repo.preload(:team) |> Map.fetch!(:team)
+      team = Plausible.Teams.with_subscription(team)
 
-        with :ok <- H.guard(params["domain"] == site.domain, "The domain doesn't match the site"),
-             :ok <-
-               H.guard(not Plausible.Teams.on_trial?(team), "The team's trial is still running"),
-             :ok <-
-               H.guard(
-                 not paid_period_running?(team.subscription),
-                 "The team still has a paid period"
-               ) do
-          {:ok, _} = Plausible.Site.Removal.run(site)
-          {:ok, site, %{deleted: true, domain: site.domain}}
-        end
-      end,
-      deletion: true
-    )
+      with :ok <-
+             H.guard(not Plausible.Teams.on_trial?(team), "The team's trial is still running"),
+           :ok <-
+             H.guard(
+               not paid_period_running?(team.subscription),
+               "The team still has a paid period"
+             ) do
+        {:ok, _} = Plausible.Site.Removal.run(site)
+        {:ok, site, %{deleted: true, domain: site.domain}}
+      end
+    end)
   end
 
   defp active_schedule(team) do

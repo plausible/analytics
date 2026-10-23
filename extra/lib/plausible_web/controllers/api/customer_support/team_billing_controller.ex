@@ -47,16 +47,8 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamBillingController do
 
   defp lock_result({:ok, team}), do: {:ok, team}
 
-  defp lock_result({:error, :no_grace_period}),
-    do: {:error, :guard, "The team has no grace period"}
-
-  defp lock_result({:error, :subscription_not_cancelled}),
-    do: {:error, :guard, "The subscription isn't cancelled"}
-
-  defp lock_result({:error, :has_grace_period}),
-    do: {:error, :guard, "The team has a grace period"}
-
-  defp lock_result({:error, :already_locked}), do: {:error, :guard, "The team is already locked"}
+  defp lock_result({:error, reason}),
+    do: {:error, :guard, Plausible.Teams.lock_error_message(reason)}
 
   defp plan_id(params) do
     case H.parse_id(params["enterprise_plan_id"]) do

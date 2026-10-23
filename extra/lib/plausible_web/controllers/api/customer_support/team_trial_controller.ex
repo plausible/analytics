@@ -16,8 +16,8 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamTrialController do
   """
   def extend(conn, params) do
     H.run_team_action(conn, params, "trial_extended", fn team ->
-      with {:ok, expiry} <- H.parse_date(params["trial_expiry_date"]),
-           {:ok, accept_until} <- H.parse_date(params["accept_traffic_until"]),
+      with {:ok, expiry} <- parse_date(params["trial_expiry_date"]),
+           {:ok, accept_until} <- parse_date(params["accept_traffic_until"]),
            :ok <-
              H.guard(later?(expiry, team.trial_expiry_date), "The new expiry date isn't later"),
            :ok <-
@@ -51,13 +51,13 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamTrialController do
       note = if is_binary(params["note"]), do: String.trim(params["note"]), else: ""
 
       with :ok <- H.guard(is_nil(team.subscription), "The team has or had a subscription"),
-           :ok <- H.check_note_line(note, "note"),
+           :ok <- check_note_line(note, "note"),
            {:ok, team} <-
              team
              |> Ecto.Changeset.change(
                trial_expiry_date: today,
                accept_traffic_until: today,
-               notes: H.append_note_line(team.notes, "#{today}: trial blocked: #{note}")
+               notes: append_note_line(team.notes, "#{today}: trial blocked: #{note}")
              )
              |> Repo.update() do
         SiteLocker.update_for(team)
@@ -77,6 +77,29 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamTrialController do
       end
     end)
   end
+
+  defp parse_date(value) when is_binary(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> {:ok, date}
+      _ -> {:error, :guard, "Dates must be YYYY-MM-DD"}
+    end
+  end
+
+  defp parse_date(_), do: {:error, :guard, "Dates must be YYYY-MM-DD"}
+
+  @max_note_line_length 500
+
+  # A line for the team notes: present, a single line, up to 500 characters.
+  defp check_note_line(line, param) do
+    with :ok <- H.guard(line != "", "Parameter `#{param}` is required"),
+         :ok <- H.guard(not String.contains?(line, ["\n", "\r"]), "One line only") do
+      H.guard(String.length(line) <= @max_note_line_length, "The line is too long")
+    end
+  end
+
+  defp append_note_line(nil, line), do: line
+  defp append_note_line("", line), do: line
+  defp append_note_line(notes, line), do: notes <> "\n" <> line
 
   defp later?(_new, nil), do: true
   defp later?(new, current), do: Date.after?(new, current)

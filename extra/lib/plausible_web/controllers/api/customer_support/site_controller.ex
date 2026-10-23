@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteController do
 
   alias PlausibleWeb.Api.CustomerSupport.Helpers, as: H
 
+  @rate_limit_fields ["ingest_rate_limit_threshold", "ingest_rate_limit_scale_seconds"]
+
   @doc """
   Sets the ingest rate limit. `ingest_rate_limit_threshold` is the number of
   events allowed per `ingest_rate_limit_scale_seconds`; `null` removes the
@@ -18,18 +20,14 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteController do
   """
   def rate_limit(conn, params) do
     H.run_site_action(conn, params, "site_rate_limit_updated", fn site ->
-      with :ok <- check_domain(site, params),
-           :ok <-
+      with :ok <-
              H.guard(
-               Map.has_key?(params, "ingest_rate_limit_threshold") and
-                 Map.has_key?(params, "ingest_rate_limit_scale_seconds"),
+               Enum.all?(@rate_limit_fields, &Map.has_key?(params, &1)),
                "Parameters `ingest_rate_limit_threshold` and `ingest_rate_limit_scale_seconds` are required"
              ),
            {:ok, site} <-
              site
-             |> Plausible.Site.crm_changeset(
-               Map.take(params, ["ingest_rate_limit_threshold", "ingest_rate_limit_scale_seconds"])
-             )
+             |> Plausible.Site.crm_changeset(Map.take(params, @rate_limit_fields))
              |> Repo.update() do
         {:ok, site,
          %{
@@ -48,8 +46,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteController do
   """
   def native_stats_start(conn, params) do
     H.run_site_action(conn, params, "site_native_stats_start_updated", fn site ->
-      with :ok <- check_domain(site, params),
-           :ok <-
+      with :ok <-
              H.guard(
                is_binary(params["native_stats_start_at"]),
                "Parameter `native_stats_start_at` is required"
@@ -71,8 +68,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteController do
   """
   def transfer(conn, params) do
     H.run_site_action(conn, params, "site_transfer_started", fn site ->
-      with :ok <- check_domain(site, params),
-           {:ok, inviter} <- fetch_user_by_email(params["inviter_email"], "inviter_email"),
+      with {:ok, inviter} <- fetch_user_by_email(params["inviter_email"], "inviter_email"),
            :ok <-
              H.guard(
                is_binary(params["invitee_email"]) and params["invitee_email"] != "",
@@ -95,10 +91,6 @@ defmodule PlausibleWeb.Api.CustomerSupport.SiteController do
       {:error, %Ecto.Changeset{} = changeset} -> {:error, changeset}
       {:error, reason} -> {:error, :guard, "Transfer refused: #{inspect(reason)}"}
     end
-  end
-
-  defp check_domain(site, params) do
-    H.guard(params["domain"] == site.domain, "The domain doesn't match the site")
   end
 
   defp fetch_user_by_email(email, param) when is_binary(email) and email != "" do

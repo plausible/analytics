@@ -12,19 +12,12 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
   alias PlausibleWeb.Api.CustomerSupport.Helpers, as: H
 
   def disable_2fa(conn, params) do
-    H.run_user_action(
-      conn,
-      params,
-      "user_2fa_disabled",
-      fn user ->
-        with :ok <-
-               H.guard(email_matches?(user, params["email"]), "Email doesn't match the user"),
-             :ok <- H.guard(user.totp_enabled, "Two-factor authentication isn't enabled"),
-             {:ok, user} <- Plausible.Auth.TOTP.force_disable(user) do
-          {:ok, user, %{user_id: user.id, email: user.email, totp_enabled: false}}
-        end
+    H.run_user_action(conn, params, "user_2fa_disabled", fn user ->
+      with :ok <- H.guard(user.totp_enabled, "Two-factor authentication isn't enabled"),
+           {:ok, user} <- Plausible.Auth.TOTP.force_disable(user) do
+        {:ok, user, %{user_id: user.id, email: user.email, totp_enabled: false}}
       end
-    )
+    end)
   end
 
   @doc """
@@ -37,14 +30,16 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
     H.run_user_action(conn, params, "user_email_changed", fn user ->
       new_email = params["new_email"]
 
-      with :ok <- H.guard(email_matches?(user, params["email"]), "Email doesn't match the user"),
-           :ok <-
+      with :ok <-
              H.guard(
                is_binary(new_email) and String.trim(new_email) != "",
                "Parameter `new_email` is required"
              ),
            :ok <-
-             H.guard(not email_matches?(user, new_email), "The new email is the same as the old"),
+             H.guard(
+               not H.email_matches?(user, new_email),
+               "The new email is the same as the old"
+             ),
            {:ok, user} <-
              user
              |> Plausible.Auth.User.changeset(%{"email" => String.trim(new_email)})
@@ -61,19 +56,11 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
   the only owner of a team with other members, is refused.
   """
   def delete(conn, params) do
-    H.run_user_action(
-      conn,
-      params,
-      "user_deleted",
-      fn user ->
-        with :ok <-
-               H.guard(email_matches?(user, params["email"]), "Email doesn't match the user"),
-             :ok <- delete_user(user) do
-          {:ok, user, %{user_id: user.id, email: user.email, deleted: true}}
-        end
-      end,
-      deletion: true
-    )
+    H.run_user_action(conn, params, "user_deleted", fn user ->
+      with :ok <- delete_user(user) do
+        {:ok, user, %{user_id: user.id, email: user.email, deleted: true}}
+      end
+    end)
   end
 
   defp delete_user(user) do
@@ -88,10 +75,4 @@ defmodule PlausibleWeb.Api.CustomerSupport.UserController do
         {:error, :guard, "The user can't be deleted: #{inspect(reason)}"}
     end
   end
-
-  defp email_matches?(user, email) when is_binary(email) do
-    String.downcase(String.trim(email)) == String.downcase(user.email)
-  end
-
-  defp email_matches?(_user, _email), do: false
 end

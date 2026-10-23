@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.EmailSuppressionController do
       params,
       "email_reactivated",
       fn ->
-        case H.fetch_suppression(params["email"]) do
+        case fetch_suppression(params["email"]) do
           %Plausible.EmailSuppression{} = suppression -> {:ok, suppression}
           nil -> {:error, :not_found, "No suppression for this address"}
         end
@@ -26,6 +26,12 @@ defmodule PlausibleWeb.Api.CustomerSupport.EmailSuppressionController do
       end
     )
   end
+
+  defp fetch_suppression(email) when is_binary(email) do
+    Plausible.Repo.get_by(Plausible.EmailSuppression, email: String.trim(email))
+  end
+
+  defp fetch_suppression(_), do: nil
 
   defp reactivate(suppression, user) do
     case Plausible.EmailSuppressions.reactivate(suppression.email, user) do
