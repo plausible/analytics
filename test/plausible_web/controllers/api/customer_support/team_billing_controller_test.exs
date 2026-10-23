@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamBillingControllerTest do
     setup %{conn: conn} do
       automation = new_user()
       patch_env(:cs_automation_user_ids, [automation.id])
-      api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*", "cs:read:*"])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*"])
       conn = put_req_header(conn, "authorization", "Bearer #{api_key.key}")
 
       customer = new_user()
@@ -21,41 +21,19 @@ defmodule PlausibleWeb.Api.CustomerSupport.TeamBillingControllerTest do
       {:ok, conn: conn, customer: customer, team: team_of(customer)}
     end
 
-    describe "reads" do
-      test "GET /teams/:team_id/usage shows usage and features used", %{conn: conn, team: team} do
-        usage = json_response(get(conn, "/api/cs/v1/teams/#{team.id}/usage"), 200)["usage"]
+    test "the billing actions need the cs:billing scope", %{team: team} do
+      automation = new_user()
+      patch_env(:cs_automation_user_ids, [automation.id])
+      api_key = insert(:api_key, user: automation, scopes: ["cs:emails:*"])
+      Plausible.Teams.start_grace_period(team)
 
-        assert usage["sites"] == 1
-        assert usage["team_members"] >= 0
-        assert is_map(usage["monthly_pageviews"])
-        assert is_list(usage["features_used"])
-      end
+      conn =
+        build_conn()
+        |> put_req_header("authorization", "Bearer #{api_key.key}")
+        |> post("/api/cs/v1/teams/#{team.id}/unlock", %{approval: @approval})
 
-      test "GET /teams/:team_id/audit lists the team's audit entries", %{conn: conn, team: team} do
-        Plausible.Teams.start_grace_period(team)
-        post(conn, "/api/cs/v1/teams/#{team.id}/unlock", %{approval: @approval})
-
-        entries = json_response(get(conn, "/api/cs/v1/teams/#{team.id}/audit"), 200)["entries"]
-        assert Enum.any?(entries, &(&1["name"] == "cs_api_team_unlocked"))
-      end
-
-      test "GET /email_suppressions returns null for an unknown address", %{conn: conn} do
-        conn = get(conn, "/api/cs/v1/email_suppressions?email=nobody@example.com")
-        assert json_response(conn, 200) == %{"suppression" => nil}
-      end
-
-      test "reads need the cs:read scope", %{team: team} do
-        automation = new_user()
-        patch_env(:cs_automation_user_ids, [automation.id])
-        api_key = insert(:api_key, user: automation, scopes: ["cs:billing:*"])
-
-        conn =
-          build_conn()
-          |> put_req_header("authorization", "Bearer #{api_key.key}")
-          |> get("/api/cs/v1/teams/#{team.id}/usage")
-
-        assert json_response(conn, 401)
-      end
+      assert json_response(conn, 401)
+      assert Repo.reload!(team).grace_period
     end
 
     describe "unlock and lock" do

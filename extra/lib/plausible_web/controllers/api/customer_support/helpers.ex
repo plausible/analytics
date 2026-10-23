@@ -52,6 +52,10 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
     run_action(conn, params, name, fn -> fetch_site(params["site_id"]) end, action, opts)
   end
 
+  def run_user_action(conn, params, name, action, opts \\ []) do
+    run_action(conn, params, name, fn -> fetch_user(params["user_id"]) end, action, opts)
+  end
+
   defp transact(conn, name, approval, action) do
     result =
       Repo.transaction(fn ->
@@ -95,6 +99,15 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
       {:ok, Repo.preload(site, :team)}
     else
       _ -> {:error, :not_found, "Site could not be found"}
+    end
+  end
+
+  defp fetch_user(user_id) do
+    with {:ok, id} <- parse_id(user_id),
+         %Plausible.Auth.User{} = user <- Repo.get(Plausible.Auth.User, id) do
+      {:ok, user}
+    else
+      _ -> {:error, :not_found, "User could not be found"}
     end
   end
 

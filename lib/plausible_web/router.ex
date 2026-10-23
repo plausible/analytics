@@ -410,12 +410,6 @@ defmodule PlausibleWeb.Router do
     scope "/api/cs/v1", PlausibleWeb.Api.CustomerSupport do
       pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
-      scope assigns: %{api_scope: "cs:read:*"} do
-        get "/teams/:team_id/usage", ReadController, :team_usage
-        get "/teams/:team_id/audit", ReadController, :team_audit
-        get "/email_suppressions", ReadController, :email_suppression
-      end
-
       scope assigns: %{api_scope: "cs:billing:*"} do
         post "/teams/:team_id/enterprise_plans", EnterprisePlanController, :create
         post "/teams/:team_id/unlock", TeamBillingController, :unlock
@@ -438,6 +432,10 @@ defmodule PlausibleWeb.Router do
 
       scope assigns: %{api_scope: "cs:emails:*"} do
         post "/email_suppressions/reactivate", EmailSuppressionController, :reactivate_suppression
+      end
+
+      scope assigns: %{api_scope: "cs:accounts:*"} do
+        post "/users/:user_id/disable_2fa", UserController, :disable_2fa
       end
     end
   end
