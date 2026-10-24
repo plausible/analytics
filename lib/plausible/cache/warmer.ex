@@ -6,6 +6,9 @@ defmodule Plausible.Cache.Warmer do
 
     * `cache_impl` - module expected to implement `Plausible.Cache` behaviour
     * `interval` - the number of milliseconds for each warm-up cycle
+    * `retry_interval` - the number of milliseconds to wait before retrying
+      a warm-up that returned `{:error, reason}`, defaults to 30 seconds.
+      Retries only happen when this is shorter than `interval`.
     * `cache_name` - defaults to cache_impl.name() but can be overridden for testing
     * `force_start?` - enforcess process startup for testing, even if it's barred
       by `Plausible.Cache.enabled?`. This is useful for avoiding issues with DB ownership
@@ -20,6 +23,8 @@ defmodule Plausible.Cache.Warmer do
   @behaviour :gen_cycle
 
   require Logger
+
+  @default_retry_interval :timer.seconds(30)
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec() | :ignore
   def child_spec(opts) do
@@ -66,18 +71,62 @@ defmodule Plausible.Cache.Warmer do
 
   @impl true
   def handle_cycle(opts) do
-    cache_name = Keyword.fetch!(opts, :cache_name)
-    warmer_fn = Keyword.fetch!(opts, :warmer_fn)
-
-    Logger.notice("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
-
-    warmer_fn.(opts)
-
-    {:continue_hibernated, opts}
+    {:continue_hibernated, warm(opts)}
   end
 
   @impl true
+  def handle_info(:retry, opts) do
+    {:continue, warm(Keyword.delete(opts, :retry_timer))}
+  end
+
   def handle_info(_msg, state) do
     {:continue, state}
+  end
+
+  defp warm(opts) do
+    cache_name = Keyword.fetch!(opts, :cache_name)
+    warmer_fn = Keyword.fetch!(opts, :warmer_fn)
+
+    opts = cancel_retry(opts)
+
+    Logger.notice("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
+
+    case warmer_fn.(opts) do
+      {:error, _} -> maybe_schedule_retry(opts)
+      _ -> opts
+    end
+  end
+
+  defp maybe_schedule_retry(opts) do
+    interval = Keyword.fetch!(opts, :interval)
+    retry_interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
+
+    if retry_interval < interval do
+      Logger.notice(
+        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{retry_interval}ms..."
+      )
+
+      Keyword.put(opts, :retry_timer, Process.send_after(self(), :retry, retry_interval))
+    else
+      opts
+    end
+  end
+
+  defp cancel_retry(opts) do
+    case Keyword.pop(opts, :retry_timer) do
+      {nil, opts} ->
+        opts
+
+      {timer, opts} ->
+        if Process.cancel_timer(timer) == false do
+          receive do
+            :retry -> :ok
+          after
+            0 -> :ok
+          end
+        end
+
+        opts
+    end
   end
 end
