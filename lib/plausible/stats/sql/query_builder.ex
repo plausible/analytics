@@ -12,8 +12,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   alias Plausible.Stats.SQL.Expression
   alias Plausible.Stats.Legacy.TimeOnPage
 
-  require Plausible.Stats.SQL.Expression
-
   def build(query, site) do
     query
     |> QueryOptimizer.split()
@@ -178,32 +176,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       group_by: meta.key
     )
     |> select_merge_as([..., meta], %{shortname(query, dimension) => meta.key})
-  end
-
-  defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
-    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
-
-    if Enum.all?(goal_join_data.custom_props_keys, &Enum.empty?/1) do
-      from(e in q,
-        join: goal in Expression.event_goal_join_no_props(goal_join_data),
-        hints: "ARRAY",
-        on: true,
-        select_merge: %{
-          ^shortname(query, dimension) => fragment("?", goal)
-        },
-        group_by: goal
-      )
-    else
-      from(e in q,
-        join: goal in Expression.event_goal_join(goal_join_data),
-        hints: "ARRAY",
-        on: true,
-        select_merge: %{
-          ^shortname(query, dimension) => fragment("?", goal)
-        },
-        group_by: goal
-      )
-    end
   end
 
   defp dimension_group_by(q, table, query, dimension) do
