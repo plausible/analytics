@@ -6,6 +6,7 @@ import {
   addGoal,
   addFunnel
 } from '../fixtures'
+import { expectLiveViewConnected } from '../test-utils'
 
 test.describe('funnel settings', () => {
   test('form integration tests', async ({ page, request }) => {
@@ -22,6 +23,7 @@ test.describe('funnel settings', () => {
     })
 
     await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
     await test.step('search reacts to the input the user types in', async () => {
       await page.getByRole('button', { name: 'Add funnel' }).click()
@@ -165,6 +167,7 @@ test.describe('funnel settings', () => {
     })
 
     await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
     await page.getByRole('button', { name: 'Add funnel' }).click()
 
@@ -276,6 +279,7 @@ test.describe('funnel settings', () => {
     })
 
     await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
     await page.locator('button[phx-click=edit-funnel]').click()
 
@@ -343,6 +347,7 @@ test.describe('funnel settings', () => {
     })
 
     await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
     await page.getByRole('button', { name: 'Add funnel' }).click()
 
@@ -410,6 +415,7 @@ test.describe('funnel settings', () => {
     })
 
     await page.goto(`/${domain}/settings/funnels`, { waitUntil: 'commit' })
+    await expectLiveViewConnected(page)
 
     await page.getByRole('button', { name: 'Add funnel' }).click()
 
