@@ -348,12 +348,19 @@ defmodule Plausible.Goals do
   end
 
   defp delete_by_event_name(site, event_name) do
-    delete_matching(
+    query =
       from(g in Goal,
         where: g.site_id == ^site.id,
         where: g.event_name == ^event_name
       )
-    )
+
+    # The goal may already be gone, e.g. deleted by hand in the goal settings.
+    # `delete_matching/1` would then fail inside its own transaction, and when
+    # called from within another transaction (as when a tracker script setting
+    # is switched off) that failure rolls back the caller's transaction too.
+    if Repo.exists?(query) do
+      delete_matching(query)
+    end
 
     :ok
   end
