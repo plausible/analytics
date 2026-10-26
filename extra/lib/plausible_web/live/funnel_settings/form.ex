@@ -296,6 +296,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def handle_event("validate", %{"funnel" => params}, socket) do
     funnel_type = socket.assigns.funnel_type
+    allowed_goal_ids = Enum.map(socket.assigns.goals, & &1.id)
 
     steps_with_idx =
       params
@@ -308,7 +309,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Funnels.create_changeset(
         params["name"],
         Enum.map(steps_with_idx, &elem(&1, 1)),
-        funnel_type: funnel_type
+        funnel_type: funnel_type,
+        allowed_goal_ids: allowed_goal_ids
       )
       |> Map.put(:action, :validate)
 
