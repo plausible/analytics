@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert business_box =~ "Custom Properties"
         assert business_box =~ "Funnels"
         assert business_box =~ "Ecommerce revenue attribution"
-        assert business_box =~ "5 years of data retention"
+        refute business_box =~ "data retention"
 
         refute business_box =~ "Goals and custom events"
 
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "Sites API access for"
         assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
-        assert enterprise_box =~ "5+ years of data retention"
+        refute enterprise_box =~ "data retention"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                  "https://plausible.io/white-label-web-analytics"
@@ -911,7 +911,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
