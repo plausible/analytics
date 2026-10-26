@@ -37,6 +37,24 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert find(resp, "#{guest_el()}:first-of-type") |> text() =~ "guest@example.com"
     end
 
+    test "role switcher forms opt out of automatic recovery after a reconnect", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      site = new_site(team: team)
+      add_member(team, role: :viewer)
+      invite_member(team, "invitee@example.com", role: :editor, inviter: user)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      resp =
+        conn
+        |> get(team_general_path())
+        |> html_response(200)
+
+      assert elem_count(resp, ~s|form[id^="role-form-"][phx-auto-recover="ignore"]|) == 4
+    end
+
     test "disables changing the role of a pending guest invitation, but not removing it", %{
       conn: conn,
       team: team,

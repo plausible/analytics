@@ -111,11 +111,26 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr(:me?, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
 
+  @doc """
+  Component for updating the role of a team member, invitation, or guest.
+  Wraps a PrimaListbox inside its own `<form>`. Submission works via
+  phx-change instead of a regular submit.
+
+  Hence the `phx-auto-recover="ignore"` on the wrapper form -- there's no
+  state to recover, and without explicitly ignoring auto-recover, we would
+  end up triggering a `handle_event("update-role")` even for disabled
+  listboxes and flashing success messages about having updated all roles
+  when the LiveView reconnects.
+  """
   def role_switcher(assigns) do
     assigns = assign(assigns, :change, role_change(assigns.user, assigns.role))
 
     ~H"""
-    <form id={"role-form-#{:erlang.phash2(@user.email)}"} phx-change={@change}>
+    <form
+      id={"role-form-#{:erlang.phash2(@user.email)}"}
+      phx-change={@change}
+      phx-auto-recover="ignore"
+    >
       <input type="hidden" name="email" value={@user.email} />
 
       <PrimaListbox.listbox id={@id} name="role" value={@role} disabled={@disabled}>
