@@ -170,7 +170,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                          ^strict_map(%{
                            "code" => -32_020,
                            "message" =>
-                             "Mcp-Protocol-Version header does not match _meta protocolVersion"
+                             "Header mcp-protocol-version does not match _meta protocolVersion"
                          })
                      }) = json_response(conn, 400)
     end
@@ -199,12 +199,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                        "error" =>
                          ^strict_map(%{
                            "code" => -32_020,
-                           "message" => "Mcp-Method header does not match request method"
+                           "message" => "Header mcp-method does not match request method"
                          })
                      }) = json_response(conn, 400)
     end
 
-    test "rejects an Mcp-Name disagreeing with params.name", %{conn: conn, token: t} do
+    test "rejects an mcp-name header disagreeing with params.name", %{conn: conn, token: t} do
       conn =
         conn
         |> put_req_header("authorization", "Bearer " <> t)
@@ -231,12 +231,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                        "error" =>
                          ^strict_map(%{
                            "code" => -32_020,
-                           "message" => "Mcp-Name header does not match params.name"
+                           "message" => "Header mcp-name does not match params.name"
                          })
                      }) = json_response(conn, 400)
     end
 
-    test "accepts a base64-encoded Mcp-Name", %{conn: conn, token: t} do
+    test "accepts a base64-encoded mcp-name header", %{conn: conn, token: t} do
       resp =
         conn
         |> put_req_header("authorization", "Bearer " <> t)

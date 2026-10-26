@@ -38,7 +38,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   @cache_scope "public"
 
   @version_key "io.modelcontextprotocol/protocolVersion"
-  @caps_key "io.modelcontextprotocol/clientCapabilities"
+  @capabilities_key "io.modelcontextprotocol/clientCapabilities"
   @server_info_key "io.modelcontextprotocol/serverInfo"
 
   # Every tool declares what scope is needed on the OAuth grant
@@ -113,9 +113,12 @@ defmodule PlausibleWeb.MCP.MCPController do
 
     expected_headers = expected_headers ++ @always_expected_headers
 
-    case Enum.find(expected_headers, fn header -> conn |> get_header(header) |> is_nil() end) do
-      nil -> :ok
-      header -> header_mismatch("Missing required header: #{header}")
+    case Enum.filter(expected_headers, fn header -> conn |> get_header(header) |> is_nil() end) do
+      [] ->
+        :ok
+
+      [first_missing_header | _] ->
+        header_mismatch("Missing required header: #{first_missing_header}")
     end
   end
 
@@ -124,8 +127,8 @@ defmodule PlausibleWeb.MCP.MCPController do
       not is_binary(meta[@version_key]) ->
         invalid_params("Missing or invalid _meta field: #{@version_key}")
 
-      not is_map(meta[@caps_key]) ->
-        invalid_params("Missing or invalid _meta field: #{@caps_key}")
+      not is_map(meta[@capabilities_key]) ->
+        invalid_params("Missing or invalid _meta field: #{@capabilities_key}")
 
       true ->
         :ok
@@ -136,14 +139,14 @@ defmodule PlausibleWeb.MCP.MCPController do
   defp validate_header_body_match(conn, message, method, meta) do
     cond do
       get_header(conn, "mcp-protocol-version") != meta[@version_key] ->
-        header_mismatch("Mcp-Protocol-Version header does not match _meta protocolVersion")
+        header_mismatch("Header mcp-protocol-version does not match _meta protocolVersion")
 
       get_header(conn, "mcp-method") != method ->
-        header_mismatch("Mcp-Method header does not match request method")
+        header_mismatch("Header mcp-method does not match request method")
 
       expect_name_header?(method) and
           decode_header_value(get_header(conn, "mcp-name")) != params(message)["name"] ->
-        header_mismatch("Mcp-Name header does not match params.name")
+        header_mismatch("Header mcp-name does not match params.name")
 
       true ->
         :ok
