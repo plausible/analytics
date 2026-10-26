@@ -17,6 +17,8 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
 
   import Phoenix.Controller, only: [json: 2]
 
+  require Logger
+
   alias PlausibleWeb.Api.Helpers, as: ApiHelpers
 
   @approval_fields ~w(conversation code approved_by)
@@ -188,6 +190,11 @@ defmodule PlausibleWeb.Api.CustomerSupport.Helpers do
 
   defp respond_error(conn, {:error, %Ecto.Changeset{} = changeset}) do
     ApiHelpers.unprocessable_entity(conn, changeset_errors(changeset))
+  end
+
+  defp respond_error(conn, error) do
+    Logger.error("[CS API] Unexpected error: #{inspect(error)}")
+    ApiHelpers.unprocessable_entity(conn, "The action couldn't be completed")
   end
 
   defp changeset_errors(changeset) do
