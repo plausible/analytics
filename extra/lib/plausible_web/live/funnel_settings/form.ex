@@ -176,7 +176,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               </div>
 
               <div class="flex flex-col gap-y-2 mt-2">
-                <.add_step_button :if={length(@step_ids) < Funnel.max_steps()} />
+                <p>
+                  <.add_step_button :if={length(@step_ids) < Funnel.max_steps()} />
+                </p>
                 <p id="funnel-eval" class="text-gray-800 dark:text-gray-200 text-sm">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
