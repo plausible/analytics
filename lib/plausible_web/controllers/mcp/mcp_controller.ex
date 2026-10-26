@@ -34,12 +34,6 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp message(%{"jsonrpc" => "2.0", "method" => method, "id" => id} = message)
-       when is_binary(method),
-       do: {:ok, message, method, id}
-
-  defp message(_body_params), do: :error
-
   @cache_ttl_ms :timer.minutes(5)
   @cache_scope "public"
 
@@ -103,10 +97,23 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp validate_headers_present(conn, method) do
-    expected_headers = ["mcp-protocol-version", "mcp-method"] ++ name_header(method)
+  defp message(%{"jsonrpc" => "2.0", "method" => method, "id" => id} = message)
+       when is_binary(method),
+       do: {:ok, message, method, id}
 
-    case Enum.find(expected_headers, fn header -> header(conn, header) == nil end) do
+  defp message(_body_params), do: :error
+
+  @always_expected_headers ["mcp-protocol-version", "mcp-method"]
+  defp validate_headers_present(conn, method) do
+    expected_headers =
+      if(expect_name_header?(method),
+        do: ["mcp-name"],
+        else: []
+      )
+
+    expected_headers = expected_headers ++ @always_expected_headers
+
+    case Enum.find(expected_headers, fn header -> conn |> get_header(header) |> is_nil() end) do
       nil -> :ok
       header -> header_mismatch("Missing required header: #{header}")
     end
@@ -128,14 +135,14 @@ defmodule PlausibleWeb.MCP.MCPController do
   # The body is the source of truth. Headers must match the body.
   defp validate_header_body_match(conn, message, method, meta) do
     cond do
-      header(conn, "mcp-protocol-version") != meta[@version_key] ->
+      get_header(conn, "mcp-protocol-version") != meta[@version_key] ->
         header_mismatch("Mcp-Protocol-Version header does not match _meta protocolVersion")
 
-      header(conn, "mcp-method") != method ->
+      get_header(conn, "mcp-method") != method ->
         header_mismatch("Mcp-Method header does not match request method")
 
-      method == "tools/call" and
-          decode_header_value(header(conn, "mcp-name")) != params(message)["name"] ->
+      expect_name_header?(method) and
+          decode_header_value(get_header(conn, "mcp-name")) != params(message)["name"] ->
         header_mismatch("Mcp-Name header does not match params.name")
 
       true ->
@@ -168,7 +175,7 @@ defmodule PlausibleWeb.MCP.MCPController do
 
     case Map.fetch(@tools_by_name, name) do
       {:ok, spec} ->
-        case call_tool(conn, spec, arguments(params)) do
+        case call_tool(conn, spec, params) do
           {:ok, value} ->
             {200, success_response(id, %{content: [text_content(value)], isError: false})}
 
@@ -193,9 +200,6 @@ defmodule PlausibleWeb.MCP.MCPController do
     {404, error_response(id, -32_601, "Method not found")}
   end
 
-  defp arguments(%{"arguments" => arguments}) when is_map(arguments), do: arguments
-  defp arguments(_params), do: %{}
-
   defp cacheable(result) do
     Map.merge(result, %{ttlMs: @cache_ttl_ms, cacheScope: @cache_scope})
   end
@@ -209,14 +213,14 @@ defmodule PlausibleWeb.MCP.MCPController do
     }
   end
 
-  defp call_tool(conn, spec, arguments) do
+  defp call_tool(conn, spec, tool_args) do
     with :ok <- require_scope(conn, spec.scope),
          :ok <- require_role(conn, spec.roles) do
-      run_tool(conn, spec.name, arguments)
+      run_tool(conn, spec.name, tool_args)
     end
   end
 
-  defp run_tool(conn, "list_sites", _arguments) do
+  defp run_tool(conn, "list_sites", _tool_args) do
     sites =
       conn.assigns.current_user
       |> Plausible.Sites.for_user_query(conn.assigns.current_team)
@@ -280,10 +284,10 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp header(conn, name), do: conn |> get_req_header(name) |> List.first()
+  defp get_header(conn, name), do: conn |> get_req_header(name) |> List.first()
 
-  defp name_header("tools/call"), do: ["mcp-name"]
-  defp name_header(_method), do: []
+  defp expect_name_header?(_method = "tools/call"), do: true
+  defp expect_name_header?(_method), do: false
 
   # `Mcp-Name` arrives as `=?base64?<encoded>?=` when the value isn't header-safe,
   # so decode it before comparing against the body.
