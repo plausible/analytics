@@ -289,7 +289,7 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp get_header(conn, name), do: conn |> get_req_header(name) |> List.first()
 
-  defp expect_name_header?(_method = "tools/call"), do: true
+  defp expect_name_header?("tools/call" = _method), do: true
   defp expect_name_header?(_method), do: false
 
   # `Mcp-Name` arrives as `=?base64?<encoded>?=` when the value isn't header-safe,
