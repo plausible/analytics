@@ -29,20 +29,19 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "unauthorized"}) = json_response(conn, 401)
+      assert json_response(conn, 401) == %{"error" => "unauthorized"}
 
       assert [challenge] = get_resp_header(conn, "www-authenticate")
       assert [_, metadata_url] = Regex.run(~r/resource_metadata="([^"]+)"/, challenge)
 
       metadata = build_conn() |> get(URI.parse(metadata_url).path) |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "resource" =>
-                         ^ProtectedResources.get_resource_url(ProtectedResources.mcp()),
-                       "authorization_servers" => [^PlausibleWeb.Endpoint.url()],
-                       "scopes_supported" => ^ProtectedResources.mcp().scopes_supported,
-                       "bearer_methods_supported" => ["header"]
-                     }) = metadata
+      assert metadata == %{
+               "resource" => ProtectedResources.get_resource_url(ProtectedResources.mcp()),
+               "authorization_servers" => [PlausibleWeb.Endpoint.url()],
+               "scopes_supported" => ProtectedResources.mcp().scopes_supported,
+               "bearer_methods_supported" => ["header"]
+             }
     end
 
     test "tools/call requires a token too", %{conn: conn} do
@@ -65,7 +64,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "unauthorized"}) = json_response(conn, 401)
+      assert json_response(conn, 401) == %{"error" => "unauthorized"}
     end
 
     test "401s an unknown token", %{conn: conn} do
@@ -86,7 +85,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "invalid_token"}) = json_response(conn, 401)
+      assert json_response(conn, 401) == %{"error" => "invalid_token"}
     end
 
     # A token that is ours, unexpired and unrevoked must still be refused if it
@@ -119,7 +118,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "invalid_token"}) = json_response(conn, 401)
+      assert json_response(conn, 401) == %{"error" => "invalid_token"}
     end
 
     test "a malformed request on a method needing no token is 400, not a crash", %{conn: conn} do
@@ -134,11 +133,15 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "params" => "not-an-object"
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" => ^strict_map(%{"code" => -32_602, "message" => ^any(:string)})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_602,
+                 "message" =>
+                   "Missing or invalid _meta field: io.modelcontextprotocol/protocolVersion"
+               }
+             }
     end
   end
 
@@ -163,16 +166,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_020,
-                           "message" =>
-                             "Header mcp-protocol-version does not match _meta protocolVersion"
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_020,
+                 "message" => "Header mcp-protocol-version does not match _meta protocolVersion"
+               }
+             }
     end
 
     test "rejects a method header disagreeing with the body", %{conn: conn, token: t} do
@@ -193,15 +194,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_020,
-                           "message" => "Header mcp-method does not match request method"
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_020,
+                 "message" => "Header mcp-method does not match request method"
+               }
+             }
     end
 
     test "rejects an mcp-name header disagreeing with params.name", %{conn: conn, token: t} do
@@ -225,15 +225,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_020,
-                           "message" => "Header mcp-name does not match params.name"
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_020,
+                 "message" => "Header mcp-name does not match params.name"
+               }
+             }
     end
 
     test "accepts a base64-encoded mcp-name header", %{conn: conn, token: t} do
@@ -258,29 +257,26 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "content" => [
-                             ^strict_map(%{
-                               "type" => "text",
-                               "text" => ^JSON.encode!(%{sites: []})
-                             })
-                           ],
-                           "isError" => false,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             })
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" => JSON.encode!(%{sites: []})
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 }
+               }
+             }
     end
 
     test "rejects a missing header", %{conn: conn, token: t} do
@@ -300,15 +296,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_020,
-                           "message" => "Missing required header: mcp-method"
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_020,
+                 "message" => "Missing required header: mcp-method"
+               }
+             }
     end
 
     test "rejects a missing _meta protocol version", %{conn: conn, token: t} do
@@ -326,16 +321,15 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_602,
-                           "message" =>
-                             "Missing or invalid _meta field: io.modelcontextprotocol/protocolVersion"
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_602,
+                 "message" =>
+                   "Missing or invalid _meta field: io.modelcontextprotocol/protocolVersion"
+               }
+             }
     end
 
     test "rejects an unsupported version, naming what is supported", %{conn: conn, token: t} do
@@ -356,20 +350,18 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{
-                           "code" => -32_022,
-                           "message" => "Unsupported protocol version",
-                           "data" =>
-                             ^strict_map(%{
-                               "supported" => ^[@version],
-                               "requested" => "1999-01-01"
-                             })
-                         })
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_022,
+                 "message" => "Unsupported protocol version",
+                 "data" => %{
+                   "supported" => [@version],
+                   "requested" => "1999-01-01"
+                 }
+               }
+             }
     end
 
     test "rejects a non-object params", %{conn: conn, token: t} do
@@ -385,11 +377,15 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "params" => "not-an-object"
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" => ^strict_map(%{"code" => -32_602, "message" => ^any(:string)})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_602,
+                 "message" =>
+                   "Missing or invalid _meta field: io.modelcontextprotocol/protocolVersion"
+               }
+             }
     end
 
     test "rejects a non-object _meta", %{conn: conn, token: t} do
@@ -405,11 +401,15 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "params" => %{"_meta" => "not-an-object"}
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" => ^strict_map(%{"code" => -32_602, "message" => ^any(:string)})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_602,
+                 "message" =>
+                   "Missing or invalid _meta field: io.modelcontextprotocol/protocolVersion"
+               }
+             }
     end
 
     test "rejects a batch array with a token", %{conn: conn, token: t} do
@@ -436,12 +436,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           ])
         )
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => nil,
-                       "error" =>
-                         ^strict_map(%{"code" => -32_600, "message" => "Invalid Request"})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => nil,
+               "error" => %{"code" => -32_600, "message" => "Invalid Request"}
+             }
     end
 
     test "rejects a batch array without a token", %{conn: conn} do
@@ -467,12 +466,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           ])
         )
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => nil,
-                       "error" =>
-                         ^strict_map(%{"code" => -32_600, "message" => "Invalid Request"})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => nil,
+               "error" => %{"code" => -32_600, "message" => "Invalid Request"}
+             }
     end
 
     test "a notification is an invalid request - this revision defines none", %{
@@ -495,12 +493,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => nil,
-                       "error" =>
-                         ^strict_map(%{"code" => -32_600, "message" => "Invalid Request"})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => nil,
+               "error" => %{"code" => -32_600, "message" => "Invalid Request"}
+             }
     end
   end
 
@@ -527,27 +524,25 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "supportedVersions" => ^[@version],
-                           "capabilities" => ^strict_map(%{"tools" => ^strict_map(%{})}),
-                           "instructions" => ^~r/list_sites/,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             }),
-                           "ttlMs" => ^any(:pos_integer),
-                           "cacheScope" => "public"
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "supportedVersions" => [@version],
+                 "capabilities" => %{"tools" => %{}},
+                 "instructions" =>
+                   "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access.",
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 },
+                 "ttlMs" => :timer.minutes(5),
+                 "cacheScope" => "public"
+               }
+             }
     end
   end
 
@@ -573,36 +568,33 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "tools" => [
-                             ^strict_map(%{
-                               "name" => "list_sites",
-                               "description" => ^any(:string),
-                               "inputSchema" =>
-                                 ^strict_map(%{
-                                   "type" => "object",
-                                   "properties" => ^strict_map(%{}),
-                                   "additionalProperties" => false
-                                 })
-                             })
-                           ],
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             }),
-                           "ttlMs" => ^any(:pos_integer),
-                           "cacheScope" => "public"
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "tools" => [
+                   %{
+                     "name" => "list_sites",
+                     "description" =>
+                       "List the sites (websites) the authorized team has access to. Returns each site's domain and timezone.",
+                     "inputSchema" => %{
+                       "type" => "object",
+                       "properties" => %{},
+                       "additionalProperties" => false
+                     }
+                   }
+                 ],
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 },
+                 "ttlMs" => :timer.minutes(5),
+                 "cacheScope" => "public"
+               }
+             }
     end
   end
 
@@ -630,11 +622,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" => ^strict_map(%{"code" => -32_602, "message" => "Unknown tool"})
-                     }) = json_response(conn, 400)
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{"code" => -32_602, "message" => "Unknown tool"}
+             }
     end
   end
 
@@ -665,32 +657,29 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "content" => [
-                             ^strict_map(%{
-                               "type" => "text",
-                               "text" =>
-                                 ^JSON.encode!(%{
-                                   sites: [%{domain: site.domain, timezone: site.timezone}]
-                                 })
-                             })
-                           ],
-                           "isError" => false,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             })
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" =>
+                       JSON.encode!(%{
+                         sites: [%{domain: site.domain, timezone: site.timezone}]
+                       })
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 }
+               }
+             }
     end
 
     test "returns an empty list when the team has no sites", %{conn: conn, token: t} do
@@ -715,29 +704,26 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "content" => [
-                             ^strict_map(%{
-                               "type" => "text",
-                               "text" => ^JSON.encode!(%{sites: []})
-                             })
-                           ],
-                           "isError" => false,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             })
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" => JSON.encode!(%{sites: []})
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 }
+               }
+             }
     end
 
     test "does not leak another team's sites", %{conn: conn, user: user, token: t} do
@@ -765,32 +751,29 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "content" => [
-                             ^strict_map(%{
-                               "type" => "text",
-                               "text" =>
-                                 ^JSON.encode!(%{
-                                   sites: [%{domain: mine.domain, timezone: mine.timezone}]
-                                 })
-                             })
-                           ],
-                           "isError" => false,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             })
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" =>
+                       JSON.encode!(%{
+                         sites: [%{domain: mine.domain, timezone: mine.timezone}]
+                       })
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 }
+               }
+             }
     end
 
     test "a grant lacking sites:read is 403, challenging for the scope it needs", %{
@@ -829,7 +812,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "insufficient_scope"}) = json_response(conn, 403)
+      assert json_response(conn, 403) == %{"error" => "insufficient_scope"}
 
       assert [challenge] = get_resp_header(conn, "www-authenticate")
 
@@ -869,32 +852,29 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           })
           |> json_response(200)
 
-        assert_matches ^strict_map(%{
-                         "jsonrpc" => "2.0",
-                         "id" => 1,
-                         "result" =>
-                           ^strict_map(%{
-                             "content" => [
-                               ^strict_map(%{
-                                 "type" => "text",
-                                 "text" =>
-                                   ^JSON.encode!(%{
-                                     sites: [%{domain: site.domain, timezone: site.timezone}]
-                                   })
-                               })
-                             ],
-                             "isError" => false,
-                             "resultType" => "complete",
-                             "_meta" =>
-                               ^strict_map(%{
-                                 "io.modelcontextprotocol/serverInfo" =>
-                                   ^strict_map(%{
-                                     "name" => ^Plausible.product_name(),
-                                     "version" => ^any(:string)
-                                   })
-                               })
-                           })
-                       }) = resp
+        assert resp == %{
+                 "jsonrpc" => "2.0",
+                 "id" => 1,
+                 "result" => %{
+                   "content" => [
+                     %{
+                       "type" => "text",
+                       "text" =>
+                         JSON.encode!(%{
+                           sites: [%{domain: site.domain, timezone: site.timezone}]
+                         })
+                     }
+                   ],
+                   "isError" => false,
+                   "resultType" => "complete",
+                   "_meta" => %{
+                     "io.modelcontextprotocol/serverInfo" => %{
+                       "name" => Plausible.product_name(),
+                       "version" => app_version()
+                     }
+                   }
+                 }
+               }
       end
     end
   end
@@ -920,12 +900,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "error" =>
-                         ^strict_map(%{"code" => -32_601, "message" => "Method not found"})
-                     }) = json_response(conn, 404)
+      assert json_response(conn, 404) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{"code" => -32_601, "message" => "Method not found"}
+             }
     end
   end
 
@@ -933,17 +912,17 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
   # the signal an older client uses to detect the protocol revision.
   describe "GET /mcp and DELETE /mcp" do
     test "GET is 405 without a token", %{conn: conn} do
-      assert_matches ^strict_map(%{
-                       "error" => "method_not_allowed",
-                       "error_description" => "Use POST for MCP."
-                     }) = conn |> get("/mcp") |> json_response(405)
+      assert conn |> get("/mcp") |> json_response(405) == %{
+               "error" => "method_not_allowed",
+               "error_description" => "Use POST for MCP."
+             }
     end
 
     test "DELETE is 405 without a token", %{conn: conn} do
-      assert_matches ^strict_map(%{
-                       "error" => "method_not_allowed",
-                       "error_description" => "Use POST for MCP."
-                     }) = conn |> delete("/mcp") |> json_response(405)
+      assert conn |> delete("/mcp") |> json_response(405) == %{
+               "error" => "method_not_allowed",
+               "error_description" => "Use POST for MCP."
+             }
     end
   end
 
@@ -1043,32 +1022,29 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         })
         |> json_response(200)
 
-      assert_matches ^strict_map(%{
-                       "jsonrpc" => "2.0",
-                       "id" => 1,
-                       "result" =>
-                         ^strict_map(%{
-                           "content" => [
-                             ^strict_map(%{
-                               "type" => "text",
-                               "text" =>
-                                 ^JSON.encode!(%{
-                                   sites: [%{domain: site.domain, timezone: site.timezone}]
-                                 })
-                             })
-                           ],
-                           "isError" => false,
-                           "resultType" => "complete",
-                           "_meta" =>
-                             ^strict_map(%{
-                               "io.modelcontextprotocol/serverInfo" =>
-                                 ^strict_map(%{
-                                   "name" => ^Plausible.product_name(),
-                                   "version" => ^any(:string)
-                                 })
-                             })
-                         })
-                     }) = resp
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" =>
+                       JSON.encode!(%{
+                         sites: [%{domain: site.domain, timezone: site.timezone}]
+                       })
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => %{
+                   "io.modelcontextprotocol/serverInfo" => %{
+                     "name" => Plausible.product_name(),
+                     "version" => app_version()
+                   }
+                 }
+               }
+             }
 
       {:ok, grant, _role} = OAuth.find_access_token(access_token, ProtectedResources.mcp())
       OAuth.revoke_grant(grant)
@@ -1093,7 +1069,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           }
         })
 
-      assert_matches ^strict_map(%{"error" => "invalid_token"}) = json_response(revoked, 401)
+      assert json_response(revoked, 401) == %{"error" => "invalid_token"}
     end
   end
 
@@ -1103,4 +1079,6 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
 
     {:ok, token: token}
   end
+
+  defp app_version, do: to_string(Application.spec(:plausible, :vsn))
 end
