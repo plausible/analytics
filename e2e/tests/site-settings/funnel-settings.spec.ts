@@ -46,6 +46,8 @@ test.describe('funnel settings', () => {
           .getByText('Plausible')
       ).toBeVisible()
 
+      // First escape press cancels focus on combobox input;
+      // next one closes the modal.
       await page.keyboard.press('Escape')
       await page.keyboard.press('Escape')
 
