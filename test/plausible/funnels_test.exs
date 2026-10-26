@@ -268,6 +268,49 @@ defmodule Plausible.FunnelsTest do
         refute Funnels.get(site, funnel.id)
       end
 
+      test "a created funnel cannot include goals from another site", %{
+        site: site,
+        steps: [g1, g2 | _]
+      } do
+        other_site = new_site()
+        {:ok, g3} = Goals.create(other_site, %{"page_path" => "/somewhere/else"})
+
+        {:error, changeset} =
+          Funnels.create(
+            site,
+            "From blog to signup and further",
+            [g1, g2, g3]
+          )
+
+        refute changeset.valid?
+        assert changeset.errors[:steps]
+      end
+
+      test "an updated funnel cannot include goals from another site", %{
+        site: site,
+        steps: [g1, g2 | _]
+      } do
+        other_site = new_site()
+        {:ok, g3} = Goals.create(other_site, %{"page_path" => "/somewhere/else"})
+
+        {:ok, funnel} =
+          Funnels.create(
+            site,
+            "From blog to signup",
+            [g1, g2]
+          )
+
+        {:error, changeset} =
+          Funnels.update(
+            funnel,
+            "From blog to signup and purchase",
+            [g1, g2, g3]
+          )
+
+        refute changeset.valid?
+        assert changeset.errors[:steps]
+      end
+
       test "a funnel cannot be made of < 2 steps", %{site: site, steps: [g1 | _]} do
         assert {:error, :invalid_funnel_size} =
                  Funnels.create(

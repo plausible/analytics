@@ -90,12 +90,15 @@ defmodule Plausible.Funnel do
   def as_goal(%Step{} = step), do: Step.as_goal(step)
   def as_goal(%DynamicStep{} = step), do: DynamicStep.as_goal(step)
 
-  def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
+  def changeset(funnel, attrs, opts \\ []) do
+    allowed_goal_ids = Keyword.get(opts, :allowed_goal_ids, [])
+
     funnel
     |> cast(attrs, [:name, :funnel_type])
     |> validate_required([:name])
     |> set_funnel_type()
     |> put_steps(attrs[:steps] || attrs["steps"])
+    |> validate_steps(allowed_goal_ids)
     |> validate_steps_length()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
@@ -145,10 +148,23 @@ defmodule Plausible.Funnel do
     |> Ecto.Changeset.put_embed(:dynamic_steps, dynamic_steps)
   end
 
+  defp validate_steps(changeset, allowed_goal_ids) do
+    rogue_goals? =
+      changeset
+      |> get_assoc(:steps)
+      |> Enum.any?(&(get_change(&1, :goal_id) not in allowed_goal_ids))
+
+    if rogue_goals? do
+      add_error(changeset, :steps, "contain invalid goals")
+    else
+      changeset
+    end
+  end
+
   defp validate_steps_length(changeset) do
     steps_count =
-      length(Ecto.Changeset.get_assoc(changeset, :steps)) +
-        length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
+      length(get_assoc(changeset, :steps)) +
+        length(get_embed(changeset, :dynamic_steps))
 
     cond do
       steps_count < @min_steps ->
