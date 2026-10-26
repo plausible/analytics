@@ -190,7 +190,9 @@ alongside with the role dropdown.</p>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>) (required)</li><li><code class="inline">role</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">my_role</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">me?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li><code class="inline">disabled</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li></ul></div>
+        <div class="summary-synopsis"><p>Component for updating the role of a team member, invitation, or guest.
+Wraps a PrimaListbox inside its own <code class="inline">&lt;form&gt;</code>. Submission works via
+phx-change instead of a regular submit.</p></div>
 
     </div>
 
@@ -269,7 +271,7 @@ alongside with the role dropdown.</p>
     </a>
     <h1 class="signature" translate="no">role_select_input(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/team.ex#L175" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/team.ex#L190" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -295,7 +297,7 @@ alongside with the role dropdown.</p>
     </a>
     <h1 class="signature" translate="no">role_switcher(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/team.ex#L114" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/team.ex#L125" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -304,7 +306,13 @@ alongside with the role dropdown.</p>
 
   <section class="docstring">
 
-<h2 id="role_switcher/1-attributes" class="section-heading">
+<p>Component for updating the role of a team member, invitation, or guest.
+Wraps a PrimaListbox inside its own <code class="inline">&lt;form&gt;</code>. Submission works via
+phx-change instead of a regular submit.</p><p>Hence the <code class="inline">phx-auto-recover=&quot;ignore&quot;</code> on the wrapper form -- there's no
+state to recover, and without explicitly ignoring auto-recover, we would
+end up triggering a <code class="inline">handle_event(&quot;update-role&quot;)</code> even for disabled
+listboxes and flashing success messages about having updated all roles
+when the LiveView reconnects.</p><h2 id="role_switcher/1-attributes" class="section-heading">
   <a href="#role_switcher/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
