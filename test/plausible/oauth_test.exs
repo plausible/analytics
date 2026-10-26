@@ -354,6 +354,22 @@ defmodule Plausible.OAuthTest do
 
       assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
     end
+
+    test "an access token stops resolving once the user is demoted to guest" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+
+      {_grant, access_token} = issue_grant(member, team)
+      assert {:ok, _, :editor} = OAuth.find_access_token(access_token, mcp())
+
+      Plausible.Teams.Membership
+      |> Repo.get_by!(team_id: team.id, user_id: member.id)
+      |> Ecto.Changeset.change(role: :guest)
+      |> Repo.update!()
+
+      assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+    end
   end
 
   describe "Step 4: revoke_grant/1 and after_user_removed_from_team/2" do
