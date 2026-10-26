@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9EC934E4.js"></script>
+    <script src="dist/sidebar_items-C224C9BE.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -157,14 +157,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:goal_join_data/0" data-no-tooltip translate="no">goal_join_data()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#t:goal_join_imported_data/0" data-no-tooltip translate="no">goal_join_imported_data()</a>
 
       </div>
@@ -190,7 +182,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#goal_condition/2" data-no-tooltip translate="no">goal_condition(goal, imported? \\ false)</a>
+        <a href="#expected_event_name/1" data-no-tooltip translate="no">expected_event_name(goal)</a>
 
       </div>
 
@@ -198,11 +190,19 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#goal_join_data/1" data-no-tooltip translate="no">goal_join_data(query)</a>
+        <a href="#goal_at_index/2" data-no-tooltip translate="no">goal_at_index(query, index)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns data needed to perform a GROUP BY on goals in an ecto query.</p></div>
+        <div class="summary-synopsis"><p>Retrieves a breakdown goal using the 1-based index assigned by <a href="#indexed_goals/1"><code class="inline">indexed_goals/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#goal_condition/2" data-no-tooltip translate="no">goal_condition(goal, imported? \\ false)</a>
+
+      </div>
 
     </div>
 
@@ -218,9 +218,32 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#indexed_goals/1" data-no-tooltip translate="no">indexed_goals(query)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Assigns breakdown goals 1-based indices, matching ClickHouse array positions.
+Assign indices before partitioning or excluding goals so native and imported
+queries use the same identifiers, decoded by <a href="#goal_at_index/2"><code class="inline">goal_at_index/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#page_path_db_field/1" data-no-tooltip translate="no">page_path_db_field(imported?)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#pathname_regex/1" data-no-tooltip translate="no">pathname_regex(goal)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The regex an event's pathname needs to match to complete the goal. Event goals
+match any pathname.</p></div>
 
     </div>
 
@@ -255,39 +278,6 @@ Pages
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:goal_join_data/0">
-
-  <div class="detail-header">
-    <a href="#t:goal_join_data/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">goal_join_data()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L66" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> goal_join_data() :: %{
-  indices: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()],
-  event_names_by_type: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
-  page_regexes: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
-  scroll_thresholds: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()],
-  custom_props_keys: [[<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]],
-  custom_props_values: [[<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]]
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="t:goal_join_imported_data/0">
 
   <div class="detail-header">
@@ -296,7 +286,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">goal_join_imported_data()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L75" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L84" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -308,7 +298,7 @@ Pages
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> goal_join_imported_data() :: %{
-  indices: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()],
+  indices: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()],
   types: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
   event_names: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
   page_regexes: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]
@@ -364,17 +354,15 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
 <code class="inline">pathname</code>, and also skips the <code class="inline">e.name == &quot;pageview&quot;</code> check.</li></ul>
   </section>
 </section>
-<section class="detail" id="goal_condition/2">
-
-    <span id="goal_condition/1"></span>
+<section class="detail" id="expected_event_name/1">
 
   <div class="detail-header">
-    <a href="#goal_condition/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#expected_event_name/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">goal_condition(goal, imported? \\ false)</h1>
+    <h1 class="signature" translate="no">expected_event_name(goal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L209" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L110" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -386,15 +374,15 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
 
   </section>
 </section>
-<section class="detail" id="goal_join_data/1">
+<section class="detail" id="goal_at_index/2">
 
   <div class="detail-header">
-    <a href="#goal_join_data/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#goal_at_index/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">goal_join_data(query)</h1>
+    <h1 class="signature" translate="no">goal_at_index(query, index)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L86" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L80" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -405,11 +393,34 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> goal_join_data(Plausible.Stats.Query.t()) :: <a href="#t:goal_join_data/0">goal_join_data</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> goal_at_index(Plausible.Stats.Query.t(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) ::
+  <a href="Plausible.Goal.html#t:t/0">Plausible.Goal.t</a>() | nil</pre>
 
       </div>
 
-<p>Returns data needed to perform a GROUP BY on goals in an ecto query.</p>
+<p>Retrieves a breakdown goal using the 1-based index assigned by <a href="#indexed_goals/1"><code class="inline">indexed_goals/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="goal_condition/2">
+
+    <span id="goal_condition/1"></span>
+
+  <div class="detail-header">
+    <a href="#goal_condition/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">goal_condition(goal, imported? \\ false)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L198" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="goal_join_imported_data/1">
@@ -420,7 +431,7 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
     </a>
     <h1 class="signature" translate="no">goal_join_imported_data(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L115" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L95" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -438,6 +449,36 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
 <p>Returns data needed to perform a GROUP BY on goals in an imported data query.</p>
   </section>
 </section>
+<section class="detail" id="indexed_goals/1">
+
+  <div class="detail-header">
+    <a href="#indexed_goals/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">indexed_goals(query)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L72" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> indexed_goals(Plausible.Stats.Query.t()) :: [
+  {<a href="Plausible.Goal.html#t:t/0">Plausible.Goal.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()}
+]</pre>
+
+      </div>
+
+<p>Assigns breakdown goals 1-based indices, matching ClickHouse array positions.
+Assign indices before partitioning or excluding goals so native and imported
+queries use the same identifiers, decoded by <a href="#goal_at_index/2"><code class="inline">goal_at_index/2</code></a>.</p>
+  </section>
+</section>
 <section class="detail" id="page_path_db_field/1">
 
   <div class="detail-header">
@@ -446,7 +487,7 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
     </a>
     <h1 class="signature" translate="no">page_path_db_field(imported?)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L287" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L276" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -456,6 +497,27 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="pathname_regex/1">
+
+  <div class="detail-header">
+    <a href="#pathname_regex/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">pathname_regex(goal)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L122" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>The regex an event's pathname needs to match to complete the goal. Event goals
+match any pathname.</p>
   </section>
 </section>
 <section class="detail" id="preload_needed_goals/3">
@@ -486,7 +548,7 @@ was completed or not, and join those conditions with a logical OR.</p><h3 id="ad
     </a>
     <h1 class="signature" translate="no">toplevel_scroll_goal_filters?(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L140" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L129" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
