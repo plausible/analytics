@@ -1078,15 +1078,16 @@ defmodule Plausible.Stats.ExplorationTest do
         now = DateTime.utc_now()
         site = new_site()
 
-        Plausible.Goals.create(site, %{"page_path" => "/home"})
-        Plausible.Goals.create(site, %{"event_name" => "Signup"})
+        {:ok, home_goal} = Plausible.Goals.create(site, %{"page_path" => "/home"})
+        {:ok, signup_goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
 
-        Plausible.Goals.create(site, %{
-          "page_path" => "/sites/new",
-          "display_name" => "Create a site"
-        })
+        {:ok, create_site_goal} =
+          Plausible.Goals.create(site, %{
+            "page_path" => "/sites/new",
+            "display_name" => "Create a site"
+          })
 
-        Plausible.Goals.create(site, %{"page_path" => "/site*"})
+        {:ok, site_goal} = Plausible.Goals.create(site, %{"page_path" => "/site*"})
 
         populate_stats(site, [
           build(:pageview,
@@ -1197,18 +1198,21 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step1.step.name == "pageview"
         assert next_step1.step.pathname == "/home"
         assert next_step1.step.is_goal
+        assert next_step1.step.goal_id == home_goal.id
         assert next_step1.visitors == 5
 
         assert next_step2.step.label == "/register"
         assert next_step2.step.name == "pageview"
         assert next_step2.step.pathname == "/register"
         refute next_step2.step.is_goal
+        assert next_step2.step.goal_id == nil
         assert next_step2.visitors == 4
 
         assert next_step3.step.label == "Signup"
         assert next_step3.step.name == "Signup"
         assert next_step3.step.pathname == ""
         assert next_step3.step.is_goal
+        assert next_step3.step.goal_id == signup_goal.id
         assert next_step3.visitors == 3
 
         assert next_step4.step.label == "/activate"
@@ -1221,6 +1225,7 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step5.step.name == "pageview"
         assert next_step5.step.pathname == "/site*"
         assert next_step5.step.is_goal
+        assert next_step5.step.goal_id == site_goal.id
         assert next_step5.visitors == 2
 
         assert next_step6.step.label == "/sites"
@@ -1233,7 +1238,13 @@ defmodule Plausible.Stats.ExplorationTest do
         assert next_step7.step.name == "pageview"
         assert next_step7.step.pathname == "/sites/new"
         assert next_step7.step.is_goal
+        assert next_step7.step.goal_id == create_site_goal.id
         assert next_step7.visitors == 1
+
+        assert {:ok, without_goals} =
+                 Exploration.next_steps(site, query, [], include_goals?: false)
+
+        refute Enum.any?(without_goals, & &1.step.is_goal)
       end
 
       test "allows searching for a pageview goal by its pathname" do

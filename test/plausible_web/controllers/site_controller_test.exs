@@ -728,7 +728,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                {"People", "/#{site.domain}/settings/people"},
                {"Visibility", "/#{site.domain}/settings/visibility"},
                {"Goals", "/#{site.domain}/settings/goals"},
-               {"Funnels", "/#{site.domain}/settings/funnels"},
                {"Custom properties", "/#{site.domain}/settings/properties"},
                {"Integrations", "/#{site.domain}/settings/integrations"},
                {"Imports & exports", "/#{site.domain}/settings/imports-exports"},

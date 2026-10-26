@@ -95,8 +95,7 @@ defmodule Plausible.Funnel do
     |> cast(attrs, [:name, :funnel_type])
     |> validate_required([:name])
     |> set_funnel_type()
-    |> put_steps(attrs[:steps] || attrs["steps"])
-    |> validate_steps_length()
+    |> maybe_put_steps(attrs[:steps] || attrs["steps"])
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
@@ -126,6 +125,16 @@ defmodule Plausible.Funnel do
     %{funnel | steps: static_steps, dynamic_steps: dynamic_steps}
   end
 
+  # Steps are left untouched when not provided for an already persisted funnel
+  defp maybe_put_steps(%{data: %{__meta__: %{state: :loaded}}} = changeset, nil), do: changeset
+
+  defp maybe_put_steps(changeset, steps) do
+    changeset
+    |> put_steps(steps || [])
+    |> validate_steps_length()
+    |> validate_unique_steps()
+  end
+
   defp put_steps(changeset, steps) do
     {static_steps, dynamic_steps} =
       steps
@@ -147,8 +156,7 @@ defmodule Plausible.Funnel do
 
   defp validate_steps_length(changeset) do
     steps_count =
-      length(Ecto.Changeset.get_assoc(changeset, :steps)) +
-        length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
+      length(current_steps(changeset, :steps) ++ current_steps(changeset, :dynamic_steps))
 
     cond do
       steps_count < @min_steps ->
@@ -160,6 +168,38 @@ defmodule Plausible.Funnel do
       true ->
         changeset
     end
+  end
+
+  # Static steps are guarded by a unique index as well, dynamic steps are not
+  defp validate_unique_steps(changeset) do
+    static_keys =
+      changeset
+      |> current_steps(:steps)
+      |> Enum.map(&{:goal, get_field(&1, :goal_id)})
+
+    dynamic_keys =
+      changeset
+      |> current_steps(:dynamic_steps)
+      |> Enum.map(&apply_changes/1)
+      |> Enum.map(
+        &{:dynamic, &1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props,
+         &1.currency}
+      )
+
+    keys = static_keys ++ dynamic_keys
+
+    if length(Enum.uniq(keys)) == length(keys) do
+      changeset
+    else
+      add_error(changeset, :steps, "must be unique")
+    end
+  end
+
+  # Steps being replaced on update are still listed, marked for removal
+  defp current_steps(changeset, field) do
+    changeset
+    |> get_change(field, [])
+    |> Enum.reject(&(&1.action == :replace))
   end
 
   defp schema_by_input(%Plausible.Goal{}), do: Step

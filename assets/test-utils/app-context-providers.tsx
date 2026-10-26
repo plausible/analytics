@@ -35,6 +35,7 @@ export const DEFAULT_SITE: PlausibleSite = {
   explorationAvailable: false,
   explorationJourneyEndEvent: '',
   explorationMaxJourneySteps: 0,
+  funnelStepsRange: [2, 8],
   propsAvailable: false,
   siteSegmentsAvailable: false,
   siteAnnotationsAvailable: false,

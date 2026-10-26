@@ -39,7 +39,8 @@ defmodule Plausible.Stats.Exploration do
     search_term: "",
     direction: :forward,
     max_candidates: 10,
-    include_wildcard?: true
+    include_wildcard?: true,
+    include_goals?: true
   ]
 
   @spec max_steps() :: pos_integer()
@@ -61,9 +62,13 @@ defmodule Plausible.Stats.Exploration do
     include_wilcard? = Keyword.fetch!(opts, :include_wildcard?)
 
     goals =
-      site
-      |> Plausible.Goals.for_site(include_goals_with_custom_props?: false)
-      |> filter_eligible_goals()
+      if Keyword.fetch!(opts, :include_goals?) do
+        site
+        |> Plausible.Goals.for_site(include_goals_with_custom_props?: false)
+        |> filter_eligible_goals()
+      else
+        []
+      end
 
     query
     |> Base.base_event_query()
@@ -173,7 +178,8 @@ defmodule Plausible.Stats.Exploration do
           pathname: m.pathname,
           includes_subpaths: m.includes_subpaths,
           subpaths_count: m.subpaths_count,
-          is_goal: m.is_goal
+          is_goal: m.is_goal,
+          goal_id: fragment("nullIf(?, 0)", m.goal_id)
         },
         visitors: m.visitors
       },
@@ -202,6 +208,7 @@ defmodule Plausible.Stats.Exploration do
           end
 
         %{
+          id: g.id,
           label: g.display_name,
           name: g.event_name || "pageview",
           pathname: pathname,
@@ -209,7 +216,13 @@ defmodule Plausible.Stats.Exploration do
         }
       end)
 
-    types = %{label: :string, name: :string, pathname: :string, regex_pathname: :string}
+    types = %{
+      id: :integer,
+      label: :string,
+      name: :string,
+      pathname: :string,
+      regex_pathname: :string
+    }
 
     query =
       from(m in subquery(q_matches),
@@ -233,9 +246,15 @@ defmodule Plausible.Stats.Exploration do
           visitors: scale_sample(fragment("uniq(?)", m.user_id)),
           includes_subpaths: fragment("CAST(?, 'Bool')", false),
           subpaths_count: 0,
-          is_goal: fragment("CAST(?, 'Bool')", true)
+          is_goal: fragment("CAST(?, 'Bool')", true),
+          goal_id: selected_as(fragment("CAST(?, 'UInt64')", g.id), :goal_id)
         },
-        group_by: [selected_as(:label), selected_as(:name), selected_as(:pathname)]
+        group_by: [
+          selected_as(:goal_id),
+          selected_as(:label),
+          selected_as(:name),
+          selected_as(:pathname)
+        ]
       )
 
     from(m in subquery(query),
@@ -383,7 +402,8 @@ defmodule Plausible.Stats.Exploration do
         includes_subpaths:
           selected_as(fragment("CAST(?, 'Bool')", is_wildcard), :includes_subpaths),
         subpaths_count: fragment("if(?, ?, 0)", is_wildcard, m.subpaths_count),
-        is_goal: fragment("CAST(?, 'Bool')", false)
+        is_goal: fragment("CAST(?, 'Bool')", false),
+        goal_id: fragment("CAST(0, 'UInt64')")
       }
     )
   end

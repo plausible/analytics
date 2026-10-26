@@ -24,80 +24,107 @@ defmodule Plausible.Stats.FunnelTest do
        }}
     end
 
-    describe "suggest/3" do
-      test "returns empty on no goals and no stats", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
-
-        assert {[], []} = Stats.Funnel.suggest(site, query)
-      end
-
-      test "returns all goals as unmatched when there are not stats", %{
+    describe "candidates/3" do
+      test "returns all goals with zero visitors when there are no stats", %{
         site: site,
-        goals: [g1, g2, g3 | _]
+        goals: [g1, g2, g3]
       } do
         query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert {[], unmatched} = Stats.Funnel.suggest(site, query, goals: [g1, g2, g3])
+        assert {:ok, candidates} = Stats.Funnel.candidates(site, query)
 
-        unmatched_ids = Enum.map(unmatched, & &1.id)
+        assert candidates |> Enum.map(& &1.step.goal_id) |> Enum.sort() ==
+                 Enum.sort([g1.id, g2.id, g3.id])
 
-        assert length(unmatched_ids) == 3
-        assert g1.id in unmatched_ids
-        assert g2.id in unmatched_ids
-        assert g3.id in unmatched_ids
+        assert Enum.all?(candidates, &(&1.visitors == 0 and &1.step.is_goal))
       end
 
-      test "returns suggestions from stats when no goals provided", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+      test "lists goals of all kinds with visitor counts, along with pages and events not covered by goals",
+           %{site: site, goals: [g1, g2, g3]} do
+        {:ok, scroll} =
+          Goals.create(site, %{
+            "page_path" => "/checkout",
+            "scroll_threshold" => 50,
+            "display_name" => "Scroll checkout"
+          })
+
+        {:ok, props} =
+          Goals.create(site, %{
+            "event_name" => "Signup",
+            "custom_props" => %{"plan" => "pro"},
+            "display_name" => "Pro signup"
+          })
+
+        {:ok, revenue} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
 
         populate_stats(site, [
-          build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
           build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
-          build(:event, name: "Signup", user_id: 123),
+          build(:event,
+            name: "Signup",
+            user_id: 123,
+            "meta.key": ["plan"],
+            "meta.value": ["pro"]
+          ),
           build(:pageview, pathname: "/checkout", user_id: 123),
+          build(:engagement, pathname: "/checkout", user_id: 123, scroll_depth: 60),
+          build(:event,
+            name: "Purchase",
+            user_id: 123,
+            revenue_reporting_amount: Decimal.new("10"),
+            revenue_reporting_currency: "USD"
+          ),
           build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
-          build(:event, name: "Signup", user_id: 666)
+          build(:event, name: "Signup", user_id: 666),
+          build(:pageview, pathname: "/about", user_id: 666)
         ])
 
-        assert {suggestions, []} = Stats.Funnel.suggest(site, query)
-        suggestions = Enum.map(suggestions, &{&1.event_name, &1.page_path})
+        query = QueryBuilder.build!(site, input_date_range: :all)
 
-        assert length(suggestions) == 6
-        assert {"Signup", nil} in suggestions
-        assert {nil, "/go/to/blog/foo"} in suggestions
-        assert {nil, "/go/to/blog/**"} in suggestions
-        assert {nil, "/go/to/blog/bar"} in suggestions
-        assert {nil, "/checkout"} in suggestions
-        assert {nil, "/irrelevant/page/not/in/funnel"} in suggestions
+        assert {:ok, candidates} = Stats.Funnel.candidates(site, query)
+
+        by_goal =
+          candidates
+          |> Enum.filter(& &1.step.goal_id)
+          |> Map.new(&{&1.step.goal_id, &1})
+
+        assert %{visitors: 2, step: %{label: "Visit /go/to/blog/**", goal_kind: nil}} =
+                 by_goal[g1.id]
+
+        assert %{visitors: 2, step: %{label: "Signup", name: "Signup"}} = by_goal[g2.id]
+        assert %{visitors: 1, step: %{label: "Visit /checkout"}} = by_goal[g3.id]
+        assert %{visitors: 1, step: %{goal_kind: :scroll}} = by_goal[scroll.id]
+        assert %{visitors: 1, step: %{label: "Pro signup", goal_kind: :props}} = by_goal[props.id]
+        assert %{visitors: 1, step: %{goal_kind: :revenue}} = by_goal[revenue.id]
+
+        pages =
+          candidates
+          |> Enum.reject(& &1.step.is_goal)
+          |> Enum.map(&{&1.step.name, &1.step.pathname, &1.step.includes_subpaths})
+
+        assert {"pageview", "/about", false} in pages
+        assert {"pageview", "/go/to/blog/foo", false} in pages
+        # covered by the plain goals
+        refute {"pageview", "/checkout", false} in pages
+        refute {"Signup", "", false} in pages
+
+        assert Enum.map(candidates, & &1.visitors) ==
+                 candidates |> Enum.map(& &1.visitors) |> Enum.sort(:desc)
       end
 
-      test "returns only unmatched goals", %{site: site, goals: [g1, g2, g3 | _]} do
-        {:ok, g4} = Goals.create(site, %{"event_name" => "Unmatched"})
-        query = QueryBuilder.build!(site, input_date_range: :all)
-
+      test "filters goals and pages by search term", %{site: site, goals: [_g1, g2, _g3]} do
         populate_stats(site, [
-          build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
-          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
-          build(:event, name: "Signup", user_id: 123),
-          build(:pageview, pathname: "/checkout", user_id: 123),
-          build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
-          build(:event, name: "Signup", user_id: 666)
+          build(:pageview, pathname: "/sign-in", user_id: 123),
+          build(:pageview, pathname: "/checkout", user_id: 123)
         ])
 
-        assert {suggestions, [unmatched]} =
-                 Stats.Funnel.suggest(site, query, goals: [g1, g2, g3, g4])
+        query = QueryBuilder.build!(site, input_date_range: :all)
 
-        suggestions = Enum.map(suggestions, &{&1.event_name, &1.page_path})
+        assert {:ok, candidates} = Stats.Funnel.candidates(site, query, search_term: "sign")
 
-        assert length(suggestions) == 6
-        assert {"Signup", nil} in suggestions
-        assert {nil, "/go/to/blog/foo"} in suggestions
-        assert {nil, "/go/to/blog/**"} in suggestions
-        assert {nil, "/go/to/blog/bar"} in suggestions
-        assert {nil, "/checkout"} in suggestions
-        assert {nil, "/irrelevant/page/not/in/funnel"} in suggestions
+        assert [%{step: %{goal_id: goal_id}}, %{step: %{pathname: "/sign-in"}}] =
+                 Enum.sort_by(candidates, & &1.step.is_goal, :desc)
 
-        assert unmatched.event_name == "Unmatched"
+        assert goal_id == g2.id
       end
     end
 
@@ -107,7 +134,7 @@ defmodule Plausible.Stats.FunnelTest do
              site: site,
              goals: [g1, g2, g3 | _]
            } do
-        funnel_definition =
+        {:ok, funnel_definition} =
           Funnels.ephemeral_definition(
             site,
             "From blog to signup and purchase",
@@ -188,10 +215,33 @@ defmodule Plausible.Stats.FunnelTest do
                 }} = funnel_data
       end
 
-      test "ephemeral definition creation crashes when passed data are invalid", %{site: site} do
-        assert_raise MatchError, fn ->
-          Funnels.ephemeral_definition(site, "Empty", [])
-        end
+      test "ephemeral definition creation fails when passed data are invalid", %{site: site} do
+        assert {:error, %Ecto.Changeset{valid?: false}} =
+                 Funnels.ephemeral_definition(site, "Empty", [])
+      end
+
+      test "ephemeral definition creation rejects goals of other sites", %{site: site} do
+        other_goal = insert(:goal, site: new_site(), event_name: "Signup")
+
+        assert {:error, :invalid_goal} =
+                 Funnels.ephemeral_definition(site, "Foreign", [
+                   %{"goal_id" => other_goal.id},
+                   %{"page_path" => "/checkout"}
+                 ])
+      end
+
+      test "ephemeral definition preloads goals of static steps", %{
+        site: site,
+        goals: [g1 | _]
+      } do
+        assert {:ok, funnel} =
+                 Funnels.ephemeral_definition(site, "Preloaded", [
+                   %{"goal_id" => g1.id},
+                   %{"page_path" => "/checkout"}
+                 ])
+
+        assert [%Plausible.Goal{id: id}, %Plausible.Goal{id: 0}] = Plausible.Funnel.goals(funnel)
+        assert id == g1.id
       end
 
       test "mixed funnels can be evaluated per site within a time range against an ephemeral definition",
@@ -199,7 +249,7 @@ defmodule Plausible.Stats.FunnelTest do
              site: site,
              goals: [g1, g2, g3 | _]
            } do
-        funnel_definition =
+        {:ok, funnel_definition} =
           Funnels.ephemeral_definition(
             site,
             "From blog to signup and purchase",

@@ -13,23 +13,24 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
+  @dynamic_step_fields ~w(event_name page_path scroll_threshold custom_props currency)
+
+  @type step_error() :: :invalid_goal | :invalid_step
+
   @spec create(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
           {:ok, Funnel.t()}
-          | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
+          | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required | step_error()}
   def create(site, name, steps, opts \\ [])
 
   def create(site, name, steps, opts)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site = Plausible.Repo.preload(site, :team)
 
-    case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
-      {:error, _} = error ->
-        error
-
-      :ok ->
-        site
-        |> create_changeset(name, steps, opts)
-        |> Repo.insert()
+    with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.team),
+         {:ok, steps, _goals_by_id} <- normalize_steps(site, steps) do
+      site
+      |> create_changeset(name, steps, opts)
+      |> Repo.insert()
     end
   end
 
@@ -37,20 +38,110 @@ defmodule Plausible.Funnels do
     {:error, :invalid_funnel_size}
   end
 
-  @spec update(Funnel.t(), String.t(), [map()], Keyword.t()) ::
+  @doc """
+  Updates the funnel. Passing `nil` as steps leaves them untouched,
+  which allows renaming or changing the funnel type only.
+  """
+  @spec update(Funnel.t(), String.t(), [map()] | nil, Keyword.t()) ::
           {:ok, Funnel.t()}
-          | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
+          | {:error, Ecto.Changeset.t() | :upgrade_required | step_error()}
   def update(funnel, name, steps, opts \\ []) do
     site = Plausible.Repo.preload(funnel, site: :team).site
 
-    case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
-      {:error, _} = error ->
-        error
+    with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.team),
+         {:ok, steps} <- maybe_normalize_steps(site, steps) do
+      funnel
+      |> edit_changeset(name, steps, opts)
+      |> Repo.update()
+    end
+  end
 
-      :ok ->
-        funnel
-        |> edit_changeset(name, steps, opts)
-        |> Repo.update()
+  @doc """
+  Validates raw step inputs against the site and turns them into
+  inputs accepted by `Plausible.Funnel.changeset/2`.
+
+  Steps referencing a goal (`%Plausible.Goal{}`, `%{goal_id: id}` or
+  `%{"goal_id" => id}`) must point at a goal of the given site.
+  Any other map is treated as a dynamic step, with only the fields
+  supported by `Plausible.Funnel.DynamicStep` retained.
+  """
+  @spec normalize_steps(Plausible.Site.t(), [map()]) ::
+          {:ok, [map()], %{pos_integer() => Plausible.Goal.t()}} | {:error, step_error()}
+  def normalize_steps(site, steps) when is_list(steps) do
+    with {:ok, goal_ids} <- collect_goal_ids(steps) do
+      goals_by_id =
+        from(g in Plausible.Goal, where: g.site_id == ^site.id and g.id in ^goal_ids)
+        |> Repo.all()
+        |> Map.new(&{&1.id, &1})
+
+      steps
+      |> Enum.reduce_while({:ok, []}, fn step, {:ok, acc} ->
+        case normalize_step(step, goals_by_id) do
+          {:ok, step} -> {:cont, {:ok, [step | acc]}}
+          {:error, _} = error -> {:halt, error}
+        end
+      end)
+      |> case do
+        {:ok, steps} -> {:ok, Enum.reverse(steps), goals_by_id}
+        error -> error
+      end
+    end
+  end
+
+  defp maybe_normalize_steps(_site, nil), do: {:ok, nil}
+
+  defp maybe_normalize_steps(site, steps) do
+    with {:ok, steps, _goals_by_id} <- normalize_steps(site, steps) do
+      {:ok, steps}
+    end
+  end
+
+  defp collect_goal_ids(steps) do
+    Enum.reduce_while(steps, {:ok, []}, fn step, {:ok, acc} ->
+      case step_goal_id(step) do
+        nil -> {:cont, {:ok, acc}}
+        :error -> {:halt, {:error, :invalid_goal}}
+        id -> {:cont, {:ok, [id | acc]}}
+      end
+    end)
+  end
+
+  defp normalize_step(step, goals_by_id) do
+    case step_goal_id(step) do
+      nil -> normalize_dynamic_step(step)
+      id when is_map_key(goals_by_id, id) -> {:ok, %{goal_id: id}}
+      _ -> {:error, :invalid_goal}
+    end
+  end
+
+  defp step_goal_id(%Plausible.Goal{id: id}), do: parse_goal_id(id)
+  defp step_goal_id(%Funnel.Step{goal_id: id}), do: parse_goal_id(id)
+  defp step_goal_id(%{goal_id: id}), do: parse_goal_id(id)
+  defp step_goal_id(%{"goal_id" => id}), do: parse_goal_id(id)
+  defp step_goal_id(step) when is_map(step), do: nil
+  defp step_goal_id(_), do: :error
+
+  defp parse_goal_id(id) when is_integer(id) and id > 0, do: id
+
+  defp parse_goal_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {id, ""} -> parse_goal_id(id)
+      _ -> :error
+    end
+  end
+
+  defp parse_goal_id(_), do: :error
+
+  defp normalize_dynamic_step(step) do
+    step =
+      step
+      |> Map.new(fn {key, value} -> {to_string(key), value} end)
+      |> Map.take(@dynamic_step_fields)
+
+    if step["event_name"] == Plausible.Stats.Exploration.Journey.Step.journey_end_event() do
+      {:error, :invalid_step}
+    else
+      {:ok, step}
     end
   end
 
@@ -81,15 +172,25 @@ defmodule Plausible.Funnels do
     Funnel.changeset(funnel, params)
   end
 
-  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()
+  @doc """
+  Builds a funnel definition that is never persisted, for evaluating
+  steps before saving them. Goals of static steps are preloaded.
+  """
+  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
+          {:ok, Funnel.t()} | {:error, Ecto.Changeset.t() | step_error()}
   def ephemeral_definition(site, name, steps, opts \\ []) do
-    changeset = create_changeset(site, name, steps, opts)
+    with {:ok, steps, goals_by_id} <- normalize_steps(site, steps) do
+      changeset = create_changeset(site, name, steps, opts)
 
-    # Sanity check to ensure the definition is valid.
-    # Should be ensured earlier already.
-    true = changeset.valid?
+      if changeset.valid? do
+        funnel = Ecto.Changeset.apply_changes(changeset)
+        steps = Enum.map(funnel.steps, &%{&1 | goal: Map.fetch!(goals_by_id, &1.goal_id)})
 
-    Ecto.Changeset.apply_changes(changeset)
+        {:ok, %{funnel | steps: steps}}
+      else
+        {:error, changeset}
+      end
+    end
   end
 
   @spec list(Plausible.Site.t()) :: [

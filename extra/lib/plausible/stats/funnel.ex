@@ -18,55 +18,119 @@ defmodule Plausible.Stats.Funnel do
   alias Plausible.Stats.Exploration
   alias Plausible.Stats.Goal.Revenue
 
-  @spec suggest(Plausible.Site.t(), Plausible.Stats.Query.t(), Keyword.t()) ::
-          {[Plausible.Goal.t()], [Plausible.Goal.t()]}
-  def suggest(site, query, opts \\ []) do
-    goals = Keyword.get(opts, :goals, [])
-    input = Keyword.get(opts, :input, "")
+  @max_page_candidates 50
 
-    goals_map =
-      Map.new(goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
+  @type candidate() :: %{step: map(), visitors: non_neg_integer()}
 
-    {:ok, suggestions} =
-      Exploration.next_steps(site, query, [], search_term: input, include_wildcard?: false)
+  @doc """
+  Lists steps a funnel can be built from: all site goals, including
+  ones with scroll threshold, custom props or revenue, along with the
+  most visited pages and custom events not covered by a goal.
 
-    {suggestions, unmatched_goals} =
-      suggestions
-      |> Enum.reject(&(&1.step.name == Exploration.Journey.Step.journey_end_event()))
-      |> Enum.reduce({[], goals_map}, fn suggestion, {suggestions, goals_map} ->
-        case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
-          {goal, :static, key} ->
-            {[goal | suggestions], Map.delete(goals_map, key)}
+  Unlike exploration, candidates don't depend on any preceding steps,
+  as funnel steps don't need to follow each other directly.
+  """
+  @spec candidates(Plausible.Site.t(), Query.t(), Keyword.t()) :: {:ok, [candidate()]}
+  def candidates(site, query, opts \\ []) do
+    search_term = opts |> Keyword.get(:search_term, "") |> String.trim()
 
-          {goal, :dynamic} ->
-            {[goal | suggestions], goals_map}
-        end
+    goals =
+      site
+      |> Plausible.Goals.for_site()
+      |> Enum.filter(&matches_search?(&1, search_term))
+
+    visitors_by_goal = goal_visitors(query, goals)
+
+    goal_candidates =
+      Enum.map(goals, fn goal ->
+        %{step: goal_step(goal), visitors: Map.get(visitors_by_goal, goal.id, 0)}
       end)
 
-    {Enum.reverse(suggestions), Map.values(unmatched_goals)}
+    plain_goal_keys =
+      goals
+      |> Enum.filter(&plain_goal?/1)
+      |> MapSet.new(&{&1.event_name || "pageview", &1.page_path || ""})
+
+    {:ok, page_candidates} =
+      Exploration.next_steps(site, query, [],
+        search_term: search_term,
+        include_goals?: false,
+        max_candidates: @max_page_candidates
+      )
+
+    page_candidates =
+      page_candidates
+      |> Enum.reject(fn %{step: step} ->
+        step.name == Exploration.Journey.Step.journey_end_event() or
+          (not step.includes_subpaths and
+             MapSet.member?(plain_goal_keys, {step.name, step.pathname}))
+      end)
+      |> Enum.map(fn candidate ->
+        %{candidate | step: candidate.step |> Map.from_struct() |> Map.put(:goal_kind, nil)}
+      end)
+
+    {:ok, Enum.sort_by(goal_candidates ++ page_candidates, & &1.visitors, :desc)}
   end
 
-  @spec step_to_goal(Exploration.Journey.Step.t(), %{
-          {String.t(), String.t()} => Plausible.Goal.t()
-        }) ::
-          {Plausible.Goal.t(), :static, {binary(), binary()}} | {Plausible.Goal.t(), :dynamic}
-  def step_to_goal(step, goals_map) do
-    goal = goals_map[{step.name, step.pathname}]
+  defp matches_search?(_goal, term) when byte_size(term) <= 2, do: true
 
-    if not is_nil(goal) and step.is_goal and
-         Plausible.Goal.display_name(step.name, step.pathname) == goal.display_name do
-      {goal, :static, {step.name, step.pathname}}
-    else
-      goal =
-        %Plausible.Goal{}
-        |> Plausible.Goal.changeset(%{
-          event_name: if(step.name != "pageview", do: step.name),
-          page_path: step.pathname
-        })
-        |> Ecto.Changeset.apply_changes()
+  defp matches_search?(goal, term) do
+    goal.display_name
+    |> String.downcase()
+    |> String.contains?(String.downcase(term))
+  end
 
-      {goal, :dynamic}
+  defp plain_goal?(goal) do
+    goal_kind(goal) == nil and
+      goal.display_name == Plausible.Goal.display_name(goal.event_name, goal.page_path) and
+      not String.contains?(goal.page_path || "", "*")
+  end
+
+  defp goal_step(goal) do
+    %Exploration.Journey.Step{
+      label: goal.display_name,
+      name: goal.event_name || "pageview",
+      pathname: goal.page_path || "",
+      is_goal: true,
+      goal_id: goal.id
+    }
+    |> Map.from_struct()
+    |> Map.put(:goal_kind, goal_kind(goal))
+  end
+
+  @doc """
+  Classifies goals which cannot be expressed with plain page or event name matching.
+  """
+  @spec goal_kind(Plausible.Goal.t()) :: :revenue | :scroll | :props | nil
+  def goal_kind(goal) do
+    cond do
+      Plausible.Goal.Revenue.revenue?(goal) -> :revenue
+      goal.scroll_threshold > -1 -> :scroll
+      Plausible.Goal.has_custom_props?(goal) -> :props
+      true -> nil
     end
+  end
+
+  defp goal_visitors(_query, []), do: %{}
+
+  defp goal_visitors(query, goals) do
+    base_query =
+      query
+      |> Query.set(preloaded_goals: %{all: [], matching_toplevel_filters: goals})
+      |> Base.base_event_query()
+
+    q = from(e in base_query, select: %{})
+
+    goals
+    |> Enum.reduce(q, fn goal, q ->
+      goal_condition = Plausible.Stats.Goals.goal_condition(goal)
+
+      visitors =
+        dynamic([e], scale_sample(fragment("uniqIf(?, ?)", e.user_id, ^goal_condition)))
+
+      from(e in q, select_merge: ^%{goal.id => visitors})
+    end)
+    |> ClickhouseRepo.one(query: query)
   end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::

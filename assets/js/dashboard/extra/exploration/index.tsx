@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, RefObject } from 'react'
+import React, { useState, ReactNode } from 'react'
 import LazyLoader from '../../components/lazy-loader'
 import { Tooltip } from '../../util/tooltip'
 import { useSiteContext } from '../../site-context'
@@ -9,12 +9,15 @@ import {
 } from '../../util/number-formatter'
 import { RefreshIcon } from '../../components/icons'
 import { popover } from '../../components/popover'
-import { PathConnectors } from './path-connectors'
-import { ExplorationColumn, MaxDepthColumn } from './exploration-column'
+import { Button } from '../../components/button'
+import { FunnelBuilderControls } from '../../funnels-context'
 import { useExplorationData } from './exploration-state'
-import { DIRECTION, MIN_GRID_COLUMNS, ExplorationDirection } from './constants'
-import { getSelectedSuggestion } from './journey'
+import { DIRECTION, ExplorationDirection } from './constants'
+import { JourneyStep } from './journey'
+import { JourneyColumns } from './journey-columns'
+import { chronologicalSteps, draftInvalidReason } from './funnel-draft'
 import { trackEvent } from '../../dogfood'
+import { FunnelType } from '../funnel/metrics'
 
 // Column header label based on index and direction.
 function columnHeader(index: number, direction: ExplorationDirection): string {
@@ -31,46 +34,43 @@ function trackExploreEntrySelected(direction: ExplorationDirection): void {
   trackEvent('Explore entry selected', { journey_direction: direction })
 }
 
-// Scrolls the active column into view whenever the journey length changes.
-function useScrollActiveColumnIntoView(
-  containerRef: RefObject<HTMLElement>,
-  stepsLength: number
-) {
-  const prevLengthRef = useRef(0)
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el || stepsLength === prevLengthRef.current) {
-      prevLengthRef.current = stepsLength
-      return
-    }
-    prevLengthRef.current = stepsLength
-
-    const activeColumn = el.querySelector(
-      `[data-exploration-column="${stepsLength}"]`
-    )
-    if (activeColumn) {
-      const { left: colLeft, right: colRight } =
-        activeColumn.getBoundingClientRect()
-      const { left: containerLeft, right: containerRight } =
-        el.getBoundingClientRect()
-      if (colRight > containerRight || colLeft < containerLeft) {
-        el.scrollTo({
-          left: el.scrollLeft + colLeft - containerLeft,
-          behavior: 'smooth'
-        })
-      }
-    } else {
-      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
-    }
-  }, [containerRef, stepsLength])
+export type FunnelExplorationProps = {
+  // Present when the current user can build funnels out of explorations
+  funnelBuilder: FunnelBuilderControls | null
 }
 
-export function FunnelExploration() {
+export function FunnelExploration({
+  funnelBuilder
+}: FunnelExplorationProps): ReactNode {
+  const [inViewport, setInViewport] = useState(false)
+
+  return (
+    <LazyLoader onVisible={() => setInViewport(true)}>
+      <JourneyExploration
+        inViewport={inViewport}
+        funnelBuilder={funnelBuilder}
+        onBuildFunnel={(steps) =>
+          // Journey steps directly follow each other, as in a strict funnel
+          funnelBuilder?.start('new', { steps, funnelType: FunnelType.strict })
+        }
+      />
+    </LazyLoader>
+  )
+}
+
+function JourneyExploration({
+  inViewport,
+  funnelBuilder,
+  onBuildFunnel
+}: {
+  inViewport: boolean
+  funnelBuilder: FunnelBuilderControls | null
+  onBuildFunnel: (steps: JourneyStep[]) => void
+}): ReactNode {
   const site = useSiteContext()
   const { dashboardState } = useDashboardStateContext()
-  const [inViewport, setInViewport] = useState(false)
   const maxJourneySteps = site.explorationMaxJourneySteps
+  const [minFunnelSteps, maxFunnelSteps] = site.funnelStepsRange
 
   const {
     journey,
@@ -85,24 +85,9 @@ export function FunnelExploration() {
     setActiveFilter
   } = useExplorationData({ site, dashboardState, inViewport })
 
-  const { steps, funnel, activeResults, activeFilter, frozen, provisional } =
-    journey
-
-  const containerRef = useRef(null)
-  useScrollActiveColumnIntoView(containerRef, steps.length)
+  const { steps, funnel, activeResults, activeFilter } = journey
 
   const initialLoading = !inViewport || (steps.length === 0 && activeLoading)
-  const journeyEnded =
-    !activeLoading && activeResults.length === 0 && steps.length >= 1
-  const activeColumnIndex = steps.length
-
-  const numColumns = initialLoading
-    ? 1
-    : journeyEnded || (activeLoading && steps.length === 1)
-      ? steps.length + 1
-      : Math.max(steps.length + 1, MIN_GRID_COLUMNS)
-
-  const gridColumns = Math.max(numColumns, MIN_GRID_COLUMNS)
 
   const noData =
     !initialLoading &&
@@ -117,141 +102,110 @@ export function FunnelExploration() {
   const overallConversionRate = lastFunnelStep?.conversion_rate ?? null
   const overallConversionVisitors = lastFunnelStep?.visitors ?? null
 
+  const funnelSteps = chronologicalSteps(steps, direction)
+  const saveAsFunnelInvalidReason = draftInvalidReason(funnelSteps, {
+    minSteps: minFunnelSteps,
+    maxSteps: maxFunnelSteps,
+    journeyEndEvent: site.explorationJourneyEndEvent
+  })
+
   return (
-    <LazyLoader onVisible={() => setInViewport(true)}>
-      <div className="flex-1 flex flex-col gap-4 pt-4">
-        <div className="flex flex-wrap items-center gap-x-3">
-          <h4
-            data-testid="exploration-title"
-            className="flex-1 text-base font-semibold dark:text-gray-100"
-          >
-            {funnel.length >= 2
-              ? `${funnel.length}-step user journey`
-              : 'Explore user journeys'}
-          </h4>
+    <div className="flex-1 flex flex-col gap-4 pt-4">
+      <div className="flex flex-wrap items-center gap-x-3">
+        <h4
+          data-testid="exploration-title"
+          className="flex-1 text-base font-semibold dark:text-gray-100"
+        >
+          {funnel.length >= 2
+            ? `${funnel.length}-step user journey`
+            : 'Explore user journeys'}
+        </h4>
 
-          {overallConversionRate != null && (
-            <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <span>
-                <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {rateFormatter(overallConversionRate)}{' '}
-                </span>
-                <span className="text-gray-500 dark:text-gray-400">
-                  ({numberShortFormatter(overallConversionVisitors!)})
-                </span>
+        {overallConversionRate != null && (
+          <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>
+              <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
+                CR: {rateFormatter(overallConversionRate)}{' '}
               </span>
-              <span className="hidden sm:inline text-gray-300 dark:text-gray-600 select-none">
-                |
+              <span className="text-gray-500 dark:text-gray-400">
+                ({numberShortFormatter(overallConversionVisitors!)})
               </span>
-            </div>
-          )}
-
-          <Tooltip
-            info={<span className="whitespace-nowrap">Deselect all</span>}
-            className={
-              steps.length === 0 ? 'invisible pointer-events-none' : ''
-            }
-          >
-            <button
-              data-testid="exploration-deselect-all"
-              onClick={reset}
-              className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
-            >
-              <RefreshIcon className="size-3.5" />
-            </button>
-          </Tooltip>
-        </div>
-
-        {noData ? (
-          <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
-            No data yet
-          </div>
-        ) : (
-          <div
-            ref={containerRef}
-            className="relative grid gap-6 overflow-x-auto -mx-5 px-5 -mb-3 pb-3 [scrollbar-width:thin] [scrollbar-color:theme(colors.gray.300)_transparent] dark:[scrollbar-color:theme(colors.gray.600)_transparent]"
-            style={{
-              gridTemplateColumns: `repeat(${gridColumns}, minmax(19rem, 1fr))`
-            }}
-          >
-            {Array.from({ length: numColumns }, (_, i) => {
-              const isActive = i === activeColumnIndex
-              const isReachable = steps.length >= i
-
-              const colFilter = isActive ? activeFilter : ''
-              const colFrozen = frozen[i] ?? []
-
-              const colResults =
-                isActive && (activeResults.length > 0 || colFilter)
-                  ? activeResults
-                  : colFrozen
-              const colLoadingInBackground =
-                isActive && (initialLoading || activeLoading)
-              const colLoading =
-                colLoadingInBackground && (!frozen[i] || !!colFilter)
-
-              const selected = getSelectedSuggestion({
-                i,
-                steps,
-                provisional,
-                funnel
-              })
-
-              const colHeaderConversionRate =
-                funnel[i]?.conversion_rate != null
-                  ? i === 0
-                    ? '100%'
-                    : rateFormatter(funnel[i].conversion_rate)
-                  : null
-
-              if (isActive && steps.length >= maxJourneySteps) {
-                return (
-                  <MaxDepthColumn
-                    key={i}
-                    colIndex={i}
-                    header={columnHeader(i, direction)}
-                  />
-                )
-              }
-
-              return (
-                <ExplorationColumn
-                  key={i}
-                  colIndex={i}
-                  direction={direction}
-                  onDirectionChange={i === 0 ? setDirection : undefined}
-                  header={columnHeader(i, direction)}
-                  headerConversionRate={colHeaderConversionRate}
-                  active={isReachable}
-                  loadingInBackground={colLoadingInBackground}
-                  loading={colLoading}
-                  results={colResults}
-                  selected={selected}
-                  maxVisitors={funnel[0]?.visitors ?? null}
-                  filter={colFilter}
-                  onFilterChange={isActive ? setActiveFilter : () => {}}
-                  onSelect={(step) => {
-                    if (i === 0 && step !== null) {
-                      trackExploreEntrySelected(direction)
-                    }
-                    selectStep(i, step)
-                  }}
-                  rateLimited={isActive && rateLimited}
-                  onRetry={retry}
-                />
-              )
-            })}
-
-            <PathConnectors
-              containerRef={containerRef}
-              steps={steps}
-              layoutKey={layoutKey}
-            />
+            </span>
+            <span className="hidden sm:inline text-gray-300 dark:text-gray-600 select-none">
+              |
+            </span>
           </div>
         )}
+
+        {funnelBuilder &&
+          steps.length > 0 &&
+          (saveAsFunnelInvalidReason !== null ? (
+            <Tooltip info={saveAsFunnelInvalidReason}>
+              <Button
+                theme="secondary"
+                size="sm"
+                className="!h-7"
+                disabled
+                data-testid="exploration-save-as-funnel"
+              >
+                Save as funnel
+              </Button>
+            </Tooltip>
+          ) : (
+            <Button
+              theme="secondary"
+              size="sm"
+              className="!h-7"
+              data-testid="exploration-save-as-funnel"
+              onClick={() => onBuildFunnel(funnelSteps)}
+            >
+              Save as funnel
+            </Button>
+          ))}
+
+        <Tooltip
+          info={<span className="whitespace-nowrap">Deselect all</span>}
+          className={steps.length === 0 ? 'invisible pointer-events-none' : ''}
+        >
+          <button
+            data-testid="exploration-deselect-all"
+            onClick={reset}
+            className={`${popover.toggleButton.classNames.rounded} ${popover.toggleButton.classNames.outline} justify-center !h-7 px-1.5`}
+          >
+            <RefreshIcon className="size-3.5" />
+          </button>
+        </Tooltip>
       </div>
-    </LazyLoader>
+
+      {noData ? (
+        <div className="flex-1 flex items-center justify-center font-medium text-gray-500 dark:text-gray-400">
+          No data yet
+        </div>
+      ) : (
+        <JourneyColumns
+          journey={journey}
+          direction={direction}
+          onDirectionChange={setDirection}
+          columnHeader={(index) => columnHeader(index, direction)}
+          initialLoading={initialLoading}
+          activeLoading={activeLoading}
+          rateLimited={rateLimited}
+          maxSteps={maxJourneySteps}
+          layoutKey={layoutKey}
+          onSelect={(index, step) => {
+            if (index === 0 && step !== null) {
+              trackExploreEntrySelected(direction)
+            }
+            selectStep(index, step)
+          }}
+          onFilterChange={setActiveFilter}
+          onRetry={retry}
+        />
+      )}
+    </div>
   )
 }
+
+export { FunnelBuilder } from './funnel-builder'
 
 export default FunnelExploration

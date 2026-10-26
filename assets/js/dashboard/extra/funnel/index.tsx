@@ -1,6 +1,10 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { InformationCircleIcon } from '@heroicons/react/24/outline'
+import {
+  InformationCircleIcon,
+  PencilSquareIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 
 import * as api from '../../api'
@@ -23,13 +27,17 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   FunnelResponse,
-  FunnelType,
   StepMetrics,
   StepValues,
   conversionRateChange,
+  funnelTypeDescriptions,
+  funnelTypeLabels,
   stepMetrics
 } from './metrics'
 import { StepOutcomes } from './outcome-box'
+import { FunnelBuilderControls, useFunnelsContext } from '../../funnels-context'
+import { useDeleteFunnel } from './funnel-api'
+import { DeleteFunnelModal } from './funnel-modals'
 
 const FUNNEL_REPORT_ID = 'funnel'
 
@@ -380,31 +388,78 @@ function ConversionRateSummary({
   )
 }
 
-const funnelTypeLabels: { [t: string]: string } = {
-  [FunnelType.sequential]: 'Sequential',
-  [FunnelType.flexible]: 'Flexible',
-  [FunnelType.strict]: 'Strict'
-}
+const actionButtonClassName =
+  'flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
 
-const funnelTypeDescriptions: { [t: string]: string } = {
-  [FunnelType.sequential]:
-    'All steps are required. Other activity is allowed between steps.',
-  [FunnelType.flexible]:
-    'Only the first and last steps are required. Middle steps can be skipped.',
-  [FunnelType.strict]:
-    'All steps are required. No other activity is allowed between steps.'
+// Edit and delete actions for users who can manage funnels
+function FunnelActions({
+  funnelId,
+  funnelName,
+  funnelBuilder
+}: {
+  funnelId: number
+  funnelName: string
+  funnelBuilder: FunnelBuilderControls
+}): ReactNode {
+  const [deleting, setDeleting] = useState(false)
+  const deleteFunnel = useDeleteFunnel()
+
+  return (
+    <div className="self-center flex items-center gap-2">
+      <Tooltip info="Edit funnel" containerRef={{ current: document.body }}>
+        <button
+          data-testid="funnel-edit"
+          aria-label="Edit funnel"
+          className={actionButtonClassName}
+          onClick={() => funnelBuilder.start(funnelId)}
+        >
+          <PencilSquareIcon className="size-4" />
+        </button>
+      </Tooltip>
+      <Tooltip info="Delete funnel" containerRef={{ current: document.body }}>
+        <button
+          data-testid="funnel-delete"
+          aria-label="Delete funnel"
+          className={actionButtonClassName}
+          onClick={() => setDeleting(true)}
+        >
+          <TrashIcon className="size-4" />
+        </button>
+      </Tooltip>
+      {deleting && (
+        <DeleteFunnelModal
+          name={funnelName}
+          onClose={() => {
+            deleteFunnel.reset()
+            setDeleting(false)
+          }}
+          onDelete={() =>
+            deleteFunnel.mutate(
+              { id: funnelId },
+              { onSuccess: () => setDeleting(false) }
+            )
+          }
+          pending={deleteFunnel.isPending}
+          error={deleteFunnel.error}
+          resetError={deleteFunnel.reset}
+        />
+      )}
+    </div>
+  )
 }
 
 function FunnelHeader({
   funnelName,
   funnel,
   steps,
-  loading
+  loading,
+  actions
 }: {
   funnelName: string
   funnel: FunnelResponse | null
   steps: StepMetrics[] | null
   loading: boolean
+  actions: ReactNode
 }): ReactNode {
   const lastStep = steps?.[steps.length - 1] ?? null
 
@@ -459,20 +514,25 @@ function FunnelHeader({
           </div>
         </div>
       )}
+
+      {actions}
     </div>
   )
 }
 
 export default function Funnel({
-  funnelName
+  funnelName,
+  funnelBuilder
 }: {
   funnelName: string
+  funnelBuilder: FunnelBuilderControls | null
 }): ReactNode {
   const site = useSiteContext()
+  const { funnels } = useFunnelsContext()
   const { dashboardState } = useDashboardStateContext()
   const [visible, setVisible] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const funnelMeta = site.funnels.find(({ name }) => name === funnelName)
+  const funnelMeta = funnels.find(({ name }) => name === funnelName)
   const comparing = isComparisonEnabled(dashboardState.comparison)
 
   const {
@@ -580,6 +640,16 @@ export default function Funnel({
           funnel={visibleFunnel}
           steps={steps}
           loading={loading && !error}
+          actions={
+            funnelBuilder &&
+            funnelMeta && (
+              <FunnelActions
+                funnelId={funnelMeta.id}
+                funnelName={funnelName}
+                funnelBuilder={funnelBuilder}
+              />
+            )
+          }
         />
         {renderContent()}
       </div>

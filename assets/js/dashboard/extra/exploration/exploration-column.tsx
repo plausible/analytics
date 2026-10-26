@@ -28,12 +28,18 @@ import {
   ExplorationDirection
 } from './constants'
 
-function DirectionDropdown({
-  direction,
-  onChange
+export function InlineDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+  testId,
+  align = 'left'
 }: {
-  direction: ExplorationDirection
-  onChange: (direction: ExplorationDirection) => void
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+  testId: string
+  align?: 'left' | 'right'
 }): ReactNode {
   const [open, setOpen] = useState(false)
   const containerRef: RefObject<HTMLDivElement> = useRef(null)
@@ -52,9 +58,7 @@ function DirectionDropdown({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
 
-  const currentLabel = DIRECTION_OPTIONS.find(
-    (o) => o.value === direction
-  )?.label
+  const currentLabel = options.find((o) => o.value === value)?.label
 
   return (
     <>
@@ -66,7 +70,7 @@ function DirectionDropdown({
       )}
       <div ref={containerRef} className="relative shrink-0">
         <button
-          data-testid={`exploration-direction-${direction}`}
+          data-testid={`${testId}-${value}`}
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
           className={`${popover.toggleButton.classNames.aboveBackdrop} flex items-center gap-0.5 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-200`}
@@ -77,21 +81,21 @@ function DirectionDropdown({
 
         {open && (
           <div
-            className={`absolute -left-1 top-full mt-1 z-10 min-w-44 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
+            className={`absolute ${align === 'left' ? '-left-1' : '-right-1'} top-full mt-1 z-10 min-w-44 dark:!bg-gray-900 ${popover.panel.classNames.roundedSheet}`}
           >
-            {DIRECTION_OPTIONS.map(({ value, label }) => (
+            {options.map((option) => (
               <button
-                key={value}
-                data-testid={`exploration-direction-${value}`}
-                data-selected={direction === value}
+                key={option.value}
+                data-testid={`${testId}-${option.value}`}
+                data-selected={value === option.value}
                 onClick={() => {
-                  onChange(value)
+                  onChange(option.value)
                   setOpen(false)
                 }}
-                className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${direction === value ? popover.items.classNames.selectedOption : ''}`}
+                className={`w-full text-left text-sm rounded-md dark:hover:!bg-gray-750 data-[selected=true]:dark:!bg-gray-750 ${popover.items.classNames.navigationLink} ${popover.items.classNames.hoverLink} ${value === option.value ? popover.items.classNames.selectedOption : ''}`}
               >
-                {label}
-                <SelectedCheckmark selected={direction === value} />
+                {option.label}
+                <SelectedCheckmark selected={value === option.value} />
               </button>
             ))}
           </div>
@@ -101,12 +105,20 @@ function DirectionDropdown({
   )
 }
 
+const GOAL_KIND_LABELS = {
+  plain: 'Goal',
+  scroll: 'Scroll depth goal',
+  props: 'Goal with custom properties',
+  revenue: 'Revenue goal'
+}
+
 function CandidateCard({
   step,
   visitors,
   selected,
   stepMaxVisitors,
   colIndex,
+  showCount,
   onSelect
 }: {
   step: JourneyStep
@@ -114,6 +126,8 @@ function CandidateCard({
   selected: SelectedSuggestion | null
   stepMaxVisitors: number
   colIndex: number
+  // The selected step always shows its count, once known
+  showCount: boolean
   onSelect: (step: JourneyStep | null) => void
 }): ReactNode {
   const { explorationJourneyEndEvent: journeyEndEvent } = useSiteContext()
@@ -126,15 +140,21 @@ function CandidateCard({
   const isGoal = step.is_goal
 
   const visitorsToShow =
-    isSelected && selected.visitors !== null ? selected.visitors : visitors
+    isSelected && selected.visitors !== null
+      ? selected.visitors
+      : showCount
+        ? visitors
+        : null
 
   const barWidth =
     isSelected && selected.conversion_rate !== null
       ? Math.max(1, Number(selected.conversion_rate))
-      : Math.max(
-          1,
-          Number(roundedNumberFormatter((visitors / stepMaxVisitors) * 100))
-        )
+      : showCount
+        ? Math.max(
+            1,
+            Number(roundedNumberFormatter((visitors / stepMaxVisitors) * 100))
+          )
+        : null
 
   const textColor = isDimmed
     ? 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
@@ -154,7 +174,7 @@ function CandidateCard({
   const iconTooltipInfo =
     isCustomEvent || isGoal
       ? isGoal
-        ? 'Goal'
+        ? GOAL_KIND_LABELS[step.goal_kind ?? 'plain']
         : 'Custom event'
       : step.includes_subpaths
         ? `Grouped pages: ${numberShortFormatter(step.subpaths_count)} pages with this prefix`
@@ -180,11 +200,13 @@ function CandidateCard({
         className={`group relative w-full text-left text-sm rounded-sm overflow-hidden focus:outline-none ${rowBg}`}
         onClick={() => onSelect(isSelected ? null : step)}
       >
-        <div
-          className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
-          data-testid="metric-bar"
-          style={{ width: `${barWidth}%` }}
-        />
+        {barWidth !== null && (
+          <div
+            className={`absolute top-0 left-0 h-full rounded-sm transition-[width] ease-in-out ${barBg}`}
+            data-testid="metric-bar"
+            style={{ width: `${barWidth}%` }}
+          />
+        )}
 
         <div className="relative flex items-center justify-between gap-2 px-2 py-1.5">
           <span
@@ -196,9 +218,11 @@ function CandidateCard({
             <span className="truncate">{step.label}</span>
           </span>
 
-          <span className={`shrink-0 font-medium ${textColor}`}>
-            <VisitorsMetric visitors={visitorsToShow} />
-          </span>
+          {visitorsToShow !== null && (
+            <span className={`shrink-0 font-medium ${textColor}`}>
+              <VisitorsMetric visitors={visitorsToShow} />
+            </span>
+          )}
         </div>
       </button>
     </li>
@@ -227,6 +251,8 @@ function ColumnEmptyState({
   colIndex,
   direction,
   rateLimited,
+  failed,
+  pageTypingAllowed,
   onRetry
 }: {
   active: boolean
@@ -234,8 +260,24 @@ function ColumnEmptyState({
   colIndex: number
   direction: ExplorationDirection
   rateLimited: boolean
+  failed: boolean
+  pageTypingAllowed: boolean
   onRetry: () => void
 }): ReactNode {
+  if (active && failed) {
+    return (
+      <span data-testid="exploration-column-error">
+        Steps could not be loaded,{' '}
+        <button
+          onClick={onRetry}
+          className="underline hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+        >
+          try again
+        </button>
+      </span>
+    )
+  }
+
   if (active && rateLimited) {
     return (
       <span>
@@ -275,6 +317,15 @@ function ColumnEmptyState({
     )
   }
 
+  if (pageTypingAllowed) {
+    return (
+      <span className="flex flex-col items-center gap-2">
+        <MagnifyingGlassIcon className="size-4.5" />
+        Search, or type a page like /login to use it as a step
+      </span>
+    )
+  }
+
   return (
     <span className="flex flex-col items-center gap-2">
       <FlagIcon className="size-4.5" />
@@ -285,10 +336,12 @@ function ColumnEmptyState({
 
 export function MaxDepthColumn({
   colIndex,
-  header
+  header,
+  message
 }: {
   colIndex: number
   header: string
+  message?: string
 }): ReactNode {
   const { explorationMaxJourneySteps: maxJourneySteps } = useSiteContext()
   return (
@@ -305,7 +358,8 @@ export function MaxDepthColumn({
       <div className="h-92 flex items-center justify-center max-w-2/3 mx-auto text-center text-sm text-pretty text-gray-400 dark:text-gray-500">
         <span className="flex flex-col items-center gap-2">
           <FlagIcon className="size-4.5" />
-          {`You've reached the maximum journey depth of ${maxJourneySteps} steps.`}
+          {message ??
+            `You've reached the maximum journey depth of ${maxJourneySteps} steps.`}
         </span>
       </div>
     </div>
@@ -328,6 +382,9 @@ export function ExplorationColumn({
   onFilterChange,
   onSelect,
   rateLimited,
+  failed = false,
+  pageTypingAllowed = false,
+  showSuggestionCounts = true,
   onRetry
 }: {
   colIndex: number
@@ -345,6 +402,10 @@ export function ExplorationColumn({
   onFilterChange: (filter: string) => void
   onSelect: (step: JourneyStep | null) => void
   rateLimited: boolean
+  failed?: boolean
+  // Lets the user type a page to use as a step, so the search box is always shown
+  pageTypingAllowed?: boolean
+  showSuggestionCounts?: boolean
   onRetry: () => void
 }): ReactNode {
   const debouncedFilterChange = useDebounce((e: InputEvent) =>
@@ -388,7 +449,8 @@ export function ExplorationColumn({
 
   const stepMaxVisitors = maxVisitors ?? results[0]?.visitors ?? 1
 
-  const showSearch = active && !selected && (results.length > 0 || filter)
+  const showSearch =
+    active && !selected && (results.length > 0 || !!filter || pageTypingAllowed)
 
   const onSelectHandler = loadingInBackground ? () => {} : onSelect
 
@@ -400,9 +462,11 @@ export function ExplorationColumn({
     >
       <div className="h-[44px] py-1.5 pl-4 pr-1.5 flex items-center justify-between gap-x-2">
         {onDirectionChange ? (
-          <DirectionDropdown
-            direction={direction}
+          <InlineDropdown
+            value={direction}
+            options={DIRECTION_OPTIONS}
             onChange={onDirectionChange}
+            testId="exploration-direction"
           />
         ) : (
           <span className="shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100">
@@ -442,6 +506,8 @@ export function ExplorationColumn({
             colIndex={colIndex}
             direction={direction}
             rateLimited={rateLimited}
+            failed={failed}
+            pageTypingAllowed={pageTypingAllowed}
             onRetry={onRetry}
           />
         </div>
@@ -452,12 +518,13 @@ export function ExplorationColumn({
         >
           {listItems.map(({ step, visitors }) => (
             <CandidateCard
-              key={`${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
+              key={`${step.goal_id ?? ''}:${step.name}:${step.label}:${step.includes_subpaths ? step.subpaths_count : 0}`}
               step={step}
               visitors={visitors}
               selected={selected}
               stepMaxVisitors={stepMaxVisitors}
               colIndex={colIndex}
+              showCount={showSuggestionCounts}
               onSelect={onSelectHandler}
             />
           ))}

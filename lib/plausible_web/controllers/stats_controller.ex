@@ -125,6 +125,7 @@ defmodule PlausibleWeb.StatsController do
           consolidated_view_available?: consolidated_view_available?,
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
+          funnel_steps_range: funnel_steps_range(),
           team_identifier: team_identifier,
           limited_to_segment_id: nil,
           connect_live_socket: verify_installation?,
@@ -139,8 +140,14 @@ defmodule PlausibleWeb.StatsController do
   end
 
   on_ee do
+    require Plausible.Funnel
+
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
+    end
+
+    defp funnel_steps_range do
+      [Plausible.Funnel.min_steps(), Plausible.Funnel.max_steps()]
     end
 
     defp list_revenue_goals(site) do
@@ -148,6 +155,7 @@ defmodule PlausibleWeb.StatsController do
     end
   else
     defp list_funnels(_site), do: []
+    defp funnel_steps_range, do: [0, 0]
     defp list_revenue_goals(_site), do: []
   end
 
@@ -438,6 +446,7 @@ defmodule PlausibleWeb.StatsController do
           consolidated_view_available?: false,
           exploration_journey_end_event: exploration_journey_end_event,
           exploration_max_journey_steps: exploration_max_journey_steps,
+          funnel_steps_range: funnel_steps_range(),
           team_identifier: team_identifier,
           limited_to_segment_id: limited_to_segment_id,
           verify_installation?: false,

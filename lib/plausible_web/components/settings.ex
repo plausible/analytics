@@ -27,6 +27,7 @@ defmodule PlausibleWeb.Components.Settings do
   attr :site, :any, default: nil
   attr :conn, :any, default: nil
   attr :show_content?, :boolean, default: true
+  attr :feature_gate_id_suffix, :string, default: ""
 
   def tile(assigns) do
     ~H"""
@@ -58,6 +59,7 @@ defmodule PlausibleWeb.Components.Settings do
             current_user={@current_user}
             current_team={@current_team}
             site={@site}
+            id_suffix={@feature_gate_id_suffix}
           >
             <div class="p-4 sm:p-6">
               {render_slot(@inner_block)}

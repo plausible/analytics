@@ -78,14 +78,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
           <p>
             Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
           </p>
-          <%= on_ee do %>
-            <p :if={Plausible.Sites.regular?(@site)} data-test-id="setup-funnels-cta">
-              You can also
-              <.styled_link href={~p"/#{@domain}/settings/funnels"}>
-                compose goals into funnels.
-              </.styled_link>
-            </p>
-          <% end %>
         </:subtitle>
         <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
           <.live_component
@@ -124,6 +116,31 @@ defmodule PlausibleWeb.Live.GoalSettings do
           revenue_goals_enabled?={@revenue_goals_enabled?}
           props_available?={@props_available?}
         />
+      </.tile>
+
+      <.tile
+        :if={ee?() and Plausible.Sites.regular?(@site)}
+        docs="funnel-analysis"
+        feature_mod={Plausible.Billing.Feature.Funnels}
+        feature_toggle?={true}
+        show_content?={!Plausible.Billing.Feature.Funnels.opted_out?(@site)}
+        site={@site}
+        current_user={@current_user}
+        current_team={@site_team}
+        feature_gate_id_suffix="-funnels"
+      >
+        <:title>
+          Funnels
+        </:title>
+        <:subtitle>
+          Track user flows and conversion rates across pages, events and goals.
+        </:subtitle>
+        <p class="text-sm" data-test-id="setup-funnels-cta">
+          Funnels are built and managed in the Explore tab of your dashboard.
+          <.styled_link href={"/#{URI.encode_www_form(@domain)}?build_funnel=new"}>
+            Build a funnel →
+          </.styled_link>
+        </p>
       </.tile>
     </div>
     """

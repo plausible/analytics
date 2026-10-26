@@ -1020,11 +1020,15 @@ test('funnels', async ({ page, request }) => {
     await expectDropdownClosed(report)
     await funnelsTabButton.click()
     const showMoreButton = dropdown(report).getByRole('button', {
-      name: 'Show 1 more'
+      name: 'Show 2 more'
     })
     await showMoreButton.click()
     await expect(showMoreButton).toBeHidden()
-    await expect(dropdown(report).getByRole('button')).toHaveCount(11)
+    // 11 funnels and the option to build a new one
+    await expect(dropdown(report).getByRole('button')).toHaveCount(12)
+    await expect(dropdown(report).getByRole('button').last()).toHaveText(
+      '+ New funnel'
+    )
     await dropdown(report)
       .getByRole('button', { name: 'Shopping 1 Funnel' })
       .click()

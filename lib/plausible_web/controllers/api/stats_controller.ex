@@ -200,30 +200,97 @@ defmodule PlausibleWeb.Api.StatsController do
            {:ok, funnel} <- Stats.funnel(site, query, funnel_id) do
         json(conn, funnel)
       else
-        {:error, {:invalid_funnel_query, due_to}} ->
-          H.bad_request(
-            conn,
-            "Funnels aren't available when the dashboard is filtered by #{due_to}",
-            %{
-              level: :normal
-            }
-          )
-
-        {:error, :funnel_not_found} ->
-          conn
-          |> put_status(404)
-          |> json(%{error: "Funnel not found"})
-          |> halt()
-
-        {:error, :upgrade_required} ->
-          H.payment_required(
-            conn,
-            "#{Plausible.Billing.Feature.Funnels.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
-          )
-
-        _ ->
-          H.bad_request(conn, "There was an error with your request")
+        error -> funnel_error(conn, error)
       end
+    end
+
+    def funnel_preview(conn, %{"steps" => steps} = params) when is_list(steps) do
+      site = Plausible.Repo.preload(conn.assigns.site, :team)
+
+      with :ok <- check_exploration_rate_limit(site),
+           :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.team),
+           query <- Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           :ok <- validate_funnel_query(query),
+           {:ok, funnel_type} <- parse_funnel_type(params["funnel_type"]),
+           {:ok, definition} <-
+             Plausible.Funnels.ephemeral_definition(site, "Preview", steps,
+               funnel_type: funnel_type
+             ),
+           {:ok, funnel} <- Stats.funnel(site, query, definition) do
+        json(conn, funnel)
+      else
+        error -> funnel_error(conn, error)
+      end
+    end
+
+    def funnel_preview(conn, _params) do
+      H.bad_request(conn, "Invalid request")
+    end
+
+    def funnel_candidates(conn, params) do
+      site = conn.assigns.site
+      search_term = params["search_term"] || ""
+
+      with :ok <- check_exploration_rate_limit(site),
+           query = Query.from(site, params, debug_metadata: debug_metadata(conn)),
+           {:ok, candidates} <-
+             Plausible.Stats.Funnel.candidates(site, query, search_term: search_term) do
+        json(conn, %{next: candidates})
+      else
+        {:error, :rate_limit} ->
+          H.too_many_requests(conn, "Too many exploration requests")
+      end
+    end
+
+    defp parse_funnel_type(nil), do: {:ok, Plausible.Funnel.default_funnel_type()}
+
+    defp parse_funnel_type(funnel_type) do
+      case Enum.find(Plausible.Funnel.funnel_types(), &(to_string(&1) == funnel_type)) do
+        nil -> {:error, :invalid_funnel_type}
+        funnel_type -> {:ok, funnel_type}
+      end
+    end
+
+    defp funnel_error(conn, {:error, {:invalid_funnel_query, due_to}}) do
+      H.bad_request(
+        conn,
+        "Funnels aren't available when the dashboard is filtered by #{due_to}",
+        %{
+          level: :normal
+        }
+      )
+    end
+
+    defp funnel_error(conn, {:error, :funnel_not_found}) do
+      conn
+      |> put_status(404)
+      |> json(%{error: "Funnel not found"})
+      |> halt()
+    end
+
+    defp funnel_error(conn, {:error, :upgrade_required}) do
+      H.payment_required(
+        conn,
+        "#{Plausible.Billing.Feature.Funnels.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+      )
+    end
+
+    defp funnel_error(conn, {:error, :rate_limit}) do
+      H.too_many_requests(conn, "Too many exploration requests")
+    end
+
+    defp funnel_error(conn, {:error, :invalid_goal}) do
+      H.bad_request(conn, "One of the steps refers to a goal that doesn't exist", %{
+        level: :normal
+      })
+    end
+
+    defp funnel_error(conn, {:error, %Ecto.Changeset{}}) do
+      H.bad_request(conn, "The funnel steps are invalid", %{level: :normal})
+    end
+
+    defp funnel_error(conn, _) do
+      H.bad_request(conn, "There was an error with your request")
     end
 
     defp validate_funnel_query(query) do

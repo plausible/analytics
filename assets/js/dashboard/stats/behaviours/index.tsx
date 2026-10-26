@@ -45,6 +45,16 @@ import { SpecialGoalPropBreakdown } from './special-goal-prop-breakdown'
 import Conversions from './conversions'
 import { getSpecialGoal, isSpecialGoal } from '../../util/goals'
 import { DashboardState, Filter } from '../../dashboard-state'
+import {
+  FUNNEL_BUILD_SEARCH_PARAM,
+  FunnelBuildTarget,
+  FunnelBuilderControls,
+  FunnelDraft,
+  parseFunnelBuildTarget,
+  SavedFunnel,
+  useFunnelsContext
+} from '../../funnels-context'
+import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { QueryApiResponse } from '../../api'
 import { DEFAULT_METRIC_COLUMN_WIDTH } from '../reports/index-breakdown'
 import { Metric } from '../metrics'
@@ -59,8 +69,24 @@ export const BEHAVIOURS_METRICS_HIDDEN_ON_MOBILE: Metric[] = [
 
 /*global BUILD_EXTRA*/
 /*global require*/
+type FunnelProps = {
+  funnelName: string
+  funnelBuilder: FunnelBuilderControls | null
+}
+
+type FunnelExplorationProps = {
+  funnelBuilder: FunnelBuilderControls | null
+}
+
+type FunnelBuilderProps = {
+  target: FunnelBuildTarget
+  draft: FunnelDraft | null
+  onCancel: () => void
+  onSaved: (funnel: SavedFunnel) => void
+}
+
 function maybeRequireFunnels(): {
-  default: ComponentType<{ funnelName: string }> | null
+  default: ComponentType<FunnelProps> | null
 } {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -70,17 +96,20 @@ function maybeRequireFunnels(): {
   }
 }
 
-function maybeRequireExploration(): { default: ComponentType | null } {
+function maybeRequireExploration(): {
+  default: ComponentType<FunnelExplorationProps> | null
+  FunnelBuilder: ComponentType<FunnelBuilderProps> | null
+} {
   if (BUILD_EXTRA) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/exploration')
   } else {
-    return { default: null }
+    return { default: null, FunnelBuilder: null }
   }
 }
 
 const Funnel = maybeRequireFunnels().default
-const FunnelExploration = maybeRequireExploration().default
+const { default: FunnelExploration, FunnelBuilder } = maybeRequireExploration()
 
 function singleGoalFilterApplied(dashboardState: DashboardState): boolean {
   const goalFilter = getGoalFilter(dashboardState)
@@ -155,17 +184,19 @@ function storePropKey({
 }
 
 function getDefaultSelectedFunnel({
-  site
+  site,
+  funnels
 }: {
   site: PlausibleSite
+  funnels: SavedFunnel[]
 }): string | undefined {
   const stored = storage.getItem(STORAGE_KEYS.getForFunnel({ site }))
-  const storedExists = stored && site.funnels.some((f) => f.name === stored)
+  const storedExists = stored && funnels.some((f) => f.name === stored)
 
   if (storedExists) {
     return stored as string
-  } else if (site.funnels.length > 0) {
-    const firstAvailable = site.funnels[0].name
+  } else if (funnels.length > 0) {
+    const firstAvailable = funnels[0].name
     storage.setItem(STORAGE_KEYS.getForFunnel({ site }), firstAvailable)
     return firstAvailable
   }
@@ -183,19 +214,60 @@ function Behaviours({
   setMode,
   mode
 }: BehavioursProps): ReactNode {
-  const { dashboardState } = useDashboardStateContext()
+  const { dashboardState, otherSearch } = useDashboardStateContext()
   const goalFilter = getGoalFilter(dashboardState)
   const specialGoal = goalFilter ? getSpecialGoal(goalFilter) : null
   const site = useSiteContext()
   const user = useUserContext()
+  const { funnels } = useFunnelsContext()
+  const navigate = useAppNavigate()
   const { enabledModes, disableMode } = useModesContext()
   const adminAccess = ['owner', 'admin', 'editor', 'super_admin'].includes(
     user.role
   )
+  const canManageFunnels =
+    user.loggedIn &&
+    adminAccess &&
+    !site.isConsolidatedView &&
+    site.funnelsAvailable &&
+    !site.funnelsOptedOut &&
+    enabledModes.includes(Mode.EXPLORATION)
 
   const [selectedFunnel, setSelectedFunnel] = useState<string | undefined>(
-    getDefaultSelectedFunnel({ site })
+    getDefaultSelectedFunnel({ site, funnels })
   )
+
+  // Funnel being built, kept in the URL so it can be linked to
+  const funnelBuildTarget = canManageFunnels
+    ? parseFunnelBuildTarget(otherSearch[FUNNEL_BUILD_SEARCH_PARAM])
+    : null
+  const [funnelDraft, setFunnelDraft] = useState<FunnelDraft | null>(null)
+
+  const setFunnelBuildTarget = useCallback(
+    (target: FunnelBuildTarget | null) => {
+      navigate({
+        search: ({ [FUNNEL_BUILD_SEARCH_PARAM]: _current, ...search }) =>
+          target === null
+            ? search
+            : { ...search, [FUNNEL_BUILD_SEARCH_PARAM]: String(target) }
+      })
+    },
+    [navigate]
+  )
+
+  useEffect(() => {
+    if (funnelBuildTarget !== null) {
+      setMode(Mode.FUNNELS)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [funnelBuildTarget])
+
+  // Keep the selection valid as funnels get renamed or deleted
+  useEffect(() => {
+    if (!selectedFunnel || !funnels.some((f) => f.name === selectedFunnel)) {
+      setSelectedFunnel(getDefaultSelectedFunnel({ site, funnels }))
+    }
+  }, [funnels, selectedFunnel, site])
   const initialSelectedPropKey =
     getPropKeyFromStorage({ site, dashboardState }) || null
   const [selectedPropKey, setSelectedPropKey] = useState<string | null>(
@@ -252,8 +324,32 @@ function Behaviours({
     }
   }, [dashboardState, mode])
 
+  function leaveFunnelBuilder(): void {
+    if (funnelBuildTarget !== null) {
+      setFunnelBuildTarget(null)
+    }
+  }
+
+  const funnelBuilder: FunnelBuilderControls | null = canManageFunnels
+    ? {
+        target: funnelBuildTarget,
+        draft: funnelDraft,
+        start: (target, draft) => {
+          setFunnelDraft(draft ?? null)
+          storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.FUNNELS)
+          setFunnelBuildTarget(target)
+        },
+        stop: () => {
+          setFunnelDraft(null)
+          setFunnelBuildTarget(null)
+        },
+        onSaved: (funnel) => setFunnelFactory(funnel.name)()
+      }
+    : null
+
   function setFunnelFactory(selectedFunnelName: string): () => void {
     return () => {
+      leaveFunnelBuilder()
       storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.FUNNELS)
       storage.setItem(STORAGE_KEYS.getForFunnel({ site }), selectedFunnelName)
       setMode(Mode.FUNNELS)
@@ -263,6 +359,7 @@ function Behaviours({
 
   function setPropKeyFactory(selectedPropKeyName: string): () => void {
     return () => {
+      leaveFunnelBuilder()
       storage.setItem(STORAGE_KEYS.getForTab({ site }), Mode.PROPS)
       storePropKey({ site, propKey: selectedPropKeyName, dashboardState })
       setMode(Mode.PROPS)
@@ -314,6 +411,7 @@ function Behaviours({
 
   function setTabFactory(tab: Mode): () => void {
     return () => {
+      leaveFunnelBuilder()
       storage.setItem(STORAGE_KEYS.getForTab({ site }), tab)
       setMode(tab)
     }
@@ -362,7 +460,7 @@ function Behaviours({
     }
 
     if (site.explorationAvailable) {
-      return <FunnelExploration />
+      return <FunnelExploration funnelBuilder={funnelBuilder} />
     }
 
     const callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
@@ -388,15 +486,32 @@ function Behaviours({
   function renderFunnels(): ReactNode {
     if (Funnel === null) {
       return featureUnavailable()
+    } else if (
+      FunnelBuilder &&
+      funnelBuilder &&
+      funnelBuilder.target !== null
+    ) {
+      return (
+        <FunnelBuilder
+          key={String(funnelBuilder.target)}
+          target={funnelBuilder.target}
+          draft={funnelBuilder.target === 'new' ? funnelBuilder.draft : null}
+          onCancel={funnelBuilder.stop}
+          onSaved={funnelBuilder.onSaved}
+        />
+      )
     } else if (Funnel && selectedFunnel && site.funnelsAvailable) {
-      return <Funnel funnelName={selectedFunnel} />
+      return (
+        <Funnel funnelName={selectedFunnel} funnelBuilder={funnelBuilder} />
+      )
     } else if (Funnel && adminAccess) {
       let callToAction
 
-      if (site.funnelsAvailable) {
+      if (site.funnelsAvailable && funnelBuilder) {
         callToAction = {
-          action: 'Set up funnels',
-          link: `/${encodeURIComponent(site.domain)}/settings/funnels`
+          action: 'Build a funnel',
+          link: `?${FUNNEL_BUILD_SEARCH_PARAM}=new`,
+          onClick: () => funnelBuilder.start('new')
         }
       } else {
         callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
@@ -588,16 +703,27 @@ function Behaviours({
             {!site.isConsolidatedView &&
               isEnabled(Mode.FUNNELS) &&
               Funnel &&
-              (site.funnels.length > 0 && site.funnelsAvailable ? (
+              (funnels.length > 0 && site.funnelsAvailable ? (
                 <DropdownTabButton
                   className="md:relative"
                   transitionClassName="md:left-auto md:w-80 md:origin-top-right"
                   active={mode === Mode.FUNNELS}
-                  options={site.funnels.map(({ name }) => ({
-                    label: name,
-                    onClick: setFunnelFactory(name),
-                    selected: mode === Mode.FUNNELS && selectedFunnel === name
-                  }))}
+                  options={[
+                    ...funnels.map(({ name }) => ({
+                      label: name,
+                      onClick: setFunnelFactory(name),
+                      selected: mode === Mode.FUNNELS && selectedFunnel === name
+                    })),
+                    ...(funnelBuilder
+                      ? [
+                          {
+                            label: '+ New funnel',
+                            onClick: () => funnelBuilder.start('new'),
+                            selected: false
+                          }
+                        ]
+                      : [])
+                  ]}
                   searchable={true}
                 >
                   Funnels

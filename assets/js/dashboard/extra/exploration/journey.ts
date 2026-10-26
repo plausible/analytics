@@ -1,4 +1,5 @@
 import { roundedNumberFormatter } from '../../util/number-formatter'
+import type { FunnelStepInput, GoalKind } from '../funnel/funnel-api'
 
 export type JourneyStep = {
   label: string
@@ -7,6 +8,10 @@ export type JourneyStep = {
   includes_subpaths: boolean
   subpaths_count: number
   is_goal: boolean
+  goal_id?: number | null
+  goal_kind?: GoalKind | null
+  // Definition of a step loaded from a saved funnel, kept intact on re-save
+  saved_step?: FunnelStepInput
 }
 
 export type JourneySuggestion = {
@@ -82,9 +87,10 @@ function provisionalEntry(
   if (!match) return {}
 
   const firstStepVisitors = existingFunnel[0]?.visitors ?? match.visitors
-  const conversionRate = roundedNumberFormatter(
-    (match.visitors / firstStepVisitors) * 100
-  )
+  const conversionRate =
+    firstStepVisitors > 0
+      ? roundedNumberFormatter((match.visitors / firstStepVisitors) * 100)
+      : '0'
 
   return {
     [columnIndex]: { visitors: match.visitors, conversion_rate: conversionRate }
@@ -186,8 +192,17 @@ export function getSelectedSuggestion({
   }
 }
 
-// Two steps are identical when their identity fields match.
+// Two steps are identical when their identity fields match. Goals are
+// identified by id, as e.g. a scroll goal shares name and pathname with
+// the pageview of the same page.
 export function journeyStepsEqual(a: JourneyStep, b: JourneyStep): boolean {
+  const aGoalId = a.goal_id ?? null
+  const bGoalId = b.goal_id ?? null
+
+  if (aGoalId !== null || bGoalId !== null) {
+    return aGoalId === bGoalId
+  }
+
   return (
     a.name === b.name &&
     a.pathname === b.pathname &&

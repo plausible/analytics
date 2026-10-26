@@ -18,6 +18,7 @@ describe('parseSiteFromDataset', () => {
       data-exploration-available="false"
       data-exploration-journey-end-event="__journey_end__"
       data-exploration-max-journey-steps="20"
+      data-funnel-steps-range="[2,8]"
       data-site-segments-available="true"
       data-site-annotations-available="true"
       data-props-available="true"
@@ -50,6 +51,7 @@ describe('parseSiteFromDataset', () => {
     explorationAvailable: false,
     explorationJourneyEndEvent: '__journey_end__',
     explorationMaxJourneySteps: 20,
+    funnelStepsRange: [2, 8],
     siteSegmentsAvailable: true,
     siteAnnotationsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],

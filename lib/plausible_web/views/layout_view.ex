@@ -61,11 +61,6 @@ defmodule PlausibleWeb.LayoutView do
         %{key: "Visibility", value: "visibility", icon: :eye}
       end,
       %{key: "Goals", value: "goals", icon: :check_circle},
-      on_ee do
-        if regular_site? do
-          %{key: "Funnels", value: "funnels", icon: :funnel}
-        end
-      end,
       %{key: "Custom properties", value: "properties", icon: :tag},
       if regular_site? do
         %{key: "Integrations", value: "integrations", icon: :puzzle_piece}

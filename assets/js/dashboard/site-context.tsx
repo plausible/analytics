@@ -14,6 +14,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
       dataset.explorationMaxJourneySteps!,
       10
     ),
+    funnelStepsRange: JSON.parse(dataset.funnelStepsRange ?? '[0, 0]'),
     siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     siteAnnotationsAvailable: dataset.siteAnnotationsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
@@ -46,6 +47,8 @@ export const siteContextDefaultValue = {
   explorationAvailable: false,
   explorationJourneyEndEvent: '',
   explorationMaxJourneySteps: 0,
+  /** minimum and maximum number of steps in a saved funnel */
+  funnelStepsRange: [0, 0] as [number, number],
   propsAvailable: false,
   siteSegmentsAvailable: false,
   siteAnnotationsAvailable: false,

@@ -14,10 +14,12 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       resp = html_response(conn, 200)
       assert resp =~ "Define actions that you want your users to take"
-      assert text_of_element(resp, @funnels_cta) =~ "compose goals into funnels"
+      assert text_of_element(resp, @funnels_cta) =~ "Explore tab of your dashboard"
 
-      assert text_of_attr(resp, "#{@funnels_cta} a", "href") =~
-               "/#{URI.encode_www_form(site.domain)}/settings/funnels"
+      assert text_of_attr(resp, "#{@funnels_cta} a", "href") ==
+               "/#{URI.encode_www_form(site.domain)}?build_funnel=new"
+
+      assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/funnel-analysis"]|)
 
       assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
 
@@ -27,6 +29,23 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert resp =~ "Custom Event"
       assert resp =~ to_string(g3)
       assert resp =~ "Revenue Goal (EUR)"
+    end
+
+    @tag :ee_only
+    test "renders funnels tile with feature toggle and upgrade notice when not on plan", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      resp = conn |> get("/#{site.domain}/settings/goals") |> html_response(200)
+
+      assert element_exists?(resp, @funnels_cta)
+      assert text_of_element(resp, "#lock-notice-funnels") =~ "upgrade your subscription"
     end
 
     @tag :ee_only

@@ -26,6 +26,21 @@ export enum FunnelType {
   strict = 'strict'
 }
 
+export const funnelTypeLabels: Record<FunnelType, string> = {
+  [FunnelType.sequential]: 'Sequential',
+  [FunnelType.flexible]: 'Flexible',
+  [FunnelType.strict]: 'Strict'
+}
+
+export const funnelTypeDescriptions: Record<FunnelType, string> = {
+  [FunnelType.sequential]:
+    'All steps are required. Other activity is allowed between steps.',
+  [FunnelType.flexible]:
+    'Only the first and last steps are required. Middle steps can be skipped.',
+  [FunnelType.strict]:
+    'All steps are required. No other activity is allowed between steps.'
+}
+
 export type FunnelResponse = FunnelPeriod & {
   name: string
   funnel_type: FunnelType

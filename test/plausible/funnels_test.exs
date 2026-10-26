@@ -105,6 +105,81 @@ defmodule Plausible.FunnelsTest do
         assert funnel1.id == funnel2.id
       end
 
+      test "update funnel name and type only, keeping steps", %{
+        site: site,
+        steps: [g1, g2 | _]
+      } do
+        {:ok, funnel} = Funnels.create(site, "Sample funnel", [g1, %{"page_path" => "/x"}, g2])
+        funnel = Funnels.get(site, funnel.id)
+
+        {:ok, _} = Funnels.update(funnel, "Renamed funnel", nil, funnel_type: :strict)
+
+        funnel = Funnels.get(site, funnel.id)
+        assert funnel.name == "Renamed funnel"
+        assert funnel.funnel_type == :strict
+        assert [%{goal_id: g1_id}, %{page_path: "/x"}, %{goal_id: g2_id}] = Funnel.steps(funnel)
+        assert g1_id == g1["goal_id"]
+        assert g2_id == g2["goal_id"]
+      end
+
+      test "update funnel reordering the same static steps", %{
+        site: site,
+        steps: [g1, g2, g3 | _]
+      } do
+        {:ok, funnel} = Funnels.create(site, "Sample funnel", [g1, g2, g3])
+        funnel = Funnels.get(site, funnel.id)
+
+        {:ok, _} = Funnels.update(funnel, funnel.name, [g3, g1, g2])
+
+        funnel = Funnels.get(site, funnel.id)
+
+        assert Enum.map(Funnel.steps(funnel), & &1.goal_id) ==
+                 Enum.map([g3, g1, g2], & &1["goal_id"])
+      end
+
+      test "steps referencing goals of other sites are rejected", %{site: site, steps: [g1 | _]} do
+        other_site = new_site()
+        {:ok, other_goal} = Goals.create(other_site, %{"event_name" => "Signup"})
+
+        assert {:error, :invalid_goal} =
+                 Funnels.create(site, "Foreign", [g1, %{"goal_id" => other_goal.id}])
+
+        assert {:error, :invalid_goal} =
+                 Funnels.create(site, "Garbage", [g1, %{"goal_id" => "abc"}])
+      end
+
+      test "journey end cannot be a funnel step", %{site: site, steps: [g1 | _]} do
+        assert {:error, :invalid_step} =
+                 Funnels.create(site, "Journey end", [g1, %{"event_name" => "__journey_end__"}])
+      end
+
+      test "unsupported dynamic step fields are dropped", %{site: site, steps: [g1 | _]} do
+        {:ok, funnel} =
+          Funnels.create(site, "Extra fields", [
+            g1,
+            %{"page_path" => "/x", "label" => "Visit /x", "step_order" => 99}
+          ])
+
+        assert [_, %Funnel.DynamicStep{page_path: "/x", step_order: 2}] = Funnel.steps(funnel)
+      end
+
+      test "dynamic steps can only appear once in a funnel", %{site: site, steps: [g1 | _]} do
+        assert {:error, changeset} =
+                 Funnels.create(site, "Repeating", [
+                   %{"page_path" => "/x"},
+                   g1,
+                   %{"page_path" => "/x"}
+                 ])
+
+        assert {"must be unique", _} = changeset.errors[:steps]
+
+        assert {:ok, _} =
+                 Funnels.create(site, "Different props", [
+                   %{"event_name" => "Purchase"},
+                   %{"event_name" => "Purchase", "custom_props" => %{"plan" => "pro"}}
+                 ])
+      end
+
       test "updating strict funnel with out of sync funnel type does not alter the type", %{
         site: site,
         steps: [g1, g2, g3, g4, g5 | _]
@@ -294,12 +369,14 @@ defmodule Plausible.FunnelsTest do
       end
 
       test "a goal can only appear once in a funnel", %{steps: [g1 | _], site: site} do
-        {:error, _changeset} =
+        {:error, changeset} =
           Funnels.create(
             site,
             "Lorem ipsum",
             [g1, g1]
           )
+
+        assert {"must be unique", _} = changeset.errors[:steps]
       end
 
       test "funnels can be listed per site, starting from most recently added", %{

@@ -894,6 +894,187 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
     end
 
+    describe "POST /api/stats/:domain/funnels/preview" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{site: site} do
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/blog",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          build(:pageview,
+            pathname: "/about",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:01:00]
+          ),
+          build(:engagement,
+            pathname: "/about",
+            user_id: @user_id,
+            scroll_depth: 80,
+            timestamp: ~N[2021-01-01 12:02:00]
+          ),
+          build(:event, name: "Signup", user_id: @user_id, timestamp: ~N[2021-01-01 12:03:00]),
+          build(:pageview,
+            pathname: "/blog",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          build(:event,
+            name: "Signup",
+            user_id: @other_user_id,
+            timestamp: ~N[2021-01-01 12:01:00]
+          )
+        ])
+
+        :ok
+      end
+
+      test "evaluates unsaved steps honoring the funnel type", %{conn: conn, site: site} do
+        {:ok, blog} = Plausible.Goals.create(site, %{"page_path" => "/blog"})
+
+        {:ok, scroll} =
+          Plausible.Goals.create(site, %{
+            "page_path" => "/about",
+            "scroll_threshold" => 50,
+            "display_name" => "Read about"
+          })
+
+        steps = [%{"goal_id" => blog.id}, %{"event_name" => "Signup"}]
+
+        assert %{
+                 "funnel_type" => "sequential",
+                 "steps" => [
+                   %{"label" => "Visit /blog", "visitors" => 2},
+                   %{"label" => "Signup", "visitors" => 2}
+                 ]
+               } = preview(conn, site, %{"steps" => steps})
+
+        steps = [%{"goal_id" => blog.id}, %{"goal_id" => scroll.id}, %{"event_name" => "Signup"}]
+
+        assert %{
+                 "steps" => [
+                   %{"visitors" => 2},
+                   %{"label" => "Read about", "visitors" => 1},
+                   %{"visitors" => 1}
+                 ]
+               } = preview(conn, site, %{"steps" => steps})
+
+        steps = [%{"goal_id" => blog.id}, %{"page_path" => "/about"}, %{"event_name" => "Signup"}]
+
+        assert %{
+                 "funnel_type" => "flexible",
+                 "steps" => [_, %{"visitors" => 1}, %{"visitors" => 2}]
+               } =
+                 preview(conn, site, %{"steps" => steps, "funnel_type" => "flexible"})
+      end
+
+      test "rejects page filters", %{conn: conn, site: site} do
+        assert %{"error" => error, "level" => "normal"} =
+                 conn
+                 |> post("/api/stats/#{site.domain}/funnels/preview", %{
+                   "period" => "day",
+                   "date" => "2021-01-01",
+                   "filters" => Jason.encode!([["is", "event:page", ["/blog"]]]),
+                   "steps" => [%{"page_path" => "/blog"}, %{"event_name" => "Signup"}]
+                 })
+                 |> json_response(400)
+
+        assert error =~ "filtered by pages"
+      end
+
+      test "rejects invalid steps", %{conn: conn, site: site} do
+        {:ok, foreign} = Plausible.Goals.create(new_site(), %{"event_name" => "Signup"})
+
+        for steps <- [
+              [%{"page_path" => "/blog"}],
+              [%{"page_path" => "/blog"}, %{"goal_id" => foreign.id}],
+              [%{"page_path" => "/blog"}, %{"page_path" => "/blog"}]
+            ] do
+          assert conn
+                 |> post("/api/stats/#{site.domain}/funnels/preview", %{
+                   "period" => "day",
+                   "date" => "2021-01-01",
+                   "steps" => steps
+                 })
+                 |> json_response(400)
+        end
+      end
+
+      test "requires a plan with funnels", %{conn: conn, user: user, site: site} do
+        user
+        |> team_of()
+        |> Plausible.Teams.Team.end_trial()
+        |> Plausible.Repo.update!()
+
+        assert conn
+               |> post("/api/stats/#{site.domain}/funnels/preview", %{
+                 "period" => "day",
+                 "steps" => [%{"page_path" => "/blog"}, %{"event_name" => "Signup"}]
+               })
+               |> json_response(402)
+      end
+
+      defp preview(conn, site, params) do
+        conn
+        |> post(
+          "/api/stats/#{site.domain}/funnels/preview",
+          Map.merge(%{"period" => "day", "date" => "2021-01-01"}, params)
+        )
+        |> json_response(200)
+      end
+    end
+
+    describe "POST /api/stats/:domain/funnels/candidates" do
+      setup [:create_user, :log_in, :create_site]
+
+      test "lists goals of any kind and pages", %{conn: conn, site: site} do
+        {:ok, signup} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+        {:ok, purchase} =
+          Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/blog",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          build(:event, name: "Signup", user_id: @user_id, timestamp: ~N[2021-01-01 12:03:00])
+        ])
+
+        assert %{"next" => candidates} =
+                 conn
+                 |> post("/api/stats/#{site.domain}/funnels/candidates", %{
+                   "period" => "day",
+                   "date" => "2021-01-01"
+                 })
+                 |> json_response(200)
+
+        assert %{"visitors" => 1, "step" => %{"label" => "Signup", "is_goal" => true}} =
+                 Enum.find(candidates, &(&1["step"]["goal_id"] == signup.id))
+
+        assert %{"visitors" => 0, "step" => %{"goal_kind" => "revenue"}} =
+                 Enum.find(candidates, &(&1["step"]["goal_id"] == purchase.id))
+
+        assert %{"visitors" => 1, "step" => %{"goal_id" => nil, "is_goal" => false}} =
+                 Enum.find(candidates, &(&1["step"]["pathname"] == "/blog"))
+      end
+
+      test "is available via shared links", %{site: site} do
+        link = insert(:shared_link, site: site)
+
+        assert %{"next" => []} =
+                 build_conn()
+                 |> post("/api/stats/#{site.domain}/funnels/candidates?auth=#{link.slug}", %{
+                   "period" => "day",
+                   "date" => "2021-01-01"
+                 })
+                 |> json_response(200)
+      end
+    end
+
     defp setup_checkout_funnel(site) do
       {:ok, [checkout]} = setup_goals(site, [{"page_path", "/checkout"}])
       purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")

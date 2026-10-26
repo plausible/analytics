@@ -292,6 +292,8 @@ defmodule PlausibleWeb.Router do
     scope "/stats", PlausibleWeb.Api do
       on_ee do
         get "/:domain/funnels/:id", StatsController, :funnel
+        post "/:domain/funnels/preview", StatsController, :funnel_preview
+        post "/:domain/funnels/candidates", StatsController, :funnel_candidates
 
         post "/:domain/exploration/next", StatsController, :exploration_next
         post "/:domain/exploration/funnel", StatsController, :exploration_funnel
@@ -320,6 +322,15 @@ defmodule PlausibleWeb.Router do
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
       get "/:segment_id/shared-links", SegmentsController, :get_related_shared_links
+    end
+
+    on_ee do
+      scope "/:domain/funnels", PlausibleWeb.Api.Internal do
+        post "/", FunnelsController, :create
+        get "/:funnel_id", FunnelsController, :show
+        patch "/:funnel_id", FunnelsController, :update
+        delete "/:funnel_id", FunnelsController, :delete
+      end
     end
 
     scope "/:domain/annotations", PlausibleWeb.Api.Internal,
@@ -672,10 +683,6 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/settings/people", SiteController, :settings_people
     get "/:domain/settings/visibility", SiteController, :settings_visibility
-
-    on_ee do
-      get "/:domain/settings/funnels", SiteController, :settings_funnels
-    end
 
     get "/:domain/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:domain/settings/integrations", SiteController, :settings_integrations

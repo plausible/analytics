@@ -18,7 +18,7 @@ export function FeatureSetupNotice({
   feature: keyof typeof MODES
   title: React.ReactNode
   info: React.ReactNode
-  callToAction: { link: string; action: string }
+  callToAction: { link: string; action: string; onClick?: () => void }
   secondaryCallToAction?: { link: string; action: string }
   onHideAction: (() => void) | null
   previewMock?: React.ReactNode
@@ -50,6 +50,14 @@ export function FeatureSetupNotice({
     return (
       <a
         href={callToAction.link}
+        onClick={
+          callToAction.onClick
+            ? (event) => {
+                event.preventDefault()
+                callToAction.onClick!()
+              }
+            : undefined
+        }
         className={buttonClassName({
           theme: 'primary',
           className: 'ml-2 sm:ml-4'

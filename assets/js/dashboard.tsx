@@ -24,6 +24,7 @@ import {
   parsePreloadedSegments,
   SegmentsContextProvider
 } from './dashboard/filtering/segments-context'
+import { FunnelsContextProvider } from './dashboard/funnels-context'
 
 timer.start()
 
@@ -95,7 +96,9 @@ if (container && container.dataset) {
                 limitedToSegment={limitedToSegment}
                 preloadedSegments={preloadedSegments}
               >
-                <RouterProvider router={router} />
+                <FunnelsContextProvider preloadedFunnels={site.funnels}>
+                  <RouterProvider router={router} />
+                </FunnelsContextProvider>
               </SegmentsContextProvider>
             </UserContextProvider>
           </SiteContextProvider>

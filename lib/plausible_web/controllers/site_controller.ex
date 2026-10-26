@@ -145,15 +145,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_funnels(conn, _params) do
-    conn
-    |> render("settings_funnels.html",
-      dogfood_page_path: "/:dashboard/settings/funnels",
-      connect_live_socket: true,
-      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-    )
-  end
-
   def settings_props(conn, _params) do
     conn
     |> render("settings_props.html",

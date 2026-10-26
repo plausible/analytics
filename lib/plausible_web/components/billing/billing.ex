@@ -15,16 +15,20 @@ defmodule PlausibleWeb.Components.Billing do
   attr :current_team, :any, required: true
   attr :locked?, :boolean, required: true
   attr :link_class, :string, default: ""
+  attr :id_suffix, :string, default: "", doc: "for telling apart multiple gates on a page"
   slot :inner_block, required: true
 
   def feature_gate(assigns) do
     ~H"""
-    <div id="feature-gate-inner-block-container" class={if(@locked?, do: "pointer-events-none")}>
+    <div
+      id={"feature-gate-inner-block-container#{@id_suffix}"}
+      class={if(@locked?, do: "pointer-events-none")}
+    >
       {render_slot(@inner_block)}
     </div>
     <div
       :if={@locked?}
-      id="feature-gate-overlay"
+      id={"feature-gate-overlay#{@id_suffix}"}
       class="absolute backdrop-blur-[8px] bg-white/70 dark:bg-gray-800/50 inset-0 flex justify-center items-center"
     >
       <div class="px-6 flex flex-col items-center gap-y-3">
@@ -36,7 +40,7 @@ defmodule PlausibleWeb.Components.Billing do
             Upgrade to unlock
           </h3>
           <span
-            id="lock-notice"
+            id={"lock-notice#{@id_suffix}"}
             class="max-w-sm sm:max-w-md mb-2 text-sm text-gray-600 dark:text-gray-100/60 leading-normal text-center"
           >
             To access this feature,
