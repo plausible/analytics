@@ -18,11 +18,7 @@ defmodule Plausible.OAuthTest do
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 
-  setup do
-    user = new_user()
-    {:ok, team} = Plausible.Teams.get_or_create(user)
-    {:ok, user: user, team: team}
-  end
+  setup [:create_user, :create_team]
 
   describe "Step 1: create_authorization_code/3" do
     test "refuses a resource this server does not know", %{user: user, team: team} do
@@ -257,7 +253,7 @@ defmodule Plausible.OAuthTest do
                })
 
       # Verify that the token works for the correct resource.
-      assert {:ok, _grant} = OAuth.find_access_token(access_token, mcp())
+      assert {:ok, _grant, _role} = OAuth.find_access_token(access_token, mcp())
     end
 
     test "rejects an expired token", %{user: user, team: team} do
@@ -307,7 +303,7 @@ defmodule Plausible.OAuthTest do
                        scope: "sites:read:*"
                      }) = response
 
-      assert {:ok, token} = OAuth.find_access_token(response.access_token, mcp())
+      assert {:ok, token, _role} = OAuth.find_access_token(response.access_token, mcp())
 
       resource = resource()
 
@@ -350,11 +346,27 @@ defmodule Plausible.OAuthTest do
       member = add_member(team, role: :editor)
 
       {_grant, access_token} = issue_grant(member, team)
-      assert {:ok, _} = OAuth.find_access_token(access_token, mcp())
+      assert {:ok, _, _role} = OAuth.find_access_token(access_token, mcp())
 
       Plausible.Teams.Membership
       |> Repo.get_by!(team_id: team.id, user_id: member.id)
       |> Repo.delete!()
+
+      assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+    end
+
+    test "an access token stops resolving once the user is demoted to guest" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+
+      {_grant, access_token} = issue_grant(member, team)
+      assert {:ok, _, :editor} = OAuth.find_access_token(access_token, mcp())
+
+      Plausible.Teams.Membership
+      |> Repo.get_by!(team_id: team.id, user_id: member.id)
+      |> Ecto.Changeset.change(role: :guest)
+      |> Repo.update!()
 
       assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
     end
@@ -409,7 +421,7 @@ defmodule Plausible.OAuthTest do
       assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
 
       assert_matches %Grant{revoked_at: nil} = Plausible.Repo.get!(Grant, kept.id)
-      assert {:ok, _} = OAuth.find_access_token(kept_token, mcp())
+      assert {:ok, _, _role} = OAuth.find_access_token(kept_token, mcp())
     end
 
     test "a member leaving revokes the grants they held against the team" do
@@ -432,7 +444,7 @@ defmodule Plausible.OAuthTest do
       assert revoked_at
 
       assert_matches %Grant{revoked_at: nil} = Plausible.Repo.get!(Grant, kept.id)
-      assert {:ok, _} = OAuth.find_access_token(kept_token, mcp())
+      assert {:ok, _, _role} = OAuth.find_access_token(kept_token, mcp())
     end
   end
 
@@ -480,7 +492,7 @@ defmodule Plausible.OAuthTest do
       })
 
     {:ok, response} = OAuth.issue_token(consumed_code)
-    {:ok, grant} = OAuth.find_access_token(response.access_token, mcp())
+    {:ok, grant, _role} = OAuth.find_access_token(response.access_token, mcp())
 
     {grant, response.access_token}
   end
