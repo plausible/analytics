@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C224C9BE.js"></script>
+    <script src="dist/sidebar_items-4A453110.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -172,7 +172,7 @@ stateless <code class="inline">2026-07-28</code> revision of the protocol.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Handles <code class="inline">GET</code> and <code class="inline">DELETE</code> verbs that earlier MCP versions used for session management by rejecting them.
+        <div class="summary-synopsis"><p>Rejects <code class="inline">GET</code> and <code class="inline">DELETE</code>, which earlier MCP versions used for session management.
 This implementation is not backwards-compatible (<a href="https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions">https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions</a>).</p></div>
 
     </div>
@@ -198,7 +198,7 @@ This implementation is not backwards-compatible (<a href="https://modelcontextpr
     </a>
     <h1 class="signature" translate="no">handle(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/mcp/mcp_controller.ex#L12" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/mcp/mcp_controller.ex#L63" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -218,7 +218,7 @@ This implementation is not backwards-compatible (<a href="https://modelcontextpr
     </a>
     <h1 class="signature" translate="no">not_supported(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/mcp/mcp_controller.ex#L22" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/mcp/mcp_controller.ex#L77" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -227,7 +227,7 @@ This implementation is not backwards-compatible (<a href="https://modelcontextpr
 
   <section class="docstring">
 
-<p>Handles <code class="inline">GET</code> and <code class="inline">DELETE</code> verbs that earlier MCP versions used for session management by rejecting them.
+<p>Rejects <code class="inline">GET</code> and <code class="inline">DELETE</code>, which earlier MCP versions used for session management.
 This implementation is not backwards-compatible (<a href="https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions">https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions</a>).</p>
   </section>
 </section>

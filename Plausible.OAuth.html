@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C224C9BE.js"></script>
+    <script src="dist/sidebar_items-4A453110.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -229,8 +229,8 @@ authorize-time.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Looks up the grant a raw access token belongs to, preloading the bound user
-and team.</p></div>
+        <div class="summary-synopsis"><p>Looks up the grant a raw access token belongs to, preloading the bound user, team,
+and their current role in the team. Returns the grant and role.</p></div>
 
     </div>
 
@@ -385,7 +385,7 @@ scopes, resource, user and team.</p></div>
     </a>
     <h1 class="signature" translate="no">after_user_removed_from_team(team, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L239" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L240" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -482,7 +482,7 @@ where the raw value exists.</p>
     </a>
     <h1 class="signature" translate="no">find_access_token(raw_access, resource)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L192" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L193" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -494,13 +494,15 @@ where the raw value exists.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> find_access_token(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="Plausible.OAuth.ProtectedResources.html#t:t/0">Plausible.OAuth.ProtectedResources.t</a>()) ::
-  {:ok, <a href="Plausible.OAuth.Grant.html#t:t/0">Plausible.OAuth.Grant.t</a>()} | {:error, :invalid_token}</pre>
+  {:ok, <a href="Plausible.OAuth.Grant.html#t:t/0">Plausible.OAuth.Grant.t</a>(), <a href="Plausible.Teams.Membership.html#t:role/0">Plausible.Teams.Membership.role</a>()}
+  | {:error, :invalid_token}</pre>
 
       </div>
 
-<p>Looks up the grant a raw access token belongs to, preloading the bound user
-and team.</p><p><code class="inline">resource</code> is the protected resource the token is presented to. A token issued
-for a different resource is not found.</p><p>Expired, revoked and wrong-resource tokens all return <code class="inline">{:error, :invalid_token}</code>
+<p>Looks up the grant a raw access token belongs to, preloading the bound user, team,
+and their current role in the team. Returns the grant and role.</p><p>The argument <code class="inline">resource</code> is the protected resource the token is supposed to be for. A token issued
+for a different resource is not found.</p><p>Expired, revoked, wrong resource, invalid role tokens all return
+<code class="inline">{:error, :invalid_token}</code>
 (<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-error-codes">see error codes</a>).</p>
   </section>
 </section>
@@ -567,7 +569,7 @@ once here and only their hashes are kept.</p>
     </a>
     <h1 class="signature" translate="no">revoke_grant(grant)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L224" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L225" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

@@ -570,6 +570,7 @@ PlausibleWeb.Plugins.API.Views.Pagination.html
 PlausibleWeb.Plugins.API.Views.SharedLink.html
 PlausibleWeb.Plugins.API.Views.TrackerScriptConfiguration.html
 PlausibleWeb.PluginsAPICase.html
+PlausibleWeb.Plugs.AuthorizeOAuthAPI.html
 PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.AuthorizePublicAPI.html
 PlausibleWeb.Plugs.AuthorizeSiteAccess.html
@@ -625,8 +626,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-EE9C315D.js
-dist/sidebar_items-C224C9BE.js
+dist/search_data-82A3D7D3.js
+dist/sidebar_items-4A453110.js
 index.html
 readme.html
 search.html
