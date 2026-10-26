@@ -152,6 +152,10 @@ defmodule Plausible.Funnel do
     rogue_goals? =
       changeset
       |> get_assoc(:steps)
+      # NOTE: `Ecto.Changeset.Relation` is part of an internal Ecto API.
+      # However, there's no other way to filter out empty entries
+      # from changes to carry out validations.
+      |> Ecto.Changeset.Relation.filter_empty()
       |> Enum.any?(&(get_change(&1, :goal_id) not in allowed_goal_ids))
 
     if rogue_goals? do
@@ -162,9 +166,15 @@ defmodule Plausible.Funnel do
   end
 
   defp validate_steps_length(changeset) do
+    # NOTE: `Ecto.Changeset.Relation` is part of an internal Ecto API.
+    # It's used by `validate_length` when using it against relations,
+    # but it's not exposed in any way directly to use it to validate
+    # multiple fields at once.
     steps_count =
-      length(get_assoc(changeset, :steps)) +
-        length(get_embed(changeset, :dynamic_steps))
+      [get_assoc(changeset, :steps), get_embed(changeset, :dynamic_steps)]
+      |> Enum.map(&Ecto.Changeset.Relation.filter_empty/1)
+      |> Enum.map(&length/1)
+      |> Enum.sum()
 
     cond do
       steps_count < @min_steps ->

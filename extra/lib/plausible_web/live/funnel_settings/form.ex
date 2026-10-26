@@ -567,12 +567,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
            assigns: %{
              site: site,
              steps: steps,
-             funnel_type: funnel_type
+             funnel_type: funnel_type,
+             goals: goals
            }
          } = socket
        ) do
     with {:ok, {definition, query}} <-
-           build_ephemeral_funnel(site, steps, funnel_type: funnel_type),
+           build_ephemeral_funnel(site, steps, funnel_type: funnel_type, goals: goals),
          {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
       assign(socket, evaluation_result: funnel)
     else
@@ -582,21 +583,29 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   defp build_ephemeral_funnel(site, steps, opts) do
+    {goals, opts} = Keyword.pop(opts, :goals, [])
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
+
     steps =
       steps
       |> Enum.sort_by(&elem(&1, 0))
       |> Enum.map(fn {_, goal} ->
-        %{
-          "goal_id" => goal.id,
-          "goal" => %{
-            "id" => goal.id,
-            "event_name" => goal.event_name,
-            "page_path" => goal.page_path,
-            "currency" => goal.currency,
-            "scroll_threshold" => goal.scroll_threshold,
-            "custom_props" => goal.custom_props
-          }
+        step_data = %{
+          "event_name" => goal.event_name,
+          "page_path" => goal.page_path,
+          "currency" => goal.currency,
+          "scroll_threshold" => goal.scroll_threshold,
+          "custom_props" => goal.custom_props
         }
+
+        if goal.id > 0 do
+          %{
+            "goal_id" => goal.id,
+            "goal" => Map.put(step_data, "id", goal.id)
+          }
+        else
+          step_data
+        end
       end)
 
     definition =

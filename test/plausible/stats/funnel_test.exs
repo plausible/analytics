@@ -136,7 +136,8 @@ defmodule Plausible.Stats.FunnelTest do
                   "page_path" => g3.page_path
                 }
               }
-            ]
+            ],
+            allowed_goal_ids: [g1.id, g2.id, g3.id]
           )
 
         populate_stats(site, [
@@ -214,7 +215,8 @@ defmodule Plausible.Stats.FunnelTest do
               },
               %{"event_name" => g2.event_name},
               %{"page_path" => g3.page_path}
-            ]
+            ],
+            allowed_goal_ids: [g1.id, g2.id, g3.id]
           )
 
         populate_stats(site, [
