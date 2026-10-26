@@ -87,15 +87,15 @@ defmodule PlausibleWeb.TrackerTest do
 
       Tracker.update_script_configuration!(
         site,
-        %{form_submissions: false, track_404_pages: false},
+        %{form_submissions: false, outbound_links: true},
         :installation
       )
 
       tracker_script_configuration = Repo.reload!(tracker_script_configuration)
 
       refute tracker_script_configuration.form_submissions
-      refute tracker_script_configuration.track_404_pages
-      refute Repo.get_by(Plausible.Goal, site_id: site.id, event_name: "404")
+      assert tracker_script_configuration.outbound_links
+      assert Repo.get_by(Plausible.Goal, site_id: site.id, event_name: "Outbound Link: Click")
     end
 
     on_ee do
