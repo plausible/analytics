@@ -6,7 +6,13 @@ extend-exclude = [
 	"**/*.csv",
 	"**/*.xml",
 	"**/*.html",
-	"tracker/eslint.config.mjs"
+	"tracker/eslint.config.mjs",
+	# Already-shipped migrations
+	"priv/repo/migrations/20200227092821_add_fingerprint_sesssions.exs",
+	"priv/repo/migrations/20231219083050_track_accept_traffic_until_notifcations.exs",
+	"priv/repo/migrations/20250429093725_backfill_enterise_plans_feautres_sites_api.exs",
+	# Refers to the migration above by name
+	"test/plausible/release_test.exs"
 ]
 ignore-hidden = false
 
