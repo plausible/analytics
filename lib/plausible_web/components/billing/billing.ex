@@ -384,7 +384,7 @@ defmodule PlausibleWeb.Components.Billing do
         Paddle.Environment.set('sandbox')
       </script>
       <script>
-        Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
+        Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle_classic) |> Keyword.fetch!(:vendor_id) %> })
       </script>
       """
     end

@@ -605,7 +605,7 @@ config :sentry,
   send_max_attempts: 1,
   before_send: {Plausible.SentryFilter, :before_send}
 
-config :plausible, :paddle,
+config :plausible, :paddle_classic,
   vendor_auth_code: paddle_auth_code,
   vendor_id: paddle_vendor_id
 

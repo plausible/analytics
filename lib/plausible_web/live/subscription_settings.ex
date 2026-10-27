@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
       {:ok, redirect(socket, to: ~p"/sites")}
     else
       subscription = Teams.Billing.get_subscription(team)
-      invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
+      invoices = Plausible.Billing.PaddleClassic.api().get_invoices(subscription)
       pageview_usage = Teams.Billing.monthly_pageview_usage(team)
       site_usage = Teams.Billing.site_usage(team)
       team_member_usage = Teams.Billing.team_member_usage(team)

@@ -1,4 +1,4 @@
-defmodule Plausible.Billing.TestPaddleApiMock do
+defmodule Plausible.Billing.PaddleClassic.TestApiMock do
   @moduledoc false
 
   def get_subscription(_) do
@@ -75,6 +75,6 @@ defmodule Plausible.Billing.TestPaddleApiMock do
   end
 
   def fetch_prices(product_ids, customer_ip) do
-    Plausible.Billing.DevPaddleApiMock.fetch_prices(product_ids, customer_ip)
+    Plausible.Billing.PaddleClassic.DevApiMock.fetch_prices(product_ids, customer_ip)
   end
 end
