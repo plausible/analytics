@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Endpoint do
     json_decoder: Phoenix.json_library()
   )
 
-  plug(Sentry.PlugContext)
+  plug(Sentry.PlugContext, body_scrubber: {__MODULE__, :scrub_sentry_body})
 
   plug(Plug.MethodOverride)
   plug(Plug.Head)
@@ -104,6 +104,14 @@ defmodule PlausibleWeb.Endpoint do
     else
       CORSPlug.call(conn, @cors_opts)
     end
+  end
+
+  # OAuth token requests carry live credentials in the body
+  @sentry_scrubbed_keys Sentry.Scrubber.default_param_keys() ++
+                          ["code", "code_verifier", "access_token", "refresh_token"]
+
+  def scrub_sentry_body(conn) do
+    Sentry.Scrubber.scrub(conn.params, keys: @sentry_scrubbed_keys)
   end
 
   def runtime_session(conn, _opts) do
