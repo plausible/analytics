@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   def mount(socket) do
     socket =
       socket
-      |> stream(:suggestions, socket.assigns[:options] || [])
+      |> assign(:suggestions, [])
 
     {:ok, socket}
   end
@@ -23,14 +23,12 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
       socket
       |> assign(assigns)
       |> assign(:selected, selected)
-      |> assign_new(:suggestions, fn -> [] end)
-      |> assign_new(:last_query, fn -> "" end)
 
     suggest_trigger = assigns[:suggest_trigger] && hash(assigns[:suggest_trigger])
 
     socket =
       if suggest_trigger && suggest_trigger != socket.assigns[:suggest_trigger] do
-        suggestions = handle_suggest(socket, socket.assigns.last_query)
+        suggestions = handle_suggest(socket, "")
         assign(socket, :suggestions, suggestions)
       else
         socket
@@ -46,7 +44,6 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   attr(:input_class, :string, default: "")
   attr(:dropdown_class, :string, default: "")
   attr(:submit_name, :string, required: true)
-  attr(:options, :list, default: [])
 
   def render(assigns) do
     ~H"""
@@ -148,20 +145,15 @@ defmodule PlausibleWeb.Live.Components.PrimaCombobox do
   def handle_event("async_combobox_search", %{"query" => query}, socket) do
     suggestions = handle_suggest(socket, query)
 
-    {:noreply, assign(socket, suggestions: suggestions, last_query: query)}
+    {:noreply, assign(socket, suggestions: suggestions)}
   end
 
   defp handle_suggest(socket, query) do
-    options = socket.assigns[:options] || []
+    existing_suggestions = Enum.map(socket.assigns.suggestions, &elem(&1, 1))
 
-    if suggest_fun = socket.assigns[:suggest_fun] do
-      suggest_fun.(query, options)
-    else
-      Enum.filter(options, fn option ->
-        String.contains?(String.downcase(option), String.downcase(query))
-      end)
-    end
-    |> Enum.map(&{hash(&1), &1})
+    suggestions = socket.assigns.suggest_fun.(query, existing_suggestions)
+
+    Enum.map(suggestions, &{hash(&1), &1})
   end
 
   defp hash(value) do

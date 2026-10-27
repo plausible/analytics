@@ -151,10 +151,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     id={"step-#{step_idx}"}
                     module={PlausibleWeb.Live.Components.PrimaCombobox}
                     submit_name={"funnel[steps][#{step_idx}][step_data]"}
-                    selected={selected_option(@steps, @funnel_modified?, step_idx)}
+                    selected={selected_option(@steps, step_idx)}
                     suggest_trigger={@steps}
                     suggest_fun={
-                      fn input, _choices -> suggest(input, @site, @goals, @steps, step_idx) end
+                      fn input, _suggestions -> suggest(input, @site, @goals, @steps, step_idx) end
                     }
                   />
                 </div>
@@ -266,8 +266,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("add-step", _value, socket) do
     step_ids = socket.assigns.step_ids
 
-    socket = assign(socket, funnel_modified?: true)
-
     if length(step_ids) < Funnel.max_steps() do
       first_free_idx = find_sequence_break(step_ids)
       new_ids = step_ids ++ [first_free_idx]
@@ -284,7 +282,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
     send(self(), :evaluate_funnel)
 
-    {:noreply, assign(socket, step_ids: step_ids, steps: steps, funnel_modified?: true)}
+    {:noreply, assign(socket, step_ids: step_ids, steps: steps)}
   end
 
   def handle_event("switch-type", %{"type" => funnel_type_str}, socket) do
@@ -432,7 +430,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     |> exclude_existing_steps(steps)
     |> Enum.map(
       &{to_step_data(&1), to_string(&1),
-       [type: if(&1.event_name, do: :custom_event, else: :pageview)]}
+       [goal: &1, type: if(&1.event_name, do: :custom_event, else: :pageview)]}
     )
     |> set_icons()
   end
@@ -506,13 +504,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     Map.delete(steps, step_input_id)
   end
 
-  defp selected_option(steps, false, idx) do
+  defp selected_option(steps, idx) do
     if goal = steps["step-#{idx}"] do
       {to_step_data(goal), to_string(goal)}
     end
   end
-
-  defp selected_option(_, _, _), do: nil
 
   defp to_goal(%{"goal_id" => goal_id} = step_data) do
     step_data
@@ -649,7 +645,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         form: form,
         funnel: funnel,
         funnel_type: funnel.funnel_type,
-        funnel_modified?: false,
         steps: steps,
         step_ids: Enum.to_list(1..Enum.count(steps))
       )
@@ -665,7 +660,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       form: form,
       funnel: nil,
       funnel_type: :sequential,
-      funnel_modified?: false,
       steps: Map.new(),
       step_ids: Enum.to_list(1..Funnel.min_steps())
     )
