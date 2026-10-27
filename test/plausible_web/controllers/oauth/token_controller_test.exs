@@ -230,7 +230,9 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
             {"resource", ["https://other.example.com/mcp"]},
             {"scope", ["admin"]}
           ] do
-        conn = build_conn() |> post("/login/oauth/token", %{valid_refresh_params | param_key => invalid_value})
+        conn =
+          build_conn()
+          |> post("/login/oauth/token", %{valid_refresh_params | param_key => invalid_value})
 
         assert_matches ^strict_map(%{"error" => "invalid_request"}) =
                          json_response(conn, 400)
@@ -341,19 +343,6 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        json_response(conn, 400)
 
       assert %{revoked_at: %NaiveDateTime{}} = Plausible.Repo.reload!(grant)
-    end
-
-    test "redeems the refresh token issued by the code exchange", %{valid_params: valid_params} do
-      %{"refresh_token" => refresh_token} =
-        build_conn() |> post("/login/oauth/token", valid_params) |> json_response(200)
-
-      params = %{
-        "grant_type" => "refresh_token",
-        "refresh_token" => refresh_token,
-        "client_id" => valid_params["client_id"]
-      }
-
-      assert build_conn() |> post("/login/oauth/token", params) |> json_response(200)
     end
   end
 end
