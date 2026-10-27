@@ -48,9 +48,9 @@ const compileOptions = {
   suffix: values.suffix
 }
 
-await compileAll(compileOptions)
-
-if (values.watch) {
+if (!values.watch) {
+  await compileAll(compileOptions)
+} else {
   console.log('Watching src/ directory for changes...')
 
   // fs.watch can fire several events for a single save, so recompile once they settle
