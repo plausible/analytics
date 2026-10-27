@@ -566,13 +566,14 @@ defmodule Plausible.OAuthTest do
       assert {:ok, response_b} =
                OAuth.refresh_token(response_a.refresh_token, expected_params)
 
-      for {invalid_params, error} <- [
-            {%{expected_params | scope: "stats:write:*"}, :invalid_scope},
+      for {invalid_params, expected_error} <- [
+            {%{expected_params | scope: "stats:write:*"}, {:error, :invalid_scope}},
             {%{expected_params | client_id: "https://other.example.com/oauth-metadata"},
-             :invalid_grant},
-            {%{expected_params | resource: "https://other.example.com/mcp"}, :invalid_grant}
+             {:error, :invalid_grant}},
+            {%{expected_params | resource: "https://other.example.com/mcp"},
+             {:error, :invalid_grant}}
           ] do
-        assert {:error, ^error} = OAuth.refresh_token(response_b.refresh_token, invalid_params)
+        assert ^expected_error = OAuth.refresh_token(response_b.refresh_token, invalid_params)
       end
 
       assert {:ok, _} = OAuth.refresh_token(response_b.refresh_token, expected_params)
