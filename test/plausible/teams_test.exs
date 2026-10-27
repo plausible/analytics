@@ -136,6 +136,23 @@ defmodule Plausible.TeamsTest do
                |> Map.fetch!(:team_memberships)
     end
 
+    test "creates 'My personal sites' if user only owns a setup team" do
+      user = new_user()
+      _site = new_site(owner: user)
+      setup_team = user |> team_of() |> Teams.complete_setup()
+
+      assert {:ok, team} = Teams.get_or_create(user)
+
+      assert team.id != setup_team.id
+      assert team.name == "My personal sites"
+      refute team.setup_complete
+
+      assert [team_membership] = Repo.preload(team, :team_memberships).team_memberships
+      assert team_membership.user_id == user.id
+      assert team_membership.role == :owner
+      assert team_membership.is_autocreated == true
+    end
+
     test "returns existing owned team if user is also a non-owner member on existing teams" do
       user = new_user()
       _site = new_site(owner: user)
