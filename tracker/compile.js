@@ -62,9 +62,16 @@ if (values.watch) {
         console.log(`\nFile changed: ${filename}`)
         console.log('Recompiling...')
 
-        await compileAll(compileOptions)
-
-        console.log('Done. Watching for changes...')
+        try {
+          await compileAll(compileOptions)
+          console.log('Done. Watching for changes...')
+        } catch (e) {
+          console.error(
+            new Error('Failed to compile all. Watching for changes...', {
+              cause: e
+            })
+          )
+        }
       }, 100)
     }
   })
