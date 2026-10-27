@@ -63,7 +63,10 @@ defmodule Plausible.OAuth.Grant do
     # and we revoke the whole grant, locking out the one that exchanged it first
     # and the one trying to exchange it now. We can't know which one of them was malicious.
     #
-    # Inside the grace period, we return the current pair again idempotently.
+    # Inside the grace period, we issue a fresh pair, replacing the current one.
+    # Only hashes are stored, so the current pair can't be returned again.
+    # The replaced token becomes the previous one and `rotated_at` stays, so
+    # presenting it after the grace period revokes the grant too.
     # Grace is needed to prevent a connection timeout from stopping a working integration.
     field :previous_refresh_token_hash, :string
     field :rotated_at, :naive_datetime

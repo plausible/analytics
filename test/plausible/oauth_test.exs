@@ -7,6 +7,7 @@ defmodule Plausible.OAuthTest do
   - `Step 2: consume_authorization_code/2` redeems that code, exactly once
   - `Step 3: issue_token/1 and find_access_token/2`: opens a grant from the redeemed code, returns token AND resolves an access token back to its grant
   - `Step 4: revoke_grant/1 and after_user_removed_from_team/2` invalidates both tokens
+  - `Step 5: refresh_token/2` rotates both tokens, and revokes the grant when a displaced refresh token is replayed late
   """
 
   use Plausible.DataCase
@@ -448,6 +449,189 @@ defmodule Plausible.OAuthTest do
     end
   end
 
+  describe "Step 5: refresh_token/2" do
+    test "rejects an unknown token" do
+      assert {:error, :invalid_grant} = OAuth.refresh_token("made-up", %{})
+      assert {:error, :invalid_grant} = OAuth.refresh_token(nil, %{})
+    end
+
+    test "rejects a revoked grant", %{user: user, team: team} do
+      response_a = issue_tokens(user, team)
+      {:ok, grant, _role} = OAuth.find_access_token(response_a.access_token, mcp())
+
+      :ok = OAuth.revoke_grant(grant)
+
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+    end
+
+    test "rejects an expired token", %{user: user, team: team} do
+      response_a = issue_tokens(user, team)
+
+      Plausible.Repo.update_all(
+        from(g in Grant, where: g.refresh_token_hash == ^Token.hash(response_a.refresh_token)),
+        set: [refresh_token_expires_at: past()]
+      )
+
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+    end
+
+    test "rejects a grant whose user has since left the team" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+      response_a = issue_tokens(member, team)
+
+      Plausible.Teams.Membership
+      |> Repo.get_by!(team_id: team.id, user_id: member.id)
+      |> Repo.delete!()
+
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+    end
+
+    test "rejects a grant whose user has since been downgraded to guest" do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(owner)
+      member = add_member(team, role: :editor)
+      response_a = issue_tokens(member, team)
+
+      Plausible.Teams.Membership
+      |> Repo.get_by!(team_id: team.id, user_id: member.id)
+      |> Ecto.Changeset.change(role: :guest)
+      |> Repo.update!()
+
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+    end
+
+    test "accepts valid refresh token, rotates access and refresh token, invalidates old access token",
+         %{user: user, team: team} do
+      response_a = issue_tokens(user, team)
+      assert {:ok, initial_grant, _role} = OAuth.find_access_token(response_a.access_token, mcp())
+      # make it about to expire
+      initial_grant =
+        initial_grant
+        |> Ecto.Changeset.change(
+          refresh_token_expires_at:
+            :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(5, :second)
+        )
+        |> Repo.update!()
+
+      assert {:ok, response_b} =
+               OAuth.refresh_token(response_a.refresh_token, %{})
+
+      assert_matches ^strict_map(%{
+                       access_token: ^any(:string),
+                       refresh_token: ^any(:string),
+                       token_type: "Bearer",
+                       expires_in: ^OAuth.access_token_ttl_seconds(),
+                       scope: ^Enum.join(supported_scopes(), " ")
+                     }) = response_b
+
+      refute response_b.access_token == response_a.access_token
+      refute response_b.refresh_token == response_a.refresh_token
+
+      assert {:error, :invalid_token} = OAuth.find_access_token(response_a.access_token, mcp())
+      assert {:ok, grant, _role} = OAuth.find_access_token(response_b.access_token, mcp())
+
+      assert_matches %Grant{
+                       user_id: ^user.id,
+                       team_id: ^team.id,
+                       access_token_hash: ^Token.hash(response_b.access_token),
+                       access_token_hint: ^String.slice(response_b.access_token, -4, 4),
+                       refresh_token_hash: ^Token.hash(response_b.refresh_token),
+                       refresh_token_hint: ^String.slice(response_b.refresh_token, -4, 4),
+                       previous_refresh_token_hash: ^Token.hash(response_a.refresh_token),
+                       rotated_at: %NaiveDateTime{},
+                       revoked_at: nil
+                     } = grant
+
+      assert NaiveDateTime.after?(
+               grant.refresh_token_expires_at,
+               initial_grant.refresh_token_expires_at
+             )
+    end
+
+    test "accepts a request specifying client ID, resource and scopes; rejects without invalidating the grant if any of them are invalid",
+         %{
+           user: user,
+           team: team
+         } do
+      response_a = issue_tokens(user, team)
+
+      expected_params = %{
+        client_id: @client_id,
+        resource: resource(),
+        scope: response_a.scope
+      }
+
+      assert {:ok, response_b} =
+               OAuth.refresh_token(response_a.refresh_token, expected_params)
+
+      for {invalid_params, error} <- [
+            {%{expected_params | scope: "stats:write:*"}, :invalid_scope},
+            {%{expected_params | client_id: "https://other.example.com/oauth-metadata"},
+             :invalid_grant},
+            {%{expected_params | resource: "https://other.example.com/mcp"}, :invalid_grant}
+          ] do
+        assert {:error, ^error} = OAuth.refresh_token(response_b.refresh_token, invalid_params)
+      end
+
+      assert {:ok, _} = OAuth.refresh_token(response_b.refresh_token, expected_params)
+    end
+
+    test "replay during grace: the previous refresh token on file is accepted (to prevent loss of access when fumbling refresh attempt due to bad network)",
+         %{
+           user: user,
+           team: team
+         } do
+      response_a = issue_tokens(user, team)
+
+      # client presents refresh token A, it's accepted, but the client loses the response
+      {:ok, response_b} = OAuth.refresh_token(response_a.refresh_token, %{})
+      {:ok, grant_b, _role} = OAuth.find_access_token(response_b.access_token, mcp())
+      assert {:error, :invalid_token} = OAuth.find_access_token(response_a.access_token, mcp())
+
+      # client presents refresh token A again, it's accepted
+      assert {:ok, response_c} = OAuth.refresh_token(response_a.refresh_token, %{})
+      assert {:ok, grant_c, _role} = OAuth.find_access_token(response_c.access_token, mcp())
+      assert {:error, :invalid_token} = OAuth.find_access_token(response_b.access_token, mcp())
+
+      # a refresh during the grace period doesn't move rotated at
+      assert_matches %Grant{
+                       id: ^grant_b.id,
+                       previous_refresh_token_hash: ^Token.hash(response_b.refresh_token),
+                       rotated_at: ^grant_b.rotated_at,
+                       revoked_at: nil
+                     } = grant_c
+
+      # refresh token A is not on file any more, so this is not considered a refresh token replay scenario, the grant is not revoked
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+      assert {:ok, _grant, _role} = OAuth.find_access_token(response_c.access_token, mcp())
+    end
+
+    test "replay outside grace: the previous refresh token on file is rejected and the whole grant is invalidated (to protect the user from an attacker taking over the grant with a logged / leaked refresh token)",
+         %{
+           user: user,
+           team: team
+         } do
+      response_a = issue_tokens(user, team)
+
+      # attacker or client presents refresh token A, it's accepted
+      {:ok, response_b} = OAuth.refresh_token(response_a.refresh_token, %{})
+      {:ok, grant_b, _role} = OAuth.find_access_token(response_b.access_token, mcp())
+      assert {:error, :invalid_token} = OAuth.find_access_token(response_a.access_token, mcp())
+
+      end_grace_period(response_b.refresh_token)
+
+      # attacker or client presents refresh token A, it's rejected
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
+
+      # both attacker and client locked out
+      assert {:error, :invalid_token} = OAuth.find_access_token(response_b.access_token, mcp())
+      assert {:error, :invalid_grant} = OAuth.refresh_token(response_b.refresh_token, %{})
+      assert Repo.reload!(grant_b).revoked_at
+    end
+  end
+
   defp pkce do
     verifier = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
     challenge = :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false)
@@ -477,9 +661,30 @@ defmodule Plausible.OAuthTest do
     OAuth.create_authorization_code(user, team, attrs)
   end
 
+  defp end_grace_period(refresh_token) do
+    Plausible.Repo.update_all(
+      from(g in Grant, where: g.refresh_token_hash == ^Token.hash(refresh_token)),
+      set: [
+        rotated_at:
+          NaiveDateTime.add(
+            NaiveDateTime.utc_now(:second),
+            -OAuth.refresh_grace_period_seconds(),
+            :second
+          )
+      ]
+    )
+  end
+
   defp past, do: NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :second)
 
   defp issue_grant(user, team, overrides \\ %{}) do
+    response = issue_tokens(user, team, overrides)
+    {:ok, grant, _role} = OAuth.find_access_token(response.access_token, mcp())
+
+    {grant, response.access_token}
+  end
+
+  defp issue_tokens(user, team, overrides \\ %{}) do
     {verifier, challenge} = pkce()
     {:ok, code} = create_code(user, team, challenge, overrides)
 
@@ -492,8 +697,6 @@ defmodule Plausible.OAuthTest do
       })
 
     {:ok, response} = OAuth.issue_token(consumed_code)
-    {:ok, grant, _role} = OAuth.find_access_token(response.access_token, mcp())
-
-    {grant, response.access_token}
+    response
   end
 end
