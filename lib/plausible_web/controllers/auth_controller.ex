@@ -55,7 +55,7 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
-  # Plug purging 2FA user session cookie outsite 2FA flow
+  # Plug purging 2FA user session cookie outside 2FA flow
   defp clear_2fa_user(conn, _opts) do
     TwoFactor.Session.clear_2fa_user(conn)
   end

@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.TeamMangementTest do
+defmodule PlausibleWeb.Live.TeamManagementTest do
   use PlausibleWeb.ConnCase, async: false
   use Bamboo.Test, shared: true
 

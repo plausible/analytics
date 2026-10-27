@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div
           :if={@consolidated_sparkline == :loading}
           class="flex flex-col gap-y-2 h-[290px] sm:h-[236px] text-center animate-pulse"
-          data-test-id="consolidated-viw-stats-loading"
+          data-test-id="consolidated-view-stats-loading"
         >
           <div class="flex-2 dark:bg-gray-750 bg-gray-100 rounded-md"></div>
           <div class="flex-1 flex flex-col gap-y-2">

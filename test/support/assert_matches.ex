@@ -32,7 +32,7 @@ defmodule Plausible.AssertMatches do
     * a special case of `any(:string, ~r/regex pattern/)` checking that value is
       a string and matches a pattern
     * shorthand version of the above, `~r/regex pattern/`
-    * any artibrary one argument function returning a boolean, like `&is_float/1`
+    * any arbitrary one argument function returning a boolean, like `&is_float/1`
       or `&(&1 < 40 or &1 > 300)`
     * exactly(expression) where expression is compared using equality, so that can
       enforce full equality inside a pattern, like: `exactly(%{foo: 2})` which will
