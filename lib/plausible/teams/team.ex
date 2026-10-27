@@ -147,12 +147,14 @@ defmodule Plausible.Teams.Team do
   end
 
   def name_changeset(team, attrs \\ %{}) do
-    changeset =
-      team
-      |> cast(attrs, [:name])
-      |> validate_name()
-      |> validate_required(:name)
+    team
+    |> cast(attrs, [:name])
+    |> validate_name()
+    |> validate_required(:name)
+    |> validate_not_reserved_name()
+  end
 
+  def validate_not_reserved_name(changeset) do
     # Do not allow an actual team keep Plausible.Teams.default_name()
     # as its name. This is just to avoid confusion in the UI and keep
     # the auto-created team distinguishable from a real one.
