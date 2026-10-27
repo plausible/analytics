@@ -1,4 +1,4 @@
-defmodule Plausible.Repo.Migrations.TrackAcceptTrafficUntilNotifications do
+defmodule Plausible.Repo.Migrations.TrackAcceptTrafficUntilNotifcations do
   use Ecto.Migration
 
   def change do
