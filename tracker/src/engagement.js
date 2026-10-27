@@ -26,6 +26,7 @@ export function prePageviewTrack() {
     // has been sent by the current script (i.e. it's most likely a SPA).
     // Trigger an engagement marking the "exit from the previous page".
     triggerEngagement()
+    scrollMetricsUpdateScheduled = false
     currentDocumentHeight = getDocumentHeight()
     maxScrollDepthPx = getCurrentScrollDepthPx()
   }
@@ -47,6 +48,12 @@ export function onPageviewIgnored() {
 
 function triggerEngagement() {
   var engagementTime = getEngagementTime()
+
+  // An update may still be waiting for the browser to be idle. The engagement
+  // has to carry the latest scroll metrics, so make the update now.
+  if (scrollMetricsUpdateScheduled) {
+    updateScrollMetrics()
+  }
 
   /*
   We send engagements if there's new relevant engagement information to share:
@@ -122,6 +129,7 @@ function getEngagementTime() {
 
 var currentDocumentHeight
 var maxScrollDepthPx
+var scrollMetricsUpdateScheduled = false
 
 function getDocumentHeight() {
   var body = document.body || {}
@@ -157,6 +165,33 @@ function getCurrentScrollDepthPx() {
     : scrollTop + viewportHeight
 }
 
+function updateScrollMetrics() {
+  scrollMetricsUpdateScheduled = false
+  currentDocumentHeight = getDocumentHeight()
+  var currentScrollDepthPx = getCurrentScrollDepthPx()
+
+  if (currentScrollDepthPx > maxScrollDepthPx) {
+    maxScrollDepthPx = currentScrollDepthPx
+  }
+}
+
+// Reading the document height or the scroll position makes the browser finish
+// any pending layout before it answers. Inside a ResizeObserver callback or a
+// scroll listener that happens in the middle of a frame, and on a page with a
+// large DOM it can block the main thread for hundreds of milliseconds. So the
+// reads wait until the browser is idle, when layout is already done, and any
+// number of resizes and scrolls before that lead to a single update.
+function scheduleScrollMetricsUpdate() {
+  if (!scrollMetricsUpdateScheduled) {
+    scrollMetricsUpdateScheduled = true
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(updateScrollMetrics)
+    } else {
+      setTimeout(updateScrollMetrics, 0)
+    }
+  }
+}
+
 export function init() {
   currentDocumentHeight = getDocumentHeight()
   maxScrollDepthPx = getCurrentScrollDepthPx()
@@ -171,16 +206,10 @@ export function init() {
       }, 200)
     })
   } else {
-    new ResizeObserver(function () {
-      currentDocumentHeight = getDocumentHeight()
-    }).observe(document.documentElement)
+    new ResizeObserver(scheduleScrollMetricsUpdate).observe(
+      document.documentElement
+    )
   }
 
-  document.addEventListener('scroll', function () {
-    var currentScrollDepthPx = getCurrentScrollDepthPx()
-
-    if (currentScrollDepthPx > maxScrollDepthPx) {
-      maxScrollDepthPx = currentScrollDepthPx
-    }
-  })
+  document.addEventListener('scroll', scheduleScrollMetricsUpdate)
 }
