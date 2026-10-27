@@ -198,7 +198,7 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
           refresh_token: refresh_token
         )
 
-      refresh_params = %{
+      valid_refresh_params = %{
         "grant_type" => "refresh_token",
         "refresh_token" => refresh_token,
         "client_id" => grant.client_id,
@@ -206,13 +206,13 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
         "scope" => Enum.join(grant.scopes, " ")
       }
 
-      {:ok, grant: grant, refresh_params: refresh_params}
+      {:ok, grant: grant, valid_refresh_params: valid_refresh_params}
     end
 
-    test "requires refresh_token", %{refresh_params: refresh_params} do
+    test "requires refresh_token", %{valid_refresh_params: valid_refresh_params} do
       for params <- [
-            Map.delete(refresh_params, "refresh_token"),
-            %{refresh_params | "refresh_token" => ""}
+            Map.delete(valid_refresh_params, "refresh_token"),
+            %{valid_refresh_params | "refresh_token" => ""}
           ] do
         conn = build_conn() |> post("/login/oauth/token", params)
 
@@ -222,15 +222,15 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
     end
 
     test "rejects request with optional params when they are malformed", %{
-      refresh_params: refresh_params
+      valid_refresh_params: valid_refresh_params
     } do
-      for {param_key, value} <- [
+      for {param_key, invalid_value} <- [
             {"client_id", ["https://other.example.com/oauth-metadata"]},
             {"client_id", ""},
             {"resource", ["https://other.example.com/mcp"]},
             {"scope", ["admin"]}
           ] do
-        conn = build_conn() |> post("/login/oauth/token", %{refresh_params | param_key => value})
+        conn = build_conn() |> post("/login/oauth/token", %{valid_refresh_params | param_key => invalid_value})
 
         assert_matches ^strict_map(%{"error" => "invalid_request"}) =
                          json_response(conn, 400)
@@ -239,10 +239,10 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
 
     test "issues a new token pair on the same grant", %{
       grant: grant,
-      refresh_params: refresh_params,
+      valid_refresh_params: valid_refresh_params,
       resource: resource
     } do
-      resp_conn = build_conn() |> post("/login/oauth/token", refresh_params)
+      resp_conn = build_conn() |> post("/login/oauth/token", valid_refresh_params)
 
       resp = json_response(resp_conn, 200)
 
@@ -265,7 +265,7 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        "scope" => "sites:read:*"
                      }) = resp
 
-      refute resp["refresh_token"] == refresh_params["refresh_token"]
+      refute resp["refresh_token"] == valid_refresh_params["refresh_token"]
 
       assert {:ok, %{id: grant_id}, _role} =
                OAuth.find_access_token(resp["access_token"], resource)
@@ -274,15 +274,15 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
     end
 
     test "accepts a request carrying only grant_type and refresh_token", %{
-      refresh_params: refresh_params
+      valid_refresh_params: valid_refresh_params
     } do
-      params = Map.take(refresh_params, ["grant_type", "refresh_token"])
+      params = Map.take(valid_refresh_params, ["grant_type", "refresh_token"])
 
       assert build_conn() |> post("/login/oauth/token", params) |> json_response(200)
     end
 
-    test "rejects an unknown refresh token", %{refresh_params: refresh_params} do
-      params = %{refresh_params | "refresh_token" => Token.generate(:refresh).raw}
+    test "rejects an unknown refresh token", %{valid_refresh_params: valid_refresh_params} do
+      params = %{valid_refresh_params | "refresh_token" => Token.generate(:refresh).raw}
 
       conn = build_conn() |> post("/login/oauth/token", params)
 
@@ -290,8 +290,8 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        json_response(conn, 400)
     end
 
-    test "rejects a mismatched client_id", %{refresh_params: refresh_params} do
-      params = %{refresh_params | "client_id" => "https://other.example.com/oauth-metadata"}
+    test "rejects a mismatched client_id", %{valid_refresh_params: valid_refresh_params} do
+      params = %{valid_refresh_params | "client_id" => "https://other.example.com/oauth-metadata"}
 
       conn = build_conn() |> post("/login/oauth/token", params)
 
@@ -299,8 +299,8 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        json_response(conn, 400)
     end
 
-    test "rejects a scope that was not granted", %{refresh_params: refresh_params} do
-      params = %{refresh_params | "scope" => "stats:write:*"}
+    test "rejects a scope that was not granted", %{valid_refresh_params: valid_refresh_params} do
+      params = %{valid_refresh_params | "scope" => "stats:write:*"}
 
       conn = build_conn() |> post("/login/oauth/token", params)
 
@@ -310,10 +310,10 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
 
     test "replaying a refresh token after the grace period revokes the grant", %{
       grant: grant,
-      refresh_params: refresh_params
+      valid_refresh_params: valid_refresh_params
     } do
       %{"refresh_token" => rotated} =
-        build_conn() |> post("/login/oauth/token", refresh_params) |> json_response(200)
+        build_conn() |> post("/login/oauth/token", valid_refresh_params) |> json_response(200)
 
       grant
       |> Plausible.Repo.reload!()
@@ -328,14 +328,14 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
       )
       |> Plausible.Repo.update!()
 
-      conn = build_conn() |> post("/login/oauth/token", refresh_params)
+      conn = build_conn() |> post("/login/oauth/token", valid_refresh_params)
 
       assert_matches ^strict_map(%{"error" => "invalid_grant"}) =
                        json_response(conn, 400)
 
       conn =
         build_conn()
-        |> post("/login/oauth/token", %{refresh_params | "refresh_token" => rotated})
+        |> post("/login/oauth/token", %{valid_refresh_params | "refresh_token" => rotated})
 
       assert_matches ^strict_map(%{"error" => "invalid_grant"}) =
                        json_response(conn, 400)
