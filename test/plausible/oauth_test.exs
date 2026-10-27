@@ -7,7 +7,7 @@ defmodule Plausible.OAuthTest do
   - `Step 2: consume_authorization_code/2` redeems that code, exactly once
   - `Step 3: issue_token/1 and find_access_token/2`: opens a grant from the redeemed code, returns token AND resolves an access token back to its grant
   - `Step 4: revoke_grant/1 and after_user_removed_from_team/2` invalidates both tokens
-  - `Step 5: refresh_token/2` rotates both tokens, and revokes the grant when a displaced refresh token is replayed late
+  - `Step 5: refresh_token/2` rotates both tokens
   """
 
   use Plausible.DataCase
