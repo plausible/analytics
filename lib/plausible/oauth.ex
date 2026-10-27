@@ -149,10 +149,10 @@ defmodule Plausible.OAuth do
   @spec issue_token(AuthorizationCode.t()) ::
           {:ok, token_response()} | {:error, Ecto.Changeset.t()}
   def issue_token(%AuthorizationCode{} = auth_code) do
-    {token_attrs, response} = new_token_pair(auth_code.scopes, now())
+    {grant_changes, response} = generate_tokens(auth_code.scopes, now())
 
     changeset =
-      token_attrs
+      grant_changes
       |> Map.merge(%{
         client_id: auth_code.client_id,
         client_name: auth_code.client_name,
@@ -215,14 +215,31 @@ defmodule Plausible.OAuth do
 
   defp exchange_current(grant, presented, now) do
     with :ok <- validate_grant_refreshable(grant, presented, now) do
-      rotate(grant, now, previous_refresh_token_hash: grant.refresh_token_hash, rotated_at: now)
+      {grant_changes, response} = generate_tokens(grant.scopes, now)
+
+      grant
+      |> Ecto.Changeset.change(grant_changes)
+      |> Ecto.Changeset.change(
+        previous_refresh_token_hash: grant.refresh_token_hash,
+        rotated_at: now
+      )
+      |> Repo.update!()
+
+      {:ok, response}
     end
   end
 
   defp handle_replay(grant, presented, now) do
     if in_grace_period?(grant, now) do
       with :ok <- validate_grant_refreshable(grant, presented, now) do
-        rotate(grant, now, previous_refresh_token_hash: grant.refresh_token_hash)
+        {grant_changes, response} = generate_tokens(grant.scopes, now)
+
+        grant
+        |> Ecto.Changeset.change(grant_changes)
+        |> Ecto.Changeset.change(previous_refresh_token_hash: grant.refresh_token_hash)
+        |> Repo.update!()
+
+        {:ok, response}
       end
     else
       revoke_grant(grant)
@@ -281,38 +298,28 @@ defmodule Plausible.OAuth do
     end
   end
 
-  defp rotate(grant, now, rotation) do
-    {token_attrs, response} = new_token_pair(grant.scopes, now)
+  defp generate_tokens(scopes, now) do
+    access_token = Token.generate(:access)
+    refresh_token = Token.generate(:refresh)
 
-    grant
-    |> Ecto.Changeset.change(Map.merge(token_attrs, Map.new(rotation)))
-    |> Repo.update!()
-
-    {:ok, response}
-  end
-
-  defp new_token_pair(scopes, now) do
-    access = Token.generate(:access)
-    refresh = Token.generate(:refresh)
-
-    attrs = %{
-      access_token_hash: access.hash,
-      access_token_hint: access.hint,
+    grant_changes = %{
+      access_token_hash: access_token.hash,
+      access_token_hint: access_token.hint,
       access_token_expires_at: NaiveDateTime.add(now, @access_token_ttl_seconds, :second),
-      refresh_token_hash: refresh.hash,
-      refresh_token_hint: refresh.hint,
+      refresh_token_hash: refresh_token.hash,
+      refresh_token_hint: refresh_token.hint,
       refresh_token_expires_at: NaiveDateTime.add(now, @refresh_token_ttl_seconds, :second)
     }
 
     response = %{
-      access_token: access.raw,
-      refresh_token: refresh.raw,
+      access_token: access_token.raw,
+      refresh_token: refresh_token.raw,
       token_type: "Bearer",
       expires_in: @access_token_ttl_seconds,
       scope: Enum.join(scopes, " ")
     }
 
-    {attrs, response}
+    {grant_changes, response}
   end
 
   @doc """
