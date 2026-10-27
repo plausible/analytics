@@ -217,22 +217,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   @max_rows_when_unlimited 20
 
-  # Defines the upper bound for how many email+role input rows the UI
+  # The upper bound for how many email+role input rows the UI
   # should render at most, in order to prevent the user getting a
   # "team member limit exceeded" error upon submit without any prior
   # indication about it.
-
-  # Since team setup is the very first creation of a team, we can safely
-  # assume that there are no existing memberships/invitations, and that
-  # max rows is equivalent to the team member limit.
-
-  # There's one exception though: guest memberships/invitations (accounts
-  # invited to individual sites of a team with `setup_complete: false`)
-  # *can* exist, but we're deliberately ignoring those here. While such
-  # teams might hit the team member limit error upon submit, we still
-  # shouldn't prevent them from adding as many rows as the team member
-  # limit because inviting an email that's already a guest won't count
-  # "double" towards the team member limit.
   defp max_new_members(team) do
     case Teams.Billing.team_member_limit(team) do
       :unlimited -> @max_rows_when_unlimited
