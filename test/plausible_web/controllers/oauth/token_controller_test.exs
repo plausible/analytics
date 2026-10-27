@@ -310,7 +310,33 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        json_response(conn, 400)
     end
 
-    test "replaying a refresh token after the grace period revokes the grant", %{
+    test "replay during grace: the previous refresh token is exchanged again", %{
+      grant: grant,
+      valid_refresh_params: valid_refresh_params,
+      resource: resource
+    } do
+      # client presents the refresh token, it's accepted, but the client loses the response
+      %{"access_token" => lost_access_token} =
+        build_conn() |> post("/login/oauth/token", valid_refresh_params) |> json_response(200)
+
+      # client presents the same refresh token again, it's accepted
+      %{"access_token" => access_token} =
+        build_conn() |> post("/login/oauth/token", valid_refresh_params) |> json_response(200)
+
+      grant_id = grant.id
+      assert {:error, :invalid_token} = OAuth.find_access_token(lost_access_token, resource)
+      assert {:ok, %{id: ^grant_id}, _role} = OAuth.find_access_token(access_token, resource)
+
+      # the original refresh token is not on file any more, so it's refused without revoking the grant
+      conn = build_conn() |> post("/login/oauth/token", valid_refresh_params)
+
+      assert_matches ^strict_map(%{"error" => "invalid_grant"}) =
+                       json_response(conn, 400)
+
+      assert {:ok, _grant, _role} = OAuth.find_access_token(access_token, resource)
+    end
+
+    test "replay outside grace: the grant is revoked", %{
       grant: grant,
       valid_refresh_params: valid_refresh_params
     } do
