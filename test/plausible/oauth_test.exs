@@ -621,7 +621,17 @@ defmodule Plausible.OAuthTest do
       {:ok, grant_b, _role} = OAuth.find_access_token(response_b.access_token, mcp())
       assert {:error, :invalid_token} = OAuth.find_access_token(response_a.access_token, mcp())
 
-      end_grace_period(response_b.refresh_token)
+      grant_b
+      |> Ecto.Changeset.change(
+        rotated_at:
+          :second
+          |> NaiveDateTime.utc_now()
+          |> NaiveDateTime.add(
+            -OAuth.refresh_grace_period_seconds(),
+            :second
+          )
+      )
+      |> Repo.update!()
 
       # attacker or client presents refresh token A, it's rejected
       assert {:error, :invalid_grant} = OAuth.refresh_token(response_a.refresh_token, %{})
@@ -662,21 +672,7 @@ defmodule Plausible.OAuthTest do
     OAuth.create_authorization_code(user, team, attrs)
   end
 
-  defp end_grace_period(refresh_token) do
-    Plausible.Repo.update_all(
-      from(g in Grant, where: g.refresh_token_hash == ^Token.hash(refresh_token)),
-      set: [
-        rotated_at:
-          NaiveDateTime.add(
-            NaiveDateTime.utc_now(:second),
-            -OAuth.refresh_grace_period_seconds(),
-            :second
-          )
-      ]
-    )
-  end
-
-  defp past, do: NaiveDateTime.add(NaiveDateTime.utc_now(:second), -1, :second)
+  defp past, do: :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :second)
 
   defp issue_grant(user, team, overrides \\ %{}) do
     response = issue_tokens(user, team, overrides)
