@@ -1,0 +1,36 @@
+name: Check spelling
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+  merge_group:
+
+jobs:
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        filter: blob:none
+
+    - name: List changed files
+      id: changed
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+      run: |
+        files=$(git diff --name-only --diff-filter=d "$BASE_SHA" HEAD | tr '\n' ' ')
+        echo "files=$files" >> "$GITHUB_OUTPUT"
+
+    - uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
+      if: steps.changed.outputs.files != ''
+      with:
+        tool: typos@1.51.1
+
+    # --force-exclude: explicitly passed files would otherwise bypass `extend-exclude`
+    - name: Check spelling in changed files
+      if: steps.changed.outputs.files != ''
+      env:
+        FILES: ${{ steps.changed.outputs.files }}
+      run: typos --force-exclude $FILES
