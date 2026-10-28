@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-639D2E9A.js"></script>
+    <script src="dist/sidebar_items-6BF49396.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -487,18 +487,9 @@ secrets of users who enable it in case the primary vault fails.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Handles Plausible billing subscription lifecycle events (creation, update, cancellation, payment success),
-Paddle API, team assignment, and notification logic. Provides helpers for formatting prices,
-managing subscription status, and updating team-related billing state.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Billing.DevPaddleApiMock.html" translate="no">Plausible.Billing.DevPaddleApiMock</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>This module mocks API requests made to Paddle in the :dev environment.</p></div>
+    <div class="summary-synopsis"><p>Billing facade: manual subscriptions, plan change previews, enterprise plan lookup,
+price formatting and notice titles. Subscription lifecycle events coming from the payment
+provider are applied through <a href="Plausible.Billing.SubscriptionState.html"><code class="inline">Plausible.Billing.SubscriptionState</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -563,11 +554,40 @@ team member limit.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Billing.PaddleApi.html" translate="no">Plausible.Billing.PaddleApi</a>
+    <a href="Plausible.Billing.PaddleClassic.html" translate="no">Plausible.Billing.PaddleClassic</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Entry point to the Paddle Classic integration: the HTTP client, webhook
+handling and the mix tasks that talk to Classic all live under this namespace.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.PaddleClassic.Api.html" translate="no">Plausible.Billing.PaddleClassic.Api</a>
 
   </div>
 
     <div class="summary-synopsis"><p>Paddle API HTTP client.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.PaddleClassic.DevApiMock.html" translate="no">Plausible.Billing.PaddleClassic.DevApiMock</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This module mocks API requests made to Paddle in the :dev environment.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.PaddleClassic.Webhooks.html" translate="no">Plausible.Billing.PaddleClassic.Webhooks</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Handles Paddle Classic webhook alerts: parses the payloads into subscription
+attributes and hands them to <a href="Plausible.Billing.SubscriptionState.html"><code class="inline">Plausible.Billing.SubscriptionState</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -606,6 +626,15 @@ team member limit.</p></div>
     <div class="summary-synopsis"><p>The subscription statuses are stored in Paddle. They can only be changed
 through Paddle webhooks, which always send the current subscription status
 via the payload.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.SubscriptionState.html" translate="no">Plausible.Billing.SubscriptionState</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Provider-independent application of subscription state changes.</p></div>
 
 </div>
 <div class="summary-row">
@@ -3662,7 +3691,7 @@ sent us engagement data in the past.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Api.PaddleController.html" translate="no">PlausibleWeb.Api.PaddleController</a>
+    <a href="PlausibleWeb.Api.PaddleClassicController.html" translate="no">PlausibleWeb.Api.PaddleClassicController</a>
 
   </div>
 
@@ -5659,35 +5688,6 @@ is changed with that action.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Mix.Tasks.CreatePaddleProdPlans.html" translate="no">mix create_paddle_prod_plans</a>
-
-  </div>
-
-    <div class="summary-synopsis"><h2 id="utility-for-creating-paddle-plans-for-production-use" class="section-heading">
-  <a href="#utility-for-creating-paddle-plans-for-production-use" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Utility for creating Paddle plans for production use.</span>
-</h2>
-<p>Takes a single <code class="inline">filename</code> argument which should be of format
-<code class="inline">input_plans_v*.json</code>. That file should live in the <code class="inline">/priv</code> directory next
-to all other plans and it should contain the necessary information about
-the production plans to be created.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Mix.Tasks.CreatePaddleSandboxPlans.html" translate="no">mix create_paddle_sandbox_plans</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Utility for creating Sandbox plans that are used on staging. The product of
-this task is a <code class="inline">sandbox_plans_v*.json</code> file matching with the production
-plans, just with the monthly/yearly product_id's of the sandbox plans.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Mix.Tasks.DownloadCountryDatabase.html" translate="no">mix download_country_database</a>
 
   </div>
@@ -5721,7 +5721,36 @@ because country shapes are identified in the geography dataset only with their a
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Mix.Tasks.PullSandboxSubscription.html" translate="no">mix pull_sandbox_subscription</a>
+    <a href="Mix.Tasks.PaddleClassic.CreateProdPlans.html" translate="no">mix paddle_classic.create_prod_plans</a>
+
+  </div>
+
+    <div class="summary-synopsis"><h2 id="utility-for-creating-paddle-plans-for-production-use" class="section-heading">
+  <a href="#utility-for-creating-paddle-plans-for-production-use" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Utility for creating Paddle plans for production use.</span>
+</h2>
+<p>Takes a single <code class="inline">filename</code> argument which should be of format
+<code class="inline">input_plans_v*.json</code>. That file should live in the <code class="inline">/priv</code> directory next
+to all other plans and it should contain the necessary information about
+the production plans to be created.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.PaddleClassic.CreateSandboxPlans.html" translate="no">mix paddle_classic.create_sandbox_plans</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Utility for creating Sandbox plans that are used on staging. The product of
+this task is a <code class="inline">sandbox_plans_v*.json</code> file matching with the production
+plans, just with the monthly/yearly product_id's of the sandbox plans.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.PaddleClassic.PullSandboxSubscription.html" translate="no">mix paddle_classic.pull_sandbox_subscription</a>
 
   </div>
 
