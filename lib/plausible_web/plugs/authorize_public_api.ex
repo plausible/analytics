@@ -146,6 +146,19 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
+  # Customer support automation API. The key needs an explicit `cs:` scope
+  # (see `check_scope/2`) and must belong to a user listed in
+  # `cs_automation_user_ids`. Super admins are not let in by that alone:
+  # the list is the only way in.
+  defp verify_by_scope(conn, api_key, "cs:" <> _ = scope) do
+    with :ok <- check_scope(api_key, scope),
+         true <- Auth.cs_automation?(api_key.user_id) do
+      {:ok, conn}
+    else
+      _ -> {:error, :invalid_api_key}
+    end
+  end
+
   defp verify_by_scope(conn, api_key, scope) do
     with :ok <- check_scope(api_key, scope) do
       {:ok, conn}
@@ -157,11 +170,14 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp check_scope(api_key, required_scope) do
+    # `cs:` scopes are only granted by a scope that itself starts with `cs:`:
+    # a broad scope like "*" never covers them.
+    cs? = String.starts_with?(required_scope, "cs:")
+
     found? =
       Enum.any?(api_key.scopes, fn scope ->
-        scope = String.trim_trailing(scope, "*")
-
-        String.starts_with?(required_scope, scope)
+        (not cs? or String.starts_with?(scope, "cs:")) and
+          String.starts_with?(required_scope, String.trim_trailing(scope, "*"))
       end)
 
     if found? do

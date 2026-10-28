@@ -91,15 +91,22 @@ case secret_key_base do
     nil
 end
 
-super_admin_user_ids =
-  get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
+parse_user_ids = fn var ->
+  get_var_from_path_or_env(config_dir, var, "")
   |> String.split(",")
-  |> Enum.map(fn id -> Integer.parse(id) end)
-  |> Enum.map(fn
-    {int, ""} -> int
-    _ -> nil
+  |> Enum.flat_map(fn id ->
+    case Integer.parse(id) do
+      {int, ""} -> [int]
+      _ -> []
+    end
   end)
-  |> Enum.filter(& &1)
+end
+
+super_admin_user_ids = parse_user_ids.("ADMIN_USER_IDS")
+
+# Users whose API keys may call the customer support automation API
+# (/api/cs/v1). Being listed here grants no access to the CS admin pages.
+cs_automation_user_ids = parse_user_ids.("CS_AUTOMATION_USER_IDS")
 
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.Mua")
@@ -376,6 +383,7 @@ config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
+  cs_automation_user_ids: cs_automation_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
