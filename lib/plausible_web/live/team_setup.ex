@@ -26,7 +26,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: ~p"/settings/team/general")
 
         true ->
-          suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
+          suggested_name =
+            Teams.Team.suggested_name_from_domain(domain, socket.assigns.current_user.name)
 
           name_changeset =
             Teams.Team.name_changeset(team || %Teams.Team{}, %{name: suggested_name})

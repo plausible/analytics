@@ -44,6 +44,15 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
                "Set up team"
     end
 
+    test "suggests a team name based on the site domain", %{conn: conn, user: user} do
+      site = new_site(owner: user, domain: "shop.my-company.co.uk")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "My Company"
+    end
+
     test "renders a skip link to the installation step", %{conn: conn, site: site} do
       {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
 
@@ -86,6 +95,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
   describe "/team/setup?flow=register - after skipping adding a site" do
     setup [:create_user, :log_in]
+
+    test "suggests a team name based on the user name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
 
     test "renders a skip link to /sites", %{conn: conn} do
       {:ok, _lv, html} = live(conn, onboarding_url())
