@@ -45,9 +45,7 @@ defmodule PlausibleWeb.SiteController do
           |> Plausible.Mailer.send()
         end
 
-        redirect(conn,
-          to: ~p"/#{site.domain}/installation?#{[flow: flow]}"
-        )
+        redirect(conn, to: site_created_redirect_path(site, flow))
 
       {:error, _, :permission_denied, _} ->
         conn
@@ -65,6 +63,14 @@ defmodule PlausibleWeb.SiteController do
           {:error, :no_access} ->
             render_new_site_form(conn, flow, changeset: changeset)
         end
+    end
+  end
+
+  defp site_created_redirect_path(site, flow) do
+    if flow == PlausibleWeb.Flows.register() do
+      ~p"/team/setup?#{[flow: flow, domain: site.domain]}"
+    else
+      ~p"/#{site.domain}/installation?#{[flow: flow]}"
     end
   end
 

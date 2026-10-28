@@ -11,6 +11,6 @@
     current_user={@current_user}
     current_team={@current_team}
     secondary_action_text="Skip"
-    secondary_action_href={~p"/sites"}
+    secondary_action_href={~p"/team/setup?#{[flow: PlausibleWeb.Flows.register()]}"}
   />
 </Layouts.onboarding>
