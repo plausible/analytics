@@ -578,8 +578,8 @@ defmodule Plausible.Billing.MigrationAudit do
       log(
         "    #{pad(row.kind, 11)} #{pad(row.currency, 4)} #{pad(row.interval, 8)} " <>
           "#{pad(row.subscriptions, 7)} total #{row.total} (min #{row.min}, max #{row.max})" <>
-          if(row.unparseable_amounts > 0,
-            do: ", #{row.unparseable_amounts} unparseable",
+          if(row.unparsable_amounts > 0,
+            do: ", #{row.unparsable_amounts} unparsable",
             else: ""
           )
       )
@@ -591,7 +591,7 @@ defmodule Plausible.Billing.MigrationAudit do
       log(
         "    #{pad(row.currency, 4)} #{row.subscriptions} subscriptions: #{row.equal} equal, " <>
           "#{row.lower} lower, #{row.higher} higher, #{row.no_list_price} without list price, " <>
-          "#{row.unparseable} unparseable"
+          "#{row.unparsable} unparsable"
       )
     end
 

@@ -154,7 +154,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
         currency: currency,
         interval: interval,
         subscriptions: length(group),
-        unparseable_amounts: length(group) - length(amounts)
+        unparsable_amounts: length(group) - length(amounts)
       }
       |> Map.merge(amount_stats(amounts))
     end)
@@ -192,7 +192,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
           lower: Map.get(frequencies, :lower, 0),
           higher: Map.get(frequencies, :higher, 0),
           no_list_price: Map.get(frequencies, :no_list_price, 0),
-          unparseable: Map.get(frequencies, :unparseable, 0)
+          unparsable: Map.get(frequencies, :unparsable, 0)
         }
       end)
       |> Enum.sort_by(&{-&1.subscriptions, &1.currency})
@@ -225,7 +225,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
   end
 
   defp compare({:ok, _amount}, nil), do: :no_list_price
-  defp compare(:error, _list_price), do: :unparseable
+  defp compare(:error, _list_price), do: :unparsable
 
   defp compare({:ok, amount}, list_price) do
     case Decimal.compare(amount, to_decimal(list_price)) do

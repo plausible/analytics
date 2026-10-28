@@ -146,7 +146,7 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalogTest do
       assert result.max_modifiers_on_one_subscription == 2
       assert result.discounts == 2
       assert result.surcharges == 1
-      assert result.zero_or_unparseable == 1
+      assert result.zero_or_unparsable == 1
 
       assert [
                %{currency: "USD", modifiers: 3, net_amount: "3.00"},

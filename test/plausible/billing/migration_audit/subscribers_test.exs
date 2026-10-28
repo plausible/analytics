@@ -105,7 +105,7 @@ defmodule Plausible.Billing.MigrationAudit.SubscribersTest do
                  currency: "USD",
                  interval: :monthly,
                  subscriptions: 3,
-                 unparseable_amounts: 1,
+                 unparsable_amounts: 1,
                  total: "16.50",
                  min: "6.00",
                  max: "10.50"
@@ -141,7 +141,7 @@ defmodule Plausible.Billing.MigrationAudit.SubscribersTest do
 
       assert [usd, eur] = result.by_currency
 
-      assert %{currency: "USD", subscriptions: 5, equal: 1, lower: 2, higher: 1, unparseable: 1} =
+      assert %{currency: "USD", subscriptions: 5, equal: 1, lower: 2, higher: 1, unparsable: 1} =
                usd
 
       assert %{currency: "EUR", subscriptions: 1, equal: 1, lower: 0, higher: 0} = eur

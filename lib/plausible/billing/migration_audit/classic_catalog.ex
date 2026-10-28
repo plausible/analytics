@@ -185,7 +185,7 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
         per_subscription |> Map.values() |> Enum.max(fn -> 0 end),
       discounts: Enum.count(described, &sign?(&1.amount, :lt)),
       surcharges: Enum.count(described, &sign?(&1.amount, :gt)),
-      zero_or_unparseable:
+      zero_or_unparsable:
         Enum.count(described, &(not sign?(&1.amount, :lt) and not sign?(&1.amount, :gt))),
       by_currency:
         described
