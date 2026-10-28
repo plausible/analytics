@@ -14,7 +14,10 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
 
   def new_site_form(assigns) do
     ~H"""
-    <.heading_and_subtitle heading="Add a website" subtitle="Start measuring traffic on a new site." />
+    <.onboarding_page_heading
+      heading="Add a website"
+      subtitle="Start measuring traffic on a new site."
+    />
     <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
       <.form :let={f} class="flex flex-col gap-y-8" for={@changeset} action={@form_submit_url}>
         <PlausibleWeb.Components.Billing.Notice.limit_exceeded
@@ -58,17 +61,6 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
           </.button>
         </div>
       </.form>
-    </div>
-    """
-  end
-
-  def heading_and_subtitle(assigns) do
-    ~H"""
-    <div class="w-full max-w-md mx-auto mt-10 sm:mt-16 px-4 flex flex-col gap-y-2 dark:text-gray-300">
-      <h1 class="text-lg sm:text-xl font-semibold">{@heading}</h1>
-      <p class="text-base text-gray-500 dark:text-gray-400 text-pretty">
-        {@subtitle}
-      </p>
     </div>
     """
   end

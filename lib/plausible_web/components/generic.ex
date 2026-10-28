@@ -1157,6 +1157,20 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :heading, :string, required: true
+  attr :subtitle, :string, required: true
+
+  def onboarding_page_heading(assigns) do
+    ~H"""
+    <div class="w-full max-w-md mx-auto mt-10 sm:mt-16 px-4 flex flex-col gap-y-2 dark:text-gray-300">
+      <h1 class="text-lg sm:text-xl font-semibold">{@heading}</h1>
+      <p class="text-base text-gray-500 dark:text-gray-400 text-pretty">
+        {@subtitle}
+      </p>
+    </div>
+    """
+  end
+
   alias Phoenix.LiveView.JS
 
   slot :inner_block, required: true
