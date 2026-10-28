@@ -90,12 +90,15 @@ defmodule Plausible.Funnel do
   def as_goal(%Step{} = step), do: Step.as_goal(step)
   def as_goal(%DynamicStep{} = step), do: DynamicStep.as_goal(step)
 
-  def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
+  def changeset(funnel, attrs, opts \\ []) do
+    allowed_goal_ids = Keyword.get(opts, :allowed_goal_ids, [])
+
     funnel
     |> cast(attrs, [:name, :funnel_type])
     |> validate_required([:name])
     |> set_funnel_type()
     |> put_steps(attrs[:steps] || attrs["steps"])
+    |> validate_steps(allowed_goal_ids)
     |> validate_steps_length()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
@@ -145,10 +148,33 @@ defmodule Plausible.Funnel do
     |> Ecto.Changeset.put_embed(:dynamic_steps, dynamic_steps)
   end
 
+  defp validate_steps(changeset, allowed_goal_ids) do
+    rogue_goals? =
+      changeset
+      |> get_assoc(:steps)
+      # NOTE: `Ecto.Changeset.Relation` is part of an internal Ecto API.
+      # However, there's no other way to filter out empty entries
+      # from changes to carry out validations.
+      |> Ecto.Changeset.Relation.filter_empty()
+      |> Enum.any?(&(get_change(&1, :goal_id) not in allowed_goal_ids))
+
+    if rogue_goals? do
+      add_error(changeset, :steps, "contain invalid goals")
+    else
+      changeset
+    end
+  end
+
   defp validate_steps_length(changeset) do
+    # NOTE: `Ecto.Changeset.Relation` is part of an internal Ecto API.
+    # It's used by `validate_length` when using it against relations,
+    # but it's not exposed in any way directly to use it to validate
+    # multiple fields at once.
     steps_count =
-      length(Ecto.Changeset.get_assoc(changeset, :steps)) +
-        length(Ecto.Changeset.get_embed(changeset, :dynamic_steps))
+      [get_assoc(changeset, :steps), get_embed(changeset, :dynamic_steps)]
+      |> Enum.map(&Ecto.Changeset.Relation.filter_empty/1)
+      |> Enum.map(&length/1)
+      |> Enum.sum()
 
     cond do
       steps_count < @min_steps ->

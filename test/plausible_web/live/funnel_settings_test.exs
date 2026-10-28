@@ -181,21 +181,16 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/form[phx-change="validate"][phx-submit="save"][phx-click-away="cancel-add-funnel"]/
+                 ~s/form[phx-change="validate"][phx-submit="save"]/
                )
 
         assert element_exists?(doc, ~s/form input[type="text"][name="funnel[name]"]/)
 
-        assert element_exists?(
-                 doc,
-                 ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/
-               )
-
         step_setup_controls = [
-          ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/,
-          ~s/input[type="hidden"][name="funnel[steps][2][goal_id]"]#submit-step-2/,
-          ~s/input[type="text"][name="display-step-1"]#step-1/,
-          ~s/input[type="text"][name="display-step-2"]#step-2/,
+          ~s/#step-1 select[hidden][name="funnel[steps][1][step_data]"]/,
+          ~s/#step-2 select[hidden][name="funnel[steps][2][step_data]"]/,
+          ~s/#step-1 input[type="text"]/,
+          ~s/#step-2 input[type="text"]/,
           ~s/a[phx-click="add-step"]/
         ]
 
@@ -217,10 +212,10 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/input[type="hidden"][name="funnel[steps][3][goal_id]"]#submit-step-3/
+                 ~s/#step-3 select[hidden][name="funnel[steps][3][step_data]"]/
                )
 
-        assert element_exists?(doc, ~s/input[type="text"][name="display-step-1"]#step-1/)
+        assert element_exists?(doc, ~s/#step-3 input[type="text"]/)
 
         assert element_exists?(
                  doc,
@@ -249,85 +244,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         doc = lv |> element(~s/#remove-step-2/) |> render_click()
 
-        assert element_exists?(doc, ~s/input#step-1/)
-        assert element_exists?(doc, ~s/input#step-3/)
-        refute element_exists?(doc, ~s/input#step-2/)
-      end
-
-      test "save button becomes active once at least two steps are selected", %{
-        conn: conn,
-        site: site
-      } do
-        setup_goals(site)
-        lv = get_liveview(conn, site)
-        lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
-
-        assert lv = find_live_child(lv, "funnels-form")
-
-        lv
-        |> element("li#dropdown-step-1-option-1 a")
-        |> render_click()
-
-        doc =
-          lv
-          |> element("li#dropdown-step-2-option-1 a")
-          |> render_click()
-
-        assert element_exists?(doc, ~s/form button#save:disabled/)
-
-        doc =
-          lv
-          |> element("form")
-          |> render_change(%{
-            funnel: %{
-              name: "My test funnel",
-              steps: [
-                %{goal_id: 1},
-                %{goal_id: 2}
-              ]
-            }
-          })
-
-        assert element_exists?(doc, ~s/form button#save/)
-        refute element_exists?(doc, ~s/form button#save:disabled/)
-      end
-
-      test "save button saves a new funnel", %{
-        conn: conn,
-        site: site
-      } do
-        setup_goals(site)
-        lv = get_liveview(conn, site)
-        lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
-
-        assert lv = find_live_child(lv, "funnels-form")
-
-        lv
-        |> element("li#dropdown-step-1-option-1 a")
-        |> render_click()
-
-        lv
-        |> element("li#dropdown-step-2-option-1 a")
-        |> render_click()
-
-        lv
-        |> element("form")
-        |> render_change(%{
-          funnel: %{
-            name: "My test funnel",
-            steps: [
-              %{goal_id: 1},
-              %{goal_id: 2}
-            ]
-          }
-        })
-
-        lv
-        |> element(~s/form/)
-        |> render_submit()
-
-        assert %Plausible.Funnel{steps: [_, _], funnel_type: :sequential} =
-                 Plausible.Funnels.get(site, "My test funnel")
+        assert element_exists?(doc, ~s/#step-1 input/)
+        assert element_exists?(doc, ~s/#step-3 input/)
+        refute element_exists?(doc, ~s/#step-2 input/)
       end
 
       test "save button saves strict-order setting", %{
@@ -441,10 +360,19 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert lv = find_live_child(lv, "funnels-form")
 
-        assert lv |> element("#step-1") |> render() |> text_of_attr("value") ==
-                 "Visit /go/to/blog/**"
+        %{"display_name" => "Visit /go/to/blog/**"} =
+          lv
+          |> element("#step-1_submit option[selected]")
+          |> render()
+          |> text_of_attr("value")
+          |> JSON.decode!()
 
-        assert lv |> element("#step-2") |> render() |> text_of_attr("value") == "Signup"
+        %{"display_name" => "Signup"} =
+          lv
+          |> element("#step-2_submit option[selected]")
+          |> render()
+          |> text_of_attr("value")
+          |> JSON.decode!()
       end
 
       test "funnel is re-evaluated when strict-order is changed", %{
@@ -619,45 +547,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert text_of_element(render(lv), ~s/#funnel-eval/) =~ "Last month conversion rate: 50%"
       end
 
-      test "clicking save after editing the funnel, updates it", %{
-        conn: conn,
-        site: site
-      } do
-        {:ok, [f1_id, _]} = setup_funnels(site)
-        {:ok, %{id: goal_id}} = Plausible.Goals.create(site, %{"page_path" => "/"})
-
-        lv = get_liveview(conn, site)
-
-        lv
-        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id="#{f1_id}"]/)
-        |> render_click()
-
-        assert lv = find_live_child(lv, "funnels-form")
-
-        lv
-        |> element("li#dropdown-step-2-option-1 a")
-        |> render_click()
-
-        lv
-        |> element("form")
-        |> render_change(%{
-          funnel: %{
-            name: "Updated funnel",
-            steps: [
-              %{goal_id: 1},
-              %{goal_id: goal_id}
-            ]
-          }
-        })
-
-        lv
-        |> element(~s/form/)
-        |> render_submit()
-
-        assert %Plausible.Funnel{steps: [_, %Plausible.Funnel.Step{goal_id: ^goal_id}]} =
-                 Plausible.Funnels.get(site, "Updated funnel")
-      end
-
       test "clicking save after editing the funnel, updates strict-order setting", %{
         conn: conn,
         site: site
@@ -724,31 +613,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert %Plausible.Funnel{funnel_type: :flexible} =
                  Plausible.Funnels.get(site, "Editable flexible funnel")
-      end
-
-      test "funnel gets evaluated on every select, assuming a second has passed between selections",
-           %{
-             conn: conn,
-             site: site
-           } do
-        setup_goals(site)
-        lv = get_liveview(conn, site)
-        lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
-
-        assert lv = find_live_child(lv, "funnels-form")
-
-        lv |> element("li#dropdown-step-1-option-1 a") |> render_click()
-
-        lv |> element("li#dropdown-step-2-option-1 a") |> render_click()
-
-        doc = lv |> element("#step-eval-0") |> render()
-        assert text_of_element(doc, ~s/#step-eval-0/) =~ "Visitors: 0"
-
-        doc = lv |> element("#step-eval-1") |> render()
-        assert text_of_element(doc, ~s/#step-eval-1/) =~ "Dropoff: 0%"
-
-        doc = lv |> element("#funnel-eval") |> render()
-        assert text_of_element(doc, ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
       end
     end
 

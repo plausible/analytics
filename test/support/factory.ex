@@ -178,19 +178,19 @@ defmodule Plausible.Factory do
     attrs =
       case {attrs, display_name_provided?} do
         {%{page_path: path}, false} when is_binary(path) ->
-          Map.put(attrs, :display_name, "Visit " <> path)
+          Map.put(attrs, :display_name, Plausible.Goal.display_name(nil, path))
 
         {%{page_path: path}, false} when is_function(path, 0) ->
           attrs
-          |> Map.put(:display_name, "Visit " <> path.())
+          |> Map.put(:display_name, Plausible.Goal.display_name(nil, path.()))
           |> Map.put(:page_path, path.())
 
         {%{event_name: event_name}, false} when is_binary(event_name) ->
-          Map.put(attrs, :display_name, event_name)
+          Map.put(attrs, :display_name, Plausible.Goal.display_name(event_name, nil))
 
         {%{event_name: event_name}, false} when is_function(event_name, 0) ->
           attrs
-          |> Map.put(:display_name, event_name.())
+          |> Map.put(:display_name, Plausible.Goal.display_name(event_name.(), nil))
           |> Map.put(:event_name, event_name.())
 
         _ ->
