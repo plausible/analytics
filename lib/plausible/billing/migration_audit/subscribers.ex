@@ -263,8 +263,17 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
     }
   end
 
-  defp plan_ids_shared_by_several_teams() do
+  defp subscribed_enterprise_plans() do
     from(ep in EnterprisePlan,
+      join: s in Subscription,
+      on: s.paddle_plan_id == ep.paddle_plan_id and s.team_id == ep.team_id,
+      distinct: ep.id,
+      select: ep
+    )
+  end
+
+  defp plan_ids_shared_by_several_teams() do
+    from(ep in Ecto.Query.subquery(subscribed_enterprise_plans()),
       group_by: ep.paddle_plan_id,
       having: count(ep.team_id, :distinct) > 1,
       select: ep.paddle_plan_id
@@ -274,12 +283,14 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
   end
 
   defp teams_with_several_enterprise_plans() do
-    from(ep in EnterprisePlan, group_by: ep.team_id, having: count(ep.id) > 1, select: ep.team_id)
+    from(ep in Ecto.Query.subquery(subscribed_enterprise_plans()),
+      group_by: ep.team_id,
+      having: count(ep.id) > 1,
+      select: ep.team_id
+    )
     |> Repo.all()
     |> length()
   end
-
-  # --- helpers ------------------------------------------------------------------------
 
   defp read_list_prices() do
     path = Application.app_dir(:plausible, ["priv", "plan_prices.json"])

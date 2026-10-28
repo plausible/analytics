@@ -35,8 +35,7 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalogTest do
         "billing_type" => "month",
         "billing_period" => 1,
         "initial_price" => %{},
-        "recurring_price" => prices,
-        "trial_days" => 0
+        "recurring_price" => prices
       },
       extra
     )
@@ -57,7 +56,7 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalogTest do
           "GBP" => "9.00"
         }),
         catalog_plan(777_001, %{"USD" => "100.00"}),
-        catalog_plan(777_002, %{"USD" => "9.00", "EUR" => "8.00"}, %{"trial_days" => 14}),
+        catalog_plan(777_002, %{"USD" => "9.00", "EUR" => "8.00"}),
         catalog_plan(777_003, "not a map", %{"billing_type" => "year"})
       ]
 
@@ -73,7 +72,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalogTest do
       assert result.multi_currency_differing == 1
       assert Map.new(result.multi_currency_by_origin) == %{static: 1, other: 1}
       assert result.without_recurring_price == 1
-      assert result.with_trial_days == 1
       assert result.live_plan_ids_missing_from_catalog == ["no-longer-in-catalog"]
 
       assert [%{plan_id: "777002", origin: :other, prices: %{"USD" => "9.00", "EUR" => "8.00"}}] =

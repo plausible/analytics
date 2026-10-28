@@ -298,8 +298,6 @@ defmodule Plausible.Billing.MigrationAudit do
     }
   end
 
-  # --- plan file integrity ----------------------------------------------------------
-
   @doc """
   Checks the static plan files and returns a list of problems (empty if all is
   well). Reads the files from the release's `priv` directory.
@@ -646,9 +644,7 @@ defmodule Plausible.Billing.MigrationAudit do
 
     log("  multiple currencies by origin: #{inspect(plans.multi_currency_by_origin)}")
 
-    log(
-      "  without a recurring price: #{plans.without_recurring_price}, with trial days: #{plans.with_trial_days}"
-    )
+    log("  without a recurring price: #{plans.without_recurring_price}")
 
     for row <- plans.currency_sets do
       log("    currencies #{Enum.join(row.currencies, ",")}: #{row.plans} plans")

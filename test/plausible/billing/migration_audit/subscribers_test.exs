@@ -198,12 +198,32 @@ defmodule Plausible.Billing.MigrationAudit.SubscribersTest do
       new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: shared)
 
       user = new_user() |> subscribe_to_enterprise_plan()
-      insert(:enterprise_plan, team: team_of(user), paddle_plan_id: "another")
+      team = team_of(user)
+      insert(:enterprise_plan, team: team, paddle_plan_id: "another")
+      insert(:subscription, team: team, paddle_plan_id: "another")
 
       enterprise = Subscribers.audit(today: @today, list_prices: %{}).enterprise
 
       assert enterprise.plan_ids_shared_by_several_teams == 1
       assert enterprise.teams_with_several_enterprise_plans == 1
+    end
+
+    test "enterprise plans without a matching subscription are not counted" do
+      shared = "shared-plan"
+      new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: shared)
+
+      # same plan id, but this team has no subscription for it
+      other = new_user()
+      {:ok, other_team} = Plausible.Teams.get_or_create(other)
+      insert(:enterprise_plan, team: other_team, paddle_plan_id: shared)
+
+      user = new_user() |> subscribe_to_enterprise_plan()
+      insert(:enterprise_plan, team: team_of(user), paddle_plan_id: "not-subscribed-yet")
+
+      enterprise = Subscribers.audit(today: @today, list_prices: %{}).enterprise
+
+      assert enterprise.plan_ids_shared_by_several_teams == 0
+      assert enterprise.teams_with_several_enterprise_plans == 0
     end
   end
 

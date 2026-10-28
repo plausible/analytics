@@ -1,19 +1,12 @@
 defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
   @moduledoc """
-  The part of the Paddle Billing migration audit that needs Paddle Classic: the
+  Part of the Paddle Billing migration audit that needs Paddle Classic: the
   plan catalog (which plans have prices in several currencies, and which kind of
   plan each one is) and subscription modifiers. It only makes read-only calls
   (`list_plans` and `list_modifiers`) and the output is aggregated: plan names
   and descriptions (customer names, mostly) are never included.
 
-  See `Plausible.Billing.MigrationAudit` for how to run it.
-
-  The request and response shapes follow Paddle's
-  [Subscription API reference](https://classic.paddle.com/api-reference/reference/subscription-api)
-  (`POST /2.0/subscription/plans` and `/modifiers`). They haven't been run against the
-  production account yet, so parsing is forgiving: entries that can't be understood
-  are counted (`:without_recurring_price`, `:recurrence_unknown`, `:zero_or_unparseable`)
-  rather than raising.
+  See `Plausible.Billing.MigrationAudit`
   """
 
   use Plausible.Repo
@@ -42,8 +35,8 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
     api = Keyword.get_lazy(opts, :api, &PaddleClassic.api/0)
     today = Keyword.get(opts, :today, Date.utc_today())
 
-    with {:ok, plans} <- fetch(opts, :plans, fn -> api.list_plans() end),
-         {:ok, modifiers} <- fetch(opts, :modifiers, fn -> api.list_modifiers() end) do
+    with {:ok, plans} <- fetch(opts, :plans, &api.list_plans/0),
+         {:ok, modifiers} <- fetch(opts, :modifiers, &api.list_modifiers/0) do
       live = live_subscriptions(today)
 
       {:ok,
@@ -69,8 +62,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
     |> Repo.all()
   end
 
-  # --- plans -----------------------------------------------------------------------
-
   defp summarise_plans(plans, live) do
     static_ids = MapSet.new(Plans.all(), & &1.monthly_product_id) |> add_yearly_ids()
 
@@ -93,7 +84,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
           currencies: prices |> Map.keys() |> Enum.sort(),
           parity?: parity?(prices),
           billing: {plan["billing_type"], plan["billing_period"]},
-          trial?: (plan["trial_days"] || 0) > 0,
           live?: MapSet.member?(live_plan_ids, id)
         }
       end)
@@ -108,7 +98,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
       with_live_subscription_by_origin:
         described |> Enum.filter(& &1.live?) |> Enum.frequencies_by(& &1.origin),
       without_recurring_price: Enum.count(described, &(&1.prices == %{})),
-      with_trial_days: Enum.count(described, & &1.trial?),
       by_billing_period:
         described
         |> counts(& &1.billing)
@@ -167,8 +156,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
     |> Enum.uniq_by(&Decimal.to_string/1)
     |> length() <= 1
   end
-
-  # --- modifiers -----------------------------------------------------------------------
 
   defp summarise_modifiers(modifiers, live) do
     live_subscription_ids = live |> Enum.map(&to_string(elem(&1, 1))) |> MapSet.new()
@@ -234,8 +221,6 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
 
   defp sign?({:ok, amount}, sign), do: Decimal.compare(amount, 0) == sign
   defp sign?(_, _sign), do: false
-
-  # --- helpers -----------------------------------------------------------------------
 
   defp counts(items, fun) do
     items |> Enum.frequencies_by(fun) |> Enum.sort_by(fn {key, n} -> {-n, inspect(key)} end)
