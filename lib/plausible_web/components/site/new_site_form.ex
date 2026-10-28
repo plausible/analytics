@@ -9,8 +9,8 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
   attr :site_limit, :integer, required: true
   attr :current_user, :any, required: true
   attr :current_team, :any, required: true
-  attr :back_button_text, :string, required: true
-  attr :back_button_href, :string, required: true
+  attr :secondary_action_text, :string, required: true
+  attr :secondary_action_href, :string, required: true
 
   def new_site_form(assigns) do
     ~H"""
@@ -46,8 +46,8 @@ defmodule PlausibleWeb.Components.Site.NewSiteForm do
         </script>
 
         <div class="flex justify-end items-center gap-x-2">
-          <.button_link theme="ghost" href={@back_button_href}>
-            {@back_button_text}
+          <.button_link theme="ghost" href={@secondary_action_href}>
+            {@secondary_action_text}
           </.button_link>
           <.button
             disabled={@site_limit_exceeded?}
