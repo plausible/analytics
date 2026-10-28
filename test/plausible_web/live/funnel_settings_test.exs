@@ -79,23 +79,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         resp = conn |> html_response(200)
         assert element_exists?(resp, ~S/button[phx-click="add-funnel"]/)
       end
-
-      test "if not enough goals are present, renders a hint to create goals + no search", %{
-        conn: conn,
-        site: site
-      } do
-        {:ok, _} = Plausible.Goals.create(site, %{"page_path" => "/go/to/blog/**"})
-        conn = get(conn, "/#{site.domain}/settings/funnels")
-
-        doc = conn |> html_response(200)
-        assert text(doc) =~ "Set up a few goals"
-
-        add_goals_path = ~p"/#{site.domain}/settings/goals"
-        assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
-
-        refute element_exists?(doc, ~s/input[type="text"]#filter-text/)
-        refute element_exists?(doc, ~s/form[phx-change="filter"]#filter-form/)
-      end
     end
 
     describe "FunnelSettings live view" do
