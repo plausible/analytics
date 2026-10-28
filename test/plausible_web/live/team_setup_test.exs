@@ -13,15 +13,65 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   describe "/team/setup - edge cases" do
     setup [:create_user, :log_in]
 
-    test "redirects if there's no implicit team created", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, @url)
-    end
-
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
       Teams.complete_setup(team)
       conn = set_current_team(conn, team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
+    end
+  end
+
+  describe "/team/setup - without any existing team" do
+    setup [:create_user, :log_in]
+
+    test "renders the form with a suggested name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+
+      assert element_exists?(html, "#create-team-submit")
+      refute element_exists?(html, "#feature-gate-overlay")
+    end
+
+    test "creates a new team from scratch and invites members", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      finish_setup(lv,
+        name: "Brand New Team",
+        rows: %{"1" => %{"email" => "new@example.com", "role" => "editor"}}
+      )
+
+      assert {:ok, team} = Teams.get_by_owner(user)
+      assert team.name == "Brand New Team"
+      assert team.setup_complete
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"Brand New Team\" team"
+      )
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :editor
+    end
+
+    test "does not create a team when an invitation is rejected", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, rows: %{"1" => %{"email" => user.email, "role" => "viewer"}}) =~
+               "You cannot invite yourself"
+
+      assert {:error, :no_team} = Teams.get_by_owner(user)
+    end
+
+    @tag :ee_only
+    test "defaults the member rows to the trial team member limit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 10
     end
   end
 

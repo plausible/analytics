@@ -10,28 +10,25 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias Plausible.Teams
 
   def mount(_params, _session, socket) do
+    team = socket.assigns.current_team
+
     socket =
-      case socket.assigns.current_team do
-        %Teams.Team{setup_complete: true} ->
-          socket
-          |> put_flash(:success, "Your team has already been created")
-          |> redirect(to: ~p"/settings/team/general")
+      if Teams.setup?(team) do
+        socket
+        |> put_flash(:success, "Your team has already been created")
+        |> redirect(to: ~p"/settings/team/general")
+      else
+        suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
 
-        %Teams.Team{} = team ->
-          suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
-          name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
+        name_changeset =
+          Teams.Team.name_changeset(team || %Teams.Team{}, %{name: suggested_name})
 
-          assign(socket,
-            current_team: team,
-            team_name_form: to_form(name_changeset),
-            locked?: Plausible.Teams.Billing.solo?(team),
-            max_new_members: max_new_members(team)
-          )
-
-        _ ->
-          socket
-          |> put_flash(:error, "You cannot create any team just yet")
-          |> redirect(to: ~p"/sites")
+        assign(socket,
+          team: team,
+          team_name_form: to_form(name_changeset),
+          locked?: not is_nil(team) and Plausible.Teams.Billing.solo?(team),
+          max_new_members: max_new_members(team)
+        )
       end
 
     {:ok, socket}
@@ -57,7 +54,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       <div class="relative -mt-8 pt-4 pb-8 px-8">
         <PlausibleWeb.Components.Billing.feature_gate
           current_user={@current_user}
-          current_team={@current_team}
+          current_team={@team}
           locked?={@locked?}
         >
           <.flash_messages flash={@flash} />
@@ -171,19 +168,20 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   defp setup_team(socket, name, entries) do
-    case Teams.setup(
-           socket.assigns.current_team,
-           name,
-           entries,
-           socket.assigns.current_user
-         ) do
-      {:ok, _} ->
+    user = socket.assigns.current_user
+
+    result =
+      case socket.assigns.team do
+        nil -> Teams.create(user, name, entries)
+        team -> Teams.setup(team, name, entries, user)
+      end
+
+    case result do
+      {:ok, team} ->
         {:noreply,
          socket
          |> put_flash(:success, "Your team is now created")
-         |> redirect(
-           to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
-         )}
+         |> redirect(to: ~p"/settings/team/general?#{[__team: team.identifier]}")}
 
       {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
         {:noreply, assign(socket, team_name_form: to_form(changeset))}
