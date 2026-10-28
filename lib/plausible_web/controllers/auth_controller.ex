@@ -107,7 +107,10 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp do_activate(conn, user, code) do
-    has_any_invitations? = Plausible.Teams.Users.has_sites?(user, include_pending?: true)
+    has_any_invitations? =
+      Plausible.Teams.Users.has_sites?(user, include_pending?: true) or
+        Teams.Invitations.pending_team_invitations_for(user) != []
+
     has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
 
     flow = conn.params["flow"]

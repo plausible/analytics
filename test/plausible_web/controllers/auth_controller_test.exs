@@ -418,7 +418,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites/new?flow="
     end
 
-    test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
+    test "redirects to /sites if user has a guest invitation", %{conn: conn, user: user} do
       owner = new_user()
       site = new_site(owner: owner)
       invite_guest(site, user, role: :viewer, inviter: owner)
@@ -430,6 +430,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
       conn = post(conn, "/activate", %{code: verification.code, team_identifier: ""})
+
+      assert redirected_to(conn) == "/sites?flow="
+    end
+
+    test "redirects to /sites if user has team invitation to a team without sites", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      {:ok, team} = Plausible.Teams.create(owner, "Team without sites", [])
+      invite_member(team, user, role: :viewer, inviter: owner)
+
+      Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+
+      {:ok, %{code: code}} = Auth.EmailVerification.issue_code(user)
+
+      conn = post(conn, "/activate", %{code: code, team_identifier: ""})
 
       assert redirected_to(conn) == "/sites?flow="
     end
