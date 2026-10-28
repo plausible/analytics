@@ -1,6 +1,7 @@
 import React, {
   createContext,
   ReactNode,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -8,11 +9,7 @@ import React, {
   useRef,
   useState
 } from 'react'
-import {
-  NavigationType,
-  useLocation,
-  useNavigationType
-} from 'react-router-dom'
+import { NavigationType, useLocation, useNavigationType } from 'react-router'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { Filter, FilterClauseLabels } from '../dashboard-state'
@@ -182,10 +179,14 @@ export const FilterEditorContextProvider = ({
         mergedKey: filter[1],
         mergedLabels: labels
       })
-      setEditing({
-        ...current,
-        draft: null,
-        hasPushedHistoryEntry: true
+      // react-router applies the URL change in a transition, so the draft must
+      // be cleared in one too, or the filter disappears between the two commits
+      startTransition(() => {
+        setEditing({
+          ...current,
+          draft: null,
+          hasPushedHistoryEntry: true
+        })
       })
     },
     [setEditing, dashboardState.filters, navigateToFilters]

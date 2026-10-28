@@ -6,7 +6,7 @@ import UserContextProvider, {
   Role,
   UserContextValue
 } from '../js/dashboard/user-context'
-import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
+import { MemoryRouter, MemoryRouterProps } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import DashboardStateContextProvider from '../js/dashboard/dashboard-state-context'
 import { getRouterBasepath } from '../js/dashboard/router'
