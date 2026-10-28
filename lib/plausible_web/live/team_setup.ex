@@ -98,9 +98,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
               </button>
             </div>
 
-            <.button id="create-team-submit" type="submit" class="mt-8 w-full">
-              Create team
-            </.button>
+            <div class="mt-8 flex justify-end items-center gap-x-2">
+              <.button_link id="create-team-cancel" theme="ghost" href={~p"/sites"}>
+                Cancel
+              </.button_link>
+              <.button id="create-team-submit" type="submit">
+                Create team
+              </.button>
+            </div>
           </.form>
         </PlausibleWeb.Components.Billing.feature_gate>
       </div>

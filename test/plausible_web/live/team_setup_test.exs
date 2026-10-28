@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   @url "/team/setup"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
-  describe "/team/setup - edge cases" do
+  describe "/team/setup" do
     setup [:create_user, :log_in]
 
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
@@ -18,6 +18,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       Teams.complete_setup(team)
       conn = set_current_team(conn, team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
+    end
+
+    test "renders a cancel link back to /sites", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, "#create-team-cancel", "href") == "/sites"
     end
   end
 
