@@ -1,4 +1,4 @@
-defmodule Plausible.Billing.PaddleApi do
+defmodule Plausible.Billing.PaddleClassic.Api do
   @moduledoc """
   Paddle API HTTP client.
   """
@@ -175,7 +175,7 @@ defmodule Plausible.Billing.PaddleApi do
   end
 
   defp get_config() do
-    Application.get_env(:plausible, :paddle)
+    Application.get_env(:plausible, :paddle_classic)
   end
 
   defp invoices_url() do

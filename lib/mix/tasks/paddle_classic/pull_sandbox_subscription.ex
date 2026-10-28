@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.PullSandboxSubscription do
+defmodule Mix.Tasks.PaddleClassic.PullSandboxSubscription do
   @moduledoc """
   Mix task for creating subscriptions in dev environment via Paddle API.
   """
@@ -17,7 +17,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
   #    https://sandbox-vendors.paddle.com/subscriptions/customers
   #
   # 3) run from command line:
-  #    mix pull_sandbox_subscription <subscription_ID>
+  #    mix paddle_classic.pull_sandbox_subscription <subscription_ID>
 
   @headers [
     {"Content-type", "application/json"},
@@ -27,9 +27,10 @@ defmodule Mix.Tasks.PullSandboxSubscription do
   def run([paddle_subscription_id]) do
     Mix.Task.run("app.start")
 
-    config = Application.get_env(:plausible, :paddle)
+    config = Application.get_env(:plausible, :paddle_classic)
 
-    endpoint = Plausible.Billing.PaddleApi.vendors_domain() <> "/api/2.0/subscription/users"
+    endpoint =
+      Plausible.Billing.PaddleClassic.Api.vendors_domain() <> "/api/2.0/subscription/users"
 
     params = %{
       vendor_id: config[:vendor_id],

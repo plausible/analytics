@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.CreatePaddleSandboxPlans do
+defmodule Mix.Tasks.PaddleClassic.CreateSandboxPlans do
   @moduledoc """
   Utility for creating Sandbox plans that are used on staging. The product of
   this task is a `sandbox_plans_v*.json` file matching with the production
   plans, just with the monthly/yearly product_id's of the sandbox plans.
 
-  In principle, this task works like `Mix.Tasks.CreatePaddleProdPlans`, with
+  In principle, this task works like `Mix.Tasks.PaddleClassic.CreateProdPlans`, with
   the following differences:
 
   * The `filename` argument should be the name of the JSON file containing the
@@ -13,7 +13,7 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
 
   * To copy the curl command from the browser, you need to add a plan from
     https://sandbox-vendors.paddle.com/subscriptions/plans. Everything else is
-    the same - please see `create_paddle_prod_plans.ex` for instructions.
+    the same - please see `create_prod_plans.ex` for instructions.
 
   * This task can be executed multiple times in a row - it will not create
     duplicates in Sandbox Paddle. On staging we can use a specific plan-naming
@@ -25,11 +25,11 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
   ## Usage example:
 
   ```
-  mix create_paddle_sandbox_plans plans_v5.json
+  mix paddle_classic.create_sandbox_plans plans_v5.json
   ```
   """
 
-  alias Mix.Tasks.CreatePaddleProdPlans
+  alias Mix.Tasks.PaddleClassic.CreateProdPlans
   use Mix.Task
 
   @requirements ["app.config"]
@@ -95,7 +95,7 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
     --data-raw '_token=#{your_unique_token}&plan-id=&default-curr=USD&tmpicon=false&name=#{name}&checkout_custom_message=&taxable_type=standard&interval=#{interval_index}&period=1&type=#{type}&trial_length=&price_USD=#{price}&active_EUR=on&price_EUR=#{price}&active_GBP=on&price_GBP=#{price}'
     """
 
-    case CreatePaddleProdPlans.curl_quietly(curl_command) do
+    case CreateProdPlans.curl_quietly(curl_command) do
       :ok ->
         IO.puts("✅ Created #{name}")
 
@@ -108,14 +108,14 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
   defp fetch_all_sandbox_plans() do
     url = "https://sandbox-vendors.paddle.com/api/2.0/subscription/plans"
 
-    paddle_config = Application.get_env(:plausible, :paddle)
+    paddle_config = Application.get_env(:plausible, :paddle_classic)
 
     paddle_credentials = %{
       vendor_id: paddle_config[:vendor_id],
       vendor_auth_code: paddle_config[:vendor_auth_code]
     }
 
-    CreatePaddleProdPlans.fetch_all_paddle_plans(url, paddle_credentials)
+    CreateProdPlans.fetch_all_paddle_plans(url, paddle_credentials)
   end
 
   @paddle_interval_indexes %{"monthly" => 2, "yearly" => 5}
@@ -154,7 +154,7 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
           "monthly_product_id" => to_string(sandbox_monthly_product_id),
           "yearly_product_id" => to_string(sandbox_yearly_product_id)
         })
-        |> CreatePaddleProdPlans.order_keys()
+        |> CreateProdPlans.order_keys()
       end)
 
     content = Jason.encode!(sandbox_plans, pretty: true)

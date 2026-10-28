@@ -430,8 +430,8 @@ defmodule PlausibleWeb.Router do
         post "/postmark/webhook", Api.PostmarkController, :webhook
       end
 
-      post "/paddle/webhook", Api.PaddleController, :webhook
-      get "/paddle/currency", Api.PaddleController, :currency
+      post "/paddle/webhook", Api.PaddleClassicController, :webhook
+      get "/paddle/currency", Api.PaddleClassicController, :currency
 
       put "/:domain/disable-feature", Api.InternalController, :disable_feature
       put "/:domain/complete-onboarding", Api.InternalController, :complete_onboarding

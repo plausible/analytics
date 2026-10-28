@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.CreatePaddleProdPlans do
+defmodule Mix.Tasks.PaddleClassic.CreateProdPlans do
   @moduledoc """
   ## Utility for creating Paddle plans for production use.
 
@@ -31,7 +31,7 @@ defmodule Mix.Tasks.CreatePaddleProdPlans do
   ## Usage example:
 
   ```
-  mix create_paddle_prod_plans input_plans_v5.json
+  mix paddle_classic.create_prod_plans input_plans_v5.json
   ```
 
   ## Requirement 1: Replace the curl command

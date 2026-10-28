@@ -65,9 +65,12 @@ defmodule Plausible.Teams.Billing do
 
   defp do_change_plan(subscription, new_plan_id) do
     res =
-      Plausible.Billing.paddle_api().update_subscription(subscription.paddle_subscription_id, %{
-        plan_id: new_plan_id
-      })
+      Plausible.Billing.PaddleClassic.api().update_subscription(
+        subscription.paddle_subscription_id,
+        %{
+          plan_id: new_plan_id
+        }
+      )
 
     case res do
       {:ok, response} ->

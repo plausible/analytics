@@ -1,4 +1,4 @@
-defmodule Plausible.Billing.PaddleApiTest do
+defmodule Plausible.Billing.PaddleClassic.ApiTest do
   use Plausible.DataCase
 
   import Mox
@@ -25,7 +25,7 @@ defmodule Plausible.Billing.PaddleApiTest do
         end
       )
 
-      assert Plausible.Billing.PaddleApi.fetch_prices(
+      assert Plausible.Billing.PaddleClassic.Api.fetch_prices(
                ["19878", "20127", "20657", "20658"],
                "127.0.0.1"
              ) ==

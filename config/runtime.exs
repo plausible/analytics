@@ -250,8 +250,8 @@ runtime_metadata = [
 config :plausible, :runtime_metadata, runtime_metadata
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
-paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
-paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
+paddle_classic_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
+paddle_classic_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
@@ -605,9 +605,9 @@ config :sentry,
   send_max_attempts: 1,
   before_send: {Plausible.SentryFilter, :before_send}
 
-config :plausible, :paddle,
-  vendor_auth_code: paddle_auth_code,
-  vendor_id: paddle_vendor_id
+config :plausible, :paddle_classic,
+  vendor_auth_code: paddle_classic_auth_code,
+  vendor_id: paddle_classic_vendor_id
 
 config :plausible, :google,
   client_id: google_cid,

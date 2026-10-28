@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.PaddleController do
+defmodule PlausibleWeb.Api.PaddleClassicController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   require Logger
@@ -6,22 +6,22 @@ defmodule PlausibleWeb.Api.PaddleController do
   plug :verify_signature when action in [:webhook]
 
   def webhook(conn, %{"alert_name" => "subscription_created"} = params) do
-    Plausible.Billing.subscription_created(params)
+    Plausible.Billing.PaddleClassic.Webhooks.subscription_created(params)
     |> webhook_response(conn, params)
   end
 
   def webhook(conn, %{"alert_name" => "subscription_updated"} = params) do
-    Plausible.Billing.subscription_updated(params)
+    Plausible.Billing.PaddleClassic.Webhooks.subscription_updated(params)
     |> webhook_response(conn, params)
   end
 
   def webhook(conn, %{"alert_name" => "subscription_cancelled"} = params) do
-    Plausible.Billing.subscription_cancelled(params)
+    Plausible.Billing.PaddleClassic.Webhooks.subscription_cancelled(params)
     |> webhook_response(conn, params)
   end
 
   def webhook(conn, %{"alert_name" => "subscription_payment_succeeded"} = params) do
-    Plausible.Billing.subscription_payment_succeeded(params)
+    Plausible.Billing.PaddleClassic.Webhooks.subscription_payment_succeeded(params)
     |> webhook_response(conn, params)
   end
 
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.PaddleController do
 
     result =
       Plausible.Cache.Adapter.fetch(:customer_currency, {plan_id, customer_ip}, fn ->
-        case Plausible.Billing.PaddleApi.fetch_prices([plan_id], customer_ip) do
+        case Plausible.Billing.PaddleClassic.Api.fetch_prices([plan_id], customer_ip) do
           {:ok, %{^plan_id => money}} ->
             {:ok, money.currency}
 
