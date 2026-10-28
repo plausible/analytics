@@ -49,8 +49,8 @@ defmodule Plausible.Billing.SubscriptionState do
 
   @doc """
   Records the subscription's cancellation (the `status` in `attrs`) and
-  notifies the team's owners and billing members. Access isn't touched here,
-  it ends on the subscription's `next_bill_date`.
+  notifies the team's owners and billing members. Nothing is locked or
+  limited here: the team keeps the plan until `next_bill_date`.
   """
   def cancel(subscription, attrs) do
     subscription = Repo.preload(subscription, team: [:owners, :billing_members])
