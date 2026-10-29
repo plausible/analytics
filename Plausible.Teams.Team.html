@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-CCABB4D6.js"></script>
+    <script src="dist/sidebar_items-0899E7F0.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -246,7 +246,26 @@ needed, so that the result stays within the name length limit.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#suggested_name_from_domain/2" data-no-tooltip translate="no">suggested_name_from_domain(domain, user_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Builds the team name suggested from a site domain, using the label right
+before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;Wannabuy&quot;.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#trial_accept_traffic_until_offset_days/0" data-no-tooltip translate="no">trial_accept_traffic_until_offset_days()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_not_reserved_name/1" data-no-tooltip translate="no">validate_not_reserved_name(changeset)</a>
 
       </div>
 
@@ -345,7 +364,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">changeset(team \\ %__MODULE__{}, attrs \\ %{}, today \\ Date.utc_today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L139" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L168" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -365,7 +384,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">crm_changeset(team, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L126" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L155" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -385,7 +404,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">default_hourly_api_request_limit()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L233" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L264" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -405,7 +424,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">end_trial(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L190" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L221" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -427,7 +446,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">name_changeset(team, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L149" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L178" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -449,7 +468,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">setup_changeset(team, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L173" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L204" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -471,7 +490,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">start_trial(team, today \\ Date.utc_today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L181" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L212" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -491,7 +510,7 @@ needed, so that the result stays within the name length limit.</p></div>
     </a>
     <h1 class="signature" translate="no">subscription_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L237" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L268" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -525,6 +544,28 @@ needed, so that the result stays within the name length limit.</p><p>Falls back 
 invalid, so that the suggestion is always safe to persist.</p>
   </section>
 </section>
+<section class="detail" id="suggested_name_from_domain/2">
+
+  <div class="detail-header">
+    <a href="#suggested_name_from_domain/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">suggested_name_from_domain(domain, user_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L129" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Builds the team name suggested from a site domain, using the label right
+before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;Wannabuy&quot;.</p><p>Falls back to <a href="#suggested_name/1"><code class="inline">suggested_name/1</code></a> when the domain doesn't yield a name-like
+label or is invalid according to the rules of <code class="inline">valid_suggestion?/1</code>.</p>
+  </section>
+</section>
 <section class="detail" id="trial_accept_traffic_until_offset_days/0">
 
   <div class="detail-header">
@@ -533,7 +574,27 @@ invalid, so that the suggestion is always safe to persist.</p>
     </a>
     <h1 class="signature" translate="no">trial_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L235" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L266" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="validate_not_reserved_name/1">
+
+  <div class="detail-header">
+    <a href="#validate_not_reserved_name/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">validate_not_reserved_name(changeset)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L186" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
