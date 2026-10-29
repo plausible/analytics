@@ -32,6 +32,9 @@ defmodule Plausible.Stats.Compare do
       old_count == 0 and new_count > 0 ->
         100
 
+      old_count == 0 and new_count < 0 ->
+        -100
+
       old_count == 0 and new_count == 0 ->
         0
 
