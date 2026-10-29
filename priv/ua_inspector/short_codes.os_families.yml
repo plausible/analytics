@@ -28,6 +28,9 @@
   - "SMA"
   - "AGO"
   - "HYP"
+  - "MYO"
+  - "YOD"
+  - "YAS"
   - ""
 - "AmigaOS":
   - "AMG"
@@ -156,6 +159,7 @@
   - "ELM"
   - "LPU"
   - "KOB"
+  - "FRT"
   - ""
 - "Mac":
   - "MAC"
@@ -163,6 +167,7 @@
   - "PSP"
   - "NDS"
   - "XBX"
+  - "STM"
 - "OpenHarmony":
   - "OHS"
   - "HNX"

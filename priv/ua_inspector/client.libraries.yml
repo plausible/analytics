@@ -320,7 +320,7 @@
   version: '$1'
 
 # this added need added tests
-- regex: 'aria2(?:/(\d+[.\d]+))?'
+- regex: 'aria2(?!App)(?:/(\d+[.\d]+))?'
   name: 'Aria2'
   version: '$1'
 
@@ -551,8 +551,8 @@
 # agent will default to this, always with 1.0.0 version.
 # there was a time when (not even that long ago) apple didn't let you set
 # a user agent so a ton of random applications still identify themselves this way.
-- regex: 'AppleCoreMedia/1\.0\.0'
-  name: 'iOS Application'
+- regex: 'AppleCoreMedia'
+  name: 'Apple Core Media'
   version: ''
 
 - regex: 'cpp-httplib(?:/(\d+[.\d]+))?'
@@ -724,3 +724,13 @@
   name: 'KlHttpClientCurl'
   version: '$1'
   url: ''
+
+- regex: 'nscurl'
+  name: 'nscurl'
+  version: ''
+  url: ''
+
+- regex: 'ocaml-cohttp/(\d+[.\d]+)'
+  name: 'ocaml-cohttp'
+  version: '$1'
+  url: 'https://github.com/mirage/ocaml-cohttp'

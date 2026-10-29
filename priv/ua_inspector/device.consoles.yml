@@ -29,10 +29,10 @@ Nintendo:
   regex: 'Nintendo (([3]?DS[i]?)|Wii[U]?|Switch|GameBoy)|Switch(?: Lite| OLED)?\)'
   device: 'console'
   models:
-    - regex: 'Nintendo (([3]?DS[i]?)|Wii[U]?|Switch|GameBoy)'
+    - regex: 'Nintendo (([3]?DS[i]?)|Wii[U]?|Switch(?: Lite| OLED)|GameBoy)'
       model: '$1'
     - regex: '(Switch(?: Lite| OLED)?)'
-      model: 'Nintendo $1'
+      model: '$1'
 
 OUYA:
   regex: 'OUYA'
@@ -82,3 +82,11 @@ Retroid Pocket:
       model: '4 Pro'
     - regex: 'Pocket ([235])'
       model: '$1'
+
+# Valve Corporation (https://www.steamdeck.com/en/)
+Valve Corporation:
+  regex: 'Steam'
+  device: 'console'
+  models:
+    - regex: 'SteamDeck'
+      model: 'Steam Deck'

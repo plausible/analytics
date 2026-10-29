@@ -5,6 +5,26 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# Fulldive (https://fulldive.com/)
+- regex: 'FulldiveBrowser/([\d.]+)'
+  name: 'Fulldive'
+  version: '$1'
+
+# Teak Browser (https://teakbrowser.app/ | https://apps.apple.com/us/app/teak-browser-userscript/id6443938027)
+- regex: 'Teak/([\d.]+)'
+  name: 'Teak Browser'
+  version: '$1'
+
+# Stadium (https://apps.apple.com/us/app/stadium-full-screen-browser/id1533596615)
+- regex: 'Stadium/([\d.]+)'
+  name: 'Stadium'
+  version: '$1'
+
+# Mullvad Browser (https://mullvad.net/en/browser)
+- regex: 'MullvadBrowser/([\d.]+)'
+  name: 'Mullvad Browser'
+  version: '$1'
+
 # GO Browser
 - regex: '[\d\s]+Lite Browser/(\d+\.\d+)$'
   name: 'GO Browser'
@@ -388,9 +408,9 @@
   version: '$1'
 
 # Diigo Browser (https://apps.apple.com/ca/app/diigo-browser/id933773981)
-- regex: 'DiigoBrowser$'
+- regex: 'DiigoBrowser(?:/([\d.]+))?'
   name: 'Diigo Browser'
-  version: ''
+  version: '$1'
 
 # OnBrowser Lite (on.browser)
 - regex: '.*OnBrowserLite(\d+\.[.\d]+)'
@@ -528,7 +548,7 @@
     default: 'Blink'
 
 # SecureX (https://play.google.com/store/apps/details?id=com.securex.browser)
-- regex: '\[(?:HB/29|PB/(?:66|81))\]'
+- regex: '\[(?:HB/29|PB/(?:6[36]|81|1[02]8|115|149)|SX/\d+)\]'
   name: 'SecureX'
   version: ''
   engine:
@@ -565,7 +585,7 @@
   name: 'Nuviu'
   version: '$1'
 
-# DoCoMo (https://play.google.com/store/apps/details?id=com.airfind.browser)
+# DoCoMo
 - regex: 'DoCoMo/(?:(\d+[.\d]+))?'
   name: 'DoCoMo'
   version: '$1'
@@ -618,6 +638,11 @@
   version: '$1'
   engine:
     default: 'Blink'
+- regex: 'Norton%20Private%20Browser'
+  name: 'Norton Private Browser'
+  version: ''
+  engine:
+    default: 'WebKit'
 
 # Odd Browser (https://play.google.com/store/apps/details?id=com.corproxy.browser)
 - regex: 'Odd/(\d+\.[.\d]+)'
@@ -705,7 +730,7 @@
     default: 'WebKit'
 
 # Lexi Browser (https://play.google.com/store/apps/details?id=com.lexi.browser)
-- regex: 'lexi/(\d+[.\d]+)'
+- regex: 'lexi(?:Browser)?/(\d+[.\d]+)'
   name: 'Lexi Browser'
   version: '$1'
   engine:
@@ -946,6 +971,13 @@
 
 # Chromium GOST (https://github.com/deemru/chromium-gost)
 - regex: 'Chrome/(\d+\.[.\d]+) .*\(Chromium GOST\)'
+  name: 'Chromium GOST'
+  version: '$1'
+  engine:
+    default: 'WebKit'
+    versions:
+      28: 'Blink'
+- regex: 'Chromium GOST.+Chrome/(\d+\.[.\d]+)'
   name: 'Chromium GOST'
   version: '$1'
   engine:
@@ -1423,7 +1455,7 @@
   version: '$1'
 
 # Steam (https://www.valvesoftware.com/)
-- regex: 'Valve Steam GameOverlay/(?:(\d+[.\d]+))?'
+- regex: 'Valve Steam GameOverlay(?:/(\d+[.\d]+))?'
   name: 'Steam In-Game Overlay'
   version: '$1'
 
@@ -1507,9 +1539,11 @@
   version: '$1'
 
 # OpenAI Atlas browser (https://openai.com/index/introducing-chatgpt-atlas/)
-- regex: 'Atlas/(\d+[.\d]+)$'
+- regex: '(?:ChatGPT%20)?Atlas/(\d+[.\d]+)'
   name: 'ChatGPT Atlas'
   version: '$1'
+  engine:
+    default: 'Blink'
 
 # Falkon (https://www.falkon.org/)
 - regex: 'Falkon(?:/(\d+[.\d]+))?'
@@ -1858,6 +1892,11 @@
   name: '360 Phone Browser'
   version: '$1'
 
+# 360 Speed Browser (360极速浏览器 - https://browser.360.cn/ee/)
+- regex: '360 Alitephone Browser(?:[ /]?\(?(\d+[.\d]+)(?:beta)?\)?)?'
+  name: '360 Speed Browser'
+  version: '$1'
+
 #SailfishBrowser
 - regex: 'SailfishBrowser(?:/(\d+[.\d]+))?'
   name: 'Sailfish Browser'
@@ -2006,12 +2045,27 @@
   version: '$1'
 
 #Brave
+- regex: 'Mac OS X.+Brave(?:/([.\d]+))?'
+  name: 'Brave'
+  version: '$1'
+  engine:
+    default: 'WebKit'
+- regex: 'Brave Browser(?: Nightly)?/([.\d]+) Mac OS X'
+  name: 'Brave'
+  version: '$1'
+  engine:
+    default: 'WebKit'
+- regex: 'Mobile Safari/.+Brave/([.\d]+)'
+  name: 'Brave'
+  version: '$1'
+  engine:
+    default: 'Blink'
 - regex: 'Chrome/(\d+\.[.\d]+).*Brave/'
   name: 'Brave'
   version: '$1'
   engine:
     default: 'Blink'
-- regex: 'Brave(?: Chrome)?(?:/(\d+[.\d]+))?'
+- regex: 'Brave(?: Browser(?: Nightly)?| Chrome)?/(\d+[.\d]+)'
   name: 'Brave'
   version: '$1'
   engine:
@@ -2034,6 +2088,11 @@
     default: 'Gecko'
 
 #WebPositive
+- regex: 'WebPositive/([\d.]+).+Version/'
+  name: 'WebPositive'
+  version: '$1'
+  engine:
+    default: 'WebKit'
 - regex: 'WebPositive'
   name: 'WebPositive'
   version: ''
@@ -2167,12 +2226,12 @@
   version: '$1'
 
 #UC Browser Mini
+- regex: 'UC[ ]?Browser/(\d+[.\d]+) \(UCMini\)'
+  name: 'UC Browser Mini'
+  version: '$1'
 - regex: 'UCMini(?:[ /]?(\d+[.\d]+))?'
   name: 'UC Browser Mini'
   version: '$1'
-- regex: 'UC[ ]?Browser.* \(UCMini\)'
-  name: 'UC Browser Mini'
-  version: ''
 - regex: 'Chrome.+uc mini browser(\d+[.\d]+)?'
   name: 'UC Browser Mini'
   version: '$1'
@@ -2556,7 +2615,7 @@
   version: '$1'
   engine:
     default: 'Blink'
-- regex: 'Midori(?:[ /](\d+[.\d]+))?'
+- regex: 'Midori(?:[ /]([.\d]+))?'
   name: 'Midori'
   version: '$1'
   engine:
@@ -2615,7 +2674,7 @@
   version: '$1'
 
 # Iron
-- regex: 'Chrome(?:/(\d+\.[.\d]+) )?.*Iron'
+- regex: 'Chrome(?:/(\d+\.[.\d]+) )?.*Iron Safari'
   name: 'Iron'
   version: '$1'
   engine:
@@ -2669,7 +2728,7 @@
     default: '' # multi engine -- WebKit or Blink
 
 # QQ Browser
-- regex: 'M?QQ(?:Browser|浏览器)(?:/([.\d]+))?'
+- regex: '(?:M?QQ(?:Browser|浏览器)|MQBHD)(?:/([.\d]+))?'
   name: 'QQ Browser'
   version: '$1'
   engine:
@@ -2994,7 +3053,7 @@
     default: 'WebKit'
 
 # Chrome Webview
-- regex: '(?: wv\)|Version/).* Chrome(?:/(\d+[.\d]+))?'
+- regex: '(?: wv\)|(?:Version|Ojxvms)/).* Chrome(?:/(\d+[.\d]+))?'
   name: 'Chrome Webview'
   version: '$1'
   engine:
@@ -3114,7 +3173,7 @@
     default: 'Text-based'
 
 #NCSA Mosaic
-- regex: 'NCSA_Mosaic(?:/(\d+[.\d]+))?'
+- regex: 'NCSA_Mosaic(?:[ /](\d+[.\d]+))?'
   name: 'NCSA Mosaic'
   version: '$1'
 
@@ -3201,7 +3260,7 @@
     default: 'WebKit'
 
 #Elinks
-- regex: 'Elinks(?:[ /](\d+[.\d]+))?'
+- regex: 'Elinks(?:[ /]\(?(\d+[.\d]+))?'
   name: 'Elinks'
   version: '$1'
   engine:
@@ -3218,7 +3277,7 @@
   version: '$1'
 
 #Firebird
-- regex: 'Firebird(?! Build)(?:/(\d+[.\d]+))?'
+- regex: 'Firebird(?! Build)(?: Browser)?(?:/(\d+[.\d]+))?'
   name: 'Firebird'
   version: '$1'
   engine:
@@ -3358,7 +3417,7 @@
   version: '$1'
 
 #OmniWeb
-- regex: 'OmniWeb(?:/[v]?(\d+[.\d]+))?'
+- regex: 'OmniWeb(?:[ /][v]?(\d+[.\d]+))?'
   name: 'OmniWeb'
   version: '$1'
   engine:
@@ -3461,7 +3520,7 @@
   version: '$1'
 
 #BlackBerry Browser
-- regex: 'BlackBerry|PlayBook|BB10'
+- regex: 'BlackBerry(?!-WorkConnect)|PlayBook|BB10'
   name: 'BlackBerry Browser'
   version: ''
 
@@ -3517,7 +3576,7 @@
   version: '$1'
   engine:
     default: 'WebKit'
-- regex: '(?!^AppleCoreMedia/1\.0\.0)(?:iPod|(?<!Apple TV; U; CPU )iPhone|iPad)'
+- regex: '^(?!AppleCoreMedia).*?\b(?<!Apple-)(?:iPod|(?<!Apple TV; U; CPU )iPhone|iPad)'
   name: 'Mobile Safari'
   version: ''
   engine:
@@ -3532,7 +3591,7 @@
   version: '$1'
   engine:
     default: 'WebKit'
-- regex: 'Macintosh'
+- regex: '^(?!AppleCoreMedia).*?\bMacintosh'
   name: 'Safari'
   version: ''
   engine:
