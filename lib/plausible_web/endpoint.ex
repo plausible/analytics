@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Endpoint do
   use Plausible
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
-  use PlausibleWeb.VerifiedRoutes
 
   on_ce do
     plug :maybe_handle_acme_challenge
@@ -99,7 +98,7 @@ defmodule PlausibleWeb.Endpoint do
 
   # CORS must not be supported at the [authorization endpoint](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-endpoint)
   def cors(conn, _opts) do
-    if conn.request_path == ~p"/login/oauth/authorize" do
+    if conn.path_info == ["login", "oauth", "authorize"] do
       conn
     else
       CORSPlug.call(conn, @cors_opts)
@@ -110,8 +109,8 @@ defmodule PlausibleWeb.Endpoint do
   @sentry_scrubbed_keys Sentry.Scrubber.default_param_keys() ++
                           ["code", "code_verifier", "access_token", "refresh_token"]
 
-  # The event ingestion endpoint is high traffic, so its body is not reported at all
-  def scrub_sentry_body(%{path_info: ["api", "event"]}), do: %{}
+  # The event ingestion endpoint is high traffic, so its body is reported unscrubbed
+  def scrub_sentry_body(%{path_info: ["api", "event"]} = conn), do: conn.params
 
   def scrub_sentry_body(conn) do
     Sentry.Scrubber.scrub(conn.params, keys: @sentry_scrubbed_keys)
