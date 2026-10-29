@@ -110,6 +110,9 @@ defmodule PlausibleWeb.Endpoint do
   @sentry_scrubbed_keys Sentry.Scrubber.default_param_keys() ++
                           ["code", "code_verifier", "access_token", "refresh_token"]
 
+  # The event ingestion endpoint is high traffic, so its body is not reported at all
+  def scrub_sentry_body(%{path_info: ["api", "event"]}), do: %{}
+
   def scrub_sentry_body(conn) do
     Sentry.Scrubber.scrub(conn.params, keys: @sentry_scrubbed_keys)
   end
