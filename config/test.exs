@@ -6,6 +6,8 @@ config :plausible, PlausibleWeb.Endpoint, server: false
 
 config :bcrypt_elixir, :log_rounds, 4
 
+config :sentry, test_mode: true
+
 config :plausible, Plausible.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online()
@@ -17,7 +19,7 @@ config :plausible, Plausible.ClickhouseRepo,
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
 config :plausible,
-  paddle_api: Plausible.Billing.TestPaddleApiMock,
+  paddle_classic_api: Plausible.Billing.PaddleClassic.TestApiMock,
   google_api: Plausible.Google.API.Mock
 
 config :bamboo, :refute_timeout, 10
@@ -52,6 +54,12 @@ config :plausible, Plausible.HelpScout,
     plug: {Req.Test, Plausible.HelpScout}
   ]
 
+config :plausible, Plausible.Postmark,
+  req_opts: [
+    plug: {Req.Test, Plausible.Postmark},
+    retry: false
+  ]
+
 config :plausible, Plausible.InstallationSupport.Checks.Detection,
   req_opts: [
     plug: {Req.Test, Plausible.InstallationSupport.Checks.Detection}
@@ -60,6 +68,11 @@ config :plausible, Plausible.InstallationSupport.Checks.Detection,
 config :plausible, Plausible.InstallationSupport.Checks.VerifyInstallation,
   req_opts: [
     plug: {Req.Test, Plausible.InstallationSupport.Checks.VerifyInstallation}
+  ]
+
+config :plausible, Plausible.OAuth.CIMD,
+  req_opts: [
+    plug: {Req.Test, Plausible.OAuth.CIMD}
   ]
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)

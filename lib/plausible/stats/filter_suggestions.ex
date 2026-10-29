@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.FilterSuggestions do
+  @moduledoc """
+  Functions for retrieving dashboard filters suggestions.
+  """
+
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments

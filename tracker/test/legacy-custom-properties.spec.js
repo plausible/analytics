@@ -6,7 +6,7 @@ test.describe('legacy custom properties support', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto('/legacy-pageview-properties.html')
-        await page.click('#custom-event-button')
+        await page.locator('#custom-event-button').click()
       },
       expectedRequests: [
         { n: 'pageview', p: { author: 'John', foo: 'bar' } },
@@ -19,7 +19,7 @@ test.describe('legacy custom properties support', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto('/legacy-custom-properties.html')
-        await page.click('#custom-props-button')
+        await page.locator('#custom-props-button').click()
       },
       expectedRequests: [{ n: 'Props event', p: { type: 'props' } }],
       shouldIgnoreRequest: isPageviewEvent
@@ -30,7 +30,7 @@ test.describe('legacy custom properties support', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto('/legacy-custom-properties.html')
-        await page.click('#custom-meta-button')
+        await page.locator('#custom-meta-button').click()
       },
       expectedRequests: [{ n: 'Meta event', m: '{"type":"meta"}' }],
       shouldIgnoreRequest: isPageviewEvent

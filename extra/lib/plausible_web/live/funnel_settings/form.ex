@@ -1,15 +1,14 @@
 defmodule PlausibleWeb.Live.FunnelSettings.Form do
   @moduledoc """
-  Phoenix LiveComponent that renders a form used for setting up funnels.
-  Makes use of dynamically placed `PlausibleWeb.Live.FunnelSettings.ComboBox` components
-  to allow building searchable funnel definitions out of list of goals available.
+  Phoenix LiveComponent that renders a form used for setting up dynamic funnels.
   """
 
   use PlausibleWeb, :live_view
   use Plausible.Funnel
 
   import PlausibleWeb.Live.Components.Form
-  alias Plausible.{Goals, Funnels}
+
+  alias Plausible.Funnels
   alias Plausible.Stats.QueryBuilder
 
   def mount(_params, %{"domain" => domain} = session, socket) do
@@ -23,24 +22,27 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         ]
       )
 
-    # We'll have the options trimmed to only the data we care about, to keep
-    # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
-    # fields, so that `String.Chars` protocol and `Funnels.ephemeral_definition/3`
-    # are applicable downstream.
     goals =
       site
-      |> Goals.for_site()
+      |> Plausible.Goals.for_site()
       |> Enum.map(fn goal ->
-        {goal.id,
-         struct!(
-           Plausible.Goal,
-           Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
-         )}
+        struct!(
+          Plausible.Goal,
+          Map.take(goal, [
+            :id,
+            :display_name,
+            :event_name,
+            :page_path,
+            :scroll_threshold,
+            :currency,
+            :custom_props
+          ])
+        )
       end)
 
     socket =
       socket
-      |> assign(goals: goals, site: site, evaluation_result: nil)
+      |> assign(site: site, goals: goals, evaluation_result: nil)
       |> prepare_socket(site, session["funnel_id"])
 
     {:ok, socket}
@@ -48,22 +50,24 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def render(assigns) do
     ~H"""
-    <div
-      class="fixed inset-0 bg-gray-500/75 transition-opacity z-50"
-      phx-window-keydown="cancel-add-funnel"
-      phx-key="Escape"
-    >
-    </div>
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
-      <div class="md:w-2/3 max-w-lg h-full">
-        <div id="funnel-form">
+      <div class="md:w-2/3 max-w-xl h-full">
+        <div
+          id="funnel-form"
+          class="group relative"
+          phx-click-away="cancel-add-funnel"
+          phx-target="#funnel-form"
+        >
+          <div class="absolute inset-0 z-10 hidden items-center justify-center rounded-lg bg-white/50 dark:bg-gray-900/50 group-has-[.phx-click-loading]:flex">
+            <.spinner class="h-8 w-8" />
+          </div>
+
           <.form
             :let={f}
             for={@form}
             phx-change="validate"
             phx-submit="save"
             phx-target="#funnel-form"
-            phx-click-away="cancel-add-funnel"
             onkeydown="return event.key != 'Enter';"
             class="bg-white dark:bg-gray-900 shadow-2xl rounded-lg px-8 pt-6 pb-8 mb-4 mt-8"
           >
@@ -80,17 +84,59 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               label="Funnel name"
             />
 
-            <div class="mt-6 flex items-center justify-between gap-4">
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Allow other activity between funnel steps
-              </span>
-              <div class="flex items-center gap-3">
-                <.toggle_switch
-                  id="toggle-strict-order"
-                  id_suffix="switch"
-                  checked={!@strict_order?}
-                  phx-click="toggle-strict-order"
-                />
+            <div class="flex flex-col gap-y-1 mt-8">
+              <.label>
+                Funnel type
+              </.label>
+              <div class="flex items-center justify-between gap-4 mt-2">
+                <.input
+                  type="radio"
+                  id={f[:funnel_type].id <> "_sequential"}
+                  name={f[:funnel_type].name}
+                  value="sequential"
+                  checked={@funnel_type == :sequential}
+                  phx-click="switch-type"
+                  phx-value-type="sequential"
+                  label="Sequential"
+                >
+                  <:help_content>
+                    All steps are required. Other activity is allowed between steps.
+                  </:help_content>
+                </.input>
+              </div>
+
+              <div class="flex items-center justify-between gap-4">
+                <.input
+                  type="radio"
+                  id={f[:funnel_type].id <> "_flexible"}
+                  name={f[:funnel_type].name}
+                  value="flexible"
+                  checked={@funnel_type == :flexible}
+                  phx-click="switch-type"
+                  phx-value-type="flexible"
+                  label="Flexible"
+                >
+                  <:help_content>
+                    Only the first and last steps are required. Middle steps can be skipped.
+                  </:help_content>
+                </.input>
+              </div>
+
+              <div class="flex items-center justify-between gap-4">
+                <.input
+                  type="radio"
+                  id={f[:funnel_type].id <> "_strict"}
+                  name={f[:funnel_type].name}
+                  value="strict"
+                  checked={@funnel_type == :strict}
+                  phx-click="switch-type"
+                  phx-value-type="strict"
+                  label="Strict"
+                >
+                  <:help_content>
+                    All steps are required. No other activity is allowed between steps.
+                  </:help_content>
+                </.input>
               </div>
             </div>
 
@@ -99,20 +145,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 Funnel steps
               </.label>
 
-              <div :for={step_idx <- @step_ids} class="flex my-3">
+              <div :for={step_idx <- @step_ids} class="flex items-center my-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
-                    selected={find_preselected(@funnel, @funnel_modified?, step_idx)}
-                    submit_name={"funnel[steps][#{step_idx}][goal_id]"}
-                    module={PlausibleWeb.Live.Components.ComboBox}
-                    suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
-                    on_selection_made={
-                      fn value, by_id ->
-                        send(self(), {:selection_made, %{submit_value: value, by: by_id}})
-                      end
-                    }
                     id={"step-#{step_idx}"}
-                    options={reject_already_selected(@goals, @selections_made)}
+                    module={PlausibleWeb.Live.Components.PrimaCombobox}
+                    submit_name={"funnel[steps][#{step_idx}][step_data]"}
+                    selected={selected_option(@steps, step_idx)}
+                    suggest_trigger={@steps}
+                    suggest_fun={
+                      fn input, _suggestions -> suggest(input, @site, @goals, @steps, step_idx) end
+                    }
                   />
                 </div>
 
@@ -123,7 +166,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   />
                 </div>
 
-                <div class="w-4/12 mt-1 ml-4 text-gray-500 dark:text-gray-400">
+                <div class="w-4/12 ml-4 text-gray-500 dark:text-gray-400">
                   <.evaluation
                     :if={@evaluation_result}
                     result={@evaluation_result}
@@ -132,11 +175,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 </div>
               </div>
 
-              <div class="flex flex-col gap-y-4 mt-6">
-                <.add_step_button :if={
-                  length(@step_ids) < Funnel.max_steps() and
-                    map_size(@selections_made) < length(@goals)
-                } />
+              <div class="flex flex-col gap-y-2 mt-2">
+                <p>
+                  <.add_step_button :if={length(@step_ids) < Funnel.max_steps()} />
+                </p>
                 <p id="funnel-eval" class="text-gray-800 dark:text-gray-200 text-sm">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
@@ -147,10 +189,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <.button
                 id="save"
                 type="submit"
-                class="w-full"
+                class="w-full mt-4"
                 disabled={
-                  has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
-                    length(@step_ids) > map_size(@selections_made)
+                  has_steps_errors?(f) or map_size(@steps) < Funnel.min_steps() or
+                    length(@step_ids) > map_size(@steps)
                 }
               >
                 <span>{if @funnel, do: "Update", else: "Add"} funnel</span>
@@ -224,8 +266,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("add-step", _value, socket) do
     step_ids = socket.assigns.step_ids
 
-    socket = assign(socket, funnel_modified?: true)
-
     if length(step_ids) < Funnel.max_steps() do
       first_free_idx = find_sequence_break(step_ids)
       new_ids = step_ids ++ [first_free_idx]
@@ -238,58 +278,72 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("remove-step", %{"step-idx" => idx}, socket) do
     idx = String.to_integer(idx)
     step_ids = List.delete(socket.assigns.step_ids, idx)
-    selections_made = drop_selection(socket.assigns.selections_made, idx)
+    steps = drop_step(socket.assigns.steps, idx)
 
     send(self(), :evaluate_funnel)
 
-    {:noreply,
-     assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
+    {:noreply, assign(socket, step_ids: step_ids, steps: steps)}
   end
 
-  def handle_event("toggle-strict-order", _params, socket) do
-    strict_order? = !socket.assigns.strict_order?
+  def handle_event("switch-type", %{"type" => funnel_type_str}, socket) do
+    funnel_type = String.to_existing_atom(funnel_type_str)
     send(self(), :evaluate_funnel)
 
-    {:noreply, assign(socket, strict_order?: strict_order?)}
+    {:noreply, assign(socket, funnel_type: funnel_type)}
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
-    strict_order? = socket.assigns.strict_order?
+    funnel_type = socket.assigns.funnel_type
+    allowed_goal_ids = Enum.map(socket.assigns.goals, & &1.id)
 
-    steps_from_assigns =
-      socket.assigns.step_ids
-      |> Enum.reduce([], fn step_id, acc ->
-        goal = Map.get(socket.assigns.selections_made, "step-#{step_id}")
-        if goal, do: [%{"goal_id" => goal.id} | acc], else: acc
-      end)
-      |> Enum.reverse()
+    steps_with_idx =
+      params
+      |> Map.get("steps", [])
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(fn {idx, payload} -> {idx, JSON.decode!(payload["step_data"])} end)
 
     changeset =
       socket.assigns.site
       |> Funnels.create_changeset(
         params["name"],
-        steps_from_assigns,
-        strict_order?: strict_order?
+        Enum.map(steps_with_idx, &elem(&1, 1)),
+        funnel_type: funnel_type,
+        allowed_goal_ids: allowed_goal_ids
       )
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    steps = store_steps(socket.assigns, steps_with_idx)
+
+    send(self(), :evaluate_funnel)
+
+    {:noreply, assign(socket, form: to_form(changeset), steps: steps)}
   end
 
   def handle_event(
         "save",
         %{"funnel" => params},
-        %{assigns: %{site: site, funnel: funnel, strict_order?: strict_order?}} = socket
+        %{
+          assigns: %{
+            site: site,
+            funnel: funnel,
+            funnel_type: funnel_type
+          }
+        } = socket
       ) do
-    steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
+    steps =
+      Enum.map(params["steps"], fn {_idx, payload} -> JSON.decode!(payload["step_data"]) end)
 
     save_fn =
       case funnel do
         %Plausible.Funnel{} ->
-          fn -> Funnels.update(funnel, params["name"], steps, strict_order?: strict_order?) end
+          fn ->
+            Funnels.update(funnel, params["name"], steps, funnel_type: funnel_type)
+          end
 
         nil ->
-          fn -> Funnels.create(site, params["name"], steps, strict_order?: strict_order?) end
+          fn ->
+            Funnels.create(site, params["name"], steps, funnel_type: funnel_type)
+          end
       end
 
     case save_fn.() do
@@ -314,23 +368,197 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, socket}
   end
 
-  def handle_info({:selection_made, %{submit_value: goal_id, by: combo_box}}, socket) do
-    selections_made = store_selection(socket.assigns, combo_box, goal_id)
-
-    send(self(), :evaluate_funnel)
-
-    {:noreply,
-     assign(socket,
-       selections_made: selections_made
-     )}
-  end
-
   def handle_info(:evaluate_funnel, socket) do
     {:noreply, evaluate_funnel(socket)}
   end
 
-  defp evaluate_funnel(%{assigns: %{selections_made: selections_made}} = socket)
-       when map_size(selections_made) < Funnel.min_steps() do
+  defp suggest(input, site, goals, steps, step_idx) do
+    steps =
+      steps
+      |> Enum.filter(fn {idx, _} -> idx != "step-#{step_idx}" end)
+      |> Enum.map(&elem(&1, 1))
+
+    query =
+      QueryBuilder.build!(site,
+        metrics: [:pageviews],
+        input_date_range: {:last_n_days, 30}
+      )
+
+    {goals_for_query, other_goals} =
+      Enum.split_with(goals, fn g ->
+        g.scroll_threshold == -1 and map_size(g.custom_props) == 0 and is_nil(g.currency)
+      end)
+
+    {suggestions, unmatched_query_goals} =
+      Plausible.Stats.Funnel.suggest(site, query, goals: goals_for_query, input: input)
+
+    unmatched_goal_entries =
+      (unmatched_query_goals ++ other_goals)
+      |> static_suggest(input)
+      |> to_suggestion_entries(steps)
+
+    suggestions
+    |> to_suggestion_entries(steps)
+    |> Enum.concat(unmatched_goal_entries)
+    |> segment()
+  end
+
+  defp static_suggest(goals, input) do
+    # NOTE: static search for goals logic should be in sync with
+    # `Plausible.Stats.Exploration.maybe_search/2`.
+
+    case String.trim(input) do
+      term when byte_size(term) > 2 ->
+        term = String.downcase(term)
+
+        Enum.filter(goals, fn g ->
+          display_name = String.downcase(g.display_name)
+          event_name = String.downcase(g.event_name || "")
+          page_path = String.downcase(g.page_path || "")
+
+          String.contains?(display_name, term) or String.contains?(event_name, term) or
+            String.contains?(page_path, term)
+        end)
+
+      _ ->
+        goals
+    end
+  end
+
+  defp to_suggestion_entries(suggestions, steps) do
+    suggestions
+    |> exclude_existing_steps(steps)
+    |> Enum.map(
+      &{to_step_data(&1), to_string(&1),
+       [goal: &1, type: if(&1.event_name, do: :custom_event, else: :pageview)]}
+    )
+    |> set_icons()
+  end
+
+  defp set_icons(suggestions) do
+    Enum.map(suggestions, fn {value, display_name, opts} ->
+      icon =
+        case opts[:type] do
+          :custom_event -> :cursor
+          :pageview -> :eye
+        end
+
+      {value, display_name, Keyword.put(opts, :icon, icon)}
+    end)
+  end
+
+  defp segment(suggestions) do
+    suggestions
+    |> Enum.group_by(fn {_, _, opts} -> opts[:type] end)
+    |> Enum.sort_by(fn {k, _} ->
+      case k do
+        :custom_event -> 0
+        :pageview -> 1
+      end
+    end)
+    |> Enum.reduce([], fn {_, segment}, acc ->
+      [{value, display_name, opts} | rest] = segment
+
+      separator? = acc != []
+
+      title =
+        case opts[:type] do
+          :custom_event -> "Custom events"
+          :pageview -> "Pageviews"
+        end
+
+      opts =
+        opts
+        |> Keyword.put(:title, title)
+        |> Keyword.put(:separator?, separator?)
+
+      acc ++ [{value, display_name, opts} | rest]
+    end)
+  end
+
+  defp exclude_existing_steps(goals, steps) do
+    existing_steps =
+      MapSet.new(steps, &{&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props})
+
+    Enum.reject(
+      goals,
+      &MapSet.member?(
+        existing_steps,
+        {&1.event_name, &1.page_path, &1.scroll_threshold, &1.custom_props}
+      )
+    )
+  end
+
+  defp has_steps_errors?(f) do
+    not f.source.valid?
+  end
+
+  defp store_steps(assigns, steps_with_idx) do
+    Enum.reduce(steps_with_idx, assigns.steps, fn {idx, step_data}, steps ->
+      Map.put(steps, "step-#{idx}", to_goal(step_data))
+    end)
+  end
+
+  defp drop_step(steps, idx) do
+    step_input_id = "step-#{idx}"
+    Map.delete(steps, step_input_id)
+  end
+
+  defp selected_option(steps, idx) do
+    if goal = steps["step-#{idx}"] do
+      {to_step_data(goal), to_string(goal)}
+    end
+  end
+
+  defp to_goal(%{"goal_id" => goal_id} = step_data) do
+    step_data
+    |> Map.delete("goal_id")
+    |> then(&Plausible.Goal.changeset(%Plausible.Goal{}, &1))
+    |> Ecto.Changeset.apply_changes()
+    |> Map.put(:id, goal_id)
+  end
+
+  defp to_goal(step_data) do
+    step_data
+    |> Funnel.DynamicStep.changeset()
+    |> Ecto.Changeset.apply_changes()
+    |> Funnel.DynamicStep.as_goal()
+  end
+
+  defp to_step_data(%Plausible.Goal{} = goal) do
+    data = %{
+      event_name: goal.event_name,
+      page_path: goal.page_path,
+      display_name: goal.display_name,
+      scroll_threshold: goal.scroll_threshold,
+      currency: goal.currency
+    }
+
+    data =
+      if is_integer(goal.id) and goal.id > 0 do
+        Map.put(data, :goal_id, goal.id)
+      else
+        data
+      end
+
+    JSON.encode!(data)
+  end
+
+  defp find_sequence_break(input) do
+    input
+    |> Enum.sort()
+    |> Enum.with_index(1)
+    |> Enum.reduce_while(nil, fn {x, order}, _ ->
+      if x != order do
+        {:halt, order}
+      else
+        {:cont, order + 1}
+      end
+    end)
+  end
+
+  defp evaluate_funnel(%{assigns: %{steps: steps}} = socket)
+       when map_size(steps) < Funnel.min_steps() do
     socket
   end
 
@@ -338,13 +566,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
          %{
            assigns: %{
              site: site,
-             selections_made: selections_made,
-             strict_order?: strict_order?
+             steps: steps,
+             funnel_type: funnel_type,
+             goals: goals
            }
          } = socket
        ) do
     with {:ok, {definition, query}} <-
-           build_ephemeral_funnel(site, selections_made, strict_order?: strict_order?),
+           build_ephemeral_funnel(site, steps, funnel_type: funnel_type, goals: goals),
          {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
       assign(socket, evaluation_result: funnel)
     else
@@ -353,19 +582,30 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     end
   end
 
-  defp build_ephemeral_funnel(site, selections_made, opts) do
+  defp build_ephemeral_funnel(site, steps, opts) do
+    {goals, opts} = Keyword.pop(opts, :goals, [])
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
+
     steps =
-      selections_made
+      steps
       |> Enum.sort_by(&elem(&1, 0))
       |> Enum.map(fn {_, goal} ->
-        %{
-          "goal_id" => goal.id,
-          "goal" => %{
-            "id" => goal.id,
-            "event_name" => goal.event_name,
-            "page_path" => goal.page_path
-          }
+        step_data = %{
+          "event_name" => goal.event_name,
+          "page_path" => goal.page_path,
+          "currency" => goal.currency,
+          "scroll_threshold" => goal.scroll_threshold,
+          "custom_props" => goal.custom_props
         }
+
+        if goal.id > 0 do
+          %{
+            "goal_id" => goal.id,
+            "goal" => Map.put(step_data, "id", goal.id)
+          }
+        else
+          step_data
+        end
       end)
 
     definition =
@@ -385,73 +625,18 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:ok, {definition, query}}
   end
 
-  defp find_sequence_break(input) do
-    input
-    |> Enum.sort()
-    |> Enum.with_index(1)
-    |> Enum.reduce_while(nil, fn {x, order}, _ ->
-      if x != order do
-        {:halt, order}
-      else
-        {:cont, order + 1}
-      end
-    end)
-  end
-
-  defp has_steps_errors?(f) do
-    not f.source.valid?
-  end
-
-  defp get_goal(assigns, id) do
-    assigns
-    |> Map.fetch!(:goals)
-    |> Enum.find_value(fn
-      {goal_id, goal} when goal_id == id -> goal
-      _ -> nil
-    end)
-  end
-
-  defp store_selection(assigns, combo_box, goal_id) do
-    Map.put(assigns.selections_made, combo_box, get_goal(assigns, goal_id))
-  end
-
-  defp drop_selection(selections_made, step_idx) do
-    step_input_id = "step-#{step_idx}"
-    Map.delete(selections_made, step_input_id)
-  end
-
-  defp reject_already_selected(goals, selections_made) do
-    selection_ids =
-      Enum.map(selections_made, fn
-        {_, %{id: goal_id}} -> goal_id
-      end)
-
-    Enum.reject(goals, fn {goal_id, _} -> goal_id in selection_ids end)
-  end
-
-  defp find_preselected(%Funnel{} = funnel, false, idx) do
-    if step = Enum.at(funnel.steps, idx - 1) do
-      {step.goal.id, to_string(step.goal)}
-    end
-  end
-
-  defp find_preselected(_, _, _), do: nil
-
   defp prepare_socket(socket, site, funnel_id) when is_integer(funnel_id) do
     funnel = Funnels.get(site.id, funnel_id)
+    steps = Funnel.goals(funnel)
 
     form =
       funnel
-      |> Funnels.edit_changeset(
-        funnel.name,
-        Enum.map(funnel.steps, &%{goal_id: &1.goal.id}),
-        strict_order?: funnel.strict_order
-      )
+      |> Funnels.edit_changeset(funnel.name, steps)
       |> to_form()
 
-    selections_made =
-      Enum.reduce(Enum.with_index(funnel.steps, 1), %{}, fn {step, idx}, acc ->
-        Map.put(acc, "step-#{idx}", step.goal)
+    steps =
+      Enum.reduce(Enum.with_index(steps, 1), %{}, fn {step, idx}, acc ->
+        Map.put(acc, "step-#{idx}", step)
       end)
 
     socket =
@@ -459,10 +644,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         socket,
         form: form,
         funnel: funnel,
-        strict_order?: funnel.strict_order,
-        funnel_modified?: false,
-        selections_made: selections_made,
-        step_ids: Enum.to_list(1..Enum.count(funnel.steps))
+        funnel_type: funnel.funnel_type,
+        steps: steps,
+        step_ids: Enum.to_list(1..Enum.count(steps))
       )
 
     evaluate_funnel(socket)
@@ -475,9 +659,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       socket,
       form: form,
       funnel: nil,
-      strict_order?: false,
-      funnel_modified?: false,
-      selections_made: Map.new(),
+      funnel_type: :sequential,
+      steps: Map.new(),
       step_ids: Enum.to_list(1..Funnel.min_steps())
     )
   end

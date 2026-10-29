@@ -1,4 +1,8 @@
 defmodule ObanErrorReporter do
+  @moduledoc """
+  Handler module for processing Oban errors. 
+  """
+
   use Plausible
   require Logger
 

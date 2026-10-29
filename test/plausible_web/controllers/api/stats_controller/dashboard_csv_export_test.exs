@@ -188,6 +188,82 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
       assert ~c"utm_terms.csv" in zip
     end
 
+    test "exports custom props with an entry_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/blog")
+      ])
+
+      custom_props =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "day",
+            filters: [["is", "visit:entry_page", ["/blog"]]]
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
+
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
+    end
+
+    test "exports custom props with an exit_page filter", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/blog",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/another",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview, pathname: "/ignored", "meta.key": ["author"], "meta.value": ["someone"]),
+        build(:pageview, pathname: "/another")
+      ])
+
+      custom_props =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "day",
+            filters: [["is", "visit:exit_page", ["/another"]]]
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
+
+      assert custom_props == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "1", "1", "50.0"],
+               ["author", "john", "1", "2", "50.0"],
+               [""]
+             ]
+    end
+
     test "limits pages.csv and exit_pages.csv to 100 rows", %{conn: conn, site: site} do
       events = for i <- 1..101, do: build(:pageview, pathname: "/page-#{i}")
       populate_stats(site, events)
@@ -799,6 +875,55 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
                ["2020-01-07", "1", "1", "1", "100", "0", "90"],
                [""]
              ]
+    end
+
+    test "exports visitors.csv when the site has no legacy time on page cutoff",
+         %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, nil)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-05 00:01:00],
+          scroll_depth: 40
+        ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-07 00:00:00])
+      ])
+
+      pages =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "7d",
+            relative_date: "2020-01-08",
+            filters: [["is", "event:page", ["/blog"]]],
+            reports: @page_filtered_reports
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"visitors.csv")
+
+      assert [
+               [
+                 "date",
+                 "visitors",
+                 "pageviews",
+                 "visits",
+                 "bounce_rate",
+                 "time_on_page",
+                 "scroll_depth"
+               ]
+               | rows
+             ] = pages
+
+      assert Enum.find(rows, &match?(["2020-01-05" | _], &1)) |> Enum.take(4) ==
+               ["2020-01-05", "1", "1", "1"]
+
+      assert Enum.find(rows, &match?(["2020-01-07" | _], &1)) |> Enum.take(4) ==
+               ["2020-01-07", "1", "1", "1"]
+
+      assert Enum.all?(rows, &(&1 == [""] or Enum.at(&1, 5) == ""))
     end
   end
 

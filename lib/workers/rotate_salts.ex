@@ -1,4 +1,8 @@
 defmodule Plausible.Workers.RotateSalts do
+  @moduledoc """
+  Worker rotating session salts.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :rotate_salts
 

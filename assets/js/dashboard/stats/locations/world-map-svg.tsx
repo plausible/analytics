@@ -176,7 +176,7 @@ const hoveredOutlineClass = classNames(sharedOutlineClass, hoveredStroke)
 
 /**
  * Used to color the countries
- * @returns the svg elements represeting countries
+ * @returns the svg elements representing countries
  */
 function colorInCountriesWithValues(
   element: SVGSVGElement,

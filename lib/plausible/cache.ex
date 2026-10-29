@@ -83,6 +83,19 @@ defmodule Plausible.Cache do
         :ok
       end
 
+      @spec broadcast_delete(any(), Keyword.t()) :: :ok
+      def broadcast_delete(key, opts \\ []) do
+        cache_name = Keyword.get(opts, :cache_name, name())
+        multicall_timeout = Keyword.get(opts, :multicall_timeout, :timer.seconds(5))
+
+        {:ok, _} =
+          Task.start(fn ->
+            :rpc.multicall(Adapter, :delete, [cache_name, key], multicall_timeout)
+          end)
+
+        :ok
+      end
+
       @spec get(any(), Keyword.t()) :: any() | nil
       def get(key, opts \\ [])
 

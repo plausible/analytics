@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
-  alias Plausible.{IngestRepo, ClickhouseRepo}
   use PlausibleWeb.ConnCase
 
   describe "Debug metadata for logged in requests" do
@@ -17,13 +16,11 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
 
       assert json_response(conn, 200)
 
-      IngestRepo.query!("SYSTEM FLUSH LOGS")
-
-      %{rows: [r1, r2]} =
-        ClickhouseRepo.query!(
-          "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
-          [site.domain]
-        )
+      assert [r1, r2] =
+               eventually(fn ->
+                 rows = get_entries_from_query_log(site.domain)
+                 {length(rows) == 2, rows}
+               end)
 
       for [unparsed_log_comment] <- [r1, r2] do
         decoded = Jason.decode!(unparsed_log_comment)
@@ -89,13 +86,11 @@ defmodule PlausibleWeb.Api.StatsController.DebugMetadataTest do
 
         assert json_response(conn, 200)
 
-        IngestRepo.query!("SYSTEM FLUSH LOGS")
-
-        %{rows: [r1, r2]} =
-          ClickhouseRepo.query!(
-            "FROM system.query_log SELECT log_comment WHERE JSONExtractString(log_comment, 'site_domain') = {$0:String}",
-            [site.domain]
-          )
+        assert [r1, r2] =
+                 eventually(fn ->
+                   rows = get_entries_from_query_log(site.domain)
+                   {length(rows) == 2, rows}
+                 end)
 
         for [unparsed_log_comment] <- [r1, r2] do
           decoded = Jason.decode!(unparsed_log_comment)

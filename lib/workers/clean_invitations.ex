@@ -1,4 +1,8 @@
 defmodule Plausible.Workers.CleanInvitations do
+  @moduledoc """
+  Worker hoovering expired invitations.
+  """
+
   use Plausible.Repo
   use Oban.Worker, queue: :clean_invitations
 

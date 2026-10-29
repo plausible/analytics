@@ -43,8 +43,7 @@ export interface PlausibleConfig {
    * If passed as a function, it will be called when `track` is called.
    */
   customProperties?:
-    | CustomProperties
-    | ((eventName: string) => CustomProperties)
+    CustomProperties | ((eventName: string) => CustomProperties)
 
   /**
    * A function that can be used to transform the payload before it is sent to the API.
@@ -100,7 +99,9 @@ export interface PlausibleEventOptions {
   url?: string
 }
 
-export type CustomProperties = Record<string, string>
+export type CustomPropertyValue = string | number | boolean
+
+export type CustomProperties = Record<string, CustomPropertyValue>
 
 export type PlausibleEventRevenue = {
   /** Revenue amount in `currency` */

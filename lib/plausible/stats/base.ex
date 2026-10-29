@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.Base do
+  @moduledoc """
+  Entry point functions for building stats queries.
+  """
+
   use Plausible
 
   alias Plausible.Stats.{TableDecider, SQL}

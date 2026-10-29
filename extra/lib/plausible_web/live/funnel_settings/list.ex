@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
     <div class="flex flex-col gap-4 sm:gap-6">
       <%= if @searching? or Enum.count(@funnels) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
-          <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
+          <.button id="add-funnel-button" phx-click="add-funnel">
             Add funnel
           </.button>
         </.filter_bar>
@@ -39,7 +39,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                 id={"delete-funnel-#{funnel.id}"}
                 phx-click="delete-funnel"
                 phx-value-funnel-id={funnel.id}
-                class="text-sm text-red-600"
                 data-confirm={"Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."}
               />
             </.td>
@@ -71,7 +70,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
         Create your first funnel
       </h3>
       <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-        Compose goals into funnels to track user flows and conversion rates.
+        Chain pages and events into a funnel to see where visitors drop off.
         <.styled_link href="https://plausible.io/docs/funnel-analysis" target="_blank">
           Learn more
         </.styled_link>
@@ -79,7 +78,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
       <.button
         id="add-funnel-button"
         phx-click="add-funnel"
-        class="mt-4"
+        class="mt-6"
       >
         Add funnel
       </.button>

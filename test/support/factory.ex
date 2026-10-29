@@ -106,6 +106,25 @@ defmodule Plausible.Factory do
     }
   end
 
+  def pending_stats_deletion_factory do
+    %Plausible.PendingStatsDeletion{
+      site_id: sequence(:pending_stats_deletion_site_id, &(&1 + 1))
+    }
+  end
+
+  def team_deletion_schedule_factory do
+    today = Date.utc_today()
+    deletion_date = Date.shift(today, day: 60)
+
+    %Plausible.TeamDeletionSchedule{
+      team: build(:team),
+      category: :expired_trial,
+      expiry_date: today,
+      deletion_date: deletion_date,
+      first_notice_due_date: Date.shift(deletion_date, day: -30)
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -159,19 +178,19 @@ defmodule Plausible.Factory do
     attrs =
       case {attrs, display_name_provided?} do
         {%{page_path: path}, false} when is_binary(path) ->
-          Map.put(attrs, :display_name, "Visit " <> path)
+          Map.put(attrs, :display_name, Plausible.Goal.display_name(nil, path))
 
         {%{page_path: path}, false} when is_function(path, 0) ->
           attrs
-          |> Map.put(:display_name, "Visit " <> path.())
+          |> Map.put(:display_name, Plausible.Goal.display_name(nil, path.()))
           |> Map.put(:page_path, path.())
 
         {%{event_name: event_name}, false} when is_binary(event_name) ->
-          Map.put(attrs, :display_name, event_name)
+          Map.put(attrs, :display_name, Plausible.Goal.display_name(event_name, nil))
 
         {%{event_name: event_name}, false} when is_function(event_name, 0) ->
           attrs
-          |> Map.put(:display_name, event_name.())
+          |> Map.put(:display_name, Plausible.Goal.display_name(event_name.(), nil))
           |> Map.put(:event_name, event_name.())
 
         _ ->
@@ -254,6 +273,65 @@ defmodule Plausible.Factory do
       key_hash: Plausible.Auth.ApiKey.do_hash(key),
       key_prefix: binary_part(key, 0, 6)
     }
+  end
+
+  @doc """
+  Takes the plaintext `:code` and `:verifier` a test will present at the token
+  endpoint, and stores what the server keeps for them - the code's hash and the
+  verifier's S256 challenge. Both default to fresh random values.
+  """
+  def oauth_authorization_code_factory(attrs) do
+    {code, attrs} =
+      Map.pop_lazy(attrs, :code, fn -> Plausible.OAuth.Token.generate(:code).raw end)
+
+    {verifier, attrs} =
+      Map.pop_lazy(attrs, :verifier, fn ->
+        :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+      end)
+
+    auth_code = %Plausible.OAuth.AuthorizationCode{
+      code_hash: Plausible.OAuth.Token.hash(code),
+      code_challenge: :crypto.hash(:sha256, verifier) |> Base.url_encode64(padding: false),
+      code_challenge_method: "S256",
+      client_id: "https://client.example.com/oauth-metadata",
+      redirect_uri: "https://client.example.com/callback",
+      expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 600, :second)
+    }
+
+    merge_attributes(auth_code, attrs)
+  end
+
+  @doc """
+  Takes the plaintext `:access_token` and `:refresh_token` a test will present,
+  and stores what the server keeps for them - the hash and the hint. Both
+  default to fresh random values.
+
+  Defaults describe a live grant for the MCP resource, carrying every scope that
+  resource supports.
+  """
+  def oauth_grant_factory(attrs) do
+    {access_token, attrs} =
+      Map.pop_lazy(attrs, :access_token, fn -> Plausible.OAuth.Token.generate(:access).raw end)
+
+    {refresh_token, attrs} =
+      Map.pop_lazy(attrs, :refresh_token, fn -> Plausible.OAuth.Token.generate(:refresh).raw end)
+
+    resource = Plausible.OAuth.ProtectedResources.mcp()
+    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(:second), 3600, :second)
+
+    grant = %Plausible.OAuth.Grant{
+      client_id: "https://client.example.com/oauth-metadata",
+      scopes: resource.scopes_supported,
+      resource: Plausible.OAuth.ProtectedResources.get_resource_url(resource),
+      access_token_hash: Plausible.OAuth.Token.hash(access_token),
+      access_token_hint: Plausible.OAuth.Token.hint(access_token),
+      access_token_expires_at: expires_at,
+      refresh_token_hash: Plausible.OAuth.Token.hash(refresh_token),
+      refresh_token_hint: Plausible.OAuth.Token.hint(refresh_token),
+      refresh_token_expires_at: expires_at
+    }
+
+    merge_attributes(grant, attrs)
   end
 
   def imported_visitors_factory do

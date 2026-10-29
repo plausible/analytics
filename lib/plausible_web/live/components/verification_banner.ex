@@ -6,8 +6,9 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
   use Phoenix.LiveComponent
   use Plausible
 
+  use PlausibleWeb.VerifiedRoutes
+
   alias Phoenix.LiveView.JS
-  alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.InstallationSupport.{State, Result}
 
   import PlausibleWeb.Components.Generic
@@ -171,7 +172,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       <div class="mt-5 flex flex-wrap items-center gap-2">
         <div id="verification-failed-default-actions" class="flex flex-wrap items-center gap-2">
           <.button_link
-            mt?={false}
             href="#"
             phx-click="retry"
             theme="secondary"
@@ -182,7 +182,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           </.button_link>
           <.button_link
             :if={@offer_custom_url_input?}
-            mt?={false}
             href="#"
             phx-click={
               JS.hide(to: "#verification-failed-default-actions")
@@ -197,8 +196,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           </.button_link>
           <.button_link
             :if={not @offer_custom_url_input?}
-            mt?={false}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain, flow: @flow)}
+            href={~p"/#{@domain}/installation?#{[flow: @flow, return_to: "dashboard"]}"}
             theme="ghost"
             size="sm"
             class="hover:bg-gray-600/10 dark:hover:bg-white/10 hover:border-transparent dark:hover:border-transparent"
@@ -265,7 +263,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
 
   defp review_installation_link_sentence(assigns) do
     review_installation_url =
-      Routes.site_path(PlausibleWeb.Endpoint, :installation, assigns.domain, flow: assigns.flow)
+      ~p"/#{assigns.domain}/installation?#{[flow: assigns.flow, return_to: "dashboard"]}"
 
     render_recommendation("See your installation instructions again here", [
       %{text: "here", href: review_installation_url}
@@ -298,12 +296,11 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         id="custom_url"
         aria-label="Website URL"
         required
-        mt?={false}
         width="w-64 h-[38px] dark:bg-white/15 dark:border-transparent"
         placeholder={"https://#{@domain}"}
         value={"https://#{@domain}"}
       />
-      <.button type="submit" mt?={false} theme="primary" size="sm">
+      <.button type="submit" theme="primary" size="sm">
         Verify URL
       </.button>
     </form>

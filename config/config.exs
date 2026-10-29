@@ -23,6 +23,12 @@ config :esbuild,
       ~w(js/app.js js/dashboard.tsx js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js --define:BUILD_EXTRA=true),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ],
+  # https://developer.friendlycaptcha.com/docs/v2/getting-started/install#using-the-scripts-without-a-cdn-ie-self-hosting
+  friendly_captcha: [
+    args:
+      ~w(node_modules/@friendlycaptcha/sdk/site.min.js node_modules/@friendlycaptcha/sdk/site.compat.min.js --loader:.js=copy --outbase=node_modules/@friendlycaptcha/sdk --outdir=../priv/static/js/friendly-captcha),
+    cd: Path.expand("../assets", __DIR__)
   ]
 
 config :tailwind,
@@ -43,7 +49,7 @@ config :ref_inspector,
   database_path: "priv/ref_inspector"
 
 config :plausible,
-  paddle_api: Plausible.Billing.PaddleApi,
+  paddle_classic_api: Plausible.Billing.PaddleClassic.Api,
   google_api: Plausible.Google.API,
   verification_checks_mod: Plausible.InstallationSupport.Verification.Checks
 
@@ -65,7 +71,7 @@ config :plausible, Plausible.Repo,
   connect_timeout: 300_000,
   handshake_timeout: 300_000,
   queue_target: 500,
-  queue_inerval: 1100
+  queue_interval: 1100
 
 config :plausible, Plausible.Cache, enabled: true
 
@@ -82,7 +88,7 @@ config :sentry,
 config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
 config :peep, :bucket_calculator, Plausible.PromEx.Buckets
 
-config :plausible, Plausible.Auth.ApiKey,
+config :plausible, PlausibleWeb.Api.RateLimit,
   legacy_per_user_hourly_request_limit: 600,
   burst_request_limit: 60,
   burst_period_seconds: 10

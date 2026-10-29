@@ -8,10 +8,7 @@ import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
-import {
-  mockManyRequests,
-  resolveWithTimestamps
-} from './support/mock-many-requests'
+import { mockManyRequests } from './support/mock-many-requests'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -51,7 +48,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('a')
+          await page.locator('a').click()
         },
         expectedRequests: [
           {
@@ -96,7 +93,7 @@ for (const mode of ['web', 'esm']) {
       await expectPlausibleInAction(page, {
         action: async () => {
           await page.goto(url)
-          await page.click('a')
+          await page.locator('a').click()
         },
         expectedRequests: [
           {
@@ -154,14 +151,14 @@ for (const mode of ['web', 'esm']) {
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
-        action: () => page.click(`a[href="${csvFileURL}"]`),
+        action: () => page.locator(`a[href="${csvFileURL}"]`).click(),
         expectedRequests: [{ n: 'File Download', p: { url: csvFileURL } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
       await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click(`a[href="${isoFileURL}"]`),
+        action: () => page.locator(`a[href="${isoFileURL}"]`).click(),
         refutedRequests: [{ n: 'File Download' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -199,7 +196,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [
           { n: 'File Download', p: { url: `${LOCAL_SERVER_ADDR}${filePath}` } }
         ],
@@ -236,7 +233,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [{ n: 'File Download', p: { url: pdfUrl } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -276,7 +273,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a', { modifiers: ['ControlOrMeta'] }),
+        action: () => page.locator('a').click({ modifiers: ['ControlOrMeta'] }),
         expectedRequests: [{ n: 'File Download', p: { url: pdfUrl } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -313,7 +310,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('span'),
+        action: () => page.locator('span').click(),
         expectedRequests: [{ n: 'File Download', p: { url: pdfUrl } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -356,13 +353,17 @@ for (const mode of ['legacy', 'web']) {
         bodyContent: /* HTML */ `<a href="${pdfUrl}">Download</a>`
       })
       await page.goto(url)
-      await page.click('a')
+      await page.locator('a').click()
       const [
         [trackingRequestList, trackingResponseTime],
         [downloadMockRequestList, downloadRequestTime]
-      ] = await resolveWithTimestamps([
-        eventsApiMock.getRequestList(),
-        pdfMock.getRequestList()
+      ] = await Promise.all([
+        eventsApiMock
+          .getRequestList()
+          .then((requestList) => [requestList, Date.now()] as const),
+        pdfMock
+          .getRequestList()
+          .then((requestList) => [requestList, Date.now()] as const)
       ])
 
       expect(downloadRequestTime).toBeLessThan(trackingResponseTime)
@@ -406,7 +407,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [{ n: 'File Download', p: { url: pdfUrl } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -440,7 +441,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         refutedRequests: [{ n: 'File Download' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -486,14 +487,14 @@ for (const mode of ['legacy', 'web']) {
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
-        action: () => page.click(`a[href="${csvFileURL}"]`),
+        action: () => page.locator(`a[href="${csvFileURL}"]`).click(),
         refutedRequests: [{ n: 'File Download' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
       await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click(`a[href="${isoFileURL}"]`),
+        action: () => page.locator(`a[href="${isoFileURL}"]`).click(),
         expectedRequests: [{ n: 'File Download', p: { url: isoFileURL } }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -536,7 +537,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         refutedRequests: [{ n: 'File Download' }],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -560,7 +561,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       linkAttributes: '',
       click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
       expected: { downloadsOnSamePage: 0, downloadsOnOtherPages: 1 },
-      skip: (browserName) =>
+      skip: (browserName: string) =>
         test.skip(
           browserName === 'webkit',
           'does not open links with such clicks (works when testing manually in macOS Safari)'
@@ -616,7 +617,9 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         >`
       })
       await page.goto(url)
-      await page.click(click.element, { modifiers: click.modifiers })
+      await page.locator(click.element).click({
+        ...(click.modifiers && { modifiers: click.modifiers })
+      })
       const [downloadsOnSamePage, downloadsOnOtherPages, eventsApiRequests] =
         await Promise.all([
           downloadMockForSamePage.getRequestList().then((d) => d.length),
@@ -682,16 +685,13 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       })
       await page.goto(url)
 
-      const navigationPromise = page.waitForRequest(filePath, {
-        timeout: 2000
-      })
-      const trackingPromise = page.waitForResponse('**/api/event', {
-        timeout: 2000
-      })
-
-      await page.click('a')
-      const [[, trackingResponseTime], [, navigationTime]] =
-        await resolveWithTimestamps([trackingPromise, navigationPromise])
+      const [trackingResponseTime, navigationTime] = await Promise.all([
+        page
+          .waitForResponse('**/api/event', { timeout: 2000 })
+          .then(() => Date.now()),
+        page.waitForRequest(filePath, { timeout: 2000 }).then(() => Date.now()),
+        page.locator('a').click()
+      ])
       await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(
         1
       )
@@ -737,7 +737,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
     const navigationPromise = page.waitForRequest(filePath, {
       timeout: 6000
     })
-    await page.click('a')
+    await page.locator('a').click()
     await navigationPromise
     await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(1)
   })

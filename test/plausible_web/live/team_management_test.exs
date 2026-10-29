@@ -1,10 +1,10 @@
-defmodule PlausibleWeb.Live.TeamMangementTest do
+defmodule PlausibleWeb.Live.TeamManagementTest do
   use PlausibleWeb.ConnCase, async: false
   use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
 
-  def team_general_path(), do: Routes.settings_path(PlausibleWeb.Endpoint, :team_general)
+  def team_general_path(), do: ~p"/settings/team/general"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "/settings/team/general" do
@@ -35,6 +35,46 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert find(resp, "#{member_el()}:first-of-type") |> text() =~ "#{user.email}"
       assert find(resp, "#{guest_el()}:first-of-type") |> text() =~ "guest@example.com"
+    end
+
+    test "role switcher forms opt out of automatic recovery after a reconnect", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      site = new_site(team: team)
+      add_member(team, role: :viewer)
+      invite_member(team, "invitee@example.com", role: :editor, inviter: user)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      resp =
+        conn
+        |> get(team_general_path())
+        |> html_response(200)
+
+      assert elem_count(resp, ~s|form[id^="role-form-"][phx-auto-recover="ignore"]|) == 4
+    end
+
+    test "disables changing the role of a pending guest invitation, but not removing it", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      site = new_site(team: team)
+      invite_guest(site, "pending-guest@example.com", role: :viewer, inviter: user)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      resp =
+        conn
+        |> get(team_general_path())
+        |> html_response(200)
+
+      assert text_of_attr(resp, role_dropdown_el("pending-guest@example.com"), "data-disabled") ==
+               "true"
+
+      refute attr_defined?(resp, remove_button_el("pending-guest@example.com"), "disabled")
+
+      refute attr_defined?(resp, role_dropdown_el("guest@example.com"), "data-disabled")
     end
 
     test "does not render Guest divider when no guests found", %{conn: conn} do
@@ -86,17 +126,16 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
         html = render(lv)
 
-        assert text_of_element(
-                 html,
-                 "#{member_el()}:nth-of-type(1) button"
-               ) == "Owner"
+        self_row = "#member-row-#{:erlang.phash2(user.email)}"
+        member_row = "#member-row-#{:erlang.phash2(member.email)}"
 
-        assert text_of_element(html, "#{member_el()}:nth-of-type(1)") =~ "You (SSO)"
+        assert text_of_element(html, "#{self_row} #{role_el()}") == "Owner"
+        assert text_of_element(html, self_row) =~ "You (SSO)"
 
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
-        assert text_of_element(html, "#{member_el()}:nth-of-type(2)") =~ "SSO"
+        assert text_of_element(html, "#{member_row} #{role_el()}") == "Viewer"
+        assert text_of_element(html, member_row) =~ "SSO"
 
-        change_role(lv, 2, "owner")
+        change_role(lv, member.email, "owner")
         html = render(lv)
 
         assert html =~ "User must have 2FA enabled to become an owner"
@@ -118,10 +157,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       html = render(lv)
 
+      assert text(html) =~ "new@example.com has been invited"
+
       member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
-      assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation sent"
+      assert member_row1 =~ "Pending invitation"
 
       member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
@@ -133,23 +173,23 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       )
     end
 
-    test "allows updating membership role in place", %{conn: conn, team: team} do
+    test "allows updating membership role in place", %{conn: conn, team: team, user: user} do
       member2 = add_member(team, role: :admin)
       lv = get_liveview(conn)
 
       html = render(lv)
 
-      assert text_of_element(
-               html,
-               "#{member_el()}:nth-of-type(1) button"
-             ) == "Owner"
+      self_row = "#member-row-#{:erlang.phash2(user.email)}"
+      member2_row = "#member-row-#{:erlang.phash2(member2.email)}"
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Admin"
+      assert text_of_element(html, "#{self_row} #{role_el()}") == "Owner"
+      assert text_of_element(html, "#{member2_row} #{role_el()}") == "Admin"
 
-      change_role(lv, 2, "viewer")
+      change_role(lv, member2.email, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
+      assert text_of_element(html, "#{member2_row} #{role_el()}") == "Viewer"
+      assert text(html) =~ "#{member2.email}'s role has been changed to Viewer"
 
       assert_no_emails_delivered()
 
@@ -166,9 +206,10 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert elem_count(html, member_el()) == 1
 
-      assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
+      assert text_of_element(html, "#{guest_el()}:first-of-type #{role_el()}") ==
+               "Guest"
 
-      change_role(lv, 1, "viewer", guest_el())
+      change_role(lv, "guest@example.com", "viewer")
       html = render(lv)
 
       assert elem_count(html, member_el()) == 2
@@ -189,7 +230,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert Enum.count(Plausible.Teams.Invitations.pending_team_invitations_for(team)) == 3
     end
 
-    test "fails to accept invitation to already existing e-mail", %{
+    test "fails to invite an e-mail belonging to an existing team member (e.g. yourself)", %{
       conn: conn,
       user: user
     } do
@@ -197,7 +238,95 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       add_invite(lv, user.email, "admin")
 
       assert lv |> render() |> text() =~
-               "Error! Make sure the e-mail is valid and is not taken already"
+               "Error! Make sure the e-mail is valid and not already taken by an existing member or invitation"
+    end
+
+    test "fails to invite an e-mail that already has a pending invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      add_invite(lv, "Sent@Example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "Error! Make sure the e-mail is valid and not already taken by an existing member or invitation"
+
+      assert Plausible.Repo.reload!(invitation).role == :viewer
+    end
+
+    test "fails to invite a guest's e-mail", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      add_guest(site, role: :viewer, user: new_user(email: "guest@example.com"))
+
+      lv = get_liveview(conn)
+      add_invite(lv, "guest@example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "This e-mail belongs to a guest. Please change their role below"
+
+      assert [] =
+               team
+               |> Plausible.Teams.Invitations.pending_team_invitations_for()
+               |> Enum.filter(&(&1.role != :guest))
+    end
+
+    test "fails to invite an e-mail with a pending guest invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      site = new_site(team: team)
+      invite_guest(site, "guest@example.com", role: :viewer, inviter: user)
+
+      lv = get_liveview(conn)
+      add_invite(lv, "guest@example.com", "admin")
+
+      assert lv |> render() |> text() =~
+               "This e-mail is already invited as a guest. To invite them to the team, please delete the guest invitation first."
+
+      assert [%{role: :guest}] = Plausible.Teams.Invitations.pending_team_invitations_for(team)
+    end
+
+    test "allows updating a pending invitation's role in place", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      change_role(lv, "sent@example.com", "editor")
+
+      assert lv |> render() |> text() =~
+               "The invitation for sent@example.com now has the Editor role"
+
+      assert Plausible.Repo.reload!(invitation).role == :editor
+      assert_no_emails_delivered()
+    end
+
+    test "shows a success message after removing a member", %{conn: conn, team: team} do
+      member = add_member(team, role: :viewer)
+
+      lv = get_liveview(conn)
+      remove_member(lv, member.email)
+
+      assert lv |> render() |> text() =~ "#{member.email} has been removed from the team"
+    end
+
+    test "shows a success message after removing a pending invitation", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      lv = get_liveview(conn)
+      remove_member(lv, "sent@example.com")
+
+      assert lv |> render() |> text() =~ "The invitation for sent@example.com has been removed"
     end
 
     @tag :ee_only
@@ -206,8 +335,6 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       user: user,
       team: team
     } do
-      insert(:growth_subscription, team: team)
-
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
@@ -227,38 +354,43 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert elem_count(html, member_el()) == 4
       assert elem_count(html, guest_el()) == 1
 
-      pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      owner = find(html, "#{member_el()}:nth-of-type(3)") |> text()
-      admin = find(html, "#{member_el()}:nth-of-type(4)") |> text()
+      pending_email = "pending@example.com"
+      sent_email = "sent@example.com"
+
+      pending = text_of_element(html, "#member-row-#{:erlang.phash2(pending_email)}")
+      sent = text_of_element(html, "#member-row-#{:erlang.phash2(sent_email)}")
+      owner = text_of_element(html, "#member-row-#{:erlang.phash2(user.email)}")
+      admin = text_of_element(html, "#member-row-#{:erlang.phash2(member2.email)}")
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert pending =~ "Invitation pending"
-      assert sent =~ "Invitation sent"
+      assert pending =~ "Pending invitation"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
 
-      remove_member(lv, 1)
-      # next becomes first
-      remove_member(lv, 1)
-      # last becomes second
-      remove_member(lv, 2)
+      remove_member(lv, pending_email)
+      remove_member(lv, sent_email)
+      remove_member(lv, member2.email)
 
       # remove guest
-      remove_member(lv, 1, guest_el())
+      remove_member(lv, guest.email)
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation pending"
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)
 
       assert elem_count(html, member_el()) == 1
       refute element_exists?(html, "#guest-list")
+
+      assert_email_delivered_with(
+        to: [nil: "pending@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+      )
 
       assert_email_delivered_with(
         to: [nil: member2.email],
@@ -297,27 +429,28 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert elem_count(html, member_el()) == 3
       assert elem_count(html, guest_el()) == 1
 
-      sent = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      owner = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      admin = find(html, "#{member_el()}:nth-of-type(3)") |> text()
+      sent_email = "sent@example.com"
+
+      sent = text_of_element(html, "#member-row-#{:erlang.phash2(sent_email)}")
+      owner = text_of_element(html, "#member-row-#{:erlang.phash2(user.email)}")
+      admin = text_of_element(html, "#member-row-#{:erlang.phash2(member2.email)}")
 
       guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
-      assert sent =~ "Invitation sent"
+      assert sent =~ "Pending invitation"
       assert owner =~ "Owner"
       assert admin != ""
       assert guest_member =~ "Guest"
 
-      remove_member(lv, 1)
-      # last becomes second
-      remove_member(lv, 2)
+      remove_member(lv, sent_email)
+      remove_member(lv, member2.email)
 
       # remove guest
-      remove_member(lv, 1, guest_el())
+      remove_member(lv, guest.email)
 
       html = render(lv) |> text()
 
-      refute html =~ "Invitation sent"
+      refute html =~ "Pending invitation"
       refute html =~ "Guest"
 
       html = render(lv)
@@ -354,7 +487,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "owner", guest_el())
+      change_role(lv, member2.email, "owner")
       html = render(lv)
 
       refute html =~ "Error!"
@@ -378,7 +511,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 2, "owner")
+      change_role(lv, member2.email, "owner")
       html = render(lv)
 
       refute html =~ "Error!"
@@ -401,7 +534,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert attr_defined?(html, "##{:erlang.phash2(member2.email)}-remove", "data-confirm")
     end
 
-    test "self-demotion role items carry data-confirm, others do not", %{
+    test "self-demotion role items carry data-confirm-message, others do not", %{
       conn: conn,
       team: team,
       user: user
@@ -416,51 +549,55 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       other_hash = :erlang.phash2(member2.email)
 
       for role <- ~w(editor billing viewer) do
-        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected data-confirm on self #{role} item"
+        assert attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm-message"),
+               "expected data-confirm-message on self #{role} item"
 
-        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on other member #{role} item"
+        refute attr_defined?(html, "#option-#{other_hash}-#{role}", "data-confirm-message"),
+               "expected no data-confirm-message on other member #{role} item"
       end
 
       for role <- ~w(owner admin) do
-        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm"),
-               "expected no data-confirm on self #{role} item"
+        refute attr_defined?(html, "#option-#{my_hash}-#{role}", "data-confirm-message"),
+               "expected no data-confirm-message on self #{role} item"
       end
     end
 
-    test "removes self, redirecting away from team", %{conn: conn, team: team} do
+    test "removes self, redirecting away from team", %{conn: conn, team: team, user: user} do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      remove_member(lv, 1)
+      remove_member(lv, user.email)
 
-      assert_redirect(lv, "/sites?__team=none")
+      flash = assert_redirect(lv, "/sites?__team=none")
+      assert flash["success"] == "You have left the team"
+      assert {:error, :not_a_member} = Plausible.Teams.Memberships.team_role(team, user)
     end
 
     test "demotes self to billing, redirecting to team general", %{
       conn: conn,
-      team: team
+      team: team,
+      user: user
     } do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "billing")
+      change_role(lv, user.email, "billing")
 
       assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
 
     test "demotes self to viewer, redirecting to team general", %{
       conn: conn,
-      team: team
+      team: team,
+      user: user
     } do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "viewer")
+      change_role(lv, user.email, "viewer")
 
       assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
@@ -474,45 +611,43 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       lv = get_liveview(conn)
 
-      change_role(lv, 2, "billing")
+      change_role(lv, member2.email, "billing")
       assert_team_membership(member2, team, :billing)
     end
 
     test "demotes self to editor, redirecting to team general", %{
       conn: conn,
-      team: team
+      team: team,
+      user: user
     } do
       _owner2 = add_member(team, role: :owner)
 
       lv = get_liveview(conn)
 
-      change_role(lv, 1, "editor")
+      change_role(lv, user.email, "editor")
 
       assert_redirect(lv, "/settings/team/general?__team=#{team.identifier}")
     end
   end
 
-  defp change_role(lv, index, role, main_selector \\ member_el()) do
+  defp change_role(lv, email, role) do
     lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-value-role="#{role}"]|)
-    |> render_click()
+    |> element(~s|#role-form-#{:erlang.phash2(email)}|)
+    |> render_change(%{"role" => role})
   end
 
-  defp remove_member(lv, index, main_selector \\ member_el()) do
+  defp remove_member(lv, email) do
     lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-click="remove-member"]|)
+    |> element(~s|##{:erlang.phash2(email)}-remove|)
     |> render_click()
   end
 
   defp add_invite(lv, email, role) do
     lv
-    |> element(~s|#input-role-picker a[phx-value-role="#{role}"]|)
-    |> render_click()
-
-    lv
     |> element("#team-layout-form")
     |> render_submit(%{
-      "input-email" => email
+      "input-email" => email,
+      "input-role" => role
     })
   end
 
@@ -533,5 +668,17 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
   defp guest_el() do
     ~s|#guest-list div[data-test-kind="guest"]|
+  end
+
+  defp role_el() do
+    ~s|[data-testid="role"]|
+  end
+
+  defp role_dropdown_el(email) do
+    ~s|[id="role-dropdown-#{email}"]|
+  end
+
+  defp remove_button_el(email) do
+    ~s|[id="#{:erlang.phash2(email)}-remove"]|
   end
 end

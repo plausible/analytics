@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Api.StatsController.ExplorationTest do
           })
           |> json_response(400)
 
-        assert resp["error"] == "We are unable to show funnels when journey is empty"
+        assert resp["error"] == "Funnels aren't available when journey is empty"
       end
 
       test "supports backward direction", %{conn: conn, site: site} do

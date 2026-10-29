@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: another_site.domain}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != another_site.domain
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
       assert html =~ "You already own this site"
 
       expected_settings_link =
-        Routes.site_path(conn, :settings_general, owned_site.domain)
+        ~p"/#{owned_site.domain}/settings/general"
 
       assert html =~ expected_settings_link
 
@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: "foo.example.com"}})
 
-      assert html =~ "This domain cannot be registered"
+      assert html =~ "This domain is already registered"
 
       site = Repo.reload!(site)
       assert site.domain != "foo.example.com"
@@ -204,7 +204,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
         |> element("form")
         |> render_submit(%{site: %{domain: ""}})
 
-      assert html =~ htmlize_quotes("can't be blank")
+      assert html =~ "Please enter a domain or subdomain"
     end
 
     test "form validation shows error for invalid domain format", %{conn: conn, site: site} do
@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Live.ChangeDomainTest do
     test "renders back to settings link with correct path", %{conn: conn, site: site} do
       {:ok, _lv, html} = live(conn, "/#{site.domain}/change-domain")
 
-      expected_link = Routes.site_path(conn, :settings_general, site.domain)
+      expected_link = ~p"/#{site.domain}/settings/general"
       assert html =~ expected_link
     end
 

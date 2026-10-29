@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 id="add-hostname-rule"
                 x-data
                 x-on:click={Modal.JS.open("hostname-rule-form-modal")}
-                class="mt-4"
+                class="mt-6"
               >
                 Add hostname
               </.button>
@@ -72,7 +72,6 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 id="add-hostname-rule"
                 x-data
                 x-on:click={Modal.JS.open("hostname-rule-form-modal")}
-                mt?={false}
               >
                 Add hostname
               </.button>
@@ -172,7 +171,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                   NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
                 <% end %>
               </p>
-              <.button type="submit" class="w-full">
+              <.button type="submit" class="w-full mt-6">
                 Add hostname
               </.button>
             </.form>

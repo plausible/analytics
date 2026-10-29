@@ -78,20 +78,42 @@ defmodule PlausibleWeb.Endpoint do
     json_decoder: Phoenix.json_library()
   )
 
-  plug(Sentry.PlugContext)
+  plug(Sentry.PlugContext, body_scrubber: {__MODULE__, :scrub_sentry_body})
 
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
   plug(:runtime_session)
 
-  plug(CORSPlug)
+  plug(:cors)
   plug(PlausibleWeb.Router)
 
   def secure_cookie?, do: config!(:secure_cookie)
 
   def websocket_url() do
     config!(:websocket_url)
+  end
+
+  @cors_opts CORSPlug.init([])
+
+  # CORS must not be supported at the [authorization endpoint](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-endpoint)
+  def cors(conn, _opts) do
+    if conn.path_info == ["login", "oauth", "authorize"] do
+      conn
+    else
+      CORSPlug.call(conn, @cors_opts)
+    end
+  end
+
+  # OAuth token requests carry live credentials in the body
+  @sentry_scrubbed_keys Sentry.Scrubber.default_param_keys() ++
+                          ["code", "code_verifier", "access_token", "refresh_token"]
+
+  # The event ingestion endpoint is high traffic, so its body is reported unscrubbed
+  def scrub_sentry_body(%{path_info: ["api", "event"]} = conn), do: conn.params
+
+  def scrub_sentry_body(conn) do
+    Sentry.Scrubber.scrub(conn.params, keys: @sentry_scrubbed_keys)
   end
 
   def runtime_session(conn, _opts) do

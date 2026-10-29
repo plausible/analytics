@@ -1,8 +1,9 @@
 {
-  "tracker_script_version": 36,
+  "tracker_script_version": 37,
   "type": "module",
   "scripts": {
     "lint": "eslint",
+    "typecheck": "tsc --noEmit --pretty",
     "check-format": "prettier --check \"**/*.{js,mjs,ts,html,json,md}\"",
     "deploy": "node compile.js",
     "test": "npx playwright test",
@@ -18,25 +19,24 @@
   "dependencies": {
     "@duckduckgo/autoconsent": "^14.16.0",
     "@rollup/plugin-json": "^6.1.0",
-    "@swc/core": "^1.11.24",
-    "chokidar": "^4.0.3",
+    "@swc/core": "^1.16.18",
     "cli-progress": "^3.12.0",
     "generatorics": "^1.1.0",
-    "rollup": "^4.41.1",
+    "rollup": "^4.64.6",
     "threads": "^1.7.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.34.0",
-    "@playwright/test": "^1.56.1",
-    "@types/node": "^22.13.4",
-    "eslint": "^9.34.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.56.1",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-playwright": "^2.2.2",
-    "express": "^4.21.2",
-    "globals": "^16.3.0",
+    "eslint-plugin-playwright": "^2.12.1",
+    "express": "^5.3.0",
+    "globals": "^17.13.0",
     "markdown-table": "^3.0.4",
-    "prettier": "^3.3.3",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.41.0"
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2"
   }
 }

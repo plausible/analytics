@@ -14,7 +14,60 @@ defmodule Plausible.Stats.Funnel do
   import Plausible.Stats.Util, only: [percentage: 2]
 
   alias Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Base, Query}
+  alias Plausible.Stats.{Base, Comparisons, DateTimeRange, Query}
+  alias Plausible.Stats.Exploration
+  alias Plausible.Stats.Goal.Revenue
+
+  @spec suggest(Plausible.Site.t(), Plausible.Stats.Query.t(), Keyword.t()) ::
+          {[Plausible.Goal.t()], [Plausible.Goal.t()]}
+  def suggest(site, query, opts \\ []) do
+    goals = Keyword.get(opts, :goals, [])
+    input = Keyword.get(opts, :input, "")
+
+    goals_map =
+      Map.new(goals, fn g -> {{g.event_name || "pageview", g.page_path || ""}, g} end)
+
+    {:ok, suggestions} =
+      Exploration.next_steps(site, query, [], search_term: input, include_wildcard?: false)
+
+    {suggestions, unmatched_goals} =
+      suggestions
+      |> Enum.reject(&(&1.step.name == Exploration.Journey.Step.journey_end_event()))
+      |> Enum.reduce({[], goals_map}, fn suggestion, {suggestions, goals_map} ->
+        case step_to_goal(Map.fetch!(suggestion, :step), goals_map) do
+          {goal, :static, key} ->
+            {[goal | suggestions], Map.delete(goals_map, key)}
+
+          {goal, :dynamic} ->
+            {[goal | suggestions], goals_map}
+        end
+      end)
+
+    {Enum.reverse(suggestions), Map.values(unmatched_goals)}
+  end
+
+  @spec step_to_goal(Exploration.Journey.Step.t(), %{
+          {String.t(), String.t()} => Plausible.Goal.t()
+        }) ::
+          {Plausible.Goal.t(), :static, {binary(), binary()}} | {Plausible.Goal.t(), :dynamic}
+  def step_to_goal(step, goals_map) do
+    goal = goals_map[{step.name, step.pathname}]
+
+    if not is_nil(goal) and step.is_goal and
+         Plausible.Goal.display_name(step.name, step.pathname) == goal.display_name do
+      {goal, :static, {step.name, step.pathname}}
+    else
+      goal =
+        %Plausible.Goal{}
+        |> Plausible.Goal.changeset(%{
+          event_name: if(step.name != "pageview", do: step.name),
+          page_path: step.pathname
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      {goal, :dynamic}
+    end
+  end
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
           {:ok, map()} | {:error, :funnel_not_found}
@@ -28,44 +81,108 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
-  def funnel(_site, query, %Funnel{} = funnel) do
-    goals = Enum.map(funnel.steps, & &1.goal)
+  def funnel(site, query, %Funnel{} = funnel) do
+    revenue_steps = revenue_steps(site, Funnel.steps(funnel))
+
+    comparison_funnel =
+      if query.comparison_utc_time_range do
+        comparison_query = Comparisons.get_comparison_query(query)
+
+        comparison_query
+        |> compute(funnel, revenue_steps)
+        |> recompute_flexible(comparison_query, site, funnel)
+      end
+
+    final_funnel =
+      query
+      |> compute(funnel, revenue_steps)
+      |> recompute_flexible(query, site, funnel)
+
+    {:ok,
+     final_funnel
+     |> Map.merge(%{
+       name: funnel.name,
+       funnel_type: funnel.funnel_type,
+       comparison: comparison_funnel,
+       date_range: tz_date_range(query.utc_time_range, query.timezone),
+       comparison_date_range:
+         if(query.comparison_utc_time_range,
+           do: tz_date_range(query.comparison_utc_time_range, query.timezone)
+         )
+     })}
+  end
+
+  defp recompute_flexible(final_funnel, query, site, %{funnel_type: :flexible} = funnel) do
+    if length(Funnel.steps(funnel)) > 2 do
+      short_funnel = convert_to_first_and_last(funnel)
+      revenue_steps = revenue_steps(site, Funnel.steps(short_funnel))
+
+      [_, last_step] =
+        query
+        |> compute(short_funnel, revenue_steps)
+        |> Map.fetch!(:steps)
+
+      steps = List.replace_at(final_funnel.steps, -1, last_step)
+
+      %{final_funnel | steps: steps}
+    else
+      final_funnel
+    end
+  end
+
+  defp recompute_flexible(final_funnel, _query, _site, _funnel),
+    do: final_funnel
+
+  defp convert_to_first_and_last(funnel) do
+    steps = Funnel.steps(funnel)
+    Funnel.swap(funnel, funnel_type: :sequential, steps: [List.first(steps), List.last(steps)])
+  end
+
+  defp revenue_steps(site, steps) do
+    if Revenue.available?(site) do
+      Enum.reject(steps, &is_nil(Funnel.as_goal(&1).currency))
+    else
+      []
+    end
+  end
+
+  defp compute(query, funnel, revenue_steps) do
+    goals = Funnel.goals(funnel)
 
     funnel_data =
       query
       |> Query.set(preloaded_goals: %{all: [], matching_toplevel_filters: goals})
       |> Base.base_event_query()
-      |> funnel_query(funnel)
+      |> funnel_query(funnel, revenue_steps)
       # We pass the query struct to record query metadata for
       # the CH debug console.
       |> ClickhouseRepo.all(query: query)
 
+    visitors_by_step = Map.new(funnel_data, &{&1.step, &1.visitors})
+
     # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,
     # it signifies the number of visitors that haven't entered the funnel.
-    not_entering_visitors =
-      case funnel_data do
-        [{0, count} | _] -> count
-        _ -> 0
-      end
+    not_entering_visitors = Map.get(visitors_by_step, 0, 0)
 
-    all_visitors = Enum.reduce(funnel_data, 0, fn {_, n}, acc -> acc + n end)
-    steps = backfill_steps(funnel_data, funnel)
+    all_visitors = funnel_data |> Enum.map(& &1.visitors) |> Enum.sum()
+
+    revenue_totals_by_step = revenue_totals(funnel_data, revenue_steps)
+
+    steps = backfill_steps(visitors_by_step, revenue_totals_by_step, funnel)
 
     visitors_at_first_step = List.first(steps).visitors
 
-    {:ok,
-     %{
-       name: funnel.name,
-       steps: steps,
-       all_visitors: all_visitors,
-       entering_visitors: visitors_at_first_step,
-       entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
-       never_entering_visitors: all_visitors - visitors_at_first_step,
-       never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
-     }}
+    %{
+      steps: steps,
+      all_visitors: all_visitors,
+      entering_visitors: visitors_at_first_step,
+      entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
+      never_entering_visitors: all_visitors - visitors_at_first_step,
+      never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
+    }
   end
 
-  defp funnel_query(query, funnel_definition) do
+  defp funnel_query(query, funnel_definition, revenue_steps) do
     q_events =
       from(e in query,
         select: %{user_id: e.user_id, _sample_factor: fragment("any(_sample_factor)")},
@@ -74,17 +191,70 @@ defmodule Plausible.Stats.Funnel do
         order_by: [desc: fragment("step")]
       )
       |> select_funnel(funnel_definition)
+      |> select_user_revenue(revenue_steps)
 
     from(f in subquery(q_events),
-      select: {f.step, total()},
+      select: %{step: f.step, visitors: total()},
       group_by: f.step
     )
+    |> select_revenue_totals(revenue_steps)
+  end
+
+  defp select_user_revenue(db_query, []), do: db_query
+
+  defp select_user_revenue(db_query, revenue_steps) do
+    sums =
+      Map.new(revenue_steps, fn step ->
+        goal_condition = Plausible.Stats.Goals.goal_condition(Funnel.as_goal(step))
+
+        {revenue_key(step),
+         dynamic([e], fragment("sumIf(?, ?)", e.revenue_reporting_amount, ^goal_condition))}
+      end)
+
+    from(q in db_query, select_merge: ^sums)
+  end
+
+  defp select_revenue_totals(db_query, []), do: db_query
+
+  defp select_revenue_totals(db_query, revenue_steps) do
+    totals =
+      Map.new(revenue_steps, fn step ->
+        key = revenue_key(step)
+
+        {key,
+         dynamic(
+           [f],
+           fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", field(f, ^key))
+         )}
+      end)
+
+    from(q in db_query, select_merge: ^totals)
+  end
+
+  defp revenue_key(%{step_order: step_order}), do: :"revenue_#{step_order}"
+
+  # The per-user sum runs for every buyer, even one that a strict order scored
+  # below the step that holds their purchase. Such a buyer did not reach the step,
+  # so the filter leaves their money out.
+  defp revenue_totals(funnel_data, revenue_steps) do
+    Map.new(revenue_steps, fn step ->
+      key = revenue_key(step)
+
+      total =
+        funnel_data
+        |> Enum.filter(&(&1.step >= step.step_order))
+        |> Enum.reduce(Decimal.new(0), fn row, acc ->
+          Decimal.add(acc, Map.get(row, key) || 0)
+        end)
+
+      {step.step_order, total}
+    end)
   end
 
   defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
-      Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
-        goal_condition = Plausible.Stats.Goals.goal_condition(step.goal)
+      Enum.reduce(Funnel.goals(funnel_definition), nil, fn goal, acc ->
+        goal_condition = Plausible.Stats.Goals.goal_condition(goal)
 
         if acc do
           dynamic([q], fragment("?, ?", ^acc, ^goal_condition))
@@ -94,7 +264,7 @@ defmodule Plausible.Stats.Funnel do
       end)
 
     dynamic_window_funnel =
-      if funnel_definition.strict_order do
+      if funnel_definition.funnel_type == :strict do
         dynamic(
           [q],
           fragment(
@@ -118,25 +288,24 @@ defmodule Plausible.Stats.Funnel do
     )
   end
 
-  defp backfill_steps(funnel_result, funnel) do
-    # Directly from ClickHouse we only get {step_idx(), visitor_count()} tuples.
+  defp backfill_steps(visitors_by_step, revenue_by_step, funnel) do
+    # Directly from ClickHouse we only get visitor counts per step index,
     # but no totals including previous steps are aggregated.
     # Hence we need to perform the appropriate backfill
     # and also calculate dropoff and conversion rate for each step.
     # In case ClickHouse returns 0-index funnel result, we're going to ignore it
     # anyway, since we fold over steps as per definition, that are always
     # indexed starting from 1.
-    funnel_result = Enum.into(funnel_result, %{})
-    max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
+    max_step = Enum.max_by(Funnel.steps(funnel), & &1.step_order).step_order
 
     funnel
-    |> Map.fetch!(:steps)
+    |> Funnel.steps()
     |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
       # first step contains the total number of all visitors qualifying for the funnel,
       # with each subsequent step needing to accumulate sum of the previous one(s)
       visitors_at_step =
         step.step_order..max_step
-        |> Enum.map(&Map.get(funnel_result, &1, 0))
+        |> Enum.map(&Map.get(visitors_by_step, &1, 0))
         |> Enum.sum()
 
       # accumulate current_visitors for the next iteration
@@ -154,18 +323,44 @@ defmodule Plausible.Stats.Funnel do
       conversion_rate = percentage(current_visitors, total_visitors)
       conversion_rate_step = percentage(current_visitors, visitors_at_previous)
 
-      step = %{
-        dropoff: dropoff,
-        dropoff_percentage: dropoff_percentage,
-        conversion_rate: conversion_rate,
-        conversion_rate_step: conversion_rate_step,
-        visitors: visitors_at_step,
-        label: to_string(step.goal)
-      }
+      computed_step =
+        %{
+          dropoff: dropoff,
+          dropoff_percentage: dropoff_percentage,
+          conversion_rate: conversion_rate,
+          conversion_rate_step: conversion_rate_step,
+          visitors: visitors_at_step,
+          label: to_string(Funnel.as_goal(step))
+        }
+        |> Map.merge(revenue_metrics(step, revenue_by_step, visitors_at_step))
 
-      {total_visitors, current_visitors, [step | acc]}
+      {total_visitors, current_visitors, [computed_step | acc]}
     end)
     |> elem(2)
     |> Enum.reverse()
+  end
+
+  defp revenue_metrics(step, revenue_by_step, visitors_at_step) do
+    case Map.fetch(revenue_by_step, step.step_order) do
+      {:ok, revenue} ->
+        currency = Funnel.as_goal(step).currency
+
+        %{
+          revenue: Revenue.format_revenue_metric(revenue, currency),
+          revenue_per_visitor:
+            Revenue.format_revenue_metric(per_visitor(revenue, visitors_at_step), currency)
+        }
+
+      :error ->
+        %{}
+    end
+  end
+
+  defp per_visitor(_revenue, 0), do: Decimal.new(0)
+  defp per_visitor(revenue, visitors), do: revenue |> Decimal.div(visitors) |> Decimal.round(3)
+
+  defp tz_date_range(utc_time_range, timezone) do
+    range = DateTimeRange.to_date_range(utc_time_range, timezone)
+    [range.first, range.last]
   end
 end

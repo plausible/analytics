@@ -44,7 +44,7 @@ defmodule Plausible.Application do
         Plausible.ClickhouseRepo,
         Plausible.IngestRepo,
         Plausible.AsyncInsertRepo,
-        Plausible.ImportDeletionRepo,
+        Plausible.DeletionRepo,
         Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
           ttl_check_interval: :timer.minutes(5),
           n_lock_partitions: 1,
@@ -326,12 +326,12 @@ defmodule Plausible.Application do
   end
 
   defp maybe_add_paddle_pool(pool_config, default) do
-    paddle_conf = Application.get_env(:plausible, :paddle)
+    paddle_conf = Application.get_env(:plausible, :paddle_classic)
 
     if paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] do
       Map.put(
         pool_config,
-        Plausible.Billing.PaddleApi.vendors_domain(),
+        Plausible.Billing.PaddleClassic.Api.vendors_domain(),
         Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
       )
     else

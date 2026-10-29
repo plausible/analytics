@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Email do
   """
 
   use Plausible
+  use PlausibleWeb.VerifiedRoutes
+
   import Bamboo.Email
   import Bamboo.PostmarkHelper
 
@@ -190,17 +192,14 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def enterprise_over_limit_internal_email(user, pageview_usage, site_usage, site_allowance) do
+  def enterprise_over_limit_internal_email(team, assigns) do
+    assigns = Map.put(assigns, :team, team)
+
     base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
-    |> subject("#{user.email} has outgrown their enterprise plan")
-    |> render("enterprise_over_limit_internal.html", %{
-      user: user,
-      pageview_usage: pageview_usage,
-      site_usage: site_usage,
-      site_allowance: site_allowance
-    })
+    |> subject("#{team.name} has outgrown their enterprise plan")
+    |> render("enterprise_over_limit_internal.html", assigns)
   end
 
   def dashboard_locked(user, team, usage, suggested_volume) do
@@ -256,7 +255,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user.email)
     |> tag("cancelled-email")
-    |> subject("Mind sharing your thoughts on Plausible?")
+    |> subject("Where did Plausible fall short?")
     |> render("cancellation_email.html", user: user)
   end
 
@@ -511,11 +510,9 @@ defmodule PlausibleWeb.Email do
       end
 
     download_url =
-      PlausibleWeb.Router.Helpers.site_url(
-        PlausibleWeb.Endpoint,
-        :download_export,
-        site.domain
-      ) <> "?__team=#{site.team.identifier}"
+      url(~p"/#{site.domain}/download/export?#{[__team: site.team.identifier]}")
+
+    deletion_date = export_deletion_date(site.team, expires_at)
 
     priority_email()
     |> to(user)
@@ -525,7 +522,8 @@ defmodule PlausibleWeb.Email do
       user: user,
       site: site,
       download_url: download_url,
-      expires_in: expires_in
+      expires_in: expires_in,
+      deletion_date: deletion_date
     )
   end
 
@@ -559,11 +557,12 @@ defmodule PlausibleWeb.Email do
     |> render("approaching_accept_traffic_until.html",
       time: "next week",
       user: %{email: notification.email, name: notification.name},
-      team: notification.team
+      team: notification.team,
+      deletion_date: nil
     )
   end
 
-  def approaching_accept_traffic_until_tomorrow(notification) do
+  def approaching_accept_traffic_until_tomorrow(notification, deletion_date \\ nil) do
     base_email()
     |> to(notification.email)
     |> tag("drop-traffic-warning-final")
@@ -571,7 +570,41 @@ defmodule PlausibleWeb.Email do
     |> render("approaching_accept_traffic_until.html",
       time: "tomorrow",
       user: %{email: notification.email, name: notification.name},
-      team: notification.team
+      team: notification.team,
+      deletion_date: deletion_date
+    )
+  end
+
+  def deletion_full_notice_email(user, team, schedule, sites_summary) do
+    days = Plausible.Teams.DeletionSchedule.first_notice_before_deletion_days()
+
+    base_email()
+    |> to(user)
+    |> tag("deletion-full-notice")
+    |> subject("Your Plausible dashboards and stats will be deleted in #{days} days")
+    |> render("deletion_full_notice_email.html",
+      user: user,
+      team: team,
+      category: schedule.category,
+      deletion_date: schedule.deletion_date,
+      sites_summary: sites_summary
+    )
+  end
+
+  def deletion_reminder_email(user, team, schedule, sites_summary) do
+    days = Plausible.Teams.DeletionSchedule.reminder_before_deletion_days()
+
+    base_email()
+    |> to(user)
+    |> tag("deletion-reminder")
+    |> subject(
+      "Final notice: your Plausible dashboards and stats will be deleted in #{days} days"
+    )
+    |> render("deletion_reminder_email.html",
+      user: user,
+      team: team,
+      deletion_date: schedule.deletion_date,
+      sites_summary: sites_summary
     )
   end
 
@@ -690,5 +723,22 @@ defmodule PlausibleWeb.Email do
       |> String.split(" ", trim: true)
       |> Enum.join(" ")
     end)
+  end
+
+  # The download only works while the site exists. When the team's scheduled
+  # deletion lands before the export link expires, the email says so, so the
+  # export isn't lost to the deletion. A deletion on the same day as the expiry
+  # counts too, since it may run earlier in the day. A snoozed schedule is on hold, and an
+  # export without an expiry (local storage) only ends with the deletion.
+  defp export_deletion_date(team, expires_at) do
+    case Plausible.TeamDeletionSchedules.active_schedule_for_team(team) do
+      %{status: status, deletion_date: %Date{} = deletion_date} when status != :snoozed ->
+        if is_nil(expires_at) or Date.compare(deletion_date, DateTime.to_date(expires_at)) != :gt do
+          deletion_date
+        end
+
+      _ ->
+        nil
+    end
   end
 end

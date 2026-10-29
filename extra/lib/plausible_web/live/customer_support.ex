@@ -9,11 +9,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   @impl true
   def mount(params, _session, socket) do
     uri =
-      Routes.customer_support_path(
-        PlausibleWeb.Endpoint,
-        :index,
-        Map.take(params, ["filter_text"])
-      )
+      ~p"/cs?#{[filter_text: params["filter_text"]]}"
       |> URI.new!()
 
     {:ok,

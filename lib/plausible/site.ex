@@ -97,13 +97,9 @@ defmodule Plausible.Site do
   end
 
   on_ee do
-    @domain_unique_error """
-    This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
-    """
+    @domain_unique_error "This domain is already registered. Ask the owner for access, or contact support@plausible.io"
   else
-    @domain_unique_error """
-    This domain cannot be registered. Perhaps one of your colleagues registered it?
-    """
+    @domain_unique_error "This domain is already registered. Ask the owner for access."
   end
 
   on_ee do
@@ -116,7 +112,8 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, @changeset_cast_fields)
     |> clean_domain()
-    |> validate_required([:domain, :timezone])
+    |> validate_required([:domain], message: "Please enter a domain or subdomain")
+    |> validate_required([:timezone])
     |> validate_timezone()
     |> validate_domain_format()
     |> validate_domain_reserved_characters()

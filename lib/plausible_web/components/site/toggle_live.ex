@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
           phx-click="toggle"
           phx-target={@myself}
           class={[
-            "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
+            "relative inline-flex flex-shrink-0 h-5 w-9 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200",
             if(@current_setting, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-600"),
             if(@disabled?, do: "cursor-not-allowed")
           ]}
@@ -42,8 +42,8 @@ defmodule PlausibleWeb.Components.Site.Feature.ToggleLive do
           <span
             aria-hidden="true"
             class={[
-              "inline-block size-5 rounded-full bg-white shadow transform transition ease-in-out duration-200",
-              if(@current_setting, do: "translate-x-5", else: "translate-x-0")
+              "inline-block size-4 rounded-full bg-white shadow transform transition ease-in-out duration-200",
+              if(@current_setting, do: "translate-x-4", else: "translate-x-0")
             ]}
           />
         </button>

@@ -27,6 +27,14 @@ defmodule Plausible.Teams.Membership do
 
   def roles(), do: @roles
 
+  @spec roles!([atom()]) :: [role()]
+  def roles!(roles) do
+    case roles -- roles() do
+      [] -> roles
+      unknown -> raise ArgumentError, "unknown roles: #{inspect(unknown)}"
+    end
+  end
+
   def changeset(team, user, role) do
     %__MODULE__{}
     |> change()

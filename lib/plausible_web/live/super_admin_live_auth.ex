@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.SuperAdminLiveAuth do
   """
 
   import Phoenix.LiveView, only: [redirect: 2]
+  import Phoenix.Component, only: [assign: 3]
 
   alias PlausibleWeb.UserAuth
 
@@ -16,7 +17,7 @@ defmodule PlausibleWeb.Live.SuperAdminLiveAuth do
       end
 
     if Plausible.Auth.super_admin?(current_user) do
-      {:cont, socket}
+      {:cont, assign(socket, :current_user, current_user)}
     else
       {:halt, redirect(socket, to: "/")}
     end

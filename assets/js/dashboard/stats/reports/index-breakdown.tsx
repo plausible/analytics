@@ -587,7 +587,7 @@ export const Bar = ({
       )}
       style={{ width: `${barWidthPercent}%` }}
     ></div>
-    <div className="px-2 py-1.5 text-sm dark:text-gray-300 relative z-9 break-all">
+    <div className="px-2 py-1.5 text-sm text-gray-800 dark:text-gray-200 relative z-9 break-all">
       {children}
     </div>
   </div>

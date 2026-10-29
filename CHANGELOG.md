@@ -18,12 +18,14 @@ All notable changes to this project will be documented in this file.
 - Add "Last 24 Hours" to dashboard time range picker and Stats API v2
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
+- Added light-mode support to tooltips
 
 ### Removed
 
 - Removed the intermediate "Awaiting your first pageview" screen after site created. User is now taken straight to the dashboard from the installation instructions page.
 - Removed the standalone team switcher page; team switching is now done from the topbar dropdown only
 - Removed `Bamboo.SMTPAdapter` from supported e-mail adapters; the library is no longer in active developments and does not compile under Elixir 1.20+
+- Removed timezone selection field when creating a new site. Timezone is automatically detected and can still be changed in site settings.
 
 ### Changed
 
@@ -39,9 +41,16 @@ All notable changes to this project will be documented in this file.
 - Improved site transfer UI
 - Redesigned authentication pages (register, sign in, 2FA, password reset, account activation)
 - Removed limitation that blocked users without owned sites from starting a subscription
+- Redesigned onboarding pages (add site, installation)
+- Moved tracking options (outbound links, file downloads, form submissions) from the installation page to the general site settings, where they can be toggled without going through the installation flow
+- Replaced HCaptcha with Friendly Captcha
+- Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
+- Replaced the options menu on site cards with individual Settings and Pin/Unpin buttons that appear on hover
 
 ### Fixed
 
+- Stats API `/api/v1/stats/breakdown` now returns a `400` error for an invalid `page` parameter instead of crashing with a `500`
+- Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change
 - Validate empty filter clauses list in Stats API v2
 - Fixed Stats API timeseries returning time buckets falling outside the queried range
@@ -54,6 +63,8 @@ All notable changes to this project will be documented in this file.
 - Fixed main graph being clipped when the browser's root font size is smaller than the default 16px
 - Fixed issue with users with billing role not being able to create personal segments
 - Fixed period arrow keys hijacking custom-range calendar
+- Fixed dashboard CSV export failing when the dashboard is filtered by entry page or exit page
+- Fixed entry page hostname breakdown crashing when revenue metrics are queried
 
 ## v3.2.0 - 2026-01-16
 
@@ -581,7 +592,7 @@ All notable changes to this project will be documented in this file.
 - Fix some links not opening correctly in new tab
 - UI fix for more than one row of custom event properties plausible/analytics#1383
 - UI fix for user menu and time picker overlapping plausible/analytics#1352
-- Respect the `path` component of BASE_URL to allow subfolder installatons
+- Respect the `path` component of BASE_URL to allow subfolder installations
 
 ### Removed
 

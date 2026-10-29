@@ -4,7 +4,6 @@ defmodule PlausibleWeb.RequireAccountPlugTest do
   import Plug.Conn
 
   alias PlausibleWeb.RequireAccountPlug
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   describe "enforcing 2FA" do
     test "passes when 2FA enforcement is disabled" do
@@ -34,7 +33,7 @@ defmodule PlausibleWeb.RequireAccountPlugTest do
         |> RequireAccountPlug.call(nil)
 
       assert conn.halted
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :force_initiate_2fa_setup)
+      assert redirected_to(conn, 302) == ~p"/2fa/setup/force-initiate"
     end
 
     test "does not override for unverified account" do
@@ -50,7 +49,7 @@ defmodule PlausibleWeb.RequireAccountPlugTest do
         |> RequireAccountPlug.call(nil)
 
       assert conn.halted
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate_form)
+      assert redirected_to(conn, 302) == ~p"/activate"
     end
 
     @force_2fa_exceptions [

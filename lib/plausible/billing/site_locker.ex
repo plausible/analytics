@@ -1,4 +1,8 @@
 defmodule Plausible.Billing.SiteLocker do
+  @moduledoc """
+  Api for managing team's lock state.
+  """
+
   use Plausible.Repo
 
   alias Plausible.Teams

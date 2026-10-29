@@ -1,17 +1,17 @@
 <% options = site_settings_sidebar(@conn) %>
 <div class="container pt-6">
   <.styled_link
-    class="text-indigo-600 font-semibold text-sm"
+    class="text-indigo-600 font-medium text-sm"
     href={"/#{URI.encode_www_form(@site.domain)}"}
   >
     ← Back to stats
   </.styled_link>
-  <div class="pb-5 border-b border-gray-200 dark:border-gray-750">
-    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
+  <div class="pt-0.5 pb-4 border-b border-gray-200 dark:border-gray-750">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl sm:truncate">
       Settings for {Plausible.Sites.display_name(@site)}
     </h2>
   </div>
-  <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
+  <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-1.5">
     <div class="lg:col-span-3">
       <.mobile_nav_dropdown
         conn={@conn}

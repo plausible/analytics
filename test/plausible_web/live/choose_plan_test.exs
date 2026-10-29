@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert business_box =~ "Up to 10 team members"
         assert business_box =~ "Up to 10 sites"
         assert business_box =~ "Stats API (600 requests per hour)"
-        assert business_box =~ "Looker Studio Connector"
+        assert business_box =~ "Data Studio Connector"
         assert business_box =~ "Custom Properties"
         assert business_box =~ "Funnels"
         assert business_box =~ "Ecommerce revenue attribution"
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                  "email" => user.email,
                  "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
                  "product" => @v5_growth_200k_yearly_plan_id,
-                 "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+                 "success" => ~p"/billing/upgrade-success",
                  "theme" => "none"
                } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
 
@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
@@ -505,11 +505,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert business_box =~ "Up to 10 team members"
         assert business_box =~ "Up to 10 sites"
         assert business_box =~ "Stats API (600 requests per hour)"
-        assert business_box =~ "Looker Studio Connector"
+        assert business_box =~ "Data Studio Connector"
         assert business_box =~ "Custom Properties"
         assert business_box =~ "Funnels"
         assert business_box =~ "Ecommerce revenue attribution"
-        assert business_box =~ "5 years of data retention"
+        refute business_box =~ "data retention"
 
         refute business_box =~ "Goals and custom events"
 
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert enterprise_box =~ "Sites API access for"
         assert enterprise_box =~ "Single Sign-On (SSO)"
         assert enterprise_box =~ "Priority support"
-        assert enterprise_box =~ "5+ years of data retention"
+        refute enterprise_box =~ "data retention"
 
         assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                  "https://plausible.io/white-label-web-analytics"
@@ -684,7 +684,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         growth_checkout_button = find(doc, @growth_checkout_button)
 
         assert text_of_attr(growth_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_growth_10k_yearly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_growth_10k_yearly_plan_id}"}'}"
 
         set_slider(lv, "5M")
         doc = element(lv, @monthly_interval_button) |> render_click()
@@ -692,12 +692,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         starter_checkout_button = find(doc, @starter_checkout_button)
 
         assert text_of_attr(starter_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_starter_5m_monthly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_starter_5m_monthly_plan_id}"}'}"
 
         business_checkout_button = find(doc, @business_checkout_button)
 
         assert text_of_attr(business_checkout_button, "onclick") =~
-                 "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_business_5m_monthly_plan_id)}'}"
+                 "if (true) {window.location = '#{~p"/billing/change-plan/preview/#{@v5_business_5m_monthly_plan_id}"}'}"
       end
     end
 
@@ -911,7 +911,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert starter_box =~ "Google Analytics import"
         assert starter_box =~ "Goals and custom events"
         assert starter_box =~ "One site"
-        assert starter_box =~ "3 years of data retention"
+        assert starter_box =~ "No retention limit"
 
         assert growth_box =~ "Up to 3 team members"
         assert growth_box =~ "Up to 3 sites"
@@ -923,7 +923,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert business_box =~ "Unlimited team members"
         assert business_box =~ "Up to 50 sites"
         assert business_box =~ "Stats API (600 requests per hour)"
-        assert business_box =~ "Looker Studio Connector"
+        assert business_box =~ "Data Studio Connector"
         assert business_box =~ "Custom Properties"
         assert business_box =~ "Funnels"
         assert business_box =~ "Ecommerce revenue attribution"
@@ -1167,7 +1167,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         assert growth_box =~ "Goals and custom events"
         assert growth_box =~ "Custom Properties"
         assert growth_box =~ "Stats API (600 requests per hour)"
-        assert growth_box =~ "Looker Studio Connector"
+        assert growth_box =~ "Data Studio Connector"
         assert growth_box =~ "Shared Links"
         assert growth_box =~ "Embedded Dashboards"
 
@@ -1179,7 +1179,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         refute business_box =~ "Unlimited team members"
         refute business_box =~ "Up to 50 sites"
         refute business_box =~ "Stats API (600 requests per hour)"
-        refute business_box =~ "Looker Studio Connector"
+        refute business_box =~ "Data Studio Connector"
         refute business_box =~ "Custom Properties"
 
         assert enterprise_box =~ "Everything in Business"
@@ -1256,7 +1256,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                  "email" => user.email,
                  "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
                  "product" => @v5_growth_200k_yearly_plan_id,
-                 "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+                 "success" => ~p"/billing/upgrade-success",
                  "theme" => "none"
                } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
       end
@@ -1355,7 +1355,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     defp get_liveview(conn) do
       conn = assign(conn, :live_module, PlausibleWeb.Live.ChoosePlan)
-      {:ok, _lv, _doc} = live(conn, Routes.billing_path(conn, :choose_plan))
+      {:ok, _lv, _doc} = live(conn, ~p"/billing/choose-plan")
     end
 
     defp get_paddle_checkout_params(element) do

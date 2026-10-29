@@ -1,5 +1,7 @@
 import React, {
   ChangeEventHandler,
+  InputHTMLAttributes,
+  ReactNode,
   useCallback,
   useState,
   RefObject
@@ -11,18 +13,38 @@ import classNames from 'classnames'
 export const SearchInput = ({
   searchRef,
   onSearch,
+  value,
+  onChange,
+  inputProps,
+  trailing,
   className,
   placeholderFocusedOrMobile = 'Search',
   placeholderUnfocusedOnlyDesktop = 'Press / to search'
 }: {
   searchRef: RefObject<HTMLInputElement>
+  /** Called with a debounce */
   onSearch: (value: string) => void
+  value?: string
+  /** Called at once on every change */
+  onChange?: (value: string) => void
+  inputProps?: Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    | 'value'
+    | 'onChange'
+    | 'onFocus'
+    | 'onBlur'
+    | 'type'
+    | 'placeholder'
+    | 'className'
+  >
+  trailing?: ReactNode
   className?: string
   placeholderFocusedOrMobile?: string
   placeholderUnfocusedOnlyDesktop?: string
 }) => {
   const [isFocused, setIsFocused] = useState(false)
-  const [hasValue, setHasValue] = useState(false)
+  const [uncontrolledHasValue, setUncontrolledHasValue] = useState(false)
+  const hasValue = value === undefined ? uncontrolledHasValue : value !== ''
 
   const onSearchInputChange: ChangeEventHandler<HTMLInputElement> = useCallback(
     (event) => {
@@ -35,10 +57,11 @@ export const SearchInput = ({
   const handleInputChange: ChangeEventHandler<HTMLInputElement> = useCallback(
     (event) => {
       const value = event.target.value
-      setHasValue(value.length > 0)
+      setUncontrolledHasValue(value.length > 0)
+      onChange?.(value)
       debouncedOnSearchInputChange(event)
     },
-    [debouncedOnSearchInputChange]
+    [onChange, debouncedOnSearchInputChange]
   )
 
   const blurSearchBox = useCallback(() => {
@@ -69,15 +92,22 @@ export const SearchInput = ({
         shouldIgnoreWhen={[isModifierPressed, () => isFocused]}
         targetRef="document"
       />
-      <div className={classNames('relative max-w-64 w-full', className)}>
+      <div
+        className={classNames(
+          'relative flex items-center max-w-64 w-full rounded-md border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-750 focus-within:border-indigo-500 focus-within:ring-3 focus-within:ring-indigo-500/20 dark:focus-within:ring-indigo-500/25',
+          className
+        )}
+      >
         <input
           data-testid="search-input"
+          {...inputProps}
           onBlur={() => setIsFocused(false)}
           onFocus={() => setIsFocused(true)}
           ref={searchRef}
           type="text"
           placeholder=" "
-          className="peer w-full text-sm dark:text-gray-100 block border-gray-300 dark:border-gray-750 rounded-md dark:bg-gray-750 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+          className="peer flex-1 min-w-0 border-none bg-transparent px-3 py-1.5 text-sm dark:text-gray-100 focus:outline-none focus:ring-0"
+          value={value}
           onChange={handleInputChange}
         />
         {!hasValue && (
@@ -90,6 +120,7 @@ export const SearchInput = ({
             </span>
           </>
         )}
+        {trailing && <div className="flex shrink-0 pr-3">{trailing}</div>}
       </div>
     </>
   )

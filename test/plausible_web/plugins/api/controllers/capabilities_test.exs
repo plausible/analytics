@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
     test "no token", %{conn: conn} do
       resp =
         conn
-        |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
+        |> get(url(~p"/api/plugins/v1/capabilities"))
         |> json_response(200)
 
       assert resp ==
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
         conn
         |> put_req_header("content-type", "application/json")
         |> authenticate("foo", "bad token")
-        |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
+        |> get(url(~p"/api/plugins/v1/capabilities"))
         |> json_response(200)
 
       assert resp ==
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
         conn
         |> put_req_header("content-type", "application/json")
         |> authenticate(site.domain, token)
-        |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
+        |> get(url(~p"/api/plugins/v1/capabilities"))
         |> json_response(200)
 
       assert resp ==
@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
         conn
         |> put_req_header("content-type", "application/json")
         |> authenticate(site.domain, token)
-        |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
+        |> get(url(~p"/api/plugins/v1/capabilities"))
         |> json_response(200)
 
       assert resp ==
@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
         conn
         |> put_req_header("content-type", "application/json")
         |> authenticate(site.domain, token)
-        |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
+        |> get(url(~p"/api/plugins/v1/capabilities"))
         |> json_response(200)
 
       assert resp ==

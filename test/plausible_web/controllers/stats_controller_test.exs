@@ -605,7 +605,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         resp = get(conn, "/" <> site.domain) |> html_response(200)
 
         assert resp =~
-                 Routes.customer_support_site_path(PlausibleWeb.Endpoint, :show, site.id)
+                 ~p"/cs/sites/site/#{site.id}"
       end
     end
   end

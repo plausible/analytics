@@ -145,13 +145,13 @@ defmodule Plausible.SitesTest do
 
   describe "ensure_stats_start_date" do
     test "is nil if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       assert Sites.ensure_stats_start_date(site).stats_start_date == nil
     end
 
     test "is date if site does have stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)
@@ -162,7 +162,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "memoizes value of start date" do
-      site = insert(:site)
+      site = new_site()
 
       assert site.stats_start_date == nil
 
@@ -219,13 +219,13 @@ defmodule Plausible.SitesTest do
 
   describe "native_stats_start_date" do
     test "is nil if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       assert Sites.native_stats_start_date(site) == nil
     end
 
     test "is date if site does have stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)
@@ -235,7 +235,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "ignores imported stats" do
-      site = insert(:site)
+      site = new_site()
       insert(:site_import, site: site)
 
       assert Sites.native_stats_start_date(site) == nil
@@ -244,13 +244,13 @@ defmodule Plausible.SitesTest do
 
   describe "has_stats?" do
     test "is false if site has no stats" do
-      site = insert(:site)
+      site = new_site()
 
       refute Sites.has_stats?(site)
     end
 
     test "is true if site has stats" do
-      site = insert(:site)
+      site = new_site()
 
       populate_stats(site, [
         build(:pageview)
@@ -291,6 +291,41 @@ defmodule Plausible.SitesTest do
       %{domain: domain} = new_site(owner: user, consolidated: true)
       assert Sites.get_for_user(user, domain, include_consolidated?: true)
       assert Sites.get_for_user!(user, domain, include_consolidated?: true)
+    end
+
+    test "prioritizes exact domain match when two sites in the same team swapped domains" do
+      user = new_user()
+      site_a = new_site(owner: user)
+      site_b = new_site(owner: user)
+      original_domain_a = site_a.domain
+      original_domain_b = site_b.domain
+
+      # Domains can't be swapped in a single update per site due to the
+      # unique constraint on `domain`, so a temporary value is used as
+      # a stepping stone, same as a real swap performed via 3 separate
+      # domain changes would produce.
+      site_b =
+        site_b
+        |> change(domain: "swap-temp.example.com", domain_changed_from: original_domain_b)
+        |> Repo.update!()
+
+      site_a =
+        site_a
+        |> change(domain: original_domain_b, domain_changed_from: original_domain_a)
+        |> Repo.update!()
+
+      site_b
+      |> change(domain: original_domain_a, domain_changed_from: original_domain_b)
+      |> Repo.update!()
+
+      # site_a now holds site_b's original domain, and site_b's
+      # domain_changed_from also equals that same domain, so a naive
+      # query for it would match both sites.
+      assert %{id: id} = Sites.get_for_user!(user, original_domain_b)
+      assert id == site_a.id
+
+      assert %{id: id} = Sites.get_for_user!(user, original_domain_a)
+      assert id == site_b.id
     end
   end
 

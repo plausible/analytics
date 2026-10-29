@@ -5,10 +5,10 @@ defmodule PlausibleWeb.UserAuth do
 
   use Plausible
 
+  use PlausibleWeb.VerifiedRoutes
+
   alias Plausible.Auth
   alias PlausibleWeb.TwoFactor
-
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   on_ee do
     @type login_subject() :: Auth.User.t() | Auth.SSO.Identity.t()
@@ -53,9 +53,7 @@ defmodule PlausibleWeb.UserAuth do
             :login_error,
             "We couldn't find a Single Sign-On account for that email."
           )
-          |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
-          )
+          |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: redirect_path]}")
 
         {:error, :over_limit} ->
           error = "Team can't accept more members. Please contact the owner."
@@ -63,9 +61,7 @@ defmodule PlausibleWeb.UserAuth do
           conn
           |> log_out_user()
           |> Phoenix.Controller.put_flash(:login_error, error)
-          |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :login_form, return_to: redirect_path)
-          )
+          |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: redirect_path]}")
 
         {:error, reason, _team, _user}
         when reason in [:multiple_memberships, :active_personal_team] ->
@@ -73,9 +69,7 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> log_out_user()
-          |> Phoenix.Controller.redirect(
-            to: Routes.sso_path(conn, :provision_issue, issue: issue)
-          )
+          |> Phoenix.Controller.redirect(to: ~p"/sso/issue?#{[issue: issue]}")
       end
     end
   end
@@ -136,11 +130,11 @@ defmodule PlausibleWeb.UserAuth do
     |> put_token_in_session(token)
   end
 
-  defp login_redirect_path(conn, redirect_path) do
+  defp login_redirect_path(_conn, redirect_path) do
     if String.starts_with?(redirect_path || "", "/") do
       redirect_path
     else
-      Routes.site_path(conn, :index)
+      ~p"/sites"
     end
   end
 

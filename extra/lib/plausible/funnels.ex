@@ -21,6 +21,8 @@ defmodule Plausible.Funnels do
   def create(site, name, steps, opts)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site = Plausible.Repo.preload(site, :team)
+    goals = Plausible.Goals.for_site(site)
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
 
     case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
@@ -42,6 +44,8 @@ defmodule Plausible.Funnels do
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
   def update(funnel, name, steps, opts \\ []) do
     site = Plausible.Repo.preload(funnel, site: :team).site
+    goals = Plausible.Goals.for_site(site)
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
 
     case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
@@ -49,9 +53,7 @@ defmodule Plausible.Funnels do
 
       :ok ->
         funnel
-        |> edit_changeset(name, steps,
-          strict_order?: Keyword.get(opts, :strict_order?, !!funnel.strict_order)
-        )
+        |> edit_changeset(name, steps, opts)
         |> Repo.update()
     end
   end
@@ -59,28 +61,43 @@ defmodule Plausible.Funnels do
   @spec create_changeset(Plausible.Site.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
   def create_changeset(site, name, steps, opts \\ []) do
-    Funnel.changeset(%Funnel{site_id: site.id}, %{
-      name: name,
-      steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
-    })
+    funnel_type = Keyword.get(opts, :funnel_type, Funnel.default_funnel_type())
+
+    Funnel.changeset(
+      %Funnel{site_id: site.id},
+      %{
+        name: name,
+        steps: steps,
+        funnel_type: funnel_type
+      },
+      opts
+    )
   end
 
   @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()], Keyword.t()) ::
           Ecto.Changeset.t()
-  def edit_changeset(funnel, name, steps, opts) do
-    Funnel.changeset(funnel, %{
-      name: name,
-      steps: steps,
-      strict_order: Keyword.get(opts, :strict_order?, false)
-    })
+  def edit_changeset(funnel, name, steps, opts \\ []) do
+    params = %{name: name, steps: steps}
+
+    params =
+      if funnel_type = Keyword.get(opts, :funnel_type) do
+        Map.put(params, :funnel_type, funnel_type)
+      else
+        params
+      end
+
+    Funnel.changeset(funnel, params, opts)
   end
 
   @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()
   def ephemeral_definition(site, name, steps, opts \\ []) do
-    site
-    |> create_changeset(name, steps, opts)
-    |> Ecto.Changeset.apply_changes()
+    changeset = create_changeset(site, name, steps, opts)
+
+    # Sanity check to ensure the definition is valid.
+    # Should be ensured earlier already.
+    true = changeset.valid?
+
+    Ecto.Changeset.apply_changes(changeset)
   end
 
   @spec list(Plausible.Site.t()) :: [
@@ -89,11 +106,16 @@ defmodule Plausible.Funnels do
   def list(%Plausible.Site{} = site) do
     q =
       from(f in Funnel,
-        inner_join: steps in assoc(f, :steps),
+        left_join: steps in assoc(f, :steps),
         where: f.site_id == ^site.id,
         group_by: f.id,
         order_by: [desc: :id],
-        select: %{name: f.name, id: f.id, steps_count: count(steps)}
+        select: %{
+          name: f.name,
+          id: f.id,
+          steps_count:
+            count(steps) + fragment("coalesce(jsonb_array_length(?), 0)", f.dynamic_steps)
+        }
       )
 
     Repo.all(q)
@@ -132,9 +154,7 @@ defmodule Plausible.Funnels do
   @spec with_goals_query(Plausible.Site.t()) :: Ecto.Query.t()
   def with_goals_query(site) do
     from(f in Funnel,
-      inner_join: steps in assoc(f, :steps),
       where: f.site_id == ^site.id,
-      group_by: f.id,
       order_by: [desc: :id],
       preload: [steps: :goal]
     )
@@ -143,12 +163,24 @@ defmodule Plausible.Funnels do
   defp base_get_query(site_id) do
     from(f in Funnel,
       where: f.site_id == ^site_id,
-      inner_join: steps in assoc(f, :steps),
-      inner_join: goal in assoc(steps, :goal),
+      left_join: steps in assoc(f, :steps),
+      left_join: goal in assoc(steps, :goal),
       order_by: steps.step_order,
       preload: [
         steps: {steps, goal: goal}
-      ]
+      ],
+      select: %{
+        f
+        | funnel_type:
+            type(
+              fragment(
+                "case when ? = true then 'strict' when ? = true then 'flexible' else 'sequential' end",
+                f.strict_order,
+                f.first_and_last
+              ),
+              f.funnel_type
+            )
+      }
     )
   end
 end

@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Exploration do
     direction = Keyword.fetch!(opts, :direction)
     search_term = Keyword.fetch!(opts, :search_term)
     max_candidates = min(Keyword.fetch!(opts, :max_candidates), @max_candidates)
-    include_wilcard? = Keyword.fetch!(opts, :include_wildcard?)
+    include_wildcard? = Keyword.fetch!(opts, :include_wildcard?)
 
     goals =
       site
@@ -67,7 +67,7 @@ defmodule Plausible.Stats.Exploration do
 
     query
     |> Base.base_event_query()
-    |> next_steps_query(journey, search_term, direction, max_candidates, include_wilcard?, goals)
+    |> next_steps_query(journey, search_term, direction, max_candidates, include_wildcard?, goals)
     # We pass the query struct to record query metadata for
     # the CH debug console.
     |> ClickhouseRepo.all(query: query)

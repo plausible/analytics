@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       [date_range: "day", metrics: ["visitors"], filters: []]
       |> Keyword.merge(params)
 
-    post(conn, Routes.stats_path(conn, :query, site.domain), params)
+    post(conn, ~p"/api/stats/#{site.domain}/query", params)
   end
 
   describe "API authorization - as anonymous user" do

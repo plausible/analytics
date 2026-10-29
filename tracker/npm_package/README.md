@@ -12,7 +12,7 @@ Add [Plausible Analytics](https://plausible.io/) to your website.
 - Automatically track page views in your SPA apps
 - Track goals and custom events
 - Provide manual values that will be bound to the event
-- Full typescript support
+- Full TypeScript support
 
 > **Important:** This library only works in browser environments. When using server-side rendering (SSR), the `init` and `track` functions will not work as they rely on browser APIs. Make sure to only initialize and track events on the client side.
 

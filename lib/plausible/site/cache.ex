@@ -60,7 +60,8 @@ defmodule Plausible.Site.Cache do
 
   @impl true
   def get_from_source(domain) do
-    query = from s in base_db_query(), where: s.domain == ^domain
+    query =
+      from s in base_db_query(), where: s.domain == ^domain or s.domain_changed_from == ^domain
 
     case Plausible.Repo.one(query) do
       {_, _, site = %Site{}} -> %Site{site | from_cache?: false}

@@ -4,6 +4,8 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
   """
   use PlausibleWeb, :live_component
 
+  import PlausibleWeb.CustomerSupport.Components.SuppressionWarning
+
   def favicon(assigns) do
     ~H"""
     <img src={"/favicon/sources/#{@domain}"} class={@class} />
@@ -32,6 +34,13 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
         >
           $
+        </span>
+        <span
+          :if={@resource.object.team_deletion_schedule}
+          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+          title="Deletion pending"
+        >
+          🧨
         </span>
       </div>
 
@@ -67,8 +76,9 @@ defmodule PlausibleWeb.CustomerSupport.Components.SearchResult do
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
       <div class="text-sm truncate">
-        {@resource.object.name} &lt;{@resource.object.email}&gt; <br />
-        Owns {length(@resource.object.owned_teams)} team(s)
+        {@resource.object.name} &lt;{@resource.object.email}&gt;
+        <.suppression_warning email={@resource.object.email} linked?={false} />
+        <br /> Owns {length(@resource.object.owned_teams)} team(s)
       </div>
     </div>
     """

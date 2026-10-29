@@ -2,7 +2,7 @@
   <div class="text-lg mb-6 font-bold dark:text-gray-100">
     [Test Mode] Update your subscription status
   </div>
-  <form action={Routes.dev_subscription_path(@conn, :update)} method="POST" class="text-sm">
+  <form action={~p"/dev/billing/update-subscription"} method="POST" class="text-sm">
     <div class="block text-gray-500 dark:text-gray-200 text-sm">
       Simulate subscription status change events. On production, this happens through Paddle webhooks.
       This implementation is calling the underlying functions as close as possible to how it happens on

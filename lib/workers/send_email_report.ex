@@ -1,4 +1,8 @@
 defmodule Plausible.Workers.SendEmailReport do
+  @moduledoc """
+  Worker sending weekly and monthly email reports to subscribed users.
+  """
+
   use Plausible
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1

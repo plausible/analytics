@@ -1,4 +1,8 @@
 defmodule Plausible.ConfigHelpers do
+  @moduledoc """
+  Helpers for parsing configuration values from env.
+  """
+
   def get_var_from_path_or_env(config_dir, var_name, default \\ nil) do
     var_path = Path.join(config_dir, var_name)
 

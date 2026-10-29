@@ -5,7 +5,7 @@ defmodule Plausible.CustomerSupport.Resource.User do
 
   @impl true
   def path(id) do
-    Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id)
+    ~p"/cs/users/user/#{id}"
   end
 
   @impl true

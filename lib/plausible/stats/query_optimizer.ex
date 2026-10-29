@@ -133,7 +133,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       query.filters
       |> Enum.filter(fn [_operation, dimension | _rest] -> dimension == "event:hostname" end)
 
-    if length(hostname_filters) > 0 do
+    if hostname_filters != [] do
       extra_filters =
         query.dimensions
         |> Enum.flat_map(&hostname_filters_for_dimension(&1, hostname_filters))
@@ -265,7 +265,7 @@ defmodule Plausible.Stats.QueryOptimizer do
           time_on_page_data:
             Map.merge(query.time_on_page_data, %{
               include_new_metric: false,
-              include_legacy_metric: true,
+              include_legacy_metric: Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
               cutoff: nil
             })
         )

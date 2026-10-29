@@ -18,7 +18,6 @@ import {
 import { LocationsDetails } from './stats/locations/details'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
-import FilterModal from './stats/modals/filter-modal'
 import DashboardStateContextProvider from './dashboard-state-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
@@ -27,6 +26,7 @@ import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 import { GOOGLE_SEARCH_TERMS_DETAILS_PATH } from './stats/sources/fetch-search-terms'
 import { SourcesDetails } from './stats/sources/details'
 import { RoutelessAnnotationModals } from './annotations/routeless-annotations-modals'
+import { ToastHost } from './components/toast'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +48,7 @@ function DashboardElement() {
           <Outlet />
           <RoutelessSegmentModals />
           <RoutelessAnnotationModals />
+          <ToastHost />
         </DashboardStateContextProvider>
       </RoutelessModalsContextProvider>
     </QueryClientProvider>
@@ -201,11 +202,6 @@ export const customPropsRoute = {
   element: <PropsModal />
 }
 
-export const filterRoute = {
-  path: 'filter/:field',
-  element: <FilterModal />
-}
-
 export function getRouterBasepath(
   site: Pick<PlausibleSite, 'shared' | 'domain'>
 ): string {
@@ -260,7 +256,6 @@ export function createAppRouter(site: PlausibleSite) {
           screenSizesRoute,
           conversionsRoute,
           customPropsRoute,
-          filterRoute,
           { path: '*', element: null }
         ]
       }

@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
 
       assert element_exists?(
                html,
-               ~s|#recommendation a[href="/example.com/installation?flow="]|
+               ~s|#recommendation a[href="/example.com/installation?flow=&return_to=dashboard"]|
              )
 
       refute element_exists?(html, @super_admin_report)
@@ -218,7 +218,7 @@ defmodule PlausibleWeb.Live.Components.VerificationBannerTest do
 
       assert element_exists?(
                html,
-               ~s|a[href="/example.com/installation?flow=review"]|
+               ~s|a[href="/example.com/installation?flow=review&return_to=dashboard"]|
              )
 
       assert html =~ "Review installation"

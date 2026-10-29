@@ -35,10 +35,12 @@ jobs:
             type=sha
 
       - name: Setup Blacksmith Builder
-        uses: useblacksmith/setup-docker-builder@5fe3b77775f1dd55595beb998036fe1f2cf47118 # v1.10.0
+        uses: useblacksmith/setup-docker-builder@19215110ab936351210feebdfa5b440b4493e184 # v2.2.0
+        with:
+          cache-key: plausible/analytics/ee
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -46,7 +48,7 @@ jobs:
 
       - name: Build and push
         id: docker_build
-        uses: useblacksmith/build-push-action@ae61d84c78ee061560aeb3cf9ddc12ab3d0cef71 # v2
+        uses: useblacksmith/build-push-action@7e8ecf9d494396e5c866bcda6c2ad7399c32d3f1 # v2
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -73,8 +75,9 @@ jobs:
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -n1 | xargs)
-          co_authors=$(printf '%s\n' "$COMMIT_MSG" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | xargs)
+          trim() { sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          first_line=$(printf '%s\n' "$COMMIT_MSG" | head -n1 | trim)
+          co_authors=$(printf '%s\n' "$COMMIT_MSG" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, - | trim)
           {
             echo "first_line=$first_line"
             echo "co_authors=$co_authors"
@@ -93,10 +96,3 @@ jobs:
               "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author(s): ${{ github.event.head_commit.author.name }}<br/>${{ steps.commitmsg.outputs.co_authors}}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
             }
 
-      - name: Set Honeycomb marker on success
-        if: ${{ success() && github.ref == 'refs/heads/master' }}
-        uses: cnkk/honeymarker-action@1bd92aec746e38efe43a0faee94ced1ebb930712
-        with:
-          apikey: ${{ secrets.HONEYCOMB_MARKER_APIKEY }}
-          dataset: 'plausible-prod'
-          message: "${{ github.sha }}"

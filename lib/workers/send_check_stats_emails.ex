@@ -1,4 +1,7 @@
 defmodule Plausible.Workers.SendCheckStatsEmails do
+  @moduledoc """
+  Worker sending reminders about checking status, provided they are collected already.
+  """
   use Plausible.Repo
   use Oban.Worker, queue: :check_stats_emails
 

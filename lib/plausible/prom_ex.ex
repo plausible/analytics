@@ -1,4 +1,8 @@
 defmodule Plausible.PromEx do
+  @moduledoc """
+  Entry point for Prometheus metrics definitions and configuration.
+  """
+
   use PromEx, otp_app: :plausible
 
   alias PromEx.Plugins
