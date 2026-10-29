@@ -10,18 +10,199 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   @url "/team/setup"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
-  describe "/team/setup - edge cases" do
+  describe "/team/setup" do
     setup [:create_user, :log_in]
-
-    test "redirects if there's no implicit team created", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, @url)
-    end
 
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
       Teams.complete_setup(team)
       conn = set_current_team(conn, team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
+    end
+
+    test "renders a cancel link back to /sites", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_element(html, "#create-team-cancel") == "Cancel"
+      assert text_of_attr(html, "#create-team-cancel", "href") == "/sites"
+    end
+
+    test "does not render the onboarding progress", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      refute element_exists?(html, "#flow-progress")
+    end
+  end
+
+  describe "/team/setup?flow=register - after adding a site" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders the team setup step of the onboarding progress", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_attr(html, ~s|#flow-progress [aria-current="step"]|, "aria-label") ==
+               "Set up team"
+    end
+
+    test "suggests a team name based on the site domain", %{conn: conn, user: user} do
+      site = new_site(owner: user, domain: "shop.my-company.co.uk")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "My Company"
+    end
+
+    test "renders a skip link to the installation step", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_element(html, "#create-team-skip") == "Skip"
+
+      assert text_of_attr(html, "#create-team-skip", "href") ==
+               ~p"/#{site.domain}/installation?flow=register"
+    end
+
+    test "turns the personal team into a real team and continues to installation", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, lv, _html} = live(conn, onboarding_url(site.domain))
+
+      finish_setup(lv, name: "Onboarded Team")
+
+      assert_redirect(
+        lv,
+        ~p"/#{site.domain}/installation?flow=register&__team=#{site.team.identifier}"
+      )
+
+      team = Repo.reload!(site.team)
+      assert team.setup_complete
+      assert team.name == "Onboarded Team"
+    end
+
+    test "skips ahead to installation if the team is already set up", %{
+      conn: conn,
+      site: site
+    } do
+      team = Teams.complete_setup(site.team)
+      conn = set_current_team(conn, team)
+      expected_path = ~p"/#{site.domain}/installation?flow=register"
+
+      assert {:error, {:redirect, %{to: ^expected_path}}} =
+               live(conn, onboarding_url(site.domain))
+    end
+
+    test "ignores the domain of a site the user can't access", %{conn: conn} do
+      other_site = new_site(domain: "other-company.com")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(other_site.domain))
+
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
+
+    test "ignores the domain of a non-existent site when skipping ahead", %{
+      conn: conn,
+      site: site
+    } do
+      team = Teams.complete_setup(site.team)
+      conn = set_current_team(conn, team)
+
+      assert {:error, {:redirect, %{to: "/sites"}}} =
+               live(conn, onboarding_url("evil.example.com"))
+    end
+  end
+
+  describe "/team/setup?flow=register - after skipping adding a site" do
+    setup [:create_user, :log_in]
+
+    test "suggests a team name based on the user name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
+
+    test "renders a skip link to /sites", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_element(html, "#create-team-skip") == "Skip"
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+    end
+
+    test "creates a team from scratch and continues to /sites", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, onboarding_url())
+
+      finish_setup(lv, name: "Onboarded Team")
+
+      assert {:ok, team} = Teams.get_by_owner(user)
+      assert team.setup_complete
+      assert team.name == "Onboarded Team"
+
+      assert_redirect(lv, "/sites?__team=" <> team.identifier)
+    end
+
+    test "skips ahead to /sites if the team is already set up", %{conn: conn, user: user} do
+      {:ok, team} = Teams.create(user, "Onboarded Team", [])
+      conn = set_current_team(conn, team)
+
+      assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, onboarding_url())
+    end
+  end
+
+  describe "/team/setup - without any existing team" do
+    setup [:create_user, :log_in]
+
+    test "renders the form with a suggested name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+
+      assert element_exists?(html, "#create-team-submit")
+      refute element_exists?(html, "#feature-gate-overlay")
+    end
+
+    test "creates a new team from scratch and invites members", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      finish_setup(lv,
+        name: "Brand New Team",
+        rows: %{"1" => %{"email" => "new@example.com", "role" => "editor"}}
+      )
+
+      assert {:ok, team} = Teams.get_by_owner(user)
+      assert team.name == "Brand New Team"
+      assert team.setup_complete
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"Brand New Team\" team"
+      )
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :editor
+    end
+
+    test "does not create a team when an invitation is rejected", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, rows: %{"1" => %{"email" => user.email, "role" => "viewer"}}) =~
+               "You cannot invite yourself"
+
+      assert {:error, :no_team} = Teams.get_by_owner(user)
+    end
+
+    @tag :ee_only
+    test "defaults the member rows to the trial team member limit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 10
     end
   end
 
@@ -325,6 +506,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert elem_count(html, row_el()) == 0
     end
   end
+
+  defp onboarding_url(), do: @url <> "?flow=register"
+  defp onboarding_url(domain), do: @url <> "?flow=register&domain=" <> domain
 
   defp row_el(), do: ~s|#member-rows > div|
   defp visible_row_el(), do: ~s|#member-rows > div:not(.hidden)|

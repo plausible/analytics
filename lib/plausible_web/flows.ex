@@ -55,8 +55,9 @@ defmodule PlausibleWeb.Flows do
   @doc """
   The steps shown in the onboarding flow's progress indicator.
   """
-  def onboarding_steps, do: [add_site_step(), installation_step()]
+  def onboarding_steps, do: [add_site_step(), team_setup_step(), installation_step()]
 
   def add_site_step, do: "Add site info"
+  def team_setup_step, do: "Set up team"
   def installation_step, do: "Install Plausible"
 end

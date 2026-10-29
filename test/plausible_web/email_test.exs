@@ -542,6 +542,8 @@ defmodule PlausibleWeb.EmailTest do
 
       assert email.html_body =~
                "You’ve created your Plausible account but haven’t added a site yet."
+
+      assert email.html_body =~ "/sites/new?flow=register"
     end
 
     test "site setup help email", %{user: user, site: site} do

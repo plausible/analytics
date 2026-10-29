@@ -187,4 +187,44 @@ defmodule Plausible.Teams.TeamTest do
       end
     end
   end
+
+  describe "suggested_name_from_domain/2" do
+    test "uses the label right before the public suffix" do
+      for {domain, expected} <- [
+            {"delfi.ee", "Delfi"},
+            {"subdomain.example.com", "Example"},
+            {"shop.bbc.co.uk", "Bbc"},
+            {"пример.рф", "Пример"}
+          ] do
+        assert Team.suggested_name_from_domain(domain, "Jane") == expected
+      end
+    end
+
+    test "ignores the path" do
+      assert Team.suggested_name_from_domain("mysite.com/mypage", "Jane") == "Mysite"
+      assert Team.suggested_name_from_domain("sub.mysite.com/mypage", "Jane") == "Mysite"
+    end
+
+    test "uses the subdomain of a hosting platform" do
+      assert Team.suggested_name_from_domain("foo.github.io", "Jane") == "Foo"
+      assert Team.suggested_name_from_domain("myapp.vercel.app", "Jane") == "Myapp"
+    end
+
+    test "turns dashes and underscores into capitalized words" do
+      assert Team.suggested_name_from_domain("my-cool_site.com", "Jane") == "My Cool Site"
+    end
+
+    test "falls back to the user name when the domain doesn't yield a name-like label" do
+      for domain <- ["lol", "localhost", "127.0.0.1", "0.1.1", "123.com", "_.com", "", nil] do
+        assert Team.suggested_name_from_domain(domain, "Jane") == "Jane's team",
+               "expected #{inspect(domain)} to fall back"
+      end
+    end
+
+    test "falls back to the user name when the label is too long for a team name" do
+      domain = String.duplicate("a", 51) <> ".com"
+
+      assert Team.suggested_name_from_domain(domain, "Jane") == "Jane's team"
+    end
+  end
 end

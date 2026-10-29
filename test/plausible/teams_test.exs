@@ -136,6 +136,23 @@ defmodule Plausible.TeamsTest do
                |> Map.fetch!(:team_memberships)
     end
 
+    test "creates 'My personal sites' if user only owns a setup team" do
+      user = new_user()
+      _site = new_site(owner: user)
+      setup_team = user |> team_of() |> Teams.complete_setup()
+
+      assert {:ok, team} = Teams.get_or_create(user)
+
+      assert team.id != setup_team.id
+      assert team.name == "My personal sites"
+      refute team.setup_complete
+
+      assert [team_membership] = Repo.preload(team, :team_memberships).team_memberships
+      assert team_membership.user_id == user.id
+      assert team_membership.role == :owner
+      assert team_membership.is_autocreated == true
+    end
+
     test "returns existing owned team if user is also a non-owner member on existing teams" do
       user = new_user()
       _site = new_site(owner: user)
@@ -468,6 +485,106 @@ defmodule Plausible.TeamsTest do
       refute team.setup_complete
       assert [] = Teams.Invitations.pending_team_invitations_for(team)
       assert_no_emails_delivered()
+    end
+  end
+
+  describe "create/3" do
+    @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+
+    test "creates a set up team owned by the user and invites members" do
+      today = Date.utc_today()
+      user = new_user()
+
+      assert {:ok, team} =
+               Teams.create(user, "New Team", [%{email: "new@example.com", role: :editor}])
+
+      assert team.name == "New Team"
+      assert team.setup_complete
+      assert team.setup_at
+      assert team.identifier
+      assert Date.compare(team.trial_expiry_date, today) == :gt
+
+      assert [team_membership] = Repo.preload(team, :team_memberships).team_memberships
+      assert team_membership.user_id == user.id
+      assert team_membership.role == :owner
+      assert team_membership.is_autocreated == false
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :editor
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"New Team\" team"
+      )
+    end
+
+    test "creates a team without any invitations" do
+      user = new_user()
+
+      assert {:ok, team} = Teams.create(user, "New Team", [])
+
+      assert team.setup_complete
+      assert [] = Teams.Invitations.pending_team_invitations_for(team)
+      assert_no_emails_delivered()
+    end
+
+    test "leaves the user's existing personal team untouched" do
+      user = new_user()
+      _site = new_site(owner: user)
+      personal_team = team_of(user)
+
+      assert {:ok, team} = Teams.create(user, "New Team", [])
+      assert team.id != personal_team.id
+
+      personal_team = Repo.reload!(personal_team)
+      assert personal_team.name == Teams.default_name()
+      refute personal_team.setup_complete
+
+      assert [team_membership] = Repo.preload(personal_team, :team_memberships).team_memberships
+      assert team_membership.user_id == user.id
+      assert team_membership.role == :owner
+      assert team_membership.is_autocreated == true
+
+      assert {:ok, %{id: personal_team_id}} = Teams.get_or_create(user)
+      assert personal_team_id == personal_team.id
+    end
+
+    test "rolls back team creation when an invitation fails" do
+      user = new_user()
+
+      assert {:error, :already_a_member} =
+               Teams.create(user, "New Team", [
+                 %{email: "new@example.com", role: :editor},
+                 %{email: user.email, role: :viewer}
+               ])
+
+      assert {:error, :no_team} = Teams.get_by_owner(user)
+      assert_no_emails_delivered()
+    end
+
+    test "returns a name changeset error without creating a team" do
+      user = new_user()
+
+      assert {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} =
+               Teams.create(user, Teams.default_name(), [
+                 %{email: "new@example.com", role: :editor}
+               ])
+
+      assert [name: {"is reserved", _}] = changeset.errors
+
+      assert {:error, :no_team} = Teams.get_by_owner(user)
+      assert_no_emails_delivered()
+    end
+  end
+
+  on_ee do
+    describe "create/3 - SSO user" do
+      setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
+
+      test "does not allow creating a team to SSO user", %{user: user} do
+        assert {:error, :permission_denied} = Teams.create(user, "New Team", [])
+      end
     end
   end
 

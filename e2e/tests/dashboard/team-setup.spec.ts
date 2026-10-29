@@ -1,6 +1,12 @@
-import { test, expect } from '@playwright/test'
-import { setupSite, subscribeToPlan } from '../fixtures'
-import { expectLiveViewConnected } from '../test-utils'
+import { test, expect, Page } from '@playwright/test'
+import {
+  login,
+  logout,
+  register,
+  setupSite,
+  subscribeToPlan
+} from '../fixtures'
+import { expectLiveViewConnected, randomID } from '../test-utils'
 
 test('submitting team name via Enter key does not crash', async ({
   page,
@@ -114,4 +120,81 @@ test('removing and re-adding a row', async ({ page, request }) => {
 
   await expect(row2.locator('input[type="email"]')).toHaveValue('')
   await expect(row2.getByTestId('role')).toHaveText('Viewer')
+})
+
+function newUser() {
+  const userID = randomID()
+
+  return {
+    name: `User ${userID}`,
+    email: `email-${userID}@example.com`,
+    password: 'VeryStrongVerySecret'
+  }
+}
+
+async function createTeamInOnboarding(page: Page, teamName: string) {
+  await expect(page).toHaveURL(/\/team\/setup\?flow=register/)
+  await expectLiveViewConnected(page)
+
+  const nameInput = page.locator('input[name="team[name]"]')
+  await nameInput.clear()
+  await nameInput.fill(teamName)
+
+  await page.getByRole('button', { name: 'Create team' }).click()
+}
+
+async function expectCurrentTeamOnSitesPage(page: Page, teamName: string) {
+  await page.goto('/sites', { waitUntil: 'commit' })
+  await expectLiveViewConnected(page)
+
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText(teamName)
+}
+
+test('team created during onboarding after adding a site stays the current team', async ({
+  page,
+  request
+}) => {
+  const user = newUser()
+  const teamName = `Onboarded team ${randomID()}`
+
+  await register({ page, request, user })
+
+  await page.getByLabel('Domain').fill(`${randomID()}.example.com`)
+  await page.getByRole('button', { name: 'Add site' }).click()
+
+  await createTeamInOnboarding(page, teamName)
+
+  await expect(page).toHaveURL(/\/installation\?flow=register&__team=/)
+
+  // without the `__team` param
+  await expectCurrentTeamOnSitesPage(page, teamName)
+
+  // with a fresh session
+  await logout(page)
+  await login({ page, user })
+  await expectCurrentTeamOnSitesPage(page, teamName)
+})
+
+test('team created during onboarding after skipping adding a site stays the current team', async ({
+  page,
+  request
+}) => {
+  const user = newUser()
+  const teamName = `Onboarded team ${randomID()}`
+
+  await register({ page, request, user })
+
+  await page.getByRole('link', { name: 'Skip' }).click()
+
+  await createTeamInOnboarding(page, teamName)
+
+  await expect(page).toHaveURL(/\/sites\?__team=/)
+
+  // without the `__team` param
+  await expectCurrentTeamOnSitesPage(page, teamName)
+
+  // with a fresh session
+  await logout(page)
+  await login({ page, user })
+  await expectCurrentTeamOnSitesPage(page, teamName)
 })

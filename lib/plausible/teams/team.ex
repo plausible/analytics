@@ -119,6 +119,35 @@ defmodule Plausible.Teams.Team do
 
   def suggested_name(_user_name), do: @suggested_name_fallback
 
+  @doc """
+  Builds the team name suggested from a site domain, using the label right
+  before the public suffix, e.g. "shop.wannabuy.co.uk/blog" -> "Wannabuy".
+
+  Falls back to `suggested_name/1` when the domain doesn't yield a name-like
+  label or is invalid according to the rules of `valid_suggestion?/1`.
+  """
+  def suggested_name_from_domain(domain, user_name) when is_binary(domain) do
+    with [host | _] <- String.split(domain, "/", parts: 2),
+         registrable_domain when is_binary(registrable_domain) <-
+           PublicSuffix.registrable_domain(host),
+         [label | _] <- String.split(registrable_domain, "."),
+         true <- String.match?(label, ~r/\p{L}/u),
+         suggested = humanize_domain_label(label),
+         true <- String.length(suggested) <= @max_name_length and valid_suggestion?(suggested) do
+      suggested
+    else
+      _ -> suggested_name(user_name)
+    end
+  end
+
+  def suggested_name_from_domain(_domain, user_name), do: suggested_name(user_name)
+
+  defp humanize_domain_label(label) do
+    label
+    |> String.split(["-", "_"], trim: true)
+    |> Enum.map_join(" ", &String.capitalize/1)
+  end
+
   defp valid_suggestion?(name) do
     byte_size(name) <= @max_name_bytes and not contains_scheme?(name)
   end
@@ -147,12 +176,14 @@ defmodule Plausible.Teams.Team do
   end
 
   def name_changeset(team, attrs \\ %{}) do
-    changeset =
-      team
-      |> cast(attrs, [:name])
-      |> validate_name()
-      |> validate_required(:name)
+    team
+    |> cast(attrs, [:name])
+    |> validate_name()
+    |> validate_required(:name)
+    |> validate_not_reserved_name()
+  end
 
+  def validate_not_reserved_name(changeset) do
     # Do not allow an actual team keep Plausible.Teams.default_name()
     # as its name. This is just to avoid confusion in the UI and keep
     # the auto-created team distinguishable from a real one.

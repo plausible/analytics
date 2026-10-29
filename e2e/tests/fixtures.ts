@@ -126,7 +126,7 @@ export async function login({ page, user }: { page: Page; user: User }) {
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
 
   await page.getByLabel('Email').fill(user.email)
-  await page.getByLabel('Password').fill(user.password)
+  await page.getByLabel('Password', { exact: true }).fill(user.password)
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('button', { name: user.name })).toBeVisible()
@@ -154,6 +154,10 @@ export async function addSite({
   await page.getByLabel('Domain').fill(domain)
 
   await page.getByRole('button', { name: 'Add site' }).click()
+
+  await expect(page).toHaveURL(/\/team\/setup/)
+
+  await page.getByRole('link', { name: 'Skip' }).click()
 
   await expect(page).toHaveURL(/\/installation/)
 
