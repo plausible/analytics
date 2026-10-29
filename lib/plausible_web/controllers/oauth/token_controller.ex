@@ -37,13 +37,34 @@ defmodule PlausibleWeb.OAuth.TokenController do
              resource: resource
            }),
          {:ok, token} <- OAuth.issue_token(auth_code) do
-      conn
-      |> put_resp_header("cache-control", "no-store")
-      |> put_resp_header("pragma", "no-cache")
-      |> json(token)
+      send_token(conn, token)
     else
       {:error, :missing_param, _name} ->
         send_error(conn, "invalid_request")
+
+      {:error, _} ->
+        send_error(conn, "invalid_grant")
+    end
+  end
+
+  defp grant(%Plug.Conn{body_params: %{"grant_type" => "refresh_token"} = params} = conn) do
+    with {:ok, refresh_token} <- require_param(params, "refresh_token"),
+         {:ok, client_id} <- check_optional_param(params, "client_id"),
+         {:ok, resource} <- check_optional_param(params, "resource"),
+         {:ok, scope} <- check_optional_param(params, "scope"),
+         {:ok, token} <-
+           OAuth.refresh_token(refresh_token, %{
+             client_id: client_id,
+             resource: resource,
+             scope: scope
+           }) do
+      send_token(conn, token)
+    else
+      {:error, :missing_param, _name} ->
+        send_error(conn, "invalid_request")
+
+      {:error, :invalid_scope} ->
+        send_error(conn, "invalid_scope")
 
       {:error, _} ->
         send_error(conn, "invalid_grant")
@@ -63,6 +84,20 @@ defmodule PlausibleWeb.OAuth.TokenController do
       value when is_binary(value) and value != "" -> {:ok, value}
       _ -> {:error, :missing_param, name}
     end
+  end
+
+  defp check_optional_param(params, name) do
+    case params[name] do
+      nil -> {:ok, nil}
+      _ -> require_param(params, name)
+    end
+  end
+
+  defp send_token(conn, token) do
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_header("pragma", "no-cache")
+    |> json(token)
   end
 
   defp send_error(conn, error) do
