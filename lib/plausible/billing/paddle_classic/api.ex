@@ -158,6 +158,92 @@ defmodule Plausible.Billing.PaddleClassic.Api do
     end
   end
 
+  @plans_page_size 500
+  @modifiers_page_size 250
+
+  @doc """
+  Lists every plan of the Classic catalog (read-only), following pagination.
+
+  Each plan has `"id"` (integer), `"name"`, `"billing_type"` (`"day"`, `"week"`, `"month"`
+  or `"year"`), `"billing_period"` (integer), `"trial_days"` (integer) and
+  `"initial_price"` / `"recurring_price"` maps of currency code => amount string.
+
+  See `POST /2.0/subscription/plans` in Paddle's
+  [Subscription API](https://classic.paddle.com/api-reference/reference/subscription-api).
+  """
+  def list_plans() do
+    list_plans(0, [])
+  end
+
+  defp list_plans(offset, acc) do
+    params =
+      Map.merge(auth_params(), %{limit: @plans_page_size, offset: offset})
+
+    case HTTPClient.impl().post(plans_url(), @headers, params) do
+      {:ok, %{body: %{"success" => true, "response" => plans} = body}} when is_list(plans) ->
+        acc = acc ++ plans
+        total = body["total"] || length(acc)
+
+        if plans != [] and length(acc) < total do
+          list_plans(offset + length(plans), acc)
+        else
+          {:ok, acc}
+        end
+
+      {:ok, %{body: body}} ->
+        {:error, body["error"] || :unexpected_response}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Lists the modifiers of all subscriptions (read-only), following pagination.
+
+  Each modifier has `"modifier_id"` (integer), `"subscription_id"` (integer), `"amount"`
+  (string, negative for discounts), `"currency"`, `"is_recurring"` (boolean) and `"description"`.
+
+  The endpoint pages with `after`: the id of the last modifier of the previous page.
+
+  See `POST /2.0/subscription/modifiers` in Paddle's
+  [Subscription API](https://classic.paddle.com/api-reference/reference/subscription-api).
+  """
+  def list_modifiers() do
+    list_modifiers(nil, [])
+  end
+
+  defp list_modifiers(after_id, acc) do
+    params =
+      Map.merge(auth_params(), %{results_per_page: @modifiers_page_size})
+
+    params = if after_id, do: Map.put(params, :after, after_id), else: params
+
+    case HTTPClient.impl().post(modifiers_url(), @headers, params) do
+      {:ok, %{body: %{"success" => true, "response" => page}}} when is_list(page) ->
+        # Paddle doesn't say if `after` is inclusive, so never count a modifier twice
+        seen = MapSet.new(acc, & &1["modifier_id"])
+        new = Enum.reject(page, &MapSet.member?(seen, &1["modifier_id"]))
+
+        if new == [] or length(page) < @modifiers_page_size do
+          {:ok, acc ++ new}
+        else
+          list_modifiers(List.last(page)["modifier_id"], acc ++ new)
+        end
+
+      {:ok, %{body: body}} ->
+        {:error, body["error"] || :unexpected_response}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  defp auth_params() do
+    config = get_config()
+    %{vendor_id: config[:vendor_id], vendor_auth_code: config[:vendor_auth_code]}
+  end
+
   def checkout_domain() do
     if Application.get_env(:plausible, :environment) == "staging" do
       "https://sandbox-checkout.paddle.com"
@@ -192,6 +278,14 @@ defmodule Plausible.Billing.PaddleClassic.Api do
 
   defp get_subscription_url() do
     Path.join(vendors_domain(), "/api/2.0/subscription/users")
+  end
+
+  defp plans_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/plans")
+  end
+
+  defp modifiers_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/modifiers")
   end
 
   defp prices_url() do
