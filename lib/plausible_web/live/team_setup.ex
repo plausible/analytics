@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     onboarding? = params["flow"] == Flows.register()
-    domain = params["domain"]
+    domain = accessible_domain(socket.assigns.current_user, params["domain"])
 
     socket =
       cond do
@@ -264,6 +264,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
          )}
     end
   end
+
+  defp accessible_domain(user, domain) when is_binary(domain) do
+    case Plausible.Sites.get_for_user(user, domain) do
+      %Plausible.Site{} = site -> site.domain
+      nil -> nil
+    end
+  end
+
+  defp accessible_domain(_user, _domain), do: nil
 
   defp success_redirect_path(onboarding?, domain, params) do
     if onboarding? do

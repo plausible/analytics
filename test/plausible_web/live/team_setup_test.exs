@@ -91,6 +91,28 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert {:error, {:redirect, %{to: ^expected_path}}} =
                live(conn, onboarding_url(site.domain))
     end
+
+    test "ignores the domain of a site the user can't access", %{conn: conn} do
+      other_site = new_site(domain: "other-company.com")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(other_site.domain))
+
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
+
+    test "ignores the domain of a non-existent site when skipping ahead", %{
+      conn: conn,
+      site: site
+    } do
+      team = Teams.complete_setup(site.team)
+      conn = set_current_team(conn, team)
+
+      assert {:error, {:redirect, %{to: "/sites"}}} =
+               live(conn, onboarding_url("evil.example.com"))
+    end
   end
 
   describe "/team/setup?flow=register - after skipping adding a site" do
