@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
   defp team_setup_form(assigns) do
     ~H"""
     <.onboarding_page_heading
-      heading="Create a new team"
+      heading="Create a team"
       subtitle="Name your team and optionally invite members by email."
     />
     <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
