@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-6BF49396.js"></script>
+    <script src="dist/sidebar_items-CCABB4D6.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -189,6 +189,26 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#list_modifiers/0" data-no-tooltip translate="no">list_modifiers()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists the modifiers of all subscriptions (read-only), following pagination.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_plans/0" data-no-tooltip translate="no">list_plans()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists every plan of the Classic catalog (read-only), following pagination.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#update_subscription/2" data-no-tooltip translate="no">update_subscription(paddle_subscription_id, params)</a>
 
       </div>
@@ -232,7 +252,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">checkout_domain()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L161" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L247" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -311,6 +331,51 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="list_modifiers/0">
+
+  <div class="detail-header">
+    <a href="#list_modifiers/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_modifiers()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L212" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Lists the modifiers of all subscriptions (read-only), following pagination.</p><p>Each modifier has <code class="inline">&quot;modifier_id&quot;</code> (integer), <code class="inline">&quot;subscription_id&quot;</code> (integer), <code class="inline">&quot;amount&quot;</code>
+(string, negative for discounts), <code class="inline">&quot;currency&quot;</code>, <code class="inline">&quot;is_recurring&quot;</code> (boolean) and <code class="inline">&quot;description&quot;</code>.</p><p>The endpoint pages with <code class="inline">after</code>: the id of the last modifier of the previous page.</p><p>See <code class="inline">POST /2.0/subscription/modifiers</code> in Paddle's
+<a href="https://classic.paddle.com/api-reference/reference/subscription-api">Subscription API</a>.</p>
+  </section>
+</section>
+<section class="detail" id="list_plans/0">
+
+  <div class="detail-header">
+    <a href="#list_plans/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">list_plans()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L174" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Lists every plan of the Classic catalog (read-only), following pagination.</p><p>Each plan has <code class="inline">&quot;id&quot;</code> (integer), <code class="inline">&quot;name&quot;</code>, <code class="inline">&quot;billing_type&quot;</code> (<code class="inline">&quot;day&quot;</code>, <code class="inline">&quot;week&quot;</code>, <code class="inline">&quot;month&quot;</code>
+or <code class="inline">&quot;year&quot;</code>), <code class="inline">&quot;billing_period&quot;</code> (integer), <code class="inline">&quot;trial_days&quot;</code> (integer) and
+<code class="inline">&quot;initial_price&quot;</code> / <code class="inline">&quot;recurring_price&quot;</code> maps of currency code =&gt; amount string.</p><p>See <code class="inline">POST /2.0/subscription/plans</code> in Paddle's
+<a href="https://classic.paddle.com/api-reference/reference/subscription-api">Subscription API</a>.</p>
+  </section>
+</section>
 <section class="detail" id="update_subscription/2">
 
   <div class="detail-header">
@@ -359,7 +424,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">vendors_domain()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L169" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_classic/api.ex#L255" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

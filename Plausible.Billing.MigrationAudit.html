@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.35.1">
+    <meta name="project" content="Plausible v0.0.1">
+
+
+    <title>Plausible.Billing.MigrationAudit — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-CCABB4D6.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.svg" alt="Plausible" />
+        </a>
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+    <span translate="no">Plausible.Billing.MigrationAudit</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+  </h1>
+
+
+    <section id="moduledoc">
+<p>Read-only audit report for the Paddle Classic-&gt;Billing migration.
+Paddle is only called when explicitly asked for with <code class="inline">catalog: true</code>,
+and then with read-only requests.</p><h2 id="module-answering-the-audit-asked-for-in-the-paddle-billing-project" class="section-heading">
+  <a href="#module-answering-the-audit-asked-for-in-the-paddle-billing-project" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Answering the audit asked for in the Paddle Billing project</span>
+</h2>
+<table><thead><tr><th style="text-align: left;">Item</th><th style="text-align: left;">Where</th></tr></thead><tbody><tr><td style="text-align: left;">Active subscriptions by plan id</td><td style="text-align: left;"><a href="#plan_resolution/1"><code class="inline">plan_resolution/1</code></a>, <code class="inline">:by_plan_id</code></td></tr><tr><td style="text-align: left;">Plan generation</td><td style="text-align: left;"><a href="#plan_resolution/1"><code class="inline">plan_resolution/1</code></a>, <code class="inline">:by_generation</code></td></tr><tr><td style="text-align: left;">Enterprise plans attached to live subscriptions</td><td style="text-align: left;"><a href="#plan_resolution/1"><code class="inline">plan_resolution/1</code></a>, <code class="inline">:enterprise_plans</code></td></tr><tr><td style="text-align: left;">Active, paused, trialing, past-due</td><td style="text-align: left;"><a href="#subscribers/1"><code class="inline">subscribers/1</code></a>, <code class="inline">:statuses</code></td></tr><tr><td style="text-align: left;">Plans with multiple currency prices</td><td style="text-align: left;"><a href="#classic_catalog/1"><code class="inline">classic_catalog/1</code></a>, <code class="inline">:plans</code></td></tr><tr><td style="text-align: left;">Customer-specific or negotiated plans</td><td style="text-align: left;"><a href="#subscribers/1"><code class="inline">subscribers/1</code></a>, <code class="inline">:enterprise</code> and <code class="inline">:vs_list_price</code>; <a href="#classic_catalog/1"><code class="inline">classic_catalog/1</code></a>, <code class="inline">:plans</code> <code class="inline">:by_origin</code></td></tr><tr><td style="text-align: left;">Recurring or one-time modifiers</td><td style="text-align: left;"><a href="#classic_catalog/1"><code class="inline">classic_catalog/1</code></a>, <code class="inline">:modifiers</code></td></tr><tr><td style="text-align: left;">Effective currency and amount paid</td><td style="text-align: left;"><a href="#subscribers/1"><code class="inline">subscribers/1</code></a>, <code class="inline">:billed</code> and <code class="inline">:vs_list_price</code></td></tr></tbody></table>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:category/0" data-no-tooltip translate="no">category()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:problem/0" data-no-tooltip translate="no">problem()</a>
+
+      </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#check_plan_files/2" data-no-tooltip translate="no">check_plan_files(files, prices)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Pure part of <a href="#plan_files_integrity/1"><code class="inline">plan_files_integrity/1</code></a>, for testing and for use on data that
+isn't on disk.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#classic_catalog/1" data-no-tooltip translate="no">classic_catalog(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Plan catalog and modifiers from Paddle Classic. Makes read-only API calls, see
+<a href="Plausible.Billing.MigrationAudit.ClassicCatalog.html#audit/1"><code class="inline">Plausible.Billing.MigrationAudit.ClassicCatalog.audit/1</code></a> for the result and options.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#classify/1" data-no-tooltip translate="no">classify(subscription)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Classifies the plan of a single subscription.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#collect/1" data-no-tooltip translate="no">collect(opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#json_report/1" data-no-tooltip translate="no">json_report(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>bin/plausible rpc &quot;IO.puts(Plausible.Billing.MigrationAudit.json_report())&quot;</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#plan_files_integrity/1" data-no-tooltip translate="no">plan_files_integrity(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Checks the static plan files and returns a list of problems (empty if all is
+well). Reads the files from the release's <code class="inline">priv</code> directory.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#plan_resolution/1" data-no-tooltip translate="no">plan_resolution(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Resolves subscriptions to plans exactly like the app does
+(<a href="Plausible.Billing.Plans.html#get_subscription_plan/1"><code class="inline">Plausible.Billing.Plans.get_subscription_plan/1</code></a>) and summarises the result.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run/1" data-no-tooltip translate="no">run(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Like <a href="#collect/1"><code class="inline">collect/1</code></a>, but prints a readable report, and returns the same data.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#subscribers/1" data-no-tooltip translate="no">subscribers(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Subscribers by status, effective amounts and enterprise plans. Database only,
+see <a href="Plausible.Billing.MigrationAudit.Subscribers.html#audit/1"><code class="inline">Plausible.Billing.MigrationAudit.Subscribers.audit/1</code></a> for the result and options.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_json/1" data-no-tooltip translate="no">to_json(result)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Encodes a result of this module as pretty JSON.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:category/0">
+
+  <div class="detail-header">
+    <a href="#t:category/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">category()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L42" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> category() ::
+  :free
+  | :manual
+  | :enterprise
+  | :unresolved
+  | {:regular, generation :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), kind :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:problem/0">
+
+  <div class="detail-header">
+    <a href="#t:problem/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">problem()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L49" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> problem() :: %{check: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), file: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil, message: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="check_plan_files/2">
+
+  <div class="detail-header">
+    <a href="#check_plan_files/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">check_plan_files(files, prices)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L358" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> check_plan_files(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | {:error, <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}) :: [<a href="#t:problem/0">problem</a>()]</pre>
+
+      </div>
+
+<p>Pure part of <a href="#plan_files_integrity/1"><code class="inline">plan_files_integrity/1</code></a>, for testing and for use on data that
+isn't on disk.</p><p><code class="inline">files</code> maps a file name without extension (for example <code class="inline">&quot;plans_v1&quot;</code>) to its
+decoded JSON (a list of plan maps), <code class="inline">prices</code> is
+the decoded <code class="inline">plan_prices.json</code> (plan id =&gt; price). A value of
+<code class="inline">{:error, message}</code> stands for a file that couldn't be read.</p><p>Checks:</p><ul><li><code class="inline">:unreadable</code> - a file is missing or isn't valid</li><li><code class="inline">:generation_mismatch</code> - a plan's <code class="inline">generation</code> doesn't match its file</li><li><code class="inline">:bad_id_format</code> - an id isn't a numeric (Paddle Classic) id</li><li><code class="inline">:same_monthly_and_yearly_id</code> - a plan uses one id for both intervals</li><li><code class="inline">:duplicate_id</code> - an id is used more than once</li><li><code class="inline">:duplicate_plan</code> - two plans in a file share kind and pageview limit</li><li><code class="inline">:missing_price</code> / <code class="inline">:orphan_price</code> / <code class="inline">:bad_price</code> - <code class="inline">plan_prices.json</code> has
+to hold a positive price for every plan id, and nothing else</li></ul>
+  </section>
+</section>
+<section class="detail" id="classic_catalog/1">
+
+    <span id="classic_catalog/0"></span>
+
+  <div class="detail-header">
+    <a href="#classic_catalog/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">classic_catalog(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L125" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Plan catalog and modifiers from Paddle Classic. Makes read-only API calls, see
+<a href="Plausible.Billing.MigrationAudit.ClassicCatalog.html#audit/1"><code class="inline">Plausible.Billing.MigrationAudit.ClassicCatalog.audit/1</code></a> for the result and options.</p>
+  </section>
+</section>
+<section class="detail" id="classify/1">
+
+  <div class="detail-header">
+    <a href="#classify/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">classify(subscription)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L182" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> classify(Plausible.Billing.Subscription.t()) :: <a href="#t:category/0">category</a>()</pre>
+
+      </div>
+
+<p>Classifies the plan of a single subscription.</p>
+  </section>
+</section>
+<section class="detail" id="collect/1">
+
+    <span id="collect/0"></span>
+
+  <div class="detail-header">
+    <a href="#collect/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">collect(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L70" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> collect(<a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="json_report/1">
+
+    <span id="json_report/0"></span>
+
+  <div class="detail-header">
+    <a href="#json_report/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">json_report(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L59" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> json_report(<a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+<p>bin/plausible rpc &quot;IO.puts(Plausible.Billing.MigrationAudit.json_report())&quot;</p><p>  or, from a remote shell:</p><p>iex&gt; IO.puts(Plausible.Billing.MigrationAudit.json_report())</p>
+  </section>
+</section>
+<section class="detail" id="plan_files_integrity/1">
+
+    <span id="plan_files_integrity/0"></span>
+
+  <div class="detail-header">
+    <a href="#plan_files_integrity/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">plan_files_integrity(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L310" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> plan_files_integrity(<a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: [<a href="#t:problem/0">problem</a>()]</pre>
+
+      </div>
+
+<p>Checks the static plan files and returns a list of problems (empty if all is
+well). Reads the files from the release's <code class="inline">priv</code> directory.</p><p>Options:</p><ul><li><code class="inline">:priv_dir</code> - directory to read from (default: the app's <code class="inline">priv</code>).</li></ul>
+  </section>
+</section>
+<section class="detail" id="plan_resolution/1">
+
+    <span id="plan_resolution/0"></span>
+
+  <div class="detail-header">
+    <a href="#plan_resolution/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">plan_resolution(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L149" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> plan_resolution(<a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
+
+      </div>
+
+<p>Resolves subscriptions to plans exactly like the app does
+(<a href="Plausible.Billing.Plans.html#get_subscription_plan/1"><code class="inline">Plausible.Billing.Plans.get_subscription_plan/1</code></a>) and summarises the result.</p><p>Options:</p><ul><li><code class="inline">:scope</code> - <code class="inline">:live</code> (default) audits every subscription that could matter
+for a port: active, past due or paused, plus cancelled ones that are still
+inside the paid period. <code class="inline">:current</code> audits the last subscription of every
+team, which is the one the app uses to determine a team's plan.</li><li><code class="inline">:today</code> - the date used for &quot;still inside the paid period&quot; (default:
+today, UTC).</li></ul>
+  </section>
+</section>
+<section class="detail" id="run/1">
+
+    <span id="run/0"></span>
+
+  <div class="detail-header">
+    <a href="#run/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">run(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L97" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Like <a href="#collect/1"><code class="inline">collect/1</code></a>, but prints a readable report, and returns the same data.</p>
+  </section>
+</section>
+<section class="detail" id="subscribers/1">
+
+    <span id="subscribers/0"></span>
+
+  <div class="detail-header">
+    <a href="#subscribers/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">subscribers(opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L119" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Subscribers by status, effective amounts and enterprise plans. Database only,
+see <a href="Plausible.Billing.MigrationAudit.Subscribers.html#audit/1"><code class="inline">Plausible.Billing.MigrationAudit.Subscribers.audit/1</code></a> for the result and options.</p>
+  </section>
+</section>
+<section class="detail" id="to_json/1">
+
+  <div class="detail-header">
+    <a href="#to_json/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">to_json(result)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/migration_audit.ex#L131" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> to_json(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+<p>Encodes a result of this module as pretty JSON.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>

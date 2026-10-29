@@ -49,6 +49,9 @@ Plausible.Billing.Ecto.Limit.html
 Plausible.Billing.EnterprisePlan.html
 Plausible.Billing.Feature.Teams.html
 Plausible.Billing.Feature.html
+Plausible.Billing.MigrationAudit.ClassicCatalog.html
+Plausible.Billing.MigrationAudit.Subscribers.html
+Plausible.Billing.MigrationAudit.html
 Plausible.Billing.PaddleClassic.Api.html
 Plausible.Billing.PaddleClassic.DevApiMock.html
 Plausible.Billing.PaddleClassic.Webhooks.html
@@ -629,8 +632,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-93192690.js
-dist/sidebar_items-6BF49396.js
+dist/search_data-6C6BB1A3.js
+dist/sidebar_items-CCABB4D6.js
 index.html
 readme.html
 search.html
