@@ -85,7 +85,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/activate?flow=register&team_identifier="
     end
 
-    test "logs the user in", %{conn: conn} do
+    test "logs the user in and redirects to onboarding", %{conn: conn} do
       user =
         Repo.insert!(
           User.new(%{
@@ -94,6 +94,7 @@ defmodule PlausibleWeb.AuthControllerTest do
             password: "very-secret-and-very-long-123",
             password_confirmation: "very-secret-and-very-long-123"
           })
+          |> Ecto.Changeset.put_change(:email_verified, true)
         )
 
       conn =
@@ -107,6 +108,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
+      assert redirected_to(conn, 302) == "/sites/new?flow=register"
     end
   end
 

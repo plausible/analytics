@@ -304,7 +304,7 @@ defmodule PlausibleWeb.AuthController do
             accept_team_invitation(conn, params["team_identifier"], user)
 
           params["register_action"] == "register_form" ->
-            ~p"/sites/new"
+            ~p"/sites/new?#{[flow: PlausibleWeb.Flows.register()]}"
 
           true ->
             params["return_to"]
