@@ -127,7 +127,7 @@ defmodule Plausible.Teams.Team do
   label or is invalid according to the rules of `valid_suggestion?/1`.
   """
   def suggested_name_from_domain(domain, user_name) when is_binary(domain) do
-    with [host | _] <- String.split(domain, ["/", ":"], parts: 2),
+    with [host | _] <- String.split(domain, "/", parts: 2),
          registrable_domain when is_binary(registrable_domain) <-
            PublicSuffix.registrable_domain(host),
          [label | _] <- String.split(registrable_domain, "."),

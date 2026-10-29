@@ -200,10 +200,9 @@ defmodule Plausible.Teams.TeamTest do
       end
     end
 
-    test "ignores the path and the port" do
+    test "ignores the path" do
       assert Team.suggested_name_from_domain("mysite.com/mypage", "Jane") == "Mysite"
       assert Team.suggested_name_from_domain("sub.mysite.com/mypage", "Jane") == "Mysite"
-      assert Team.suggested_name_from_domain("mysite.com:8000", "Jane") == "Mysite"
     end
 
     test "uses the subdomain of a hosting platform" do
