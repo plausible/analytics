@@ -1761,6 +1761,27 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         assert notification.threshold == 15
       end
+
+      test "does not allow changing site_id or type of #{type} notification", %{
+        conn: conn,
+        site: site
+      } do
+        other_site = new_site()
+        notification = insert(:"#{unquote(type)}_notification", site: site)
+        other_type = if unquote(type) == :spike, do: "drop", else: "spike"
+
+        put(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}", %{
+          "traffic_change_notification" => %{
+            "site_id" => to_string(other_site.id),
+            "type" => other_type
+          }
+        })
+
+        notification = Repo.reload!(notification)
+
+        assert notification.site_id == site.id
+        assert notification.type == unquote(type)
+      end
     end
 
     describe "POST /sites/:domain/traffic-change-notification/#{type}/recipients" do
