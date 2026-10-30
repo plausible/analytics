@@ -49,6 +49,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Readiness check (`/api/health`) no longer stays failing for hours after a cache fails to load at boot: a failed cache refresh is now retried after 30 seconds
 - Stats API `/api/v1/stats/breakdown` now returns a `400` error for an invalid `page` parameter instead of crashing with a `500`
 - Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change

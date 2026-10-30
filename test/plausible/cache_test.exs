@@ -56,6 +56,17 @@ defmodule Plausible.CacheTest do
     test "cache is not ready when it doesn't exist", %{test: test} do
       refute ExampleCache.ready?(test)
     end
+
+    test "refresh_all returns an error when the source query fails", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      log =
+        capture_log(fn ->
+          assert {:error, _} = ExampleCache.refresh_all(cache_name: test)
+        end)
+
+      assert log =~ "Error refreshing '#{test}'"
+    end
   end
 
   describe "merging cache items" do
@@ -193,12 +204,51 @@ defmodule Plausible.CacheTest do
       assert at1 < at2
       assert at3 > at2
     end
+
+    test "cache warmer retries a failed run before the next interval", %{test: test} do
+      test_pid = self()
+
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(test_pid, {:error, :db_unavailable}),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 30
+      ]
+
+      capture_log(fn ->
+        {:ok, _} = start_test_warmer(opts)
+
+        assert_receive {:cache_warmed, %{at: at1}}, 100
+        assert_receive {:cache_warmed, %{at: at2}}, 100
+        assert at2 > at1
+      end)
+    end
+
+    test "cache warmer does not retry a successful run", %{test: test} do
+      test_pid = self()
+
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(test_pid),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 30
+      ]
+
+      {:ok, _} = start_test_warmer(opts)
+
+      assert_receive {:cache_warmed, _}, 100
+      refute_receive {:cache_warmed, _}, 150
+    end
   end
 
-  defp report_back(test_pid) do
+  defp report_back(test_pid, result \\ :ok) do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
-      :ok
+      result
     end
   end
 
