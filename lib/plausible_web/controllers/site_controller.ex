@@ -501,7 +501,7 @@ defmodule PlausibleWeb.SiteController do
     notification =
       Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: type)
 
-    Plausible.Site.TrafficChangeNotification.changeset(notification, params)
+    Plausible.Site.TrafficChangeNotification.update_changeset(notification, params)
     |> Repo.update!()
 
     conn
