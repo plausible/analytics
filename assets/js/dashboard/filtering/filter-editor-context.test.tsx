@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { act, renderHook } from '@testing-library/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import { useDashboardStateContext } from '../dashboard-state-context'
 import { Filter } from '../dashboard-state'
