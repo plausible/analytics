@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
         Create your first funnel
       </h3>
       <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-        Compose goals into funnels to track user flows and conversion rates.
+        Chain pages and events into a funnel to see where visitors drop off.
         <.styled_link href="https://plausible.io/docs/funnel-analysis" target="_blank">
           Learn more
         </.styled_link>

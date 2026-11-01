@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Live.Installation do
 
     ~H"""
     <.onboarding_or_app_layout {assigns}>
-      <PlausibleWeb.Components.Site.NewSiteForm.heading_and_subtitle
+      <.onboarding_page_heading
         heading={@heading}
         subtitle={@subtitle}
       />

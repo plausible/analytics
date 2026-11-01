@@ -44,7 +44,7 @@ defmodule Plausible.Funnel.DynamicStep do
   def as_goal(step) do
     %Plausible.Goal{
       id: 0,
-      display_name: display_name(step),
+      display_name: Plausible.Goal.display_name(step.event_name, step.page_path),
       event_name: step.event_name,
       page_path: step.page_path,
       scroll_threshold: step.scroll_threshold,
@@ -58,16 +58,6 @@ defmodule Plausible.Funnel.DynamicStep do
       add_error(changeset, :event_name, "cannot co-exist with page_path")
     else
       changeset
-    end
-  end
-
-  defp display_name(step) do
-    case step do
-      %{page_path: page_path} when is_binary(page_path) ->
-        "Visit " <> page_path
-
-      %{event_name: event_name} when is_binary(event_name) ->
-        event_name
     end
   end
 end

@@ -231,6 +231,42 @@ defmodule Plausible.Teams do
     end
   end
 
+  @doc """
+  Creates a new team owned by the given user and invites the given members.
+
+  Unlike `get_or_create/1`, this always creates a new team, regardless of
+  any other teams the user is already a member or an owner of. Those teams
+  are left untouched.
+  """
+  @spec create(Auth.User.t(), String.t(), [InviteToTeam.invite_entry()]) ::
+          {:ok, Teams.Team.t()} | {:error, any()}
+  def create(%Auth.User{} = user, name, invite_entries)
+      when is_binary(name) and is_list(invite_entries) do
+    with :ok <- check_user_type(user),
+         {:ok, {team, invitations}} <- do_create(user, name, invite_entries) do
+      InviteToTeam.send_invitation_emails(invitations)
+      {:ok, team}
+    end
+  end
+
+  defp do_create(user, name, invite_entries) do
+    Repo.transact(fn ->
+      with {:ok, team} <- insert_setup_team(name),
+           {:ok, _} <- Repo.insert(Teams.Membership.changeset(team, user, :owner)),
+           {:ok, invitations} <- InviteToTeam.invite_all(team, user, invite_entries) do
+        {:ok, {team, invitations}}
+      end
+    end)
+  end
+
+  defp insert_setup_team(name) do
+    %Teams.Team{}
+    |> Teams.Team.changeset(%{name: name})
+    |> Teams.Team.validate_not_reserved_name()
+    |> Teams.Team.setup_changeset()
+    |> Repo.insert()
+  end
+
   @spec delete(Teams.Team.t()) :: {:ok, :deleted} | {:error, :active_subscription}
   def delete(team) do
     team = Teams.with_subscription(team)

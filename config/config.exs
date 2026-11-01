@@ -43,13 +43,13 @@ config :tailwind,
 
 config :ua_inspector,
   database_path: "priv/ua_inspector",
-  remote_release: "6.5.0"
+  remote_release: "6.5.2"
 
 config :ref_inspector,
   database_path: "priv/ref_inspector"
 
 config :plausible,
-  paddle_api: Plausible.Billing.PaddleApi,
+  paddle_classic_api: Plausible.Billing.PaddleClassic.Api,
   google_api: Plausible.Google.API,
   verification_checks_mod: Plausible.InstallationSupport.Verification.Checks
 

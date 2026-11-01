@@ -107,7 +107,10 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp do_activate(conn, user, code) do
-    has_any_invitations? = Plausible.Teams.Users.has_sites?(user, include_pending?: true)
+    has_any_invitations? =
+      Plausible.Teams.Users.has_sites?(user, include_pending?: true) or
+        Teams.Invitations.pending_team_invitations_for(user) != []
+
     has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
 
     flow = conn.params["flow"]
@@ -301,7 +304,7 @@ defmodule PlausibleWeb.AuthController do
             accept_team_invitation(conn, params["team_identifier"], user)
 
           params["register_action"] == "register_form" ->
-            ~p"/sites/new"
+            ~p"/sites/new?#{[flow: PlausibleWeb.Flows.register()]}"
 
           true ->
             params["return_to"]

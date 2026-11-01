@@ -7,7 +7,7 @@
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
-import { Modal, Dropdown, Listbox } from 'prima'
+import { Modal, Dropdown, Listbox, Combobox } from 'prima'
 import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
@@ -20,7 +20,15 @@ import MemberRows from './member-rows'
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
 if (csrfToken && websocketUrl) {
-  let Hooks = { Modal, Dropdown, Listbox, Confirm, CopySnippet, MemberRows }
+  let Hooks = {
+    Modal,
+    Dropdown,
+    Listbox,
+    Confirm,
+    CopySnippet,
+    MemberRows,
+    Combobox
+  }
 
   Hooks.VerificationLifecycle = {
     mounted() {

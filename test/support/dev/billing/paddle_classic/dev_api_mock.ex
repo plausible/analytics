@@ -1,4 +1,4 @@
-defmodule Plausible.Billing.DevPaddleApiMock do
+defmodule Plausible.Billing.PaddleClassic.DevApiMock do
   @moduledoc """
   This module mocks API requests made to Paddle in the :dev environment.
 
@@ -25,7 +25,7 @@ defmodule Plausible.Billing.DevPaddleApiMock do
   end
 
   @doc """
-  Mocks the real `Plausible.Billing.PaddleApi.fetch_prices`, but:
+  Mocks the real `Plausible.Billing.PaddleClassic.Api.fetch_prices`, but:
 
   1. instead of filtering by a list of product IDs simply returns the prices for
      all plans

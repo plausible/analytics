@@ -51,7 +51,8 @@ defmodule Plausible.FunnelTest do
           ]
         }
 
-        changeset = Funnel.changeset(%Funnel{site_id: site.id}, params)
+        changeset =
+          Funnel.changeset(%Funnel{site_id: site.id}, params, allowed_goal_ids: [g1.id, g2.id])
 
         assert changeset.valid?
 
@@ -134,7 +135,10 @@ defmodule Plausible.FunnelTest do
           ]
         }
 
-        changeset = Funnel.changeset(%Funnel{site_id: site.id}, params)
+        changeset =
+          Funnel.changeset(%Funnel{site_id: site.id}, params,
+            allowed_goal_ids: [g1.id, g2.id, g3.id]
+          )
 
         assert changeset.valid?
 

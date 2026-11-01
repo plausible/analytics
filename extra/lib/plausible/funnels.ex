@@ -21,6 +21,8 @@ defmodule Plausible.Funnels do
   def create(site, name, steps, opts)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site = Plausible.Repo.preload(site, :team)
+    goals = Plausible.Goals.for_site(site)
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
 
     case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
@@ -42,6 +44,8 @@ defmodule Plausible.Funnels do
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
   def update(funnel, name, steps, opts \\ []) do
     site = Plausible.Repo.preload(funnel, site: :team).site
+    goals = Plausible.Goals.for_site(site)
+    opts = Keyword.put(opts, :allowed_goal_ids, Enum.map(goals, & &1.id))
 
     case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
@@ -59,11 +63,15 @@ defmodule Plausible.Funnels do
   def create_changeset(site, name, steps, opts \\ []) do
     funnel_type = Keyword.get(opts, :funnel_type, Funnel.default_funnel_type())
 
-    Funnel.changeset(%Funnel{site_id: site.id}, %{
-      name: name,
-      steps: steps,
-      funnel_type: funnel_type
-    })
+    Funnel.changeset(
+      %Funnel{site_id: site.id},
+      %{
+        name: name,
+        steps: steps,
+        funnel_type: funnel_type
+      },
+      opts
+    )
   end
 
   @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()], Keyword.t()) ::
@@ -78,7 +86,7 @@ defmodule Plausible.Funnels do
         params
       end
 
-    Funnel.changeset(funnel, params)
+    Funnel.changeset(funnel, params, opts)
   end
 
   @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()], Keyword.t()) :: Funnel.t()

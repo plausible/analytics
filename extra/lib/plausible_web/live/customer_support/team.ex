@@ -300,7 +300,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   end
 
   defp manage_url(%{paddle_subscription_id: paddle_id} = _subscription) do
-    Plausible.Billing.PaddleApi.vendors_domain() <>
+    Plausible.Billing.PaddleClassic.Api.vendors_domain() <>
       "/subscriptions/customers/manage/" <> paddle_id
   end
 

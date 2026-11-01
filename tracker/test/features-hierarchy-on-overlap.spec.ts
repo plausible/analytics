@@ -59,7 +59,7 @@ for (const mode of ['legacy', 'web'] as const) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [{ n: 'Custom Event', p: { url: downloadUrl } }],
         awaitedRequestCount: 2
       })
@@ -102,7 +102,7 @@ for (const mode of ['legacy', 'web'] as const) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [
           { n: 'Outbound Link: Click', p: { url: downloadUrl } }
         ],
@@ -146,7 +146,7 @@ for (const mode of ['legacy', 'web'] as const) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('a'),
+        action: () => page.locator('a').click(),
         expectedRequests: [
           {
             n: 'File Download',
@@ -196,8 +196,8 @@ for (const mode of ['web', 'esm'] as const) {
         action: async () => {
           await page.goto(url)
           await ensurePlausibleInitialized(page)
-          await page.fill('input[type="text"]', 'Any Name')
-          await page.click('input[type="submit"]')
+          await page.locator('input[type="text"]').fill('Any Name')
+          await page.locator('input[type="submit"]').click()
         },
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
         expectedRequests: [
@@ -243,8 +243,8 @@ for (const mode of ['web', 'esm'] as const) {
         action: async () => {
           await page.goto(url)
           await ensurePlausibleInitialized(page)
-          await page.fill('input[type="email"]', 'any@example.com')
-          await page.press('input[type="email"]', 'Enter')
+          await page.locator('input[type="email"]').fill('any@example.com')
+          await page.locator('input[type="email"]').press('Enter')
         },
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
         expectedRequests: [

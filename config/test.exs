@@ -19,7 +19,7 @@ config :plausible, Plausible.ClickhouseRepo,
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
 config :plausible,
-  paddle_api: Plausible.Billing.TestPaddleApiMock,
+  paddle_classic_api: Plausible.Billing.PaddleClassic.TestApiMock,
   google_api: Plausible.Google.API.Mock
 
 config :bamboo, :refute_timeout, 10

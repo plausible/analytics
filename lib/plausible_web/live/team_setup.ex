@@ -8,30 +8,38 @@ defmodule PlausibleWeb.Live.TeamSetup do
   import PlausibleWeb.Live.Components.Team, only: [role_select_input: 1]
 
   alias Plausible.Teams
+  alias PlausibleWeb.{Flows, Layouts}
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    team = socket.assigns.current_team
+    onboarding? = params["flow"] == Flows.register()
+    domain = accessible_domain(socket.assigns.current_user, params["domain"])
+
     socket =
-      case socket.assigns.current_team do
-        %Teams.Team{setup_complete: true} ->
+      cond do
+        Teams.setup?(team) and onboarding? ->
+          redirect(socket, to: onboarding_next_step_path(domain))
+
+        Teams.setup?(team) ->
           socket
           |> put_flash(:success, "Your team has already been created")
           |> redirect(to: ~p"/settings/team/general")
 
-        %Teams.Team{} = team ->
-          suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
-          name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
+        true ->
+          suggested_name =
+            Teams.Team.suggested_name_from_domain(domain, socket.assigns.current_user.name)
+
+          name_changeset =
+            Teams.Team.name_changeset(team || %Teams.Team{}, %{name: suggested_name})
 
           assign(socket,
-            current_team: team,
+            team: team,
+            onboarding?: onboarding?,
+            domain: domain,
             team_name_form: to_form(name_changeset),
-            locked?: Plausible.Teams.Billing.solo?(team),
+            locked?: not is_nil(team) and Plausible.Teams.Billing.solo?(team),
             max_new_members: max_new_members(team)
           )
-
-        _ ->
-          socket
-          |> put_flash(:error, "You cannot create any team just yet")
-          |> redirect(to: ~p"/sites")
       end
 
     {:ok, socket}
@@ -39,25 +47,47 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   def render(assigns) do
     ~H"""
-    <.focus_box padding?={false}>
-      <:title>
-        <div class="pt-8 px-8 flex justify-between">
-          <div>Create a new team</div>
-          <div class="ml-auto">
-            <.docs_info slug="users-roles" />
-          </div>
-        </div>
-      </:title>
-      <:subtitle>
-        <p class="px-8">
-          Name your team and optionally invite members by email. When ready, click "Create team"
-        </p>
-      </:subtitle>
+    <.onboarding_or_app_layout {assigns}>
+      <.team_setup_form {assigns} />
+    </.onboarding_or_app_layout>
+    """
+  end
 
-      <div class="relative -mt-8 pt-4 pb-8 px-8">
+  defp onboarding_or_app_layout(assigns) do
+    if assigns.onboarding? do
+      ~H"""
+      <Layouts.onboarding current_step={Flows.team_setup_step()} current_user={@current_user}>
+        {render_slot(@inner_block)}
+      </Layouts.onboarding>
+      """
+    else
+      ~H"""
+      <Layouts.app
+        footer?={false}
+        global_notices?={false}
+        current_user={@current_user}
+        current_team={@current_team}
+        current_team_role={@current_team_role}
+        teams={@teams}
+        my_team={@my_team}
+      >
+        {render_slot(@inner_block)}
+      </Layouts.app>
+      """
+    end
+  end
+
+  defp team_setup_form(assigns) do
+    ~H"""
+    <.onboarding_page_heading
+      heading="Create a team"
+      subtitle="Name your team and optionally invite members by email."
+    />
+    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
+      <div class="relative">
         <PlausibleWeb.Components.Billing.feature_gate
           current_user={@current_user}
-          current_team={@current_team}
+          current_team={@team}
           locked?={@locked?}
         >
           <.flash_messages flash={@flash} />
@@ -67,7 +97,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
             for={@team_name_form}
             id="create-team-form"
             phx-submit="create-team"
-            class="mt-6"
           >
             <.input
               type="text"
@@ -101,13 +130,28 @@ defmodule PlausibleWeb.Live.TeamSetup do
               </button>
             </div>
 
-            <.button id="create-team-submit" type="submit" class="mt-8 w-full">
-              Create team
-            </.button>
+            <div class="mt-8 flex justify-end items-center gap-x-2">
+              <%= if @onboarding? do %>
+                <.button_link
+                  id="create-team-skip"
+                  theme="ghost"
+                  href={onboarding_next_step_path(@domain)}
+                >
+                  Skip
+                </.button_link>
+              <% else %>
+                <.button_link id="create-team-cancel" theme="ghost" href={~p"/sites"}>
+                  Cancel
+                </.button_link>
+              <% end %>
+              <.button id="create-team-submit" type="submit">
+                Create team
+              </.button>
+            </div>
           </.form>
         </PlausibleWeb.Components.Billing.feature_gate>
       </div>
-    </.focus_box>
+    </div>
     """
   end
 
@@ -171,19 +215,25 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   defp setup_team(socket, name, entries) do
-    case Teams.setup(
-           socket.assigns.current_team,
-           name,
-           entries,
-           socket.assigns.current_user
-         ) do
-      {:ok, _} ->
+    user = socket.assigns.current_user
+
+    result =
+      case socket.assigns.team do
+        nil -> Teams.create(user, name, entries)
+        team -> Teams.setup(team, name, entries, user)
+      end
+
+    case result do
+      {:ok, team} ->
+        redirect_path =
+          success_redirect_path(socket.assigns.onboarding?, socket.assigns.domain,
+            __team: team.identifier
+          )
+
         {:noreply,
          socket
          |> put_flash(:success, "Your team is now created")
-         |> redirect(
-           to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
-         )}
+         |> redirect(to: redirect_path)}
 
       {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
         {:noreply, assign(socket, team_name_form: to_form(changeset))}
@@ -215,24 +265,37 @@ defmodule PlausibleWeb.Live.TeamSetup do
     end
   end
 
+  defp accessible_domain(user, domain) when is_binary(domain) do
+    case Plausible.Sites.get_for_user(user, domain) do
+      %Plausible.Site{} = site -> site.domain
+      nil -> nil
+    end
+  end
+
+  defp accessible_domain(_user, _domain), do: nil
+
+  defp success_redirect_path(onboarding?, domain, params) do
+    if onboarding? do
+      onboarding_next_step_path(domain, params)
+    else
+      ~p"/settings/team/general?#{params}"
+    end
+  end
+
+  defp onboarding_next_step_path(domain, params \\ []) do
+    if is_nil(domain) do
+      ~p"/sites?#{params}"
+    else
+      ~p"/#{domain}/installation?#{[flow: Flows.register()] ++ params}"
+    end
+  end
+
   @max_rows_when_unlimited 20
 
-  # Defines the upper bound for how many email+role input rows the UI
+  # The upper bound for how many email+role input rows the UI
   # should render at most, in order to prevent the user getting a
   # "team member limit exceeded" error upon submit without any prior
   # indication about it.
-
-  # Since team setup is the very first creation of a team, we can safely
-  # assume that there are no existing memberships/invitations, and that
-  # max rows is equivalent to the team member limit.
-
-  # There's one exception though: guest memberships/invitations (accounts
-  # invited to individual sites of a team with `setup_complete: false`)
-  # *can* exist, but we're deliberately ignoring those here. While such
-  # teams might hit the team member limit error upon submit, we still
-  # shouldn't prevent them from adding as many rows as the team member
-  # limit because inviting an email that's already a guest won't count
-  # "double" towards the team member limit.
   defp max_new_members(team) do
     case Teams.Billing.team_member_limit(team) do
       :unlimited -> @max_rows_when_unlimited

@@ -62,6 +62,11 @@ type ImportedVisitors = {
   date?: EventDate
 }
 
+type FunnelInputStep =
+  | string
+  | { event_name: string; currency?: string }
+  | { page_path: string; scroll_threshold?: string }
+
 export type StatsEntry = Event | ImportedVisitors
 
 export async function register({
@@ -121,7 +126,7 @@ export async function login({ page, user }: { page: Page; user: User }) {
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
 
   await page.getByLabel('Email').fill(user.email)
-  await page.getByLabel('Password').fill(user.password)
+  await page.getByLabel('Password', { exact: true }).fill(user.password)
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('button', { name: user.name })).toBeVisible()
@@ -149,6 +154,10 @@ export async function addSite({
   await page.getByLabel('Domain').fill(domain)
 
   await page.getByRole('button', { name: 'Add site' }).click()
+
+  await expect(page).toHaveURL(/\/team\/setup/)
+
+  await page.getByRole('link', { name: 'Skip' }).click()
 
   await expect(page).toHaveURL(/\/installation/)
 
@@ -504,7 +513,7 @@ export async function addFunnel({
   request: APIRequestContext
   domain: string
   name: string
-  steps: string[]
+  steps: FunnelInputStep[]
 }) {
   const response = await request.post('/e2e-tests/funnel', {
     headers: {
@@ -515,6 +524,28 @@ export async function addFunnel({
   })
 
   expect(response.ok()).toBeTruthy()
+}
+
+export async function getFunnel({
+  request,
+  domain,
+  name
+}: {
+  request: APIRequestContext
+  domain: string
+  name: string
+}) {
+  const response = await request.get('/e2e-tests/funnel', {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    params: { domain: domain, name: name }
+  })
+
+  expect(response.ok()).toBeTruthy()
+
+  return await response.json()
 }
 
 export async function subscribeToPlan({

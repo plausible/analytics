@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.PaddleControllerTest do
+defmodule PlausibleWeb.Api.PaddleClassicControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
