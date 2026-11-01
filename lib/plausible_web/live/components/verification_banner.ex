@@ -172,7 +172,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
       <div class="mt-5 flex flex-wrap items-center gap-2">
         <div id="verification-failed-default-actions" class="flex flex-wrap items-center gap-2">
           <.button_link
-            mt?={false}
             href="#"
             phx-click="retry"
             theme="secondary"
@@ -183,7 +182,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           </.button_link>
           <.button_link
             :if={@offer_custom_url_input?}
-            mt?={false}
             href="#"
             phx-click={
               JS.hide(to: "#verification-failed-default-actions")
@@ -198,7 +196,6 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
           </.button_link>
           <.button_link
             :if={not @offer_custom_url_input?}
-            mt?={false}
             href={~p"/#{@domain}/installation?#{[flow: @flow, return_to: "dashboard"]}"}
             theme="ghost"
             size="sm"
@@ -299,12 +296,11 @@ defmodule PlausibleWeb.Live.Components.VerificationBanner do
         id="custom_url"
         aria-label="Website URL"
         required
-        mt?={false}
         width="w-64 h-[38px] dark:bg-white/15 dark:border-transparent"
         placeholder={"https://#{@domain}"}
         value={"https://#{@domain}"}
       />
-      <.button type="submit" mt?={false} theme="primary" size="sm">
+      <.button type="submit" theme="primary" size="sm">
         Verify URL
       </.button>
     </form>

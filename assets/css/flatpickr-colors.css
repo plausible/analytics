@@ -18,7 +18,7 @@
   @apply w-full min-w-0 max-w-none;
 }
 
-/* Hader */
+/* Header */
 .flatpickr-months {
   @apply relative items-center py-1;
 }
@@ -147,7 +147,7 @@ span.flatpickr-weekday {
 /* Day cells */
 .flatpickr-day {
   @apply mx-0 my-px h-9 max-w-none rounded-md border border-transparent
-    bg-transparent text-sm font-medium leading-[35px]
+    bg-transparent text-sm font-normal leading-[35px]
     text-gray-800 dark:text-gray-100;
 }
 

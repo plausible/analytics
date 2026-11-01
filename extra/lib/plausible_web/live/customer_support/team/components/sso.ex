@@ -68,6 +68,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
             phx-click="remove-sso-integration"
             phx-target={@myself}
             theme="danger"
+            class="mt-6"
           >
             Remove Integration
           </.button>

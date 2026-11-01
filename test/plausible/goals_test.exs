@@ -749,6 +749,44 @@ defmodule Plausible.GoalsTest do
       assert_matches [%{id: ^g3.id}, %{id: ^g2.id}] = Goals.for_site(site)
     end
 
+    test "funnel reduction accounts for dynamic funnel steps" do
+      site = new_site()
+      {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
+      {:ok, g2} = Goals.create(site, %{"page_path" => "/2"})
+      {:ok, g3} = Goals.create(site, %{"page_path" => "/3"})
+
+      {:ok, f1} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel 2 steps mixed",
+          [
+            %{"goal_id" => g1.id},
+            %{"page_path" => "/5"}
+          ]
+        )
+
+      {:ok, f2} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel 3 steps mixed",
+          [
+            %{"goal_id" => g1.id},
+            %{"page_path" => "/4"},
+            %{"event_name" => "Some event"}
+          ]
+        )
+
+      :ok = Goals.delete(g1.id, site)
+
+      refute Plausible.Funnels.get(site.id, f1.id)
+      assert Repo.all(from(fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f1.id)) == []
+
+      assert f2 = Plausible.Funnels.get(site.id, f2.id)
+      assert Enum.count(Plausible.Funnel.steps(f2)) == 2
+
+      assert_matches [%{id: ^g3.id}, %{id: ^g2.id}] = Goals.for_site(site)
+    end
+
     test "deleting special goal (e.g. via tracker script sync) also triggers funnel reduction" do
       site = new_site()
       {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})

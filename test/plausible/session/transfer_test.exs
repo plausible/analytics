@@ -33,6 +33,9 @@ defmodule Plausible.Session.TransferTest do
 
   defp transfer_configuration(pid) do
     for {app_name, _, _} <- Application.loaded_applications() do
+      # loading an app later resets its env to the .app defaults, so load it first
+      _ = :peer.call(pid, Application, :load, [app_name])
+
       for {key, val} <- Application.get_all_env(app_name) do
         :ok = :peer.call(pid, Application, :put_env, [app_name, key, val])
       end

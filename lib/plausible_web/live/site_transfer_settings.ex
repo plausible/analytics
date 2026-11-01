@@ -111,7 +111,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                   field={f[:team_identifier]}
                   options={@team_options}
                   prompt="Select a team"
-                  mt?={false}
                 />
               </div>
               <p
@@ -143,7 +142,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                   field={f[:email]}
                   label="Email address"
                   placeholder="example@email.com"
-                  mt?={false}
                 />
               </div>
             </div>
@@ -165,7 +163,6 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
                     type="hidden"
                     field={f[:my_team_available]}
                     value={true}
-                    mt?={false}
                   />
                 </div>
               </div>
@@ -193,6 +190,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
             type="submit"
             theme="danger"
             phx-disable-with="Transferring..."
+            class="mt-6"
           >
             {submit_label(f[:destination].value)}
           </.button>

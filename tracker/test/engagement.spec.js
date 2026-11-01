@@ -22,7 +22,7 @@ test.describe('engagement events', () => {
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -47,7 +47,7 @@ test.describe('engagement events', () => {
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-nav'),
+      action: () => page.locator('#hash-nav').click(),
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html` },
         {
@@ -72,7 +72,7 @@ test.describe('engagement events', () => {
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
-      action: () => page.click('#history-nav'),
+      action: () => page.locator('#history-nav').click(),
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` },
         { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page` }
@@ -94,7 +94,7 @@ test.describe('engagement events', () => {
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
-      action: () => page.click('#about-us-hash-link'),
+      action: () => page.locator('#about-us-hash-link').click(),
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/#home` },
         { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/#about-us` }
@@ -109,14 +109,14 @@ test.describe('engagement events', () => {
     await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#pageview-trigger-custom-url'),
+      action: () => page.locator('#pageview-trigger-custom-url').click(),
       expectedRequests: [
         { n: 'pageview', u: 'https://example.com/custom/location' }
       ]
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [
         { n: 'engagement', u: 'https://example.com/custom/location' }
       ]
@@ -129,7 +129,7 @@ test.describe('engagement events', () => {
     await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       refutedRequests: [{ n: 'engagement' }]
     })
   })
@@ -147,14 +147,14 @@ test.describe('engagement events', () => {
     // After the initial pageview is sent, navigate to ignored page ->
     // engagement event is sent from the initial page URL
     await expectPlausibleInAction(page, {
-      action: () => page.click('#ignored-hash-link'),
+      action: () => page.locator('#ignored-hash-link').click(),
       expectedRequests: [{ n: 'engagement', u: pageBaseURL, h: 1 }]
     })
 
     // Navigate from ignored page to a tracked page ->
     // no engagement from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-link-1'),
+      action: () => page.locator('#hash-link-1').click(),
       expectedRequests: [{ n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1 }],
       refutedRequests: [{ n: 'engagement' }]
     })
@@ -162,7 +162,7 @@ test.describe('engagement events', () => {
     // Navigate from a tracked page to another tracked page ->
     // engagement with the last page URL, pageview with the new URL
     await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-link-2'),
+      action: () => page.locator('#hash-link-2').click(),
       expectedRequests: [
         { n: 'engagement', u: `${pageBaseURL}#hash1`, h: 1 },
         { n: 'pageview', u: `${pageBaseURL}#hash2`, h: 1 }
@@ -176,12 +176,12 @@ test.describe('engagement events', () => {
     await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#pageview-trigger-custom-props'),
+      action: () => page.locator('#pageview-trigger-custom-props').click(),
       expectedRequests: [{ n: 'pageview', p: { author: 'John' } }]
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [{ n: 'engagement', p: { author: 'John' } }]
     })
   })
@@ -195,7 +195,7 @@ test.describe('engagement events', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [{ n: 'engagement', p: { author: 'John', index: '0' } }]
     })
   })
@@ -208,17 +208,17 @@ test.describe('engagement events', () => {
       expectedRequests: [{ n: 'pageview', p: { author: 'John', index: '0' } }]
     })
 
-    await page.click('#increment-event-index')
+    await page.locator('#increment-event-index').click()
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#custom-event-button'),
+      action: () => page.locator('#custom-event-button').click(),
       expectedRequests: [
         { n: 'Custom event', p: { author: 'Karl', index: '1' } }
       ]
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#navigate-away'),
+      action: () => page.locator('#navigate-away').click(),
       expectedRequests: [{ n: 'engagement', p: { author: 'John', index: '0' } }]
     })
   })
@@ -232,7 +232,7 @@ test.describe('engagement events', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#john-post'),
+      action: () => page.locator('#john-post').click(),
       expectedRequests: [
         { n: 'engagement', p: {} },
         { n: 'pageview', p: { author: 'john' } }
@@ -240,7 +240,7 @@ test.describe('engagement events', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#jane-post'),
+      action: () => page.locator('#jane-post').click(),
       expectedRequests: [
         { n: 'engagement', p: { author: 'john' } },
         { n: 'pageview', p: { author: 'jane' } }
@@ -248,7 +248,7 @@ test.describe('engagement events', () => {
     })
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#home'),
+      action: () => page.locator('#home').click(),
       expectedRequests: [
         { n: 'engagement', p: { author: 'jane' } },
         { n: 'pageview', p: {} }
@@ -271,9 +271,9 @@ test.describe('engagement events', () => {
 
     await expectPlausibleInAction(page, {
       action: async () => {
-        await page.click('#to-pageleave-pageview-props')
+        await page.locator('#to-pageleave-pageview-props').click()
         await page.waitForTimeout(500)
-        await page.click('#back-button-trigger')
+        await page.locator('#back-button-trigger').click()
       },
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html` },
@@ -369,7 +369,7 @@ test.describe('engagement events', () => {
     await page.waitForTimeout(1000)
 
     const [request] = await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-nav'),
+      action: () => page.locator('#hash-nav').click(),
       expectedRequests: [
         { n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html` },
         {
@@ -383,7 +383,7 @@ test.describe('engagement events', () => {
     expect(request.e).toBeLessThan(1500)
 
     const [request2] = await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-nav-2'),
+      action: () => page.locator('#hash-nav-2').click(),
       expectedRequests: [
         {
           n: 'engagement',
@@ -415,7 +415,7 @@ test.describe('engagement events', () => {
 
     await page.waitForTimeout(3000)
     const [request4] = await expectPlausibleInAction(page, {
-      action: () => page.click('#hash-nav'),
+      action: () => page.locator('#hash-nav').click(),
       expectedRequests: [
         {
           n: 'engagement',

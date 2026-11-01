@@ -23,7 +23,7 @@
     </span>
     <.input type="hidden" value={@selected_property} field={f[:property]} readonly="true" />
   </div>
-  <div class="flex justify-between mt-3">
+  <div class="flex justify-between mt-6">
     <div class="w-36">
       <.label for={f[:start_date].id}>From</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
@@ -56,7 +56,7 @@
     <.button
       type="submit"
       name="confirmButton"
-      class="button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      class="button sm:w-auto w-full mt-6 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
     >
       <span class="label-enabled pointer-events-none">
         Confirm import

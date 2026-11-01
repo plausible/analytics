@@ -137,11 +137,10 @@
             class="flex items-center gap-2"
             x-show="!document.cookie.includes('logged_in=true')"
           >
-            <.button_link href="/login" theme="ghost" mt?={false}>Login</.button_link>
+            <.button_link href="/login" theme="ghost">Login</.button_link>
             <.button_link
               :if={Plausible.Auth.check_registration_enabled() == :ok}
               href="/register"
-              mt?={false}
             >
               Sign up
             </.button_link>

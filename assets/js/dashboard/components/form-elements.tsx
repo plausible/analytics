@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 
@@ -52,20 +52,36 @@ export const LabeledTextInput = ({
   value,
   onChange,
   placeholder,
-  maxLength
-}: LabeledFieldProps) => (
-  <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
-    <input
-      autoComplete="off"
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
-      className={fieldClassName}
-    />
-  </LabeledField>
-)
+  maxLength,
+  focusOnMount = false
+}: LabeledFieldProps & {
+  focusOnMount?: boolean
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const input = inputRef.current
+    if (focusOnMount && input) {
+      input.focus()
+      input.setSelectionRange(input.value.length, input.value.length)
+    }
+  }, [focusOnMount])
+
+  return (
+    <LabeledField label={label} id={id} value={value} maxLength={maxLength}>
+      <input
+        ref={inputRef}
+        autoComplete="off"
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-describedby={maxLength !== undefined ? `${id}-counter` : undefined}
+        className={fieldClassName}
+      />
+    </LabeledField>
+  )
+}
 
 export const LabeledTextarea = ({
   label,
@@ -233,23 +249,48 @@ export const getOptionDisabledMessage = ({
   return null
 }
 
-/** Keep this component styled the same as checkboxes in PlausibleWeb.Live.Installation.Instructions */
+/**
+ * Sizes are kept in sync with the Phoenix `input` component in
+ * `lib/plausible_web/live/components/form.ex`. The actual Tailwind classes live
+ * in `assets/css/app.css` (.checkbox-base, .checkbox-{sm,md}).
+ */
+export type CheckboxSize = 'sm' | 'md'
+
+const checkboxBaseClass = 'checkbox-base'
+
+const checkboxSizes: Record<CheckboxSize, string> = {
+  sm: 'checkbox-sm',
+  md: 'checkbox-md'
+}
+
+export const checkboxClassName = ({
+  size = 'md',
+  className
+}: {
+  size?: CheckboxSize
+  className?: string
+} = {}): string => classNames(checkboxBaseClass, checkboxSizes[size], className)
+
 export const Checkbox = ({
   id,
   checked,
   onChange,
+  size = 'md',
   children
-}: React.DetailedHTMLProps<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  HTMLInputElement
->) => {
+}: Omit<
+  React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+  >,
+  'size'
+> & { size?: CheckboxSize }) => {
   return (
     <label
       className="text-sm block font-medium dark:text-gray-100 font-normal gap-x-2 flex flex-inline items-center justify-start"
       htmlFor={id}
     >
       <input
-        className="block size-5 rounded-sm dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-indigo-600"
+        className={checkboxClassName({ size })}
         id={id}
         type="checkbox"
         checked={checked}

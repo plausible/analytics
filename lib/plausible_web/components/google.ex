@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Components.Google do
 
   def button(assigns) do
     ~H"""
-    <.button_link id={@id} href={@to} theme="secondary" mt?={false}>
+    <.button_link id={@id} href={@to} theme="secondary">
       <.logo /> Continue with Google
     </.button_link>
     """

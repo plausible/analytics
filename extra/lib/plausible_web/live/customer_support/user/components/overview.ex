@@ -48,7 +48,7 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
 
       <.form :let={f} for={@form} phx-target={@myself} phx-submit="save-user" class="mt-8">
         <.input type="textarea" field={f[:notes]} label="Notes" />
-        <div class="flex justify-between">
+        <div class="flex justify-between mt-6">
           <div>
             <.button phx-target={@myself} type="submit">
               Save

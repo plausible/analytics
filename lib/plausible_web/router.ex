@@ -191,6 +191,7 @@ defmodule PlausibleWeb.Router do
 
         post "/stats", E2EController, :populate_stats
         post "/funnel", E2EController, :create_funnel
+        get "/funnel", E2EController, :get_funnel
         post "/goal", E2EController, :create_goal
         put "/verification", E2EController, :put_verification_scenario
       end
@@ -429,8 +430,8 @@ defmodule PlausibleWeb.Router do
         post "/postmark/webhook", Api.PostmarkController, :webhook
       end
 
-      post "/paddle/webhook", Api.PaddleController, :webhook
-      get "/paddle/currency", Api.PaddleController, :currency
+      post "/paddle/webhook", Api.PaddleClassicController, :webhook
+      get "/paddle/currency", Api.PaddleClassicController, :currency
 
       put "/:domain/disable-feature", Api.InternalController, :disable_feature
       put "/:domain/complete-onboarding", Api.InternalController, :complete_onboarding
@@ -476,9 +477,6 @@ defmodule PlausibleWeb.Router do
 
     get "/invitation-expired", AuthController, :invitation_expired
 
-    get "/login/oauth/authorize", OAuth.AuthorizeController, :authorize_form
-    post "/login/oauth/authorize", OAuth.AuthorizeController, :authorize
-
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
     get "/2fa/setup/force-initiate", AuthController, :force_initiate_2fa_setup
@@ -495,6 +493,17 @@ defmodule PlausibleWeb.Router do
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
+  end
+
+  scope "/login/oauth", PlausibleWeb do
+    pipe_through [
+      :browser,
+      :csrf,
+      PlausibleWeb.RequireAccountPlug
+    ]
+
+    get "/authorize", OAuth.AuthorizeController, :authorize_form
+    post "/authorize", OAuth.AuthorizeController, :authorize
   end
 
   scope "/login/oauth", PlausibleWeb do
@@ -615,7 +624,12 @@ defmodule PlausibleWeb.Router do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
       live "/sites", Sites, :index, as: :site
-      live "/team/setup", TeamSetup, :setup, as: :team_setup
+
+      scope assigns: %{legacy_layout?: false, bg_class: "bg-white dark:bg-gray-950"} do
+        live "/team/setup", TeamSetup, :setup,
+          as: :team_setup,
+          container: {:div, class: "h-full"}
+      end
     end
 
     get "/sites/new", SiteController, :new

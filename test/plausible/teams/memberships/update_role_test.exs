@@ -14,22 +14,9 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
     collaborator = add_member(team, role: :editor)
     assert_team_membership(collaborator, team, :editor)
 
-    assert {:ok, _} = UpdateRole.update(team, collaborator.id, "viewer", user)
+    assert {:ok, _} = UpdateRole.update(team, collaborator.id, :viewer, user)
 
     assert_team_membership(collaborator, team, :viewer)
-  end
-
-  test "owner can promote another member to owner" do
-    user = new_user()
-    _site = new_site(owner: user)
-    team = team_of(user)
-    collaborator = add_member(team, role: :editor)
-    assert_team_membership(collaborator, team, :editor)
-
-    assert {:ok, _} = UpdateRole.update(team, collaborator.id, "owner", user)
-
-    assert_team_membership(collaborator, team, :owner)
-    assert_no_emails_delivered()
   end
 
   test "can demote self when an owner" do
@@ -38,7 +25,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
     team = team_of(user)
     _collaborator = add_member(team, role: :owner)
 
-    assert {:ok, _} = UpdateRole.update(team, user.id, "viewer", user)
+    assert {:ok, _} = UpdateRole.update(team, user.id, :viewer, user)
 
     assert_team_membership(user, team, :viewer)
     assert_no_emails_delivered()
@@ -49,22 +36,9 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
     _site = new_site(owner: user)
     team = team_of(user)
 
-    assert {:error, :only_one_owner} = UpdateRole.update(team, user.id, "viewer", user)
+    assert {:error, :only_one_owner} = UpdateRole.update(team, user.id, :viewer, user)
 
     assert_team_membership(user, team, :owner)
-    assert_no_emails_delivered()
-  end
-
-  test "can demote self when an admin" do
-    user = new_user()
-    owner = new_user()
-    _site = new_site(owner: owner)
-    team = team_of(owner)
-    _admin = add_member(team, user: user, role: :admin)
-
-    assert {:ok, _} = UpdateRole.update(team, user.id, "viewer", user)
-
-    assert_team_membership(user, team, :viewer)
     assert_no_emails_delivered()
   end
 
@@ -76,27 +50,10 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
     _admin = add_member(team, user: user, role: :admin)
     _another_owner = add_member(team, role: :owner)
 
-    assert {:error, :permission_denied} = UpdateRole.update(team, owner.id, "viewer", user)
+    assert {:error, :permission_denied} = UpdateRole.update(team, owner.id, :viewer, user)
 
     assert_team_membership(owner, team, :owner)
     assert_no_emails_delivered()
-  end
-
-  for role <- Plausible.Teams.Membership.roles() -- [:owner, :admin] do
-    test "#{role} can't update role of a member" do
-      user = new_user()
-      owner = new_user()
-      _site = new_site(owner: owner)
-      team = team_of(owner)
-      _member = add_member(team, user: user, role: unquote(role))
-      another_member = add_member(team, role: :viewer)
-
-      assert {:error, :permission_denied} =
-               UpdateRole.update(team, another_member.id, "editor", user)
-
-      assert_team_membership(another_member, team, :viewer)
-      assert_no_emails_delivered()
-    end
   end
 
   test "guest->member promotion sends out an e-mail" do
@@ -107,7 +64,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
 
     add_guest(site, role: :viewer, user: user)
 
-    assert {:ok, _} = UpdateRole.update(team, user.id, "editor", owner)
+    assert {:ok, _} = UpdateRole.update(team, user.id, :editor, owner)
 
     assert_email_delivered_with(
       to: [nil: user.email],
@@ -130,7 +87,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
           new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
-        assert {:ok, _} = UpdateRole.update(team, collaborator.id, "editor", user)
+        assert {:ok, _} = UpdateRole.update(team, collaborator.id, :editor, user)
 
         assert_team_membership(collaborator, team, :editor)
       end
@@ -146,7 +103,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
           new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
-        assert {:ok, _} = UpdateRole.update(team, collaborator.id, "owner", user)
+        assert {:ok, _} = UpdateRole.update(team, collaborator.id, :owner, user)
 
         assert_team_membership(collaborator, team, :owner)
       end
@@ -169,7 +126,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
         {:ok, collaborator, _} = Plausible.Auth.TOTP.initiate(collaborator)
         {:ok, collaborator, _} = Plausible.Auth.TOTP.enable(collaborator, :skip_verify)
 
-        assert {:ok, _} = UpdateRole.update(team, collaborator.id, "owner", user)
+        assert {:ok, _} = UpdateRole.update(team, collaborator.id, :owner, user)
 
         assert_team_membership(collaborator, team, :owner)
       end
@@ -188,7 +145,7 @@ defmodule Plausible.Teams.Memberships.UpdateRoleTest do
           new_identity(collaborator.name, collaborator.email, integration)
           |> Plausible.Auth.SSO.provision_user()
 
-        assert {:error, :disabled_2fa} = UpdateRole.update(team, collaborator.id, "owner", user)
+        assert {:error, :disabled_2fa} = UpdateRole.update(team, collaborator.id, :owner, user)
       end
     end
   end

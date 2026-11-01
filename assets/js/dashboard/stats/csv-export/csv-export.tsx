@@ -97,7 +97,7 @@ export function CsvExport({
       ) : exportStatus === ExportStatus.error ? (
         <ExportFailedBubble />
       ) : (
-        <ArrowDownTrayIcon className="size-4 stroke-2" />
+        <ArrowDownTrayIcon className="size-4" />
       )}
     </button>
   )

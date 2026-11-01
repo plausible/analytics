@@ -87,14 +87,50 @@ defmodule PlausibleWeb.E2EController do
       site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
 
       steps =
-        Enum.map(steps, fn step ->
-          goal = get_goal(site, step)
-          %{"goal_id" => goal.id}
+        Enum.map(steps, fn
+          goal_name when is_binary(goal_name) ->
+            goal = get_goal(site, goal_name)
+            %{"goal_id" => goal.id}
+
+          goal_data when is_map(goal_data) ->
+            goal_data
         end)
 
       {:ok, _} = Plausible.Funnels.create(site, name, steps)
 
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
+    def get_funnel(conn, %{"domain" => domain, "name" => name}) do
+      site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+
+      funnel =
+        Plausible.Funnel
+        |> Plausible.Repo.get_by!(site_id: site.id, name: name)
+        |> Plausible.Repo.preload(steps: :goal)
+
+      steps = Plausible.Funnel.goals(funnel)
+
+      funnel_data =
+        funnel
+        |> Map.take([:id, :name, :funnel_type, :site_id])
+        |> Map.put(
+          :steps,
+          Enum.map(
+            steps,
+            &Map.take(&1, [
+              :id,
+              :event_name,
+              :page_path,
+              :scroll_threshold,
+              :display_name,
+              :currency,
+              :custom_props
+            ])
+          )
+        )
+
+      send_resp(conn, 200, Jason.encode!(funnel_data))
     end
 
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
@@ -172,7 +208,9 @@ defmodule PlausibleWeb.E2EController do
 
     defp maybe_set_import_id(events, site) do
       if Enum.any?(events, &Map.has_key?(&1, :table)) do
-        import = Plausible.Factory.insert(:site_import, site: site)
+        [owner | _] = Plausible.Repo.preload(site, :owners).owners
+
+        import = Plausible.Factory.insert(:site_import, site: site, imported_by: owner)
 
         Enum.map(events, &set_import_id(&1, import.id))
       else

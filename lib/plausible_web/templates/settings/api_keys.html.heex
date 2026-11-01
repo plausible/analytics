@@ -21,13 +21,13 @@
           Access your stats through the Plausible API.
           <.styled_link href="https://plausible.io/docs/stats-api">Learn more</.styled_link>
         </p>
-        <.button_link href={~p"/settings/api-keys/new"}>
+        <.button_link href={~p"/settings/api-keys/new"} class="mt-6">
           New API Key
         </.button_link>
       </div>
     <% else %>
       <.filter_bar filtering_enabled?={false}>
-        <.button_link mt?={false} href={~p"/settings/api-keys/new"}>
+        <.button_link href={~p"/settings/api-keys/new"}>
           New API Key
         </.button_link>
       </.filter_bar>

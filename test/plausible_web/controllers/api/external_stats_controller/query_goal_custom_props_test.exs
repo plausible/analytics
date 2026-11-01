@@ -366,6 +366,55 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalCustomPropsTest do
 
       refute Enum.find(results, &(&1["dimensions"] == ["Button Click"]))
     end
+
+    test "custom event goals are not completed by pageviews with the same custom props", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, _} =
+        Goals.create(site, %{
+          "event_name" => "Signup",
+          "display_name" => "Premium Signup",
+          "custom_props" => %{"plan" => "premium"}
+        })
+
+      {:ok, _} = Goals.create(site, %{"page_path" => "/blog/**"})
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/post",
+          "meta.key": ["plan"],
+          "meta.value": ["premium"],
+          user_id: 1
+        ),
+        build(:event,
+          name: "Signup",
+          "meta.key": ["plan"],
+          "meta.value": ["premium"],
+          user_id: 2
+        ),
+        build(:event,
+          name: "Signup",
+          "meta.key": ["plan"],
+          "meta.value": ["premium"],
+          user_id: 3
+        ),
+        build(:event, name: "Signup", "meta.key": ["plan"], "meta.value": ["free"], user_id: 4)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Premium Signup"], "metrics" => [2]},
+               %{"dimensions" => ["Visit /blog/**"], "metrics" => [1]}
+             ]
+    end
   end
 
   describe "goals with custom props and imported data" do

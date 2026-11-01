@@ -93,6 +93,139 @@ defmodule Plausible.PostmarkTest do
     end
   end
 
+  describe "delete_suppressions/1" do
+    test "no-ops without making any request for an empty list" do
+      Req.Test.stub(Postmark, fn _conn -> flunk("Postmark should not have been called") end)
+
+      assert [] = Postmark.delete_suppressions([])
+    end
+
+    test "deletes every address, on every stream, in a single request each, and confirms all" do
+      test_pid = self()
+
+      Req.Test.stub(Postmark, fn conn ->
+        assert conn.request_path in [
+                 "/message-streams/outbound/suppressions/delete",
+                 "/message-streams/priority/suppressions/delete"
+               ]
+
+        conn = Plug.Conn.fetch_query_params(conn)
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+        send(test_pid, {:request, conn.request_path, Jason.decode!(body)})
+
+        Req.Test.json(conn, %{
+          "Suppressions" => [
+            %{"EmailAddress" => "a@example.com", "Status" => "Deleted"},
+            %{"EmailAddress" => "b@example.com", "Status" => "Deleted"}
+          ]
+        })
+      end)
+
+      assert Postmark.delete_suppressions(["a@example.com", "b@example.com"]) == [
+               "a@example.com",
+               "b@example.com"
+             ]
+
+      for stream <- ["outbound", "priority"] do
+        path = "/message-streams/#{stream}/suppressions/delete"
+        assert_received {:request, ^path, body}
+
+        assert body == %{
+                 "Suppressions" => [
+                   %{"EmailAddress" => "a@example.com"},
+                   %{"EmailAddress" => "b@example.com"}
+                 ]
+               }
+      end
+    end
+
+    test "splits a large batch into multiple requests per stream, respecting Postmark's max of 50" do
+      test_pid = self()
+      emails = for n <- 1..51, do: "user-#{n}@example.com"
+
+      Req.Test.stub(Postmark, fn conn ->
+        conn = Plug.Conn.fetch_query_params(conn)
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+        %{"Suppressions" => suppressions} = Jason.decode!(body)
+        send(test_pid, {:chunk_size, length(suppressions)})
+
+        Req.Test.json(
+          conn,
+          %{"Suppressions" => Enum.map(suppressions, &Map.put(&1, "Status", "Deleted"))}
+        )
+      end)
+
+      assert Postmark.delete_suppressions(emails) |> length() == 51
+
+      # 51 emails, chunked at 50, on each of the 2 streams = 4 requests total
+      assert_received {:chunk_size, 50}
+      assert_received {:chunk_size, 50}
+      assert_received {:chunk_size, 1}
+      assert_received {:chunk_size, 1}
+    end
+
+    test "still confirms addresses Postmark refused (e.g. a spam complaint), only logging it" do
+      Req.Test.stub(Postmark, fn conn ->
+        Req.Test.json(conn, %{
+          "Suppressions" => [
+            %{"EmailAddress" => "a@example.com", "Status" => "Deleted"},
+            %{
+              "EmailAddress" => "complainer@example.com",
+              "Status" => "Failed",
+              "Message" => "SpamComplaint suppressions cannot be deleted"
+            }
+          ]
+        })
+      end)
+
+      assert Postmark.delete_suppressions(["a@example.com", "complainer@example.com"]) == [
+               "a@example.com",
+               "complainer@example.com"
+             ]
+    end
+
+    test "does not confirm a chunk whose call errored outright on any stream" do
+      Req.Test.stub(Postmark, fn conn ->
+        case conn.request_path do
+          "/message-streams/outbound/suppressions/delete" ->
+            Req.Test.json(conn, %{
+              "Suppressions" => [%{"EmailAddress" => "a@example.com", "Status" => "Deleted"}]
+            })
+
+          "/message-streams/priority/suppressions/delete" ->
+            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+        end
+      end)
+
+      assert Postmark.delete_suppressions(["a@example.com"]) == []
+    end
+
+    test "only leaves out the chunk that failed, not unrelated chunks" do
+      ok_emails = for n <- 1..50, do: "ok-#{n}@example.com"
+      failing_email = "unreachable@example.com"
+
+      Req.Test.stub(Postmark, fn conn ->
+        conn = Plug.Conn.fetch_query_params(conn)
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+        %{"Suppressions" => suppressions} = Jason.decode!(body)
+
+        if Enum.any?(suppressions, &(&1["EmailAddress"] == failing_email)) do
+          conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+        else
+          Req.Test.json(
+            conn,
+            %{"Suppressions" => Enum.map(suppressions, &Map.put(&1, "Status", "Deleted"))}
+          )
+        end
+      end)
+
+      confirmed = Postmark.delete_suppressions(ok_emails ++ [failing_email])
+
+      assert Enum.sort(confirmed) == Enum.sort(ok_emails)
+      refute failing_email in confirmed
+    end
+  end
+
   describe "backfill_suppressions/0" do
     test "upserts a suppression for every entry found, across both streams" do
       Req.Test.stub(Postmark, fn conn ->

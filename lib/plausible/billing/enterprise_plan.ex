@@ -32,12 +32,42 @@ defmodule Plausible.Billing.EnterprisePlan do
 
   @max round(:math.pow(2, 31))
 
-  def changeset(model, attrs \\ %{}) do
+  def create_changeset(model, attrs \\ %{}) do
     model
     |> cast(attrs, @required_fields)
+    |> validate()
+  end
+
+  @doc """
+  Updates an existing plan. `paddle_plan_id` is never changed, because
+  subscriptions are linked to the plan by it.
+  """
+  def update_changeset(plan, attrs \\ %{}) do
+    plan
+    |> cast(attrs, List.delete(@required_fields, :paddle_plan_id))
+    |> validate()
+  end
+
+  @doc """
+  Marks the plan as manually subscribed to, see
+  `Plausible.Billing.create_manual_subscription/2`.
+  """
+  def manual_subscription_changeset(plan) do
+    plan
+    |> change(paddle_plan_id: Plausible.Billing.Subscription.manual_plan_id())
+    |> unique_paddle_plan_id_constraint()
+  end
+
+  defp validate(changeset) do
+    changeset
     |> validate_number(:monthly_pageview_limit, less_than: @max)
     |> validate_number(:site_limit, less_than: @max)
     |> validate_number(:hourly_api_request_limit, less_than: @max)
     |> validate_required(@required_fields)
+    |> unique_paddle_plan_id_constraint()
+  end
+
+  defp unique_paddle_plan_id_constraint(changeset) do
+    unique_constraint(changeset, [:team_id, :paddle_plan_id], error_key: :paddle_plan_id)
   end
 end

@@ -2,14 +2,14 @@ defmodule Plausible.Billing.EnterprisePlanTest do
   use Plausible.DataCase
   alias Plausible.Billing.EnterprisePlan
 
-  test "changeset/2 loads and dumps the list of features" do
+  test "create_changeset/2 loads and dumps the list of features" do
     team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
     plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{features: ["props", "stats_api"]}
 
     assert {:ok, enterprise_plan} =
              plan
-             |> EnterprisePlan.changeset(attrs)
+             |> EnterprisePlan.create_changeset(attrs)
              |> Plausible.Repo.insert()
 
     assert %EnterprisePlan{
@@ -21,28 +21,28 @@ defmodule Plausible.Billing.EnterprisePlanTest do
            } = Plausible.Repo.get(EnterprisePlan, enterprise_plan.id)
   end
 
-  test "changeset/2 fails when feature does not exist" do
+  test "create_changeset/2 fails when feature does not exist" do
     team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
     plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{features: ["ga4_import"]}
 
     assert {:error, changeset} =
              plan
-             |> EnterprisePlan.changeset(attrs)
+             |> EnterprisePlan.create_changeset(attrs)
              |> Plausible.Repo.insert()
 
     assert {"is invalid", [type: {:array, Plausible.Billing.Ecto.Feature}, validation: :cast]} ==
              changeset.errors[:features]
   end
 
-  test "changeset/2 loads and dumps limits" do
+  test "create_changeset/2 loads and dumps limits" do
     team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
     plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{team_member_limit: :unlimited, monthly_pageview_limit: 10_000}
 
     assert {:ok, enterprise_plan} =
              plan
-             |> EnterprisePlan.changeset(attrs)
+             |> EnterprisePlan.create_changeset(attrs)
              |> Plausible.Repo.insert()
 
     assert %EnterprisePlan{team_member_limit: :unlimited, monthly_pageview_limit: 10_000} =
@@ -50,5 +50,34 @@ defmodule Plausible.Billing.EnterprisePlanTest do
 
     assert %EnterprisePlan{team_member_limit: :unlimited, monthly_pageview_limit: 10_000} =
              Plausible.Repo.get(EnterprisePlan, enterprise_plan.id)
+  end
+
+  test "update_changeset/2 leaves paddle_plan_id unchanged" do
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    plan = insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123")
+
+    assert {:ok, %EnterprisePlan{paddle_plan_id: "123", site_limit: 50}} =
+             plan
+             |> EnterprisePlan.update_changeset(%{paddle_plan_id: "456", site_limit: 50})
+             |> Plausible.Repo.update()
+  end
+
+  test "create_changeset/2 refuses a duplicate paddle_plan_id within a team" do
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    other_team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+
+    insert(:enterprise_plan, team_id: team.id, paddle_plan_id: "123")
+
+    assert {:error, changeset} =
+             build(:enterprise_plan, team_id: team.id)
+             |> EnterprisePlan.create_changeset(%{paddle_plan_id: "123"})
+             |> Plausible.Repo.insert()
+
+    assert {"has already been taken", _} = changeset.errors[:paddle_plan_id]
+
+    assert {:ok, _} =
+             build(:enterprise_plan, team_id: other_team.id)
+             |> EnterprisePlan.create_changeset(%{paddle_plan_id: "123"})
+             |> Plausible.Repo.insert()
   end
 end

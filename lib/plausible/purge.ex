@@ -8,7 +8,7 @@ defmodule Plausible.Purge do
   All import tables have MergeTree's deduplication mechanism _disabled_ by setting
   `replicated_deduplication_window` from default 100 to 0. When enabled, every insert
   into a given table is compared against hashes of 100 previous inserts (as complete
-  parts, not concrete rows) and ignored when match is found. The prupose of that
+  parts, not concrete rows) and ignored when match is found. The purpose of that
   mechanism is making inserts of exact same batches idempotent when retrying them
   shortly after - for instance due to timeout, when the client can't easily tell if
   previous insert succeeded or not. Deduplication, however, only considers inserts,

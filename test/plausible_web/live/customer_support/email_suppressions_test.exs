@@ -70,6 +70,27 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       assert text_of_element(html, "tbody tr:first-child") =~ "complainer@example.com"
     end
 
+    test "renders a suppression recorded from a rejected send", %{conn: conn} do
+      {:ok, _} =
+        EmailSuppressions.create_from_rejected_send(%{
+          email: "ghost@example.com",
+          details: "Rejected by Postmark on send: some reason"
+        })
+
+      {:ok, _lv, html} = live(conn, open_suppressions())
+      text = text(html)
+
+      assert text =~ "ghost@example.com"
+      assert text =~ "Recipient rejected"
+      assert text =~ "rejected"
+
+      row = text_of_element(html, "tbody tr:first-child")
+      assert row =~ "Details"
+      assert row =~ "Reactivate"
+
+      assert html =~ "Rejected by Postmark on send: some reason"
+    end
+
     test "filters by reason", %{conn: conn} do
       {:ok, _} =
         EmailSuppressions.create_from_bounce(%{

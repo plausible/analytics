@@ -876,6 +876,55 @@ defmodule PlausibleWeb.Api.StatsController.DashboardCsvExportTest do
                [""]
              ]
     end
+
+    test "exports visitors.csv when the site has no legacy time on page cutoff",
+         %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, nil)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-05 00:01:00],
+          scroll_depth: 40
+        ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-07 00:00:00])
+      ])
+
+      pages =
+        conn
+        |> do_export(site, %{
+          @base_params
+          | date_range: "7d",
+            relative_date: "2020-01-08",
+            filters: [["is", "event:page", ["/blog"]]],
+            reports: @page_filtered_reports
+        })
+        |> response(200)
+        |> unzip_and_parse_csv(~c"visitors.csv")
+
+      assert [
+               [
+                 "date",
+                 "visitors",
+                 "pageviews",
+                 "visits",
+                 "bounce_rate",
+                 "time_on_page",
+                 "scroll_depth"
+               ]
+               | rows
+             ] = pages
+
+      assert Enum.find(rows, &match?(["2020-01-05" | _], &1)) |> Enum.take(4) ==
+               ["2020-01-05", "1", "1", "1"]
+
+      assert Enum.find(rows, &match?(["2020-01-07" | _], &1)) |> Enum.take(4) ==
+               ["2020-01-07", "1", "1", "1"]
+
+      assert Enum.all?(rows, &(&1 == [""] or Enum.at(&1, 5) == ""))
+    end
   end
 
   describe "POST /api/stats/:domain/export - with a custom prop filter" do

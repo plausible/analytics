@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { addSite, setupSite, setVerificationScenario } from '../fixtures'
-import { expectLiveViewConnected } from '../test-utils'
+import { expectLiveViewConnected, randomID } from '../test-utils'
 
 const VERIFICATION_BANNER_SELECTOR = '#verification-ui'
 const PROGRESS_MSG_SELECTOR = '#progress'
@@ -18,7 +18,7 @@ const LOADING_STATE_CYCLED_MESSAGES = [
 test('installation verification', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
 
-  const otherDomain = `other.verification.com`
+  const otherDomain = `${randomID()}.other.verification.com`
   await addSite({ page, domain: otherDomain })
 
   const banner = page.locator(VERIFICATION_BANNER_SELECTOR)

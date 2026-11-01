@@ -18,13 +18,13 @@
           value={@site.google_auth.email}
           disabled="disabled"
           width="w-1/2"
-          mt?={false}
         />
 
         <.button_link
           theme="danger"
           href={~p"/#{@site.domain}/settings/google-search"}
           method="delete"
+          class="mt-6"
         >
           Unlink Google account
         </.button_link>
@@ -66,7 +66,7 @@
                 )}
               </div>
 
-              <.button type="submit">Save</.button>
+              <.button type="submit" class="mt-6">Save</.button>
             </.form>
           <% {:error, error} -> %>
             <.notice title="Integration error" theme={:red} class="mt-8">

@@ -3,11 +3,10 @@
     <.button_link
       :if={Plausible.Auth.check_registration_enabled() == :ok}
       href="/register"
-      mt?={false}
     >
       Start free trial
     </.button_link>
-    <.button_link href="/login" theme="secondary" mt?={false}>
+    <.button_link href="/login" theme="secondary">
       Sign in
     </.button_link>
   </.auth_container>

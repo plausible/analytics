@@ -4,6 +4,7 @@ import { plainFilterText } from '../util/filter-text'
 import { AppNavigationTarget } from '../navigation/use-app-navigate'
 import { PlausibleSite } from '../site-context'
 import { Role, UserContextValue } from '../user-context'
+import { formatDayShort, parseNaiveDate } from '../util/date'
 
 export enum SegmentType {
   personal = 'personal',
@@ -115,22 +116,6 @@ export const parseApiSegmentData = ({
   ...rest
 })
 
-export function getSearchToRemoveSegmentFilter(): Required<AppNavigationTarget>['search'] {
-  return (searchRecord) => {
-    const updatedFilters = (
-      (Array.isArray(searchRecord.filters)
-        ? searchRecord.filters
-        : []) as Filter[]
-    ).filter((f) => !isSegmentFilter(f))
-    const currentLabels = searchRecord.labels ?? {}
-    return {
-      ...searchRecord,
-      filters: updatedFilters,
-      labels: cleanLabels(updatedFilters, currentLabels)
-    }
-  }
-}
-
 export function getSearchToSetSegmentFilter(
   segment: Pick<SavedSegment, 'id' | 'name'>,
   options: { omitAllOtherFilters?: boolean } = {}
@@ -163,6 +148,30 @@ export const SEGMENT_TYPE_LABELS = {
   [SegmentType.personal]: 'Personal segment',
   [SegmentType.site]: 'Site segment'
 }
+
+export const getSegmentAuthorship = ({
+  segment,
+  showOnlyPublicData
+}: {
+  segment: Pick<SavedSegment | SavedSegmentPublic, 'type' | 'owner_name'>
+  showOnlyPublicData: boolean
+}): string => {
+  if (
+    segment.type === SegmentType.site &&
+    !showOnlyPublicData &&
+    segment.owner_name
+  ) {
+    return segment.owner_name
+  }
+  return SEGMENT_TYPE_LABELS[segment.type]
+}
+
+export const getAttributionDateLabel = (
+  segment: Pick<SavedSegment, 'inserted_at' | 'updated_at'>
+): string =>
+  segment.updated_at === segment.inserted_at
+    ? formatDayShort(parseNaiveDate(segment.inserted_at))
+    : `Edited ${formatDayShort(parseNaiveDate(segment.updated_at))}`
 
 export function resolveFilters(
   filters: Filter[],
@@ -247,8 +256,21 @@ export function isListableSegment({
   return false
 }
 
-export function canSeeSegmentDetails({ user }: { user: UserContextValue }) {
-  return user.loggedIn && user.role !== Role.public
+export function getNavigationToExpandSegment(
+  segment: SavedSegments[number]
+): Pick<AppNavigationTarget, 'search'> & {
+  state: { expandedSegment: SavedSegments[number] }
+} {
+  return {
+    search: (s) => ({
+      ...s,
+      filters: segment.segment_data.filters,
+      labels: segment.segment_data.labels
+    }),
+    state: {
+      expandedSegment: segment
+    }
+  }
 }
 
 export function canRemoveFilter(
@@ -262,16 +284,4 @@ export function canRemoveFilter(
     )
   }
   return true
-}
-
-export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
-  const segmentFilter = filters.find(isSegmentFilter)
-  if (!segmentFilter) {
-    return undefined
-  }
-  const [_operation, _dimension, clauses] = segmentFilter
-  if (clauses.length !== 1) {
-    throw new Error('Dashboard can be filtered by only one segment')
-  }
-  return segmentFilter
 }

@@ -23,7 +23,9 @@ function currentHash() {
       const fileHash = crypto.createHash('sha256').update(fileContent).digest()
       combinedHash.update(fileHash)
     } catch (error) {
-      throw new Error(`Failed to read or hash ${filePath}: ${error.message}`)
+      throw new Error(`Failed to read or hash ${filePath}: ${error.message}`, {
+        cause: error
+      })
     }
   }
 

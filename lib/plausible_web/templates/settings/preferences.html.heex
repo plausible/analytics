@@ -9,9 +9,9 @@
       for={@name_changeset}
       method="post"
     >
-      <.input type="text" field={f[:name]} label="Name" width="w-1/2" mt?={false} />
+      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
 
-      <.button type="submit">
+      <.button type="submit" class="mt-6">
         Change name
       </.button>
     </.form>
@@ -22,7 +22,7 @@
       <a id="view-name">Your name</a>
     </:title>
     <.form :let={f} for={@name_changeset}>
-      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" mt?={false} />
+      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" />
     </.form>
   </.tile>
 
@@ -42,10 +42,9 @@
         options={Plausible.Themes.options()}
         label="Theme"
         width="w-1/2"
-        mt?={false}
       />
 
-      <.button type="submit">
+      <.button type="submit" class="mt-6">
         Change theme
       </.button>
     </.form>

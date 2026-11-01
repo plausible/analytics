@@ -36,7 +36,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
       <%= if Enum.empty?(@consolidated_views) do %>
         <div class="mx-auto flex flex-col items-center">
           <p>This team does not have a consolidated view yet.</p>
-          <.button class="mx-auto" phx-click="create-consolidated-view" phx-target={@myself}>
+          <.button class="mx-auto mt-6" phx-click="create-consolidated-view" phx-target={@myself}>
             Create one
           </.button>
         </div>

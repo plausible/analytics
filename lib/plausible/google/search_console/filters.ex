@@ -1,6 +1,6 @@
 defmodule Plausible.Google.SearchConsole.Filters do
   @moduledoc false
-  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
+  import Plausible.Stats.Filters.Utils, only: [page_regex: 1, split_page_patterns: 1]
 
   def transform(property, plausible_filters, search) do
     gsc_filters =
@@ -35,7 +35,9 @@ defmodule Plausible.Google.SearchConsole.Filters do
   defp transform_filter(property, [:matches_wildcard, "visit:entry_page", pages | _])
        when is_list(pages) do
     expression =
-      Enum.map_join(pages, "|", fn page -> page_regex(property_url(property, page)) end)
+      pages
+      |> Enum.flat_map(&split_page_patterns/1)
+      |> Enum.map_join("|", fn page -> page_regex(property_url(property, page)) end)
 
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end

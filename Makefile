@@ -24,13 +24,13 @@ server: ## Start the web server
 CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
 
 clickhouse: ## Start a container with a recent version of clickhouse
-	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
+	docker run $(CH_FLAGS) --network host --volume=plausible_clickhouse:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
 
 clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:26.10.3.7-alpine
+	docker run $(CH_FLAGS) --volume=plausible_clickhouse_prod:/var/lib/clickhouse clickhouse/clickhouse-server:26.10.3.7-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
@@ -57,7 +57,7 @@ browserless:
 	docker run -e "TOKEN=dummy_token" -p 3000:3000 --network host ghcr.io/browserless/chromium
 
 minio: ## Start a transient container with a recent version of minio (s3)
-	docker run -d --rm -p 10000:10000 -p 10001:10001 --name plausible_minio minio/minio server /data --address ":10000" --console-address ":10001"
+	docker run -d --rm -p 10000:10000 -p 10001:10001 --name plausible_minio pgsty/minio:RELEASE.2026-08-04T00-00-00Z@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372 server /data --address ":10000" --console-address ":10001"
 	while ! docker exec plausible_minio mc alias set local http://localhost:10000 minioadmin minioadmin; do sleep 1; done
 	docker exec plausible_minio sh -c 'mc mb local/dev-exports && mc ilm add --expiry-days 7 local/dev-exports'
 	docker exec plausible_minio sh -c 'mc mb local/dev-imports && mc ilm add --expiry-days 7 local/dev-imports'

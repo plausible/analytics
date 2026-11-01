@@ -148,4 +148,64 @@ defmodule Plausible.MailerTest do
       end
     end
   end
+
+  describe "recording a suppression from a rejected send (Postmark ErrorCode 406)" do
+    @describetag :ee_only
+    @describetag :capture_log
+
+    setup do
+      bypass = Bypass.open()
+
+      original_base_uri = Application.get_env(:bamboo, :postmark_base_uri)
+      Application.put_env(:bamboo, :postmark_base_uri, "http://localhost:#{bypass.port}")
+      on_exit(fn -> Application.put_env(:bamboo, :postmark_base_uri, original_base_uri) end)
+
+      patch_env(Plausible.Mailer, adapter: Bamboo.PostmarkAdapter, api_key: "test-key")
+
+      %{bypass: bypass}
+    end
+
+    test "records a suppression when Postmark actually rejects the send as an inactive recipient",
+         %{bypass: bypass} do
+      user = insert(:user, email: "ghost@example.com")
+
+      Bypass.expect_once(bypass, "POST", "/email", fn conn ->
+        Plug.Conn.resp(
+          conn,
+          422,
+          Jason.encode!(%{
+            "ErrorCode" => 406,
+            "Message" => "Rejected outright!"
+          })
+        )
+      end)
+
+      email = PlausibleWeb.Email.welcome_email(user)
+      assert {:error, :unknown_error} = Plausible.Mailer.send(email)
+
+      assert Plausible.EmailSuppressions.suppressed?("ghost@example.com")
+
+      suppression = Repo.get_by!(Plausible.EmailSuppression, email: "ghost@example.com")
+      assert suppression.reason == :recipient_rejected
+      assert suppression.source == :rejected
+      assert suppression.details =~ "Rejected outright!"
+    end
+
+    test "does not record a suppression for an unrelated Postmark error", %{bypass: bypass} do
+      user = insert(:user, email: "innocent@example.com")
+
+      Bypass.expect_once(bypass, "POST", "/email", fn conn ->
+        Plug.Conn.resp(
+          conn,
+          422,
+          Jason.encode!(%{"ErrorCode" => 300, "Message" => "Invalid email request"})
+        )
+      end)
+
+      email = PlausibleWeb.Email.welcome_email(user)
+      assert {:error, :unknown_error} = Plausible.Mailer.send(email)
+
+      refute Plausible.EmailSuppressions.suppressed?("innocent@example.com")
+    end
+  end
 end
