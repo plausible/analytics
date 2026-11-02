@@ -374,16 +374,20 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         ts = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
         populate_stats(site, [
-          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123, timestamp: ts),
+          build(:pageview,
+            pathname: "/go/to/blog/foo",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, -2, :second)
+          ),
           build(:pageview,
             pathname: "/intervention",
             user_id: 123,
-            timestamp: NaiveDateTime.add(ts, 1, :second)
+            timestamp: NaiveDateTime.add(ts, -1, :second)
           ),
           build(:event,
             name: "Signup",
             user_id: 123,
-            timestamp: NaiveDateTime.add(ts, 2, :second)
+            timestamp: ts
           )
         ])
 
@@ -424,11 +428,15 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         ts = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
         populate_stats(site, [
-          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123, timestamp: ts),
+          build(:pageview,
+            pathname: "/go/to/blog/foo",
+            user_id: 123,
+            timestamp: NaiveDateTime.add(ts, -2, :second)
+          ),
           build(:event,
             name: "Purchase",
             user_id: 123,
-            timestamp: NaiveDateTime.add(ts, 2, :second)
+            timestamp: ts
           )
         ])
 
