@@ -26,10 +26,18 @@
         </:thead>
 
         <:tbody :let={grant}>
-          <.td truncate max_width="max-w-40" title={grant.client_id}>
-            {grant.client_name || grant.client_id}
+          <.td max_width="max-w-60" title={grant.client_id}>
+            <span class="block truncate font-medium">{grant.client_name || grant.client_id}</span>
+            <span
+              :if={grant.client_name}
+              class="block truncate text-xs text-gray-500 dark:text-gray-400"
+            >
+              Client ID: {grant.client_id}
+            </span>
           </.td>
-          <.td hide_on_mobile truncate max_width="max-w-40">{grant.team.name}</.td>
+          <.td hide_on_mobile truncate max_width="max-w-40">
+            {Plausible.Teams.name(grant.team)}
+          </.td>
           <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
           <.td actions>
             <.delete_button
