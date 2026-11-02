@@ -6,6 +6,9 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Auth.SSO.Domain.Status
 
+    use Plausible.Test.Support.DNS
+
+    alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO
     alias Plausible.Auth.SSO.Domain.Verification.Worker
 
@@ -38,7 +41,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
         team = new_site(owner: owner).team
         integration = SSO.initiate_saml_integration(team)
         domain = "#{Enum.random(1..10_000)}.example.com"
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
 
         {:ok,
          owner: owner,
@@ -49,31 +52,31 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
       end
 
       test "domain is marked as in progress and job is snoozed", %{domain: domain} do
+        fail_checks(domain)
         assert {:ok, %{status: Status.pending()}} = SSO.Domains.get(domain)
 
         assert {:snooze, 15} =
-                 perform_job(Worker, %{"domain" => domain}, meta: %{bypass_checks: true})
+                 perform_job(Worker, %{"domain" => domain})
 
         assert {:ok, %{status: Status.in_progress()}} = SSO.Domains.get(domain)
 
         assert {:snooze, 7680} =
-                 perform_job(Worker, %{"domain" => domain},
-                   attempt: 10,
-                   meta: %{bypass_checks: true}
-                 )
+                 perform_job(Worker, %{"domain" => domain}, attempt: 10)
 
         assert {:ok, %{status: Status.in_progress()}} = SSO.Domains.get(domain)
       end
 
       test "domain is marked as verified and emails are sent", %{
+        sso_domain: sso_domain,
         domain: domain,
         team: team,
         owner: owner
       } do
         owner2 = add_member(team, role: :owner)
+        serve_txt("plausible-sso-verification=#{sso_domain.identifier}")
 
         assert {:ok, %{status: Status.verified()}} =
-                 perform_job(Worker, %{"domain" => domain}, meta: %{skip_checks: true})
+                 perform_job(Worker, %{"domain" => domain})
 
         assert_email_delivered_with(
           to: [nil: owner.email],
@@ -97,17 +100,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
         domain: domain,
         team: team
       } do
+        fail_checks(domain)
+
         assert {:snooze, _} =
-                 perform_job(Worker, %{"domain" => domain},
-                   attempt: 14,
-                   meta: %{bypass_checks: true}
-                 )
+                 perform_job(Worker, %{"domain" => domain}, attempt: 14)
 
         assert {:cancel, :max_snoozes} =
-                 perform_job(Worker, %{"domain" => domain},
-                   attempt: 15,
-                   meta: %{bypass_checks: true}
-                 )
+                 perform_job(Worker, %{"domain" => domain}, attempt: 15)
 
         assert_email_delivered_with(subject: "SSO domain #{domain} verification failure")
 
@@ -118,6 +117,17 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
                  entity_id: "#{domain.id}"
                )
       end
+    end
+
+    defp serve_txt(record) do
+      {:ok, port} = DNSServer.start(record)
+      patch_env(:sso_verification_nameservers, [{{0, 0, 0, 0}, port}])
+    end
+
+    # The HTTP checks fail on the address check, without any network.
+    defp fail_checks(domain) do
+      serve_txt("plausible-sso-verification=something-else")
+      stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
     end
   end
 end

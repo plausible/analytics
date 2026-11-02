@@ -12,10 +12,10 @@ defmodule Plausible.Auth.SSO.Domains do
 
   use Plausible.Auth.SSO.Domain.Status
 
-  @spec add(SSO.Integration.t(), String.t(), Keyword.t()) ::
+  @spec add(SSO.Integration.t(), String.t()) ::
           {:ok, SSO.Domain.t()} | {:error, Ecto.Changeset.t()}
-  def add(integration, domain, opts \\ []) do
-    changeset = SSO.Domain.create_changeset(integration, domain, opts)
+  def add(integration, domain) do
+    changeset = SSO.Domain.create_changeset(integration, domain)
 
     Repo.insert_with_audit(changeset, "sso_domain_added", %{team_id: integration.team_id})
   end
@@ -61,26 +61,21 @@ defmodule Plausible.Auth.SSO.Domains do
 
   @spec verify(SSO.Domain.t(), Keyword.t()) :: SSO.Domain.t()
   def verify(%SSO.Domain{} = sso_domain, opts \\ []) do
-    skip_checks? = Keyword.get(opts, :skip_checks?, false)
     verification_opts = Keyword.get(opts, :verification_opts, [])
     now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
 
-    if skip_checks? do
-      mark_verified!(sso_domain, :dns_txt, now)
-    else
-      case SSO.Domain.Verification.run(
-             sso_domain.domain,
-             sso_domain.identifier,
-             verification_opts
-           ) do
-        {:ok, step} ->
-          mark_verified!(sso_domain, step, now)
+    case SSO.Domain.Verification.run(
+           sso_domain.domain,
+           sso_domain.identifier,
+           verification_opts
+         ) do
+      {:ok, step} ->
+        mark_verified!(sso_domain, step, now)
 
-        {:error, :unverified} ->
-          sso_domain
-          |> SSO.Domain.unverified_changeset(Status.in_progress(), now)
-          |> Repo.update!()
-      end
+      {:error, :unverified} ->
+        sso_domain
+        |> SSO.Domain.unverified_changeset(Status.in_progress(), now)
+        |> Repo.update!()
     end
   end
 
