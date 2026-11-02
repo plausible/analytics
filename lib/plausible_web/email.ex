@@ -512,6 +512,8 @@ defmodule PlausibleWeb.Email do
     download_url =
       url(~p"/#{site.domain}/download/export?#{[__team: site.team.identifier]}")
 
+    deletion_date = export_deletion_date(site.team, expires_at)
+
     priority_email()
     |> to(user)
     |> tag("export-success")
@@ -520,7 +522,8 @@ defmodule PlausibleWeb.Email do
       user: user,
       site: site,
       download_url: download_url,
-      expires_in: expires_in
+      expires_in: expires_in,
+      deletion_date: deletion_date
     )
   end
 
@@ -720,5 +723,22 @@ defmodule PlausibleWeb.Email do
       |> String.split(" ", trim: true)
       |> Enum.join(" ")
     end)
+  end
+
+  # The download only works while the site exists. When the team's scheduled
+  # deletion lands before the export link expires, the email says so, so the
+  # export isn't lost to the deletion. A deletion on the same day as the expiry
+  # counts too, since it may run earlier in the day. A snoozed schedule is on hold, and an
+  # export without an expiry (local storage) only ends with the deletion.
+  defp export_deletion_date(team, expires_at) do
+    case Plausible.TeamDeletionSchedules.active_schedule_for_team(team) do
+      %{status: status, deletion_date: %Date{} = deletion_date} when status != :snoozed ->
+        if is_nil(expires_at) or Date.compare(deletion_date, DateTime.to_date(expires_at)) != :gt do
+          deletion_date
+        end
+
+      _ ->
+        nil
+    end
   end
 end

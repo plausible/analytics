@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
   def render(assigns) do
     ~H"""
     <div>
-      <.form :let={f} for={@changeset} phx-submit="submit" phx-target={@myself}>
+      <.form :let={f} for={@changeset} phx-submit="submit" phx-target={@myself} class="mt-6">
         <.input
           help_text="Just the naked domain or subdomain without 'www', 'https' etc."
           type="text"
@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
           </.styled_link>
         </p>
 
-        <.button type="submit" class="mt-4 w-full">
+        <.button type="submit" class="mt-6 w-full">
           Change Domain
         </.button>
       </.form>

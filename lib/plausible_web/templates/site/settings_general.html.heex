@@ -34,14 +34,12 @@
               type="select"
               options={Plausible.Timezones.options()}
               width="w-full max-w-72"
-              mt?={false}
             />
           </div>
           <.button
             theme="secondary"
             type="submit"
             class="shrink-0"
-            mt?={false}
             disabled
             x-bind:disabled="!changed"
           >

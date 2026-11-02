@@ -5,7 +5,7 @@ config :plausible, PlausibleWeb.Endpoint,
   check_origin: false
 
 config :plausible,
-  paddle_api: Plausible.Billing.DevPaddleApiMock,
+  paddle_classic_api: Plausible.Billing.PaddleClassic.DevApiMock,
   google_api: Plausible.Google.API.Mock,
   verification_checks_mod: Plausible.InstallationSupport.Verification.ChecksMock
 

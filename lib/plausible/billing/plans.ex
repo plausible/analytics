@@ -169,7 +169,7 @@ defmodule Plausible.Billing.Plans do
   def with_prices([_ | _] = plans, customer_ip \\ "127.0.0.1") do
     product_ids = Enum.flat_map(plans, &[&1.monthly_product_id, &1.yearly_product_id])
 
-    case Plausible.Billing.paddle_api().fetch_prices(product_ids, customer_ip) do
+    case Plausible.Billing.PaddleClassic.api().fetch_prices(product_ids, customer_ip) do
       {:ok, prices} ->
         Enum.map(plans, fn plan ->
           plan
@@ -195,7 +195,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}, customer_ip) do
-    case Plausible.Billing.paddle_api().fetch_prices([product_id], customer_ip) do
+    case Plausible.Billing.PaddleClassic.api().fetch_prices([product_id], customer_ip) do
       {:ok, prices} -> Map.fetch!(prices, product_id)
       {:error, :api_error} -> nil
     end

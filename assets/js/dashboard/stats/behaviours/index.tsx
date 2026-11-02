@@ -566,7 +566,7 @@ function Behaviours({
             site.propsAvailable ? (
               <DropdownTabButton
                 className="md:relative"
-                transitionClassName="md:left-auto md:w-88 md:origin-top-right"
+                transitionClassName="md:left-auto md:w-80 md:origin-top-right"
                 active={mode === Mode.PROPS}
                 options={propertyKeys.map((key) => ({
                   label: key,
@@ -591,7 +591,7 @@ function Behaviours({
               (site.funnels.length > 0 && site.funnelsAvailable ? (
                 <DropdownTabButton
                   className="md:relative"
-                  transitionClassName="md:left-auto md:w-88 md:origin-top-right"
+                  transitionClassName="md:left-auto md:w-80 md:origin-top-right"
                   active={mode === Mode.FUNNELS}
                   options={site.funnels.map(({ name }) => ({
                     label: name,

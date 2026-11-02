@@ -123,11 +123,10 @@ export default function TopStats({
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
     const statDisplayNameClass = classNames(
-      'text-xs uppercase whitespace-nowrap flex w-fit',
+      'text-xs font-semibold uppercase whitespace-nowrap flex w-fit',
       {
-        'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]':
-          isSelected,
-        'font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100':
+        'text-gray-900 dark:text-gray-100': isSelected,
+        'text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100':
           !isSelected
       }
     )

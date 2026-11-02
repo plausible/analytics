@@ -240,7 +240,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query) do
-    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
+    goal_join_data = Plausible.Stats.Goals.goal_join_imported_data(query)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn
@@ -250,8 +250,9 @@ defmodule Plausible.Stats.Imported do
         |> select_merge_as([i], %{
           dim0:
             fragment(
-              "indexOf(?, ?)",
-              type(^goal_join_data.event_names_imports, {:array, :string}),
+              "CAST(?[indexOf(?, ?)], 'UInt64')",
+              type(^goal_join_data.indices, {:array, :integer}),
+              type(^goal_join_data.event_names, {:array, :string}),
               i.name
             )
         })
@@ -268,15 +269,17 @@ defmodule Plausible.Stats.Imported do
             """
             notEmpty(
               arrayFilter(
-                goal_idx -> ?[goal_idx] = 'page' AND match(?, ?[goal_idx]),
+                (goal_idx, type, page_regex) -> type = 'page' AND match(?, page_regex),
+                ?,
+                ?,
                 ?
               ) as indices
             )
             """,
-            type(^goal_join_data.types, {:array, :string}),
             i.page,
-            type(^goal_join_data.page_regexes, {:array, :string}),
-            type(^goal_join_data.indices, {:array, :integer})
+            type(^goal_join_data.indices, {:array, :integer}),
+            type(^goal_join_data.types, {:array, :string}),
+            type(^goal_join_data.page_regexes, {:array, :string})
           )
         )
         |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)

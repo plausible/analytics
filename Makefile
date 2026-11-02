@@ -24,13 +24,13 @@ server: ## Start the web server
 CH_FLAGS ?= --detach -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 --name plausible_clickhouse --env CLICKHOUSE_SKIP_USER_SETUP=1
 
 clickhouse: ## Start a container with a recent version of clickhouse
-	docker run $(CH_FLAGS) --network host --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
+	docker run $(CH_FLAGS) --network host --volume=plausible_clickhouse:/var/lib/clickhouse --volume=$$PWD/.clickhouse_config:/etc/clickhouse-server/config.d clickhouse/clickhouse-server:latest-alpine
 
 clickhouse-client: ## Connect to clickhouse
 	docker exec -it plausible_clickhouse clickhouse-client -d plausible_events_db
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:25.11.5.8-alpine
+	docker run $(CH_FLAGS) --volume=plausible_clickhouse_prod:/var/lib/clickhouse clickhouse/clickhouse-server:25.11.5.8-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
@@ -57,7 +57,7 @@ browserless:
 	docker run -e "TOKEN=dummy_token" -p 3000:3000 --network host ghcr.io/browserless/chromium
 
 minio: ## Start a transient container with a recent version of minio (s3)
-	docker run -d --rm -p 10000:10000 -p 10001:10001 --name plausible_minio minio/minio server /data --address ":10000" --console-address ":10001"
+	docker run -d --rm -p 10000:10000 -p 10001:10001 --name plausible_minio pgsty/minio:RELEASE.2026-08-04T00-00-00Z@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372 server /data --address ":10000" --console-address ":10001"
 	while ! docker exec plausible_minio mc alias set local http://localhost:10000 minioadmin minioadmin; do sleep 1; done
 	docker exec plausible_minio sh -c 'mc mb local/dev-exports && mc ilm add --expiry-days 7 local/dev-exports'
 	docker exec plausible_minio sh -c 'mc mb local/dev-imports && mc ilm add --expiry-days 7 local/dev-imports'
@@ -67,14 +67,15 @@ minio: ## Start a transient container with a recent version of minio (s3)
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
 
+sso: server_url ?= http://localhost:8000
 sso:
 	$(call require, integration_id)
-	@echo "Setting up local IdP service..."
+	@echo "Setting up local IdP service for Plausible running at $(server_url)..."
 	@docker run --name=idp \
   -p 8080:8080 \
-  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
-  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
-  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+  -e SIMPLESAMLPHP_SP_ENTITY_ID=$(server_url)/sso/$(integration_id) \
+  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=$(server_url)/sso/saml/consume/$(integration_id) \
+  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php:ro -d kenchan0130/simplesamlphp
 
 	@sleep 2
 
@@ -89,15 +90,15 @@ sso:
 	@echo ""
 	@echo ""
 	@echo "Following accounts are configured:"
-	@echo "- user@plausible.test / plausible"
-	@echo "- user1@plausible.test / plausible"
-	@echo "- user2@plausible.test / plausible"
+	@echo "- user@example.com / plausible"
+	@echo "- user1@example.com / plausible"
+	@echo "- user2@example.com / plausible"
 	@echo ""
-	@echo "Run plausible application server with ALLOW_RESERVED_IPS=true"
+	@echo "Add 'example.com' as the SSO domain, then verify it with:"
+	@echo "  make mock-dns domain_id=<identifier shown next to the domain>"
 	
 sso-stop:
-	docker stop idp
-	docker remove idp
+	docker stop idp && docker rm idp
 
 generate-corefile:
 	$(call require, domain_id)

@@ -5,32 +5,41 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   use PlausibleWeb, :live_view
 
-  alias Plausible.Teams
-  alias Plausible.Teams.Management.Layout
+  import PlausibleWeb.Live.Components.Team, only: [role_select_input: 1]
 
-  def mount(_params, _session, socket) do
+  alias Plausible.Teams
+  alias PlausibleWeb.{Flows, Layouts}
+
+  def mount(params, _session, socket) do
+    team = socket.assigns.current_team
+    onboarding? = params["flow"] == Flows.register()
+    domain = accessible_domain(socket.assigns.current_user, params["domain"])
+
     socket =
-      case socket.assigns.current_team do
-        %Teams.Team{setup_complete: true} ->
+      cond do
+        Teams.setup?(team) and onboarding? ->
+          redirect(socket, to: onboarding_next_step_path(domain))
+
+        Teams.setup?(team) ->
           socket
           |> put_flash(:success, "Your team has already been created")
           |> redirect(to: ~p"/settings/team/general")
 
-        %Teams.Team{} = team ->
-          suggested_name = Teams.Team.suggested_name(socket.assigns.current_user.name)
-          name_changeset = Teams.Team.name_changeset(team, %{name: suggested_name})
+        true ->
+          suggested_name =
+            Teams.Team.suggested_name_from_domain(domain, socket.assigns.current_user.name)
+
+          name_changeset =
+            Teams.Team.name_changeset(team || %Teams.Team{}, %{name: suggested_name})
 
           assign(socket,
-            current_team: team,
+            team: team,
+            onboarding?: onboarding?,
+            domain: domain,
             team_name_form: to_form(name_changeset),
-            locked?: Plausible.Teams.Billing.solo?(team),
+            locked?: not is_nil(team) and Plausible.Teams.Billing.solo?(team),
             max_new_members: max_new_members(team)
           )
-
-        _ ->
-          socket
-          |> put_flash(:error, "You cannot create any team just yet")
-          |> redirect(to: ~p"/sites")
       end
 
     {:ok, socket}
@@ -38,30 +47,57 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   def render(assigns) do
     ~H"""
-    <.focus_box padding?={false}>
-      <:title>
-        <div class="pt-8 px-8 flex justify-between">
-          <div>Create a new team</div>
-          <div class="ml-auto">
-            <.docs_info slug="users-roles" />
-          </div>
-        </div>
-      </:title>
-      <:subtitle>
-        <p class="px-8">
-          Name your team and optionally invite members by email. When ready, click "Create team"
-        </p>
-      </:subtitle>
+    <.onboarding_or_app_layout {assigns}>
+      <.team_setup_form {assigns} />
+    </.onboarding_or_app_layout>
+    """
+  end
 
-      <div class="relative -mt-8 pt-4 pb-8 px-8">
+  defp onboarding_or_app_layout(assigns) do
+    if assigns.onboarding? do
+      ~H"""
+      <Layouts.onboarding current_step={Flows.team_setup_step()} current_user={@current_user}>
+        {render_slot(@inner_block)}
+      </Layouts.onboarding>
+      """
+    else
+      ~H"""
+      <Layouts.app
+        footer?={false}
+        global_notices?={false}
+        current_user={@current_user}
+        current_team={@current_team}
+        current_team_role={@current_team_role}
+        teams={@teams}
+        my_team={@my_team}
+      >
+        {render_slot(@inner_block)}
+      </Layouts.app>
+      """
+    end
+  end
+
+  defp team_setup_form(assigns) do
+    ~H"""
+    <.onboarding_page_heading
+      heading="Create a team"
+      subtitle="Name your team and optionally invite members by email."
+    />
+    <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
+      <div class="relative">
         <PlausibleWeb.Components.Billing.feature_gate
           current_user={@current_user}
-          current_team={@current_team}
+          current_team={@team}
           locked?={@locked?}
         >
           <.flash_messages flash={@flash} />
 
-          <.form :let={f} for={@team_name_form} id="create-team-form" phx-submit="create-team">
+          <.form
+            :let={f}
+            for={@team_name_form}
+            id="create-team-form"
+            phx-submit="create-team"
+          >
             <.input
               type="text"
               placeholder={"#{@current_user.name}'s team"}
@@ -72,13 +108,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
               required
             />
 
-            <div id="member-rows-container" phx-hook="MemberRows" data-max-rows={@max_new_members}>
+            <div id="member-rows-container" phx-hook="MemberRows">
               <.label class="mb-2 mt-4">
                 Team members
               </.label>
 
               <div id="member-rows" data-row-list>
-                <.member_row row={%{id: "1", email: "", role: :viewer}} />
+                <.member_row
+                  :for={n <- 1..@max_new_members//1}
+                  row={%{id: n, email: "", role: :viewer}}
+                  hidden?={n > 1}
+                />
               </div>
 
               <button
@@ -88,74 +128,58 @@ defmodule PlausibleWeb.Live.TeamSetup do
               >
                 <Heroicons.plus class="size-4" /> Add another
               </button>
-
-              <template data-row-template>
-                <.member_row row={%{id: "__ROW_ID__", email: "", role: :viewer}} />
-              </template>
             </div>
 
-            <.button id="create-team-submit" type="submit" class="mt-8 w-full">
-              Create team
-            </.button>
+            <div class="mt-8 flex justify-end items-center gap-x-2">
+              <%= if @onboarding? do %>
+                <.button_link
+                  id="create-team-skip"
+                  theme="ghost"
+                  href={onboarding_next_step_path(@domain)}
+                >
+                  Skip
+                </.button_link>
+              <% else %>
+                <.button_link id="create-team-cancel" theme="ghost" href={~p"/sites"}>
+                  Cancel
+                </.button_link>
+              <% end %>
+              <.button id="create-team-submit" type="submit">
+                Create team
+              </.button>
+            </div>
           </.form>
         </PlausibleWeb.Components.Billing.feature_gate>
       </div>
-    </.focus_box>
+    </div>
     """
   end
 
   attr(:row, :map, required: true)
+  attr(:hidden?, :boolean, default: false)
 
   defp member_row(assigns) do
     ~H"""
-    <div id={"member-row-#{@row.id}"} data-row class="flex items-center gap-x-3 mt-3">
+    <div
+      id={"member-row-#{@row.id}"}
+      data-row
+      class={["items-center gap-x-3 mt-3", if(@hidden?, do: "hidden", else: "flex")]}
+    >
       <div class="flex-1">
         <.input
           type="email"
           name={"rows[#{@row.id}][email]"}
           value={@row.email}
           placeholder="Enter e-mail"
-          mt?={false}
         />
       </div>
 
-      <details
-        name="role-picker-group"
-        data-role-picker
-        class="relative inline-block text-left"
-      >
-        <summary
-          id={"role-picker-#{@row.id}-trigger"}
-          role="button"
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          class="role w-[100px] list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center justify-between font-medium rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-750 text-gray-800 dark:text-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 whitespace-nowrap truncate shadow-xs hover:shadow-sm transition-all duration-150"
-        >
-          <span data-role-label>{@row.role |> Atom.to_string() |> String.capitalize()}</span>
-          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-        </summary>
-
-        <div
-          role="listbox"
-          aria-labelledby={"role-picker-#{@row.id}-trigger"}
-          class="absolute right-0 z-50 mt-2 w-max p-1.5 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black/5"
-        >
-          <button
-            :for={{role, description} <- PlausibleWeb.Live.Components.Team.role_descriptions()}
-            type="button"
-            role="option"
-            aria-selected={to_string(role == @row.role)}
-            tabindex="-1"
-            data-role-item={role}
-            class="block w-full max-w-60 text-left rounded-md text-sm/6 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/80 px-3 py-1.5"
-          >
-            <div>{role |> Atom.to_string() |> String.capitalize()}</div>
-            <div class="text-gray-500 dark:text-gray-400 text-xs/5">{description}</div>
-          </button>
-        </div>
-      </details>
-
-      <input type="hidden" name={"rows[#{@row.id}][role]"} value={@row.role} data-role-value />
+      <.role_select_input
+        id={"role-select-#{@row.id}"}
+        name={"rows[#{@row.id}][role]"}
+        role={@row.role}
+        my_role={:owner}
+      />
 
       <button
         type="button"
@@ -170,20 +194,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
-    name_changeset = Teams.Team.name_changeset(socket.assigns.current_team, %{name: name})
-
-    # Only validated here, not persisted yet - the rename is committed
-    # together with the rest of team creation (including invitations).
-    case Ecto.Changeset.apply_action(name_changeset, :update) do
-      {:ok, _team} ->
-        create_team(socket, name_changeset, Map.get(params, "rows", %{}))
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, team_name_form: to_form(changeset))}
-    end
+    create_team(socket, name, Map.get(params, "rows", %{}))
   end
 
-  defp create_team(socket, name_changeset, rows_params) do
+  defp create_team(socket, name, rows_params) do
     entries =
       rows_params
       |> Map.values()
@@ -197,41 +211,49 @@ defmodule PlausibleWeb.Live.TeamSetup do
       end)
       |> Enum.filter(&(&1.email != ""))
 
-    emails = Enum.map(entries, & &1.email)
-
-    cond do
-      Enum.any?(emails, &(not valid_email?(&1))) ->
-        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
-
-      Enum.uniq(emails) != emails ->
-        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
-
-      socket.assigns.current_user.email in emails ->
-        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
-
-      true ->
-        layout =
-          Enum.reduce(entries, %{}, fn %{email: email, role: role}, layout ->
-            Layout.schedule_send(layout, email, role)
-          end)
-
-        persist_layout(socket, layout, name_changeset)
-    end
+    setup_team(socket, name, entries)
   end
 
-  defp persist_layout(socket, layout, name_changeset) do
-    case Layout.persist(layout, %{
-           current_user: socket.assigns.current_user,
-           current_team: socket.assigns.current_team,
-           name_changeset: name_changeset
-         }) do
-      {:ok, _} ->
+  defp setup_team(socket, name, entries) do
+    user = socket.assigns.current_user
+
+    result =
+      case socket.assigns.team do
+        nil -> Teams.create(user, name, entries)
+        team -> Teams.setup(team, name, entries, user)
+      end
+
+    case result do
+      {:ok, team} ->
+        redirect_path =
+          success_redirect_path(socket.assigns.onboarding?, socket.assigns.domain,
+            __team: team.identifier
+          )
+
         {:noreply,
          socket
          |> put_flash(:success, "Your team is now created")
-         |> redirect(
-           to: ~p"/settings/team/general?#{[__team: socket.assigns.current_team.identifier]}"
+         |> redirect(to: redirect_path)}
+
+      {:error, %Ecto.Changeset{data: %Teams.Team{}} = changeset} ->
+        {:noreply, assign(socket, team_name_form: to_form(changeset))}
+
+      {:error, :invalid_email} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
+
+      {:error, :duplicate_emails} ->
+        {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
+
+      {:error, reason} when reason in [:already_a_guest, :invited_as_guest] ->
+        {:noreply,
+         put_live_flash(
+           socket,
+           :error,
+           "Some of these e-mails belong to site guests who cannot be invited at this stage. Please invite them later in team settings"
          )}
+
+      {:error, :already_a_member} ->
+        {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
 
       {:error, {:over_limit, limit}} ->
         {:noreply,
@@ -240,42 +262,40 @@ defmodule PlausibleWeb.Live.TeamSetup do
            :error,
            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
          )}
-
-      {:error, other} ->
-        # Team setup only ever sends brand-new invitations (never updates or
-        # removes existing memberships), so none of Layout.persist/2's other
-        # known error reasons (permission checks, last-owner protection, 2FA
-        # enforcement) are reachable from here. Anything else is unexpected.
-        Sentry.capture_message("Unexpected error while creating team via team setup",
-          extra: %{error: inspect(other), team_id: socket.assigns.current_team.id}
-        )
-
-        {:noreply, put_live_flash(socket, :error, "Something went wrong. Please try again")}
     end
   end
 
-  defp valid_email?(email) do
-    String.contains?(email, "@") and String.contains?(email, ".")
+  defp accessible_domain(user, domain) when is_binary(domain) do
+    case Plausible.Sites.get_for_user(user, domain) do
+      %Plausible.Site{} = site -> site.domain
+      nil -> nil
+    end
+  end
+
+  defp accessible_domain(_user, _domain), do: nil
+
+  defp success_redirect_path(onboarding?, domain, params) do
+    if onboarding? do
+      onboarding_next_step_path(domain, params)
+    else
+      ~p"/settings/team/general?#{params}"
+    end
+  end
+
+  defp onboarding_next_step_path(domain, params \\ []) do
+    if is_nil(domain) do
+      ~p"/sites?#{params}"
+    else
+      ~p"/#{domain}/installation?#{[flow: Flows.register()] ++ params}"
+    end
   end
 
   @max_rows_when_unlimited 20
 
-  # Defines the upper bound for how many email+role input rows the UI
+  # The upper bound for how many email+role input rows the UI
   # should render at most, in order to prevent the user getting a
   # "team member limit exceeded" error upon submit without any prior
   # indication about it.
-
-  # Since team setup is the very first creation of a team, we can safely
-  # assume that there are no existing memberships/invitations, and that
-  # max rows is equivalent to the team member limit.
-
-  # There's one exception though: guest memberships/invitations (accounts
-  # invited to individual sites of a team with `setup_complete: false`)
-  # *can* exist, but we're deliberately ignoring those here. While such
-  # teams might hit the team member limit error upon submit, we still
-  # shouldn't prevent them from adding as many rows as the team member
-  # limit because inviting an email that's already a guest won't count
-  # "double" towards the team member limit.
   defp max_new_members(team) do
     case Teams.Billing.team_member_limit(team) do
       :unlimited -> @max_rows_when_unlimited

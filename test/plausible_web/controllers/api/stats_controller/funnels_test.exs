@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert %{
                  "name" => "Test funnel",
-                 "strict_order" => false,
+                 "funnel_type" => "sequential",
                  "comparison" => nil,
                  "all_visitors" => 3,
                  "entering_visitors" => 2,
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
 
       test "computes a strict-order funnel for a day", %{conn: conn, site: site} do
-        {:ok, funnel} = setup_funnel(site, @build_funnel_with, strict_order?: true)
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with, funnel_type: :strict)
 
         populate_stats(site, [
           build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
@@ -95,10 +95,43 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
         assert %{
                  "name" => "Test funnel",
-                 "strict_order" => true,
+                 "funnel_type" => "strict",
                  "all_visitors" => 1,
-                 "entering_visitors" => 1
+                 "entering_visitors" => 1,
+                 "steps" => steps
                } = resp
+
+        assert Enum.at(steps, 0)["visitors"] == 1
+        assert Enum.at(steps, 1)["visitors"] == 1
+        assert Enum.at(steps, 2)["visitors"] == 0
+        assert Enum.at(steps, 3)["visitors"] == 0
+      end
+
+      test "computes a flexible funnel for a day", %{conn: conn, site: site} do
+        {:ok, funnel} = setup_funnel(site, @build_funnel_with, funnel_type: :flexible)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
+          build(:event, name: "Purchase", user_id: @user_id)
+        ])
+
+        resp =
+          conn
+          |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day")
+          |> json_response(200)
+
+        assert %{
+                 "name" => "Test funnel",
+                 "funnel_type" => "flexible",
+                 "all_visitors" => 1,
+                 "entering_visitors" => 1,
+                 "steps" => steps
+               } = resp
+
+        assert Enum.at(steps, 0)["visitors"] == 1
+        assert Enum.at(steps, 1)["visitors"] == 0
+        assert Enum.at(steps, 2)["visitors"] == 0
+        assert Enum.at(steps, 3)["visitors"] == 1
       end
 
       test "404 for unknown funnel", %{site: site, conn: conn} do
@@ -585,6 +618,45 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                } = purchase_step
       end
 
+      test "reports revenue for a dynamic funnel without goals", %{conn: conn, site: site} do
+        {:ok, funnel} =
+          Plausible.Funnels.create(
+            site,
+            "Test funnel",
+            [%{"page_path" => "/checkout"}, %{"event_name" => "Purchase", "currency" => "USD"}]
+          )
+
+        funnel = Plausible.Repo.reload!(funnel)
+
+        populate_stats(site, [
+          build(:pageview, pathname: "/checkout", user_id: @user_id),
+          build(:pageview, pathname: "/checkout", user_id: @other_user_id),
+          purchase(@user_id, "100"),
+          purchase(@other_user_id, "300")
+        ])
+
+        assert [checkout_step, purchase_step] = funnel_steps(conn, site, funnel)
+
+        refute Map.has_key?(checkout_step, "revenue")
+        refute Map.has_key?(checkout_step, "revenue_per_visitor")
+
+        assert %{
+                 "visitors" => 2,
+                 "revenue" => %{
+                   "short" => "$400.0",
+                   "long" => "$400.00",
+                   "value" => 400.0,
+                   "currency" => "USD"
+                 },
+                 "revenue_per_visitor" => %{
+                   "short" => "$200.0",
+                   "long" => "$200.00",
+                   "value" => 200.0,
+                   "currency" => "USD"
+                 }
+               } = purchase_step
+      end
+
       test "divides the revenue by visitors, not by orders", %{conn: conn, site: site} do
         {:ok, funnel} = setup_checkout_funnel(site)
 
@@ -761,7 +833,9 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           setup_goals(site, [{"page_path", "/checkout"}, {"event_name", "Signup"}])
 
         purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        {:ok, funnel} = funnel_with_goals(site, [checkout, signup, purchase], strict_order?: true)
+
+        {:ok, funnel} =
+          funnel_with_goals(site, [checkout, signup, purchase], funnel_type: :strict)
 
         populate_stats(site, [
           build(:pageview,
@@ -784,6 +858,38 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  "visitors" => 0,
                  "revenue" => %{"long" => "$0.00"},
                  "revenue_per_visitor" => %{"long" => "$0.00"}
+               } = purchase_step
+      end
+
+      test "reports revenue when the payment is in the last step of a flexible funnel",
+           %{
+             conn: conn,
+             site: site
+           } do
+        {:ok, [checkout, signup]} =
+          setup_goals(site, [{"page_path", "/checkout"}, {"event_name", "Signup"}])
+
+        purchase = insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+
+        {:ok, funnel} =
+          funnel_with_goals(site, [checkout, signup, purchase], funnel_type: :flexible)
+
+        populate_stats(site, [
+          build(:pageview,
+            pathname: "/checkout",
+            user_id: @user_id,
+            timestamp: ~N[2021-01-01 12:00:00]
+          ),
+          purchase(@user_id, "100", timestamp: ~N[2021-01-01 12:01:00])
+        ])
+
+        assert [_checkout_step, _signup_step, purchase_step] =
+                 funnel_steps(conn, site, funnel, "period=day&date=2021-01-01")
+
+        assert %{
+                 "visitors" => 1,
+                 "revenue" => %{"long" => "$100.00"},
+                 "revenue_per_visitor" => %{"long" => "$100.00"}
                } = purchase_step
       end
     end

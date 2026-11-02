@@ -151,34 +151,11 @@ defmodule Plausible.Billing.PlansTest do
       assert %{growth: [_ | _], business: [_ | _]} = Plans.available_plans_for(subscription)
     end
 
-    test "latest_enterprise_plan_with_price/1" do
-      now = NaiveDateTime.utc_now()
-      user = new_user(trial_expiry_date: Date.utc_today())
-      team = team_of(user)
+    test "get_price_for/2 returns the Paddle price of an enterprise plan" do
+      team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+      enterprise_plan = insert(:enterprise_plan, team: team, paddle_plan_id: "123")
 
-      subscribe_to_enterprise_plan(user,
-        paddle_plan_id: "123",
-        inserted_at: now,
-        subscription?: false
-      )
-
-      subscribe_to_enterprise_plan(user,
-        paddle_plan_id: "456",
-        inserted_at: NaiveDateTime.shift(now, hour: -10),
-        subscription?: false
-      )
-
-      subscribe_to_enterprise_plan(user,
-        paddle_plan_id: "789",
-        inserted_at: NaiveDateTime.shift(now, minute: -2),
-        subscription?: false
-      )
-
-      {enterprise_plan, price} =
-        Plausible.Teams.Billing.latest_enterprise_plan_with_price(team, "127.0.0.1")
-
-      assert enterprise_plan.paddle_plan_id == "123"
-      assert price == Money.new(:EUR, "123.00")
+      assert Plans.get_price_for(enterprise_plan, "127.0.0.1") == Money.new(:EUR, "123.00")
     end
   end
 

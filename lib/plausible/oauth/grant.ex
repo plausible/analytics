@@ -20,13 +20,13 @@ defmodule Plausible.OAuth.Grant do
     :access_token_hint,
     :access_token_expires_at,
     :resource,
+    :scopes,
     :refresh_token_hash,
     :refresh_token_hint,
     :refresh_token_expires_at
   ]
   @optional [
     :client_name,
-    :scopes,
     :previous_refresh_token_hash,
     :rotated_at,
     :revoked_at,
@@ -39,7 +39,7 @@ defmodule Plausible.OAuth.Grant do
     # Copied verbatim from the remote metadata document, e.g. `Claude Code`
     field :client_name, :string
     # The granted scopes, e.g. `["stats:read:*","sites:read:*"]`
-    field :scopes, {:array, :string}, default: []
+    field :scopes, {:array, :string}
     # The resource this grant is for, e.g. `https://plausible.io/mcp`
     field :resource, :string
 
@@ -63,7 +63,10 @@ defmodule Plausible.OAuth.Grant do
     # and we revoke the whole grant, locking out the one that exchanged it first
     # and the one trying to exchange it now. We can't know which one of them was malicious.
     #
-    # Inside the grace period, we return the current pair again idempotently.
+    # Inside the grace period, we issue a fresh pair, replacing the current one.
+    # Only hashes are stored, so the current pair can't be returned again.
+    # The replaced token becomes the previous one and `rotated_at` stays, so
+    # presenting it after the grace period revokes the grant too.
     # Grace is needed to prevent a connection timeout from stopping a working integration.
     field :previous_refresh_token_hash, :string
     field :rotated_at, :naive_datetime
@@ -86,7 +89,9 @@ defmodule Plausible.OAuth.Grant do
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> validate_length(:client_name, max: 255)
+    |> validate_length(:scopes, min: 1)
     |> validate_length(:client_id, max: 2048, count: :bytes)
+    |> validate_length(:resource, max: 2048, count: :bytes)
     |> unique_constraint(:access_token_hash)
     |> unique_constraint(:refresh_token_hash)
   end

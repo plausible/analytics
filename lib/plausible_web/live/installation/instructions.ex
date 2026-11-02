@@ -159,7 +159,6 @@ defmodule PlausibleWeb.Live.Installation.Instructions do
         type="button"
         theme="secondary"
         size="xs"
-        mt?={false}
         class="absolute top-1.5 right-1.5 shadow-xs"
         data-copy
       >

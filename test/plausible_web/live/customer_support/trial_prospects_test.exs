@@ -127,6 +127,41 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspectsTest do
       assert text_of_element(html, "tbody tr:first-child") =~ "Older Co"
     end
 
+    test "can toggle traffic estimate sorting in both directions", %{conn: conn} do
+      small = insert(:team, name: "Small Traffic Co")
+      big = insert(:team, name: "Big Traffic Co")
+
+      prospect(small, estimated_monthly: 9_000, estimated_mrr: 339)
+      prospect(big, estimated_monthly: 100_000, estimated_mrr: 19)
+
+      {:ok, lv, html} = live(conn, open_prospects())
+      assert text_of_element(html, "tbody tr:first-child") =~ "Small Traffic Co"
+
+      html = lv |> element("a", "Traffic estimate") |> render_click()
+      assert_patch(lv, open_prospects(sort_by: "traffic", sort_direction: "desc"))
+      assert text_of_element(html, "tbody tr:first-child") =~ "Big Traffic Co"
+
+      html = lv |> element("a", "Traffic estimate") |> render_click()
+      assert_patch(lv, open_prospects(sort_by: "traffic", sort_direction: "asc"))
+      assert text_of_element(html, "tbody tr:first-child") =~ "Small Traffic Co"
+    end
+
+    test "shows existing team notes alongside each prospect", %{conn: conn} do
+      noted = insert(:team, name: "Noted Co", notes: "Contacted owner\nFollow up next week")
+      blank = insert(:team, name: "Blank Co", notes: nil)
+
+      prospect(noted, estimated_mrr: 99)
+      prospect(blank, estimated_mrr: 19)
+
+      {:ok, _lv, html} = live(conn, open_prospects())
+
+      assert text_of_element(html, "thead") =~ "Notes"
+
+      assert text_of_element(html, "tbody tr:first-child td:last-child") =~ "Contacted owner"
+
+      assert text_of_element(html, "tbody tr:last-child td:last-child") == ""
+    end
+
     test "excludes rows left behind for teams no longer on a trial", %{conn: conn} do
       live_team = insert(:team, name: "Live Co")
       prospect(live_team, estimated_mrr: 19)

@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     <p class="text-sm">
       Prepare your data for download by clicking the button below. When that's done, a Zip file that you can download will appear.
     </p>
-    <.button phx-click="export">Prepare download</.button>
+    <.button phx-click="export" class="mt-6">Prepare download</.button>
     """
   end
 

@@ -7,11 +7,11 @@ if config_env() in [:dev, :test, :load] do
 end
 
 if config_env() == :ce_dev do
-  Envy.load(["config/.env.dev"])
+  Envy.load(["config/.env.dev", "config/.env.ce_dev"])
 end
 
 if config_env() == :ce_test do
-  Envy.load(["config/.env.test"])
+  Envy.load(["config/.env.test", "config/.env.ce_test"])
 end
 
 if config_env() == :e2e_test do
@@ -262,20 +262,20 @@ runtime_metadata = [
 config :plausible, :runtime_metadata, runtime_metadata
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
-honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
-honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
-paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
-paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
+paddle_classic_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
+paddle_classic_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
+postmark_webhook_username = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_USERNAME")
+postmark_webhook_password = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_PASSWORD")
 help_scout_app_id = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_ID")
 help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SECRET")
 help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
 help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
 otlp_endpoint =
-  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT", "https://api.honeycomb.io:443")
+  get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT")
 
 geolite2_country_db =
   get_var_from_path_or_env(
@@ -617,9 +617,9 @@ config :sentry,
   send_max_attempts: 1,
   before_send: {Plausible.SentryFilter, :before_send}
 
-config :plausible, :paddle,
-  vendor_auth_code: paddle_auth_code,
-  vendor_id: paddle_vendor_id
+config :plausible, :paddle_classic,
+  vendor_auth_code: paddle_classic_auth_code,
+  vendor_id: paddle_classic_vendor_id
 
 config :plausible, :google,
   client_id: google_cid,
@@ -632,6 +632,11 @@ config :plausible, Plausible.HelpScout,
   app_secret: help_scout_app_secret,
   signature_key: help_scout_signature_key,
   vault_key: help_scout_vault_key
+
+config :plausible, Plausible.Postmark,
+  api_key: postmark_api_key,
+  webhook_username: postmark_webhook_username,
+  webhook_password: postmark_webhook_password
 
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
@@ -874,7 +879,9 @@ cloud_cron = [
   # Daily at 5:00 UTC
   {"0 5 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff},
   # Daily at 2:00 UTC
-  {"0 2 * * *", Plausible.Workers.ScoreTrialProspects}
+  {"0 2 * * *", Plausible.Workers.ScoreTrialProspects},
+  # Daily at 23:00 UTC
+  {"0 23 * * *", Plausible.Workers.CleanEmailSuppressions}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -894,7 +901,8 @@ base_queues = [
   domain_change_transition: 1,
   check_accept_traffic_until: 1,
   clickhouse_clean_sites: 1,
-  locations_sync: 1
+  locations_sync: 1,
+  clean_email_suppressions: 1
 ]
 
 cloud_queues = [
@@ -998,7 +1006,7 @@ if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file
 end
 
-if honeycomb_api_key && honeycomb_dataset do
+if otlp_endpoint do
   config :opentelemetry,
     resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
     span_processor: :batch,
@@ -1006,11 +1014,7 @@ if honeycomb_api_key && honeycomb_dataset do
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: otlp_endpoint,
-    otlp_headers: [
-      {"x-honeycomb-team", honeycomb_api_key},
-      {"x-honeycomb-dataset", honeycomb_dataset}
-    ]
+    otlp_endpoint: otlp_endpoint
 else
   config :opentelemetry,
     sampler: :always_off,

@@ -45,9 +45,7 @@ defmodule PlausibleWeb.SiteController do
           |> Plausible.Mailer.send()
         end
 
-        redirect(conn,
-          to: ~p"/#{site.domain}/installation?#{[flow: flow]}"
-        )
+        redirect(conn, to: site_created_redirect_path(site, flow))
 
       {:error, _, :permission_denied, _} ->
         conn
@@ -65,6 +63,14 @@ defmodule PlausibleWeb.SiteController do
           {:error, :no_access} ->
             render_new_site_form(conn, flow, changeset: changeset)
         end
+    end
+  end
+
+  defp site_created_redirect_path(site, flow) do
+    if flow == PlausibleWeb.Flows.register() do
+      ~p"/team/setup?#{[flow: flow, domain: site.domain]}"
+    else
+      ~p"/#{site.domain}/installation?#{[flow: flow]}"
     end
   end
 
@@ -347,7 +353,7 @@ defmodule PlausibleWeb.SiteController do
       })
       |> Repo.insert()
 
-    :ok = tolerate_unique_contraint_violation(result, "weekly_reports_site_id_index")
+    :ok = tolerate_unique_constraint_violation(result, "weekly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
@@ -401,7 +407,7 @@ defmodule PlausibleWeb.SiteController do
       })
       |> Repo.insert()
 
-    :ok = tolerate_unique_contraint_violation(result, "monthly_reports_site_id_index")
+    :ok = tolerate_unique_constraint_violation(result, "monthly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
@@ -495,7 +501,7 @@ defmodule PlausibleWeb.SiteController do
     notification =
       Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: type)
 
-    Plausible.Site.TrafficChangeNotification.changeset(notification, params)
+    Plausible.Site.TrafficChangeNotification.update_changeset(notification, params)
     |> Repo.update!()
 
     conn
@@ -623,7 +629,7 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  defp tolerate_unique_contraint_violation(result, name) do
+  defp tolerate_unique_constraint_violation(result, name) do
     case result do
       {:ok, _} ->
         :ok

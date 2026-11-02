@@ -357,6 +357,17 @@ defmodule Plausible.Billing.QuotaTest do
       assert Plausible.Teams.Billing.team_member_usage(team) == 3
     end
 
+    test "counts additional owners and pending owner invitations as team members" do
+      me = new_user()
+      _site = new_site(owner: me)
+      team = team_of(me)
+
+      add_member(team, role: :owner)
+      invite_member(team, "invitee@example.com", role: :owner, inviter: me)
+
+      assert Plausible.Teams.Billing.team_member_usage(team) == 2
+    end
+
     test "does not count ownership transfer as a team member by default" do
       me = new_user()
       site_i_own = new_site(owner: me)

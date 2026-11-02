@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { ChronoUnit, DateTimeFormatter } from '@js-joda/core'
-import { Locale } from '@js-joda/locale_en-us'
+import { Locale } from '@js-joda/locale'
+// Registers English locale data with @js-joda/locale
+import '@js-joda/locale_en-us'
 import { currentTime, timeToISO } from '../test-utils'
 import { setupSite, populateStats, StatsEntry } from '../fixtures'
 import { randomID } from '../test-utils'
@@ -277,6 +279,7 @@ test('different graph time intervals are available', async ({
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Hours')
   await expect(graphIntervalSegments).toHaveCount(1)
   await graphIntervalSegments.filter({ hasText: 'Min' }).click()
+  await optionsMenu.click()
   await expect(page.getByTestId('current-graph-interval')).toHaveText('Min')
 })
 

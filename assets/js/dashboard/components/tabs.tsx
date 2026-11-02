@@ -2,7 +2,7 @@ import { Popover, Transition } from '@headlessui/react'
 import classNames from 'classnames'
 import React, { ReactNode, useRef, useEffect } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { popover, BlurMenuButtonOnEscape } from './popover'
+import { popover, BlurMenuButtonOnEscape, SelectedCheckmark } from './popover'
 import { useSearchableItems } from '../hooks/use-searchable-items'
 import { SearchInput } from './search-input'
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
@@ -16,7 +16,7 @@ export const TabWrapper = ({
 }) => (
   <div
     className={classNames(
-      'flex items-baseline gap-x-3.5 text-xs font-medium text-gray-500 dark:text-gray-400',
+      'flex items-baseline gap-x-3.5 text-xs text-gray-500 dark:text-gray-400',
       className
     )}
   >
@@ -32,11 +32,14 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames('truncate text-left text-xs uppercase', {
-      'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 font-semibold cursor-pointer':
-        !active,
-      'text-gray-900 dark:text-gray-100 font-bold tracking-[-.01em]': active
-    })}
+    className={classNames(
+      'truncate text-left text-xs font-semibold uppercase',
+      {
+        'text-gray-500 dark:text-gray-400 group-hover/tab:text-gray-800 dark:group-hover/tab:text-gray-200 cursor-pointer':
+          !active,
+        'text-gray-900 dark:text-gray-100': active
+      }
+    )}
   >
     <span data-active={active ? 'true' : 'false'} data-testid="tab-button">
       {children}
@@ -90,6 +93,9 @@ export const DropdownTabButton = ({
     <Popover className={className}>
       {({ close: closeDropdown }) => (
         <>
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <div
             className={classNames('-mb-px pb-4', {
@@ -98,7 +104,10 @@ export const DropdownTabButton = ({
           >
             <Popover.Button
               data-testid="tab-button-with-dropdown"
-              className="group/tab relative inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              className={classNames(
+                popover.toggleButton.classNames.aboveBackdrop,
+                "group/tab inline-flex justify-between rounded-xs before:absolute before:inset-[-16px_-6px] before:content-[' ']"
+              )}
               ref={dropdownButtonRef}
             >
               <TabButtonText active={active}>{children}</TabButtonText>
@@ -175,19 +184,17 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
   }, [searchable, showSearch, searchRef])
 
   return (
-    <>
+    <div className="flex flex-col gap-y-1">
       {searchable && showSearch && (
-        <div className="flex items-center p-1">
-          <SearchInput
-            searchRef={searchRef}
-            className="!max-w-none"
-            onSearch={handleSearchInput}
-          />
-        </div>
+        <SearchInput
+          searchRef={searchRef}
+          className="!max-w-none"
+          onSearch={handleSearchInput}
+        />
       )}
       <div
         data-testid="dropdown-items"
-        className={'max-h-[224px] overflow-y-auto flex flex-col gap-y-0.5 p-1'}
+        className={'max-h-[224px] overflow-y-auto flex flex-col gap-y-0.5'}
       >
         {showableData.map(({ selected, label, onClick }, index) => {
           return (
@@ -201,6 +208,7 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
               className={itemClassName}
             >
               <span className="line-clamp-1">{label}</span>
+              <SelectedCheckmark selected={selected} />
             </button>
           )
         })}
@@ -213,24 +221,22 @@ const Items = ({ options, searchable, closeDropdown }: ItemsProps) => {
             )}
           >
             {`Show ${countOfMoreToShow} more`}
-            <EllipsisHorizontalIcon className="block w-5 h-5" />
+            <EllipsisHorizontalIcon
+              className={classNames('w-5', popover.items.classNames.rowIcon)}
+            />
           </button>
         )}
         {searching && !filteredData.length && (
-          <button
-            className={classNames(
-              itemClassName,
-              'w-full text-left !justify-start'
-            )}
-            onClick={handleClearSearch}
-          >
-            No items found.{' '}
-            <span className="ml-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-500">
-              Click to clear search.
+          <button className={itemClassName} onClick={handleClearSearch}>
+            <span>
+              No items found.{' '}
+              <span className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-500">
+                Click to clear search.
+              </span>
             </span>
           </button>
         )}
       </div>
-    </>
+    </div>
   )
 }

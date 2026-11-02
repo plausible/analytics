@@ -124,9 +124,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
       Enum.map(fields, fn field ->
         type = schema.__schema__(:type, field) || raise "missing type for #{field}"
 
-        type
-        |> Ecto.Type.type()
-        |> Ecto.Adapters.ClickHouse.Schema.remap_type(schema, field)
+        Ecto.Adapters.ClickHouse.Schema.remap_type(type, schema, field)
       end)
 
     encoding_types = Ch.RowBinary.encoding_types(types)

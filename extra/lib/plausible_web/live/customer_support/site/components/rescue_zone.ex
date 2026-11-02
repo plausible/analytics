@@ -45,7 +45,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.RescueZone do
           suggest_fun={fn input, _ -> search_email(input) end}
           creatable
         />
-        <.button phx-target={@myself} type="submit">
+        <.button phx-target={@myself} type="submit" class="mt-6">
           Initiate Site Transfer
         </.button>
       </form>

@@ -88,9 +88,8 @@
             type="email"
             required
             placeholder="e.g. joe@example.com"
-            mt?={false}
           />
-          <.button type="submit" mt?={false}>
+          <.button type="submit">
             Add recipient
           </.button>
         </div>
@@ -151,8 +150,9 @@
           type="number"
           required
           label={meta.threshold_text}
+          wrapper_class="mt-6"
         />
-        <.button type="submit" mt?={false}>
+        <.button type="submit">
           Save threshold
         </.button>
       </div>
@@ -200,10 +200,9 @@
             field={f[:recipient]}
             type="email"
             placeholder="e.g. joe@example.com"
-            mt?={false}
             required
           />
-          <.button type="submit" mt?={false}>
+          <.button type="submit">
             Add recipient
           </.button>
         </div>

@@ -1,0 +1,294 @@
+defmodule Plausible.Billing.PaddleClassic.Api do
+  @moduledoc """
+  Paddle API HTTP client.
+  """
+
+  alias Plausible.HTTPClient
+
+  @headers [
+    {"content-type", "application/json"},
+    {"accept", "application/json"}
+  ]
+
+  def update_subscription_preview(paddle_subscription_id, new_plan_id) do
+    config = get_config()
+
+    params = %{
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
+      subscription_id: paddle_subscription_id,
+      plan_id: new_plan_id,
+      prorate: true,
+      keep_modifiers: true,
+      bill_immediately: true,
+      quantity: 1
+    }
+
+    case HTTPClient.post(preview_update_url(), @headers, params) do
+      {:ok, response} ->
+        if response.body["success"] do
+          {:ok, response.body["response"]}
+        else
+          {:error, response.body["error"]}
+        end
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  def update_subscription(paddle_subscription_id, params) do
+    config = get_config()
+
+    params =
+      Map.merge(params, %{
+        vendor_id: config[:vendor_id],
+        vendor_auth_code: config[:vendor_auth_code],
+        subscription_id: paddle_subscription_id,
+        prorate: true,
+        keep_modifiers: true,
+        bill_immediately: true,
+        quantity: 1
+      })
+
+    case HTTPClient.post(update_subscription_url(), @headers, params) do
+      {:ok, response} ->
+        if response.body["success"] do
+          {:ok, response.body["response"]}
+        else
+          {:error, response.body["error"]}
+        end
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  def get_subscription(paddle_subscription_id) do
+    config = get_config()
+
+    params = %{
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
+      subscription_id: paddle_subscription_id
+    }
+
+    case HTTPClient.post(get_subscription_url(), @headers, params) do
+      {:ok, response} ->
+        if response.body["success"] do
+          [subscription] = response.body["response"]
+          {:ok, subscription}
+        else
+          {:error, response.body["error"]}
+        end
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec get_invoices(Plausible.Billing.Subscription.t() | nil) ::
+          {:ok, list()}
+          | {:error, :request_failed}
+          | {:error, :no_invoices}
+  def get_invoices(nil), do: {:error, :no_invoices}
+  def get_invoices(%{paddle_subscription_id: nil}), do: {:error, :no_invoices}
+
+  def get_invoices(subscription) do
+    config = get_config()
+
+    params = %{
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
+      subscription_id: subscription.paddle_subscription_id,
+      is_paid: 1,
+      from: Date.shift(Date.utc_today(), year: -5) |> Calendar.strftime("%Y-%m-%d"),
+      to: Date.shift(Date.utc_today(), day: 1) |> Calendar.strftime("%Y-%m-%d")
+    }
+
+    with {:ok, %{body: body}} <- HTTPClient.post(invoices_url(), @headers, params),
+         true <- Map.get(body, "success"),
+         [_ | _] = response <- Map.get(body, "response") do
+      Enum.sort(response, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
+        Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
+      end)
+      |> then(&{:ok, &1})
+    else
+      error ->
+        Sentry.capture_message("Failed to retrieve invoices from Paddle",
+          extra: %{extra: inspect(error), params: params, invoices_url: invoices_url()}
+        )
+
+        {:error, :request_failed}
+    end
+  end
+
+  def fetch_prices([_ | _] = product_ids, customer_ip) do
+    params = %{product_ids: Enum.join(product_ids, ","), customer_ip: customer_ip}
+
+    prices_final_url =
+      prices_url()
+      |> URI.parse()
+      |> Map.replace(:query, URI.encode_query(params))
+      |> URI.to_string()
+
+    case HTTPClient.impl().get(prices_final_url, @headers, nil) do
+      {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
+        products =
+          Enum.into(products, %{}, fn %{
+                                        "currency" => currency,
+                                        "price" => %{"net" => net_price},
+                                        "product_id" => product_id
+                                      } ->
+            {Integer.to_string(product_id), Money.from_float!(currency, net_price)}
+          end)
+
+        {:ok, products}
+
+      {:ok, %{body: body}} ->
+        Sentry.capture_message("Paddle API: Unexpected response when fetching prices",
+          extra: %{api_response: body, product_ids: product_ids}
+        )
+
+        {:error, :api_error}
+
+      {:error, %{reason: reason}} ->
+        Sentry.capture_message("Paddle API: Error when fetching prices", extra: %{reason: reason})
+        {:error, :api_error}
+    end
+  end
+
+  @plans_page_size 500
+  @modifiers_page_size 250
+
+  @doc """
+  Lists every plan of the Classic catalog (read-only), following pagination.
+
+  Each plan has `"id"` (integer), `"name"`, `"billing_type"` (`"day"`, `"week"`, `"month"`
+  or `"year"`), `"billing_period"` (integer), `"trial_days"` (integer) and
+  `"initial_price"` / `"recurring_price"` maps of currency code => amount string.
+
+  See `POST /2.0/subscription/plans` in Paddle's
+  [Subscription API](https://classic.paddle.com/api-reference/reference/subscription-api).
+  """
+  def list_plans() do
+    list_plans(0, [])
+  end
+
+  defp list_plans(offset, acc) do
+    params =
+      Map.merge(auth_params(), %{limit: @plans_page_size, offset: offset})
+
+    case HTTPClient.impl().post(plans_url(), @headers, params) do
+      {:ok, %{body: %{"success" => true, "response" => plans} = body}} when is_list(plans) ->
+        acc = acc ++ plans
+        total = body["total"] || length(acc)
+
+        if plans != [] and length(acc) < total do
+          list_plans(offset + length(plans), acc)
+        else
+          {:ok, acc}
+        end
+
+      {:ok, %{body: body}} ->
+        {:error, body["error"] || :unexpected_response}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Lists the modifiers of all subscriptions (read-only), following pagination.
+
+  Each modifier has `"modifier_id"` (integer), `"subscription_id"` (integer), `"amount"`
+  (string, negative for discounts), `"currency"`, `"is_recurring"` (boolean) and `"description"`.
+
+  The endpoint pages with `after`: the id of the last modifier of the previous page.
+
+  See `POST /2.0/subscription/modifiers` in Paddle's
+  [Subscription API](https://classic.paddle.com/api-reference/reference/subscription-api).
+  """
+  def list_modifiers() do
+    list_modifiers(nil, [])
+  end
+
+  defp list_modifiers(after_id, acc) do
+    params =
+      Map.merge(auth_params(), %{results_per_page: @modifiers_page_size})
+
+    params = if after_id, do: Map.put(params, :after, after_id), else: params
+
+    case HTTPClient.impl().post(modifiers_url(), @headers, params) do
+      {:ok, %{body: %{"success" => true, "response" => page}}} when is_list(page) ->
+        # Paddle doesn't say if `after` is inclusive, so never count a modifier twice
+        seen = MapSet.new(acc, & &1["modifier_id"])
+        new = Enum.reject(page, &MapSet.member?(seen, &1["modifier_id"]))
+
+        if new == [] or length(page) < @modifiers_page_size do
+          {:ok, acc ++ new}
+        else
+          list_modifiers(List.last(page)["modifier_id"], acc ++ new)
+        end
+
+      {:ok, %{body: body}} ->
+        {:error, body["error"] || :unexpected_response}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  defp auth_params() do
+    config = get_config()
+    %{vendor_id: config[:vendor_id], vendor_auth_code: config[:vendor_auth_code]}
+  end
+
+  def checkout_domain() do
+    if Application.get_env(:plausible, :environment) == "staging" do
+      "https://sandbox-checkout.paddle.com"
+    else
+      "https://checkout.paddle.com"
+    end
+  end
+
+  def vendors_domain() do
+    if Application.get_env(:plausible, :environment) == "staging" do
+      "https://sandbox-vendors.paddle.com"
+    else
+      "https://vendors.paddle.com"
+    end
+  end
+
+  defp get_config() do
+    Application.get_env(:plausible, :paddle_classic)
+  end
+
+  defp invoices_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/payments")
+  end
+
+  defp preview_update_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/preview_update")
+  end
+
+  defp update_subscription_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/users/update")
+  end
+
+  defp get_subscription_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/users")
+  end
+
+  defp plans_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/plans")
+  end
+
+  defp modifiers_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/modifiers")
+  end
+
+  defp prices_url() do
+    Path.join(checkout_domain(), "/api/2.0/prices")
+  end
+end

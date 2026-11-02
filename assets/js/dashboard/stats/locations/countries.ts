@@ -7,7 +7,7 @@ export type WorldJsonCountryData = { properties: { a3: string } }
 
 export function parseWorldTopoJsonToGeoJsonFeatures(): Array<WorldJsonCountryData> {
   const collection = topojson.feature(
-    // @ts-expect-error strings in worldJson not recongizable as the enum values declared in library
+    // @ts-expect-error strings in worldJson not recognizable as the enum values declared in library
     worldJson,
     worldJson.objects.countries
   )

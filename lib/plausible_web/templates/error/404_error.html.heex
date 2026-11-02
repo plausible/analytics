@@ -5,7 +5,7 @@
   <div :if={!@conn.assigns[:current_user]} class="text-xl dark:text-gray-100">
     Trying to access your dashboard? You may need to log in again to see it
   </div>
-  <div class="mt-4 flex">
+  <div class="mt-10 flex">
     <.button_link
       :if={!@conn.assigns[:current_user]}
       href={~p"/login?#{[return_to: url_path(@conn)]}"}

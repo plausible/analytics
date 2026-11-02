@@ -9,19 +9,19 @@ test.describe('manual extension', () => {
     await page.goto('/manual.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#pageview-trigger'),
+      action: () => page.locator('#pageview-trigger').click(),
       expectedRequests: [
         { n: 'pageview', u: `${LOCAL_SERVER_ADDR}/manual.html` }
       ]
     })
     await expectPlausibleInAction(page, {
-      action: () => page.click('#custom-event-trigger'),
+      action: () => page.locator('#custom-event-trigger').click(),
       expectedRequests: [
         { n: 'CustomEvent', u: `${LOCAL_SERVER_ADDR}/manual.html` }
       ]
     })
     await expectPlausibleInAction(page, {
-      action: () => page.click('#custom-event-trigger-custom-url'),
+      action: () => page.locator('#custom-event-trigger-custom-url').click(),
       expectedRequests: [
         { n: 'CustomEvent', u: `https://example.com/custom/location` }
       ]
@@ -34,19 +34,19 @@ test.describe('manual extension', () => {
     await page.goto('/manual.html')
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#pageview-trigger-custom-url'),
+      action: () => page.locator('#pageview-trigger-custom-url').click(),
       expectedRequests: [
         { n: 'pageview', u: `https://example.com/custom/location` }
       ]
     })
     await expectPlausibleInAction(page, {
-      action: () => page.click('#custom-event-trigger'),
+      action: () => page.locator('#custom-event-trigger').click(),
       expectedRequests: [
         { n: 'CustomEvent', u: `${LOCAL_SERVER_ADDR}/manual.html` }
       ]
     })
     await expectPlausibleInAction(page, {
-      action: () => page.click('#custom-event-trigger-custom-url'),
+      action: () => page.locator('#custom-event-trigger-custom-url').click(),
       expectedRequests: [
         { n: 'CustomEvent', u: `https://example.com/custom/location` }
       ]

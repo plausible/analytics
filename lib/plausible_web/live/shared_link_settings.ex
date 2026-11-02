@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
               phx-click="add-shared-link"
               x-data
               x-on:click={Modal.JS.preopen("shared-links-form-modal")}
-              class="mt-4"
+              class="mt-6"
             >
               Add shared link
             </.button>
@@ -104,7 +104,6 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
               <.button
                 id="add-shared-link-button"
                 phx-click="add-shared-link"
-                mt?={false}
                 x-data
                 x-on:click={Modal.JS.preopen("shared-links-form-modal")}
               >
@@ -159,12 +158,10 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                 </.td>
                 <.td actions>
                   <.edit_button
-                    class="mt-1"
                     phx-click="edit-shared-link"
                     phx-value-slug={link.slug}
                   />
                   <.delete_button
-                    class="mt-1"
                     phx-click="delete-shared-link"
                     phx-value-slug={link.slug}
                     data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."

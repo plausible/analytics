@@ -15,7 +15,11 @@
   <body>
     <button
       id="manual-purchase"
-      onclick="window.plausible('Purchase', {revenue: {amount: 15.99, currency: 'USD'}})"
+      onclick="
+        window.plausible('Purchase', {
+          revenue: { amount: 15.99, currency: 'USD' }
+        })
+      "
     >
       Click me
     </button>

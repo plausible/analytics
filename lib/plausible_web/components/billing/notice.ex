@@ -3,46 +3,27 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   use PlausibleWeb, :component
 
+  require Plausible.Billing
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
+  attr(:current_team_role, :atom, required: true)
+
   def active_grace_period(assigns) do
-    if assigns.enterprise? do
-      ~H"""
-      <aside class="container">
-        <.notice
-          title={Plausible.Billing.active_grace_period_notice_title()}
-          class="shadow-md dark:shadow-none"
-        >
-          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
-          <.link
-            href={~p"/billing/choose-plan"}
-            class="whitespace-nowrap font-semibold"
-          >
-            Upgrade now <span aria-hidden="true"> &rarr;</span>
-          </.link>
-        </.notice>
-      </aside>
-      """
-    else
-      ~H"""
-      <aside class="container">
-        <.notice
-          title={Plausible.Billing.active_grace_period_notice_title()}
-          class="shadow-md dark:shadow-none"
-        >
-          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
-          <.link
-            href={~p"/billing/choose-plan"}
-            class="whitespace-nowrap font-semibold"
-          >
-            Upgrade now <span aria-hidden="true"> &rarr;</span>
-          </.link>
-        </.notice>
-      </aside>
-      """
-    end
+    ~H"""
+    <aside class="container">
+      <.notice
+        title={Plausible.Billing.active_grace_period_notice_title()}
+        class="shadow-md dark:shadow-none"
+      >
+        To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
+        <.upgrade_link_or_owner_hint current_team_role={@current_team_role} />
+      </.notice>
+    </aside>
+    """
   end
+
+  attr(:current_team_role, :atom, required: true)
 
   def dashboard_locked(assigns) do
     ~H"""
@@ -52,14 +33,31 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         class="shadow-md dark:shadow-none"
       >
         Since you’ve outgrown your current subscription tier, it’s time to upgrade to match your growing usage.
-        <.link
-          href={~p"/billing/choose-plan"}
-          class="whitespace-nowrap font-semibold"
-        >
-          Upgrade now <span aria-hidden="true"> &rarr;</span>
-        </.link>
+        <.upgrade_link_or_owner_hint current_team_role={@current_team_role} />
       </.notice>
     </aside>
+    """
+  end
+
+  defp upgrade_link_or_owner_hint(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :can_upgrade?,
+        assigns.current_team_role in Plausible.Billing.allowed_roles()
+      )
+
+    ~H"""
+    <.link
+      :if={@can_upgrade?}
+      href={~p"/billing/choose-plan"}
+      class="whitespace-nowrap font-semibold"
+    >
+      Upgrade now <span aria-hidden="true"> &rarr;</span>
+    </.link>
+    <span :if={!@can_upgrade?} class="font-semibold" data-test="owner-upgrade-hint">
+      Please ask a team owner to upgrade the subscription.
+    </span>
     """
   end
 
@@ -267,13 +265,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, and we'll keep tracking your stats as usual. Upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -290,7 +287,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading lets you add more as your team grows.
         </p>
-        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"}>
           Upgrade
         </.button_link>
       </div>
@@ -305,7 +302,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading lets you add more sites as you grow.
         </p>
-        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"}>
           Upgrade
         </.button_link>
       </div>
@@ -324,7 +321,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <p class="text-pretty">
           Upgrading gives you room to grow.
         </p>
-        <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+        <.button_link href={~p"/billing/choose-plan"}>
           Upgrade
         </.button_link>
       </div>
@@ -340,13 +337,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -364,13 +360,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           No action is required. Occasional traffic spikes are normal, but upgrading now gives you room to grow if higher traffic continues.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -388,13 +383,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -432,13 +426,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           To ensure uninterrupted access to your stats, please upgrade to a plan that fits your current usage {@deadline_text}.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -456,13 +449,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           Your stats are still being tracked, but dashboard access is temporarily locked because your site exceeded your plan's pageview limit for two consecutive billing cycles. Upgrade to restore access.
         </p>
         <div class="flex gap-3 items-center">
-          <.button_link href={~p"/billing/choose-plan"} mt?={false}>
+          <.button_link href={~p"/billing/choose-plan"}>
             Upgrade
           </.button_link>
           <.button_link
             href="https://plausible.io/docs/subscription-plans"
             theme="secondary"
-            mt?={false}
           >
             Learn more
           </.button_link>
@@ -482,7 +474,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         <.button_link
           id="upgrade-or-change-plan-link"
           href={~p"/billing/choose-plan"}
-          mt?={false}
         >
           Choose a plan
         </.button_link>

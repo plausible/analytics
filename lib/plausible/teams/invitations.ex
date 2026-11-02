@@ -588,26 +588,6 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def check_invitation_permissions(%Teams.Team{} = team, inviter, invitation_role, opts) do
-    check_permissions? = Keyword.get(opts, :check_permissions, true)
-
-    if check_permissions? do
-      case Teams.Memberships.team_role(team, inviter) do
-        {:ok, :owner} when invitation_role == :owner ->
-          :ok
-
-        {:ok, inviter_role}
-        when inviter_role in [:owner, :admin] and invitation_role != :owner ->
-          :ok
-
-        _ ->
-          {:error, :permission_denied}
-      end
-    else
-      :ok
-    end
-  end
-
   def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
@@ -641,21 +621,38 @@ defmodule Plausible.Teams.Invitations do
   @doc false
   def ensure_new_membership(_site_or_team, nil, _role), do: :ok
 
-  def ensure_new_membership(_site_or_team, _invitee, :owner), do: :ok
-
   def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
     case Teams.Memberships.team_role(team, invitee) do
-      {:ok, :guest} -> :ok
+      {:ok, :guest} -> {:error, :already_a_guest}
       {:error, :not_a_member} -> :ok
       {:ok, _} -> {:error, :already_a_member}
     end
   end
+
+  # Site ownership transfers are allowed to target existing site members
+  def ensure_new_membership(%Plausible.Site{}, _invitee, :owner), do: :ok
 
   def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do
       :ok
     else
       {:error, :already_a_member}
+    end
+  end
+
+  def ensure_no_invitations(%Teams.Team{} = team, invitee_email) do
+    pending_invitation_role =
+      Repo.one(
+        from ti in Teams.Invitation,
+          where: ti.team_id == ^team.id,
+          where: ti.email == ^invitee_email,
+          select: ti.role
+      )
+
+    case pending_invitation_role do
+      nil -> :ok
+      :guest -> {:error, :invited_as_guest}
+      _ -> {:error, :invited_as_member}
     end
   end
 

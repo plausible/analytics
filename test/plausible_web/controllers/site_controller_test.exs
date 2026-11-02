@@ -45,6 +45,12 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
+    test "skip link continues to the team setup onboarding step", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=register")
+
+      assert html_response(conn, 200) =~ ~s(href="/team/setup?flow=register")
+    end
+
     test "does not display limit notice when user is on an enterprise plan", %{
       conn: conn,
       user: user
@@ -359,6 +365,30 @@ defmodule PlausibleWeb.SiteControllerTest do
 
   describe "POST /sites" do
     setup [:create_user, :log_in]
+
+    test "continues to the team setup step in the onboarding flow", %{conn: conn} do
+      conn =
+        post(conn, "/sites?flow=register", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/team/setup?flow=register&domain=example.com"
+    end
+
+    test "continues to the installation step in the provisioning flow", %{conn: conn} do
+      conn =
+        post(conn, "/sites?flow=provisioning", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/installation?flow=provisioning"
+    end
 
     test "creates the site with valid params", %{conn: conn} do
       conn =
@@ -1730,6 +1760,27 @@ defmodule PlausibleWeb.SiteControllerTest do
           )
 
         assert notification.threshold == 15
+      end
+
+      test "does not allow changing site_id or type of #{type} notification", %{
+        conn: conn,
+        site: site
+      } do
+        other_site = new_site()
+        notification = insert(:"#{unquote(type)}_notification", site: site)
+        other_type = if unquote(type) == :spike, do: "drop", else: "spike"
+
+        put(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}", %{
+          "traffic_change_notification" => %{
+            "site_id" => to_string(other_site.id),
+            "type" => other_type
+          }
+        })
+
+        notification = Repo.reload!(notification)
+
+        assert notification.site_id == site.id
+        assert notification.type == unquote(type)
       end
     end
 

@@ -8,10 +8,7 @@ import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { ScriptConfig } from './support/types'
-import {
-  mockManyRequests,
-  resolveWithTimestamps
-} from './support/mock-many-requests'
+import { mockManyRequests } from './support/mock-many-requests'
 
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
@@ -64,7 +61,7 @@ for (const mode of ['web', 'esm']) {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto(url)
-        await page.click('a')
+        await page.locator('a').click()
       },
       expectedRequests: [
         {
@@ -114,13 +111,13 @@ for (const mode of ['legacy', 'web']) {
         }
       ]
       await expectPlausibleInAction(page, {
-        action: () => page.click('a', { modifiers: ['ControlOrMeta'] }), // open in new tab
+        action: () => page.locator('a').click({ modifiers: ['ControlOrMeta'] }), // open in new tab
         expectedRequests,
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('h1'),
+        action: () => page.locator('h1').click(),
         expectedRequests,
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -150,7 +147,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.press('a', 'Enter'),
+        action: () => page.locator('a').press('Enter'),
         expectedRequests: [
           {
             n: 'Reset Password',
@@ -193,9 +190,9 @@ for (const mode of ['legacy', 'web']) {
       // if the form is tagged, clicks within the form should not trigger events
       await expectPlausibleInAction(page, {
         action: async () => {
-          await page.click('form')
-          await page.click('h2')
-          await page.click('label', { button: 'right' })
+          await page.locator('form').click()
+          await page.locator('h2').click()
+          await page.locator('label').click({ button: 'right' })
         },
         expectedRequests: [],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
@@ -203,8 +200,8 @@ for (const mode of ['legacy', 'web']) {
 
       await expectPlausibleInAction(page, {
         action: async () => {
-          await page.fill('input[type="email"]', 'anything@example.com')
-          await page.press('input[type="email"]', 'Enter')
+          await page.locator('input[type="email"]').fill('anything@example.com')
+          await page.locator('input[type="email"]').press('Enter')
         },
         expectedRequests: [
           {
@@ -241,15 +238,15 @@ for (const mode of ['legacy', 'web']) {
       // if the form parent is tagged, clicks within the form should not trigger events
       await expectPlausibleInAction(page, {
         action: async () => {
-          await page.click('form')
-          await page.click('input[type="text"]')
+          await page.locator('form').click()
+          await page.locator('input[type="text"]').click()
         },
         expectedRequests: [],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('input[type="submit"]'),
+        action: () => page.locator('input[type="submit"]').click(),
         expectedRequests: [
           {
             n: 'Form Submit'
@@ -287,13 +284,13 @@ for (const mode of ['legacy', 'web']) {
       ]
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('span'),
+        action: () => page.locator('span').click(),
         expectedRequests,
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('strong'),
+        action: () => page.locator('strong').click(),
         expectedRequests,
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -319,7 +316,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('button'),
+        action: () => page.locator('button').click(),
         expectedRequests: [
           {
             n: 'Custom Event',
@@ -365,7 +362,7 @@ for (const mode of ['legacy', 'web']) {
       })
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('button'),
+        action: () => page.locator('button').click(),
         expectedRequests: [
           {
             n: 'Custom Event'
@@ -407,14 +404,15 @@ for (const mode of ['legacy', 'web']) {
         >`
       })
       await page.goto(url)
-      const navigationPromise = page.waitForRequest(targetPage.url, {
-        timeout: 2000
-      })
-      await page.click('a')
-      const [[trackingRequestList, trackingResponseTime], [, navigationTime]] =
-        await resolveWithTimestamps([
-          eventsApiMock.getRequestList(),
-          navigationPromise
+      const [navigationTime, [trackingRequestList, trackingResponseTime]] =
+        await Promise.all([
+          page
+            .waitForRequest(targetPage.url, { timeout: 2000 })
+            .then(() => Date.now()),
+          eventsApiMock
+            .getRequestList()
+            .then((requestList) => [requestList, Date.now()] as const),
+          page.locator('a').click()
         ])
       await expect(page.getByText('Subscription successful')).toBeVisible()
       expect(navigationTime).toBeLessThanOrEqual(trackingResponseTime)
@@ -462,13 +460,13 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('circle'),
+        action: () => page.locator('circle').click(),
         expectedRequests: [
           {
             n: 'link click',
             p: {
               expected: { url: {} },
-              __expectation__: (actual) =>
+              __expectation__: (actual: unknown) =>
                 actual && JSON.stringify(actual) === '{"url":{}}'
             }
           }
@@ -498,7 +496,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('button'),
+        action: () => page.locator('button').click(),
         refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -524,7 +522,7 @@ for (const mode of ['legacy', 'web']) {
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click('span'),
+        action: () => page.locator('span').click(),
         refutedRequests: [{}],
         shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
@@ -546,7 +544,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       linkAttributes: '',
       click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
       expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 },
-      skip: (browserName) =>
+      skip: (browserName: string) =>
         test.skip(
           browserName === 'webkit',
           'does not open links with such clicks (works when testing manually in macOS Safari)'
@@ -617,7 +615,10 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       await page.goto(url)
 
       await expectPlausibleInAction(page, {
-        action: () => page.click(click.element, { modifiers: click.modifiers }),
+        action: () =>
+          page.locator(click.element).click({
+            ...(click.modifiers && { modifiers: click.modifiers })
+          }),
         expectedRequests: [{ n: 'outbound', p: { url: outboundUrl } }]
       })
 
@@ -655,15 +656,15 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       >`
     })
     await page.goto(url)
-    const navigationPromise = page.waitForRequest(targetPage.url, {
-      timeout: 2000
-    })
-    const trackingPromise = page.waitForResponse('**/api/event', {
-      timeout: 2000
-    })
-    await page.click('a')
-    const [[, trackingResponseTime], [, navigationTime]] =
-      await resolveWithTimestamps([trackingPromise, navigationPromise])
+    const [trackingResponseTime, navigationTime] = await Promise.all([
+      page
+        .waitForResponse('**/api/event', { timeout: 2000 })
+        .then(() => Date.now()),
+      page
+        .waitForRequest(targetPage.url, { timeout: 2000 })
+        .then(() => Date.now()),
+      page.locator('a').click()
+    ])
     await expect(page.getByText('Subscription successful')).toBeVisible()
     expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([
@@ -706,7 +707,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const navigationPromise = page.waitForRequest(targetPage.url, {
       timeout: 6000
     })
-    await page.click('a')
+    await page.locator('a').click()
     await navigationPromise
     await expect(page.getByText('Subscription successful')).toBeVisible()
   })
@@ -733,7 +734,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     await page.goto(url)
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('a'),
+      action: () => page.locator('a').click(),
       refutedRequests: [{}]
     })
 
@@ -766,7 +767,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     await page.goto(url)
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('a'),
+      action: () => page.locator('a').click(),
       refutedRequests: [{}],
       responseDelay: 500,
       mockRequestTimeout: 250

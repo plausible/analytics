@@ -23,6 +23,7 @@ import { useDashboardStateContext } from '../../dashboard-state-context'
 import { useSiteContext } from '../../site-context'
 import {
   FunnelResponse,
+  FunnelType,
   StepMetrics,
   StepValues,
   conversionRateChange,
@@ -379,6 +380,21 @@ function ConversionRateSummary({
   )
 }
 
+const funnelTypeLabels: { [t: string]: string } = {
+  [FunnelType.sequential]: 'Sequential',
+  [FunnelType.flexible]: 'Flexible',
+  [FunnelType.strict]: 'Strict'
+}
+
+const funnelTypeDescriptions: { [t: string]: string } = {
+  [FunnelType.sequential]:
+    'All steps are required. Other activity is allowed between steps.',
+  [FunnelType.flexible]:
+    'Only the first and last steps are required. Middle steps can be skipped.',
+  [FunnelType.strict]:
+    'All steps are required. No other activity is allowed between steps.'
+}
+
 function FunnelHeader({
   funnelName,
   funnel,
@@ -418,16 +434,12 @@ function FunnelHeader({
             </span>
 
             <div className="flex items-center gap-1">
-              {funnel.strict_order ? 'Strict' : 'Sequential'}
+              {funnelTypeLabels[funnel.funnel_type]}
               <Tooltip
                 className="flex"
                 containerRef={{ current: document.body }}
                 info={
-                  <span>
-                    {funnel.strict_order
-                      ? 'No other activity is allowed between steps.'
-                      : 'Other activity is allowed between steps.'}
-                  </span>
+                  <span> {funnelTypeDescriptions[funnel.funnel_type]} </span>
                 }
               >
                 <InformationCircleIcon className="size-3.5" />

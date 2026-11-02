@@ -83,7 +83,7 @@ for (const mode of ['web', 'esm', 'legacy']) {
             new Promise((resolve) =>
               // @ts-expect-error - window.plausible is defined
               window.plausible('Purchase', {
-                callback: (result) => resolve(result)
+                callback: (result: unknown) => resolve(result)
               })
             )
         )

@@ -57,7 +57,6 @@ defmodule PlausibleWeb.SettingsController do
 
       render(conn, :team_general,
         team_name_changeset: name_changeset,
-        force_2fa_enabled?: Teams.force_2fa_enabled?(conn.assigns.current_team),
         layout: {PlausibleWeb.LayoutView, :settings},
         connect_live_socket: true
       )
@@ -380,7 +379,8 @@ defmodule PlausibleWeb.SettingsController do
       user_sessions: user_sessions,
       email_changeset: email_changeset,
       password_changeset: password_changeset,
-      layout: {PlausibleWeb.LayoutView, :settings}
+      layout: {PlausibleWeb.LayoutView, :settings},
+      connect_live_socket: true
     )
   end
 

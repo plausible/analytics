@@ -55,7 +55,6 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
                 phx-click="remove-sso-domain"
                 phx-value-identifier={sso_domain.identifier}
                 phx-target={@myself}
-                class="text-sm text-red-600"
                 data-confirm={"Are you sure you want to remove domain '#{sso_domain.domain}'? All SSO users will be deprovisioned and logged out."}
               />
             </.td>
@@ -69,6 +68,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
             phx-click="remove-sso-integration"
             phx-target={@myself}
             theme="danger"
+            class="mt-6"
           >
             Remove Integration
           </.button>

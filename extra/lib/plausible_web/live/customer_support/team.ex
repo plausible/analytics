@@ -300,27 +300,33 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   end
 
   defp manage_url(%{paddle_subscription_id: paddle_id} = _subscription) do
-    Plausible.Billing.PaddleApi.vendors_domain() <>
+    Plausible.Billing.PaddleClassic.Api.vendors_domain() <>
       "/subscriptions/customers/manage/" <> paddle_id
   end
 
   defp subscription_plan(team) do
     subscription = team.subscription
 
-    if Plausible.Billing.Subscription.Status.active?(subscription) &&
-         subscription.paddle_subscription_id do
-      quota = PlausibleWeb.AuthView.subscription_quota(subscription)
-      interval = PlausibleWeb.AuthView.subscription_interval(subscription)
+    cond do
+      Plausible.Billing.Subscription.Status.active?(subscription) &&
+          subscription.paddle_subscription_id ->
+        quota = PlausibleWeb.AuthView.subscription_quota(subscription)
+        interval = PlausibleWeb.AuthView.subscription_interval(subscription)
 
-      assigns = %{quota: quota, interval: interval, subscription: subscription}
+        assigns = %{quota: quota, interval: interval, subscription: subscription}
 
-      ~H"""
-      <.styled_link new_tab={true} href={manage_url(@subscription)}>
-        {@quota} ({@interval})
-      </.styled_link>
-      """
-    else
-      "--"
+        ~H"""
+        <.styled_link new_tab={true} href={manage_url(@subscription)}>
+          {@quota} ({@interval})
+        </.styled_link>
+        """
+
+      Plausible.Billing.Subscription.Status.active?(subscription) &&
+          Plausible.Billing.Subscription.manual_subscription?(subscription) ->
+        "Manually billed enterprise"
+
+      true ->
+        "--"
     end
   end
 

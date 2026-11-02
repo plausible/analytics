@@ -15,7 +15,6 @@
         <.input
           x-on:click="submitDisabled = false"
           type="radio"
-          class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
           id={f[:type].id <> "_0"}
           name={f[:type].name}
           value="stats_api"
@@ -72,7 +71,7 @@
           Make sure to store the key in a secure place. Once created, we will not be able to show it again.
         </p>
       </div>
-      <.button type="submit" class="w-full" x-bind:disabled="submitDisabled">
+      <.button type="submit" class="w-full mt-6" x-bind:disabled="submitDisabled">
         Create API key
       </.button>
     </.form>

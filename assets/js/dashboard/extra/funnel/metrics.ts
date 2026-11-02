@@ -20,9 +20,15 @@ type FunnelPeriod = {
   never_entering_visitors_percentage: string
 }
 
+export enum FunnelType {
+  sequential = 'sequential',
+  flexible = 'flexible',
+  strict = 'strict'
+}
+
 export type FunnelResponse = FunnelPeriod & {
   name: string
-  strict_order: boolean
+  funnel_type: FunnelType
   comparison?: FunnelPeriod | null
   date_range?: [string, string]
   comparison_date_range?: [string, string] | null

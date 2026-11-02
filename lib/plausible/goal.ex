@@ -74,34 +74,47 @@ defmodule Plausible.Goal do
   def changeset(goal, attrs \\ %{}) do
     goal
     |> cast(attrs, @fields)
-    |> update_leading_slash()
-    |> validate_event_name_and_page_path()
-    |> validate_page_path_for_scroll_goal()
+    |> base_changeset()
     |> maybe_put_display_name()
-    |> validate_change(:custom_props, &validate_custom_props/2)
     |> unique_constraint(:display_name, name: :goals_display_name_unique)
     |> unique_constraint(:event_name, name: :goals_event_config_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
       name: :goals_pageview_config_unique
     )
+    |> check_constraint(:event_name,
+      name: :check_event_name_or_page_path,
+      message: "cannot co-exist with page_path"
+    )
+    |> prevent_currency_change()
+    |> prevent_special_goal_renames()
+  end
+
+  def base_changeset(changeset) do
+    changeset
+    |> update_leading_slash()
+    |> validate_event_name_and_page_path()
+    |> validate_page_path_for_scroll_goal()
+    |> validate_change(:custom_props, &validate_custom_props/2)
     |> validate_length(:event_name, max: @max_event_name_length)
     |> validate_number(:scroll_threshold,
       greater_than_or_equal_to: -1,
       less_than_or_equal_to: 100,
       message: "Should be -1 (missing) or in range [0, 100]"
     )
-    |> check_constraint(:event_name,
-      name: :check_event_name_or_page_path,
-      message: "cannot co-exist with page_path"
-    )
     |> maybe_drop_currency()
-    |> prevent_currency_change()
-    |> prevent_special_goal_renames()
   end
 
   @spec display_name(t()) :: String.t()
   def display_name(goal) do
     goal.display_name
+  end
+
+  @spec display_name(event_name :: String.t() | nil, page_path :: String.t() | nil) :: String.t()
+  def display_name(event_name, page_path) do
+    case {event_name, page_path} do
+      {event, path} when event in [nil, "", "pageview"] and is_binary(path) -> "Visit " <> path
+      {event, _} when is_binary(event) -> event
+    end
   end
 
   @spec type(t()) :: :event | :scroll | :page
@@ -212,10 +225,10 @@ defmodule Plausible.Goal do
 
     case clause do
       [nil, path, _] when is_binary(path) ->
-        put_change(changeset, :display_name, "Visit " <> path)
+        put_change(changeset, :display_name, display_name(nil, path))
 
       [nil, _, event_name] when is_binary(event_name) ->
-        put_change(changeset, :display_name, event_name)
+        put_change(changeset, :display_name, display_name(event_name, nil))
 
       _ ->
         changeset

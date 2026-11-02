@@ -225,6 +225,47 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
 
         assert_search_result(html, "site", site.id)
       end
+
+      test "does not show a suppression warning for a user whose e-mail isn't suppressed", %{
+        conn: conn
+      } do
+        target = new_user(email: "fine@example.com")
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "user:fine@example.com")
+        html = render(lv)
+
+        assert_search_result(html, "user", target.id)
+
+        refute element_exists?(
+                 html,
+                 ~s|a[data-test-type="user"][data-test-id="#{target.id}"] svg[title*="suppressed"]|
+               )
+      end
+
+      test "shows a suppression warning for a user whose e-mail is suppressed", %{conn: conn} do
+        target = new_user(email: "bounced@example.com")
+
+        {:ok, _} =
+          Plausible.EmailSuppressions.create_from_bounce(%{
+            email: target.email,
+            reason: :hard_bounce,
+            source: :webhook
+          })
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "user:bounced@example.com")
+        html = render(lv)
+
+        assert_search_result(html, "user", target.id)
+
+        assert element_exists?(
+                 html,
+                 ~s|a[data-test-type="user"][data-test-id="#{target.id}"] svg[title*="suppressed"]|
+               )
+      end
     end
 
     defp assert_search_result(doc, type, id) do

@@ -7,7 +7,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
     test "returns v5 Starter plan benefits" do
       assert PlanBenefits.for_starter(get_10k_plan(5, :starter)) == [
                "One site",
-               "3 years of data retention",
+               "No retention limit",
                "Intuitive, fast and privacy-friendly dashboard",
                "Email/Slack reports",
                "Google Analytics import",
@@ -55,6 +55,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Up to 50 sites",
                  "Unlimited team members",
                  "Team Management",
+                 "No retention limit",
                  "Saved Segments",
                  "Annotations",
                  "Goals and custom events",
@@ -78,7 +79,6 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Everything in Growth",
                "Up to 10 sites",
                "Up to 10 team members",
-               "5 years of data retention",
                "Custom Properties",
                "Stats API (600 requests per hour)",
                "Data Studio Connector",
@@ -97,7 +97,6 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Everything in Growth",
                "Up to 50 sites",
                "Up to 10 team members",
-               "5 years of data retention",
                "Custom Properties",
                "Ecommerce revenue attribution",
                "Funnels and user journeys",
@@ -151,7 +150,6 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Single Sign-On (SSO)",
                "Managed Proxy",
                "Scheduled raw event data exports",
-               "5+ years of data retention",
                "Priority support"
              ]
     end
@@ -172,7 +170,6 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Single Sign-On (SSO)",
                "Managed Proxy",
                "Scheduled raw event data exports",
-               "5+ years of data retention",
                "Priority support"
              ]
     end

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Goals do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
+  import Plausible.Stats.Filters.Utils, only: [page_regex: 1, uses_page_regex?: 1]
 
   alias Plausible.Stats.Filters
 
@@ -63,67 +63,68 @@ defmodule Plausible.Stats.Goals do
     end)
   end
 
-  @type goal_join_data() :: %{
-          indices: [non_neg_integer()],
+  @doc """
+  Assigns breakdown goals 1-based indices, matching ClickHouse array positions.
+  Assign indices before partitioning or excluding goals so native and imported
+  queries use the same identifiers, decoded by `goal_at_index/2`.
+  """
+  @spec indexed_goals(Plausible.Stats.Query.t()) :: [{Plausible.Goal.t(), pos_integer()}]
+  def indexed_goals(query) do
+    Enum.with_index(query.preloaded_goals.matching_toplevel_filters, 1)
+  end
+
+  @doc """
+  Retrieves a breakdown goal using the 1-based index assigned by `indexed_goals/1`.
+  """
+  @spec goal_at_index(Plausible.Stats.Query.t(), pos_integer()) :: Plausible.Goal.t() | nil
+  def goal_at_index(query, index) do
+    Enum.at(query.preloaded_goals.matching_toplevel_filters, index - 1)
+  end
+
+  @type goal_join_imported_data() :: %{
+          indices: [pos_integer()],
           types: [String.t()],
-          event_names_imports: [String.t()],
-          event_names_by_type: [String.t()],
-          page_regexes: [String.t()],
-          scroll_thresholds: [non_neg_integer()],
-          custom_props_keys: [[String.t()]],
-          custom_props_values: [[String.t()]]
+          event_names: [String.t()],
+          page_regexes: [String.t()]
         }
 
   @doc """
-  Returns data needed to perform a GROUP BY on goals in an ecto query.
+  Returns data needed to perform a GROUP BY on goals in an imported data query.
   """
-  @spec goal_join_data(Plausible.Stats.Query.t()) :: goal_join_data()
-  def goal_join_data(query) do
-    goals = query.preloaded_goals.matching_toplevel_filters
+  @spec goal_join_imported_data(Plausible.Stats.Query.t()) :: goal_join_imported_data()
+  def goal_join_imported_data(query) do
+    {goals, indices} =
+      query
+      |> indexed_goals()
+      |> Enum.reject(fn {goal, _idx} -> Plausible.Goal.has_custom_props?(goal) end)
+      |> Enum.unzip()
 
-    goals
-    |> Enum.with_index(1)
-    |> Enum.reduce(
-      %{
-        indices: [],
-        types: [],
-        event_names_imports: [],
-        event_names_by_type: [],
-        page_regexes: [],
-        scroll_thresholds: [],
-        custom_props_keys: [],
-        custom_props_values: []
-      },
-      fn {goal, idx}, acc ->
-        goal_type = Plausible.Goal.type(goal)
-        {prop_keys, prop_values} = Enum.unzip(goal.custom_props)
-
-        %{
-          indices: [idx | acc.indices],
-          types: [to_string(goal_type) | acc.types],
-          # This will contain "" for non-event goals
-          event_names_imports: [to_string(goal.event_name) | acc.event_names_imports],
-          event_names_by_type: [event_name_by_type(goal_type, goal) | acc.event_names_by_type],
-          # Event goals are considered to match everything for the sake of efficient queries in query_builder.ex
-          # See also Plausible.Stats.SQL.Expression.event_goal_join/1
-          page_regexes: [page_regex_for_goal(goal_type, goal) | acc.page_regexes],
-          scroll_thresholds: [goal.scroll_threshold | acc.scroll_thresholds],
-          custom_props_keys: [prop_keys | acc.custom_props_keys],
-          custom_props_values: [prop_values | acc.custom_props_values]
-        }
-      end
-    )
-    |> Enum.map(fn {key, list} -> {key, Enum.reverse(list)} end)
-    |> Map.new()
+    %{
+      indices: indices,
+      types: Enum.map(goals, fn goal -> goal |> Plausible.Goal.type() |> to_string() end),
+      event_names: Enum.map(goals, fn goal -> to_string(goal.event_name) end),
+      page_regexes: Enum.map(goals, &pathname_regex/1)
+    }
   end
 
-  defp event_name_by_type(:event, goal), do: goal.event_name
-  defp event_name_by_type(:page, _goal), do: "pageview"
-  defp event_name_by_type(:scroll, _goal), do: "engagement"
+  def expected_event_name(goal) do
+    case Plausible.Goal.type(goal) do
+      :event -> goal.event_name
+      :page -> "pageview"
+      :scroll -> "engagement"
+    end
+  end
 
-  defp page_regex_for_goal(:event, _goal), do: ".?"
-  defp page_regex_for_goal(:page, goal), do: Filters.Utils.page_regex(goal.page_path)
-  defp page_regex_for_goal(:scroll, goal), do: Filters.Utils.page_regex(goal.page_path)
+  @doc """
+  The regex an event's pathname needs to match to complete the goal. Event goals
+  match any pathname.
+  """
+  def pathname_regex(goal) do
+    case Plausible.Goal.type(goal) do
+      :event -> ".?"
+      _page_or_scroll -> page_regex(goal.page_path)
+    end
+  end
 
   def toplevel_scroll_goal_filters?(query) do
     goal_filters? =
@@ -247,7 +248,7 @@ defmodule Plausible.Stats.Goals do
   defp page_path_condition(page_path, imported?) do
     db_field = page_path_db_field(imported?)
 
-    if String.contains?(page_path, "*") do
+    if uses_page_regex?(page_path) do
       dynamic([e], fragment("match(?, ?)", field(e, ^db_field), ^page_regex(page_path)))
     else
       dynamic([e], field(e, ^db_field) == ^page_path)
