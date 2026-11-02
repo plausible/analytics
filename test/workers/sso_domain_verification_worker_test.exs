@@ -6,8 +6,6 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Auth.SSO.Domain.Status
 
-    use Plausible.Test.Support.DNS
-
     alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO
     alias Plausible.Auth.SSO.Domain.Verification.Worker
@@ -124,10 +122,8 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
       patch_env(:sso_verification_nameservers, [{{0, 0, 0, 0}, port}])
     end
 
-    # The HTTP checks fail on the address check, without any network.
     defp fail_checks(domain) do
-      serve_txt("plausible-sso-verification=something-else")
-      stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
+      patch_env(:sso_verification_nameservers, fail_sso_checks(domain))
     end
   end
 end

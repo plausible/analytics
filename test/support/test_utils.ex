@@ -124,23 +124,36 @@ defmodule Plausible.TestUtils do
     end
 
     @doc """
-    Adds the domain, letting its single DNS lookup resolve to a public address.
+    Inserts a pending domain without the add-time DNS check.
+    `SSO.Domains.add/2` is tested on its own.
     """
     def add_sso_domain(integration, domain) do
-      Plausible.Test.Support.DNS.expect_dns_lookup(domain, [{93, 184, 216, 34}])
-      SSO.Domains.add(integration, domain)
+      %SSO.Domain{}
+      |> Ecto.Changeset.change(domain: domain, identifier: Ecto.UUID.generate())
+      |> Ecto.Changeset.put_assoc(:sso_integration, integration)
+      |> Repo.insert()
     end
 
     @doc """
-    Verifies the domain via a local DNS server serving its TXT record.
+    Marks the domain verified via DNS TXT without running the checks.
+    `SSO.Domains.verify/2` is tested on its own.
     """
     def verify_sso_domain(sso_domain) do
-      {:ok, port} =
-        Plasusible.Test.Support.DNSServer.start(
-          "plausible-sso-verification=#{sso_domain.identifier}"
-        )
+      SSO.Domains.mark_verified!(sso_domain, :dns_txt)
+    end
 
-      SSO.Domains.verify(sso_domain, verification_opts: [nameservers: [{{0, 0, 0, 0}, port}]])
+    @doc """
+    Makes every verification check fail for the domain and returns the
+    nameservers to verify with: the TXT record doesn't match and the HTTP
+    checks fail on the address check, without any network.
+    """
+    def fail_sso_checks(domain) do
+      {:ok, port} =
+        Plasusible.Test.Support.DNSServer.start("plausible-sso-verification=something-else")
+
+      Plausible.Test.Support.DNS.stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
+
+      [{{0, 0, 0, 0}, port}]
     end
 
     def provision_sso_user(%{user: user, sso_integration: integration}) do
