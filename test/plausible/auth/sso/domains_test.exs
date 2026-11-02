@@ -123,7 +123,15 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
         {:ok, sso_domain} = add_sso_domain(integration, domain)
 
-        verified_domain = verify_sso_domain(sso_domain)
+        {:ok, dns_port} =
+          DNSServer.start("plausible-sso-verification=#{sso_domain.identifier}")
+
+        expect_no_dns_lookup()
+
+        verified_domain =
+          SSO.Domains.verify(sso_domain,
+            verification_opts: [nameservers: [{{0, 0, 0, 0}, dns_port}]]
+          )
 
         assert audited_entry("sso_domain_verification_success",
                  team_id: integration.team_id,
@@ -141,20 +149,43 @@ defmodule Plausible.Auth.SSO.DomainsTest do
       } do
         domain = generate_domain()
         {:ok, sso_domain} = add_sso_domain(integration, domain)
+        nameservers = fail_sso_checks(domain)
 
+        unverified_domain =
+          SSO.Domains.verify(sso_domain, verification_opts: [nameservers: nameservers])
+
+        assert unverified_domain.id == sso_domain.id
+        refute unverified_domain.verified_via
+        assert unverified_domain.status == Status.in_progress()
+        assert unverified_domain.last_verified_at
+      end
+
+      test "marks domain as in progress when the HTTP checks get a non-matching answer", %{
+        integration: integration
+      } do
+        domain = generate_domain()
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
         {:ok, dns_port} = DNSServer.start("plausible-sso-verification=something-else")
-        # The HTTP checks then fail on the address check, without any network.
-        stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
+        stub_dns()
+
+        Req.Test.expect(SSO.Domain.Verification, 2, fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "text/html")
+          |> Plug.Conn.send_resp(
+            200,
+            ~s|<html><meta name="plausible-sso-verification" content="something-else"/></html>|
+          )
+        end)
+
+        Req.Test.verify_on_exit!()
 
         unverified_domain =
           SSO.Domains.verify(sso_domain,
             verification_opts: [nameservers: [{{0, 0, 0, 0}, dns_port}]]
           )
 
-        assert unverified_domain.id == sso_domain.id
         refute unverified_domain.verified_via
         assert unverified_domain.status == Status.in_progress()
-        assert unverified_domain.last_verified_at
       end
     end
 

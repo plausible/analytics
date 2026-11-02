@@ -65,9 +65,13 @@ defmodule PlausibleWeb.Live.SSOManagementTest do
     describe "live" do
       setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
-      test "init setup - basic walk through", %{conn: conn} do
+      setup do
         # The add-domain form resolves the domain.
         stub_dns()
+        :ok
+      end
+
+      test "init setup - basic walk through", %{conn: conn} do
         {lv, _html} = get_lv(conn)
         lv |> element("form#sso-init") |> render_submit()
         html = render(lv)
@@ -177,8 +181,6 @@ defmodule PlausibleWeb.Live.SSOManagementTest do
 
       test "add another domain", %{conn: conn, team: team} do
         setup_integration(team, "org.example.com")
-        # After setup_integration: its DNS expectation would drop this stub.
-        stub_dns()
 
         {lv, _html} = get_lv(conn)
 

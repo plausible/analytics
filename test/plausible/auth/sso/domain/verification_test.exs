@@ -10,6 +10,9 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plug.Conn
 
+    # Without a matching expectation, a request to the plug raises.
+    setup {Req.Test, :verify_on_exit!}
+
     @meta_tag ~s|<html><meta name="plausible-sso-verification" content="ex4mpl3"/></html>|
 
     describe "individual checks" do
@@ -26,7 +29,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       test "url" do
         stub_dns()
 
-        serve(fn conn ->
+        serve(2, fn conn ->
           assert conn.scheme == :https
           assert conn.host == "93.184.216.34"
           assert Conn.get_req_header(conn, "host") == ["example.com"]
@@ -41,7 +44,6 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
       test "url is protected against SSRF when DNS resolves to a private IP" do
         expect_dns_lookup("example.com", [{192, 168, 1, 1}])
-        serve(fn _conn -> flunk("should never be called") end)
 
         refute Verification.url("example.com", "ex4mpl3")
       end
@@ -49,7 +51,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       test "meta_tag" do
         stub_dns()
 
-        serve(fn conn ->
+        serve(2, fn conn ->
           refute conn.request_path == "/plausible-sso-verification"
 
           conn
@@ -63,7 +65,6 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
       test "meta_tag is protected against SSRF when DNS resolves to a private IP" do
         expect_dns_lookup("example.com", [{192, 168, 1, 1}])
-        serve(fn _conn -> flunk("should never be called") end)
 
         refute Verification.meta_tag("example.com", "ex4mpl3")
       end
@@ -111,7 +112,6 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       test "DNS matches, no HTTP endpoint is ever called" do
         {:ok, dns_port} = DNSServer.start("plausible-sso-verification=ex4mpl3")
         expect_no_dns_lookup()
-        serve(fn _conn -> flunk("should never be called") end)
 
         assert {:ok, :dns_txt} =
                  Verification.run("example.com", "ex4mpl3",
@@ -139,7 +139,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         {:ok, dns_port} = DNSServer.start("plausible-sso-verification=something-else")
         stub_dns()
 
-        serve(fn conn ->
+        serve(2, fn conn ->
           case conn.request_path do
             "/plausible-sso-verification" ->
               Conn.send_resp(conn, 404, "")
@@ -158,6 +158,6 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
     end
 
-    defp serve(fun), do: Req.Test.stub(Verification, fun)
+    defp serve(times \\ 1, fun), do: Req.Test.expect(Verification, times, fun)
   end
 end
