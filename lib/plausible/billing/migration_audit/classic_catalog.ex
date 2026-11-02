@@ -216,7 +216,10 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
     }
   end
 
+  # The spec says boolean, prod returns 0/1.
   defp recurring?(%{"is_recurring" => value}) when is_boolean(value), do: value
+  defp recurring?(%{"is_recurring" => 1}), do: true
+  defp recurring?(%{"is_recurring" => 0}), do: false
   defp recurring?(_), do: :unknown
 
   defp sign?({:ok, amount}, sign), do: Decimal.compare(amount, 0) == sign
