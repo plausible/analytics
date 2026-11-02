@@ -531,7 +531,8 @@ defmodule PlausibleWeb.Router do
       :browser,
       :csrf,
       PlausibleWeb.RequireAccountPlug,
-      PlausibleWeb.Plugs.CurrentPath
+      PlausibleWeb.Plugs.CurrentPath,
+      PlausibleWeb.Plugs.GuestSites
     ]
 
     get "/", SettingsController, :index

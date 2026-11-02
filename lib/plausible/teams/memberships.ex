@@ -262,6 +262,35 @@ defmodule Plausible.Teams.Memberships do
     Repo.one(query) || Map.fetch!(defaults, option)
   end
 
+  @spec guest_memberships(Plausible.Auth.User.t()) :: [Teams.GuestMembership.t()]
+  def guest_memberships(user) do
+    user
+    |> guest_memberships_query()
+    |> join(:left, [team: t], o in assoc(t, :owners), as: :owners)
+    |> order_by([site: s], asc: s.domain)
+    |> preload([site: s, team: t, owners: o], site: {s, team: {t, owners: o}})
+    |> Repo.all()
+  end
+
+  @spec has_guest_memberships?(Plausible.Auth.User.t()) :: boolean()
+  def has_guest_memberships?(user) do
+    user
+    |> guest_memberships_query()
+    |> Repo.exists?()
+  end
+
+  defp guest_memberships_query(user) do
+    from(gm in Teams.GuestMembership,
+      inner_join: tm in assoc(gm, :team_membership),
+      inner_join: s in ^Plausible.Site.regular(),
+      as: :site,
+      on: s.id == gm.site_id,
+      inner_join: t in assoc(s, :team),
+      as: :team,
+      where: tm.user_id == ^user.id and tm.role == :guest
+    )
+  end
+
   defp get_guest_membership(site_id, user_id) do
     query =
       from(
