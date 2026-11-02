@@ -551,6 +551,7 @@ defmodule PlausibleWeb.Router do
     live_session :settings, on_mount: PlausibleWeb.Live.SettingsContext do
       scope alias: Live, assigns: %{connect_live_socket: true} do
         live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings
+        live "/guest-sites", GuestSitesSettings, :guest_sites, as: :settings
       end
     end
 
