@@ -168,6 +168,9 @@ defmodule Plausible.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
+      # Used directly by the SAML adapter and by the SSRF TLS tests, but only ever
+      # reached the project through simple_saml.
+      {:x509, "~> 0.9"},
       {:zstream, "~> 0.6.4"},
       {:con_cache,
        git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},

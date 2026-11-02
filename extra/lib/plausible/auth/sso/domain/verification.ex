@@ -16,6 +16,9 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
        ```
 
      in the body of `text/html` type.
+
+  The HTTP checks don't follow redirects: the response must come from
+  `https://{domain}` itself. A domain that redirects verifies via DNS TXT.
   """
 
   alias Plausible.Auth.SSO.Domain
@@ -95,10 +98,9 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   end
 
   defp run_request(url) do
-    base_opts = [max_redirects: 4, max_retries: 3, retry_log_level: :warning]
-    fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
+    opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 
-    case Plausible.SSRF.get(url, Keyword.merge(base_opts, fetch_body_opts)) do
+    case Plausible.SSRF.get(url, opts) do
       {:ok, resp} -> resp
       {:error, _reason} -> nil
     end

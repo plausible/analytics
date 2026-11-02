@@ -4,23 +4,20 @@ defmodule Plausible.SSRF do
   hostnames reaching internal, private or local network space
   """
 
+  alias Plausible.SSRF.Pools
+
   @type error_reason ::
           :invalid_url
           | :invalid_host
           | :dns_resolution_failed
           | :restricted_address
-          | :too_many_redirects
+          | :redirect_not_followed
+          | :timeout
 
   @redirect_statuses [301, 302, 303, 307, 308]
-  @default_max_redirects 4
+  @default_receive_timeout :timer.seconds(5)
+  @default_total_timeout :timer.seconds(30)
   @dns_timeout 1_000
-
-  # Every distinct `finch: [conn_opts: [hostname: ...]]` value we pass below
-  # makes Req start a brand new, dedicated Finch instance under the hood
-  # (Req can't vary `conn_opts` per-request on a shared pool, so it forks one
-  # per pool options fingerprint) - and since these hostnames are
-  # customer-controlled, that's an unbounded number of them over time. 
-  @default_pool_max_idle_time :timer.minutes(5)
 
   @doc """
   Resolves bare hostname or literal IP and returns its address(es), 
@@ -42,28 +39,47 @@ defmodule Plausible.SSRF do
   end
 
   @doc """
-  Performs a GET request against arbitrary URL, refusing to connect to (or be
-  redirected to) a restricted address
+  Performs a GET request against arbitrary URL, refusing to connect to a
+  restricted address.
+
+  Does not retry or follow redirects: a redirect is
+  `{:error, :redirect_not_followed}`. The whole call is cut off after
+  `:total_timeout` ms. `:cacerts` replaces the system CA store.
   """
   @spec get(String.t(), keyword()) ::
           {:ok, Req.Response.t()} | {:error, error_reason() | Exception.t()}
   def get(url, opts \\ []) do
-    max_redirects = Keyword.get(opts, :max_redirects, @default_max_redirects)
-    request(url, opts, max_redirects)
-  end
+    {total_timeout, opts} = Keyword.pop(opts, :total_timeout, @default_total_timeout)
 
-  defp request(url, opts, redirects_left) do
-    with {:ok, uri} <- parse_url(url),
-         {:ok, ips} <- resolve_host(uri.host),
-         {:ok, resp} <- do_request(uri, hd(ips), opts) do
-      handle_response(resp, uri, opts, redirects_left)
+    opts =
+      opts
+      |> Keyword.put_new(:retry, false)
+      |> Keyword.put_new(:receive_timeout, @default_receive_timeout)
+      # Req still honours it as an alias of :redirect, and it wins.
+      |> Keyword.delete(:follow_redirects)
+
+    # The pool is linked to the task, so killing the task stops it too.
+    task = Task.async(fn -> request(url, opts) end)
+
+    case Task.yield(task, total_timeout) || Task.shutdown(task, :brutal_kill) do
+      {:ok, result} -> result
+      _ -> {:error, :timeout}
     end
   end
 
+  defp request(url, opts) do
+    with {:ok, uri} <- parse_url(url),
+         {:ok, ips} <- resolve_host(uri.host),
+         {:ok, resp} <- do_request(uri, hd(ips), opts) do
+      handle_response(resp)
+    end
+  end
+
+  # HTTPS only: the certificate is the only proof the right
+  # host answered.
   defp parse_url(url) do
     case URI.new(url) do
-      {:ok, %URI{scheme: scheme, host: host} = uri}
-      when scheme in ["http", "https"] and is_binary(host) and host != "" ->
+      {:ok, %URI{scheme: "https", host: host} = uri} when is_binary(host) and host != "" ->
         {:ok, uri}
 
       _ ->
@@ -71,38 +87,36 @@ defmodule Plausible.SSRF do
     end
   end
 
+  # Connects to the checked IP, not the hostname, so DNS can't change in between.
+  # Never pass the hostname as `:connect_options`: Req starts a Finch instance per
+  # distinct value and never stops them.
   defp do_request(uri, ip, opts) do
     host = uri.host
     pinned_url = %{uri | host: ip |> :inet.ntoa() |> to_string()}
+    {cacerts, opts} = Keyword.pop(opts, :cacerts)
 
-    request_opts =
-      Keyword.merge(opts,
+    Pools.with_pool(pinned_url, host, ip, cacerts, fn finch ->
+      opts
+      |> Keyword.merge(
         method: :get,
         url: pinned_url,
         headers: [{"host", host}],
-        finch: [pool_max_idle_time: @default_pool_max_idle_time, conn_opts: [hostname: host]],
+        finch: finch,
         redirect: false
       )
-
-    Req.request(request_opts)
+      |> Req.request()
+    end)
   end
 
-  defp handle_response(%Req.Response{status: status} = resp, uri, opts, redirects_left)
+  defp handle_response(%Req.Response{status: status} = resp)
        when status in @redirect_statuses do
     case Req.Response.get_header(resp, "location") do
-      [location | _] when redirects_left > 0 ->
-        next_url = uri |> URI.merge(location) |> URI.to_string()
-        request(next_url, opts, redirects_left - 1)
-
-      [_ | _] ->
-        {:error, :too_many_redirects}
-
-      [] ->
-        {:ok, resp}
+      [_ | _] -> {:error, :redirect_not_followed}
+      [] -> {:ok, resp}
     end
   end
 
-  defp handle_response(resp, _uri, _opts, _redirects_left), do: {:ok, resp}
+  defp handle_response(resp), do: {:ok, resp}
 
   defp dns_lookup(host) do
     charlist_host = to_charlist(host)
@@ -119,7 +133,10 @@ defmodule Plausible.SSRF do
   end
 
   defp validate_ips(ips) do
-    if Enum.all?(ips, &Plausible.IP.Tools.allowed?/1) do
+    # Swappable so tests can allow their own loopback server.
+    check = Application.get_env(:plausible, :ssrf_ip_check) || Plausible.IP.Tools
+
+    if Enum.all?(ips, &check.allowed?(&1)) do
       {:ok, ips}
     else
       {:error, :restricted_address}
