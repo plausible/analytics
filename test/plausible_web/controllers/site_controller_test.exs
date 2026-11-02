@@ -45,6 +45,12 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
+    test "skip link continues to the team setup onboarding step", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=register")
+
+      assert html_response(conn, 200) =~ ~s(href="/team/setup?flow=register")
+    end
+
     test "does not display limit notice when user is on an enterprise plan", %{
       conn: conn,
       user: user
@@ -359,6 +365,30 @@ defmodule PlausibleWeb.SiteControllerTest do
 
   describe "POST /sites" do
     setup [:create_user, :log_in]
+
+    test "continues to the team setup step in the onboarding flow", %{conn: conn} do
+      conn =
+        post(conn, "/sites?flow=register", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/team/setup?flow=register&domain=example.com"
+    end
+
+    test "continues to the installation step in the provisioning flow", %{conn: conn} do
+      conn =
+        post(conn, "/sites?flow=provisioning", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/installation?flow=provisioning"
+    end
 
     test "creates the site with valid params", %{conn: conn} do
       conn =

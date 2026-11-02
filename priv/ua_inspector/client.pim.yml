@@ -165,3 +165,13 @@
 - regex: 'Android-Gmail'
   name: 'Gmail'
   version: ''
+
+# Citrix Secure Mail (https://docs.citrix.com/en-us/citrix-secure-mail/overview.html)
+- regex: 'WorxMail/([\d.]+)'
+  name: 'Citrix Secure Mail'
+  version: '$1'
+
+# BlackBerry Work (https://marketplace.blackberry.com/apps/com.good.gcs.g3)
+- regex: 'BLACKBERRY-WorkConnect/([\d.]+)'
+  name: 'BlackBerry Work'
+  version: '$1'

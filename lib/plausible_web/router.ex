@@ -624,7 +624,12 @@ defmodule PlausibleWeb.Router do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
       live "/sites", Sites, :index, as: :site
-      live "/team/setup", TeamSetup, :setup, as: :team_setup
+
+      scope assigns: %{legacy_layout?: false, bg_class: "bg-white dark:bg-gray-950"} do
+        live "/team/setup", TeamSetup, :setup,
+          as: :team_setup,
+          container: {:div, class: "h-full"}
+      end
     end
 
     get "/sites/new", SiteController, :new
