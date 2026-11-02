@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         integration = SSO.initiate_saml_integration(team2)
-        SSO.Domains.add(integration, "some-sso.example.com", skip_checks?: true)
+        add_sso_domain(integration, "some-sso.example.com")
         SSO.initiate_saml_integration(team3)
 
         {:ok, lv, _html} = live(conn, @cs_index)
@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         team3 = new_user(team: [name: "Team Three"]) |> team_of()
 
         integration = SSO.initiate_saml_integration(team2)
-        SSO.Domains.add(integration, "some-sso.example.com", skip_checks?: true)
+        add_sso_domain(integration, "some-sso.example.com")
 
         {:ok, lv, _html} = live(conn, @cs_index)
 

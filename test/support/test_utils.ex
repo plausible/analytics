@@ -117,12 +117,30 @@ defmodule Plausible.TestUtils do
       team = Plausible.Teams.complete_setup(team)
       integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} =
-        SSO.Domains.add(integration, ctx[:domain] || "example.com", skip_checks?: true)
-
-      _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+      {:ok, sso_domain} = add_sso_domain(integration, ctx[:domain] || "example.com")
+      _sso_domain = verify_sso_domain(sso_domain)
 
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
+    end
+
+    @doc """
+    Adds the domain, letting its single DNS lookup resolve to a public address.
+    """
+    def add_sso_domain(integration, domain) do
+      Plausible.Test.Support.DNS.expect_dns_lookup(domain, [{93, 184, 216, 34}])
+      SSO.Domains.add(integration, domain)
+    end
+
+    @doc """
+    Verifies the domain via a local DNS server serving its TXT record.
+    """
+    def verify_sso_domain(sso_domain) do
+      {:ok, port} =
+        Plasusible.Test.Support.DNSServer.start(
+          "plausible-sso-verification=#{sso_domain.identifier}"
+        )
+
+      SSO.Domains.verify(sso_domain, verification_opts: [nameservers: [{{0, 0, 0, 0}, port}]])
     end
 
     def provision_sso_user(%{user: user, sso_integration: integration}) do

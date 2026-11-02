@@ -664,8 +664,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         # Setup SSO
         integration = Auth.SSO.initiate_saml_integration(team)
 
-        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com", skip_checks?: true)
-        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, "example.com")
+        _sso_domain = verify_sso_domain(sso_domain)
 
         identity = new_identity(owner.name, owner.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
@@ -688,8 +688,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         # Setup SSO
         integration = Auth.SSO.initiate_saml_integration(team)
 
-        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com", skip_checks?: true)
-        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, "example.com")
+        _sso_domain = verify_sso_domain(sso_domain)
 
         identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
@@ -712,8 +712,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         # Setup SSO
         integration = Auth.SSO.initiate_saml_integration(team)
 
-        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com", skip_checks?: true)
-        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, "example.com")
+        _sso_domain = verify_sso_domain(sso_domain)
 
         identity = new_identity(member.name, member.email, integration)
         {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
