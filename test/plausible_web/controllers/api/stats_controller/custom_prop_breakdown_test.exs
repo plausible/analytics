@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       "date_range" => Keyword.get(opts, :date_range, "day"),
       "filters" => Keyword.get(opts, :filters, []),
       "metrics" => Keyword.get(opts, :metrics, ["visitors", "events", "percentage"]),
-      "include" => Keyword.get(opts, :include, nil),
+      "include" => Keyword.get(opts, :include, %{}),
       "pagination" => Keyword.get(opts, :pagination, nil),
       "order_by" => Keyword.get(opts, :order_by, nil)
     }
@@ -632,6 +632,144 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                    %{"long" => "€8.00", "short" => "€8.0", "value" => 8.0, "currency" => "EUR"},
                    %{"long" => "€8.00", "short" => "€8.0", "value" => 8.0, "currency" => "EUR"}
                  ]
+               }
+             ]
+    end
+
+    @tag :ee_only
+    test "returns revenue metrics when filtering by a revenue goal in comparison mode with negative amounts (regression)",
+         %{conn: conn, site: site} do
+      prop_key = "logged_in"
+
+      now = DateTime.utc_now(:second)
+      day_ago = DateTime.shift(now, hour: -25)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("-12"),
+          revenue_reporting_currency: "EUR",
+          timestamp: now
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("-100"),
+          revenue_reporting_currency: "EUR",
+          timestamp: now
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["false"],
+          revenue_reporting_amount: Decimal.new("-8"),
+          revenue_reporting_currency: "EUR",
+          timestamp: now
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["false"],
+          revenue_reporting_amount: Decimal.new("-8"),
+          revenue_reporting_currency: "EUR",
+          timestamp: day_ago
+        )
+      ])
+
+      insert(:goal, %{
+        site: site,
+        event_name: "Payment",
+        currency: :EUR,
+        display_name: "PaymentEUR"
+      })
+
+      response =
+        query_props(conn, site, prop_key,
+          filters: [["is", "event:goal", ["PaymentEUR"]]],
+          date_range: "24h",
+          include: %{
+            "compare" => "previous_period",
+            "compare_match_day_of_week" => false
+          },
+          metrics: [
+            "visitors",
+            "events",
+            "conversion_rate",
+            "average_revenue",
+            "total_revenue"
+          ]
+        )
+
+      assert response["results"] == [
+               %{
+                 "dimensions" => ["true"],
+                 "metrics" => [
+                   2,
+                   2,
+                   66.67,
+                   %{
+                     "long" => "€-56.00",
+                     "short" => "€-56.0",
+                     "value" => -56.0,
+                     "currency" => "EUR"
+                   },
+                   %{
+                     "long" => "€-112.00",
+                     "short" => "€-112.0",
+                     "value" => -112.0,
+                     "currency" => "EUR"
+                   }
+                 ],
+                 "comparison" => %{
+                   "change" => [100, 100, 66.7, -100, -100],
+                   "dimensions" => ["true"],
+                   "metrics" => [
+                     0,
+                     0,
+                     0.0,
+                     %{"currency" => "EUR", "long" => "€0.00", "short" => "€0.0", "value" => 0.0},
+                     %{"currency" => "EUR", "long" => "€0.00", "short" => "€0.0", "value" => 0.0}
+                   ]
+                 }
+               },
+               %{
+                 "dimensions" => ["false"],
+                 "metrics" => [
+                   1,
+                   1,
+                   33.33,
+                   %{
+                     "long" => "€-8.00",
+                     "short" => "€-8.0",
+                     "value" => -8.0,
+                     "currency" => "EUR"
+                   },
+                   %{"long" => "€-8.00", "short" => "€-8.0", "value" => -8.0, "currency" => "EUR"}
+                 ],
+                 "comparison" => %{
+                   "change" => [0, 0, -66.7, 0, 0],
+                   "dimensions" => ["false"],
+                   "metrics" => [
+                     1,
+                     1,
+                     100.0,
+                     %{
+                       "currency" => "EUR",
+                       "long" => "€-8.00",
+                       "short" => "€-8.0",
+                       "value" => -8.0
+                     },
+                     %{
+                       "currency" => "EUR",
+                       "long" => "€-8.00",
+                       "short" => "€-8.0",
+                       "value" => -8.0
+                     }
+                   ]
+                 }
                }
              ]
     end

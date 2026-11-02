@@ -381,7 +381,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     query =
       QueryBuilder.build!(site,
         metrics: [:pageviews],
-        input_date_range: {:last_n_days, 30}
+        input_date_range: query_date_range()
       )
 
     {goals_for_query, other_goals} =
@@ -619,10 +619,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     query =
       QueryBuilder.build!(site,
         metrics: [:pageviews],
-        input_date_range: :month
+        input_date_range: query_date_range()
       )
 
     {:ok, {definition, query}}
+  end
+
+  defp query_date_range() do
+    now = DateTime.utc_now()
+    thirty_days_ago = DateTime.add(now, -30, :day)
+    {:datetime_range, thirty_days_ago, now}
   end
 
   defp prepare_socket(socket, site, funnel_id) when is_integer(funnel_id) do
