@@ -108,6 +108,9 @@ defmodule PlausibleWeb.LayoutView do
           if(not Teams.setup?(current_team),
             do: %{key: "API keys", value: "api-keys", icon: :api_keys}
           ),
+          if(FunWithFlags.enabled?(:mcp, for: assigns.current_user),
+            do: %{key: "Connected apps", value: "connected-apps", icon: :link}
+          ),
           if(Plausible.Users.type(assigns.current_user) == :standard,
             do: %{key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle}
           )

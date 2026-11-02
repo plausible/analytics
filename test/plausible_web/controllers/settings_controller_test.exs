@@ -1404,6 +1404,122 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "GET /settings/connected-apps" do
+    setup [:create_user, :log_in, :create_team]
+
+    setup %{user: user} do
+      FunWithFlags.enable(:mcp, for_actor: user)
+      :ok
+    end
+
+    test "renders an empty state", %{conn: conn} do
+      conn = get(conn, ~p"/settings/connected-apps")
+
+      assert html = html_response(conn, 200)
+      assert html =~ "No connected apps"
+    end
+
+    test "lists the user's grants", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+      team = team |> Ecto.Changeset.change(name: "Acme Team") |> Repo.update!()
+
+      used =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          client_name: "Claude"
+        )
+
+      unused =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          client_name: nil,
+          client_id: "https://unnamed.example.com/oauth-metadata"
+        )
+
+      revoked =
+        insert(:oauth_grant, user: user, team: team, client_name: "Revoked app", revoked_at: now)
+
+      other_user = add_member(team, role: :editor)
+
+      others =
+        insert(:oauth_grant, user: other_user, team: team, client_name: "Someone else's app")
+
+      conn = get(conn, ~p"/settings/connected-apps")
+
+      assert html = html_response(conn, 200)
+
+      assert text_of_element(html, "table") =~ "Acme Team"
+
+      assert html =~ "Claude"
+      assert html =~ ~p"/settings/connected-apps/#{used.id}"
+
+      assert html =~ "https://unnamed.example.com/oauth-metadata"
+      assert html =~ ~p"/settings/connected-apps/#{unused.id}"
+
+      refute html =~ "Revoked app"
+      refute html =~ ~p"/settings/connected-apps/#{revoked.id}"
+      refute html =~ "Someone else"
+      refute html =~ ~p"/settings/connected-apps/#{others.id}"
+    end
+
+    test "is not found without the feature flag", %{conn: conn, user: user} do
+      FunWithFlags.disable(:mcp, for_actor: user)
+
+      conn = get(conn, ~p"/settings/connected-apps")
+
+      assert html_response(conn, 404)
+    end
+  end
+
+  describe "DELETE /settings/connected-apps/:id" do
+    setup [:create_user, :log_in, :create_team]
+
+    setup %{user: user} do
+      FunWithFlags.enable(:mcp, for_actor: user)
+      :ok
+    end
+
+    test "revokes the grant", %{conn: conn, user: user, team: team} do
+      grant = insert(:oauth_grant, user: user, team: team)
+
+      conn = delete(conn, ~p"/settings/connected-apps/#{grant.id}")
+
+      assert redirected_to(conn, 302) == ~p"/settings/connected-apps#connected-apps"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Access revoked successfully"
+      assert Repo.reload!(grant).revoked_at
+    end
+
+    test "can't revoke a grant that doesn't belong to me", %{conn: conn, team: team} do
+      other_user = add_member(team, role: :editor)
+      grant = insert(:oauth_grant, user: other_user, team: team)
+
+      conn = delete(conn, ~p"/settings/connected-apps/#{grant.id}")
+
+      assert redirected_to(conn, 302) == ~p"/settings/connected-apps#connected-apps"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Could not find connected app to revoke"
+
+      refute Repo.reload!(grant).revoked_at
+    end
+
+    test "is not found without the feature flag", %{conn: conn, user: user, team: team} do
+      FunWithFlags.disable(:mcp, for_actor: user)
+      grant = insert(:oauth_grant, user: user, team: team)
+
+      conn = delete(conn, ~p"/settings/connected-apps/#{grant.id}")
+
+      assert html_response(conn, 404)
+      refute Repo.reload!(grant).revoked_at
+    end
+  end
+
   describe "GET /settings/danger-zone" do
     setup [:create_user, :log_in, :create_team]
 
@@ -1452,6 +1568,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     security: {"Security", "/settings/security"},
     subscription: {"Subscription", "/settings/billing/subscription"},
     api_keys: {"API keys", "/settings/api-keys"},
+    connected_apps: {"Connected apps", "/settings/connected-apps"},
     danger_zone: {"Danger zone", "/settings/danger-zone"},
     team_general: {"General", "/settings/team/general"},
     sso: {"Single Sign-On", "/settings/sso/info"},
@@ -1506,6 +1623,35 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert html = html_response(conn, 200)
         assert text_of_element(html, "button[disabled]") =~ "Disable 2FA"
       end
+    end
+  end
+
+  describe "Account settings - connected apps" do
+    setup [:create_user, :log_in]
+
+    test "are listed in the account menu with the feature flag", %{conn: conn, user: user} do
+      FunWithFlags.enable(:mcp, for_actor: user)
+
+      conn = get(conn, ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :connected_apps, :danger_zone],
+          else: [:preferences, :security, :api_keys, :connected_apps, :danger_zone]
+        )
+
+      html
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
+    end
+
+    test "are not listed without the feature flag", %{conn: conn} do
+      conn = get(conn, ~p"/settings/preferences")
+
+      html_response(conn, 200)
+      |> refute_unexpected_menu_items([:connected_apps])
     end
   end
 

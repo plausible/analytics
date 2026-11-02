@@ -8,6 +8,8 @@ defmodule Plausible.OAuthTest do
   - `Step 3: issue_token/1 and find_access_token/2`: opens a grant from the redeemed code, returns token AND resolves an access token back to its grant
   - `Step 4: revoke_grant/1 and after_user_removed_from_team/2` invalidates both tokens
   - `Step 5: refresh_token/2` rotates both tokens
+
+  Also covers the connected apps view: `list_grants/1` and `revoke_user_grant/2`.
   """
 
   use Plausible.DataCase
@@ -640,6 +642,87 @@ defmodule Plausible.OAuthTest do
       assert {:error, :invalid_token} = OAuth.find_access_token(response_b.access_token, mcp())
       assert {:error, :invalid_grant} = OAuth.refresh_token(response_b.refresh_token, %{})
       assert Repo.reload!(grant_b).revoked_at
+    end
+  end
+
+  describe "list_grants/1" do
+    test "lists the user's live grants across teams, most recently connected first", %{
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+
+      {:ok, other_team} = Plausible.Teams.get_or_create(new_user())
+      add_member(other_team, user: user, role: :viewer)
+
+      oldest =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -3, :day)
+        )
+
+      older =
+        insert(:oauth_grant,
+          user: user,
+          team: other_team,
+          inserted_at: NaiveDateTime.add(now, -1, :day)
+        )
+
+      newest = insert(:oauth_grant, user: user, team: team, inserted_at: now)
+
+      assert [first, second, third] = OAuth.list_grants(user)
+      assert first.id == newest.id
+      assert second.id == older.id
+      assert second.team.id == other_team.id
+      assert third.id == oldest.id
+    end
+
+    test "leaves out revoked and expired grants", %{user: user, team: team} do
+      insert(:oauth_grant, user: user, team: team, revoked_at: past())
+      insert(:oauth_grant, user: user, team: team, refresh_token_expires_at: past())
+
+      assert OAuth.list_grants(user) == []
+    end
+
+    test "leaves out other users' grants", %{user: user, team: team} do
+      other_user = add_member(team, role: :editor)
+      insert(:oauth_grant, user: other_user, team: team)
+
+      assert OAuth.list_grants(user) == []
+    end
+  end
+
+  describe "revoke_user_grant/2" do
+    test "revokes the user's grant", %{user: user, team: team} do
+      {grant, access_token} = issue_grant(user, team)
+
+      assert :ok = OAuth.revoke_user_grant(user, to_string(grant.id))
+
+      assert %Grant{revoked_at: %NaiveDateTime{}} = Repo.reload!(grant)
+      assert {:error, :invalid_token} = OAuth.find_access_token(access_token, mcp())
+    end
+
+    test "does not revoke another user's grant", %{team: team} do
+      other_user = add_member(team, role: :editor)
+      grant = insert(:oauth_grant, user: other_user, team: team)
+
+      assert {:error, :not_found} = OAuth.revoke_user_grant(new_user(), grant.id)
+
+      assert %Grant{revoked_at: nil} = Repo.reload!(grant)
+    end
+
+    test "does not find an already revoked grant", %{user: user, team: team} do
+      revoked_at = past()
+      grant = insert(:oauth_grant, user: user, team: team, revoked_at: revoked_at)
+
+      assert {:error, :not_found} = OAuth.revoke_user_grant(user, grant.id)
+
+      assert_matches %Grant{revoked_at: ^revoked_at} = Repo.reload!(grant)
+    end
+
+    test "does not find a malformed id", %{user: user} do
+      assert {:error, :not_found} = OAuth.revoke_user_grant(user, "not-an-id")
     end
   end
 
