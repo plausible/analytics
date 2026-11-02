@@ -888,11 +888,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") ==
-               "admin@example.com Editor"
-
-      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+      assert resp |> find("tbody tr") |> Enum.map(&text/1) |> Enum.sort() == [
+               "admin@example.com Editor",
                "viewer@example.com Viewer"
+             ]
+
+      assert resp =~ i1.invitation_id
+      assert resp =~ i2.invitation_id
     end
 
     test "lists pending site transfer", %{conn: conn, user: user} do
@@ -904,8 +906,25 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
-               "#{new_owner.email} Owner"
+      assert text_of_element(resp, "tbody tr") == "#{new_owner.email} Owner"
+      assert resp =~ st.transfer_id
+    end
+
+    test "does not expose pending invitation and transfer ids to editors", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :editor)
+      invitation = invite_guest(site, "viewer@example.com", role: :viewer, inviter: owner)
+      transfer = invite_transfer(site, new_user(), inviter: owner)
+
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      assert resp =~ "viewer@example.com"
+      refute resp =~ invitation.invitation_id
+      refute resp =~ transfer.transfer_id
     end
 
     test "renders distinct team management notices to owner", %{conn: conn, user: user} do
