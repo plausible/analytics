@@ -1,4 +1,6 @@
 defmodule Plausible.Cache.Warmer do
+  @max_retries 3
+
   @moduledoc """
   A periodic cache warmer.
 
@@ -6,9 +8,12 @@ defmodule Plausible.Cache.Warmer do
 
     * `cache_impl` - module expected to implement `Plausible.Cache` behaviour
     * `interval` - the number of milliseconds for each warm-up cycle
-    * `retry_interval` - the number of milliseconds to wait before retrying
-      a warm-up that returned `{:error, reason}`, defaults to 30 seconds.
-      Retries only happen when this is shorter than `interval`.
+    * `retry_interval` - optional. The number of milliseconds to wait before
+      the warmer retries a warm-up that returned `{:error, reason}`. The wait
+      doubles after each failed retry, plus up to a third of it at random, so
+      warmers that fail together do not retry together. The warmer retries at
+      most #{@max_retries} times, then waits for the next cycle. Without this
+      option, the warmer does not retry and waits for the next cycle.
     * `cache_name` - defaults to cache_impl.name() but can be overridden for testing
     * `force_start?` - enforcess process startup for testing, even if it's barred
       by `Plausible.Cache.enabled?`. This is useful for avoiding issues with DB ownership
@@ -23,8 +28,6 @@ defmodule Plausible.Cache.Warmer do
   @behaviour :gen_cycle
 
   require Logger
-
-  @default_retry_interval :timer.seconds(30)
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec() | :ignore
   def child_spec(opts) do
@@ -59,74 +62,57 @@ defmodule Plausible.Cache.Warmer do
         "#{__MODULE__} initializing #{inspect(warmer_fn)} #{cache_name} with interval #{interval}..."
       )
 
-      {:ok,
-       {interval,
+      opts =
         opts
         |> Keyword.put(:cache_name, cache_name)
-        |> Keyword.put(:warmer_fn, warmer_fn)}}
+        |> Keyword.put(:warmer_fn, warmer_fn)
+
+      {:ok, {interval, {opts, nil}}}
     else
       :ignore
     end
   end
 
   @impl true
-  def handle_cycle(opts) do
-    {:continue_hibernated, warm(opts)}
+  def handle_cycle({opts, _retry}) do
+    {:continue_hibernated, warm(opts, 0)}
   end
 
   @impl true
-  def handle_info(:retry, opts) do
-    {:continue, warm(Keyword.delete(opts, :retry_timer))}
+  def handle_info({:retry, ref}, {opts, {ref, retries}}) do
+    {:continue_hibernated, warm(opts, retries)}
   end
 
   def handle_info(_msg, state) do
     {:continue, state}
   end
 
-  defp warm(opts) do
+  defp warm(opts, retries) do
     cache_name = Keyword.fetch!(opts, :cache_name)
     warmer_fn = Keyword.fetch!(opts, :warmer_fn)
-
-    opts = cancel_retry(opts)
 
     Logger.notice("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
 
     case warmer_fn.(opts) do
-      {:error, _} -> maybe_schedule_retry(opts)
-      _ -> opts
+      {:error, _} -> {opts, schedule_retry(opts, retries + 1)}
+      _ -> {opts, nil}
     end
   end
 
-  defp maybe_schedule_retry(opts) do
-    interval = Keyword.fetch!(opts, :interval)
-    retry_interval = Keyword.get(opts, :retry_interval, @default_retry_interval)
+  defp schedule_retry(opts, retry) do
+    retry_interval = Keyword.get(opts, :retry_interval)
 
-    if retry_interval < interval do
+    if retry_interval && retry <= @max_retries do
+      backoff = retry_interval * Integer.pow(2, retry - 1)
+      delay = backoff + Enum.random(0..div(backoff, 3))
+
       Logger.notice(
-        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{retry_interval}ms..."
+        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{delay}ms (#{retry}/#{@max_retries})..."
       )
 
-      Keyword.put(opts, :retry_timer, Process.send_after(self(), :retry, retry_interval))
-    else
-      opts
-    end
-  end
-
-  defp cancel_retry(opts) do
-    case Keyword.pop(opts, :retry_timer) do
-      {nil, opts} ->
-        opts
-
-      {timer, opts} ->
-        if Process.cancel_timer(timer) == false do
-          receive do
-            :retry -> :ok
-          after
-            0 -> :ok
-          end
-        end
-
-        opts
+      ref = make_ref()
+      Process.send_after(self(), {:retry, ref}, delay)
+      {ref, retry}
     end
   end
 end

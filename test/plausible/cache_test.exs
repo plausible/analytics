@@ -205,24 +205,77 @@ defmodule Plausible.CacheTest do
       assert at3 > at2
     end
 
-    test "cache warmer retries a failed run before the next interval", %{test: test} do
-      test_pid = self()
-
+    test "cache warmer retries a failing run until it succeeds, then stops", %{test: test} do
       opts = [
         cache_impl: ExampleCache,
         force_start?: true,
-        warmer_fn: report_back(test_pid, {:error, :db_unavailable}),
+        warmer_fn: fail_first(self(), 2),
         cache_name: test,
         interval: :timer.hours(1),
-        retry_interval: 30
+        retry_interval: 10
       ]
 
       capture_log(fn ->
         {:ok, _} = start_test_warmer(opts)
 
-        assert_receive {:cache_warmed, %{at: at1}}, 100
-        assert_receive {:cache_warmed, %{at: at2}}, 100
-        assert at2 > at1
+        for _ <- 1..3, do: assert_receive({:cache_warmed, _}, 1000)
+        refute_receive {:cache_warmed, _}, 200
+      end)
+    end
+
+    test "cache warmer stops retrying after a few failed retries", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(self(), {:error, :db_unavailable}),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 10
+      ]
+
+      capture_log(fn ->
+        {:ok, _} = start_test_warmer(opts)
+
+        for _ <- 1..4, do: assert_receive({:cache_warmed, _}, 1000)
+        refute_receive {:cache_warmed, _}, 300
+      end)
+    end
+
+    test "cache warmer ignores a pending retry after a regular cycle", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: fail_first(self(), 1),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 300
+      ]
+
+      capture_log(fn ->
+        {:ok, warmer} = start_test_warmer(opts)
+        assert_receive {:cache_warmed, _}, 1000
+
+        send(warmer, :"$cycle")
+        assert_receive {:cache_warmed, _}, 1000
+
+        refute_receive {:cache_warmed, _}, 600
+      end)
+    end
+
+    test "cache warmer does not retry a failing run without a retry interval", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(self(), {:error, :db_unavailable}),
+        cache_name: test,
+        interval: :timer.hours(1)
+      ]
+
+      capture_log(fn ->
+        {:ok, _} = start_test_warmer(opts)
+
+        assert_receive {:cache_warmed, _}, 100
+        refute_receive {:cache_warmed, _}, 200
       end)
     end
 
@@ -249,6 +302,16 @@ defmodule Plausible.CacheTest do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
       result
+    end
+  end
+
+  defp fail_first(test_pid, times) do
+    runs = :counters.new(1, [])
+
+    fn opts ->
+      :counters.add(runs, 1, 1)
+      result = if :counters.get(runs, 1) <= times, do: {:error, :db_unavailable}, else: :ok
+      report_back(test_pid, result).(opts)
     end
   end
 
