@@ -3,7 +3,6 @@ defmodule Plausible.OAuth.CIMD do
   This module fetches and validates [Client ID Metadata Documents](https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/).
   """
 
-  @fetch_timeout 5_000
   @max_metadata_bytes 1_000_000
   @max_client_name_length 255
   @max_client_id_length 2048
@@ -14,6 +13,8 @@ defmodule Plausible.OAuth.CIMD do
   Fetches the document at `client_id` and validates it.
 
   The `client_id` is validated first, so an invalid one costs no DNS lookup.
+  The document must be served directly at the `client_id` URL; redirects are
+  not followed.
   """
   @spec fetch(String.t()) :: {:ok, map()} | {:error, atom() | Exception.t()}
   def fetch(client_id) do
@@ -67,7 +68,7 @@ defmodule Plausible.OAuth.CIMD do
 
   defp ssrf_get(url) do
     opts =
-      [receive_timeout: @fetch_timeout, decode_body: false]
+      [decode_body: false]
       |> Keyword.merge(Application.get_env(:plausible, __MODULE__, [])[:req_opts] || [])
 
     case Plausible.SSRF.get(url, opts) do

@@ -341,6 +341,50 @@ defmodule Plausible.OAuth.CIMDTest do
       assert {:error, :dns_resolution_failed} = CIMD.fetch(@client_id)
     end
 
+    test "refuses a document served over a redirect, even a same-origin one" do
+      Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+        case conn.request_path do
+          "/oauth-metadata" ->
+            conn
+            |> Plug.Conn.put_resp_header("location", "https://client.example.com/elsewhere")
+            |> Plug.Conn.send_resp(302, "")
+
+          "/elsewhere" ->
+            raise "should never be called"
+        end
+      end)
+
+      assert {:error, :redirect_not_followed} = CIMD.fetch(@client_id)
+    end
+
+    test "refuses a document reached through an open redirect on a trusted host" do
+      client_id = "https://client.example.com/r?to=https://attacker.example/doc.json"
+      stub_dns(%{"client.example.com" => {[{93, 184, 216, 34}], []}})
+
+      Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+        case conn.request_path do
+          "/r" ->
+            conn
+            |> Plug.Conn.put_resp_header("location", "https://attacker.example/doc.json")
+            |> Plug.Conn.send_resp(302, "")
+
+          "/doc.json" ->
+            raise "should never be called"
+        end
+      end)
+
+      assert {:error, :redirect_not_followed} = CIMD.fetch(client_id)
+    end
+
+    test "refuses a 3xx with a document body rather than parsing it" do
+      stub_body(
+        JSON.encode!(%{"client_id" => @client_id, "redirect_uris" => [@redirect_uri]}),
+        302
+      )
+
+      assert {:error, :client_metadata_unavailable} = CIMD.fetch(@client_id)
+    end
+
     test "refuses a client_id resolving to a restricted address, without fetching it" do
       stub_dns(%{"client.example.com" => {[{169, 254, 169, 254}], []}})
       Req.Test.stub(Plausible.OAuth.CIMD, fn _conn -> raise "should never be called" end)

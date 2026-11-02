@@ -78,6 +78,29 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
              "Authorization error"
   end
 
+  test "renders an error page instead of consent when the client_id redirects", %{
+    conn: conn,
+    valid_params: valid_params,
+    valid_doc: valid_doc
+  } do
+    stub_dns()
+
+    Req.Test.stub(Plausible.OAuth.CIMD, fn conn ->
+      case conn.request_path do
+        "/oauth-metadata" ->
+          conn
+          |> Plug.Conn.put_resp_header("location", "https://client.example.com/moved")
+          |> Plug.Conn.send_resp(302, "")
+
+        "/moved" ->
+          Plug.Conn.send_resp(conn, 200, Jason.encode!(valid_doc))
+      end
+    end)
+
+    assert conn |> get_authorize(valid_params) |> html_response(400) =~
+             "Authorization error"
+  end
+
   test "refuses an over-long client_name before rendering the consent screen",
        %{conn: conn, valid_params: valid_params, valid_doc: valid_doc} do
     stub_dns()

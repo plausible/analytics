@@ -1,3 +1,12 @@
+defmodule Plausible.IP.ToolsInterface do
+  @moduledoc """
+  Behaviour for the address check in `Plausible.SSRF`, so that tests running a
+  server of their own can allow its address.
+  """
+
+  @callback allowed?(:inet.ip_address()) :: boolean()
+end
+
 defmodule Plausible.IP.Tools do
   @moduledoc """
   Recognizes reserved and private IPv4/IPv6 addresses.
@@ -43,6 +52,9 @@ defmodule Plausible.IP.Tools do
   Determines if IP is allowed, i.e. valid and not reserved/private.
   """
 
+  @behaviour Plausible.IP.ToolsInterface
+
+  @impl true
   @spec allowed?(:inet.ip_address() | String.t()) :: boolean()
   def allowed?(ip) when is_binary(ip) do
     case :inet.parse_address(String.to_charlist(ip)) do
