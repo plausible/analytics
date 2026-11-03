@@ -9,7 +9,13 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     price accordingly, without overrides
   """
 
+  use Plausible.Repo
+
+  alias Plausible.Billing.{EnterprisePlan, Subscription}
   alias Plausible.Billing.PaddleBilling
+  alias Plausible.Billing.PaddleClassic
+
+  @enterprise_product_name "Plausible Enterprise"
 
   currency_parity_file =
     Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
@@ -74,6 +80,163 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         true -> acc
       end
     end)
+  end
+
+  @doc """
+  Creates a custom price for every enterprise plan in the database that
+  doesn't have one in Paddle Billing yet, all under a single custom
+  "Enterprise" product.
+
+  Enterprise plans are always single currency, but the database doesn't
+  record which one. The currency and the amount are read from the plan in
+  Paddle Classic, by `paddle_plan_id`. Plans that Classic doesn't know, or
+  that don't have exactly one recurring price, are reported with a raise
+  before anything is written to Paddle Billing.
+
+  Plans without a Classic counterpart (manual subscriptions) are skipped, and
+  so are duplicates: teams sharing a `paddle_plan_id` share its price.
+
+  With `overwrite?` set, existing prices (and the product) are updated as well.
+
+  Returns the mapping of every Classic plan id to its Billing product and
+  price ids, like `sync_standard/1`.
+  """
+  def sync_enterprise(overwrite? \\ false) do
+    enterprise_plans = enterprise_plans_with_prices()
+
+    {:ok, existing_products} = PaddleBilling.api().list_products()
+
+    enterprise_product =
+      Enum.find(existing_products, &(get_in(&1, ["custom_data", "enterprise"]) == true))
+
+    {product_id, existing_mapping} =
+      case enterprise_product do
+        nil ->
+          {:ok, product} =
+            PaddleBilling.api().create_product(
+              @enterprise_product_name,
+              enterprise_product_data(),
+              enterprise?: true
+            )
+
+          {product["id"], %{}}
+
+        product ->
+          if overwrite? do
+            {:ok, _} =
+              PaddleBilling.api().update_product(product["id"],
+                name: @enterprise_product_name,
+                custom_data: enterprise_product_data()
+              )
+          end
+
+          {product["id"], classic_plan_mapping([product])}
+      end
+
+    Enum.reduce(enterprise_plans, existing_mapping, fn {plan, price}, acc ->
+      throttle()
+      IO.write(".")
+
+      sync_enterprise_price(product_id, plan, price, acc, overwrite?)
+    end)
+  end
+
+  defp sync_enterprise_price(product_id, plan, price, acc, overwrite?) do
+    description = enterprise_price_description(plan)
+
+    custom_data = %{
+      "paddle_classic_plan_id" => plan.paddle_plan_id,
+      "canonical_enterprise_plan" => Map.from_struct(plan)
+    }
+
+    billing_price =
+      case Map.get(acc, plan.paddle_plan_id) do
+        %{billing_price_id: price_id} when overwrite? ->
+          {:ok, billing_price} =
+            PaddleBilling.api().update_price(price_id,
+              description: description,
+              price: price,
+              custom_data: custom_data
+            )
+
+          billing_price
+
+        %{billing_price_id: price_id} ->
+          %{"id" => price_id}
+
+        nil ->
+          {:ok, billing_price} =
+            PaddleBilling.api().create_price(product_id, description,
+              interval: plan.billing_interval,
+              price: price,
+              enterprise?: true,
+              custom_data: custom_data
+            )
+
+          billing_price
+      end
+
+    Map.put(acc, plan.paddle_plan_id, %{
+      billing_product_id: product_id,
+      billing_price_id: billing_price["id"]
+    })
+  end
+
+  # One entry per Classic plan, with its price read from Classic
+  defp enterprise_plans_with_prices() do
+    manual_plan_id = Subscription.manual_plan_id()
+
+    enterprise_plans =
+      Repo.all(
+        from ep in EnterprisePlan,
+          where: ep.paddle_plan_id != ^manual_plan_id,
+          order_by: ep.id
+      )
+      |> Enum.uniq_by(& &1.paddle_plan_id)
+
+    {:ok, classic_plans} = PaddleClassic.api().list_plans()
+    classic_plans_by_id = Map.new(classic_plans, &{to_string(&1["id"]), &1})
+
+    resolved =
+      for plan <- enterprise_plans do
+        case classic_price(Map.get(classic_plans_by_id, plan.paddle_plan_id)) do
+          {:ok, price} -> {:ok, {plan, price}}
+          {:error, reason} -> {:error, {plan.paddle_plan_id, reason}}
+        end
+      end
+
+    case for({:error, problem} <- resolved, do: problem) do
+      [] ->
+        for {:ok, plan_with_price} <- resolved, do: plan_with_price
+
+      problems ->
+        raise "Enterprise plans that can't be priced from Paddle Classic: #{inspect(problems)}"
+    end
+  end
+
+  # Enterprise plans are assumed to be single currency, the currency is
+  # whichever one the Classic plan is priced in.
+  defp classic_price(nil), do: {:error, :not_in_classic}
+
+  defp classic_price(%{"recurring_price" => %{} = prices}) when map_size(prices) == 1 do
+    [{currency, amount}] = Map.to_list(prices)
+
+    case Money.new(currency, to_string(amount)) do
+      %Money{} = money -> {:ok, money}
+      {:error, _} -> {:error, {:invalid_price, currency, amount}}
+    end
+  end
+
+  defp classic_price(%{"recurring_price" => %{} = prices}) when map_size(prices) > 1,
+    do: {:error, {:several_currencies, prices |> Map.keys() |> Enum.sort()}}
+
+  defp classic_price(_plan), do: {:error, :no_recurring_price}
+
+  defp enterprise_product_data(), do: %{"enterprise" => true}
+
+  # Internal, like the standard price descriptions
+  defp enterprise_price_description(plan) do
+    "[enterprise] #{plan.billing_interval} (Classic plan #{plan.paddle_plan_id})"
   end
 
   defp create_product(canonical_plan, context, acc) do
