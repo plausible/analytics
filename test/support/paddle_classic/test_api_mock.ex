@@ -74,6 +74,10 @@ defmodule Plausible.Billing.PaddleClassic.TestApiMock do
     end
   end
 
+  def list_plans() do
+    Plausible.Billing.PaddleClassic.Api.list_plans()
+  end
+
   def fetch_prices(product_ids, customer_ip) do
     Plausible.Billing.PaddleClassic.DevApiMock.fetch_prices(product_ids, customer_ip)
   end
