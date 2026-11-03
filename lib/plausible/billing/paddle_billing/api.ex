@@ -4,6 +4,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   """
 
   alias Plausible.HTTPClient
+  alias Plausible.HTTPClient.Non200Error
 
   @headers [
     {"content-type", "application/json"},
@@ -53,9 +54,9 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       type: type,
       description: description,
       unit_price: money(amount, currency),
-      unit_price_overrrides: overrides,
+      unit_price_overrides: overrides,
       billing_cycle: %{
-        internval: interval,
+        interval: interval,
         frequency: 1
       },
       quantity: %{
@@ -70,11 +71,14 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       {:ok, %Finch.Response{body: %{"data" => data}, status: 201}} ->
         {:ok, data}
 
-      {:error, %Finch.Response{body: %{"error" => error}}} ->
+      {:error, %Non200Error{reason: %Finch.Response{body: %{"error" => error}}}} ->
         {:error, error}
 
-      error ->
+      {:error, error} ->
         {:error, error}
+
+      unexpected ->
+        {:error, unexpected}
     end
   end
 
@@ -97,7 +101,10 @@ defmodule Plausible.Billing.PaddleBilling.Api do
     params =
       if opts[:overrides?] do
         # Will crash if overrides weren't updated along with the price
-        amount = Map.fetch!(params, :amount)
+        {amount, currency} = opts |> Keyword.fetch!(:price) |> to_amount_currency()
+
+        # crash if base currency is other than the default
+        @base_currency = currency
 
         Map.put(params, :unit_price_overrides, parity_overrides(amount))
       else
@@ -108,18 +115,21 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       url =
         prices_url()
         |> URI.new!()
-        |> URI.append_path(price_id)
+        |> URI.append_path("/" <> price_id)
         |> URI.to_string()
 
       case HTTPClient.impl().patch(url, req_headers(), params) do
         {:ok, %Finch.Response{body: %{"data" => data}, status: 200}} ->
           {:ok, data}
 
-        {:error, %Finch.Response{body: %{"error" => error}}} ->
+        {:error, %Non200Error{reason: %Finch.Response{body: %{"error" => error}}}} ->
           {:error, error}
 
-        error ->
+        {:error, error} ->
           {:error, error}
+
+        unexpected ->
+          {:error, unexpected}
       end
     else
       {:error, :no_changes}
@@ -127,11 +137,12 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   end
 
   defp to_amount_currency(price) do
+    # 1 USD is "100".
+    # Raises if the price has fractions of a cent.
     amount =
       price
       |> Money.to_decimal()
-      |> Keyword.fetch!(:amount)
-      |> Decimal.mult(1000)
+      |> Decimal.mult(100)
       |> Decimal.to_integer()
 
     currency = Money.to_currency_code(price)
@@ -173,11 +184,14 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       {:ok, %Finch.Response{body: %{"data" => data}, status: 201}} ->
         {:ok, data}
 
-      {:error, %Finch.Response{body: %{"error" => error}}} ->
+      {:error, %Non200Error{reason: %Finch.Response{body: %{"error" => error}}}} ->
         {:error, error}
 
-      error ->
+      {:error, error} ->
         {:error, error}
+
+      unexpected ->
+        {:error, unexpected}
     end
   end
 
@@ -192,25 +206,28 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       url =
         products_url()
         |> URI.new!()
-        |> URI.append_path(product_id)
+        |> URI.append_path("/" <> product_id)
         |> URI.to_string()
 
       case HTTPClient.impl().patch(url, req_headers(), params) do
         {:ok, %Finch.Response{body: %{"data" => data}, status: 200}} ->
           {:ok, data}
 
-        {:error, %Finch.Response{body: %{"error" => error}}} ->
+        {:error, %Non200Error{reason: %Finch.Response{body: %{"error" => error}}}} ->
           {:error, error}
 
-        error ->
+        {:error, error} ->
           {:error, error}
+
+        unexpected ->
+          {:error, unexpected}
       end
     else
       {:error, :no_changes}
     end
   end
 
-  @spec list_products() :: [map()]
+  @spec list_products() :: {:ok, [map()]} | {:error, any()}
   def list_products() do
     params = %{
       per_page: @products_page_size,
@@ -235,11 +252,14 @@ defmodule Plausible.Billing.PaddleBilling.Api do
           {:ok, acc ++ data}
         end
 
-      {:error, %Finch.Response{body: %{"error" => error}}} ->
+      {:error, %Non200Error{reason: %Finch.Response{body: %{"error" => error}}}} ->
         {:error, error}
 
-      error ->
+      {:error, error} ->
         {:error, error}
+
+      unexpected ->
+        {:error, unexpected}
     end
   end
 
