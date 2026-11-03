@@ -234,7 +234,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     }
   end
 
-  defp enterprise_product_name(plan) do
+  @doc false
+  def enterprise_product_name(plan) do
     volume = PlausibleWeb.StatsView.large_number_format(plan.monthly_pageview_limit)
 
     suffix = "#{volume}/#{plan.site_limit} sites"
@@ -251,7 +252,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         api_request_limit =
           PlausibleWeb.StatsView.large_number_format(plan.hourly_api_request_limit)
 
-        suffix <> "/#{api_request_limit} API calls hourly"
+        suffix <> "/#{api_request_limit} API calls"
       else
         suffix
       end
