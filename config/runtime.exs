@@ -610,8 +610,7 @@ config :plausible, :paddle_classic,
   vendor_auth_code: paddle_classic_auth_code,
   vendor_id: paddle_classic_vendor_id
 
-config :plausible, :paddle_billing,
-  api_key: paddle_billing_api_key
+config :plausible, :paddle_billing, api_key: paddle_billing_api_key
 
 config :plausible, :google,
   client_id: google_cid,
