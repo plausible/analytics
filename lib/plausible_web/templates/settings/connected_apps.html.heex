@@ -1,0 +1,54 @@
+<.settings_tiles>
+  <.tile>
+    <:title>
+      <a id="connected-apps">Connected apps</a>
+    </:title>
+    <:subtitle>
+      Applications you have authorized to access your Plausible data.
+    </:subtitle>
+
+    <%= if Enum.empty?(@grants) do %>
+      <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
+        <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
+          No connected apps
+        </h3>
+        <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
+          Applications you authorize to access your Plausible account will appear here.
+        </p>
+      </div>
+    <% else %>
+      <.table rows={@grants}>
+        <:thead>
+          <.th>Application</.th>
+          <.th hide_on_mobile>Team</.th>
+          <.th hide_on_mobile>Connected</.th>
+          <.th invisible>Actions</.th>
+        </:thead>
+
+        <:tbody :let={grant}>
+          <.td max_width="max-w-60" title={grant.client_id}>
+            <span class="block truncate font-medium">{grant.client_name || grant.client_id}</span>
+            <span
+              :if={grant.client_name}
+              class="block truncate text-xs text-gray-500 dark:text-gray-400"
+            >
+              Client ID: {grant.client_id}
+            </span>
+          </.td>
+          <.td hide_on_mobile truncate max_width="max-w-40">
+            {Plausible.Teams.name(grant.team)}
+          </.td>
+          <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
+          <.td actions>
+            <.delete_button
+              method="delete"
+              href={~p"/settings/connected-apps/#{grant.id}"}
+              aria-label={"Revoke access for #{grant.client_name || grant.client_id}"}
+              data-confirm={"Are you sure you want to revoke access for #{grant.client_name || grant.client_id}? The application will need to be authorized again to reconnect."}
+            />
+          </.td>
+        </:tbody>
+      </.table>
+    <% end %>
+  </.tile>
+</.settings_tiles>

@@ -1452,6 +1452,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     security: {"Security", "/settings/security"},
     subscription: {"Subscription", "/settings/billing/subscription"},
     api_keys: {"API keys", "/settings/api-keys"},
+    connected_apps: {"Connected apps", "/settings/connected-apps"},
     danger_zone: {"Danger zone", "/settings/danger-zone"},
     team_general: {"General", "/settings/team/general"},
     sso: {"Single Sign-On", "/settings/sso/info"},
@@ -1506,6 +1507,35 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert html = html_response(conn, 200)
         assert text_of_element(html, "button[disabled]") =~ "Disable 2FA"
       end
+    end
+  end
+
+  describe "Account settings - connected apps" do
+    setup [:create_user, :log_in]
+
+    test "are listed in the account menu with the feature flag", %{conn: conn, user: user} do
+      FunWithFlags.enable(:mcp, for_actor: user)
+
+      conn = get(conn, ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :connected_apps, :danger_zone],
+          else: [:preferences, :security, :api_keys, :connected_apps, :danger_zone]
+        )
+
+      html
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
+    end
+
+    test "are not listed without the feature flag", %{conn: conn} do
+      conn = get(conn, ~p"/settings/preferences")
+
+      html_response(conn, 200)
+      |> refute_unexpected_menu_items([:connected_apps])
     end
   end
 

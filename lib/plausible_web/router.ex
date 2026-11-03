@@ -560,6 +560,9 @@ defmodule PlausibleWeb.Router do
     post "/api-keys", SettingsController, :create_api_key
     delete "/api-keys/:id", SettingsController, :delete_api_key
 
+    get "/connected-apps", SettingsController, :connected_apps
+    delete "/connected-apps/:id", SettingsController, :revoke_connected_app
+
     get "/danger-zone", SettingsController, :danger_zone
 
     get "/team/general", SettingsController, :team_general
