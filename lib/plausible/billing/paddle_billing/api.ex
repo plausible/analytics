@@ -47,7 +47,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
 
     tax_mode = Keyword.get(opts, :tax_mode, :account_setting)
 
-    data = Keyword.get(opts, :data, %{})
+    data = Keyword.get(opts, :custom_data, %{})
 
     params = %{
       product_id: product_id,
