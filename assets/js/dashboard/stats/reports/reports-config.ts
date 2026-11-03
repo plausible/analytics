@@ -26,6 +26,7 @@ export type BreakdownReportConfig = {
   detailsTitle: string
   detailsPath: string
   dimensionLabel: string
+  orderByStorageId?: string
   alwaysOnFilters?: ApiFilter[]
   searchDimension?: NonTimeDimension
 }
@@ -168,6 +169,7 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'Top pages',
     detailsPath: 'pages-with-hostname',
     dimensionLabel: 'URL',
+    orderByStorageId: 'pages-with-hostname',
     searchDimension: 'event:page'
   },
   [BreakdownReportKey.entryPages]: {
@@ -204,6 +206,7 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'Entry pages',
     detailsPath: 'entry-pages-with-hostname',
     dimensionLabel: 'URL',
+    orderByStorageId: 'entry-pages-with-hostname',
     alwaysOnFilters: [['is_not', 'visit:entry_page', ['']]],
     searchDimension: 'visit:entry_page'
   },
@@ -253,6 +256,7 @@ export const BREAKDOWN_REPORTS: Record<
     detailsTitle: 'Exit pages',
     detailsPath: 'exit-pages-with-hostname',
     dimensionLabel: 'URL',
+    orderByStorageId: 'exit-pages-with-hostname',
     alwaysOnFilters: [['is_not', 'visit:exit_page', ['']]],
     searchDimension: 'visit:exit_page'
   },
