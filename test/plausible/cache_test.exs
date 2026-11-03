@@ -24,6 +24,23 @@ defmodule Plausible.CacheTest do
     end
   end
 
+  defmodule UnavailableRepo do
+    def all(_query) do
+      raise DBConnection.ConnectionError, "connection not available and request was dropped"
+    end
+  end
+
+  defmodule UnavailableCache do
+    use Plausible.Cache
+
+    def name(), do: __MODULE__
+    def child_id(), do: __MODULE__
+    def count_all(), do: 100
+    def repo(), do: UnavailableRepo
+    def base_db_query(), do: %Ecto.Query{}
+    def get_from_source(key), do: repo().all(key)
+  end
+
   describe "public cache interface" do
     test "cache process is started, but falls back to the database if cache is disabled", %{
       test: test
@@ -57,12 +74,11 @@ defmodule Plausible.CacheTest do
       refute ExampleCache.ready?(test)
     end
 
-    test "refresh_all returns an error when the source query fails", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
+    test "refresh_all returns an error when the database is unavailable", %{test: test} do
       log =
         capture_log(fn ->
-          assert {:error, _} = ExampleCache.refresh_all(cache_name: test)
+          assert {:error, %DBConnection.ConnectionError{}} =
+                   UnavailableCache.refresh_all(cache_name: test)
         end)
 
       assert log =~ "Error refreshing '#{test}'"
