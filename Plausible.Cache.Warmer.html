@@ -138,7 +138,12 @@ Pages
 
 
     <section id="moduledoc">
-<p>A periodic cache warmer.</p><p>Child specification options available:</p><ul><li><code class="inline">cache_impl</code> - module expected to implement <a href="Plausible.Cache.html"><code class="inline">Plausible.Cache</code></a> behaviour</li><li><code class="inline">interval</code> - the number of milliseconds for each warm-up cycle</li><li><code class="inline">cache_name</code> - defaults to cache_impl.name() but can be overridden for testing</li><li><code class="inline">force_start?</code> - enforcess process startup for testing, even if it's barred
+<p>A periodic cache warmer.</p><p>Child specification options available:</p><ul><li><code class="inline">cache_impl</code> - module expected to implement <a href="Plausible.Cache.html"><code class="inline">Plausible.Cache</code></a> behaviour</li><li><code class="inline">interval</code> - the number of milliseconds for each warm-up cycle</li><li><code class="inline">retry_interval</code> - optional. The number of milliseconds to wait before
+the warmer retries a warm-up that returned <code class="inline">{:error, reason}</code>. The wait
+doubles after each failed retry, plus up to a third of it at random, so
+warmers that fail together do not retry together. Without this option,
+the warmer does not retry and waits for the next cycle.</li><li><code class="inline">max_retries</code> - defaults to 3. The number of retries before the warmer
+gives up and waits for the next cycle.</li><li><code class="inline">cache_name</code> - defaults to cache_impl.name() but can be overridden for testing</li><li><code class="inline">force_start?</code> - enforcess process startup for testing, even if it's barred
 by <code class="inline">Plausible.Cache.enabled?</code>. This is useful for avoiding issues with DB ownership
 and async tests.</li><li><code class="inline">warmer_fn</code> - by convention, either <code class="inline">:refresh_all</code> or <code class="inline">:refresh_updated_recently</code>,
 both are automatically provided by <code class="inline">cache_impl</code> module. Technically any exported
@@ -188,7 +193,7 @@ or captured function will work, if need be.</li></ul><p>See tests for more compr
     </a>
     <h1 class="signature" translate="no">child_spec(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/warmer.ex#L25" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/warmer.ex#L34" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
