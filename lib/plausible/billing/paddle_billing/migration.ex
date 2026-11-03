@@ -84,9 +84,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   end
 
   @doc """
-  Creates a custom price for every enterprise plan in the database that
-  doesn't have one in Paddle Billing yet, all under a single custom
-  "Enterprise" product.
+  Creates a custom product and respective price for every enterprise 
+  plan in the database that doesn't have one in Paddle Billing yet.
 
   Enterprise plans are always single currency, but the database doesn't
   record which one. The currency and the amount are read from the plan in
