@@ -11,11 +11,12 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   use Plausible.Repo
 
-  alias Plausible.Billing.{EnterprisePlan, Subscription}
+  alias Plausible.Billing.EnterprisePlan
+  alias Plausible.Billing.Feature
   alias Plausible.Billing.PaddleBilling
   alias Plausible.Billing.PaddleClassic
-
-  @enterprise_product_name "Plausible Enterprise"
+  alias Plausible.Billing.Plans
+  alias Plausible.Billing.Subscription
 
   currency_parity_file =
     Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
@@ -44,7 +45,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   internal. Product and price names are displayed to customers.
   """
   def sync_standard(overwrite? \\ false) do
-    canonical_plans = Plausible.Billing.Plans.all()
+    canonical_plans = Plans.all()
     {:ok, existing_products} = PaddleBilling.api().list_products()
 
     product_by_classic_plan_id =
@@ -106,52 +107,60 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
     {:ok, existing_products} = PaddleBilling.api().list_products()
 
-    enterprise_product =
-      Enum.find(existing_products, &(get_in(&1, ["custom_data", "enterprise"]) == true))
+    existing_enterprise_products =
+      Enum.filter(existing_products, & &1["custom_data"]["enterprise"])
 
-    {product_id, existing_mapping} =
-      case enterprise_product do
-        nil ->
-          {:ok, product} =
-            PaddleBilling.api().create_product(
-              @enterprise_product_name,
-              enterprise_product_data(),
-              enterprise?: true
-            )
+    product_by_classic_plan_id =
+      Map.new(existing_enterprise_products, fn product ->
+        classic_plan_id = get_in(product, ["custom_data", "canonical_plan", "paddle_plan_id"])
+        {classic_plan_id, product}
+      end)
 
-          {product["id"], %{}}
+    existing_mapping = classic_plan_mapping(existing_enterprise_products)
 
-        product ->
-          if overwrite? do
-            {:ok, _} =
-              PaddleBilling.api().update_product(product["id"],
-                name: @enterprise_product_name,
-                custom_data: enterprise_product_data()
-              )
-          end
-
-          {product["id"], classic_plan_mapping([product])}
-      end
-
-    Enum.reduce(enterprise_plans, existing_mapping, fn {plan, price}, acc ->
+    Enum.reduce(enterprise_plans, existing_mapping, fn {enterprise_plan, price}, acc ->
       Process.sleep(1_000)
       IO.write(".")
 
-      sync_enterprise_price(product_id, plan, price, acc, overwrite?)
+      existing_product = Map.get(product_by_classic_plan_id, enterprise_plan.paddle_plan_id)
+
+      cond do
+        is_nil(existing_product) -> create_enterprise_product(enterprise_plan, price, acc)
+        overwrite? -> update_enterprise_product(existing_product, enterprise_plan, price, acc)
+        true -> acc
+      end
     end)
   end
 
-  defp sync_enterprise_price(product_id, plan, price, acc, overwrite?) do
+  defp create_enterprise_product(enterprise_plan, price, acc) do
+    {:ok, product} =
+      PaddleBilling.api().create_product(
+        enterprise_product_name(enterprise_plan),
+        enterprise_product_data(enterprise_plan),
+        enterprise?: true
+      )
+
+    sync_enterprise_price(product["id"], enterprise_plan, price, acc, false)
+  end
+
+  defp update_enterprise_product(existing_product, enterprise_plan, price, acc) do
+    {:ok, product} =
+      PaddleBilling.api().update_product(existing_product["id"],
+        name: enterprise_product_name(enterprise_plan),
+        custom_data: enterprise_product_data(enterprise_plan)
+      )
+
+    sync_enterprise_price(product["id"], enterprise_plan, price, acc, true)
+  end
+
+  defp sync_enterprise_price(product_id, plan, price, acc, update?) do
     description = enterprise_price_description(plan)
 
-    custom_data = %{
-      "paddle_classic_plan_id" => plan.paddle_plan_id,
-      "canonical_enterprise_plan" => Map.from_struct(plan)
-    }
+    custom_data = %{"paddle_classic_plan_id" => plan.paddle_plan_id}
 
     billing_price =
       case Map.get(acc, plan.paddle_plan_id) do
-        %{billing_price_id: price_id} when overwrite? ->
+        %{billing_price_id: price_id} when update? ->
           {:ok, billing_price} =
             PaddleBilling.api().update_price(price_id,
               description: description,
@@ -232,7 +241,44 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   defp classic_price(_plan), do: {:error, :no_recurring_price}
 
-  defp enterprise_product_data(), do: %{"enterprise" => true}
+  defp enterprise_product_data(plan) do
+    %{
+      "enterprise" => true,
+      "canonical_enterprise_plan" => Map.from_struct(plan)
+    }
+  end
+
+  defp enterprise_product_name(plan) do
+    volume = PlausibleWeb.StatsView.large_number_format(plan.monthly_pageview_limit)
+
+    suffix = "#{volume}/#{plan.site_limit} sites"
+
+    suffix =
+      if plan.team_member_limit != :unlimited do
+        suffix <> "/#{plan.team_member_limit} members"
+      else
+        suffix
+      end
+
+    suffix =
+      if plan.hourly_api_request_limit != 600 do
+        api_request_limit =
+          PlausibleWeb.StatsView.large_number_format(plan.hourly_api_request_limit)
+
+        suffix <> "/#{api_request_limit} API calls hourly"
+      else
+        suffix
+      end
+
+    features =
+      [Feature.SitesAPI, Feature.SSO]
+      |> Enum.filter(&(&1 in plan.features))
+      |> Enum.map_join(",", & &1.display_name())
+
+    suffix = if(features, do: suffix <> "/" <> features, else: suffix)
+
+    "Plausible Enterprise #{suffix}"
+  end
 
   # Internal, like the standard price descriptions
   defp enterprise_price_description(plan) do
