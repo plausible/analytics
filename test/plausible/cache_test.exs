@@ -24,6 +24,23 @@ defmodule Plausible.CacheTest do
     end
   end
 
+  defmodule UnavailableRepo do
+    def all(_query) do
+      raise DBConnection.ConnectionError, "connection not available and request was dropped"
+    end
+  end
+
+  defmodule UnavailableCache do
+    use Plausible.Cache
+
+    def name(), do: __MODULE__
+    def child_id(), do: __MODULE__
+    def count_all(), do: 100
+    def repo(), do: UnavailableRepo
+    def base_db_query(), do: %Ecto.Query{}
+    def get_from_source(key), do: repo().all(key)
+  end
+
   describe "public cache interface" do
     test "cache process is started, but falls back to the database if cache is disabled", %{
       test: test
@@ -55,6 +72,11 @@ defmodule Plausible.CacheTest do
 
     test "cache is not ready when it doesn't exist", %{test: test} do
       refute ExampleCache.ready?(test)
+    end
+
+    test "refresh_all returns an error when the database is unavailable", %{test: test} do
+      assert {:error, %DBConnection.ConnectionError{}} =
+               UnavailableCache.refresh_all(cache_name: test)
     end
   end
 
@@ -193,12 +215,159 @@ defmodule Plausible.CacheTest do
       assert at1 < at2
       assert at3 > at2
     end
+
+    test "cache warmer backs off retries until it succeeds, then stops", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: fail_first(self(), 3),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 60,
+        max_retries: 4
+      ]
+
+      capture_log(fn ->
+        {:ok, _} = start_test_warmer(opts)
+
+        warmed_at =
+          for _ <- 1..4 do
+            assert_receive {:cache_warmed, %{at: at}}, 1000
+            at
+          end
+
+        scheduling_tolerance = 100
+
+        for {[previous_at, at], backoff} <-
+              Enum.zip(Enum.chunk_every(warmed_at, 2, 1, :discard), [60, 120, 240]) do
+          elapsed = System.convert_time_unit(at - previous_at, :native, :millisecond)
+
+          assert elapsed >= backoff
+          assert elapsed <= backoff + div(backoff, 3) + scheduling_tolerance
+        end
+
+        refute_receive {:cache_warmed, _}, 800
+      end)
+    end
+
+    test "cache warmer stops retrying after a few failed retries", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(self(), {:error, :db_unavailable}),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 10
+      ]
+
+      errors =
+        capture_log([level: :error], fn ->
+          {:ok, _} = start_test_warmer(opts)
+
+          for _ <- 1..4, do: assert_receive({:cache_warmed, _}, 1000)
+          refute_receive {:cache_warmed, _}, 300
+        end)
+
+      assert [_] = Regex.scan(~r/failed - :db_unavailable/, errors)
+    end
+
+    for max_retries <- [0, 1, 4] do
+      test "cache warmer stops after #{max_retries} configured retries", %{test: test} do
+        max_retries = unquote(max_retries)
+
+        opts = [
+          cache_impl: ExampleCache,
+          force_start?: true,
+          warmer_fn: report_back(self(), {:error, :db_unavailable}),
+          cache_name: test,
+          interval: :timer.hours(1),
+          retry_interval: 10,
+          max_retries: max_retries
+        ]
+
+        capture_log(fn ->
+          {:ok, _} = start_test_warmer(opts)
+
+          for _ <- 0..max_retries, do: assert_receive({:cache_warmed, _}, 1000)
+          refute_receive {:cache_warmed, _}, 300
+        end)
+      end
+    end
+
+    test "cache warmer ignores a pending retry after a regular cycle", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: fail_first(self(), 1),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 300
+      ]
+
+      log =
+        capture_log(fn ->
+          {:ok, warmer} = start_test_warmer(opts)
+          assert_receive {:cache_warmed, _}, 1000
+
+          send(warmer, :"$cycle")
+          assert_receive {:cache_warmed, _}, 1000
+
+          refute_receive {:cache_warmed, _}, 600
+        end)
+
+      assert log =~ "retrying in"
+    end
+
+    test "cache warmer does not retry a failing run without a retry interval", %{test: test} do
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(self(), {:error, :db_unavailable}),
+        cache_name: test,
+        interval: :timer.hours(1)
+      ]
+
+      capture_log(fn ->
+        {:ok, _} = start_test_warmer(opts)
+
+        assert_receive {:cache_warmed, _}, 1000
+        refute_receive {:cache_warmed, _}, 200
+      end)
+    end
+
+    test "cache warmer does not retry a successful run", %{test: test} do
+      test_pid = self()
+
+      opts = [
+        cache_impl: ExampleCache,
+        force_start?: true,
+        warmer_fn: report_back(test_pid),
+        cache_name: test,
+        interval: :timer.hours(1),
+        retry_interval: 30
+      ]
+
+      {:ok, _} = start_test_warmer(opts)
+
+      assert_receive {:cache_warmed, _}, 1000
+      refute_receive {:cache_warmed, _}, 150
+    end
   end
 
-  defp report_back(test_pid) do
+  defp report_back(test_pid, result \\ :ok) do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
-      :ok
+      result
+    end
+  end
+
+  defp fail_first(test_pid, times) do
+    runs = :counters.new(1, [])
+
+    fn opts ->
+      :counters.add(runs, 1, 1)
+      result = if :counters.get(runs, 1) <= times, do: {:error, :db_unavailable}, else: :ok
+      report_back(test_pid, result).(opts)
     end
   end
 
