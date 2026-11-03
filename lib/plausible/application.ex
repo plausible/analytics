@@ -73,7 +73,8 @@ defmodule Plausible.Application do
           warmers: [
             refresh_all:
               {Plausible.Site.Cache.All,
-               interval: :timer.minutes(15) + Enum.random(1..:timer.seconds(10))},
+               interval: :timer.minutes(15) + Enum.random(1..:timer.seconds(10)),
+               retry_interval: :timer.seconds(30)},
             refresh_updated_recently:
               {Plausible.Site.Cache.RecentlyUpdated, interval: :timer.seconds(30)}
           ]
@@ -103,7 +104,8 @@ defmodule Plausible.Application do
           warmers: [
             refresh_all:
               {Plausible.Shield.IPRuleCache.All,
-               interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10))},
+               interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10)),
+               retry_interval: :timer.seconds(30)},
             refresh_updated_recently:
               {Plausible.Shield.IPRuleCache.RecentlyUpdated, interval: :timer.seconds(35)}
           ]
@@ -174,7 +176,9 @@ defmodule Plausible.Application do
             warmers: [
               refresh_all:
                 {Plausible.Site.TrackerScriptIdCache.All,
-                 interval: :timer.minutes(180) + Enum.random(1..:timer.seconds(10))},
+                 interval: :timer.minutes(180) + Enum.random(1..:timer.seconds(10)),
+                 retry_interval: :timer.seconds(30),
+                 max_retries: 8},
               refresh_updated_recently:
                 {Plausible.Site.TrackerScriptIdCache.RecentlyUpdated,
                  interval: :timer.seconds(30)}
@@ -190,7 +194,9 @@ defmodule Plausible.Application do
             warmers: [
               refresh_all:
                 {Plausible.Site.TrackerScriptCache.All,
-                 interval: :timer.minutes(180) + Enum.random(1..:timer.seconds(10))},
+                 interval: :timer.minutes(180) + Enum.random(1..:timer.seconds(10)),
+                 retry_interval: :timer.seconds(30),
+                 max_retries: 8},
               refresh_updated_recently:
                 {Plausible.Site.TrackerScriptCache.RecentlyUpdated, interval: :timer.seconds(30)}
             ]
@@ -222,6 +228,7 @@ defmodule Plausible.Application do
 
     setup_request_logging()
     setup_sentry()
+    Plausible.Workers.ImportAnalytics.install_exception_handler()
     setup_opentelemetry()
     Plausible.Ingestion.Persistor.TelemetryHandler.install()
 

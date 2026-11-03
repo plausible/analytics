@@ -24,6 +24,8 @@ defmodule PlausibleWeb.SettingsController do
   plug Plausible.Plugs.RestrictUserType,
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
 
+  plug :require_mcp_feature_flag when action in [:connected_apps, :revoke_connected_app]
+
   def index(conn, _params) do
     redirect(conn, to: ~p"/settings/preferences")
   end
@@ -198,6 +200,37 @@ defmodule PlausibleWeb.SettingsController do
         conn
         |> put_flash(:error, "Could not find API Key to delete")
         |> redirect(to: ~p"/settings/api-keys#api-keys")
+    end
+  end
+
+  def connected_apps(conn, _params) do
+    grants = Plausible.OAuth.list_grants(conn.assigns.current_user)
+
+    render(conn, :connected_apps, layout: {PlausibleWeb.LayoutView, :settings}, grants: grants)
+  end
+
+  def revoke_connected_app(conn, %{"id" => id}) do
+    case Plausible.OAuth.revoke_user_grant(conn.assigns.current_user, id) do
+      :ok ->
+        conn
+        |> put_flash(:success, "Access revoked successfully")
+        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Could not find connected app to revoke")
+        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+    end
+  end
+
+  # remove on rollout
+  defp require_mcp_feature_flag(conn, _opts) do
+    if FunWithFlags.enabled?(:mcp, for: conn.assigns.current_user) do
+      conn
+    else
+      conn
+      |> render_error(404)
+      |> halt()
     end
   end
 
