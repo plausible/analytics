@@ -1,6 +1,4 @@
 defmodule Plausible.Cache.Warmer do
-  @max_retries 3
-
   @moduledoc """
   A periodic cache warmer.
 
@@ -11,9 +9,10 @@ defmodule Plausible.Cache.Warmer do
     * `retry_interval` - optional. The number of milliseconds to wait before
       the warmer retries a warm-up that returned `{:error, reason}`. The wait
       doubles after each failed retry, plus up to a third of it at random, so
-      warmers that fail together do not retry together. The warmer retries at
-      most #{@max_retries} times, then waits for the next cycle. Without this
-      option, the warmer does not retry and waits for the next cycle.
+      warmers that fail together do not retry together. Without this option,
+      the warmer does not retry and waits for the next cycle.
+    * `max_retries` - defaults to 3. The number of retries before the warmer
+      gives up and waits for the next cycle.
     * `cache_name` - defaults to cache_impl.name() but can be overridden for testing
     * `force_start?` - enforcess process startup for testing, even if it's barred
       by `Plausible.Cache.enabled?`. This is useful for avoiding issues with DB ownership
@@ -26,6 +25,8 @@ defmodule Plausible.Cache.Warmer do
   """
 
   @behaviour :gen_cycle
+
+  @default_max_retries 3
 
   require Logger
 
@@ -101,13 +102,14 @@ defmodule Plausible.Cache.Warmer do
 
   defp schedule_retry(opts, retry) do
     retry_interval = Keyword.get(opts, :retry_interval)
+    max_retries = Keyword.get(opts, :max_retries, @default_max_retries)
 
-    if retry_interval && retry <= @max_retries do
+    if retry_interval && retry <= max_retries do
       backoff = retry_interval * Integer.pow(2, retry - 1)
       delay = backoff + Enum.random(0..div(backoff, 3))
 
       Logger.notice(
-        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{delay}ms (#{retry}/#{@max_retries})..."
+        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{delay}ms (#{retry}/#{max_retries})..."
       )
 
       ref = make_ref()
