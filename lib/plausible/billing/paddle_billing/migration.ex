@@ -22,7 +22,15 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   @currency_parity_file currency_parity_file
   @prices_file prices_file
 
-  def sync_standard(overwrite? \\ false) do
+  @doc """
+  Creates the products and prices for the standard plans that don't exist in
+  Paddle Billing yet.
+
+  Returns the mapping of every Classic plan id to its Billing product and
+  price ids, whether they were created now or found in Paddle, so repeated
+  runs return the same mapping.
+  """
+  def sync_standard(_overwrite? \\ false) do
     canonical_plans = Plausible.Billing.Plans.all()
     {:ok, existing_products} = PaddleBilling.api().list_products()
 
@@ -46,63 +54,53 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
     plan_prices = @prices_file |> File.read!() |> JSON.decode!()
 
-    Enum.reduce(canonical_plans, %{}, fn canonical_plan, acc ->
+    existing_mapping = classic_plan_mapping(existing_products)
+
+    Enum.reduce(canonical_plans, existing_mapping, fn canonical_plan, acc ->
       monthly_exists? = MapSet.member?(existing_plan_ids, canonical_plan.monthly_product_id)
       yearly_exists? = MapSet.member?(existing_plan_ids, canonical_plan.yearly_product_id)
 
       if not monthly_exists? and not yearly_exists? do
-        product_data = %{
-          canonical_plan: canonical_plan |> Map.from_struct() |> JSON.encode!()
-        }
-
+        product_data = %{canonical_plan: Map.from_struct(canonical_plan)}
         product_name = plan_name(canonical_plan)
 
         {:ok, product} = PaddleBilling.api().create_product(product_name, product_data)
 
-        monthly_price =
-          Money.new!(Map.fetch!(plan_prices, canonical_plan.monthly_product_id), :USD)
+        # Some plans only come in one interval
+        [monthly: canonical_plan.monthly_product_id, yearly: canonical_plan.yearly_product_id]
+        |> Enum.reject(fn {_interval, classic_plan_id} -> is_nil(classic_plan_id) end)
+        |> Enum.reduce(acc, fn {interval, classic_plan_id}, acc ->
+          price = Money.new!(Map.fetch!(plan_prices, classic_plan_id), :USD)
 
-        monthly_overrides? =
-          MapSet.member?(multi_currency_plans, canonical_plan.monthly_product_id)
+          opts = [
+            interval: interval,
+            overrides?: MapSet.member?(multi_currency_plans, classic_plan_id),
+            price: price,
+            custom_data: %{"paddle_classic_plan_id" => classic_plan_id}
+          ]
 
-        monthly_opts = [
-          interval: :monthly,
-          overrides?: monthly_overrides?,
-          price: monthly_price,
-          custom_data: %{"paddle_classic_plan_id" => canonical_plan.monthly_product_id}
-        ]
+          {:ok, billing_price} =
+            PaddleBilling.api().create_price(product["id"], "#{product_name} #{interval}", opts)
 
-        {:ok, monthly_price} =
-          PaddleBilling.api().create_price(
-            product["id"],
-            "#{product_name} monthly",
-            monthly_opts
-          )
-
-        yearly_price = Money.new!(Map.fetch!(plan_prices, canonical_plan.yearly_product_id), :USD)
-        yearly_overrides? = MapSet.member?(multi_currency_plans, canonical_plan.yearly_product_id)
-
-        yearly_opts = [
-          interval: :yearly,
-          overrides?: yearly_overrides?,
-          price: yearly_price,
-          custom_data: %{"paddle_classic_plan_id" => canonical_plan.yearly_product_id}
-        ]
-
-        {:ok, yearly_price} =
-          PaddleBilling.api().create_price(product["id"], "#{product_name} yearly", yearly_opts)
-
+          Map.put(acc, classic_plan_id, %{
+            billing_product_id: product["id"],
+            billing_price_id: billing_price["id"]
+          })
+        end)
+      else
         acc
-        |> Map.put(canonical_plan.monthly_plan_id, %{
-          billing_product_id: product["id"],
-          billing_price_id: monthly_price["id"]
-        })
-        |> Map.put(canonical_plan.yearly_plan_id, %{
-          billing_product_id: product["id"],
-          billing_price_id: yearly_price["id"]
-        })
       end
     end)
+  end
+
+  # Prices link back to Classic through their `paddle_classic_plan_id`
+  defp classic_plan_mapping(products) do
+    for product <- products,
+        price <- product["prices"] || [],
+        classic_plan_id = get_in(price, ["custom_data", "paddle_classic_plan_id"]),
+        into: %{} do
+      {classic_plan_id, %{billing_product_id: product["id"], billing_price_id: price["id"]}}
+    end
   end
 
   defp plan_name(plan) do

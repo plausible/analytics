@@ -145,7 +145,7 @@ defmodule Plausible.Billing.PaddleBilling.ApiTest do
                Api.create_price(@product_id, "with data",
                  price: Money.new(:USD, "384"),
                  interval: :yearly,
-                 data: %{classic_plan_id: "597643"}
+                 custom_data: %{classic_plan_id: "597643"}
                )
     end
 
