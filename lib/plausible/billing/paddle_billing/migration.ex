@@ -134,7 +134,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
       end
 
     Enum.reduce(enterprise_plans, existing_mapping, fn {plan, price}, acc ->
-      throttle()
+      Process.sleep(1_000)
       IO.write(".")
 
       sync_enterprise_price(product_id, plan, price, acc, overwrite?)
