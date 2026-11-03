@@ -196,51 +196,27 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   defp enterprise_plans_with_prices() do
     manual_plan_id = Subscription.manual_plan_id()
 
-    enterprise_plans =
-      Repo.all(
-        from ep in EnterprisePlan,
-          where: ep.paddle_plan_id != ^manual_plan_id,
-          order_by: ep.id
-      )
-      |> Enum.uniq_by(& &1.paddle_plan_id)
-
     {:ok, classic_plans} = PaddleClassic.api().list_plans()
     classic_plans_by_id = Map.new(classic_plans, &{to_string(&1["id"]), &1})
 
-    resolved =
-      for plan <- enterprise_plans do
-        case classic_price(Map.get(classic_plans_by_id, plan.paddle_plan_id)) do
-          {:ok, price} -> {:ok, {plan, price}}
-          {:error, reason} -> {:error, {plan.paddle_plan_id, reason}}
-        end
-      end
+    from(ep in EnterprisePlan,
+      where: ep.paddle_plan_id != ^manual_plan_id,
+      order_by: ep.id
+    )
+    |> Repo.all()
+    |> Enum.uniq_by(& &1.paddle_plan_id)
+    |> Enum.map(fn enterprise_plan ->
+      [{currency, amount}] =
+        classic_plans_by_id
+        |> Map.fetch!(enterprise_plan.paddle_plan_id)
+        |> Map.fetch!("recurring_price")
+        |> Map.to_list()
 
-    case for({:error, problem} <- resolved, do: problem) do
-      [] ->
-        for {:ok, plan_with_price} <- resolved, do: plan_with_price
+      price = Money.new!(to_string(amount), currency)
 
-      problems ->
-        raise "Enterprise plans that can't be priced from Paddle Classic: #{inspect(problems)}"
-    end
+      {enterprise_plan, price}
+    end)
   end
-
-  # Enterprise plans are assumed to be single currency, the currency is
-  # whichever one the Classic plan is priced in.
-  defp classic_price(nil), do: {:error, :not_in_classic}
-
-  defp classic_price(%{"recurring_price" => %{} = prices}) when map_size(prices) == 1 do
-    [{currency, amount}] = Map.to_list(prices)
-
-    case Money.new(currency, to_string(amount)) do
-      %Money{} = money -> {:ok, money}
-      {:error, _} -> {:error, {:invalid_price, currency, amount}}
-    end
-  end
-
-  defp classic_price(%{"recurring_price" => %{} = prices}) when map_size(prices) > 1,
-    do: {:error, {:several_currencies, prices |> Map.keys() |> Enum.sort()}}
-
-  defp classic_price(_plan), do: {:error, :no_recurring_price}
 
   defp enterprise_product_data(plan) do
     %{
