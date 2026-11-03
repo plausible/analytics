@@ -11,7 +11,7 @@
     </div>
     <div class="mb-6 mt-12">
       <div class="flex gap-x-5 text-sm justify-center">
-        <.styled_link href={PlausibleWeb.LayoutView.home_dest(@conn)}>
+        <.styled_link href={PlausibleWeb.LayoutView.home_dest(@conn.assigns[:current_user])}>
           Home page
         </.styled_link>
         <.styled_link href="https://status.plausible.io">

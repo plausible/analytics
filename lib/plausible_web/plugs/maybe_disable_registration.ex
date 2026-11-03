@@ -3,30 +3,25 @@ defmodule PlausibleWeb.Plugs.MaybeDisableRegistration do
   Plug toggling registration according to selfhosted state.
   """
 
+  use PlausibleWeb.VerifiedRoutes
+
   import Phoenix.Controller
   import Plug.Conn
-
-  alias Plausible.Release
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def init(opts) do
     opts
   end
 
   def call(conn, _opts) do
-    disabled_for = List.wrap(conn.assigns.disable_registration_for)
+    case Plausible.Auth.check_registration_enabled(conn.assigns.registration_context) do
+      :ok ->
+        conn
 
-    selfhost_config = Application.get_env(:plausible, :selfhost)
-    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
-    first_launch? = Release.should_be_first_launch?()
-
-    if not first_launch? and disable_registration in disabled_for do
-      conn
-      |> put_flash(:error, "Registration is disabled on this instance")
-      |> redirect(to: Routes.auth_path(conn, :login_form))
-      |> halt()
-    else
-      conn
+      {:error, _, message} ->
+        conn
+        |> put_flash(:error, message)
+        |> redirect(to: ~p"/login")
+        |> halt()
     end
   end
 end

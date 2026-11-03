@@ -5,7 +5,7 @@ import { useSiteContext } from '../../site-context'
 import { useDashboardStateContext } from '../../dashboard-state-context'
 import {
   numberShortFormatter,
-  percentageFormatter
+  rateFormatter
 } from '../../util/number-formatter'
 import { RefreshIcon } from '../../components/icons'
 import { popover } from '../../components/popover'
@@ -134,7 +134,7 @@ export function FunnelExploration() {
             <div className="order-last sm:order-none w-full sm:w-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>
                 <span className="font-medium sm:font-semibold text-gray-700 dark:text-gray-200">
-                  CR: {percentageFormatter(Number(overallConversionRate!))}{' '}
+                  CR: {rateFormatter(overallConversionRate)}{' '}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
                   ({numberShortFormatter(overallConversionVisitors!)})
@@ -201,7 +201,7 @@ export function FunnelExploration() {
                 funnel[i]?.conversion_rate != null
                   ? i === 0
                     ? '100%'
-                    : `${Number(funnel[i].conversion_rate).toFixed(1)}%`
+                    : rateFormatter(funnel[i].conversion_rate)
                   : null
 
               if (isActive && steps.length >= maxJourneySteps) {

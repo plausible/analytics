@@ -6,7 +6,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   use Plausible.Funnel
 
-  alias Plausible.{Goals, Funnels, Teams}
+  alias Plausible.Funnels
+  alias Plausible.Teams
 
   def mount(
         _params,
@@ -28,9 +29,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
       end)
-      |> assign_new(:goal_count, fn %{site: site} ->
-        Goals.count(site)
-      end)
 
     {:ok,
      assign(socket,
@@ -47,7 +45,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   # Normally, we'd have to use live_patch which we can't do with views unmounted at the router it seems.
   def render(assigns) do
     ~H"""
-    <div id="funnel-settings-main">
+    <div id="funnel-settings-main" class="group">
       <.flash_messages flash={@flash} />
 
       <.tile
@@ -65,6 +63,18 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         <:subtitle :if={Enum.count(@all_funnels) > 0}>
           Compose goals into funnels to track user flows and conversion rates.
         </:subtitle>
+        <div
+          :if={@setup_funnel?}
+          class="fixed flex inset-0 bg-gray-500/75 transition-opacity z-50"
+          phx-window-keydown="cancel-setup-funnel"
+          phx-key="Escape"
+        >
+          <div class="w-full self-center block group-has-[#funnel-form]:hidden">
+            <div class="text-center">
+              <.spinner class="inline-block h-8 w-8" />
+            </div>
+          </div>
+        </div>
         <%= if @setup_funnel? do %>
           {live_render(
             @socket,
@@ -76,33 +86,13 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             }
           )}
         <% end %>
-        <div :if={@goal_count >= Funnel.min_steps()}>
+        <div>
           <.live_component
             module={PlausibleWeb.Live.FunnelSettings.List}
             id="funnels-list"
             funnels={@displayed_funnels}
             filter_text={@filter_text}
           />
-        </div>
-
-        <div
-          :if={@goal_count < Funnel.min_steps()}
-          class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto"
-        >
-          <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
-            Ready to dig into user flows?
-          </h3>
-          <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
-            Set up a few goals like <.highlighted>Signup</.highlighted>, <.highlighted>Visit /</.highlighted>, or
-            <.highlighted>Scroll 50% on /blog/*</.highlighted>
-            first, then return here to build your first funnel.
-          </p>
-          <.button_link
-            class="mt-4"
-            href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
-          >
-            Set up goals →
-          </.button_link>
         </div>
       </.tile>
     </div>
@@ -126,6 +116,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_event("add-funnel", _value, socket) do
     {:noreply, assign(socket, setup_funnel?: true)}
+  end
+
+  def handle_event("cancel-setup-funnel", _value, socket) do
+    send(self(), :cancel_setup_funnel)
+    {:noreply, socket}
   end
 
   def handle_event("edit-funnel", %{"funnel-id" => id}, socket) do

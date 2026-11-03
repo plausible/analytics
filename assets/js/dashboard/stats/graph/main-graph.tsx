@@ -36,7 +36,8 @@ import {
   getRelativeChange,
   REVENUE_METRICS,
   getFirstAndLastTimeLabels,
-  MainGraphSeriesName
+  MainGraphSeriesName,
+  normalizeGraphTimeLabel
 } from './main-graph-data'
 import { Metric, getMetricLabel } from '../metrics'
 import { extractIntervalFromDimensions, Interval } from './intervals'
@@ -46,12 +47,13 @@ import {
   AnnotationType,
   canShowAddAnnotationButton,
   getAnnotationGranularity,
-  groupAnnotationsByTimeLabel
+  groupAnnotationsByDatetime
 } from '../../annotations/annotations'
 import { useUserContext } from '../../user-context'
 import { Button } from '../../components/button'
 import { HoverAnnotationsList } from '../../annotations/hover-annotations-list'
 import { InteractiveAnnotationsList } from '../../annotations/interactive-annotations-list'
+import { tooltipClassName } from '../../util/tooltip'
 
 const height = 368
 const marginTop = 16
@@ -118,8 +120,8 @@ export const MainGraph = ({
   const interval = extractIntervalFromDimensions(data.query.dimensions)
   const isRealtime = data.extraContext.isRealtime
 
-  const annotationsByTimeLabel = useMemo(
-    () => groupAnnotationsByTimeLabel(annotations, interval),
+  const annotationsByDatetime = useMemo(
+    () => groupAnnotationsByDatetime(annotations, interval),
     [annotations, interval]
   )
 
@@ -304,13 +306,15 @@ export const MainGraph = ({
     () =>
       remappedData.map((datum) => {
         const annotationsOnDatum = datum.main.isDefined
-          ? (annotationsByTimeLabel[datum.main.timeLabel] ?? [])
+          ? (annotationsByDatetime[
+              normalizeGraphTimeLabel(datum.main.timeLabel)
+            ] ?? [])
           : []
         return {
           count: annotationsOnDatum.length
         }
       }),
-    [remappedData, annotationsByTimeLabel]
+    [remappedData, annotationsByDatetime]
   )
 
   const getFormattedValue = useCallback(
@@ -398,8 +402,12 @@ export const MainGraph = ({
 
   const annotationDatetime =
     selectedDatum && selectedDatum.main.isDefined
-      ? selectedDatum.main.timeLabel
+      ? normalizeGraphTimeLabel(selectedDatum.main.timeLabel)
       : null
+
+  const annotationsForSelectedBucket = annotationDatetime
+    ? annotationsByDatetime[annotationDatetime]
+    : undefined
 
   const zoomToPeriod = useCallback(
     (date: string) => {
@@ -507,11 +515,7 @@ export const MainGraph = ({
           {tooltip.persistent ? (
             <PersistentTooltipContents
               annotationDatetime={annotationDatetime}
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotations={annotationsForSelectedBucket}
               isTouchDevice={isTouchDevice}
               interval={interval}
               zoomDate={zoomDate}
@@ -521,11 +525,8 @@ export const MainGraph = ({
             />
           ) : (
             <HoveredTooltipContents
-              annotations={
-                annotationDatetime
-                  ? annotationsByTimeLabel[annotationDatetime]
-                  : undefined
-              }
+              annotationDatetime={annotationDatetime}
+              annotations={annotationsForSelectedBucket}
               interval={interval}
               zoomDate={zoomDate}
               canAddAnnotation={canAddAnnotation}
@@ -538,6 +539,7 @@ export const MainGraph = ({
 }
 
 type TooltipContentsProps = {
+  annotationDatetime: string | null
   annotations: Annotation[] | undefined
   interval: Interval
   zoomDate: string | null
@@ -554,7 +556,6 @@ const PersistentTooltipContents = ({
   canAddAnnotation,
   closeTooltip
 }: {
-  annotationDatetime: string | null
   isTouchDevice: boolean
   onZoomToPeriod: (date: string) => void
   closeTooltip: () => void
@@ -564,8 +565,9 @@ const PersistentTooltipContents = ({
   const hasActions = !!zoomDate || (!!annotationDatetime && canAddAnnotation)
   return (
     <>
-      {!!annotations?.length && (
+      {!!annotationDatetime && !!annotations?.length && (
         <InteractiveAnnotationsList
+          annotationDatetime={annotationDatetime}
           annotations={annotations}
           isTouchDevice={isTouchDevice}
           closeTooltip={closeTooltip}
@@ -575,8 +577,9 @@ const PersistentTooltipContents = ({
         <div className="flex flex-row gap-x-2 mt-2">
           {!!annotationDatetime && canAddAnnotation && (
             <Button
+              theme="secondary"
               size="xs"
-              className="flex-auto bg-gray-600/70 border-gray-600/70 border-transparent hover:bg-gray-600"
+              className="flex-auto"
               onClick={() => {
                 closeTooltip()
                 setModal({
@@ -594,8 +597,9 @@ const PersistentTooltipContents = ({
           )}
           {!!zoomDate && (
             <Button
+              theme="secondary"
               size="xs"
-              className="flex-auto bg-gray-600/70 border-gray-600/70 border-transparent hover:bg-gray-600"
+              className="flex-auto"
               onClick={() => onZoomToPeriod(zoomDate)}
             >{`View ${interval}`}</Button>
           )}
@@ -606,6 +610,7 @@ const PersistentTooltipContents = ({
 }
 
 const HoveredTooltipContents = ({
+  annotationDatetime,
   annotations,
   interval,
   zoomDate,
@@ -613,17 +618,20 @@ const HoveredTooltipContents = ({
 }: TooltipContentsProps) => {
   return (
     <>
-      {!!annotations?.length && (
-        <HoverAnnotationsList annotations={annotations} />
+      {!!annotationDatetime && !!annotations?.length && (
+        <HoverAnnotationsList
+          annotations={annotations}
+          annotationDatetime={annotationDatetime}
+        />
       )}
-      <hr className="border-gray-600 dark:border-gray-800 my-1" />
+      <hr className="border-gray-200 dark:border-gray-800 my-1" />
       <div className="flex flex-col gap-y-0.5">
         {!!zoomDate && (
-          <div className="text-gray-300 dark:text-gray-400 text-xs">
+          <div className="text-gray-500 dark:text-gray-400 text-xs">
             {`Click to view ${interval}`}
           </div>
         )}
-        <div className="text-gray-300 dark:text-gray-400 text-xs">
+        <div className="text-gray-500 dark:text-gray-400 text-xs">
           {canAddAnnotation
             ? 'Right click for more actions'
             : 'Right click to pin tooltip'}
@@ -636,8 +644,11 @@ const HoveredTooltipContents = ({
 const isTouchEvent = (event: unknown) =>
   event instanceof PointerEvent && event.pointerType === 'touch'
 
-const mainGraphTooltipClassName =
-  'absolute bg-gray-800 dark:bg-gray-950 py-3 px-4 rounded-md shadow shadow-gray-200 dark:shadow-gray-850 w-max max-w-[220px] sm:max-w-[300px]'
+const mainGraphTooltipClassName = tooltipClassName({
+  size: 'sm',
+  theme: 'darker',
+  className: 'absolute w-max max-w-[220px] sm:max-w-[300px]'
+})
 
 type MainGraphTooltipProps = {
   metric: Metric
@@ -697,7 +708,7 @@ const MainGraphTooltip = ({
       })}
     >
       <aside
-        className="text-sm font-normal text-gray-100 flex flex-col gap-2"
+        className="font-normal flex flex-col gap-2"
         data-testid="graph-tooltip"
       >
         <div className="flex justify-between items-center rounded-sm">
@@ -709,7 +720,7 @@ const MainGraphTooltip = ({
           </div>
           {comparison.isDefined && typeof change === 'number' && (
             <ChangeArrow
-              className="text-xs/6 font-medium text-white whitespace-nowrap"
+              className="text-xs/6 font-medium whitespace-nowrap"
               metric={metric}
               change={change}
             />
@@ -719,7 +730,7 @@ const MainGraphTooltip = ({
           {main.isDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
-                <div className="size-2 flex-none mr-2 rounded-full bg-indigo-400" />
+                <div className="size-2 flex-none mr-2 rounded-full bg-indigo-500 dark:bg-indigo-400" />
                 <div
                   data-testid="main-time-label"
                   className="whitespace-nowrap"
@@ -747,7 +758,7 @@ const MainGraphTooltip = ({
           {comparison.isDefined && (
             <div className="flex flex-row justify-between items-center">
               <div className="flex items-center mr-4">
-                <div className="size-2 flex-none mr-2 rounded-full bg-gray-500"></div>
+                <div className="size-2 flex-none mr-2 rounded-full bg-indigo-200 dark:bg-indigo-800"></div>
                 <div className="whitespace-nowrap">
                   {getFullBucketLabel(comparison.timeLabel, {
                     isRealtime,

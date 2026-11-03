@@ -20,14 +20,14 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
 
           <.styled_link
             new_tab={true}
-            href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+            href={stats_path(@site.domain)}
           >
             Dashboard
           </.styled_link>
 
           <.styled_link
             new_tab={true}
-            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain, [])}
+            href={~p"/#{@site.domain}/settings/general"}
           >
             Settings
           </.styled_link>
@@ -46,20 +46,26 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
           label="Timezone"
           options={Plausible.Timezones.options()}
         />
-        <.input type="checkbox" field={f[:public]} label="Public?" />
-        <.input type="datetime-local" field={f[:native_stats_start_at]} label="Native Stats Start At" />
-        <.input
-          type="text"
-          field={f[:ingest_rate_limit_threshold]}
-          label="Ingest Rate Limit Threshold"
-        />
-        <.input
-          type="text"
-          field={f[:ingest_rate_limit_scale_seconds]}
-          label="Ingest Rate Limit Scale Seconds"
-        />
+        <.input type="checkbox" field={f[:public]} label="Public?" wrapper_class="mt-2" />
+        <div class="flex flex-col gap-6 mt-6">
+          <.input
+            type="datetime-local"
+            field={f[:native_stats_start_at]}
+            label="Native Stats Start At"
+          />
+          <.input
+            type="text"
+            field={f[:ingest_rate_limit_threshold]}
+            label="Ingest Rate Limit Threshold"
+          />
+          <.input
+            type="text"
+            field={f[:ingest_rate_limit_scale_seconds]}
+            label="Ingest Rate Limit Scale Seconds"
+          />
+        </div>
 
-        <div class="flex justify-between">
+        <div class="flex justify-between mt-6">
           <.button phx-target={@myself} type="submit">
             Save
           </.button>
@@ -98,7 +104,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     site = socket.assigns.site
 
     {:ok, _} = Plausible.Site.Removal.run(site)
-    navigate_with_success(Routes.customer_support_path(socket, :index), "Site deleted")
+    navigate_with_success(~p"/cs", "Site deleted")
     {:noreply, socket}
   end
 end

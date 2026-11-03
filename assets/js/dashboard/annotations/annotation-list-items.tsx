@@ -10,35 +10,38 @@ export const AnnotationsListContainer = ({
   children
 }: {
   children: ReactNode
-}) => (
-  <div className="text-sm font-normal text-gray-100 flex flex-col gap-2">
-    {children}
-  </div>
-)
+}) => <div className="flex flex-col gap-2">{children}</div>
 
 const VerticalBar = () => (
   <div className="rounded-xs w-[3px] bg-green-500 shrink-0" />
 )
 
 export const AnnotationItemRow = ({ children }: { children: ReactNode }) => (
-  <div className="group flex flex-row gap-x-2">
+  <div className="relative group flex flex-row gap-x-2">
     <VerticalBar />
     {children}
   </div>
 )
 
 export const AnnotationAuthorshipLine = ({
-  annotation
+  annotation,
+  showDateLabel
 }: {
   annotation: Annotation
+  showDateLabel: boolean
 }) => (
-  <div className="flex items-baseline text-xs text-gray-300 pr-8">
+  <div
+    data-testid="annotation-attribution"
+    className="flex items-baseline text-xs text-gray-500 dark:text-gray-400 pr-8"
+  >
     <span className="truncate min-w-0">
       {getAnnotationAuthorship(annotation)}
     </span>
-    <span className="whitespace-nowrap shrink-0">
-      {` • ${getAttributionDateLabel(annotation)}`}
-    </span>
+    {showDateLabel && (
+      <span className="whitespace-nowrap shrink-0">
+        &nbsp;{`• ${getAttributionDateLabel(annotation)}`}
+      </span>
+    )}
   </div>
 )
 

@@ -178,11 +178,15 @@ function PagesBreakdownMenu({
     <Popover className="relative">
       {({ close }) => (
         <>
+          <Popover.Overlay
+            className={popover.backdrop.classNames.transparent}
+          />
           <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
             ref={buttonRef}
             className={classNames(
-              'relative flex rounded !text-gray-500 dark:!text-gray-400 hover:!text-gray-600 dark:hover:!text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
+              popover.toggleButton.classNames.aboveBackdrop,
+              'flex rounded !text-gray-500 dark:!text-gray-400 hover:!text-gray-600 dark:hover:!text-gray-300 transition-colors duration-150 before:absolute before:inset-[-8px]',
               popover.toggleButton.classNames.linkLike,
               'justify-center'
             )}
@@ -196,11 +200,11 @@ function PagesBreakdownMenu({
             {...popover.transition.props}
             className={classNames(
               popover.transition.classNames.right,
-              'mt-2 min-w-48'
+              'mt-2 min-w-52'
             )}
           >
             <Popover.Panel className={popover.panel.classNames.roundedSheet}>
-              <p className="uppercase text-xs font-medium text-gray-500 dark:text-gray-400 px-4 py-2.5 whitespace-nowrap">
+              <p className={popover.items.classNames.sectionTitle}>
                 Break down by
               </p>
               <div

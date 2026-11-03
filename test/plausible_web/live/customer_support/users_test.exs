@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
 
     defp open_user(id, qs \\ []) do
-      Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, id, qs)
+      ~p"/cs/users/user/#{id}?#{qs}"
     end
 
     describe "overview" do
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
 
         assert element_exists?(
                  html,
-                 ~s|a[href="#{Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)}"]|
+                 ~s|a[href="#{~p"/cs/teams/team/#{team.id}"}"]|
                )
       end
 
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         |> element(~s|button[phx-click="delete-user"]|)
         |> render_click()
 
-        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, ~p"/cs")
 
         refute Plausible.Repo.get(Plausible.Auth.User, user.id)
       end
@@ -82,6 +82,43 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         assert text =~ "Failed to delete user: :is_only_team_owner"
 
         assert Plausible.Repo.get(Plausible.Auth.User, user.id)
+      end
+    end
+
+    describe "e-mail suppression warning" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "shows no warning when the user's e-mail isn't suppressed", %{
+        conn: conn,
+        user: user
+      } do
+        {:ok, _lv, html} = live(conn, open_user(user.id))
+
+        refute element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: user.email]}"}"]|
+               )
+      end
+
+      test "shows a warning linking to the suppression search when the user's e-mail is suppressed",
+           %{conn: conn, user: user} do
+        {:ok, _} =
+          Plausible.EmailSuppressions.create_from_bounce(%{
+            email: user.email,
+            reason: :hard_bounce,
+            source: :webhook
+          })
+
+        {:ok, _lv, html} = live(conn, open_user(user.id))
+
+        assert element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: user.email]}"}"]|
+               )
       end
     end
 

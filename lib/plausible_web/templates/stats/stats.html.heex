@@ -1,6 +1,4 @@
 <div class={stats_container_class(@conn)} data-site-domain={@site.domain}>
-  <PlausibleWeb.Components.FirstDashboardLaunchBanner.render site={@site} />
-
   <%= if Plausible.Teams.locked?(@site.team) do %>
     <div
       class="w-full px-4 py-4 text-sm font-bold text-center text-yellow-800 bg-yellow-100 rounded-sm transition"
@@ -55,8 +53,15 @@
     data-exploration-max-journey-steps={@exploration_max_journey_steps}
     data-team-identifier={@team_identifier}
     data-limited-to-segment-id={Jason.encode!(@limited_to_segment_id)}
+    data-show-email-reports-cta={to_string(@show_email_reports_cta?)}
   >
   </div>
+  <%= if @verify_installation? do %>
+    {live_render(@conn, PlausibleWeb.Live.Verification,
+      id: "live-verification",
+      session: @verification_session
+    )}
+  <% end %>
   <div id="modal_root"></div>
   <%= if ee?() && !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="py-12 lg:py-16 lg:flex lg:items-center lg:justify-between">

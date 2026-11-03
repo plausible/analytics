@@ -33,7 +33,7 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
           <.td :if={kind == :membership}>
             <.styled_link
               class="flex items-center"
-              patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, person.id)}
+              patch={~p"/cs/users/user/#{person.id}"}
             >
               <img
                 src={Plausible.Auth.User.profile_img_url(person)}

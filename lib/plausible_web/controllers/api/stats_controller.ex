@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Api.StatsController do
           H.too_many_requests(conn, "Too many exploration requests")
 
         {:error, :empty_journey} ->
-          H.bad_request(conn, "We are unable to show funnels when journey is empty")
+          H.bad_request(conn, "Funnels aren't available when journey is empty")
 
         {:error, :journey_too_long} ->
           H.bad_request(conn, "The journey is too long")
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Api.StatsController do
         {:error, {:invalid_funnel_query, due_to}} ->
           H.bad_request(
             conn,
-            "We are unable to show funnels when the dashboard is filtered by #{due_to}",
+            "Funnels aren't available when the dashboard is filtered by #{due_to}",
             %{
               level: :normal
             }

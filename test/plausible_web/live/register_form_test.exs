@@ -50,6 +50,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       lv = get_liveview(conn, "/register")
 
+      on_ee do
+        html = render(lv)
+        assert_signup_tracking(html, "none")
+      end
+
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
@@ -91,8 +96,34 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       assert html =~ "Please complete the captcha to register"
+      assert_push_event(lv, "reset-frc-captcha", %{})
+
+      on_ee do
+        assert_signup_tracking(html, "captcha")
+      end
 
       refute Repo.one(User)
+    end
+
+    test "resets the captcha when registration fails", %{conn: conn} do
+      mock_captcha_success()
+
+      new_user(email: "mary.sue@plausible.test")
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "has already been taken"
+      assert_push_event(lv, "reset-frc-captcha", %{})
+
+      on_ee do
+        assert_signup_tracking(html, "email")
+      end
     end
   end
 
@@ -223,12 +254,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       refute Repo.get_by(User, email: "mary.sue@plausible.test")
     end
 
-    test "renders expired invitation notice on on-existent invitation ID", %{conn: conn} do
-      lv = get_liveview(conn, "/register/invitation/doesnotexist")
+    test "redirects to expired invitation notice on on-existent invitation ID", %{conn: conn} do
+      conn = assign(conn, :live_module, PlausibleWeb.Live.RegisterForm)
 
-      html = render(lv)
-
-      assert html =~ "This invitation has expired or was revoked"
+      assert {:error, {:redirect, %{to: "/invitation-expired"}}} =
+               live(conn, "/register/invitation/doesnotexist")
     end
 
     test "renders error on failed captcha", %{conn: conn, guest_invitation: guest_invitation} do
@@ -242,6 +272,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       assert html =~ "Please complete the captcha to register"
+      assert_push_event(lv, "reset-frc-captcha", %{})
 
       refute Repo.get_by(User, email: "user@email.co")
     end
@@ -258,6 +289,15 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     lv
     |> element("form")
     |> render_change(%{id => text})
+  end
+
+  on_ee do
+    defp assert_signup_tracking(html, previous_error_category) do
+      options = Jason.encode!(%{"props" => %{"previous_error" => previous_error_category}})
+
+      assert text_of_attr(html, "#register-form", "onsubmit") ==
+               "window.plausible('Signup', #{options})"
+    end
   end
 
   defp mock_captcha_success() do

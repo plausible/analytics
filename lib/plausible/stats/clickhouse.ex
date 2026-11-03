@@ -191,20 +191,4 @@ defmodule Plausible.Stats.Clickhouse do
   def current_visitors_12h(site) do
     Stats.current_visitors(site, Duration.new!(hour: -12))
   end
-
-  def has_pageviews?(site) do
-    # This function is currently only used in installation verification
-    # which is not accessible for consolidated views.
-    true = Plausible.Sites.regular?(site)
-
-    ClickhouseRepo.exists?(
-      from(e in "events_v2",
-        where:
-          e.site_id == ^site.id and
-            e.name == "pageview" and
-            e.timestamp >=
-              ^site.native_stats_start_at
-      )
-    )
-  end
 end

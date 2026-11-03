@@ -15,6 +15,7 @@ import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../router'
 import { CsvExport, ExportStatus } from '../stats/csv-export/csv-export'
+import { MenuSeparator } from './nav-menu-components'
 
 function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   const { dashboardState } = useDashboardStateContext()
@@ -41,7 +42,11 @@ function ImportedSwitchItem({ disabled }: { disabled: boolean }) {
   )
 }
 
-function DashboardOptionsMenuItems() {
+function DashboardOptionsMenuItems({
+  closeDropdown
+}: {
+  closeDropdown: () => void
+}) {
   const { dashboardState } = useDashboardStateContext()
   const { selectedInterval, onIntervalClick, availableIntervals } =
     useGraphIntervalContext()
@@ -77,6 +82,7 @@ function DashboardOptionsMenuItems() {
           shouldIgnoreWhen={[isModifierPressed, isTyping]}
         />
       )}
+      <Popover.Overlay className={popover.backdrop.classNames.transparent} />
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button
         ref={buttonRef}
@@ -84,6 +90,7 @@ function DashboardOptionsMenuItems() {
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
+          popover.toggleButton.classNames.aboveBackdrop,
           'justify-center'
         )}
       >
@@ -95,17 +102,20 @@ function DashboardOptionsMenuItems() {
         className={classNames(popover.transition.classNames.right, 'mt-2')}
       >
         <Popover.Panel
-          className={classNames(
-            popover.panel.classNames.roundedSheet,
-            'min-w-72'
-          )}
+          className={classNames(popover.panel.classNames.roundedSheet, 'w-56')}
         >
           {showIntervalSection && (
-            <IntervalPicker
-              selectedInterval={selectedInterval}
-              onIntervalClick={onIntervalClick}
-              options={availableIntervals}
-            />
+            <>
+              <IntervalPicker
+                selectedInterval={selectedInterval}
+                onIntervalClick={(interval) => {
+                  onIntervalClick(interval)
+                  closeDropdown()
+                }}
+                options={availableIntervals}
+              />
+              <MenuSeparator />
+            </>
           )}
           <CsvExport
             exportStatus={exportStatus}
@@ -148,6 +158,7 @@ export function DashboardOptionsMenu() {
     return (
       <button
         disabled
+        data-testid="dashboard-options-menu"
         className={classNames(
           popover.toggleButton.classNames.rounded,
           popover.toggleButton.classNames.ghost,
@@ -161,7 +172,7 @@ export function DashboardOptionsMenu() {
 
   return (
     <Popover className="md:relative">
-      {() => <DashboardOptionsMenuItems />}
+      {({ close }) => <DashboardOptionsMenuItems closeDropdown={close} />}
     </Popover>
   )
 }

@@ -22,7 +22,7 @@ defmodule PlausibleWeb.CustomerSupport.Components.Search do
   def render(assigns) do
     ~H"""
     <div>
-      <ul :if={@results != []} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul :if={@results != []} class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <li :for={r <- @results} class="group relative">
           <.link patch={r.path} data-test-type={r.type} data-test-id={r.id}>
             <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">

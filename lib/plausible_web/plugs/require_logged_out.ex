@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.RequireLoggedOutPlug do
+  @moduledoc """
+  Plug forcibly logging user out if they are authenticated.
+  """
+
   import Plug.Conn
 
   def init(opts \\ []) do

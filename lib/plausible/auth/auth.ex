@@ -24,6 +24,8 @@ defmodule Plausible.Auth do
       @activation_request_limit 100_000
       @totp_setup_limit 100_000
       @totp_setup_ip_limit 100_000
+      @oauth_authorize_limit 100_000
+      @oauth_authorize_ip_limit 100_000
 
     env when env in [:test, :ce_test] ->
       @ip_rate_limit 5
@@ -33,6 +35,8 @@ defmodule Plausible.Auth do
       @activation_ip_limit 100_000
       @totp_setup_ip_limit 100_000
       @activation_request_limit 100_000
+      @oauth_authorize_limit 10
+      @oauth_authorize_ip_limit 100_000
 
     _ ->
       @ip_rate_limit 5
@@ -42,6 +46,8 @@ defmodule Plausible.Auth do
       @activation_ip_limit 2
       @totp_setup_ip_limit 2
       @activation_request_limit 5
+      @oauth_authorize_limit 10
+      @oauth_authorize_ip_limit 30
   end
 
   @rate_limits %{
@@ -94,8 +100,20 @@ defmodule Plausible.Auth do
       prefix: "totp-setup:user",
       limit: @totp_setup_limit,
       interval: :timer.minutes(5)
+    },
+    oauth_authorize_ip: %{
+      prefix: "oauth-authorize:ip",
+      limit: @oauth_authorize_ip_limit,
+      interval: :timer.minutes(1)
+    },
+    oauth_authorize_user: %{
+      prefix: "oauth-authorize:user",
+      limit: @oauth_authorize_limit,
+      interval: :timer.minutes(1)
     }
   }
+
+  @type registration_context() :: :default | :invitation
 
   @rate_limit_types Map.keys(@rate_limits)
 
@@ -120,6 +138,27 @@ defmodule Plausible.Auth do
     end
 
     :ok
+  end
+
+  @spec check_registration_enabled(registration_context()) ::
+          :ok | {:error, registration_context(), String.t()}
+  def check_registration_enabled(context \\ :default) do
+    disabled_for =
+      if context == :invitation do
+        [true]
+      else
+        [:invite_only, true]
+      end
+
+    selfhost_config = Application.fetch_env!(:plausible, :selfhost)
+    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
+    first_launch? = Plausible.Release.should_be_first_launch?()
+
+    if not first_launch? and disable_registration in disabled_for do
+      {:error, disable_registration, "Registration is disabled on this instance"}
+    else
+      :ok
+    end
   end
 
   @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil

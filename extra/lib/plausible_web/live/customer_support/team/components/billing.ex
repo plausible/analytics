@@ -24,7 +24,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     plan = Plans.get_subscription_plan(team.subscription)
 
     attrs = get_plan_attrs(plan)
-    plan_form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, attrs))
+    plan_form = to_form(EnterprisePlan.create_changeset(%EnterprisePlan{}, attrs))
 
     {:ok,
      assign(socket,
@@ -63,14 +63,26 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           id="new-custom-plan"
           phx-click="show-plan-form"
           phx-target={@myself}
-          class="ml-auto"
+          class="ml-auto mt-6"
         >
           New Custom Plan
         </.button>
       </div>
 
       <div class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
-        <h1 class="text-xs font-semibold">Usage</h1>
+        <.title :if={@team.subscription} class="mb-2">Subscription</.title>
+        <.table :if={@team.subscription} rows={[@team.subscription]}>
+          <:thead>
+            <.th>Last bill date</.th>
+            <.th>Next bill date</.th>
+          </:thead>
+          <:tbody :let={subscription}>
+            <.td data-test-id="last-bill-date">{format_bill_date(subscription.last_bill_date)}</.td>
+            <.td data-test-id="next-bill-date">{format_bill_date(subscription.next_bill_date)}</.td>
+          </:tbody>
+        </.table>
+
+        <.title class="mt-8 mb-2">Usage</.title>
         <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
           <:thead>
             <.th invisible>Cycle</.th>
@@ -90,16 +102,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           </:tbody>
         </.table>
 
-        <p :if={@usage.features != []} class="mt-6 mb-4">
-          <h1 class="text-xs font-semibold">Features Used</h1>
+        <%= if @usage.features != [] do %>
+          <.title class="mt-8 mb-2">Features Used</.title>
           <span class="text-sm">
             {@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
           </span>
-        </p>
+        <% end %>
 
-        <h1 :if={!@show_plan_form? and @plans != []} class="mt-8 text-xs font-semibold">
-          Custom Plans
-        </h1>
+        <.title :if={!@show_plan_form? and @plans != []} class="mt-8 mb-2">Custom Plans</.title>
         <.table :if={!@show_plan_form?} rows={@plans}>
           <:thead>
             <.th invisible>Interval</.th>
@@ -114,12 +124,35 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             </.td>
             <.td class="align-top" data-test-id={"plan-entry-#{plan.paddle_plan_id}"}>
               {plan.paddle_plan_id}
+              <br />
+
+              <.button
+                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                id={"manual-subscribe-#{plan.paddle_plan_id}"}
+                theme="secondary"
+                size="sm"
+                data-confirm={manual_subscribe_confirmation()}
+                phx-click="manual-subscribe"
+                phx-value-id={plan.id}
+                phx-target={@myself}
+              >
+                Manual Subscribe
+              </.button>
 
               <span
                 :if={current_plan?(@team, plan.paddle_plan_id)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
               >
                 CURRENT
+              </span>
+              <span
+                :if={
+                  current_plan?(@team, plan.paddle_plan_id) and
+                    Plausible.Billing.Subscription.manual_subscription?(@team.subscription)
+                }
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
+              >
+                MANUAL SUBSCRIPTION
               </span>
             </.td>
             <.td max_width="max-w-40">
@@ -161,65 +194,74 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
           phx-target={@myself}
           phx-change="estimate-cost"
         >
-          <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
-          <.input
-            type="select"
-            options={["monthly", "yearly"]}
-            field={f[:billing_interval]}
-            label="Billing Interval"
-            autocomplete="off"
-          />
-
-          <div class="flex items-center gap-x-4">
+          <div class="flex flex-col gap-6 mt-6">
             <.input
-              field={f[:monthly_pageview_limit]}
-              label="Monthly Pageview Limit"
+              field={f[:paddle_plan_id]}
+              label="Paddle Plan ID"
               autocomplete="off"
-              width="w-[500]"
+              readonly={not is_nil(@editing_plan)}
             />
-            <.preview for={f[:monthly_pageview_limit]} />
-          </div>
-
-          <div class="flex items-center gap-x-4">
-            <.input width="w-[500]" field={f[:site_limit]} label="Site Limit" autocomplete="off" />
-            <.preview for={f[:site_limit]} />
-          </div>
-
-          <div class="flex items-center gap-x-4">
             <.input
-              field={f[:team_member_limit]}
-              label="Team Member Limit"
+              type="select"
+              options={["monthly", "yearly"]}
+              field={f[:billing_interval]}
+              label="Billing Interval"
               autocomplete="off"
-              width="w-[500]"
             />
-            <.preview for={f[:team_member_limit]} />
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:monthly_pageview_limit]}
+                label="Monthly Pageview Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:monthly_pageview_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input width="w-[500]" field={f[:site_limit]} label="Site Limit" autocomplete="off" />
+              <.preview for={f[:site_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:team_member_limit]}
+                label="Team Member Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:team_member_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:hourly_api_request_limit]}
+                label="Hourly API Request Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+              <.preview for={f[:hourly_api_request_limit]} />
+            </div>
           </div>
 
-          <div class="flex items-center gap-x-4">
+          <div class="flex flex-col gap-2 mt-2">
             <.input
-              field={f[:hourly_api_request_limit]}
-              label="Hourly API Request Limit"
-              autocomplete="off"
-              width="w-[500]"
+              :for={
+                mod <-
+                  Plausible.Billing.Feature.list()
+                  |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
+              }
+              :if={mod not in Teams.Billing.free_features()}
+              x-on:change="featureChangeCallback(event)"
+              type="checkbox"
+              value={mod in (f.source.changes[:features] || f.source.data.features || [])}
+              name={"#{f.name}[features[]][#{mod.name()}]"}
+              label={mod.display_name()}
             />
-            <.preview for={f[:hourly_api_request_limit]} />
           </div>
 
-          <.input
-            :for={
-              mod <-
-                Plausible.Billing.Feature.list()
-                |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
-            }
-            :if={mod not in Teams.Billing.free_features()}
-            x-on:change="featureChangeCallback(event)"
-            type="checkbox"
-            value={mod in (f.source.changes[:features] || f.source.data.features || [])}
-            name={"#{f.name}[features[]][#{mod.name()}]"}
-            label={mod.display_name()}
-          />
-
-          <div class="mt-8 flex align-center gap-x-4">
+          <div class="mt-10 flex align-center gap-x-4">
             <.input
               type="checkbox"
               field={f[:managed_proxy_price_modifier]}
@@ -235,11 +277,11 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               value={@cost_estimate}
             />
 
-            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself}>
+            <.button theme="secondary" phx-click="hide-plan-form" phx-target={@myself} class="mt-6">
               Cancel
             </.button>
 
-            <.button type="submit">
+            <.button type="submit" class="mt-6">
               {if @editing_plan, do: "Update Plan", else: "Save Custom Plan"}
             </.button>
           </div>
@@ -250,7 +292,58 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   end
 
   def handle_event("show-plan-form", _, socket) do
-    {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+    if Plausible.Billing.Subscription.manual_subscription?(socket.assigns.team.subscription) do
+      failure(
+        "Creating a new plan is prohibited due to a manual subscription. Edit the existing enterprise plan instead."
+      )
+
+      {:noreply, socket}
+    else
+      {:noreply, assign(socket, show_plan_form?: true, editing_plan: nil)}
+    end
+  end
+
+  def handle_event("manual-subscribe", %{"id" => plan_id}, socket) do
+    %{team: team, plans: plans} = socket.assigns
+    plan = Enum.find(plans, &(&1.id == String.to_integer(plan_id)))
+
+    if plan && not current_plan?(team, plan.paddle_plan_id) do
+      case Plausible.Billing.create_manual_subscription(team, plan) do
+        {:ok, _team} ->
+          # Reload the whole page, so that e.g. the subscription status in the header updates too
+          navigate_with_success(
+            ~p"/cs/teams/team/#{team.id}?tab=billing",
+            "Subscription created (manual)"
+          )
+
+          {:noreply, socket}
+
+        {:error, :already_manual} ->
+          failure("A team can only have one manual subscription")
+          {:noreply, socket}
+
+        {:error, :active_subscription} ->
+          failure("The team has an active Paddle subscription. Cancel it in Paddle first.")
+          {:noreply, socket}
+
+        {:error, :not_latest_plan} ->
+          failure("Only the latest enterprise plan can get a manual subscription")
+          {:noreply, socket}
+
+        {:error, :not_yearly} ->
+          failure(
+            "Manual subscriptions are only possible for yearly plans. Change the plan's billing interval to yearly first."
+          )
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          failure("Error saving subscription: #{inspect(changeset.errors)}")
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("edit-plan", %{"id" => plan_id}, socket) do
@@ -258,7 +351,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
 
     if plan do
-      plan_form = to_form(EnterprisePlan.changeset(plan, %{}))
+      plan_form = to_form(EnterprisePlan.update_changeset(plan))
       {:noreply, assign(socket, show_plan_form?: true, editing_plan: plan, plan_form: plan_form)}
     else
       {:noreply, socket}
@@ -282,7 +375,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
     params = update_features_to_list(params)
 
-    form = to_form(EnterprisePlan.changeset(%EnterprisePlan{}, params))
+    form = to_form(EnterprisePlan.create_changeset(%EnterprisePlan{}, params))
 
     params = sanitize_params(params)
 
@@ -302,7 +395,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
-    changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
+
+    changeset =
+      EnterprisePlan.create_changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
     case Plausible.Repo.insert(changeset) do
       {:ok, _plan} ->
@@ -325,7 +420,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
 
   def handle_event("update-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
-    changeset = EnterprisePlan.changeset(socket.assigns.editing_plan, params)
+    changeset = EnterprisePlan.update_changeset(socket.assigns.editing_plan, params)
 
     case Plausible.Repo.update(changeset) do
       {:ok, _plan} ->
@@ -386,6 +481,9 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
         order_by: [desc: :id]
     )
   end
+
+  defp format_bill_date(nil), do: "--"
+  defp format_bill_date(date), do: PlausibleWeb.TextHelpers.format_date(date)
 
   defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
     "unlimited"
@@ -453,6 +551,18 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
       value={preview_number(@for.value)}
       class="bg-transparent border-0 p-0 m-0 text-sm w-full"
     />
+    """
+  end
+
+  defp manual_subscribe_confirmation() do
+    """
+    Manually subscribe the customer to this enterprise plan?
+
+    This creates a subscription outside of Paddle, which will have no information about it. \
+    Use it only when the customer pays by bank transfer against an invoice.
+
+    The plan's Paddle Plan ID will be replaced with "manual-subscription". \
+    The subscription will be valid for one year starting today.
     """
   end
 

@@ -3,7 +3,7 @@
   for={@conn}
   class="max-w-md w-full mx-auto bg-white dark:bg-gray-900 shadow-md rounded-sm px-8 pt-6 pb-8 mb-4 mt-8"
   onsubmit="confirmButton.disabled = true; return true;"
-  action={Routes.google_analytics_path(@conn, :import, @site.domain)}
+  action={~p"/#{@site.domain}/settings/google-import"}
 >
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
 
@@ -23,7 +23,7 @@
     </span>
     <.input type="hidden" value={@selected_property} field={f[:property]} readonly="true" />
   </div>
-  <div class="flex justify-between mt-3">
+  <div class="flex justify-between mt-6">
     <div class="w-36">
       <.label for={f[:start_date].id}>From</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
@@ -45,12 +45,7 @@
     <p class="text-sm mt-4 sm:mt-0 dark:text-gray-100">
       <a
         href={
-          Routes.google_analytics_path(@conn, :property, @site.domain,
-            property: @selected_property,
-            access_token: @access_token,
-            refresh_token: @refresh_token,
-            expires_at: @expires_at
-          )
+          ~p"/#{@site.domain}/import/google-analytics/property?#{[property: @selected_property, access_token: @access_token, refresh_token: @refresh_token, expires_at: @expires_at]}"
         }
         class="underline text-indigo-600"
       >
@@ -61,7 +56,7 @@
     <.button
       type="submit"
       name="confirmButton"
-      class="button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      class="button sm:w-auto w-full mt-6 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
     >
       <span class="label-enabled pointer-events-none">
         Confirm import

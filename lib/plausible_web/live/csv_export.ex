@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         <.download
           storage={@storage}
           export={@export}
-          href={Routes.site_path(@socket, :download_export, @site.domain)}
+          href={~p"/#{@site.domain}/download/export"}
         />
     <% end %>
     """
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     <p class="text-sm">
       Prepare your data for download by clicking the button below. When that's done, a Zip file that you can download will appear.
     </p>
-    <.button phx-click="export">Prepare download</.button>
+    <.button phx-click="export" class="mt-6">Prepare download</.button>
     """
   end
 
@@ -227,9 +227,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         {:error, :no_data} ->
           socket
           |> put_flash(:error, "There is no data to export")
-          |> redirect(
-            to: Routes.site_path(socket, :settings_imports_exports, socket.assigns.site.domain)
-          )
+          |> redirect(to: ~p"/#{socket.assigns.site.domain}/settings/imports-exports")
       end
 
     {:noreply, socket}

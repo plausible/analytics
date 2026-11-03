@@ -219,6 +219,56 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
               metric_prefix ++ [:verification, :unhandled],
               event_name: InstallationSupport.Verification.Checks.telemetry_event_unhandled()
             )
+        ),
+        distribution(
+          metric_prefix ++ [:clickhouse_clean_sites, :stage, :duration],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_stage_duration(),
+          reporter_options: [
+            buckets: [10, 50, 100, 500, 1_000, 5_000, 10_000, 30_000, 60_000, 300_000, 600_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration,
+          tags: [:stage]
+        ),
+        last_value(
+          metric_prefix ++ [:clickhouse_clean_sites, :run, :sites_count],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_run_event(),
+          measurement: :sites_count
+        ),
+        last_value(
+          metric_prefix ++ [:clickhouse_clean_sites, :run, :partitions_count],
+          event_name: Plausible.Workers.ClickhouseCleanSites.telemetry_partitions_event(),
+          measurement: :count,
+          tags: [:table]
+        ),
+        last_value(
+          metric_prefix ++ [:scan_inactive_teams, :run, :created_count],
+          event_name: Plausible.Workers.ScanInactiveTeams.telemetry_run_event(),
+          measurement: :created
+        ),
+        last_value(
+          metric_prefix ++ [:unsnooze_team_deletions, :run, :count],
+          event_name: Plausible.Workers.UnsnoozeTeamDeletions.telemetry_run_event(),
+          measurement: :count
+        ),
+        counter(
+          metric_prefix ++ [:send_deletion_notifications, :run, :total],
+          event_name: Plausible.Workers.SendDeletionNotifications.telemetry_run_event(),
+          tags: [:stage, :outcome, :category]
+        ),
+        counter(
+          metric_prefix ++ [:execute_team_deletions, :run, :total],
+          event_name: Plausible.Workers.ExecuteTeamDeletions.telemetry_run_event(),
+          tags: [:outcome, :category]
+        ),
+        distribution(
+          metric_prefix ++ [:execute_team_deletions, :sites_deleted],
+          event_name: Plausible.Workers.ExecuteTeamDeletions.telemetry_sites_deleted_event(),
+          reporter_options: [
+            buckets: [1, 2, 5, 10, 25, 50, 100, 250, 500, 1_000]
+          ],
+          measurement: :count,
+          tags: [:category]
         )
       ]
       |> Enum.concat(persistor_metrics(metric_prefix))

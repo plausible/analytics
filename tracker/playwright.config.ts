@@ -3,21 +3,23 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
+const isCI: boolean = !!process.env.CI
+
 export default defineConfig({
   testDir: './test',
   /* Can be overridden in specific tests with test('a longer running test', async () => { test.setTimeout(<longer timeout>); // test content... }) */
   timeout: 10 * 1000,
   fullyParallel: true,
   /* Optimize workers for CI vs local development */
-  workers: process.env.CI ? 4 : undefined,
+  ...(isCI && { workers: 4 }),
   /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: isCI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'list',
   /* Limit the number of failures on CI to save resources */
-  maxFailures: process.env.CI ? 10 : undefined,
+  ...(isCI && { maxFailures: 10 }),
   /*
   Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions.
   NOTE: We run the installation support tests on Chrome only because the Browserless /function API
@@ -44,6 +46,6 @@ export default defineConfig({
   webServer: {
     command: 'npm run start',
     port: 3000,
-    reuseExistingServer: !process.env.CI
+    reuseExistingServer: !isCI
   }
 })

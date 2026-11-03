@@ -5,6 +5,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   this team.
   """
   use PlausibleWeb, :live_component
+
   import PlausibleWeb.CustomerSupport.Live
   alias Plausible.ConsolidatedView
   alias Plausible.Stats
@@ -35,7 +36,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
       <%= if Enum.empty?(@consolidated_views) do %>
         <div class="mx-auto flex flex-col items-center">
           <p>This team does not have a consolidated view yet.</p>
-          <.button class="mx-auto" phx-click="create-consolidated-view" phx-target={@myself}>
+          <.button class="mx-auto mt-6" phx-click="create-consolidated-view" phx-target={@myself}>
             Create one
           </.button>
         </div>
@@ -57,7 +58,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
             <.td>
               <.styled_link
                 new_tab={true}
-                href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, consolidated_view.domain, [])}
+                href={stats_path(consolidated_view.domain)}
               >
                 Dashboard
               </.styled_link>

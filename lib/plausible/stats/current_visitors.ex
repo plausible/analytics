@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.CurrentVisitors do
+  @moduledoc """
+  API for querying current number of visitors for real-time stats.
+  """
+
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 

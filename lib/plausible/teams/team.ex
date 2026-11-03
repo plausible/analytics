@@ -12,14 +12,21 @@ defmodule Plausible.Teams.Team do
   use Ecto.Schema
   use Plausible
 
-  alias Plausible.Auth
-
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
 
   @trial_accept_traffic_until_offset_days 14
   @subscription_accept_traffic_until_offset_days 30
+
+  @max_name_length 50
+  # `teams.name` is a varchar(255), which counts code points. Capping bytes
+  # keeps the column safe, since a code point is never shorter than a byte.
+  @max_name_bytes 255
+  @suggested_name_suffix "'s team"
+  @suggested_name_fallback "My team"
+
+  @default_hourly_api_request_limit on_ee(do: 600, else: 1_000_000)
 
   on_ee do
     @derive {Plausible.Audit.Encoder,
@@ -50,7 +57,7 @@ defmodule Plausible.Teams.Team do
     field :setup_at, :naive_datetime
 
     # Field synced from current subscription plan, if any. The value of this field is treated as the source of truth when out of sync
-    field :hourly_api_request_limit, :integer, default: Auth.ApiKey.default_hourly_request_limit()
+    field :hourly_api_request_limit, :integer, default: @default_hourly_api_request_limit
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
@@ -65,6 +72,9 @@ defmodule Plausible.Teams.Team do
     has_many :team_invitations, Plausible.Teams.Invitation
     has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+
+    has_one :team_deletion_schedule, Plausible.TeamDeletionSchedule,
+      where: [status: {:in, Plausible.TeamDeletionSchedule.active_statuses()}]
 
     on_ee do
       has_one :sso_integration, Plausible.Auth.SSO.Integration
@@ -84,6 +94,64 @@ defmodule Plausible.Teams.Team do
     timestamps()
   end
 
+  @doc """
+  Builds the team name suggested for a user, shortening the user's name as
+  needed, so that the result stays within the name length limit.
+
+  Falls back to a generic name when the user's name would make the suggestion
+  invalid, so that the suggestion is always safe to persist.
+  """
+  def suggested_name(user_name) when is_binary(user_name) do
+    room = @max_name_length - String.length(@suggested_name_suffix)
+
+    suggested =
+      user_name
+      |> String.slice(0, room)
+      |> String.trim_trailing()
+      |> Kernel.<>(@suggested_name_suffix)
+
+    if valid_suggestion?(suggested) do
+      suggested
+    else
+      @suggested_name_fallback
+    end
+  end
+
+  def suggested_name(_user_name), do: @suggested_name_fallback
+
+  @doc """
+  Builds the team name suggested from a site domain, using the label right
+  before the public suffix, e.g. "shop.wannabuy.co.uk/blog" -> "Wannabuy".
+
+  Falls back to `suggested_name/1` when the domain doesn't yield a name-like
+  label or is invalid according to the rules of `valid_suggestion?/1`.
+  """
+  def suggested_name_from_domain(domain, user_name) when is_binary(domain) do
+    with [host | _] <- String.split(domain, "/", parts: 2),
+         registrable_domain when is_binary(registrable_domain) <-
+           PublicSuffix.registrable_domain(host),
+         [label | _] <- String.split(registrable_domain, "."),
+         true <- String.match?(label, ~r/\p{L}/u),
+         suggested = humanize_domain_label(label),
+         true <- String.length(suggested) <= @max_name_length and valid_suggestion?(suggested) do
+      suggested
+    else
+      _ -> suggested_name(user_name)
+    end
+  end
+
+  def suggested_name_from_domain(_domain, user_name), do: suggested_name(user_name)
+
+  defp humanize_domain_label(label) do
+    label
+    |> String.split(["-", "_"], trim: true)
+    |> Enum.map_join(" ", &String.capitalize/1)
+  end
+
+  defp valid_suggestion?(name) do
+    byte_size(name) <= @max_name_bytes and not contains_scheme?(name)
+  end
+
   def crm_changeset(team, params) do
     team
     |> cast(params, [
@@ -93,6 +161,7 @@ defmodule Plausible.Teams.Team do
       :allow_next_upgrade_override,
       :accept_traffic_until
     ])
+    |> validate_name()
     |> maybe_bump_accept_traffic_until()
   end
 
@@ -100,6 +169,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(attrs, [:name])
     |> validate_required(:name)
+    |> validate_name()
     |> start_trial(today)
     |> maybe_bump_accept_traffic_until()
     |> maybe_set_identifier()
@@ -108,8 +178,27 @@ defmodule Plausible.Teams.Team do
   def name_changeset(team, attrs \\ %{}) do
     team
     |> cast(attrs, [:name])
+    |> validate_name()
     |> validate_required(:name)
-    |> validate_exclusion(:name, [Plausible.Teams.default_name()])
+    |> validate_not_reserved_name()
+  end
+
+  def validate_not_reserved_name(changeset) do
+    # Do not allow an actual team keep Plausible.Teams.default_name()
+    # as its name. This is just to avoid confusion in the UI and keep
+    # the auto-created team distinguishable from a real one.
+
+    # Hence we use `force_change` here -- even if the value didn't
+    # change, check that name is not `Plausible.Teams.default_name()`.
+    # Only do that when the name field doesn't have any prior errors
+    # on it to avoid double-flagging (blank + reserved).
+    if Keyword.has_key?(changeset.errors, :name) do
+      changeset
+    else
+      changeset
+      |> force_change(:name, get_field(changeset, :name))
+      |> validate_exclusion(:name, [Plausible.Teams.default_name()])
+    end
   end
 
   def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do
@@ -133,6 +222,23 @@ defmodule Plausible.Teams.Team do
     change(team, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
   end
 
+  defp validate_name(changeset) do
+    changeset
+    |> validate_length(:name, max: @max_name_length)
+    |> validate_length(:name, count: :bytes, max: @max_name_bytes)
+    |> validate_change(:name, fn :name, name ->
+      if contains_scheme?(name) do
+        [name: "cannot contain a URL"]
+      else
+        []
+      end
+    end)
+  end
+
+  # Team names end up in invitation e-mails, so reject names carrying an
+  # explicit URL scheme. Bare hostnames are deliberately left alone.
+  defp contains_scheme?(name), do: String.contains?(name, "://")
+
   defp maybe_set_identifier(changeset) do
     if get_field(changeset, :identifier) do
       changeset
@@ -154,6 +260,8 @@ defmodule Plausible.Teams.Team do
       changeset
     end
   end
+
+  def default_hourly_api_request_limit(), do: @default_hourly_api_request_limit
 
   def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
 

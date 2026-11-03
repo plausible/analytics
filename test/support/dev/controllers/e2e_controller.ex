@@ -51,6 +51,7 @@ defmodule PlausibleWeb.E2EController do
       site
       |> Plausible.Site.set_native_stats_start_at(stats_start_time)
       |> Plausible.Site.set_stats_start_date(stats_start_date)
+      |> Plausible.Site.put_onboarding_status_advance(:first_pageview)
       |> Plausible.Repo.update!()
 
       populate(events, site)
@@ -86,14 +87,72 @@ defmodule PlausibleWeb.E2EController do
       site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
 
       steps =
-        Enum.map(steps, fn step ->
-          goal = get_goal(site, step)
-          %{"goal_id" => goal.id}
+        Enum.map(steps, fn
+          goal_name when is_binary(goal_name) ->
+            goal = get_goal(site, goal_name)
+            %{"goal_id" => goal.id}
+
+          goal_data when is_map(goal_data) ->
+            goal_data
         end)
 
       {:ok, _} = Plausible.Funnels.create(site, name, steps)
 
       send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+    end
+
+    def get_funnel(conn, %{"domain" => domain, "name" => name}) do
+      site = Plausible.Repo.get_by!(Plausible.Site, domain: domain)
+
+      funnel =
+        Plausible.Funnel
+        |> Plausible.Repo.get_by!(site_id: site.id, name: name)
+        |> Plausible.Repo.preload(steps: :goal)
+
+      steps = Plausible.Funnel.goals(funnel)
+
+      funnel_data =
+        funnel
+        |> Map.take([:id, :name, :funnel_type, :site_id])
+        |> Map.put(
+          :steps,
+          Enum.map(
+            steps,
+            &Map.take(&1, [
+              :id,
+              :event_name,
+              :page_path,
+              :scroll_threshold,
+              :display_name,
+              :currency,
+              :custom_props
+            ])
+          )
+        )
+
+      send_resp(conn, 200, Jason.encode!(funnel_data))
+    end
+
+    def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
+      opts = [
+        slowdown: params["options"]["slowdown"] || 0,
+        launch_delay: params["options"]["launch_delay"] || 0
+      ]
+
+      # Registering a new scenario is treated as the start of a fresh
+      # verification "phase" in e2e specs - reset the rate limit so a spec
+      # exercising multiple scenarios/flows against the same domain doesn't
+      # hit the real per-domain verification rate limit.
+      rate_limit_key = "site_verification:#{domain}"
+      :ets.select_delete(Plausible.RateLimit, [{{{rate_limit_key, :_}, :_, :_}, [], [true]}])
+
+      case Plausible.InstallationSupport.Verification.MockScenarios.put(domain, scenario, opts) do
+        :ok ->
+          send_resp(conn, 200, Jason.encode!(%{"ok" => true}))
+
+        {:error, :unknown_scenario} ->
+          send_resp(conn, 422, Jason.encode!(%{"error" => "Unknown scenario: #{scenario}"}))
+      end
     end
 
     defp get_goal(site, name) do
@@ -149,7 +208,9 @@ defmodule PlausibleWeb.E2EController do
 
     defp maybe_set_import_id(events, site) do
       if Enum.any?(events, &Map.has_key?(&1, :table)) do
-        import = Plausible.Factory.insert(:site_import, site: site)
+        [owner | _] = Plausible.Repo.preload(site, :owners).owners
+
+        import = Plausible.Factory.insert(:site_import, site: site, imported_by: owner)
 
         Enum.map(events, &set_import_id(&1, import.id))
       else

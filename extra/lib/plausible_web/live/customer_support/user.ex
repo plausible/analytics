@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.User do
   use PlausibleWeb.CustomerSupport.Live
 
   import Ecto.Query
+  import PlausibleWeb.CustomerSupport.Components.SuppressionWarning
   alias Plausible.Repo
 
   alias PlausibleWeb.CustomerSupport.User.Components.{
@@ -30,7 +31,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.User do
 
       {:noreply, go_to_tab(socket, tab, params, :user, tab_component(tab))}
     else
-      {:noreply, redirect(socket, to: Routes.customer_support_path(socket, :index))}
+      {:noreply, redirect(socket, to: ~p"/cs")}
     end
   end
 
@@ -73,7 +74,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.User do
               </span>
             </div>
           </p>
-          <p class="text-sm font-medium">{@user.email}</p>
+          <p class="text-sm font-medium flex items-center gap-x-1">
+            {@user.email}
+            <.suppression_warning email={@user.email} />
+          </p>
         </div>
       </div>
 

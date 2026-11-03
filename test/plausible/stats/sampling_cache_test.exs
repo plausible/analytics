@@ -191,7 +191,7 @@ defmodule Plausible.Stats.SamplingCacheTest do
                ) == div(@threshold, 2)
       end
 
-      test "conslidated_get returns nil", %{test: test} do
+      test "consolidated_get returns nil", %{test: test} do
         start_test_cache(test)
 
         assert is_nil(

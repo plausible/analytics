@@ -99,6 +99,25 @@ on_ee do
   {:ok, solo_team} = Plausible.Teams.get_or_create(solo_user)
 
   Plausible.Billing.DevSubscriptions.create(solo_team.id, "910413")
+
+  {:ok, _} =
+    Plausible.EmailSuppressions.create_from_bounce(%{
+      email: user2.email,
+      reason: :hard_bounce,
+      source: :webhook,
+      postmark_bounce_id: 123_456_789,
+      postmark_inactive: true,
+      can_activate: true,
+      details: "The email account that you tried to reach does not exist."
+    })
+
+  {:ok, _} =
+    Plausible.EmailSuppressions.create_from_bounce(%{
+      email: "former-subscriber@example.com",
+      reason: :unsubscribe,
+      source: :backfill,
+      details: "Unsubscribed via Postmark (origin: Recipient)"
+    })
 end
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)

@@ -10,12 +10,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   @url "/team/setup"
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
-  describe "/team/setup - edge cases" do
+  describe "/team/setup" do
     setup [:create_user, :log_in]
-
-    test "redirects if there's no implicit team created", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, @url)
-    end
 
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
@@ -23,63 +19,304 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       conn = set_current_team(conn, team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
     end
-  end
 
-  describe "/team/setup - main differences from team management" do
-    setup [:create_user, :log_in, :create_team]
-
-    test "renames the team on first render", %{conn: conn, team: team} do
-      assert team.name == "My personal sites"
+    test "renders a cancel link back to /sites", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Jane Smith's team"
-
-      assert Repo.reload!(team).name == "Jane Smith's team"
+      assert text_of_element(html, "#create-team-cancel") == "Cancel"
+      assert text_of_attr(html, "#create-team-cancel", "href") == "/sites"
     end
 
-    test "renames even if team already has non-default name", %{conn: conn, team: team} do
-      assert team.name == "My personal sites"
-      Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
+    test "does not render the onboarding progress", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+      refute element_exists?(html, "#flow-progress")
+    end
+  end
+
+  describe "/team/setup?flow=register - after adding a site" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders the team setup step of the onboarding progress", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_attr(html, ~s|#flow-progress [aria-current="step"]|, "aria-label") ==
+               "Set up team"
+    end
+
+    test "suggests a team name based on the site domain", %{conn: conn, user: user} do
+      site = new_site(owner: user, domain: "shop.my-company.co.uk")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "My Company"
+    end
+
+    test "renders a skip link to the installation step", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert text_of_element(html, "#create-team-skip") == "Skip"
+
+      assert text_of_attr(html, "#create-team-skip", "href") ==
+               ~p"/#{site.domain}/installation?flow=register"
+    end
+
+    test "turns the personal team into a real team and continues to installation", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, lv, _html} = live(conn, onboarding_url(site.domain))
+
+      finish_setup(lv, name: "Onboarded Team")
+
+      assert_redirect(
+        lv,
+        ~p"/#{site.domain}/installation?flow=register&__team=#{site.team.identifier}"
+      )
+
+      team = Repo.reload!(site.team)
+      assert team.setup_complete
+      assert team.name == "Onboarded Team"
+    end
+
+    test "skips ahead to installation if the team is already set up", %{
+      conn: conn,
+      site: site
+    } do
+      team = Teams.complete_setup(site.team)
+      conn = set_current_team(conn, team)
+      expected_path = ~p"/#{site.domain}/installation?flow=register"
+
+      assert {:error, {:redirect, %{to: ^expected_path}}} =
+               live(conn, onboarding_url(site.domain))
+    end
+
+    test "ignores the domain of a site the user can't access", %{conn: conn} do
+      other_site = new_site(domain: "other-company.com")
+
+      {:ok, _lv, html} = live(conn, onboarding_url(other_site.domain))
+
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
+
+    test "ignores the domain of a non-existent site when skipping ahead", %{
+      conn: conn,
+      site: site
+    } do
+      team = Teams.complete_setup(site.team)
+      conn = set_current_team(conn, team)
+
+      assert {:error, {:redirect, %{to: "/sites"}}} =
+               live(conn, onboarding_url("evil.example.com"))
+    end
+  end
+
+  describe "/team/setup?flow=register - after skipping adding a site" do
+    setup [:create_user, :log_in]
+
+    test "suggests a team name based on the user name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+    end
+
+    test "renders a skip link to /sites", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_element(html, "#create-team-skip") == "Skip"
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+    end
+
+    test "creates a team from scratch and continues to /sites", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, onboarding_url())
+
+      finish_setup(lv, name: "Onboarded Team")
+
+      assert {:ok, team} = Teams.get_by_owner(user)
+      assert team.setup_complete
+      assert team.name == "Onboarded Team"
+
+      assert_redirect(lv, "/sites?__team=" <> team.identifier)
+    end
+
+    test "skips ahead to /sites if the team is already set up", %{conn: conn, user: user} do
+      {:ok, team} = Teams.create(user, "Onboarded Team", [])
+      conn = set_current_team(conn, team)
+
+      assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, onboarding_url())
+    end
+  end
+
+  describe "/team/setup - without any existing team" do
+    setup [:create_user, :log_in]
+
+    test "renders the form with a suggested name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
                "Jane Smith's team"
 
-      assert Repo.reload!(team).name == "Jane Smith's team"
+      assert element_exists?(html, "#create-team-submit")
+      refute element_exists?(html, "#feature-gate-overlay")
+    end
+
+    test "creates a new team from scratch and invites members", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      finish_setup(lv,
+        name: "Brand New Team",
+        rows: %{"1" => %{"email" => "new@example.com", "role" => "editor"}}
+      )
+
+      assert {:ok, team} = Teams.get_by_owner(user)
+      assert team.name == "Brand New Team"
+      assert team.setup_complete
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"Brand New Team\" team"
+      )
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :editor
+    end
+
+    test "does not create a team when an invitation is rejected", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, rows: %{"1" => %{"email" => user.email, "role" => "viewer"}}) =~
+               "You cannot invite yourself"
+
+      assert {:error, :no_team} = Teams.get_by_owner(user)
+    end
+
+    @tag :ee_only
+    test "defaults the member rows to the trial team member limit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 10
+    end
+  end
+
+  describe "/team/setup - suggested team name" do
+    test "shortens a long user name to fit the limit", %{conn: conn} do
+      user = new_user(name: String.duplicate("a", 55))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, _team} = Teams.get_or_create(user)
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      expected = String.duplicate("a", 43) <> "'s team"
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               expected
+    end
+
+    test "falls back to a generic name when the user name carries a URL scheme", %{conn: conn} do
+      user = new_user(name: "Cheap meds https://spam.example.com")
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, _team} = Teams.get_or_create(user)
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+    end
+
+    test "falls back to a generic name when shortening overflows the column", %{conn: conn} do
+      user = new_user(name: String.duplicate("👨‍👩‍👧‍👦", 36))
+      {:ok, conn: conn} = log_in(%{user: user, conn: conn})
+      {:ok, _team} = Teams.get_or_create(user)
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "My team"
+    end
+  end
+
+  describe "/team/setup - team name" do
+    setup [:create_user, :log_in, :create_team]
+
+    test "suggests a default name without persisting it", %{conn: conn, team: team} do
+      assert team.name == "My personal sites"
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's team"
+
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
     test "renders form", %{conn: conn} do
-      {:ok, lv, html} = live(conn, @url)
-      assert element_exists?(html, ~s|input#update-team-form_name[name="team[name]"]|)
-      assert element_exists?(html, ~s|button[phx-click="save-team-layout"]|)
-
-      _ = render(lv)
+      {:ok, _lv, html} = live(conn, @url)
+      assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"]|)
+      assert element_exists?(html, "#create-team-submit")
+      assert elem_count(html, visible_row_el()) == 1
     end
 
-    test "changing team name, updates team name in db", %{conn: conn, team: team} do
+    test "marks the name input as required so the browser blocks a blank submit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert element_exists?(html, ~s|input#create-team-form_name[name="team[name]"][required]|)
+    end
+
+    test "rejects a blank name on submit", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
-      type_into_input(lv, "team[name]", "New Team Name")
-      assert Repo.reload!(team).name == "New Team Name"
 
-      _ = render(lv)
+      assert finish_setup(lv, name: "") =~ "blank"
+      refute Repo.reload!(team).setup_complete
     end
 
-    test "setting team name to 'My personal sites' is reserved", %{
+    test "setting team name containing a URL is rejected", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, name: "Cheap meds at https://spam.example.com") =~
+               "cannot contain a URL"
+
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
+
+    test "setting team name longer than the limit is rejected", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, name: String.duplicate("a", 51)) =~
+               "should be at most 50 character(s)"
+
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
+
+    test "rejects the reserved default team name on submit", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv, name: "My personal sites") =~ "is reserved"
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
+
+    test "creating the team goes through once a valid name is submitted", %{
       conn: conn,
-      team: team,
-      user: user
+      team: team
     } do
-      {:ok, lv, html} = live(conn, @url)
+      {:ok, lv, _html} = live(conn, @url)
 
-      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "#{user.name}'s team"
+      finish_setup(lv, name: "Fixed Team Name")
 
-      type_into_input(lv, "team[name]", "Team Name 1")
-      _ = render(lv)
-      type_into_input(lv, "team[name]", "My personal sites")
-      _ = render(lv)
-      assert Repo.reload!(team).name == "Team Name 1"
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      team = Repo.reload!(team)
+      assert team.setup_complete
+      assert team.name == "Fixed Team Name"
     end
 
     @tag :ee_only
@@ -97,318 +334,191 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
-  describe "/team/setup - full integration" do
+  # Adding/removing rows and picking a role all happen entirely client-side
+  # (see assets/js/liveview/member-rows.js) - the server only ever sees the
+  # final "rows" form data once, on submit. These tests exercise that submit
+  # handling directly with the payload a real form submission would produce,
+  # since ExUnit's LiveViewTest can't drive the client-side JS itself.
+  describe "/team/setup - adding members" do
     setup [:create_user, :log_in, :create_team]
 
-    test "renders member, enqueues invitation, delivers it", %{conn: conn, user: user, team: team} do
-      {lv, html} = get_child_lv(conn, with_html?: true)
-      member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      assert member_row1 =~ "#{user.name}"
-      assert member_row1 =~ "#{user.email}"
-      assert member_row1 =~ "You"
+    test "starts out with a single empty row defaulting to viewer", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
+      assert elem_count(html, visible_row_el()) == 1
 
-      add_invite(lv, "new@example.com", "admin")
+      assert text_of_attr(html, ~s|#{visible_row_el()} input[type="hidden"]|, "value") ==
+               "viewer"
+    end
 
-      html = render(lv)
+    test "creating the team sends out an invitation for a filled row with the given role", %{
+      conn: conn,
+      team: team
+    } do
+      {:ok, lv, _html} = live(conn, @url)
 
-      member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      assert member_row1 =~ "new@example.com"
-      assert member_row1 =~ "Invited User"
-      assert member_row1 =~ "Invitation pending"
-
-      member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      assert member_row2 =~ "#{user.name}"
-      assert member_row2 =~ "#{user.email}"
-
-      save_layout(lv)
+      finish_setup(lv, rows: %{"1" => %{"email" => "new@example.com", "role" => "admin"}})
 
       assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
       team = Repo.reload!(team)
+      assert team.setup_complete
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
         subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
       )
+
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "new@example.com"
+      assert invitation.role == :admin
     end
 
-    test "allows updating pending invitation role in place", %{conn: conn, team: team} do
-      lv = get_child_lv(conn)
-      add_invite(lv, "new@example.com", "admin")
+    test "blank rows are ignored on submit", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
 
-      html = render(lv)
+      finish_setup(lv,
+        rows: %{
+          "1" => %{"email" => "", "role" => "viewer"},
+          "2" => %{"email" => "second@example.com", "role" => "viewer"}
+        }
+      )
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Admin"
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Owner"
-
-      change_role(lv, 1, "viewer")
-      html = render(lv)
-
-      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Viewer"
-
-      save_layout(lv)
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
       team = Repo.reload!(team)
-
-      assert_email_delivered_with(
-        to: [nil: "new@example.com"],
-        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
-      )
+      assert [invitation] = Teams.Invitations.pending_team_invitations_for(team)
+      assert invitation.email == "second@example.com"
     end
 
-    test "allows updating membership role in place", %{conn: conn, team: team} do
-      member2 = add_member(team, role: :admin)
-      {lv, html} = get_child_lv(conn, with_html?: true)
+    test "rejects invalid e-mails", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
 
-      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Owner"
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Admin"
+      assert finish_setup(lv, rows: %{"1" => %{"email" => "not-an-email", "role" => "viewer"}}) =~
+               "Make sure all e-mails are valid"
 
-      change_role(lv, 2, "viewer")
-      html = render(lv)
-
-      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
-
-      save_layout(lv)
-
-      assert_no_emails_delivered()
-
-      assert_team_membership(member2, team, :viewer)
+      refute Repo.reload!(team).setup_complete
+      # the (valid) name submitted alongside the invalid row must not persist
+      # on its own - team creation is all-or-nothing
+      assert Repo.reload!(team).name == "My personal sites"
     end
 
-    test "allows updating guest membership so it moves sections and sends out promotion e-mail",
-         %{
-           conn: conn,
-           user: user,
-           team: team
-         } do
-      site = new_site(owner: user)
-      add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
+    test "rejects duplicate e-mails across rows", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
 
-      {:ok, main_lv, _html} = live(conn, @url)
-      lv = get_child_lv(conn)
+      rows = %{
+        "1" => %{"email" => "dup@example.com", "role" => "viewer"},
+        "2" => %{"email" => "dup@example.com", "role" => "admin"}
+      }
 
-      type_into_input(main_lv, "team[name]", "A-Team!")
+      assert finish_setup(lv, rows: rows) =~ "Make sure e-mails are unique"
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
 
-      assert Repo.reload!(team).name == "A-Team!"
+    test "rejects inviting yourself", %{conn: conn, team: team, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
 
-      html = render(lv)
+      assert finish_setup(lv, rows: %{"1" => %{"email" => user.email, "role" => "admin"}}) =~
+               "You cannot invite yourself"
 
-      assert elem_count(html, member_el()) == 1
+      refute Repo.reload!(team).setup_complete
+      assert Repo.reload!(team).name == "My personal sites"
+    end
 
-      assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
+    test "rejects inviting a guest member", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      guest = new_user()
+      add_guest(site, role: :viewer, user: guest)
 
-      change_role(lv, 1, "viewer", guest_el())
-      html = render(lv)
+      {:ok, lv, _html} = live(conn, @url)
 
-      assert elem_count(html, member_el()) == 2
-      refute element_exists?(html, "#guest-list")
+      assert finish_setup(lv, rows: %{"1" => %{"email" => guest.email, "role" => "admin"}}) =~
+               "Some of these e-mails belong to site guests"
 
-      save_layout(lv)
-
-      assert_email_delivered_with(
-        to: [nil: "guest@example.com"],
-        subject: @subject_prefix <> "Welcome to \"A-Team!\" team"
-      )
+      refute Repo.reload!(team).setup_complete
+      assert [] = Teams.Invitations.pending_team_invitations_for(team)
     end
 
     @tag :ee_only
-    test "fails to save layout with limits breached", %{conn: conn, team: team} do
+    test "fails to create the team when the plan's member limit is breached", %{
+      conn: conn,
+      team: team
+    } do
       insert(:growth_subscription, team: team)
+      {:ok, lv, _html} = live(conn, @url)
 
-      lv = get_child_lv(conn)
-      html = render(lv)
-      refute attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
-      refute attr_defined?(html, ~s|#invite-member|, "disabled")
+      rows =
+        for n <- 1..4, into: %{} do
+          {to_string(n), %{"email" => "new#{n}@example.com", "role" => "viewer"}}
+        end
 
-      add_invite(lv, "new1@example.com", "admin")
-      add_invite(lv, "new2@example.com", "admin")
-      add_invite(lv, "new3@example.com", "admin")
-      add_invite(lv, "new4@example.com", "admin")
-
-      html = render(lv)
-
-      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
-      assert attr_defined?(html, ~s|#invite-member|, "disabled")
-
-      assert text_of_element(html, ~s/[data-test="limit-exceeded-notice"]/) =~
-               "This account is limited to 3 members"
-    end
-
-    test "all options are disabled for the sole owner", %{conn: conn} do
-      lv = get_child_lv(conn)
-
-      options =
-        lv
-        |> render()
-        |> find("#{member_el()} a")
-
-      assert Enum.empty?(options)
-    end
-
-    test "in case of >1 owner, the one owner limit is still enforced", %{conn: conn, team: team} do
-      _other_owner = add_member(team, role: :owner)
-      lv = get_child_lv(conn)
-
-      options =
-        lv
-        |> render()
-        |> find("#{member_el()} a")
-
-      refute Enum.empty?(options)
-
-      change_role(lv, 1, "viewer")
-
-      html = lv |> render()
-
-      assert element_exists?(html, "#{member_el()}:nth-of-type(1) a")
-      refute element_exists?(html, "#{member_el()}:nth-of-type(2) a")
-    end
-
-    test "allows removing any type of entry", %{
-      conn: conn,
-      user: user,
-      team: team
-    } do
-      member2 = add_member(team, role: :admin)
-      _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
-
-      site = new_site(owner: user)
-
-      guest =
-        add_guest(site,
-          role: :viewer,
-          user: new_user(name: "Mr Guest", email: "guest@example.com")
-        )
-
-      lv = get_child_lv(conn)
-      add_invite(lv, "pending@example.com", "admin")
-
-      html = render(lv)
-
-      assert elem_count(html, member_el()) == 4
-      assert elem_count(html, guest_el()) == 1
-
-      pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
-      sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
-      owner = find(html, "#{member_el()}:nth-of-type(3)") |> text()
-      admin = find(html, "#{member_el()}:nth-of-type(4)") |> text()
-
-      guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
-
-      assert pending =~ "Invitation pending"
-      assert sent =~ "Invitation sent"
-      assert owner =~ "You"
-      assert admin != ""
-      assert guest_member =~ "Guest"
-
-      remove_member(lv, 1)
-      # next becomes first
-      remove_member(lv, 1)
-      # last becomes second
-      remove_member(lv, 2)
-
-      # remove guest
-      remove_member(lv, 1, guest_el())
-
-      html = render(lv) |> text()
-
-      refute html =~ "Invitation pending"
-      refute html =~ "Invitation sent"
-      refute html =~ "Team member"
-      refute html =~ "Guest"
-
-      save_layout(lv)
-
-      team = Repo.reload!(team)
-
-      assert_email_delivered_with(
-        to: [nil: guest.email],
-        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
-      )
-
-      assert_email_delivered_with(
-        to: [nil: member2.email],
-        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
-      )
-
+      assert finish_setup(lv, rows: rows) =~ "Your account is limited to 3 team members"
+      refute Repo.reload!(team).setup_complete
+      # the transaction rolls back entirely, so the rename never lands either
+      assert Repo.reload!(team).name == "My personal sites"
       assert_no_emails_delivered()
     end
+  end
 
-    test "respawns membersip enqueued for deletion", %{
-      conn: conn,
-      team: team
-    } do
-      member2 = add_member(team, role: :editor, user: new_user(email: "another@example.com"))
+  # The client-side row cap itself (assets/js/liveview/member-rows.js) can't
+  # be exercised here since ExUnit's LiveViewTest can't drive that JS - these
+  # tests cover the server-computed limit instead, by counting how many rows
+  # (visible or not) it renders up front for the JS to reveal on "add".
+  describe "/team/setup - member row limit" do
+    setup [:create_user, :log_in, :create_team]
 
-      lv = get_child_lv(conn)
+    @tag :ee_only
+    test "defaults to the trial team member limit", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @url)
 
-      remove_member(lv, 1)
+      assert elem_count(html, row_el()) == 10
+    end
 
-      add_invite(lv, "another@example.com", "viewer")
+    @tag :ee_only
+    test "is not reduced by an existing guest member", %{conn: conn, team: team} do
+      site = new_site(team: team)
+      add_guest(site, role: :viewer, user: new_user())
 
-      html = render(lv)
+      {:ok, _lv, html} = live(conn, @url)
 
-      assert find(html, "#{member_el()}:nth-of-type(2)") |> text() =~ "You"
+      assert elem_count(html, row_el()) == 10
+    end
 
-      save_layout(lv)
+    @tag :ee_only
+    test "is capped at 20 for an unlimited plan", %{conn: conn, user: user} do
+      subscribe_to_enterprise_plan(user, team_member_limit: :unlimited)
 
-      assert_no_emails_delivered()
-      assert_team_membership(member2, team, :viewer)
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 20
+    end
+
+    @tag :ee_only
+    test "renders no rows for a solo team (member limit 0)", %{conn: conn, user: user} do
+      subscribe_to_starter_plan(user)
+
+      # Normally, starter tier accounts shouldn't even be setting up teams because
+      # there's no point to do so. However, their access to the team setup page is
+      # not restricted on the plug level, so this test makes sure it behaves
+      # correctly and doesn't crash even in that scenario.
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 0
     end
   end
 
-  defp type_into_input(lv, id, text) do
+  defp onboarding_url(), do: @url <> "?flow=register"
+  defp onboarding_url(domain), do: @url <> "?flow=register&domain=" <> domain
+
+  defp row_el(), do: ~s|#member-rows > div|
+  defp visible_row_el(), do: ~s|#member-rows > div:not(.hidden)|
+
+  defp finish_setup(lv, opts) do
+    name = Keyword.get(opts, :name, "Jane Smith's team")
+    rows = Keyword.get(opts, :rows, %{"1" => %{"email" => "", "role" => "viewer"}})
+
     lv
-    |> element("form#update-team-form")
-    |> render_change(%{id => text})
-  end
-
-  defp add_invite(lv, email, role) do
-    lv
-    |> element(~s|#input-role-picker a[phx-value-role="#{role}"]|)
-    |> render_click()
-
-    lv
-    |> element("#team-layout-form")
-    |> render_submit(%{
-      "input-email" => email
-    })
-  end
-
-  defp save_layout(lv) do
-    lv
-    |> element("button#save-layout")
-    |> render_click()
-  end
-
-  defp change_role(lv, index, role, main_selector \\ member_el()) do
-    lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-value-role="#{role}"]|)
-    |> render_click()
-  end
-
-  defp get_child_lv(conn, opts \\ []) do
-    {:ok, lv, _} = live(conn, @url)
-    assert lv = find_live_child(lv, "team-management-setup")
-
-    if Keyword.get(opts, :with_html?) do
-      {lv, render(lv)}
-    else
-      lv
-    end
-  end
-
-  defp remove_member(lv, index, main_selector \\ member_el()) do
-    lv
-    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-click="remove-member"]|)
-    |> render_click()
-  end
-
-  defp member_el() do
-    ~s|#member-list div[data-test-kind="member"]|
-  end
-
-  defp guest_el() do
-    ~s|#guest-list div[data-test-kind="guest"]|
+    |> element("#create-team-form")
+    |> render_submit(%{"team" => %{"name" => name}, "rows" => rows})
   end
 end

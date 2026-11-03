@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   alias PlausibleWeb.Components.Billing.{PlanBox, Notice, PageviewSlider}
   alias Plausible.Billing.{Plans, Quota, PlanBenefits}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
@@ -139,11 +138,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         />
         <Notice.subscription_past_due class="pb-6" subscription={@subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@subscription} />
-        <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
 
         <div class="mt-6 w-full md:flex">
           <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            href={~p"/settings/billing/subscription"}
             class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-400 text-sm font-semibold gap-1 items-center transition-colors duration-150"
           >
             <span>←</span>
@@ -162,7 +160,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </div>
         <div class="md:hidden mt-6 max-w-md mx-auto">
           <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            href={~p"/settings/billing/subscription"}
             class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-semibold"
           >
             ← Back to settings
@@ -257,7 +255,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     Please see your full usage report (including sites and team members) under the
     <a
       class="inline font-medium text-indigo-600 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors duration-150"
-      href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+      href={~p"/settings/billing/subscription"}
     >
       "Subscription" section
     </a>

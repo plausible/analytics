@@ -6,6 +6,11 @@ import {
   populateStats,
   createSharedLink
 } from '../fixtures'
+import {
+  openFilterSubmenuItem,
+  pickFilterValue,
+  closeFilterEditor
+} from '../test-utils'
 
 test('dashboard renders for logged in user', async ({ page, request }) => {
   const { domain } = await setupSite({ page, request })
@@ -80,7 +85,7 @@ test('site switcher is not shown when viewing without being logged in', async ({
   await expect(siteSwitcherStatic).not.toHaveRole('button')
 
   await siteSwitcherStatic.click()
-  await expect(page.getByTestId('sitemenu')).not.toBeVisible()
+  await expect(page.getByTestId('sitemenu')).toBeHidden()
 })
 
 test('dashboard renders with imported data', async ({ page, request }) => {
@@ -154,21 +159,27 @@ test('tab selection user preferences are preserved across reloads', async ({
   expect(currentTab).toEqual('exitPages')
 })
 
-test('back navigation closes the modal', async ({ page, request, baseURL }) => {
+test('back navigation removes an applied filter', async ({
+  page,
+  request,
+  baseURL
+}) => {
   const { domain } = await setupSite({ page, request })
   await populateStats({
     request,
     domain,
-    events: [{ name: 'pageview' }]
+    events: [{ name: 'pageview', pathname: '/page1' }]
   })
 
   await page.goto('/' + domain, { waitUntil: 'commit' })
 
   await page.getByRole('button', { name: 'Filter' }).click()
 
-  await page.getByRole('link', { name: 'Page' }).click()
+  await openFilterSubmenuItem(page, 'Page', 'Page')
+  await pickFilterValue(page, { value: '/page1' })
+  await closeFilterEditor(page)
 
-  await expect(page).toHaveURL(baseURL + '/' + domain + '/filter/page')
+  await expect(page).toHaveURL(/f=is,page,\/page1/)
 
   await page.goBack()
 

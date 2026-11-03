@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     require Plausible.Billing.Subscription.Status
 
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, id, qs)
+      ~p"/cs/teams/team/#{id}?#{qs}"
     end
 
     setup [:create_user, :log_in, :create_site]
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|button[phx-click="delete-team"]|)
         |> render_click()
 
-        assert_redirect(lv, Routes.customer_support_path(PlausibleWeb.Endpoint, :index))
+        assert_redirect(lv, ~p"/cs")
 
         refute Plausible.Repo.get(Plausible.Teams.Team, team.id)
       end
@@ -154,10 +154,240 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text_of_attr(html, "#team_accept_traffic_until", "value") == "2029-01-15"
       end
 
+      test "prolonging trial_expiry_date cancels a pending expired-trial deletion schedule", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            category: :expired_trial,
+            status: :scheduled,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+
+        future_date = Date.utc_today() |> Date.add(30) |> Date.to_iso8601()
+
+        lv
+        |> element(~s|form[phx-submit="save-team"]|)
+        |> render_submit(%{"team" => %{"trial_expiry_date" => future_date}})
+
+        html = render(lv)
+        refute text(html) =~ "Deletion scheduled"
+
+        assert Plausible.Repo.reload!(schedule).status == :cancelled
+      end
+
+      test "prolonging an expired trial unlocks the team straight away", %{conn: conn, user: user} do
+        team =
+          user
+          |> team_of()
+          |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
+          |> Plausible.Repo.update!()
+
+        Plausible.Billing.SiteLocker.update_for(team, send_email?: false)
+        assert Plausible.Repo.reload!(team).locked
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        future_date = Date.utc_today() |> Date.add(30) |> Date.to_iso8601()
+
+        lv
+        |> element(~s|form[phx-submit="save-team"]|)
+        |> render_submit(%{"team" => %{"trial_expiry_date" => future_date}})
+
+        refute Plausible.Repo.reload!(team).locked
+      end
+
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
+      end
+
+      test "does not show a deletion schedule section when there is none", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+
+        refute text(html) =~ "Deletion scheduled"
+      end
+
+      test "shows an active deletion schedule and allows snoozing it", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Deletion scheduled"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        future = Date.utc_today() |> Date.add(7)
+
+        lv
+        |> element(~s|form[phx-submit="snooze-schedule"]|)
+        |> render_submit(%{
+          "team_deletion_schedule" => %{
+            "snoozed_until" => "#{future}",
+            "snooze_note" => "give them time"
+          }
+        })
+
+        html = render(lv)
+        assert text(html) =~ "Snoozed until #{future}"
+        assert text(html) =~ "give them time"
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :snoozed
+        assert updated.snoozed_until == future
+        assert updated.snooze_note == "give them time"
+      end
+
+      test "rejects a snooze date that isn't in the future", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        today_iso = Date.to_iso8601(Date.utc_today())
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => today_iso}})
+
+        assert text(html) =~ "must be in the future"
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
+      end
+
+      test "rejects a blank snooze date", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :reminder_sent,
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, _html} = live(conn, open_team(team.id))
+
+        html =
+          lv
+          |> element(~s|form[phx-submit="snooze-schedule"]|)
+          |> render_submit(%{"team_deletion_schedule" => %{"snoozed_until" => ""}})
+
+        assert text(html) =~ "can't be blank"
+        assert Plausible.Repo.reload!(schedule).status == :reminder_sent
+      end
+
+      test "allows unsnoozing a snoozed schedule", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        schedule =
+          insert(:team_deletion_schedule,
+            team: team,
+            status: :snoozed,
+            snoozed_until: ~D[2026-09-20],
+            snooze_note: "customer asked for time",
+            deletion_date: ~D[2026-10-19]
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Snoozed until"
+        assert element_exists?(html, ~s|button[phx-click="unsnooze-schedule"]|)
+
+        lv |> element(~s|button[phx-click="unsnooze-schedule"]|) |> render_click()
+
+        html = render(lv)
+        assert element_exists?(html, ~s|form[phx-submit="snooze-schedule"]|)
+
+        updated = Plausible.Repo.reload!(schedule)
+        assert updated.status == :scheduled
+        assert updated.is_backlog
+      end
+    end
+
+    describe "members" do
+      test "lists members linking to their user page, and pending invitations without a link",
+           %{conn: conn, user: user} do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "member@example.com"), role: :editor)
+        invite_member(team, "invitee@example.com", role: :viewer, inviter: user)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        assert text_of_element(html, ~s|a[href="#{~p"/cs/users/user/#{member.id}"}"]|) =~
+                 "member@example.com"
+
+        rows = html |> find("tbody tr") |> Enum.map(&text/1)
+
+        assert Enum.any?(rows, &(&1 =~ "member@example.com" and &1 =~ "membership"))
+        assert Enum.any?(rows, &(&1 =~ "invitee@example.com" and &1 =~ "invitation"))
+
+        refute html |> find("tbody a") |> text() =~ "invitee@example.com"
+      end
+
+      test "shows no suppression warning for a member whose e-mail isn't suppressed", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "fine@example.com"), role: :editor)
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        refute element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: member.email]}"}"]|
+               )
+      end
+
+      test "shows a suppression warning linking to the suppression search for a suppressed member",
+           %{conn: conn, user: user} do
+        team = team_of(user)
+        member = add_member(team, user: new_user(email: "bounced@example.com"), role: :editor)
+
+        {:ok, _} =
+          Plausible.EmailSuppressions.create_from_bounce(%{
+            email: member.email,
+            reason: :hard_bounce,
+            source: :webhook
+          })
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: "members"))
+
+        assert element_exists?(
+                 html,
+                 ~s|a[href="#{~p"/cs/email-suppressions?#{[search: member.email]}"}"]|
+               )
       end
     end
 
@@ -648,7 +878,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_change(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "updated-plan-456",
+            "paddle_plan_id" => "original-plan",
             "billing_interval" => "yearly",
             "monthly_pageview_limit" => "15000000",
             "site_limit" => "500",
@@ -674,7 +904,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ "Plan updated"
 
         updated_plan = Plausible.Repo.reload!(plan)
-        assert updated_plan.paddle_plan_id == "updated-plan-456"
+        assert updated_plan.paddle_plan_id == "original-plan"
         assert updated_plan.billing_interval == :yearly
         assert updated_plan.monthly_pageview_limit == 15_000_000
         assert updated_plan.site_limit == 500
@@ -688,7 +918,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
         refute element_exists?(html, ~s|form#save-plan|)
 
-        assert text(html) =~ "updated-plan-456"
+        assert text(html) =~ "original-plan"
         assert text(html) =~ "yearly"
         assert text(html) =~ "15,000,000"
         assert text(html) =~ "500"
@@ -720,9 +950,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> element(~s|form#save-plan|)
         |> render_submit(%{
           "enterprise_plan" => %{
-            "paddle_plan_id" => "",
+            "paddle_plan_id" => "valid-plan",
             "billing_interval" => "monthly",
-            "monthly_pageview_limit" => "1000000",
+            "monthly_pageview_limit" => "",
             "site_limit" => "100",
             "team_member_limit" => "10",
             "hourly_api_request_limit" => "1000"
@@ -735,7 +965,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert element_exists?(html, ~s|form#save-plan|)
 
         unchanged_plan = Plausible.Repo.reload!(plan)
-        assert unchanged_plan.paddle_plan_id == "valid-plan"
+        assert unchanged_plan.monthly_pageview_limit == 1_000_000
       end
 
       test "cancel edit returns to plan list", %{conn: conn, user: user} do
@@ -880,6 +1110,96 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         refute element_exists?(html, ~s|[data-test-id="plan-entry-plan-another"]|)
       end
 
+      test "plan can be manually subscribed with a single confirmed click", %{
+        conn: conn,
+        user: user
+      } do
+        team = team_of(user)
+
+        plan =
+          insert(:enterprise_plan,
+            team: team,
+            paddle_plan_id: "plan-original",
+            billing_interval: :yearly,
+            monthly_pageview_limit: 1_000_000
+          )
+
+        {:ok, lv, html} = live(conn, open_team(team.id, tab: :billing))
+
+        button = ~s|button[phx-click="manual-subscribe"][phx-value-id="#{plan.id}"]|
+        assert element_exists?(html, button)
+        assert text_of_attr(html, button, "data-confirm") =~ "outside of Paddle"
+        refute element_exists?(html, "form#manual-subscribe")
+
+        assert text(html) =~ "Subscription statusOn trial"
+
+        lv |> element(button) |> render_click()
+
+        flash = assert_redirect(lv, open_team(team.id, tab: :billing))
+        assert flash["success"] == "Subscription created (manual)"
+
+        {:ok, _lv, html} = live(conn, open_team(team.id, tab: :billing))
+
+        plan = Plausible.Repo.reload!(plan)
+        assert plan.paddle_plan_id == "manual-subscription"
+
+        subscription = Plausible.Repo.get_by!(Plausible.Billing.Subscription, team_id: team.id)
+        assert subscription.paddle_plan_id == plan.paddle_plan_id
+        assert subscription.currency_code == "XXX"
+        assert subscription.next_bill_amount == "-1"
+        assert subscription.last_bill_date == Date.utc_today()
+        assert subscription.next_bill_date == Date.shift(Date.utc_today(), year: 1)
+        assert is_nil(subscription.paddle_subscription_id)
+
+        assert text(html) =~ "Subscription statusActive"
+        assert text(html) =~ "Subscription planManually billed enterprise"
+        assert html =~ "MANUAL SUBSCRIPTION"
+        refute element_exists?(html, button)
+
+        assert text_of_element(html, ~s|[data-test-id="last-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.last_bill_date)
+
+        assert text_of_element(html, ~s|[data-test-id="next-bill-date"]|) ==
+                 PlausibleWeb.TextHelpers.format_date(subscription.next_bill_date)
+      end
+
+      test "new plan can't be created while on a manual subscription", %{conn: conn, user: user} do
+        team = team_of(user)
+        plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
+        {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv |> element("button#new-custom-plan") |> render_click()
+        html = render(lv)
+
+        assert text(html) =~
+                 "Creating a new plan is prohibited due to a manual subscription. Edit the existing enterprise plan instead."
+
+        refute element_exists?(html, ~s|form[phx-submit="save-plan"]|)
+      end
+
+      test "only the latest plan can be manually subscribed to", %{conn: conn, user: user} do
+        team = team_of(user)
+
+        older_plan =
+          insert(:enterprise_plan,
+            team: team,
+            inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+          )
+
+        insert(:enterprise_plan, team: team)
+
+        {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
+
+        lv
+        |> element(~s|button[phx-click="manual-subscribe"][phx-value-id="#{older_plan.id}"]|)
+        |> render_click()
+
+        assert text(render(lv)) =~ "Only the latest enterprise plan can get a manual subscription"
+        refute Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
+      end
+
       defp open_custom_plan(conn, team) do
         {:ok, lv, _html} = live(conn, open_team(team.id, tab: :billing))
         render(lv)
@@ -973,7 +1293,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert {:error, {:live_redirect, %{to: to}}} =
                  lv |> element("button#remove-sso-integration") |> render_click()
 
-        assert to == Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id)
+        assert to == ~p"/cs/teams/team/#{team.id}"
       end
     end
 

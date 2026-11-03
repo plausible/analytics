@@ -69,9 +69,13 @@ export async function compileAll(options = {}) {
     })
   })
 
-  await workerPool.completed()
-  await workerPool.terminate()
-  bar.stop()
+  try {
+    await workerPool.completed()
+  } finally {
+    // force, since a graceful terminate() re-awaits completed() and rethrows before stopping the workers
+    await workerPool.terminate(true)
+    bar.stop()
+  }
 
   console.log(
     `Completed compilation of ${variantsToCompile.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`

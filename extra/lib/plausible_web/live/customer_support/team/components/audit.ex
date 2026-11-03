@@ -44,7 +44,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           label="Audit Entry Identifier"
           value={@revealed_audit_entry_id}
         />
-        <div class="relative">
+        <div class="relative mt-6">
           <.input
             rows="16"
             type="textarea"
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           is_nil(@revealed_audit_entry_id) &&
             (@audit_page.metadata.before || @audit_page.metadata.after)
         }
-        class="flex justify-between items-center mt-4"
+        class="flex justify-between items-center mt-10"
       >
         <.button
           :if={@audit_page.metadata.before}
@@ -163,11 +163,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
     pagination_params = get_pagination_params(params)
     team = socket.assigns.team
 
-    query_params = %{"tab" => "audit"} |> Map.merge(pagination_params)
+    query_params =
+      %{"tab" => "audit"}
+      |> Map.merge(pagination_params)
+      |> Map.to_list()
 
     {:noreply,
      push_patch(socket,
-       to: Routes.customer_support_team_path(PlausibleWeb.Endpoint, :show, team.id, query_params)
+       to: ~p"/cs/teams/team/#{team.id}?#{query_params}"
      )}
   end
 
@@ -228,7 +231,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
       />
 
       <.styled_link
-        patch={Routes.customer_support_user_path(PlausibleWeb.Endpoint, :show, @user.id)}
+        patch={~p"/cs/users/user/#{@user.id}"}
         class="cursor-pointer flex block items-center"
       >
         {@user.name}

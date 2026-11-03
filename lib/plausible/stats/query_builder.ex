@@ -269,7 +269,7 @@ defmodule Plausible.Stats.QueryBuilder do
       |> Filters.dimensions_used_in_filters(min_depth: 1, behavioral_filters: :ignore)
       |> Enum.filter(&(&1 in @only_toplevel))
 
-    if Enum.count(not_toplevel) > 0 do
+    if not_toplevel != [] do
       {:error,
        %QueryError{
          code: :invalid_filters,
@@ -370,7 +370,7 @@ defmodule Plausible.Stats.QueryBuilder do
         _ -> []
       end)
 
-    if length(goal_filter_clauses) > 0 do
+    if goal_filter_clauses != [] do
       configured_goal_names =
         query.preloaded_goals.all
         |> Enum.map(&Plausible.Goal.display_name/1)

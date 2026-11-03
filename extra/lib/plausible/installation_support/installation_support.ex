@@ -12,6 +12,8 @@ defmodule Plausible.InstallationSupport do
     def user_agent() do
       "Plausible Verification Agent - if abused, contact support@plausible.io"
     end
+
+    def verification_checks_mod, do: Application.fetch_env!(:plausible, :verification_checks_mod)
   else
     def user_agent() do
       "Plausible Community Edition"

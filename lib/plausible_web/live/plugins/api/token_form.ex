@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
             <.button
               theme="secondary"
               phx-click="close-token-modal"
-              class="w-full"
+              class="w-full mt-6"
             >
               Close modal
             </.button>
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
                 Create plugin token for {@domain}
               </.title>
 
-              <div class="mt-4">
+              <div class="mt-6">
                 <.input
                   autofocus
                   field={f[:description]}
@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 Once created, we will display the token so it can be copied.
               </p>
-              <.button type="submit" class="w-full">
+              <.button type="submit" class="w-full mt-6">
                 Create plugin token
               </.button>
             </.form>

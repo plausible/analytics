@@ -13,13 +13,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
 
   describe "unauthorized calls" do
     for {method, url} <- [
-          {:get, Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :get, 1)},
-          {:put, Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)},
-          {:get, Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :index)}
+          {:get, "/api/plugins/v1/shared_links/1"},
+          {:put, "/api/plugins/v1/shared_links"},
+          {:get, "/api/plugins/v1/shared_links"}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
-        |> unquote(method)(unquote(url))
+        |> unquote(method)(unverified_url(PlausibleWeb.Endpoint, unquote(url)))
         |> json_response(401)
         |> assert_schema("UnauthorizedError", spec())
       end
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
 
   describe "get /shared_links/:id" do
     test "validates input out of the box", %{conn: conn, token: token, site: site} do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :get, "hello")
+      url = url(~p"/api/plugins/v1/shared_links/hello")
 
       resp =
         conn
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     test "retrieve shared link by ID", %{conn: conn, site: site, token: token} do
       shared_link = insert(:shared_link, name: "Some Link Name", site: site)
 
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :get, shared_link.id)
+      url = url(~p"/api/plugins/v1/shared_links/#{shared_link.id}")
 
       resp =
         conn
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
 
     test "fails to retrieve non-existing link", %{conn: conn, site: site, token: token} do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :get, 666)
+      url = url(~p"/api/plugins/v1/shared_links/666")
 
       conn
       |> authenticate(site.domain, token)
@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
 
     test "fails to retrieve link from another site", %{conn: conn, site: site, token: token} do
       shared_link = insert(:shared_link, name: "Some Link Name", site: build(:site))
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :get, shared_link.id)
+      url = url(~p"/api/plugins/v1/shared_links/#{shared_link.id}")
 
       conn
       |> authenticate(site.domain, token)
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       site: site,
       token: token
     } do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+      url = url(~p"/api/plugins/v1/shared_links")
 
       initial_conn = authenticate(conn, site.domain, token)
 
@@ -114,11 +114,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.plugins_api_shared_links_url(
-                 PlausibleWeb.Endpoint,
-                 :get,
-                 resp.shared_link.id
-               )
+               url(~p"/api/plugins/v1/shared_links/#{resp.shared_link.id}")
 
       assert ^resp =
                initial_conn
@@ -132,7 +128,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       site: site,
       token: token
     } do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+      url = url(~p"/api/plugins/v1/shared_links")
 
       initial_conn = authenticate(conn, site.domain, token)
 
@@ -165,7 +161,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
 
     test "validates input out of the box", %{conn: conn, token: token, site: site} do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+      url = url(~p"/api/plugins/v1/shared_links")
 
       resp =
         conn
@@ -185,7 +181,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     } do
       insert(:starter_subscription, team: site.team)
 
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+      url = url(~p"/api/plugins/v1/shared_links")
 
       resp =
         authenticate(conn, site.domain, token)
@@ -210,7 +206,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         site: site,
         token: token
       } do
-        url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+        url = url(~p"/api/plugins/v1/shared_links")
 
         resp =
           authenticate(conn, site.domain, token)
@@ -237,7 +233,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       token: token,
       site: site
     } do
-      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :index)
+      url = url(~p"/api/plugins/v1/shared_links")
 
       resp =
         conn
@@ -262,7 +258,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       end
 
       url =
-        Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :index, limit: 2)
+        url(~p"/api/plugins/v1/shared_links?#{[limit: 2]}")
 
       initial_conn = authenticate(conn, site.domain, token)
 

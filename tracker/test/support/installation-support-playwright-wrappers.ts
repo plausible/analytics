@@ -27,8 +27,8 @@ export async function executeVerifier(
     async function verify() {
       await page.evaluate(verifierCode) // injects window.verifyPlausibleInstallation
       return await page.evaluate(
-        // @ts-expect-error - window.verifyPlausibleInstallation has been injected
         (c) => {
+          // @ts-expect-error - window.verifyPlausibleInstallation has been injected
           return window.verifyPlausibleInstallation(c)
         },
         { ...functionContext, responseHeaders }
@@ -48,7 +48,7 @@ export async function executeVerifier(
       } catch (error) {
         lastError = error
         if (
-          typeof error?.message === 'string' &&
+          error instanceof Error &&
           error.message.toLowerCase().includes('execution context')
         ) {
           await new Promise((resolve) =>
@@ -65,20 +65,29 @@ export async function executeVerifier(
       data: {
         completed: false,
         error: {
-          message: error?.message ?? JSON.stringify(error)
+          message:
+            error instanceof Error ? error.message : JSON.stringify(error)
         }
       }
     }
   }
 }
 
-export async function detect(page, context) {
+export async function detect(
+  page: Page,
+  context: {
+    url: string
+    detectV1: boolean
+    timeoutMs?: number
+    debug?: boolean
+  }
+) {
   const { url, detectV1, timeoutMs } = context
   const debug = context.debug ? true : false
 
-  const detectorCode = await compileFile(DETECTOR_JS_VARIANT, {
+  const detectorCode = (await compileFile(DETECTOR_JS_VARIANT, {
     returnCode: true
-  })
+  })) as string
 
   await page.goto(url)
   await page.evaluate(detectorCode)

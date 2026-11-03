@@ -161,6 +161,77 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       assert length(results) == Plausible.Goals.max_goals_per_site()
     end
+
+    test "returns pageview goals with | between alternative paths", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/pricing|/plans"})
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/pricing", user_id: 1),
+        build(:pageview, pathname: "/plans", user_id: 2),
+        build(:pageview, pathname: "/about", user_id: 3),
+        build(:pageview, pathname: "/pricing/enterprise", user_id: 4),
+        build(:pageview, pathname: "/legacy/plans", user_id: 5),
+        build(:pageview, pathname: "/pricing|/plans", user_id: 6),
+        build(:event, name: "Signup", pathname: "/pricing", user_id: 7)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Visit /pricing|/plans"], "metrics" => [2]}
+             ]
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [["is", "event:goal", ["Visit /pricing|/plans"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2]}
+             ]
+    end
+
+    test "counts pageview goals on path P and custom event goals that happen on path P separately",
+         %{
+           conn: conn,
+           site: site
+         } do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/blog/**"})
+      insert(:goal, %{site: site, page_path: "/pricing"})
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/a", user_id: 1),
+        build(:pageview, pathname: "/blog/b", user_id: 2),
+        build(:pageview, pathname: "/pricing", user_id: 3),
+        build(:event, name: "Signup", pathname: "/blog/a", user_id: 4),
+        build(:event, name: "Signup", pathname: "/pricing", user_id: 5),
+        build(:event, name: "Signup", pathname: "/", user_id: 6)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Signup"], "metrics" => [3]},
+               %{"dimensions" => ["Visit /blog/**"], "metrics" => [2]},
+               %{"dimensions" => ["Visit /pricing"], "metrics" => [1]}
+             ]
+    end
   end
 
   describe "page scroll goals" do

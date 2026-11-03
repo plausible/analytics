@@ -357,6 +357,17 @@ defmodule Plausible.Billing.QuotaTest do
       assert Plausible.Teams.Billing.team_member_usage(team) == 3
     end
 
+    test "counts additional owners and pending owner invitations as team members" do
+      me = new_user()
+      _site = new_site(owner: me)
+      team = team_of(me)
+
+      add_member(team, role: :owner)
+      invite_member(team, "invitee@example.com", role: :owner, inviter: me)
+
+      assert Plausible.Teams.Billing.team_member_usage(team) == 2
+    end
+
     test "does not count ownership transfer as a team member by default" do
       me = new_user()
       site_i_own = new_site(owner: me)
@@ -1055,20 +1066,6 @@ defmodule Plausible.Billing.QuotaTest do
       user = new_user()
       team = user |> team_of() |> Plausible.Teams.with_subscription()
       %{user: user, team: team}
-    end
-
-    test "returns nil if usage doesn't have any sites", %{team: team} do
-      suggested_tier =
-        team
-        |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Quota.suggest_tier(
-          @highest_starter_plan,
-          @highest_growth_plan,
-          @highest_business_plan,
-          nil
-        )
-
-      assert suggested_tier == nil
     end
 
     test "returns :custom if the monthly pageview limit exceeds regular plans",

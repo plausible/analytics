@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
     <div class="flex flex-col gap-4 sm:gap-6">
       <%= if @searching? or Enum.count(@props) > 0 do %>
         <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
-          <.button phx-click="add-prop" mt?={false}>
+          <.button phx-click="add-prop">
             Add property
           </.button>
         </.filter_bar>
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
       <.button
         id="add-property-button"
         phx-click="add-prop"
-        class="mt-4"
+        class="mt-6"
       >
         Add property
       </.button>

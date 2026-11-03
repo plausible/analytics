@@ -1,0 +1,421 @@
+defmodule Plausible.OAuth do
+  @moduledoc """
+  Minimal OAuth 2.1 authorization server used to authenticate remote MCP
+  connectors (e.g. Claude) against Plausible.
+
+  Handles the grant lifecycle: creating an authorization code, redeeming it once,
+  then issuing, resolving and revoking the tokens that follow. Validation lives in
+  `Plausible.OAuth.PKCE`, `Plausible.OAuth.CIMD` and
+  `Plausible.OAuth.ProtectedResources`.
+
+  The token endpoint implements the `authorization_code` and `refresh_token`
+  grants. Every refresh rotates both tokens.
+  """
+
+  use Plausible.Repo
+
+  alias Plausible.OAuth.{AuthorizationCode, Grant, PKCE, ProtectedResources, Token}
+  alias Plausible.Teams.{Membership, Memberships}
+
+  @authorization_code_ttl_seconds 600
+  @access_token_ttl_seconds 3600
+  @refresh_token_ttl_seconds 30 * 24 * 3600
+  @refresh_grace_period_seconds 60
+
+  @roles_with_oauth Membership.roles!([:owner, :admin, :editor, :billing, :viewer])
+
+  @type token_response() :: %{
+          access_token: String.t(),
+          refresh_token: String.t(),
+          token_type: String.t(),
+          expires_in: pos_integer(),
+          scope: String.t()
+        }
+
+  @spec access_token_ttl_seconds() :: pos_integer()
+  def access_token_ttl_seconds(), do: @access_token_ttl_seconds
+
+  @spec refresh_token_ttl_seconds() :: pos_integer()
+  def refresh_token_ttl_seconds(), do: @refresh_token_ttl_seconds
+
+  @spec refresh_grace_period_seconds() :: pos_integer()
+  def refresh_grace_period_seconds(), do: @refresh_grace_period_seconds
+
+  @doc """
+  Creates a single-use authorization code bound to the given user and team.
+
+  `attrs` must carry `:client_id`, `:redirect_uri`, `:code_challenge`,
+  `:code_challenge_method`, `:resource` and a non-empty `:scopes` list, and may
+  carry `:client_name`.
+
+  `:resource` and `:scopes` are re-resolved here rather than trusted from the
+  caller, since the consent screen was rendered by a separate request.
+
+  Returns the raw code - only its hash is stored, so this is the only point
+  where the raw value exists.
+  """
+  @spec create_authorization_code(Plausible.Auth.User.t(), Plausible.Teams.Team.t(), map()) ::
+          {:ok, String.t()}
+          | {:error, Ecto.Changeset.t() | :invalid_scope | :invalid_target | :not_a_member}
+  def create_authorization_code(user, team, attrs) do
+    with :ok <- validate_role(Memberships.team_role(team, user)),
+         {:ok, resource} <- normalize_resource(attrs[:resource]),
+         {:ok, scopes} <- ProtectedResources.normalize_granted_scopes(attrs[:scopes], resource) do
+      code = Token.generate(:code)
+
+      changeset =
+        AuthorizationCode.changeset(%{
+          code_hash: code.hash,
+          client_id: attrs.client_id,
+          client_name: attrs[:client_name],
+          redirect_uri: attrs.redirect_uri,
+          code_challenge: attrs.code_challenge,
+          code_challenge_method: attrs.code_challenge_method,
+          scopes: scopes,
+          resource: ProtectedResources.get_resource_url(resource),
+          user_id: user.id,
+          team_id: team.id,
+          expires_at: NaiveDateTime.add(now(), @authorization_code_ttl_seconds, :second)
+        })
+
+      with {:ok, _auth_code} <- Repo.insert(changeset), do: {:ok, code.raw}
+    end
+  end
+
+  @doc """
+  Consumes an authorization code and validates it against what the client
+  presented at the token endpoint: `:verifier`, `:client_id`, `:redirect_uri`
+  and `:resource`. Every one of those must equal the value bound to the code at
+  authorize-time.
+
+  `:client_id` is checked even though PKCE already proves possession of the
+  verifier, as required by
+  [token endpoint extension section](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension).
+
+  The row is deleted on lookup whether or not the later checks pass, so a code
+  can only ever be redeemed once.
+
+  To redeem the code, the user must still have a role in the team.
+  """
+  @type presented_grant() :: %{
+          required(:verifier) => String.t(),
+          required(:client_id) => String.t(),
+          required(:redirect_uri) => String.t(),
+          required(:resource) => String.t()
+        }
+
+  @spec consume_authorization_code(String.t(), presented_grant()) ::
+          {:ok, AuthorizationCode.t()} | {:error, :invalid_grant}
+  def consume_authorization_code(code, presented) when is_binary(code) do
+    with {:ok, auth_code} <- delete_and_fetch_code(Token.hash(code)),
+         :ok <- check_not_expired(auth_code.expires_at, now()),
+         :ok <-
+           PKCE.verify(
+             auth_code.code_challenge,
+             presented.verifier,
+             auth_code.code_challenge_method
+           ),
+         :ok <- match(auth_code.client_id, presented.client_id),
+         :ok <- match(auth_code.redirect_uri, presented.redirect_uri),
+         :ok <- match(auth_code.resource, presented.resource),
+         :ok <-
+           validate_role(
+             Memberships.team_role(team_id: auth_code.team_id, user_id: auth_code.user_id)
+           ) do
+      {:ok, auth_code}
+    else
+      _ -> {:error, :invalid_grant}
+    end
+  end
+
+  def consume_authorization_code(_code, _presented), do: {:error, :invalid_grant}
+
+  defp delete_and_fetch_code(code_hash) do
+    query = from(c in AuthorizationCode, where: c.code_hash == ^code_hash, select: c)
+
+    case Repo.delete_all(query) do
+      {1, [code]} -> {:ok, code}
+      {0, _} -> {:error, :invalid_grant}
+    end
+  end
+
+  @doc """
+  Creates a grant from a consumed authorization code, inheriting its client,
+  scopes, resource, user and team.
+
+  Issues an access and a refresh token together. Both raw values are returned
+  once here and only their hashes are kept.
+  """
+  @spec issue_token(AuthorizationCode.t()) ::
+          {:ok, token_response()} | {:error, Ecto.Changeset.t()}
+  def issue_token(%AuthorizationCode{} = auth_code) do
+    {grant_changes, response} = generate_tokens(auth_code.scopes, now())
+
+    changeset =
+      grant_changes
+      |> Map.merge(%{
+        client_id: auth_code.client_id,
+        client_name: auth_code.client_name,
+        scopes: auth_code.scopes,
+        resource: auth_code.resource,
+        user_id: auth_code.user_id,
+        team_id: auth_code.team_id
+      })
+      |> Grant.changeset()
+
+    with {:ok, _grant} <- Repo.insert(changeset), do: {:ok, response}
+  end
+
+  @doc """
+  Exchanges a refresh token for a new access and refresh token pair on the same
+  grant. The presented token stops working, and so does the access token issued
+  with it.
+
+  `presented` may carry `:client_id`, `:resource` and `:scope`. Each one that is
+  present must match the grant. `:scope` can't narrow the grant, since the grant
+  holds one scope set for both tokens.
+
+  The token displaced by the latest rotation is still recognised. Presented
+  within #{@refresh_grace_period_seconds} seconds of that rotation, it is
+  exchanged again, so a client that lost the response can recover. The token it
+  replaces becomes the recognised one, without restarting the window. Presented
+  later, it means the token leaked, and the whole grant is revoked.
+  """
+  @type presented_refresh() :: %{
+          optional(:client_id) => String.t() | nil,
+          optional(:resource) => String.t() | nil,
+          optional(:scope) => String.t() | nil
+        }
+
+  @spec refresh_token(String.t(), presented_refresh()) ::
+          {:ok, token_response()} | {:error, :invalid_grant | :invalid_scope}
+  def refresh_token(raw_refresh, presented) when is_binary(raw_refresh) do
+    hash = Token.hash(raw_refresh)
+
+    {:ok, result} =
+      Repo.transaction(fn ->
+        now = now()
+
+        case lock_grant_by_refresh_hash(hash) do
+          %Grant{refresh_token_hash: ^hash} = grant ->
+            exchange_current(grant, presented, now)
+
+          %Grant{previous_refresh_token_hash: ^hash} = grant ->
+            handle_replay(grant, presented, now)
+
+          nil ->
+            {:error, :invalid_grant}
+        end
+      end)
+
+    result
+  end
+
+  def refresh_token(_raw_refresh, _presented), do: {:error, :invalid_grant}
+
+  defp exchange_current(grant, presented, now) do
+    with :ok <- validate_grant_refreshable(grant, presented, now) do
+      {grant_changes, response} = generate_tokens(grant.scopes, now)
+
+      grant
+      |> Ecto.Changeset.change(grant_changes)
+      |> Ecto.Changeset.change(
+        previous_refresh_token_hash: grant.refresh_token_hash,
+        rotated_at: now
+      )
+      |> Repo.update!()
+
+      {:ok, response}
+    end
+  end
+
+  defp handle_replay(grant, presented, now) do
+    if in_grace_period?(grant, now) do
+      with :ok <- validate_grant_refreshable(grant, presented, now) do
+        {grant_changes, response} = generate_tokens(grant.scopes, now)
+
+        grant
+        |> Ecto.Changeset.change(grant_changes)
+        |> Ecto.Changeset.change(previous_refresh_token_hash: grant.refresh_token_hash)
+        |> Repo.update!()
+
+        {:ok, response}
+      end
+    else
+      revoke_grant(grant)
+      {:error, :invalid_grant}
+    end
+  end
+
+  defp lock_grant_by_refresh_hash(hash) do
+    Repo.one(
+      from(g in Grant,
+        where: g.refresh_token_hash == ^hash or g.previous_refresh_token_hash == ^hash,
+        lock: "FOR UPDATE"
+      )
+    )
+  end
+
+  defp in_grace_period?(grant, now) do
+    NaiveDateTime.diff(now, grant.rotated_at, :second) < @refresh_grace_period_seconds
+  end
+
+  defp validate_grant_refreshable(grant, presented, now) do
+    with :ok <- check_not_revoked(grant),
+         :ok <- check_not_expired(grant.refresh_token_expires_at, now),
+         # client_id must match when sent, see the
+         # [token endpoint extension](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-token-endpoint-extension-3)
+         :ok <- match_if_present(grant.client_id, presented[:client_id]),
+         # Tokens stay restricted to the resource server they were granted for, see
+         # [access token privilege restriction](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-access-token-privilege-rest).
+         # MCP clients must send this with every token request, see
+         # [resource parameter implementation](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization#resource-parameter-implementation)
+         :ok <- match_if_present(grant.resource, presented[:resource]),
+         :ok <- check_same_scopes(grant, presented[:scope]) do
+      case validate_role(Memberships.team_role(team_id: grant.team_id, user_id: grant.user_id)) do
+        :ok -> :ok
+        {:error, :not_a_member} -> {:error, :invalid_grant}
+      end
+    end
+  end
+
+  defp check_not_revoked(%Grant{revoked_at: nil}), do: :ok
+  defp check_not_revoked(_grant), do: {:error, :invalid_grant}
+
+  defp match_if_present(_expected, nil), do: :ok
+  defp match_if_present(expected, presented), do: match(expected, presented)
+
+  defp check_same_scopes(_grant, nil), do: :ok
+
+  defp check_same_scopes(grant, scope) do
+    with {:ok, resource} <- ProtectedResources.get_by_url(grant.resource),
+         {:ok, scopes} <-
+           ProtectedResources.normalize_granted_scopes(String.split(scope), resource),
+         true <- scopes == grant.scopes do
+      :ok
+    else
+      _ -> {:error, :invalid_scope}
+    end
+  end
+
+  defp generate_tokens(scopes, now) do
+    access_token = Token.generate(:access)
+    refresh_token = Token.generate(:refresh)
+
+    grant_changes = %{
+      access_token_hash: access_token.hash,
+      access_token_hint: access_token.hint,
+      access_token_expires_at: NaiveDateTime.add(now, @access_token_ttl_seconds, :second),
+      refresh_token_hash: refresh_token.hash,
+      refresh_token_hint: refresh_token.hint,
+      refresh_token_expires_at: NaiveDateTime.add(now, @refresh_token_ttl_seconds, :second)
+    }
+
+    response = %{
+      access_token: access_token.raw,
+      refresh_token: refresh_token.raw,
+      token_type: "Bearer",
+      expires_in: @access_token_ttl_seconds,
+      scope: Enum.join(scopes, " ")
+    }
+
+    {grant_changes, response}
+  end
+
+  @doc """
+  Looks up the grant a raw access token belongs to, preloading the bound user, team,
+  and their current role in the team. Returns the grant and role.
+
+  The argument `resource` is the protected resource the token is supposed to be for. A token issued
+  for a different resource is not found.
+
+  Expired, revoked, wrong resource, invalid role tokens all return
+  `{:error, :invalid_token}`
+  ([see error codes](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-error-codes)).
+  """
+  @spec find_access_token(String.t(), ProtectedResources.t()) ::
+          {:ok, Grant.t(), Membership.role()} | {:error, :invalid_token}
+  def find_access_token(raw_access, resource) when is_binary(raw_access) do
+    resource_url = ProtectedResources.get_resource_url(resource)
+
+    query =
+      from(g in Grant,
+        inner_join: u in assoc(g, :user),
+        inner_join: t in assoc(g, :team),
+        inner_join: tm in Membership,
+        on: tm.team_id == g.team_id and tm.user_id == g.user_id,
+        where:
+          g.access_token_hash == ^Token.hash(raw_access) and
+            g.resource == ^resource_url and
+            g.access_token_expires_at > ^now() and
+            is_nil(g.revoked_at),
+        preload: [user: u, team: t],
+        select: {g, tm.role}
+      )
+
+    case Repo.one(query) do
+      {%Grant{} = grant, role} when role in @roles_with_oauth -> {:ok, grant, role}
+      _ -> {:error, :invalid_token}
+    end
+  end
+
+  @doc """
+  Revokes a grant, invalidating its access and refresh tokens.
+
+  Recorded on the row rather than deleted, so a revoked connection can still be
+  displayed and its `previous_refresh_token_hash` still recognised. Idempotent:
+  an already-revoked grant keeps its original `revoked_at`.
+  """
+  @spec revoke_grant(Grant.t()) :: :ok
+  def revoke_grant(%Grant{} = grant) do
+    now = now()
+
+    Repo.update_all(
+      from(g in Grant, where: g.id == ^grant.id and is_nil(g.revoked_at)),
+      set: [revoked_at: now, updated_at: now]
+    )
+
+    :ok
+  end
+
+  @doc """
+  Revokes every live grant a user holds against a team, when they stop being a member of it.
+  """
+  @spec after_user_removed_from_team(Plausible.Teams.Team.t(), Plausible.Auth.User.t()) :: :ok
+  def after_user_removed_from_team(team, user) do
+    now = now()
+
+    Repo.update_all(
+      from(g in Grant,
+        where: g.team_id == ^team.id and g.user_id == ^user.id and is_nil(g.revoked_at)
+      ),
+      set: [revoked_at: now, updated_at: now]
+    )
+
+    :ok
+  end
+
+  defp normalize_resource(resource) do
+    case ProtectedResources.get_by_url(resource) do
+      {:ok, protected_resource} -> {:ok, protected_resource}
+      {:error, :not_found} -> {:error, :invalid_target}
+    end
+  end
+
+  defp check_not_expired(expires_at, now) do
+    if NaiveDateTime.compare(expires_at, now) == :gt do
+      :ok
+    else
+      {:error, :invalid_grant}
+    end
+  end
+
+  defp validate_role({:ok, role}) when role in @roles_with_oauth, do: :ok
+  defp validate_role(_), do: {:error, :not_a_member}
+
+  defp match(same, same), do: :ok
+  defp match(_, _), do: {:error, :invalid_grant}
+
+  # Second precision matches the stored `:naive_datetime` columns.
+  defp now(), do: NaiveDateTime.utc_now(:second)
+end

@@ -1,4 +1,7 @@
 defmodule Plausible.Stats.Compare do
+  @moduledoc """
+  Helper functions for uniformly calculating percent changes of metrics.
+  """
   def calculate_change(:conversion_rate, old_value, new_value) do
     Float.round(new_value - old_value, 1)
   end
@@ -28,6 +31,9 @@ defmodule Plausible.Stats.Compare do
     cond do
       old_count == 0 and new_count > 0 ->
         100
+
+      old_count == 0 and new_count < 0 ->
+        -100
 
       old_count == 0 and new_count == 0 ->
         0

@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
   def render(assigns) do
     ~H"""
     <div>
-      <.form :let={f} for={@changeset} phx-submit="submit" phx-target={@myself}>
+      <.form :let={f} for={@changeset} phx-submit="submit" phx-target={@myself} class="mt-6">
         <.input
           help_text="Just the naked domain or subdomain without 'www', 'https' etc."
           type="text"
@@ -35,12 +35,12 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
           class="mt-1 flex text-sm text-red-500 leading-4.5 text-pretty"
         >
           You already own this site. See its&nbsp;
-          <.styled_link href={Routes.site_path(@socket, :settings_general, @already_owned_domain)}>
+          <.styled_link href={~p"/#{@already_owned_domain}/settings/general"}>
             settings
           </.styled_link>
         </p>
 
-        <.button type="submit" class="mt-4 w-full">
+        <.button type="submit" class="mt-6 w-full">
           Change Domain
         </.button>
       </.form>

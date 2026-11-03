@@ -8,8 +8,6 @@ defmodule Plausible.HelpScoutTest do
     alias Plausible.HelpScout
     alias Plausible.Repo
 
-    alias PlausibleWeb.Router.Helpers, as: Routes
-
     require Plausible.Billing.Subscription.Status
 
     @v4_business_monthly_plan_id "857105"
@@ -59,7 +57,7 @@ defmodule Plausible.HelpScoutTest do
         stub_help_scout_requests(email)
         team = team_of(user)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+        crm_url = url(~p"/cs/teams/team/#{team.id}")
 
         assert {:ok,
                 %{
@@ -149,10 +147,10 @@ defmodule Plausible.HelpScoutTest do
                 }} = HelpScout.get_details_for_customer("500", "1000")
       end
 
-      test "returns for user with paid subscription on free 10k plan" do
+      test "returns for user with a subscription on free 10k plan" do
         user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, "free_10k")
+        subscribe_to_plan(user, "free_10k", paddle_subscription_id: nil)
 
         stub_help_scout_requests(email)
 
@@ -160,7 +158,7 @@ defmodule Plausible.HelpScoutTest do
                 %{
                   status_link: _,
                   status_label: "Paid",
-                  plan_link: _,
+                  plan_link: "#",
                   plan_label: "Free 10k"
                 }} = HelpScout.get_details_for_customer("500", "1000")
       end
@@ -199,6 +197,22 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: _,
                   plan_label: "1M Enterprise Plan (€123 yearly)"
+                }} = HelpScout.get_details_for_customer("500", "1000")
+      end
+
+      test "returns for user with manual subscription on yearly enterprise plan" do
+        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        team = team_of(user)
+        plan = insert(:enterprise_plan, team: team, billing_interval: :yearly)
+        {:ok, _} = Plausible.Billing.create_manual_subscription(team, plan)
+
+        stub_help_scout_requests(email)
+
+        assert {:ok,
+                %{
+                  status_label: "Paid",
+                  plan_link: "#",
+                  plan_label: "1M Enterprise Plan (manual, yearly)"
                 }} = HelpScout.get_details_for_customer("500", "1000")
       end
 
@@ -442,7 +456,7 @@ defmodule Plausible.HelpScoutTest do
 
         team = team_of(user)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team.id)
+        crm_url = url(~p"/cs/teams/team/#{team.id}")
 
         assert {:ok,
                 %{
@@ -480,7 +494,7 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user2)
         team2 = team_of(user2)
 
-        crm_url = Routes.customer_support_team_url(PlausibleWeb.Endpoint, :show, team2.id)
+        crm_url = url(~p"/cs/teams/team/#{team2.id}")
 
         assert {:ok,
                 %{

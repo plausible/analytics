@@ -288,7 +288,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         conn = post(conn, "/api/v1/sites", %{})
 
         assert json_response(conn, 400) == %{
-                 "error" => "domain: can't be blank"
+                 "error" => "domain: Please enter a domain or subdomain"
                }
       end
 
@@ -566,7 +566,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         other_team_site = new_site()
         add_member(other_team_site.team, user: user, role: :viewer)
 
-        # `team_id` paramaeter is ignored
+        # `team_id` parameter is ignored
         conn = get(conn, "/api/v1/sites?team_id=" <> other_team_site.team.identifier)
 
         assert_matches %{

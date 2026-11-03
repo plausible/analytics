@@ -4,6 +4,10 @@ defmodule Plausible.Application do
   use Application
   use Plausible
 
+  on_ee do
+    @start_verification_mock_scenarios? Mix.env() in [:dev, :e2e_test, :test]
+  end
+
   def start(_type, _args) do
     on_ee(do: Plausible.License.ensure_valid_license())
     on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
@@ -40,7 +44,7 @@ defmodule Plausible.Application do
         Plausible.ClickhouseRepo,
         Plausible.IngestRepo,
         Plausible.AsyncInsertRepo,
-        Plausible.ImportDeletionRepo,
+        Plausible.DeletionRepo,
         Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
           ttl_check_interval: :timer.minutes(5),
           n_lock_partitions: 1,
@@ -194,6 +198,11 @@ defmodule Plausible.Application do
         end,
         Plausible.Ingestion.Counters,
         Plausible.Session.Salts,
+        on_ee do
+          if always(@start_verification_mock_scenarios?) do
+            Plausible.InstallationSupport.Verification.MockScenarios
+          end
+        end,
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
         Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
         ReferrerBlocklist,
@@ -318,12 +327,12 @@ defmodule Plausible.Application do
   end
 
   defp maybe_add_paddle_pool(pool_config, default) do
-    paddle_conf = Application.get_env(:plausible, :paddle)
+    paddle_conf = Application.get_env(:plausible, :paddle_classic)
 
     if paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] do
       Map.put(
         pool_config,
-        Plausible.Billing.PaddleApi.vendors_domain(),
+        Plausible.Billing.PaddleClassic.Api.vendors_domain(),
         Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
       )
     else

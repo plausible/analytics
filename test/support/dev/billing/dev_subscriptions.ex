@@ -6,18 +6,13 @@ defmodule Plausible.Billing.DevSubscriptions do
   use Plausible
 
   on_ee do
+    use PlausibleWeb.VerifiedRoutes
+
     import Ecto.Query
 
     alias Plausible.{Repo, Billing}
-    alias Plausible.Billing.{Plan, EnterprisePlan, DevPaddleApiMock}
-    alias PlausibleWeb.Router.Helpers, as: Routes
-
-    def create_after_1s(team_id, plan_id) do
-      Task.start(fn ->
-        Process.sleep(1000)
-        create(team_id, plan_id)
-      end)
-    end
+    alias Plausible.Billing.{Plan, EnterprisePlan}
+    alias Plausible.Billing.PaddleClassic.DevApiMock
 
     def create(team_id, plan_id, opts \\ []) do
       plan_or_enterprise_plan = get_plan_or_enterprise_plan(plan_id)
@@ -34,14 +29,14 @@ defmodule Plausible.Billing.DevSubscriptions do
           "email" => "",
           "subscription_id" => Ecto.UUID.generate(),
           "subscription_plan_id" => plan_id,
-          "update_url" => Routes.dev_subscription_path(PlausibleWeb.Endpoint, :update_form),
-          "cancel_url" => Routes.dev_subscription_path(PlausibleWeb.Endpoint, :cancel_form),
+          "update_url" => ~p"/dev/billing/update-subscription-form",
+          "cancel_url" => ~p"/dev/billing/cancel-subscription-form",
           "status" => "active",
           "next_bill_date" => next_bill_date(plan_or_enterprise_plan, plan_id),
-          "unit_price" => "#{to_string(DevPaddleApiMock.all_prices()[plan_id])}.00",
+          "unit_price" => "#{to_string(DevApiMock.all_prices()[plan_id])}.00",
           "currency" => "EUR"
         }
-        |> Plausible.Billing.subscription_created()
+        |> Plausible.Billing.PaddleClassic.Webhooks.subscription_created()
 
         {:ok, Repo.reload(get_team_subscription(team_id))}
       else
@@ -69,10 +64,10 @@ defmodule Plausible.Billing.DevSubscriptions do
           "old_status" => to_string(subscription.status),
           "status" => new_status,
           "next_bill_date" => next_bill_date,
-          "new_unit_price" => "#{to_string(DevPaddleApiMock.all_prices()[current_plan_id])}.00",
+          "new_unit_price" => "#{to_string(DevApiMock.all_prices()[current_plan_id])}.00",
           "currency" => "EUR"
         }
-        |> Plausible.Billing.subscription_updated()
+        |> Plausible.Billing.PaddleClassic.Webhooks.subscription_updated()
 
         :ok
       else
@@ -101,7 +96,7 @@ defmodule Plausible.Billing.DevSubscriptions do
 
       if subscription = get_team_subscription(team_id) do
         %{"subscription_id" => subscription.paddle_subscription_id, "status" => "deleted"}
-        |> Billing.subscription_cancelled()
+        |> Plausible.Billing.PaddleClassic.Webhooks.subscription_cancelled()
 
         subscription = Repo.reload!(subscription)
 
