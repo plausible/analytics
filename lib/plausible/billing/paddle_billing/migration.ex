@@ -78,7 +78,11 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   defp create_product(canonical_plan, context, acc) do
     {:ok, product} =
-      PaddleBilling.api().create_product(plan_name(canonical_plan), product_data(canonical_plan))
+      PaddleBilling.api().create_product(
+        product_name(canonical_plan),
+        product_data(canonical_plan),
+        description: product_description(canonical_plan)
+      )
 
     sync_prices(product["id"], canonical_plan, context, acc, false)
   end
@@ -86,8 +90,9 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   defp update_product(existing_product, canonical_plan, context, acc) do
     {:ok, product} =
       PaddleBilling.api().update_product(existing_product["id"],
-        name: plan_name(canonical_plan),
-        custom_data: product_data(canonical_plan)
+        name: product_name(canonical_plan),
+        custom_data: product_data(canonical_plan),
+        description: product_description(canonical_plan)
       )
 
     sync_prices(product["id"], canonical_plan, context, acc, true)
@@ -161,12 +166,16 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   # Internal, not shown to customers, unlike product and price names. Plans of
   # different generations share their names.
   defp price_description(plan, interval) do
-    "#{plan_name(plan)} v#{plan.generation} #{interval}"
+    "[v#{plan.generation}] #{interval} #{product_name(plan)}"
   end
 
-  defp plan_name(plan) do
+  defp product_name(plan) do
     prefix = plan.kind |> to_string() |> String.capitalize()
 
     "#{prefix} (#{plan.volume})"
+  end
+
+  defp product_description(plan) do
+    "[v#{plan.generation}] #{product_name(plan)}"
   end
 end
