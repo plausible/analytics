@@ -112,7 +112,9 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
     product_by_classic_plan_id =
       Map.new(existing_enterprise_products, fn product ->
-        classic_plan_id = get_in(product, ["custom_data", "canonical_plan", "paddle_plan_id"])
+        classic_plan_id =
+          get_in(product, ["custom_data", "canonical_enterprise_plan", "paddle_plan_id"])
+
         {classic_plan_id, product}
       end)
 
@@ -244,7 +246,16 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   defp enterprise_product_data(plan) do
     %{
       "enterprise" => true,
-      "canonical_enterprise_plan" => Map.from_struct(plan)
+      "canonical_enterprise_plan" =>
+        Map.take(plan, [
+          :paddle_plan_id,
+          :billing_interval,
+          :monthly_pageview_limit,
+          :site_limit,
+          :team_member_limit,
+          :hourly_api_request_limit,
+          :features
+        ])
     }
   end
 
@@ -275,7 +286,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
       |> Enum.filter(&(&1 in plan.features))
       |> Enum.map_join(",", & &1.display_name())
 
-    suffix = if(features, do: suffix <> "/" <> features, else: suffix)
+    suffix = if(features != "", do: suffix <> "/" <> features, else: suffix)
 
     "Plausible Enterprise #{suffix}"
   end
