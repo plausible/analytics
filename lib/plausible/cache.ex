@@ -62,7 +62,6 @@ defmodule Plausible.Cache do
       @modes [:all, :updated_recently]
 
       alias Plausible.Cache.Adapter
-      require Logger
 
       @spec put(any(), any(), Keyword.t()) :: any()
       def put(key, value, opts \\ []) do
@@ -229,9 +228,7 @@ defmodule Plausible.Cache do
               items = repo().all(query)
               :ok = merge_items(items, opts)
             catch
-              _, e ->
-                Logger.error("Error refreshing '#{cache_name}' - #{inspect(e)}")
-                {:error, e}
+              _, e -> {:error, e}
             end
           end
         )

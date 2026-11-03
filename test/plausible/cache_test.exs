@@ -75,13 +75,8 @@ defmodule Plausible.CacheTest do
     end
 
     test "refresh_all returns an error when the database is unavailable", %{test: test} do
-      log =
-        capture_log(fn ->
-          assert {:error, %DBConnection.ConnectionError{}} =
-                   UnavailableCache.refresh_all(cache_name: test)
-        end)
-
-      assert log =~ "Error refreshing '#{test}'"
+      assert {:error, %DBConnection.ConnectionError{}} =
+               UnavailableCache.refresh_all(cache_name: test)
     end
   end
 
@@ -249,12 +244,15 @@ defmodule Plausible.CacheTest do
         retry_interval: 10
       ]
 
-      capture_log(fn ->
-        {:ok, _} = start_test_warmer(opts)
+      errors =
+        capture_log([level: :error], fn ->
+          {:ok, _} = start_test_warmer(opts)
 
-        for _ <- 1..4, do: assert_receive({:cache_warmed, _}, 1000)
-        refute_receive {:cache_warmed, _}, 300
-      end)
+          for _ <- 1..4, do: assert_receive({:cache_warmed, _}, 1000)
+          refute_receive {:cache_warmed, _}, 300
+        end)
+
+      assert [_] = Regex.scan(~r/failed - :db_unavailable/, errors)
     end
 
     test "cache warmer ignores a pending retry after a regular cycle", %{test: test} do

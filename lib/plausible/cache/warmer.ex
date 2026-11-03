@@ -95,26 +95,30 @@ defmodule Plausible.Cache.Warmer do
     Logger.notice("#{__MODULE__} running #{inspect(warmer_fn)} on #{cache_name}...")
 
     case warmer_fn.(opts) do
-      {:error, _} -> {opts, schedule_retry(opts, retries + 1)}
+      {:error, reason} -> {opts, schedule_retry(opts, retries + 1, reason)}
       _ -> {opts, nil}
     end
   end
 
-  defp schedule_retry(opts, retry) do
+  defp schedule_retry(opts, retry, reason) do
     retry_interval = Keyword.get(opts, :retry_interval)
     max_retries = Keyword.get(opts, :max_retries, @default_max_retries)
+    failure = "#{__MODULE__} #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} failed"
 
     if retry_interval && retry <= max_retries do
       backoff = retry_interval * Integer.pow(2, retry - 1)
       delay = backoff + Enum.random(0..div(backoff, 3))
 
-      Logger.notice(
-        "#{__MODULE__} retrying #{inspect(opts[:warmer_fn])} on #{opts[:cache_name]} in #{delay}ms (#{retry}/#{max_retries})..."
+      Logger.warning(
+        "#{failure}, retrying in #{delay}ms (#{retry}/#{max_retries}) - #{inspect(reason)}"
       )
 
       ref = make_ref()
       Process.send_after(self(), {:retry, ref}, delay)
       {ref, retry}
+    else
+      Logger.error("#{failure} - #{inspect(reason)}")
+      nil
     end
   end
 end
