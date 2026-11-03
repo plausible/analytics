@@ -48,20 +48,20 @@ jobs:
         env:
           CLICKHOUSE_SKIP_USER_SETUP: 1
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
 
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
+      - uses: marocchino/tool-versions-action@v2.0.0
         id: versions
-      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+      - uses: erlef/setup-beam@v1.24.1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache@v6.1.0
         with:
           path: |
             deps
@@ -76,7 +76,7 @@ jobs:
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
       - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        uses: dorny/paths-filter@v4.0.3
         id: changes
         with:
           filters: |
@@ -146,21 +146,21 @@ jobs:
         shardIndex: [1, 2]
         shardTotal: [2]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
 
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
+      - uses: marocchino/tool-versions-action@v2.0.0
         id: versions
 
-      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+      - uses: erlef/setup-beam@v1.24.1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache@v6.1.0
         with:
           path: |
             deps
@@ -176,7 +176,7 @@ jobs:
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
       - name: Cache E2E dependencies and Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache@v6.1.0
         id: playwright-cache
         with:
           path: |
@@ -188,7 +188,7 @@ jobs:
             playwright-${{ runner.os }}-
 
       - name: Check for changes in tracker/**
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        uses: dorny/paths-filter@v4.0.3
         id: changes
         with:
           filters: |
@@ -236,7 +236,7 @@ jobs:
 
       - name: Upload E2E blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: e2e-blob-report-${{ matrix.shardIndex }}
           path: e2e/blob-report
@@ -248,10 +248,10 @@ jobs:
     timeout-minutes: 15
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24.22.1
           cache: 'npm'
@@ -260,7 +260,7 @@ jobs:
         run: npm --prefix ./e2e ci
 
       - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           path: all-e2e-blob-reports
           pattern: e2e-blob-report-*
@@ -276,21 +276,21 @@ jobs:
       MIX_ENV: test
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
 
-      - uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
+      - uses: marocchino/tool-versions-action@v2.0.0
         id: versions
 
-      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+      - uses: erlef/setup-beam@v1.24.1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache@v6.1.0
         with:
           path: |
             deps

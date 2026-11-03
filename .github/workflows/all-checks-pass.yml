@@ -11,7 +11,7 @@ jobs:
       checks: read
     steps:
       - name: GitHub Checks
-        uses: poseidon/wait-for-status-checks@e7e24423722c5b8e97a6dd5848827d2a412f812d # v0.7.0
+        uses: poseidon/wait-for-status-checks@v0.7.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ignore: merge-sharded-e2e-test-report,copilot
