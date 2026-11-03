@@ -31,6 +31,9 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
 
     with {:ok, raw_token} <- get_bearer_token(conn),
          {:ok, grant, role} <- OAuth.find_access_token(raw_token, resource),
+         # Recorded before the rate limit, so a valid token that is being
+         # throttled still shows as used in the connected apps view.
+         :ok <- OAuth.touch_grant(grant),
          :ok <- check_rate_limit(grant.team) do
       conn
       |> assign(:current_user, grant.user)

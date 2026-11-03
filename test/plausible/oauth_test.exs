@@ -517,6 +517,8 @@ defmodule Plausible.OAuthTest do
         )
         |> Repo.update!()
 
+      refute initial_grant.last_used_at
+
       assert {:ok, response_b} =
                OAuth.refresh_token(response_a.refresh_token, %{})
 
@@ -550,6 +552,8 @@ defmodule Plausible.OAuthTest do
                grant.refresh_token_expires_at,
                initial_grant.refresh_token_expires_at
              )
+
+      assert grant.last_used_at == grant.rotated_at
     end
 
     test "accepts a request specifying client ID, resource and scopes; rejects without invalidating the grant if any of them are invalid",

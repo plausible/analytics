@@ -21,6 +21,7 @@ defmodule Plausible.OAuth do
   @access_token_ttl_seconds 3600
   @refresh_token_ttl_seconds 30 * 24 * 3600
   @refresh_grace_period_seconds 60
+  @last_used_precision_seconds 300
 
   @roles_with_oauth Membership.roles!([:owner, :admin, :editor, :billing, :viewer])
 
@@ -223,6 +224,7 @@ defmodule Plausible.OAuth do
         previous_refresh_token_hash: grant.refresh_token_hash,
         rotated_at: now
       )
+      |> mark_used(now)
       |> Repo.update!()
 
       {:ok, response}
@@ -237,6 +239,7 @@ defmodule Plausible.OAuth do
         grant
         |> Ecto.Changeset.change(grant_changes)
         |> Ecto.Changeset.change(previous_refresh_token_hash: grant.refresh_token_hash)
+        |> mark_used(now)
         |> Repo.update!()
 
         {:ok, response}
@@ -403,6 +406,30 @@ defmodule Plausible.OAuth do
     else
       _ -> {:error, :not_found}
     end
+  end
+
+  @doc """
+  Records that a grant's access token was used, for the connected apps
+  settings view. Refreshing tokens records it too, see `refresh_token/2`.
+
+  The timestamp is only rewritten once it is older than
+  #{@last_used_precision_seconds} seconds, so a busy client does not
+  update the row on every request.
+  """
+  @spec touch_grant(Grant.t(), NaiveDateTime.t()) :: :ok
+  def touch_grant(%Grant{} = grant, now \\ now()) do
+    if is_nil(grant.last_used_at) or
+         NaiveDateTime.diff(now, grant.last_used_at, :second) > @last_used_precision_seconds do
+      grant
+      |> mark_used(now)
+      |> Repo.update!(allow_stale: true)
+    end
+
+    :ok
+  end
+
+  defp mark_used(grant_or_changeset, now) do
+    Ecto.Changeset.change(grant_or_changeset, last_used_at: now)
   end
 
   @doc """
