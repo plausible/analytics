@@ -57,6 +57,9 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     existing_mapping = classic_plan_mapping(existing_products)
 
     Enum.reduce(canonical_plans, existing_mapping, fn canonical_plan, acc ->
+      Process.sleep(1000)
+      IO.write(".")
+
       monthly_exists? = MapSet.member?(existing_plan_ids, canonical_plan.monthly_product_id)
       yearly_exists? = MapSet.member?(existing_plan_ids, canonical_plan.yearly_product_id)
 
