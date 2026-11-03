@@ -682,6 +682,36 @@ defmodule Plausible.OAuthTest do
       assert third.id == oldest.id
     end
 
+    test "lists most recently used grants first, then never used ones", %{
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+
+      never_used = insert(:oauth_grant, user: user, team: team, inserted_at: now)
+
+      used_long_ago =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -5, :day),
+          last_used_at: NaiveDateTime.add(now, -3, :day)
+        )
+
+      used_recently =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -5, :day),
+          last_used_at: NaiveDateTime.add(now, -1, :hour)
+        )
+
+      assert [first, second, third] = OAuth.list_grants(user)
+      assert first.id == used_recently.id
+      assert second.id == used_long_ago.id
+      assert third.id == never_used.id
+    end
+
     test "leaves out revoked and expired grants", %{user: user, team: team} do
       insert(:oauth_grant, user: user, team: team, revoked_at: past())
       insert(:oauth_grant, user: user, team: team, refresh_token_expires_at: past())
