@@ -1,17 +1,11 @@
 defmodule Plausible.Billing.PaddleBilling.ApiTest do
-  use Plausible.DataCase, async: false
+  use Plausible.DataCase
 
   import Mox
   alias Plausible.Billing.PaddleBilling.Api
   alias Plausible.HTTPClient.Non200Error
 
   setup :verify_on_exit!
-
-  setup do
-    previous = Application.get_env(:plausible, :paddle_billing)
-    Application.put_env(:plausible, :paddle_billing, api_key: "test_api_key")
-    on_exit(fn -> Application.put_env(:plausible, :paddle_billing, previous) end)
-  end
 
   @product_id "pro_01h1vjes1y163xfj1rh1tkfb65"
   @price_id "pri_01gsz8z1q1n00f12qt7fgvhfkv"
