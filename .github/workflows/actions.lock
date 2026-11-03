@@ -41,6 +41,9 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v7.1.0'
         - 'marocchino/tool-versions-action@v2.0.0'
+    '.github/workflows/plumber.yml':
+        - 'actions/checkout@v7.0.1'
+        - 'getplumber/plumber@v0.7.18'
     '.github/workflows/publish-docs.yml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
@@ -95,6 +98,11 @@ dependencies:
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
         owner_id: 44036562
         repo_id: 189476904
+    'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9':
+        ref: 'v7.0.2'
+        commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
+        owner_id: 44036562
+        repo_id: 192625955
     'actions/upload-artifact@v7.0.2':
         ref: 'v7.0.2'
         commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
@@ -145,6 +153,19 @@ dependencies:
         commit: 'sha1-f98bb26551cd1af7d3eb2674578a80754ece88db'
         owner_id: 16627596
         repo_id: 242669075
+    'getplumber/plumber@v0.7.18':
+        ref: 'v0.7.18'
+        commit: 'sha1-ebc213aa45dccd233ce5c2630f0aafa8e8d650c5'
+        owner_id: 255179076
+        repo_id: 1137327132
+        uses:
+            - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
+            - 'github/codeql-action@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee'
+    'github/codeql-action@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee':
+        ref: 'v4.39.0'
+        commit: 'sha1-6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee'
+        owner_id: 9919
+        repo_id: 259445878
     'hashicorp/setup-terraform@v4.0.1':
         ref: 'v4.0.1'
         commit: 'sha1-dfe3c3f87815947d99a8997f908cb6525fc44e9e'

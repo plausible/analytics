@@ -1,5 +1,7 @@
 # Security Policy
 
+[![Plumber Score](https://score.getplumber.io/github.com/plausible/analytics.svg)](https://score.getplumber.io/github.com/plausible/analytics)
+
 ## Supported Versions
 
 We only add security updates to the latest MAJOR.MINOR version of the project. No security updates are backported to previous versions. If you

@@ -1,0 +1,26 @@
+# Plumber overlay: inherits every control from the CLI's built-in
+# baseline, only the differences for this repository are written here.
+# Run 'plumber config resolve' to see the full effective config.
+extends: plumber:default
+version: '2.0'
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # Keep the curated default list and trust the CI, release and
+      # notification actions this repository uses on top of it, all
+      # recorded in actions.lock.
+      includePlumberDefaults: true
+      trustedGithubActions:
+        - EndBug/add-and-commit
+        - codespell-project/actions-codespell
+        - crate-ci/typos
+        - dorny/paths-filter
+        - fjogeleit/http-request-action
+        - marocchino/tool-versions-action
+        - peaceiris/actions-gh-pages
+        - poseidon/wait-for-status-checks
+        - thollander/actions-comment-pull-request
+        - tj-actions/changed-files
+        - useblacksmith/build-push-action
+        - useblacksmith/setup-docker-builder
