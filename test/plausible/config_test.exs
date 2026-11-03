@@ -709,6 +709,55 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "clickhouse" do
+    test "default query timeout and max_execution_time" do
+      env = [
+        {"CLICKHOUSE_QUERY_TIMEOUT_MS", nil},
+        {"CLICKHOUSE_MAX_EXECUTION_TIME_SEC", nil}
+      ]
+
+      config = runtime_config(env)
+      repo_config = get_in(config, [:plausible, Plausible.ClickhouseRepo])
+
+      assert repo_config[:timeout] == 15_000
+      assert repo_config[:settings][:max_execution_time] == 20
+    end
+
+    test "CLICKHOUSE_QUERY_TIMEOUT_MS overrides timeout and derives max_execution_time" do
+      env = [
+        {"CLICKHOUSE_QUERY_TIMEOUT_MS", "60000"},
+        {"CLICKHOUSE_MAX_EXECUTION_TIME_SEC", nil}
+      ]
+
+      config = runtime_config(env)
+      repo_config = get_in(config, [:plausible, Plausible.ClickhouseRepo])
+
+      assert repo_config[:timeout] == 60_000
+      assert repo_config[:settings][:max_execution_time] == 65
+    end
+
+    test "CLICKHOUSE_MAX_EXECUTION_TIME_SEC overrides derived max_execution_time" do
+      env = [
+        {"CLICKHOUSE_QUERY_TIMEOUT_MS", "60000"},
+        {"CLICKHOUSE_MAX_EXECUTION_TIME_SEC", "120"}
+      ]
+
+      config = runtime_config(env)
+      repo_config = get_in(config, [:plausible, Plausible.ClickhouseRepo])
+
+      assert repo_config[:timeout] == 60_000
+      assert repo_config[:settings][:max_execution_time] == 120
+    end
+
+    test "CLICKHOUSE_QUERY_TIMEOUT_MS must be an integer" do
+      env = [{"CLICKHOUSE_QUERY_TIMEOUT_MS", "15s"}]
+
+      assert_raise RuntimeError, ~r/CLICKHOUSE_QUERY_TIMEOUT_MS must be an integer/, fn ->
+        runtime_config(env)
+      end
+    end
+  end
+
   defp runtime_config(env) do
     put_system_env_undo(env)
     Config.Reader.read!("config/runtime.exs", env: :prod)
