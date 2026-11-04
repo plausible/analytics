@@ -448,6 +448,24 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  # capability:begin
+  # id: disable_2fa@ui_session
+  # action: disable_2fa
+  # transport: ui_session
+  # entry: POST /2fa/disable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.AuthController.disable_2fa/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Requires the password; SSO users denied
+  # capability:end
   def disable_2fa(conn, %{"password" => password}) do
     case Auth.TOTP.disable(conn.assigns.current_user, password) do
       {:ok, _} ->
@@ -463,6 +481,24 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  # capability:begin
+  # id: generate_2fa_recovery_codes@ui_session
+  # action: generate_2fa_recovery_codes
+  # transport: ui_session
+  # entry: POST /2fa/recovery_codes (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.AuthController.generate_2fa_recovery_codes/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Requires the password
+  # capability:end
   def generate_2fa_recovery_codes(conn, %{"password" => password}) do
     case Auth.TOTP.generate_recovery_codes(conn.assigns.current_user, password) do
       {:ok, codes} ->
@@ -582,6 +618,24 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: ~p"/settings/security#update-email")
   end
 
+  # capability:begin
+  # id: delete_account@ui_session
+  # action: delete_account
+  # transport: ui_session
+  # entry: DELETE /me (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.AuthController.delete_me/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: SSO users denied; refused while the user is the only owner of a team or has an active subscription
+  # capability:end
   def delete_me(conn, params) do
     case Plausible.Auth.delete_user(conn.assigns[:current_user]) do
       {:ok, :deleted} ->

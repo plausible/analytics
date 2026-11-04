@@ -114,6 +114,24 @@ defmodule PlausibleWeb.SSOController do
     )
   end
 
+  # capability:begin
+  # id: revoke_sso_session@ui_session
+  # action: revoke_sso_session
+  # transport: ui_session
+  # entry: DELETE /settings/sso/sessions/:session_id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SSOController.delete_session/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: SSOController plug AuthorizeTeamAccess [:owner, :admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: EE only
+  # capability:end
   def delete_session(conn, %{"session_id" => session_id}) do
     current_team = conn.assigns.current_team
     Auth.UserSessions.revoke_sso_by_id(current_team, session_id)

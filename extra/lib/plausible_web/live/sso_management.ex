@@ -449,6 +449,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     """
   end
 
+  # capability:begin
+  # id: setup_sso@ui_session
+  # action: setup_sso
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "init-sso"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; Starts a SAML integration for the team
+  # capability:end
   def handle_event("init-sso", _params, socket) do
     team = socket.assigns.current_team
     integration = SSO.initiate_saml_integration(team)
@@ -466,6 +484,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, route_mode(socket, :idp_form)}
   end
 
+  # capability:begin
+  # id: update_sso_integration@ui_session
+  # action: update_sso_integration
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "update-integration"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; Changes the IdP configuration
+  # capability:end
   def handle_event("update-integration", params, socket) do
     socket =
       case SSO.update_integration(socket.assigns.integration, params["saml_config"] || %{}) do
@@ -482,6 +518,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: add_sso_domain@ui_session
+  # action: add_sso_domain
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "add-domain"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only
+  # capability:end
   def handle_event("add-domain", params, socket) do
     integration = socket.assigns.integration
 
@@ -501,6 +555,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: verify_sso_domain@ui_session
+  # action: verify_sso_domain
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "verify-domain-submit"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; Starts domain verification
+  # capability:end
   def handle_event("verify-domain-submit", params, socket) do
     integration = socket.assigns.integration
     sso_domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
@@ -549,6 +621,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: remove_sso_domain@ui_session
+  # action: remove_sso_domain
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "remove-domain"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only
+  # capability:end
   def handle_event("remove-domain", params, socket) do
     integration = socket.assigns.integration
     domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
@@ -574,6 +664,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     end
   end
 
+  # capability:begin
+  # id: set_force_sso@ui_session
+  # action: set_force_sso
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "toggle-force-sso"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; Forces every member to log in through SSO
+  # capability:end
   def handle_event("toggle-force-sso", _params, socket) do
     team = socket.assigns.current_team
     new_toggle = if team.policy.force_sso == :none, do: :all_but_owners, else: :none
@@ -591,6 +699,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
     end
   end
 
+  # capability:begin
+  # id: update_sso_policy@ui_session
+  # action: update_sso_policy
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) handle_event "update-policy"
+  # handler: PlausibleWeb.Live.SSOManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; Session timeout, default role and similar
+  # capability:end
   def handle_event("update-policy", params, socket) do
     team = socket.assigns.current_team
     params = params["policy"]

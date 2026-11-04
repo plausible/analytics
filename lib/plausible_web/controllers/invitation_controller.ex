@@ -8,6 +8,24 @@ defmodule PlausibleWeb.InvitationController do
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
        [:owner, :admin] when action in [:remove_invitation]
 
+  # capability:begin
+  # id: accept_invitation@ui_session
+  # action: accept_invitation
+  # transport: ui_session
+  # entry: POST /sites/invitations/:invitation_id/accept and POST /settings/team/invitations/:invitation_id/accept (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.InvitationController.accept_invitation/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: Teams.Invitations.Accept (invitation must be for the current user)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: One handler for guest, team and site transfer invitations
+  # capability:end
   def accept_invitation(conn, %{"invitation_id" => invitation_id} = params) do
     current_user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -80,6 +98,23 @@ defmodule PlausibleWeb.InvitationController do
     end
   end
 
+  # capability:begin
+  # id: reject_invitation@ui_session
+  # action: reject_invitation
+  # transport: ui_session
+  # entry: POST /sites/invitations/:invitation_id/reject and POST /settings/team/invitations/:invitation_id/reject (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.InvitationController.reject_invitation/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: invitation must be for the current user
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: inferred
+  # capability:end
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
     case Teams.Invitations.Reject.reject(invitation_id, conn.assigns.current_user) do
       {:ok, _invitation} ->
@@ -135,6 +170,24 @@ defmodule PlausibleWeb.InvitationController do
     end
   end
 
+  # capability:begin
+  # id: cancel_team_invitation@ui_session
+  # action: cancel_team_invitation
+  # transport: ui_session
+  # entry: DELETE /settings/team/invitations/:invitation_id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.InvitationController.remove_team_invitation/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: Invitations.RemoveFromTeam.remove -> check_can_remove_invitation (owner, admin)
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: TeamManagement "remove-member" covers the same for pending invitations
+  # capability:end
   def remove_team_invitation(conn, %{"invitation_id" => invitation_id}) do
     %{current_team: team, current_user: current_user} = conn.assigns
 

@@ -34,6 +34,24 @@ defmodule PlausibleWeb.SettingsController do
     render_team_general(conn)
   end
 
+  # capability:begin
+  # id: rename_team@ui_session
+  # action: rename_team
+  # transport: ui_session
+  # entry: POST /settings/team/general/name (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.update_team_name/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: SettingsController plug AuthorizeTeamAccess [:owner, :admin]
+  # current_feature_gate: none
+  # proposed_scope: teams:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: NEW SCOPE: teams:write, for team settings that are safe to delegate; no API or MCP equivalent
+  # capability:end
   def update_team_name(conn, %{"team" => params}) do
     changeset = Teams.Team.name_changeset(conn.assigns.current_team, params)
 
@@ -68,6 +86,24 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: enable_team_force_2fa@ui_session
+  # action: enable_team_force_2fa
+  # transport: ui_session
+  # entry: POST /settings/team/force_2fa/enable (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.enable_team_force_2fa/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: SettingsController plug AuthorizeTeamAccess [:owner]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: Security policy, keep session only
+  # capability:end
   def enable_team_force_2fa(conn, _params) do
     team = conn.assigns.current_team
     user = conn.assigns.current_user
@@ -85,6 +121,24 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: disable_team_force_2fa@ui_session
+  # action: disable_team_force_2fa
+  # transport: ui_session
+  # entry: POST /settings/team/force_2fa/disable (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.disable_team_force_2fa/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: SettingsController plug AuthorizeTeamAccess [:owner]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: Security policy, requires the password
+  # capability:end
   def disable_team_force_2fa(conn, %{"password" => password}) do
     team = conn.assigns.current_team
     user = conn.assigns.current_user
@@ -107,6 +161,23 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: leave_team@ui_session
+  # action: leave_team
+  # transport: ui_session
+  # entry: POST /settings/team/leave (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.leave_team/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing]
+  # current_role_enforced_by: Teams.Memberships.Leave.leave (any member; last owner can't leave)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, viewer, billing]
+  # confidence: verified
+  # capability:end
   def leave_team(conn, _params) do
     case Teams.Memberships.Leave.leave(conn.assigns.current_team, conn.assigns.current_user) do
       {:ok, _} ->
@@ -145,6 +216,23 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: leave_guest_site@ui_session
+  # action: leave_guest_site
+  # transport: ui_session
+  # entry: DELETE /settings/guest-sites/:site_id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.leave_guest_site/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [guest_viewer, guest_editor]
+  # current_role_enforced_by: Teams.Memberships.remove(site_id, current_user) (own guest membership only)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [guest_viewer, guest_editor]
+  # confidence: verified
+  # capability:end
   def leave_guest_site(conn, %{"site_id" => site_id}) do
     user = conn.assigns.current_user
 
@@ -184,6 +272,24 @@ defmodule PlausibleWeb.SettingsController do
     render(conn, "new_api_key.html", changeset: changeset, sites_api_enabled?: sites_api_enabled?)
   end
 
+  # capability:begin
+  # id: create_api_key@ui_session
+  # action: create_api_key
+  # transport: ui_session
+  # entry: POST /settings/api-keys (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.create_api_key/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing]
+  # current_role_enforced_by: none (membership only; current team from the session)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, viewer, billing]
+  # confidence: verified
+  # notes: No role check: any member, including viewer and billing, can create a Stats or Sites API key for the team; roles only matter when the key is used, and the Stats API checks none
+  # capability:end
   def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key, "type" => type}}) do
     current_user = conn.assigns.current_user
     current_team = conn.assigns.current_team
@@ -217,6 +323,24 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: delete_api_key@ui_session
+  # action: delete_api_key
+  # transport: ui_session
+  # entry: DELETE /settings/api-keys/:id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.delete_api_key/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Own keys only (Auth.delete_api_key scopes by user)
+  # capability:end
   def delete_api_key(conn, %{"id" => id}) do
     case Auth.delete_api_key(conn.assigns.current_user, id) do
       :ok ->
@@ -237,6 +361,24 @@ defmodule PlausibleWeb.SettingsController do
     render(conn, :connected_apps, layout: {PlausibleWeb.LayoutView, :settings}, grants: grants)
   end
 
+  # capability:begin
+  # id: revoke_connected_app@ui_session
+  # action: revoke_connected_app
+  # transport: ui_session
+  # entry: DELETE /settings/connected-apps/:id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.revoke_connected_app/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Revokes an OAuth grant; own grants only; behind the :mcp feature flag
+  # capability:end
   def revoke_connected_app(conn, %{"id" => id}) do
     case Plausible.OAuth.revoke_user_grant(conn.assigns.current_user, id) do
       :ok ->
@@ -281,6 +423,23 @@ defmodule PlausibleWeb.SettingsController do
     render(conn, :team_danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
   end
 
+  # capability:begin
+  # id: delete_team@ui_session
+  # action: delete_team
+  # transport: ui_session
+  # entry: DELETE /settings/team/delete (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.delete_team/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: SettingsController plug AuthorizeTeamAccess [:owner]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # capability:end
   def delete_team(conn, _params) do
     team = conn.assigns.current_team
 
@@ -302,6 +461,24 @@ defmodule PlausibleWeb.SettingsController do
 
   # Preferences actions
 
+  # capability:begin
+  # id: update_name@ui_session
+  # action: update_name
+  # transport: ui_session
+  # entry: POST /settings/preferences/name (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.update_name/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: SSO users denied (RestrictUserType)
+  # capability:end
   def update_name(conn, %{"user" => params}) do
     changeset = Auth.User.name_changeset(conn.assigns.current_user, params)
 
@@ -316,6 +493,23 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: update_theme@ui_session
+  # action: update_theme
+  # transport: ui_session
+  # entry: POST /settings/preferences/theme (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.update_theme/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # capability:end
   def update_theme(conn, %{"user" => params}) do
     changeset = Auth.User.theme_changeset(conn.assigns.current_user, params)
 
@@ -346,6 +540,24 @@ defmodule PlausibleWeb.SettingsController do
 
   # Security actions
 
+  # capability:begin
+  # id: update_email@ui_session
+  # action: update_email
+  # transport: ui_session
+  # entry: POST /settings/security/email (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.update_email/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: SSO users denied (RestrictUserType)
+  # capability:end
   def update_email(conn, %{"user" => params}) do
     user = conn.assigns.current_user
 
@@ -373,6 +585,23 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: cancel_update_email@ui_session
+  # action: cancel_update_email
+  # transport: ui_session
+  # entry: POST /settings/security/email/cancel (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.cancel_update_email/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # capability:end
   def cancel_update_email(conn, _params) do
     changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
 
@@ -392,6 +621,24 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: update_password@ui_session
+  # action: update_password
+  # transport: ui_session
+  # entry: POST /settings/security/password (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.update_password/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: SSO users denied (RestrictUserType)
+  # capability:end
   def update_password(conn, %{"user" => params}) do
     user = conn.assigns.current_user
     user_session = conn.assigns.current_user_session
@@ -445,6 +692,23 @@ defmodule PlausibleWeb.SettingsController do
     )
   end
 
+  # capability:begin
+  # id: revoke_user_session@ui_session
+  # action: revoke_user_session
+  # transport: ui_session
+  # entry: DELETE /settings/security/user-sessions/:id (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.delete_session/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # capability:end
   def delete_session(conn, %{"id" => session_id}) do
     current_user = conn.assigns.current_user
 

@@ -105,6 +105,24 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
+  # capability:begin
+  # id: change_plan@ui_session
+  # action: change_plan
+  # transport: ui_session
+  # entry: POST /billing/change-plan/:new_plan_id (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.BillingController.change_plan/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, billing]
+  # current_role_enforced_by: BillingController plug AuthorizeTeamAccess Billing.allowed_roles() ([:owner, :billing])
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, billing]
+  # confidence: verified
+  # notes: Billing is never grantable to tokens
+  # capability:end
   def change_plan(conn, %{"new_plan_id" => new_plan_id}) do
     team = conn.assigns.current_team
 
