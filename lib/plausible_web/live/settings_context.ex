@@ -11,14 +11,6 @@ defmodule PlausibleWeb.Live.SettingsContext do
 
   defp get_current_path(_params, url, socket) do
     %{path: current_path} = URI.parse(url)
-
-    socket =
-      socket
-      |> assign(:current_path, current_path)
-      |> assign_new(:has_guest_sites?, fn %{current_user: user} ->
-        Plausible.Teams.Memberships.has_guest_memberships?(user)
-      end)
-
-    {:cont, socket}
+    {:cont, assign(socket, :current_path, current_path)}
   end
 end

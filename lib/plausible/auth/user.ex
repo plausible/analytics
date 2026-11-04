@@ -32,6 +32,7 @@ defmodule Plausible.Auth.User do
     field :old_password, :string, virtual: true
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
+    field :has_guest_memberships?, :boolean, virtual: true
     field :name, :string
     field :last_seen, :naive_datetime
     field :theme, Ecto.Enum, values: [:system, :light, :dark]

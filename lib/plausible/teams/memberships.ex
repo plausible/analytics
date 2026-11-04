@@ -272,13 +272,6 @@ defmodule Plausible.Teams.Memberships do
     |> Repo.all()
   end
 
-  @spec has_guest_memberships?(Plausible.Auth.User.t()) :: boolean()
-  def has_guest_memberships?(user) do
-    user
-    |> guest_memberships_query()
-    |> Repo.exists?()
-  end
-
   defp guest_memberships_query(user) do
     from(gm in Teams.GuestMembership,
       inner_join: tm in assoc(gm, :team_membership),
