@@ -322,7 +322,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
            })}
       end)
 
-      stub(Plausible.HTTPClient.Mock, :patch, fn
+      expect(Plausible.HTTPClient.Mock, :patch, 2, fn
         "https://sandbox-api.paddle.com/products/prod_123", _headers, params ->
           assert %{
                    name: "Plausible Enterprise 200k/50 sites/20 members/2k API calls/Sites API",
@@ -398,6 +398,57 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       assert %{
                "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
              } = Migration.sync_enterprise(true)
+    end
+
+    test "creates nothing for existing plans without overwrite" do
+      insert_enterprise_plan("123")
+      stub_classic_plans([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])
+      stub_existing_enterprise_products()
+
+      stub(Plausible.HTTPClient.Mock, :patch, fn url, _headers, _params ->
+        flunk("unexpected PATCH #{url}")
+      end)
+
+      assert Migration.sync_enterprise() == %{
+               "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
+             }
+    end
+
+    test "raises without sending any write when Classic doesn't know a plan" do
+      insert_enterprise_plan("123")
+      insert_enterprise_plan("456")
+      stub_classic_plans([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])
+      stub_empty_products()
+
+      assert_raise KeyError, fn -> Migration.sync_enterprise() end
+    end
+
+    test "raises without sending any write when a plan has no recurring price" do
+      insert_enterprise_plan("123")
+      insert_enterprise_plan("456")
+
+      stub_classic_plans([
+        %{"id" => 123, "recurring_price" => %{"USD" => "9.000"}},
+        %{"id" => 456, "recurring_price" => %{}}
+      ])
+
+      stub_empty_products()
+
+      assert_raise MatchError, fn -> Migration.sync_enterprise() end
+    end
+
+    test "raises without sending any write when a plan has several recurring prices" do
+      insert_enterprise_plan("123")
+      insert_enterprise_plan("456")
+
+      stub_classic_plans([
+        %{"id" => 123, "recurring_price" => %{"USD" => "9.000"}},
+        %{"id" => 456, "recurring_price" => %{"USD" => "9.000", "EUR" => "8.000"}}
+      ])
+
+      stub_empty_products()
+
+      assert_raise MatchError, fn -> Migration.sync_enterprise() end
     end
   end
 
@@ -480,6 +531,60 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       assert Migration.enterprise_product_name(ep) ==
                "Plausible Enterprise 200k/50 sites/20 members/2k API calls/Sites API,Single Sign-On"
     end
+  end
+
+  defp insert_enterprise_plan(paddle_plan_id) do
+    insert(:enterprise_plan,
+      team: new_site().team,
+      monthly_pageview_limit: 200_000,
+      billing_interval: :monthly,
+      site_limit: 50,
+      hourly_api_request_limit: 2000,
+      team_member_limit: 20,
+      features: [Plausible.Billing.Feature.SitesAPI],
+      paddle_plan_id: paddle_plan_id
+    )
+  end
+
+  defp classic_plans_response(plans) do
+    ok_response(%{
+      "success" => true,
+      "count" => length(plans),
+      "total" => length(plans),
+      "response" => plans
+    })
+  end
+
+  defp stub_classic_plans(plans) do
+    stub(Plausible.HTTPClient.Mock, :post, fn
+      "https://vendors.paddle.com/api/2.0/subscription/plans", _headers, _params ->
+        {:ok, classic_plans_response(plans)}
+
+      url, _headers, _params ->
+        flunk("unexpected POST #{url}")
+    end)
+  end
+
+  defp stub_existing_enterprise_products() do
+    stub(Plausible.HTTPClient.Mock, :get, fn "https://sandbox-api.paddle.com/products" <> _,
+                                             _headers ->
+      {:ok,
+       ok_response(%{
+         "data" => [
+           %{
+             "id" => "prod_123",
+             "prices" => [
+               %{"id" => "price_456", "custom_data" => %{"paddle_classic_plan_id" => "123"}}
+             ],
+             "custom_data" => %{
+               "canonical_enterprise_plan" => %{"paddle_plan_id" => "123"},
+               "enterprise" => true
+             }
+           }
+         ],
+         "meta" => %{"has_more" => false}
+       })}
+    end)
   end
 
   defp plan(kind, volume, generation) do
