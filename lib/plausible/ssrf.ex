@@ -17,10 +17,12 @@ defmodule Plausible.SSRF do
   @redirect_statuses [301, 302, 303, 307, 308]
   @default_receive_timeout :timer.seconds(5)
   @default_total_timeout :timer.seconds(30)
+  @default_max_retries 2
+  @default_retry_delay :timer.seconds(1)
   @dns_timeout 1_000
 
   @doc """
-  Resolves bare hostname or literal IP and returns its address(es), 
+  Resolves bare hostname or literal IP and returns its address(es),
   only if all are allowed
   """
   @spec resolve_host(String.t()) :: {:ok, [:inet.ip_address()]} | {:error, error_reason()}
@@ -42,9 +44,13 @@ defmodule Plausible.SSRF do
   Performs a GET request against arbitrary URL, refusing to connect to a
   restricted address.
 
-  Does not retry or follow redirects: a redirect is
-  `{:error, :redirect_not_followed}`. The whole call is cut off after
-  `:total_timeout` ms. `:cacerts` replaces the system CA store.
+  Does not follow redirects: a redirect is `{:error, :redirect_not_followed}`.
+
+  Retries transient failures twice, a second apart.
+
+  The whole call is cut off after `:total_timeout` ms.
+
+  Provide the option `:cacerts` when testing against mock https server. It replaces the system CA store.
   """
   @spec get(String.t(), keyword()) ::
           {:ok, Req.Response.t()} | {:error, error_reason() | Exception.t()}
@@ -53,7 +59,11 @@ defmodule Plausible.SSRF do
 
     opts =
       opts
-      |> Keyword.put_new(:retry, false)
+      |> Keyword.put_new(:retry, :safe_transient)
+      |> Keyword.put_new(:max_retries, @default_max_retries)
+      # needed, so Req would ignore the response header Retry-After
+      |> Keyword.put_new(:retry_delay, @default_retry_delay)
+      |> Keyword.put_new(:retry_log_level, false)
       |> Keyword.put_new(:receive_timeout, @default_receive_timeout)
       # Req still honours it as an alias of :redirect, and it wins.
       |> Keyword.delete(:follow_redirects)

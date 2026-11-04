@@ -139,7 +139,7 @@ defmodule Plausible.SSRFTest do
       assert microseconds < 500_000
     end
 
-    test "does not retry" do
+    test "retries a transient failure twice, then returns it" do
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       test_pid = self()
@@ -153,10 +153,37 @@ defmodule Plausible.SSRFTest do
           end
         )
 
-      assert {:ok, %Req.Response{status: 503}} = get(ca, "https://good.example:#{port}/")
+      assert {:ok, %Req.Response{status: 503}} =
+               get(ca, "https://good.example:#{port}/", retry_delay: 0)
 
-      assert_received :called
+      for _ <- 1..3, do: assert_received(:called)
       refute_received :called
+    end
+
+    test "ignores the server's Retry-After" do
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      test_pid = self()
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port ->
+            send(test_pid, :called)
+
+            conn
+            |> Plug.Conn.put_resp_header("retry-after", "3600")
+            |> Plug.Conn.send_resp(503, "")
+          end
+        )
+
+      {microseconds, result} =
+        :timer.tc(fn -> get(ca, "https://good.example:#{port}/", max_retries: 1) end)
+
+      assert {:ok, %Req.Response{status: 503}} = result
+      assert microseconds < 3_000_000
+
+      for _ <- 1..2, do: assert_received(:called)
     end
 
     test "follows no redirect" do
