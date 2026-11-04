@@ -150,7 +150,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
       PaddleBilling.api().update_product(existing_product["id"],
         name: enterprise_product_name(enterprise_plan),
         custom_data: enterprise_product_data(enterprise_plan),
-        enterprise?: true
+        enterprise?: true,
+        type: "standard"
       )
 
     sync_enterprise_price(product["id"], enterprise_plan, price, acc, true)
@@ -166,6 +167,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         %{billing_price_id: price_id} when update? ->
           {:ok, billing_price} =
             PaddleBilling.api().update_price(price_id,
+              type: "standard",
               description: description,
               price: price,
               custom_data: custom_data

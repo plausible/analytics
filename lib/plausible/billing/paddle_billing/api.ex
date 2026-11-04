@@ -80,7 +80,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   def update_price(price_id, opts \\ []) do
     params =
       opts
-      |> Keyword.take([:description, :status, :tax_mode, :custom_data])
+      |> Keyword.take([:description, :status, :tax_mode, :custom_data, :type])
       |> Map.new()
 
     params =
@@ -194,7 +194,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   def update_product(product_id, opts \\ []) do
     params =
       opts
-      |> Keyword.take([:name, :description, :custom_data, :status])
+      |> Keyword.take([:name, :description, :custom_data, :status, :type])
       |> Map.new()
 
     params =
