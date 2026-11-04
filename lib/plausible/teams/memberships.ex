@@ -264,33 +264,30 @@ defmodule Plausible.Teams.Memberships do
 
   @spec guest_memberships(Plausible.Auth.User.t()) :: [Teams.GuestMembership.t()]
   def guest_memberships(user) do
-    user
+    user.id
     |> guest_memberships_query()
+    |> join(:inner, [gm], s in assoc(gm, :site), as: :site)
+    |> join(:inner, [site: s], t in assoc(s, :team), as: :team)
     |> join(:left, [team: t], o in assoc(t, :owners), as: :owners)
     |> order_by([site: s], asc: s.domain)
     |> preload([site: s, team: t, owners: o], site: {s, team: {t, owners: o}})
     |> Repo.all()
   end
 
-  defp guest_memberships_query(user) do
+  defp guest_memberships_query(user_id) do
     from(gm in Teams.GuestMembership,
       inner_join: tm in assoc(gm, :team_membership),
-      inner_join: s in assoc(gm, :site),
-      as: :site,
-      inner_join: t in assoc(s, :team),
-      as: :team,
-      where: tm.user_id == ^user.id and tm.role == :guest
+      as: :team_membership,
+      where: tm.user_id == ^user_id and tm.role == :guest
     )
   end
 
   defp get_guest_membership(site_id, user_id) do
     query =
-      from(
-        gm in Teams.GuestMembership,
-        inner_join: tm in assoc(gm, :team_membership),
-        where: gm.site_id == ^site_id and tm.user_id == ^user_id,
-        preload: [team_membership: tm]
-      )
+      user_id
+      |> guest_memberships_query()
+      |> where([gm], gm.site_id == ^site_id)
+      |> preload([team_membership: tm], team_membership: tm)
 
     case Repo.one(query) do
       nil -> {:error, :no_guest}
