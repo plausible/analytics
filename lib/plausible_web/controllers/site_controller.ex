@@ -119,6 +119,24 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: ~p"/#{domain}/settings/general")
   end
 
+  # capability:begin
+  # id: get_site@ui_session
+  # action: get_site
+  # transport: ui_session
+  # entry: GET /:domain/settings/general (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.settings_general/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Domain and timezone; the tracker script configuration is loaded by the embedded TrackingSettings LiveView; the Sites API get_site returns the same data to viewers, so proposed follows it
+  # capability:end
   def settings_general(conn, _params) do
     site = conn.assigns[:site]
 
@@ -205,6 +223,24 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # capability:begin
+  # id: list_report_recipients@ui_session
+  # action: list_report_recipients
+  # transport: ui_session
+  # entry: GET /:domain/settings/email-reports (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.settings_email_reports/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Emails of weekly and monthly report and traffic notification recipients, who may have no account; a GET that writes: ?cta_clicked=true advances the onboarding status
+  # capability:end
   def settings_email_reports(conn, params) do
     site = conn.assigns[:site]
 
@@ -240,6 +276,24 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # capability:begin
+  # id: get_google_integration@ui_session
+  # action: get_google_integration
+  # transport: ui_session
+  # entry: GET /:domain/settings/integrations (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.settings_integrations/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Calls the Google API with the site's OAuth connection to list Search Console properties; also reports whether Plugins API tokens exist
+  # capability:end
   def settings_integrations(conn, _params) do
     site =
       conn.assigns.site

@@ -11,6 +11,24 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
   @refresh_integration_interval :timer.seconds(5)
 
+  # capability:begin
+  # id: get_sso_settings@ui_session
+  # action: get_sso_settings
+  # transport: ui_session
+  # entry: live /settings/sso/general (live_render SSOManagement) mount
+  # handler: PlausibleWeb.Live.SSOManagement.mount/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner]
+  # current_role_enforced_by: host page only: SSOController plug AuthorizeTeamAccess [:owner] + Feature.SSO in sso_settings (mount has no check)
+  # current_feature_gate: Plausible.Billing.Feature.SSO
+  # proposed_scope: none
+  # proposed_roles: [owner]
+  # confidence: verified
+  # notes: EE only; IdP configuration, domains and policy
+  # capability:end
   def mount(_params, _session, socket) do
     socket = load_integration(socket, socket.assigns.current_team)
 

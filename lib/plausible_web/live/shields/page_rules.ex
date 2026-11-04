@@ -10,6 +10,23 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   alias Plausible.Shield
   alias Plausible.Stats.QueryBuilder
 
+  # capability:begin
+  # id: list_page_block_rules@ui_session
+  # action: list_page_block_rules
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Pages, component PageRules) update
+  # handler: PlausibleWeb.Live.Shields.PageRules.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Pages.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def update(assigns, socket) do
     socket =
       socket

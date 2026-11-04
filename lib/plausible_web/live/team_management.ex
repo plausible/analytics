@@ -11,6 +11,24 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   alias Plausible.Teams.Management.Roster
 
+  # capability:begin
+  # id: list_team_members@ui_session
+  # action: list_team_members
+  # transport: ui_session
+  # entry: live /settings/team/general (live_render TeamManagement) mount
+  # handler: PlausibleWeb.Live.TeamManagement.mount/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing]
+  # current_role_enforced_by: none (membership only; SettingsController.team_general has no team role plug and the members tile has no role condition)
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing]
+  # confidence: verified
+  # notes: Every member, including viewer and billing, sees the email and role of every member, guest and pending invitee; controls are only disabled below owner and admin; no API or MCP equivalent; open question whether viewers and billing should see the roster
+  # capability:end
   def mount(_params, _session, socket) do
     {:ok, reset(socket)}
   end

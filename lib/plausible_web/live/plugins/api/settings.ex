@@ -7,6 +7,24 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
 
   alias Plausible.Plugins.API.Tokens
 
+  # capability:begin
+  # id: list_plugins_tokens@ui_session
+  # action: list_plugins_tokens
+  # transport: ui_session
+  # entry: live /:domain/settings/integrations (live_render Plugins.API.Settings) mount
+  # handler: PlausibleWeb.Live.Plugins.API.Settings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Plugins.API.Settings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Token descriptions and last use; credential management stays session only
+  # capability:end
   def mount(_params, %{"domain" => domain} = session, socket) do
     socket =
       socket

@@ -9,6 +9,24 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   alias Plausible.Funnels
   alias Plausible.Teams
 
+  # capability:begin
+  # id: list_funnels@ui_session
+  # action: list_funnels
+  # transport: ui_session
+  # entry: live /:domain/settings/funnels (live_render FunnelSettings) mount
+  # handler: PlausibleWeb.Live.FunnelSettings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: FunnelSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: EE only; settings page is editor and above, but viewers use funnels on the dashboard, so proposed follows list_goals
+  # capability:end
   def mount(
         _params,
         %{"site_id" => site_id, "domain" => domain},

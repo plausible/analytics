@@ -11,6 +11,24 @@ defmodule PlausibleWeb.Live.SubscriptionSettings do
 
   alias Plausible.Teams
 
+  # capability:begin
+  # id: get_subscription@ui_session
+  # action: get_subscription
+  # transport: ui_session
+  # entry: live /settings/billing/subscription mount (router.ex live_session :settings)
+  # handler: PlausibleWeb.Live.SubscriptionSettings.mount/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, billing]
+  # current_role_enforced_by: mount redirects unless current_team_role in Billing.allowed_roles() ([:owner, :billing])
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, billing]
+  # confidence: verified
+  # notes: Subscription and invoices (fetched from Paddle); billing is never grantable to tokens
+  # capability:end
   def mount(_params, _session, socket) do
     team = socket.assigns.current_team
 

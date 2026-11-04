@@ -199,10 +199,46 @@ defmodule PlausibleWeb.SettingsController do
     render_preferences(conn)
   end
 
+  # capability:begin
+  # id: list_user_sessions@ui_session
+  # action: list_user_sessions
+  # transport: ui_session
+  # entry: GET /settings/security (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.security/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Own sessions, rendered with the email and password forms
+  # capability:end
   def security(conn, _params) do
     render_security(conn)
   end
 
+  # capability:begin
+  # id: list_guest_sites@ui_session
+  # action: list_guest_sites
+  # transport: ui_session
+  # entry: GET /settings/guest-sites (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.guest_sites/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Own guest memberships
+  # capability:end
   def guest_sites(conn, _params) do
     case Teams.Memberships.guest_memberships(conn.assigns.current_user) do
       [] ->
@@ -252,6 +288,24 @@ defmodule PlausibleWeb.SettingsController do
     redirect(conn, to: ~p"/settings/billing/subscription")
   end
 
+  # capability:begin
+  # id: list_api_keys@ui_session
+  # action: list_api_keys
+  # transport: ui_session
+  # entry: GET /settings/api-keys (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.api_keys/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Own keys, scoped to the current team (Auth.list_api_keys)
+  # capability:end
   def api_keys(conn, _params) do
     current_user = conn.assigns.current_user
     current_team = conn.assigns[:current_team]
@@ -355,6 +409,24 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
+  # capability:begin
+  # id: list_connected_apps@ui_session
+  # action: list_connected_apps
+  # transport: ui_session
+  # entry: GET /settings/connected-apps (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SettingsController.connected_apps/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: n/a (own account; RequireAccountPlug)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Own OAuth grants; behind the :mcp feature flag
+  # capability:end
   def connected_apps(conn, _params) do
     grants = Plausible.OAuth.list_grants(conn.assigns.current_user)
 

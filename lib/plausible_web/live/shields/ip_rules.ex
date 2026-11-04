@@ -9,6 +9,23 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   alias Plausible.Shields
   alias Plausible.Shield
 
+  # capability:begin
+  # id: list_ip_block_rules@ui_session
+  # action: list_ip_block_rules
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.IPAddresses, component IPRules) update
+  # handler: PlausibleWeb.Live.Shields.IPRules.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.IPAddresses.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def update(assigns, socket) do
     socket =
       socket

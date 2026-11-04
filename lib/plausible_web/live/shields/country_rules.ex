@@ -9,6 +9,23 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   alias Plausible.Shields
   alias Plausible.Shield
 
+  # capability:begin
+  # id: list_country_block_rules@ui_session
+  # action: list_country_block_rules
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Countries, component CountryRules) update
+  # handler: PlausibleWeb.Live.Shields.CountryRules.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Countries.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def update(assigns, socket) do
     socket =
       socket

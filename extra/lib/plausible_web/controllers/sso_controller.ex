@@ -105,6 +105,24 @@ defmodule PlausibleWeb.SSOController do
     end
   end
 
+  # capability:begin
+  # id: list_sso_sessions@ui_session
+  # action: list_sso_sessions
+  # transport: ui_session
+  # entry: GET /settings/sso/sessions (router.ex scope "/settings", pipe_through [:browser, :csrf, RequireAccountPlug, CurrentPath])
+  # handler: PlausibleWeb.SSOController.team_sessions/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: SSOController plug AuthorizeTeamAccess [:owner, :admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: EE only; other members' SSO sessions
+  # capability:end
   def team_sessions(conn, _params) do
     sso_sessions = Auth.UserSessions.list_sso_for_team(conn.assigns.current_team)
 

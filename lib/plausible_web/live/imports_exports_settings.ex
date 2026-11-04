@@ -11,6 +11,24 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
   require Plausible.Imported.SiteImport
 
+  # capability:begin
+  # id: list_imports@ui_session
+  # action: list_imports
+  # transport: ui_session
+  # entry: live /:domain/settings/imports-exports (live_render ImportsExportsSettings) mount
+  # handler: PlausibleWeb.Live.ImportsExportsSettings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: ImportsExportsSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Imports with their pageview counts
+  # capability:end
   def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
