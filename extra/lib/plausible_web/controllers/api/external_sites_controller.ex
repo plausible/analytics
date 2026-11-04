@@ -14,6 +14,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
 
+  # capability:begin
+  # id: list_sites@sites_api
+  # action: list_sites
+  # transport: sites_api
+  # entry: GET /api/v1/sites (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.index/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: team
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # current_role_enforced_by: none (membership only; query filter Sites.for_user_query)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Team comes from the key, else ?team_id; legacy key without team_id gets no lock or feature check and lists sites across all teams including guest sites; with a team, guest sites are excluded (tm.role != :guest)
+  # capability:end
   def index(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team || Teams.get(params["team_id"])
@@ -29,6 +47,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     })
   end
 
+  # capability:begin
+  # id: list_guests@sites_api
+  # action: list_guests
+  # transport: sites_api
+  # entry: GET /api/v1/sites/guests (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.guests_index/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Returns guest emails; viewers and guest viewers can list them here, but the UI people page (SiteController.settings_people) requires editor or above, so proposed follows the UI; sites:read routes are gated on the StatsAPI feature, not SitesAPI
+  # capability:end
   def guests_index(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -54,6 +90,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: list_teams@sites_api
+  # action: list_teams
+  # transport: sites_api
+  # entry: GET /api/v1/sites/teams (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.teams_index/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: account
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing]
+  # current_role_enforced_by: none (membership only; query filter Teams.Users.teams_query excludes guest memberships)
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing]
+  # confidence: verified
+  # notes: Team key: only its own team; legacy key: all teams; no team or site to check, so no lock or feature gate, although api_available is reported per team; open question whether this needs teams:read
+  # capability:end
   def teams_index(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -79,6 +133,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     })
   end
 
+  # capability:begin
+  # id: list_goals@sites_api
+  # action: list_goals
+  # transport: sites_api
+  # entry: GET /api/v1/sites/goals (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.goals_index/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: sites:read routes are gated on the StatsAPI feature, not SitesAPI; billing excluded by find_site, but billing can read the same data in the dashboard and via MCP list_sites, so proposed adds billing; super admin passes the plug but find_site has no :super_admin, so gets 404
+  # capability:end
   def goals_index(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -113,6 +185,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: create_site@sites_api
+  # action: create_site
+  # transport: sites_api
+  # entry: POST /api/v1/sites (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.create_site/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: team
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor]
+  # current_role_enforced_by: Sites.create -> Memberships.can_add_site? (team role in [owner, admin, editor])
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: sites:provision
+  # proposed_roles: [owner, admin, editor]
+  # confidence: verified
+  # notes: Team comes from the key, else ?team_id; legacy key without team_id: no lock or feature check in the plug and Sites.create falls back to the user's own team (multiple_teams error if ambiguous); site limit via Teams.Billing.ensure_can_add_new_site; can_add_site? also blocks an SSO owner of a team whose setup isn't complete; the new site would have to be appended to a non-NULL grant site_ids
+  # capability:end
   def create_site(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team || Teams.get(params["team_id"])
@@ -172,6 +262,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: get_site@sites_api
+  # action: get_site
+  # transport: sites_api
+  # entry: GET /api/v1/sites/:site_id (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.get_site/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: sites:read routes are gated on the StatsAPI feature, not SitesAPI; billing excluded by find_site, but billing can read the same data in the dashboard and via MCP list_sites, so proposed adds billing; super admin passes the plug but find_site has no :super_admin, so gets 404; a GET can write: get_or_create_config creates a tracker script configuration
+  # capability:end
   def get_site(conn, %{"site_id" => site_id}) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -187,6 +295,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: delete_site@sites_api
+  # action: delete_site
+  # transport: sites_api
+  # entry: DELETE /api/v1/sites/:site_id (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.delete_site/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: sites:provision
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Owner only here, but the UI (SiteController.delete_site) also lets admins delete; proposed follows the UI
+  # capability:end
   def delete_site(conn, %{"site_id" => site_id}) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -201,6 +327,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: update_site@sites_api
+  # action: update_site
+  # transport: sites_api
+  # entry: PUT /api/v1/sites/:site_id (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.update_site/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Changes domain and/or tracker script configuration; the UI splits these into ChangeDomain (domain) and tracker settings LiveViews
+  # capability:end
   def update_site(conn, %{"site_id" => site_id} = params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -268,6 +412,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: invite_guest@sites_api
+  # action: invite_guest
+  # transport: sites_api
+  # entry: PUT /api/v1/sites/guests (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.find_or_create_guest/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin]); InviteToSite -> Invitations.check_invitation_permissions (team member owner/admin)
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Team member limit via check_team_member_limit; covered by sites:provision today, proposed access:write because it grants other people access
+  # capability:end
   def find_or_create_guest(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -314,6 +476,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: remove_guest@sites_api
+  # action: remove_guest
+  # transport: sites_api
+  # entry: DELETE /api/v1/sites/guests/:email (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.delete_guest/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Removes a pending invitation or an accepted guest; the UI uses two endpoints for this (InvitationController.remove_invitation and Site.MembershipController.remove_member_by_user); Memberships.remove is called without the acting user, so find_site is the only role check
+  # capability:end
   def delete_guest(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -349,6 +529,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: create_shared_link@sites_api
+  # action: create_shared_link
+  # transport: sites_api
+  # entry: PUT /api/v1/sites/shared-links (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.find_or_create_shared_link/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check, Plausible.Billing.Feature.SharedLinks]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Find-or-create by name; SharedLinks feature checked in Sites.create_shared_link
+  # capability:end
   def find_or_create_shared_link(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -393,6 +591,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: create_goal@sites_api
+  # action: create_goal
+  # transport: sites_api
+  # entry: PUT /api/v1/sites/goals (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.find_or_create_goal/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check, Plausible.Billing.Feature.RevenueGoals, Plausible.Billing.Feature.Props]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Find-or-create; RevenueGoals/Props features checked in Goals for revenue goals and goals with custom props
+  # capability:end
   def find_or_create_goal(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -425,6 +641,23 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: delete_goal@sites_api
+  # action: delete_goal
+  # transport: sites_api
+  # entry: DELETE /api/v1/sites/goals/:goal_id (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.delete_goal/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def delete_goal(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -452,6 +685,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: list_custom_props@sites_api
+  # action: list_custom_props
+  # transport: sites_api
+  # entry: GET /api/v1/sites/custom-props (router.ex scope "/api/v1/sites", assigns api_scope "sites:read:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.custom_props_index/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: sites:read routes are gated on the StatsAPI feature, not SitesAPI; billing excluded by find_site, but billing can read the same data in the dashboard and via MCP list_sites, so proposed adds billing; super admin passes the plug but find_site has no :super_admin, so gets 404
+  # capability:end
   def custom_props_index(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -473,6 +724,24 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: add_custom_prop@sites_api
+  # action: add_custom_prop
+  # transport: sites_api
+  # entry: PUT /api/v1/sites/custom-props (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.add_custom_prop/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check, Plausible.Billing.Feature.Props]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Props feature checked in Props.allow
+  # capability:end
   def add_custom_prop(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
@@ -514,6 +783,23 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  # capability:begin
+  # id: delete_custom_prop@sites_api
+  # action: delete_custom_prop
+  # transport: sites_api
+  # entry: DELETE /api/v1/sites/custom-props/*property (router.ex scope "/api/v1/sites", assigns api_scope "sites:provision:*", api_context :site, pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalSitesController.delete_custom_prop/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: sites:provision:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (prefix match on key scopes)
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: controller find_site -> Sites.get_for_user(roles: [:owner, :admin, :editor]) (coalesce(guest role, team role))
+  # current_feature_gate: [Plausible.Billing.Feature.SitesAPI, locked_check]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def delete_custom_prop(conn, params) do
     user = conn.assigns.current_user
     team = conn.assigns.current_team
