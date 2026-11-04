@@ -10,6 +10,10 @@ defmodule CapabilityMap do
 
   @scope_vocabulary ~w(stats:read sites:read sites:write sites:provision access:write teams:create)
 
+  # Proposed scopes for a separate /cs/mcp protected resource, so CS grants
+  # never mix with customer grants. Super admin only.
+  @cs_scope_vocabulary ~w(cs:read cs:write cs:billing cs:delete)
+
   # Proposed scope for actions that stay session-only and are never
   # grantable to tokens (billing, account security, credential management).
   @session_only_scope "none"
@@ -24,7 +28,8 @@ defmodule CapabilityMap do
     {"/api/paddle/webhook, /api/postmark/webhook, /api/paddle/currency",
      "Third-party webhooks and billing helpers"},
     {"/api/health, /api/system/*", "Health checks"},
-    {"/cs/*, /flags/*, /debug/clickhouse", "Super admin tooling, outside the policy by design"},
+    {"/flags/*, /debug/clickhouse",
+     "Super admin tooling outside customer support (feature flags UI, ClickHouse debug)"},
     {"/helpscout/*", "Support integration authenticated by HelpScout"},
     {"/dev/*, /plug-tests/*, /e2e-tests/*, /sent-emails*", "Dev, test and e2e only"},
     {"Pages that load no data beyond a mapped read: new site, new API key, *_form, danger zones, settings_visibility, settings_shields, preferences, the settings index redirects",
@@ -271,6 +276,7 @@ defmodule CapabilityMap do
       {Regex.match?(~r/^[A-Z][\w.]*\.[a-z_][a-z0-9_?!]*\/\d+$/, block["handler"] || ""),
        "handler #{inspect(block["handler"])} must be Module.function/arity"},
       {block["proposed_scope"] in @scope_vocabulary or
+         block["proposed_scope"] in @cs_scope_vocabulary or
          block["proposed_scope"] == @session_only_scope or
          String.starts_with?(block["notes"] || "", "NEW SCOPE:"),
        "proposed_scope #{inspect(block["proposed_scope"])} not in vocabulary " <>
