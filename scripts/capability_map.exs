@@ -10,6 +10,35 @@ defmodule CapabilityMap do
 
   @scope_vocabulary ~w(stats:read sites:read sites:write sites:provision access:write teams:create)
 
+  # Proposed scope for actions that stay session-only and are never
+  # grantable to tokens (billing, account security, credential management).
+  @session_only_scope "none"
+
+  # Entry points deliberately left without a capability block, with the reason.
+  @not_mapped [
+    {"Registration, login, activation, password reset, 2FA setup and verification, SSO login and SAML, logout",
+     "Authentication flows: they establish a session, they are not actions on a resource"},
+    {"OAuth authorize, token and /.well-known metadata",
+     "They issue credentials; the capabilities are on the resources the credentials reach"},
+    {"POST /api/event, GET /api/error", "Tracker ingestion, public by design"},
+    {"/api/paddle/webhook, /api/postmark/webhook, /api/paddle/currency",
+     "Third-party webhooks and billing helpers"},
+    {"/api/health, /api/system/*", "Health checks"},
+    {"/cs/*, /flags/*, /debug/clickhouse", "Super admin tooling, outside the policy by design"},
+    {"/helpscout/*", "Support integration authenticated by HelpScout"},
+    {"/dev/*, /plug-tests/*, /e2e-tests/*, /sent-emails*", "Dev, test and e2e only"},
+    {"GET settings and form pages (settings_*, new, *_form, preferences, security, api_keys, ...)",
+     "Render only; the capability is on the handler that performs the change"},
+    {"Billing pages (choose plan, upgrade, previews, ping), SubscriptionSettings and ChoosePlan LiveViews",
+     "Billing is never grantable to tokens; change_plan is mapped as the one billing write"},
+    {"Avatar, error report, GET /", "Not actions on a resource"},
+    {"Plugins API /spec/* and /v1/capabilities, GET /api/docs/query/schema.json",
+     "Public metadata"},
+    {"MCP server/discover and tools/list", "Protocol methods, not capabilities"},
+    {"UI-only LiveView events (filter, sort, modals, CTA dismissals, form validation)",
+     "Change only the LiveView's own state"}
+  ]
+
   # Current scope strings and the vocabulary scope they map to. Used only to
   # decide whether a row's scope drifts.
   @legacy_scope_aliases %{
@@ -239,9 +268,10 @@ defmodule CapabilityMap do
        "id #{inspect(block["id"])} must equal action@transport"},
       {Regex.match?(~r/^[a-z][a-z0-9_]*$/, block["action"] || ""),
        "action #{inspect(block["action"])} must be snake_case"},
-      {Regex.match?(~r/^[A-Z][\w.]*\.[a-z_?!]+\/\d+$/, block["handler"] || ""),
+      {Regex.match?(~r/^[A-Z][\w.]*\.[a-z_][a-z0-9_?!]*\/\d+$/, block["handler"] || ""),
        "handler #{inspect(block["handler"])} must be Module.function/arity"},
       {block["proposed_scope"] in @scope_vocabulary or
+         block["proposed_scope"] == @session_only_scope or
          String.starts_with?(block["notes"] || "", "NEW SCOPE:"),
        "proposed_scope #{inspect(block["proposed_scope"])} not in vocabulary " <>
          "(start notes with `NEW SCOPE:` to propose one)"}
@@ -272,7 +302,7 @@ defmodule CapabilityMap do
     with false <- String.ends_with?(block["source_file"], "router.ex"),
          false <- block["transport"] == "mcp",
          [_, module, fun] <-
-           Regex.run(~r/^([A-Z][\w.]*)\.([a-z_?!]+)\/\d+$/, block["handler"] || "") do
+           Regex.run(~r/^([A-Z][\w.]*)\.([a-z_][a-z0-9_?!]*)\/\d+$/, block["handler"] || "") do
       rest = Enum.drop(lines, stop_line)
 
       code_index =
@@ -282,8 +312,9 @@ defmodule CapabilityMap do
         end)
 
       def_index =
-        if code_index && Regex.match?(~r/^\s*defp?\s+[a-z_?!]+[\s(]/, Enum.at(rest, code_index)),
-          do: code_index
+        if code_index &&
+             Regex.match?(~r/^\s*defp?\s+[a-z_][a-z0-9_?!]*[\s(]/, Enum.at(rest, code_index)),
+           do: code_index
 
       module_warnings =
         case enclosing_module(lines, stop_line) do
@@ -298,7 +329,7 @@ defmodule CapabilityMap do
             ["#{loc}: block is not directly above a def (handler #{block["handler"]})"]
 
           index ->
-            [_, name] = Regex.run(~r/^\s*defp?\s+([a-z_?!]+)/, Enum.at(rest, index))
+            [_, name] = Regex.run(~r/^\s*defp?\s+([a-z_][a-z0-9_?!]*)/, Enum.at(rest, index))
 
             cond do
               name != fun ->
@@ -387,7 +418,11 @@ defmodule CapabilityMap do
       "\n## 4. Coverage matrix\n\n",
       render_coverage(blocks),
       "\n## 5. Notes and open questions\n\n",
-      render_notes(blocks)
+      render_notes(blocks),
+      "## 6. Not mapped\n\n",
+      "Proposed scope `#{@session_only_scope}` in the tables above means session only, ",
+      "never grantable to tokens. These entry points have no block at all:\n\n",
+      md_table([{"Entry points", 0}, {"Why", 1}], @not_mapped)
     ]
     |> IO.iodata_to_binary()
   end
@@ -406,6 +441,7 @@ defmodule CapabilityMap do
   end
 
   defp cell(row, :source), do: "#{row["source_file"]}:#{row["source_line"]}"
+  defp cell(row, index) when is_tuple(row), do: elem(row, index)
   defp cell(row, key), do: format_value(row[key])
 
   defp format_value(nil), do: ""
