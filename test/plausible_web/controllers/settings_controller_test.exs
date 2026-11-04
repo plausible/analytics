@@ -1450,6 +1450,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
   @menu_items [
     preferences: {"Preferences", "/settings/preferences"},
     security: {"Security", "/settings/security"},
+    guest_sites: {"Guest sites", "/settings/guest-sites"},
     subscription: {"Subscription", "/settings/billing/subscription"},
     api_keys: {"API keys", "/settings/api-keys"},
     connected_apps: {"Connected apps", "/settings/connected-apps"},
@@ -1476,6 +1477,20 @@ defmodule PlausibleWeb.SettingsControllerTest do
           :team_danger_zone,
           :danger_zone
         ])
+        |> LazyHTML.from_document()
+        |> assert_sidebar_menu(expected_account_menu)
+        |> assert_mobile_menu(expected_account_menu)
+      end
+
+      test "shows guest sites when the SSO user is a guest of a site", %{conn: conn, user: user} do
+        add_guest(new_site(), user: Repo.reload!(user), role: :viewer)
+
+        conn = get(conn, ~p"/settings/preferences")
+        assert html = html_response(conn, 200)
+
+        expected_account_menu = [:preferences, :security, :guest_sites, :subscription, :api_keys]
+
+        html
         |> LazyHTML.from_document()
         |> assert_sidebar_menu(expected_account_menu)
         |> assert_mobile_menu(expected_account_menu)
@@ -1557,10 +1572,30 @@ defmodule PlausibleWeb.SettingsControllerTest do
       html
       |> refute_unexpected_menu_items(
         if(ee?(),
-          do: [:team_general, :sso],
-          else: [:subscription, :team_general, :sso]
+          do: [:guest_sites, :team_general, :sso],
+          else: [:guest_sites, :subscription, :team_general, :sso]
         )
       )
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
+    end
+
+    test "when the user is a guest of a site, the account menu shows guest sites",
+         %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
+
+      conn = get(conn, ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :guest_sites, :subscription, :api_keys, :danger_zone],
+          else: [:preferences, :security, :guest_sites, :api_keys, :danger_zone]
+        )
+
+      html
       |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu)
       |> assert_mobile_menu(expected_account_menu)

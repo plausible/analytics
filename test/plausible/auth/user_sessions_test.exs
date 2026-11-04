@@ -295,6 +295,40 @@ defmodule Plausible.Auth.UserSessionsTest do
       assert owner.id == user.id
     end
 
+    test "marks a user without guest memberships", %{session: session} do
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == false
+    end
+
+    test "marks a user with guest memberships", %{session: session, user: user} do
+      new_site(owner: user)
+      add_guest(new_site(), user: user, role: :viewer)
+      add_guest(new_site(), user: user, role: :editor)
+
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == true
+      assert [%{role: :owner}] = fetched.user.team_memberships
+    end
+
+    test "marks a guest who is also a member of several teams", %{session: session, user: user} do
+      new_site(owner: user)
+
+      for _ <- 1..2 do
+        new_site().team
+        |> Plausible.Teams.complete_setup()
+        |> add_member(user: user, role: :viewer)
+      end
+
+      add_guest(new_site(), user: user, role: :viewer)
+
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == true
+      assert length(fetched.user.team_memberships) == 3
+    end
+
     test "returns not found when no matching session found" do
       assert {:error, :not_found} = UserSessions.get_by_token(Ecto.UUID.generate())
     end

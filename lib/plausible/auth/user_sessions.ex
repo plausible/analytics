@@ -95,6 +95,13 @@ defmodule Plausible.Auth.UserSessions do
 
     last_team_subscription_query = Plausible.Teams.last_subscription_join_query()
 
+    guest_memberships_query =
+      from(gtm in Plausible.Teams.Membership,
+        inner_join: gm in assoc(gtm, :guest_memberships),
+        where: gtm.user_id == parent_as(:user).id and gtm.role == :guest,
+        select: 1
+      )
+
     token_query =
       from(us in Auth.UserSession,
         inner_join: u in assoc(us, :user),
@@ -108,11 +115,14 @@ defmodule Plausible.Auth.UserSessions do
         on: true,
         where: us.token == ^token,
         order_by: t.id,
+        select: {us, exists(guest_memberships_query)},
         preload: [user: {u, team_memberships: {tm, team: {t, subscription: ts, owners: o}}}]
       )
 
     case Repo.one(token_query) do
-      %Auth.UserSession{} = user_session ->
+      {user_session, has_guest_memberships?} ->
+        user_session = put_in(user_session.user.has_guest_memberships?, has_guest_memberships?)
+
         if NaiveDateTime.compare(user_session.timeout_at, now) == :gt do
           {:ok, user_session}
         else
