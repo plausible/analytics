@@ -272,11 +272,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   end
 
   def api_domain() do
-    if Application.get_env(:plausible, :environment) == "prod" do
-      "https://api.paddle.com"
-    else
-      "https://sandbox-api.paddle.com"
-    end
+    "https://sandbox-api.paddle.com"
   end
 
   defp req_headers() do
