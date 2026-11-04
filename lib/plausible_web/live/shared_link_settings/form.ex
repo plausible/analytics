@@ -187,6 +187,24 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
     Enum.map(segments, &{&1.id, &1.name})
   end
 
+  # capability:begin
+  # id: create_shared_link@ui_session
+  # action: create_shared_link
+  # transport: ui_session
+  # entry: live /:domain/settings/visibility (live_render SharedLinkSettings) handle_event "save-shared-link"
+  # handler: PlausibleWeb.Live.SharedLinkSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SharedLinkSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView)
+  # current_feature_gate: Plausible.Billing.Feature.SharedLinks
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Clause with assigns.shared_link nil; feature checked in Sites.create_shared_link; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event(
         "save-shared-link",
         %{"shared_link" => shared_link_params},
@@ -212,6 +230,24 @@ defmodule PlausibleWeb.Live.SharedLinkSettings.Form do
     end
   end
 
+  # capability:begin
+  # id: update_shared_link@ui_session
+  # action: update_shared_link
+  # transport: ui_session
+  # entry: live /:domain/settings/visibility (live_render SharedLinkSettings) handle_event "save-shared-link"
+  # handler: PlausibleWeb.Live.SharedLinkSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SharedLinkSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView)
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Clause with an existing shared link; no API or MCP equivalent; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event(
         "save-shared-link",
         %{"shared_link" => shared_link_params},

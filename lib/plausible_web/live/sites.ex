@@ -14,6 +14,24 @@ defmodule PlausibleWeb.Live.Sites do
 
   alias PlausibleWeb.Components.PrimaDropdown
 
+  # capability:begin
+  # id: list_sites@ui_session
+  # action: list_sites
+  # transport: ui_session
+  # entry: live /sites mount (router.ex live_session, pipe_through [:browser, :csrf, :app_layout, RequireAccountPlug])
+  # handler: PlausibleWeb.Live.Sites.mount/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # current_role_enforced_by: none (membership only; query filter Teams.Sites.accessible_by)
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Guest sites are listed only while the current team isn't set up (accessible_by); also lists pending invitations
+  # capability:end
   def mount(params, _session, socket) do
     team = socket.assigns.current_team
     user = socket.assigns.current_user

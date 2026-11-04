@@ -94,6 +94,24 @@ defmodule PlausibleWeb.InvitationController do
     end
   end
 
+  # capability:begin
+  # id: cancel_guest_invitation@ui_session
+  # action: cancel_guest_invitation
+  # transport: ui_session
+  # entry: DELETE /sites/:domain/invitations/:invitation_id (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.InvitationController.remove_invitation/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: InvitationController plug AuthorizeSiteAccess [:owner, :admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Also cancels pending site transfers; the Sites API covers this inside remove_guest
+  # capability:end
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
     case Teams.Invitations.RemoveFromSite.remove(invitation_id, conn.assigns.site) do
       {:ok, invitation_or_transfer} ->

@@ -126,6 +126,24 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, assign(socket, input_email: params["input-email"])}
   end
 
+  # capability:begin
+  # id: invite_team_member@ui_session
+  # action: invite_team_member
+  # transport: ui_session
+  # entry: live /settings/team/general (live_render TeamManagement) handle_event "input-invitation"
+  # handler: PlausibleWeb.Live.TeamManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: InviteToTeam.invite_all -> TeamRolePermissions.ensure_can_invite
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: team_general page has no team role plug, controls are only disabled for other roles, the service is the check; team member limit via check_team_member_limit; no API or MCP equivalent
+  # capability:end
   def handle_event(
         "input-invitation",
         %{"input-email" => email, "input-role" => role},
@@ -161,10 +179,46 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: remove_team_member@ui_session
+  # action: remove_team_member
+  # transport: ui_session
+  # entry: live /settings/team/general (live_render TeamManagement) handle_event "remove-member"
+  # handler: PlausibleWeb.Live.TeamManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: Memberships.Remove.remove (check_can_remove_membership: owner any, admin non-owners) or Invitations.RemoveFromTeam.remove
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Also removes pending team invitations; triggers OAuth.after_user_removed_from_team; no API or MCP equivalent
+  # capability:end
   def handle_event("remove-member", %{"email" => email}, %{assigns: %{roster: roster}} = socket) do
     {:noreply, remove(socket, Map.fetch!(roster, email))}
   end
 
+  # capability:begin
+  # id: update_team_member_role@ui_session
+  # action: update_team_member_role
+  # transport: ui_session
+  # entry: live /settings/team/general (live_render TeamManagement) handle_event "update-role"
+  # handler: PlausibleWeb.Live.TeamManagement.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: Memberships.UpdateRole.update -> TeamRolePermissions.ensure_can_change_member_role
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Changing a role doesn't touch OAuth grants, but the role is looked up per request so it takes effect immediately; no API or MCP equivalent
+  # capability:end
   def handle_event(
         "update-role",
         %{"email" => email, "role" => role},

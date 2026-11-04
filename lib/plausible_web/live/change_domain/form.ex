@@ -48,6 +48,24 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
     """
   end
 
+  # capability:begin
+  # id: update_site@ui_session
+  # action: update_site
+  # transport: ui_session
+  # entry: live /:domain/change-domain handle_event "submit"
+  # handler: PlausibleWeb.Live.ChangeDomain.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: ChangeDomain.mount -> Sites.get_for_user!(roles: [:editor, :owner, :admin, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Domain only; tracker script configuration is edited in other LiveViews (Phase 2); no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("submit", %{"site" => %{"domain" => new_domain}}, socket) do
     site = socket.assigns.site
     preview_changeset = Site.update_changeset(site, %{domain: new_domain})

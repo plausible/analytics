@@ -32,6 +32,24 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # capability:begin
+  # id: create_site@ui_session
+  # action: create_site
+  # transport: ui_session
+  # entry: POST /sites (router.ex scope "/", pipe_through [:browser, :csrf]; SiteController unrestricted action)
+  # handler: PlausibleWeb.SiteController.create_site/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor]
+  # current_role_enforced_by: Sites.create -> Memberships.can_add_site? (team role in [owner, admin, editor])
+  # current_feature_gate: none
+  # proposed_scope: sites:provision
+  # proposed_roles: [owner, admin, editor]
+  # confidence: verified
+  # notes: Team comes from the session; site limit via Teams.Billing.ensure_can_add_new_site; no SitesAPI feature gate, as expected for the UI
+  # capability:end
   def create_site(conn, %{"site" => site_params}) do
     team = conn.assigns.current_team
     user = conn.assigns.current_user
@@ -114,6 +132,24 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # capability:begin
+  # id: list_guests@ui_session
+  # action: list_guests
+  # transport: ui_session
+  # entry: GET /:domain/settings/people (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.settings_people/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Viewers can't see this page, but the Sites API lets viewers list guest emails
+  # capability:end
   def settings_people(conn, _params) do
     site = Repo.preload(conn.assigns.site, :team)
 
@@ -311,6 +347,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/danger-zone")
   end
 
+  # capability:begin
+  # id: delete_site@ui_session
+  # action: delete_site
+  # transport: ui_session
+  # entry: DELETE /:domain (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.delete_site/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :super_admin] (destructive actions)
+  # current_feature_gate: none
+  # proposed_scope: sites:provision
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Admins can delete here but not via the Sites API (owner only)
+  # capability:end
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 

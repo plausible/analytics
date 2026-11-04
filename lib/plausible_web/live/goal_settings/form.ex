@@ -622,6 +622,24 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  # capability:begin
+  # id: create_goal@ui_session
+  # action: create_goal
+  # transport: ui_session
+  # entry: live /:domain/settings/goals (live_render GoalSettings) handle_event "save-goal"
+  # handler: PlausibleWeb.Live.GoalSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: GoalSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView)
+  # current_feature_gate: [Plausible.Billing.Feature.RevenueGoals, Plausible.Billing.Feature.Props]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Clause with assigns.goal nil; features checked in Goals.create; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("save-goal", %{"goal" => goal_params}, %{assigns: %{goal: nil}} = socket) do
     {:ok, transformed_params} =
       goal_params
@@ -642,6 +660,24 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     end
   end
 
+  # capability:begin
+  # id: update_goal@ui_session
+  # action: update_goal
+  # transport: ui_session
+  # entry: live /:domain/settings/goals (live_render GoalSettings) handle_event "save-goal"
+  # handler: PlausibleWeb.Live.GoalSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: GoalSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView)
+  # current_feature_gate: [Plausible.Billing.Feature.RevenueGoals, Plausible.Billing.Feature.Props]
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Clause with an existing goal; no API or MCP equivalent; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event(
         "save-goal",
         %{"goal" => goal_params},

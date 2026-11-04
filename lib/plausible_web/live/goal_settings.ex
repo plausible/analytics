@@ -7,6 +7,24 @@ defmodule PlausibleWeb.Live.GoalSettings do
   alias Plausible.{Goals, Teams}
   alias PlausibleWeb.Live.Components.Modal
 
+  # capability:begin
+  # id: list_goals@ui_session
+  # action: list_goals
+  # transport: ui_session
+  # entry: live /:domain/settings/goals (live_render GoalSettings) mount
+  # handler: PlausibleWeb.Live.GoalSettings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: GoalSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Settings page is editor and above; viewers can read goals via the dashboard and the Sites API, so proposed follows the capability
+  # capability:end
   def mount(
         _params,
         %{"site_id" => site_id, "domain" => domain},
@@ -160,6 +178,24 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: delete_goal@ui_session
+  # action: delete_goal
+  # transport: ui_session
+  # entry: live /:domain/settings/goals (live_render GoalSettings) handle_event "delete-goal"
+  # handler: PlausibleWeb.Live.GoalSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: GoalSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Deletes by session site_id; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("delete-goal", %{"goal-id" => goal_id} = params, socket) do
     goal_id = String.to_integer(goal_id)
 

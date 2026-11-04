@@ -39,6 +39,24 @@ defmodule PlausibleWeb.Site.MembershipController do
     )
   end
 
+  # capability:begin
+  # id: invite_guest@ui_session
+  # action: invite_guest
+  # transport: ui_session
+  # entry: POST /sites/:domain/memberships/invite (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.Site.MembershipController.invite_member/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: MembershipController plug AuthorizeSiteAccess [:owner, :admin]; InviteToSite -> Invitations.check_invitation_permissions (team member owner/admin)
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: role owner starts a site transfer instead of a guest invite (InviteToSite); team member limit via check_team_member_limit
+  # capability:end
   def invite_member(conn, %{"email" => email, "role" => role}) do
     site_domain = conn.assigns.site.domain
 
@@ -100,6 +118,24 @@ defmodule PlausibleWeb.Site.MembershipController do
     Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
     Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
   """
+  # capability:begin
+  # id: update_guest_role@ui_session
+  # action: update_guest_role
+  # transport: ui_session
+  # entry: PUT /sites/:domain/memberships/u/:id/role/:new_role (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.Site.MembershipController.update_role_by_user/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: MembershipController plug AuthorizeSiteAccess [:owner, :admin]; Memberships.update_role rules on site_role
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: No API or MCP equivalent
+  # capability:end
   def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
     %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
@@ -133,6 +169,24 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
+  # capability:begin
+  # id: remove_guest@ui_session
+  # action: remove_guest
+  # transport: ui_session
+  # entry: DELETE /sites/:domain/memberships/u/:id (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.Site.MembershipController.remove_member_by_user/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: MembershipController plug AuthorizeSiteAccess [:owner, :admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Memberships.remove(site, user) has no actor check, the plug is the only role check; pending invitations go through cancel_guest_invitation, the Sites API handles both in one call
+  # capability:end
   def remove_member_by_user(conn, %{"id" => user_id} = _params) do
     site = conn.assigns.site
 

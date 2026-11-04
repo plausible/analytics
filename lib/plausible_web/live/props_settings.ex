@@ -7,6 +7,24 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   alias PlausibleWeb.Live.Components.ComboBox
 
+  # capability:begin
+  # id: list_custom_props@ui_session
+  # action: list_custom_props
+  # transport: ui_session
+  # entry: live /:domain/settings/properties (live_render PropsSettings) mount
+  # handler: PlausibleWeb.Live.PropsSettings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: PropsSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Settings page is editor and above; the Sites API lets viewers list props
+  # capability:end
   def mount(_params, %{"site_id" => site_id, "domain" => domain}, socket) do
     socket =
       socket
@@ -120,6 +138,24 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, filter_text: "", displayed_props: socket.assigns.all_props)}
   end
 
+  # capability:begin
+  # id: delete_custom_prop@ui_session
+  # action: delete_custom_prop
+  # transport: ui_session
+  # entry: live /:domain/settings/properties (live_render PropsSettings) handle_event "disallow-prop"
+  # handler: PlausibleWeb.Live.PropsSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: PropsSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: no Teams.locked? check in the UI, the Sites API checks it; handle_event "allow" and "allow-existing-props" in this module look unused (the Form LiveView handles them)
+  # capability:end
   def handle_event("disallow-prop", %{"prop" => prop}, socket) do
     {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
 

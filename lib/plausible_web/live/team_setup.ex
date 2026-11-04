@@ -193,6 +193,24 @@ defmodule PlausibleWeb.Live.TeamSetup do
     """
   end
 
+  # capability:begin
+  # id: create_team@ui_session
+  # action: create_team
+  # transport: ui_session
+  # entry: live /team/setup handle_event "create-team"
+  # handler: PlausibleWeb.Live.TeamSetup.handle_event/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: []
+  # current_role_enforced_by: none (Teams.create rejects SSO users via check_user_type)
+  # current_feature_gate: none
+  # proposed_scope: teams:create
+  # proposed_roles: []
+  # confidence: verified
+  # notes: Two paths: Teams.create for a new team, or Teams.setup on the current team when it isn't set up yet, with no role check of its own; invites in the same form go through InviteToTeam (owner/admin rules); no API or MCP equivalent; an OAuth grant can't hold it while team_id is NOT NULL
+  # capability:end
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
     create_team(socket, name, Map.get(params, "rows", %{}))
   end

@@ -7,6 +7,24 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
   alias PlausibleWeb.Live.Components.Modal
   import Ecto.Query
 
+  # capability:begin
+  # id: list_shared_links@ui_session
+  # action: list_shared_links
+  # transport: ui_session
+  # entry: live /:domain/settings/visibility (live_render SharedLinkSettings) mount
+  # handler: PlausibleWeb.Live.SharedLinkSettings.mount/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SharedLinkSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shared link URLs grant anonymous stats access, so proposed keeps listing at editor and above; the Plugins API token can list them
+  # capability:end
   def mount(
         _params,
         %{"site_id" => site_id, "domain" => domain},
@@ -199,6 +217,24 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: delete_shared_link@ui_session
+  # action: delete_shared_link
+  # transport: ui_session
+  # entry: live /:domain/settings/visibility (live_render SharedLinkSettings) handle_event "delete-shared-link"
+  # handler: PlausibleWeb.Live.SharedLinkSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SharedLinkSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: No API or MCP equivalent; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("delete-shared-link", %{"slug" => slug}, socket) do
     site_id = socket.assigns.site.id
 

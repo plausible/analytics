@@ -123,6 +123,24 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     {:noreply, assign(socket, prop_key_options_count: count)}
   end
 
+  # capability:begin
+  # id: add_custom_prop@ui_session
+  # action: add_custom_prop
+  # transport: ui_session
+  # entry: live /:domain/settings/properties (live_render PropsSettings) handle_event "allow-prop"
+  # handler: PlausibleWeb.Live.PropsSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: PropsSettings.Form.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: Plausible.Billing.Feature.Props
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Nested LiveView with its own mount check; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("allow-prop", %{"prop" => prop}, socket) do
     case Plausible.Props.allow(socket.assigns.site, prop) do
       {:ok, site} ->
@@ -142,6 +160,24 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     end
   end
 
+  # capability:begin
+  # id: add_existing_custom_props@ui_session
+  # action: add_existing_custom_props
+  # transport: ui_session
+  # entry: live /:domain/settings/properties (live_render PropsSettings) handle_event "allow-existing-props"
+  # handler: PlausibleWeb.Live.PropsSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: PropsSettings.Form.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: Plausible.Billing.Feature.Props
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Bulk variant of add_custom_prop using props seen in stats; no API equivalent; no Teams.locked? check in the UI, the Sites API checks it
+  # capability:end
   def handle_event("allow-existing-props", _params, socket) do
     {:ok, site} = Plausible.Props.allow_existing_props(socket.assigns.site)
     send(socket.assigns.rendered_by, {:props_allowed, site.allowed_event_props})
