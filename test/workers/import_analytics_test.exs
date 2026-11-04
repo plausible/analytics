@@ -324,4 +324,97 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       end)
     end
   end
+
+  describe "job exceptions" do
+    setup do
+      user = new_user()
+      site = new_site(owner: user)
+
+      {:ok, site: site, user: user}
+    end
+
+    test "purges imported stats when the import job crashes and will retry", %{
+      site: site,
+      user: user
+    } do
+      {:ok, job} = new_crashing_import(site, user, max_attempts: 3)
+      query = imported_visitors_query(site, job.args.import_id)
+
+      assert %{failure: 1} = Oban.drain_queue(queue: :analytics_imports)
+
+      assert await_clickhouse_count(query, 0)
+      assert_no_emails_delivered()
+    end
+
+    test "marks the import failed when the import job crashes on its last attempt", %{
+      site: site,
+      user: user
+    } do
+      {:ok, job} = new_crashing_import(site, user, max_attempts: 1)
+
+      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports)
+
+      assert Repo.get!(SiteImport, job.args.import_id).status == SiteImport.failed()
+      assert_email_delivered_with(to: [user])
+    end
+
+    @tag :tmp_dir
+    test "keeps the import when the cleaner job crashes and will retry", %{
+      site: site,
+      user: user,
+      tmp_dir: tmp_dir
+    } do
+      site_import = insert(:site_import, site: site, imported_by: user)
+      query = imported_visitors_query(site, site_import.id)
+
+      insert_crashing_cleaner(site_import, tmp_dir, max_attempts: 20)
+
+      assert %{failure: 1} = Oban.drain_queue(queue: :analytics_imports)
+
+      assert await_clickhouse_count(query, 1)
+      assert Repo.reload!(site_import).status == SiteImport.completed()
+      assert_no_emails_delivered()
+    end
+
+    @tag :tmp_dir
+    test "keeps the import when the cleaner job crashes on its last attempt", %{
+      site: site,
+      user: user,
+      tmp_dir: tmp_dir
+    } do
+      site_import = insert(:site_import, site: site, imported_by: user)
+      query = imported_visitors_query(site, site_import.id)
+
+      insert_crashing_cleaner(site_import, tmp_dir, max_attempts: 1)
+
+      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports)
+
+      assert await_clickhouse_count(query, 1)
+      assert Repo.reload!(site_import).status == SiteImport.completed()
+      assert_no_emails_delivered()
+    end
+  end
+
+  defp new_crashing_import(site, user, job_opts) do
+    Plausible.Imported.NoopImporter.new_import(site, user,
+      start_date: Date.utc_today() |> Date.shift(day: -7),
+      end_date: Date.utc_today(),
+      crash: true,
+      job_opts: job_opts
+    )
+  end
+
+  defp imported_visitors_query(site, import_id) do
+    populate_stats(site, import_id, [build(:imported_visitors)])
+    query = from(v in Plausible.Imported.Visitor, where: v.import_id == ^import_id)
+    assert await_clickhouse_count(query, 1)
+    query
+  end
+
+  # Deleting a directory with File.rm!/1 raises, like the permission errors in #6515.
+  defp insert_crashing_cleaner(site_import, dir, job_opts) do
+    %{"import_id" => site_import.id, "paths" => [dir]}
+    |> Plausible.Workers.LocalImportAnalyticsCleaner.new(job_opts)
+    |> Oban.insert!()
+  end
 end

@@ -360,6 +360,52 @@ defmodule Plausible.OAuth do
   end
 
   @doc """
+  Lists the grants a user can still use, across all of their teams, with the
+  team preloaded. Revoked grants and grants whose refresh token has expired
+  are left out, since neither can be used anymore.
+
+  Most recently connected grants come first.
+  """
+  @spec list_grants(Plausible.Auth.User.t()) :: [Grant.t()]
+  def list_grants(user) do
+    Repo.all(
+      from(g in Grant,
+        inner_join: t in assoc(g, :team),
+        where:
+          g.user_id == ^user.id and
+            is_nil(g.revoked_at) and
+            g.refresh_token_expires_at > ^now(),
+        order_by: [desc: g.inserted_at, desc: g.id],
+        preload: [team: t]
+      )
+    )
+  end
+
+  @doc """
+  Revokes one of the user's grants by its id.
+
+  Returns `{:error, :not_found}` for an id that doesn't belong to one of the
+  user's live grants, including one that is already revoked.
+  """
+  @spec revoke_user_grant(Plausible.Auth.User.t(), term()) :: :ok | {:error, :not_found}
+  def revoke_user_grant(user, grant_id) do
+    now = now()
+
+    with {id, ""} <- Integer.parse(to_string(grant_id)),
+         {1, _} <-
+           Repo.update_all(
+             from(g in Grant,
+               where: g.id == ^id and g.user_id == ^user.id and is_nil(g.revoked_at)
+             ),
+             set: [revoked_at: now, updated_at: now]
+           ) do
+      :ok
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  @doc """
   Revokes a grant, invalidating its access and refresh tokens.
 
   Recorded on the row rather than deleted, so a revoked connection can still be
