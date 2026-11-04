@@ -241,10 +241,10 @@ Paddle Billing yet.</p></div>
 <p>Creates a custom product and respective price for every enterprise 
 plan in the database that doesn't have one in Paddle Billing yet.</p><p>Enterprise plans are always single currency, but the database doesn't
 record which one. The currency and the amount are read from the plan in
-Paddle Classic, by <code class="inline">paddle_plan_id</code>. Plans that Classic doesn't know, or
-that don't have exactly one recurring price, are reported with a raise
-before anything is written to Paddle Billing.</p><p>Plans without a Classic counterpart (manual subscriptions) are skipped, and
-so are duplicates: teams sharing a <code class="inline">paddle_plan_id</code> share its price.</p><p>With <code class="inline">overwrite?</code> set, existing prices (and the product) are updated as well.</p><p>Returns the mapping of every Classic plan id to its Billing product and
+Paddle Classic, by <code class="inline">paddle_plan_id</code>. Plans that don't have exactly one
+recurring price raise before anything is written to Paddle Billing.</p><p>Plans without a Classic counterpart are skipped and their ids are printed.
+These are manual subscriptions and plans deleted from Classic. Duplicates
+are skipped too: teams sharing a <code class="inline">paddle_plan_id</code> share its price.</p><p>With <code class="inline">overwrite?</code> set, existing prices (and the product) are updated as well.</p><p>Returns the mapping of every Classic plan id to its Billing product and
 price ids, like <a href="#sync_standard/1"><code class="inline">sync_standard/1</code></a>.</p>
   </section>
 </section>
