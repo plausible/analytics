@@ -164,10 +164,14 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def remove(site, user, opts \\ []) do
+  def remove(site_or_site_id, user, opts \\ [])
+
+  def remove(%Plausible.Site{} = site, user, opts), do: remove(site.id, user, opts)
+
+  def remove(site_id, user, opts) do
     send_email? = Keyword.get(opts, :send_email?, true)
 
-    with {:ok, guest_membership} <- get_guest_membership(site.id, user.id) do
+    with {:ok, guest_membership} <- get_guest_membership(site_id, user.id) do
       guest_membership =
         Repo.preload(guest_membership, [:site, team_membership: [:team, :user]])
 
@@ -175,8 +179,8 @@ defmodule Plausible.Teams.Memberships do
         Repo.transaction(fn ->
           Repo.delete!(guest_membership)
           prune_guests(guest_membership.team_membership.team)
-          Plausible.Segments.after_user_removed_from_site(site, user)
-          Plausible.Annotations.after_user_removed_from_site(site, user)
+          Plausible.Segments.after_user_removed_from_site(guest_membership.site, user)
+          Plausible.Annotations.after_user_removed_from_site(guest_membership.site, user)
         end)
 
       if send_email?, do: send_site_member_removed_email(guest_membership)

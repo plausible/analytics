@@ -148,17 +148,13 @@ defmodule PlausibleWeb.SettingsController do
   def leave_guest_site(conn, %{"site_id" => site_id}) do
     user = conn.assigns.current_user
 
-    guest_membership =
-      user
-      |> Teams.Memberships.guest_memberships()
-      |> Enum.find(&(to_string(&1.site_id) == site_id))
-
     conn =
-      with %{site: site} <- guest_membership,
-           {:ok, _} <- Teams.Memberships.remove(site, user, send_email?: false) do
-        put_flash(conn, :success, "You have left #{site.domain}")
-      else
-        _ -> put_flash(conn, :error, "You're no longer a guest of this site")
+      case Teams.Memberships.remove(site_id, user, send_email?: false) do
+        {:ok, guest_membership} ->
+          put_flash(conn, :success, "You have left #{guest_membership.site.domain}")
+
+        {:error, :no_guest} ->
+          put_flash(conn, :error, "You're no longer a guest of this site")
       end
 
     redirect(conn, to: ~p"/settings/guest-sites")
