@@ -11,6 +11,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   import Ecto.Query, only: [from: 2]
   import PlausibleWeb.Components.Generic
 
+  # capability:begin
+  # id: cs_get_team_billing@ui_session
+  # action: cs_get_team_billing
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Usage, limits, features and enterprise plans
+  # capability:end
   def update(%{team: team}, socket) do
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
@@ -303,6 +321,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     end
   end
 
+  # capability:begin
+  # id: cs_create_manual_subscription@ui_session
+  # action: cs_create_manual_subscription
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing handle_event "manual-subscribe"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:billing
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Billing.create_manual_subscription on the latest enterprise plan
+  # capability:end
   def handle_event("manual-subscribe", %{"id" => plan_id}, socket) do
     %{team: team, plans: plans} = socket.assigns
     plan = Enum.find(plans, &(&1.id == String.to_integer(plan_id)))
@@ -358,6 +394,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     end
   end
 
+  # capability:begin
+  # id: cs_delete_enterprise_plan@ui_session
+  # action: cs_delete_enterprise_plan
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing handle_event "delete-plan"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:billing
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def handle_event("delete-plan", %{"id" => plan_id}, socket) do
     plan = Plausible.Repo.get(EnterprisePlan, plan_id)
 
@@ -372,6 +425,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     {:noreply, assign(socket, show_plan_form?: false, editing_plan: nil)}
   end
 
+  # capability:begin
+  # id: cs_estimate_enterprise_plan_cost@ui_session
+  # action: cs_estimate_enterprise_plan_cost
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing handle_event "estimate-cost"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Pure calculation (EnterprisePlan.estimate), no writes
+  # capability:end
   def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
     params = update_features_to_list(params)
 
@@ -393,6 +464,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     {:noreply, assign(socket, cost_estimate: cost_estimate, plan_form: form)}
   end
 
+  # capability:begin
+  # id: cs_create_enterprise_plan@ui_session
+  # action: cs_create_enterprise_plan
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing handle_event "save-plan"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:billing
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
 
@@ -418,6 +506,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     end
   end
 
+  # capability:begin
+  # id: cs_update_enterprise_plan@ui_session
+  # action: cs_update_enterprise_plan
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=billing handle_event "update-plan"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Billing.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:billing
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def handle_event("update-plan", %{"enterprise_plan" => params}, socket) do
     params = params |> update_features_to_list() |> sanitize_params()
     changeset = EnterprisePlan.update_changeset(socket.assigns.editing_plan, params)

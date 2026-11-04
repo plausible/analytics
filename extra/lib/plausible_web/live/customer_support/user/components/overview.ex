@@ -79,6 +79,24 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
     """
   end
 
+  # capability:begin
+  # id: cs_delete_user@ui_session
+  # action: cs_delete_user
+  # transport: ui_session
+  # entry: live /cs/users/user/:id?tab=overview handle_event "delete-user"
+  # handler: PlausibleWeb.CustomerSupport.User.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Refused with an active subscription
+  # capability:end
   def handle_event("delete-user", _params, socket) do
     user = socket.assigns.user
 
@@ -97,6 +115,24 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
     end
   end
 
+  # capability:begin
+  # id: cs_force_disable_2fa@ui_session
+  # action: cs_force_disable_2fa
+  # transport: ui_session
+  # entry: live /cs/users/user/:id?tab=overview handle_event "force-disable-2fa"
+  # handler: PlausibleWeb.CustomerSupport.User.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Removes a second factor without the user; account security, keep session only
+  # capability:end
   def handle_event("force-disable-2fa", _params, socket) do
     user = socket.assigns.user
 
@@ -105,6 +141,24 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Overview do
     {:noreply, assign(socket, user: updated_user)}
   end
 
+  # capability:begin
+  # id: cs_update_user@ui_session
+  # action: cs_update_user
+  # transport: ui_session
+  # entry: live /cs/users/user/:id?tab=overview handle_event "save-user"
+  # handler: PlausibleWeb.CustomerSupport.User.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: User.changeset casts email, name, email_verified, theme and notes, so a token could change a user's email and mark it verified, which is an account takeover; keep session only or split notes into cs:write
+  # capability:end
   def handle_event("save-user", %{"user" => params}, socket) do
     user = socket.assigns.user
 

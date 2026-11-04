@@ -19,6 +19,23 @@ defmodule PlausibleWeb.Live.CustomerSupport.Site do
     """
   end
 
+  # capability:begin
+  # id: cs_get_site@ui_session
+  # action: cs_get_site
+  # transport: ui_session
+  # entry: live /cs/sites/site/:id handle_params
+  # handler: PlausibleWeb.Live.CustomerSupport.Site.handle_params/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def handle_params(%{"id" => site_id} = params, _uri, socket) do
     tab = params["tab"] || "overview"
     site = Resource.Site.get(site_id)

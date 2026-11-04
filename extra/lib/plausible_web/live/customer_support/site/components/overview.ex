@@ -84,6 +84,24 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     """
   end
 
+  # capability:begin
+  # id: cs_update_site@ui_session
+  # action: cs_update_site
+  # transport: ui_session
+  # entry: live /cs/sites/site/:id?tab=overview handle_event "save-site"
+  # handler: PlausibleWeb.CustomerSupport.Site.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Site.crm_changeset: timezone, public, native_stats_start_at, ingest rate limit, onboarding_status; public makes the dashboard readable by anyone
+  # capability:end
   def handle_event("save-site", %{"site" => params}, socket) do
     site = socket.assigns.site
 
@@ -100,6 +118,24 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.Overview do
     end
   end
 
+  # capability:begin
+  # id: cs_delete_site@ui_session
+  # action: cs_delete_site
+  # transport: ui_session
+  # entry: live /cs/sites/site/:id?tab=overview handle_event "delete-site"
+  # handler: PlausibleWeb.CustomerSupport.Site.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Site.Removal.run, irreversible
+  # capability:end
   def handle_event("delete-site", _, socket) do
     site = socket.assigns.site
 

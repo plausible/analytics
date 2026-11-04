@@ -53,6 +53,24 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.RescueZone do
     """
   end
 
+  # capability:begin
+  # id: cs_start_site_transfer@ui_session
+  # action: cs_start_site_transfer
+  # transport: ui_session
+  # entry: live /cs/sites/site/:id?tab=rescue-zone handle_event "init-transfer"
+  # handler: PlausibleWeb.CustomerSupport.Site.Components.RescueZone.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Sends an ownership transfer on behalf of ?inviter_email (any user, looked up by email); InviteToSite still checks the inviter is owner or admin of the site
+  # capability:end
   def handle_event("init-transfer", params, socket) do
     inviter = Plausible.Repo.get_by!(Plausible.Auth.User, email: params["inviter_email"])
 

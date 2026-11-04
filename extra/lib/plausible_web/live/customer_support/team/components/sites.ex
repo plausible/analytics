@@ -14,6 +14,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Sites do
 
   @page_size 24
 
+  # capability:begin
+  # id: cs_list_team_sites@ui_session
+  # action: cs_list_team_sites
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=sites update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Sites.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Includes sparklines from ClickHouse (Stats.Sparkline.parallel_overview), so it reads stats too
+  # capability:end
   def update(%{team: team, tab_params: tab_params}, socket) do
     team = Repo.preload(team, :owners)
     owner = List.first(team.owners)

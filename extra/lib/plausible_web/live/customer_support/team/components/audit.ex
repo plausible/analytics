@@ -4,6 +4,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
   """
   use PlausibleWeb, :live_component
 
+  # capability:begin
+  # id: cs_list_team_audit_entries@ui_session
+  # action: cs_list_team_audit_entries
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=audit update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Audit.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Paginated audit entries; "reveal-audit-entry" only expands one in the UI
+  # capability:end
   def update(%{team: team, tab_params: tab_params}, socket) do
     pagination_params = get_pagination_params(tab_params)
     audit_page = Plausible.Audit.list_entries_paginated([team_id: team.id], pagination_params)

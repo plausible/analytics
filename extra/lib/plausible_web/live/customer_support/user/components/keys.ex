@@ -6,6 +6,24 @@ defmodule PlausibleWeb.CustomerSupport.User.Components.Keys do
   import Ecto.Query
   alias Plausible.Repo
 
+  # capability:begin
+  # id: cs_list_user_api_keys@ui_session
+  # action: cs_list_user_api_keys
+  # transport: ui_session
+  # entry: live /cs/users/user/:id?tab=keys update
+  # handler: PlausibleWeb.CustomerSupport.User.Components.Keys.update/2
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Key names, teams, scopes and key prefixes, not the keys
+  # capability:end
   def update(%{user: user}, socket) do
     keys = keys(user)
     {:ok, assign(socket, user: user, keys: keys)}

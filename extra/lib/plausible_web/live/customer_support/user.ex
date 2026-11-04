@@ -16,6 +16,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.User do
     Keys
   }
 
+  # capability:begin
+  # id: cs_get_user@ui_session
+  # action: cs_get_user
+  # transport: ui_session
+  # entry: live /cs/users/user/:id handle_params
+  # handler: PlausibleWeb.Live.CustomerSupport.User.handle_params/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: User header and team memberships
+  # capability:end
   def handle_params(%{"id" => user_id} = params, _uri, socket) do
     tab = params["tab"] || "overview"
     user = Resource.User.get(user_id)

@@ -15,6 +15,24 @@ defmodule PlausibleWeb.CustomerSupport.Components.Search do
     {:ok, perform_search(socket, filter_text)}
   end
 
+  # capability:begin
+  # id: cs_search@ui_session
+  # action: cs_search
+  # transport: ui_session
+  # entry: live /cs handle_event "search-updated"
+  # handler: PlausibleWeb.CustomerSupport.Components.Search.handle_event/3
+  # credential: [session]
+  # resource: none
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Searches teams, users and sites (Resource.Team/User/Site.search); prefixes narrow the resource type
+  # capability:end
   def handle_event("search-updated", %{"filter_text" => filter_text}, socket) do
     {:noreply, perform_search(socket, filter_text)}
   end

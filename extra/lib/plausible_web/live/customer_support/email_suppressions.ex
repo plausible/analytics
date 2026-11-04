@@ -16,6 +16,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
     {:ok, assign(socket, :reasons, @reasons)}
   end
 
+  # capability:begin
+  # id: cs_list_email_suppressions@ui_session
+  # action: cs_list_email_suppressions
+  # transport: ui_session
+  # entry: live /cs/email-suppressions handle_params
+  # handler: PlausibleWeb.Live.CustomerSupport.EmailSuppressions.handle_params/3
+  # credential: [session]
+  # resource: none
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Suppressed email addresses with the reason, filterable and searchable
+  # capability:end
   def handle_params(params, _uri, socket) do
     reason = if params["reason"] in reason_strings(), do: params["reason"]
     pagination_params = Map.take(params, ["after", "before"])
@@ -34,6 +52,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressions do
     {:noreply, push_patch(socket, to: ~p"/cs/email-suppressions?#{query}")}
   end
 
+  # capability:begin
+  # id: cs_reactivate_email@ui_session
+  # action: cs_reactivate_email
+  # transport: ui_session
+  # entry: live /cs/email-suppressions handle_event "reactivate"
+  # handler: PlausibleWeb.Live.CustomerSupport.EmailSuppressions.handle_event/3
+  # credential: [session]
+  # resource: none
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Passes the acting super admin to EmailSuppressions.reactivate; Postmark refuses to reactivate spam complaints
+  # capability:end
   def handle_event("reactivate", %{"email" => email}, socket) do
     socket =
       case EmailSuppressions.reactivate(email, socket.assigns.current_user) do

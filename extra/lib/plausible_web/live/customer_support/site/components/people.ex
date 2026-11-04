@@ -4,6 +4,24 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.People do
   """
   use PlausibleWeb, :live_component
 
+  # capability:begin
+  # id: cs_list_site_people@ui_session
+  # action: cs_list_site_people
+  # transport: ui_session
+  # entry: live /cs/sites/site/:id?tab=people update
+  # handler: PlausibleWeb.CustomerSupport.Site.Components.People.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Members and guests with emails
+  # capability:end
   def update(%{site: site}, socket) do
     people = Plausible.Sites.list_people(site)
 

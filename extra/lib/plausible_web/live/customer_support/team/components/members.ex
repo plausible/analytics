@@ -8,6 +8,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
   alias Plausible.Teams
   alias Plausible.Teams.Management.Roster
 
+  # capability:begin
+  # id: cs_list_team_members@ui_session
+  # action: cs_list_team_members
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=members update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Members.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Roster with emails, roles and SSO session counts
+  # capability:end
   def update(%{team: team}, socket) do
     {:ok, refresh_members(socket, team)}
   end
@@ -79,6 +97,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
     """
   end
 
+  # capability:begin
+  # id: cs_deprovision_sso_user@ui_session
+  # action: cs_deprovision_sso_user
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=members handle_event "deprovision-sso-user"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Members.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: SSO.deprovision_user! turns an SSO user back into a standard user
+  # capability:end
   def handle_event("deprovision-sso-user", %{"identifier" => user_id}, socket) do
     [id: String.to_integer(user_id)]
     |> Plausible.Auth.find_user_by()

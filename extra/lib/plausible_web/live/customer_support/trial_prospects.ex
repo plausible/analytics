@@ -12,6 +12,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
   alias PlausibleWeb.StatsView
   alias PlausibleWeb.TextHelpers
 
+  # capability:begin
+  # id: cs_list_trial_prospects@ui_session
+  # action: cs_list_trial_prospects
+  # transport: ui_session
+  # entry: live /cs/trial-prospects handle_params
+  # handler: PlausibleWeb.Live.CustomerSupport.TrialProspects.handle_params/3
+  # credential: [session]
+  # resource: none
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Teams on trial with usage, sorted and paginated (TrialProspects.list)
+  # capability:end
   def handle_params(params, _uri, socket) do
     sort_by =
       if params["sort_by"] in TrialProspects.sortable_columns(),

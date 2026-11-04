@@ -10,6 +10,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
   alias Plausible.ConsolidatedView
   alias Plausible.Stats
 
+  # capability:begin
+  # id: cs_list_consolidated_views@ui_session
+  # action: cs_list_consolidated_views
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=consolidated_views update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def update(%{team: team}, socket) do
     consolidated_view = ConsolidatedView.get(team)
 
@@ -86,6 +103,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
     """
   end
 
+  # capability:begin
+  # id: cs_create_consolidated_view@ui_session
+  # action: cs_create_consolidated_view
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=consolidated_views handle_event "create-consolidated-view"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: ConsolidatedView.enable; the customer UI has no equivalent
+  # capability:end
   def handle_event("create-consolidated-view", _, socket) do
     case ConsolidatedView.enable(socket.assigns.team) do
       {:ok, consolidated_view} ->
@@ -98,6 +133,23 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews do
     end
   end
 
+  # capability:begin
+  # id: cs_delete_consolidated_view@ui_session
+  # action: cs_delete_consolidated_view
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=consolidated_views handle_event "delete-consolidated-view"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.ConsolidatedViews.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # capability:end
   def handle_event("delete-consolidated-view", _, socket) do
     ConsolidatedView.disable(socket.assigns.team)
     success("Deleted consolidated view")

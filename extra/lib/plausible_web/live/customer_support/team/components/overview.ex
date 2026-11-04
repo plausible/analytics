@@ -148,6 +148,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
   defp format_dt(nil), do: "N/A"
   defp format_dt(%NaiveDateTime{} = dt), do: NaiveDateTime.to_date(dt) |> Date.to_string()
 
+  # capability:begin
+  # id: cs_update_team@ui_session
+  # action: cs_update_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=overview handle_event "save-team"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Team.crm_changeset: name, notes, trial_expiry_date, allow_next_upgrade_override, accept_traffic_until; re-runs SiteLocker.update_for, so it can lock or unlock; trial extension has billing impact
+  # capability:end
   def handle_event("save-team", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
@@ -169,6 +187,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     end
   end
 
+  # capability:begin
+  # id: cs_delete_team@ui_session
+  # action: cs_delete_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=overview handle_event "delete-team"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Irreversible; Teams.delete refuses a team with an active subscription
+  # capability:end
   def handle_event("delete-team", _params, socket) do
     case Plausible.Teams.delete(socket.assigns.team) do
       {:ok, :deleted} ->
@@ -182,6 +218,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     end
   end
 
+  # capability:begin
+  # id: cs_snooze_team_deletion@ui_session
+  # action: cs_snooze_team_deletion
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=overview handle_event "snooze-schedule"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Postpones a scheduled team deletion, with a note
+  # capability:end
   def handle_event("snooze-schedule", %{"team_deletion_schedule" => params}, socket) do
     changeset = TeamDeletionSchedule.crm_changeset(socket.assigns.schedule, params)
 
@@ -203,6 +257,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Overview do
     end
   end
 
+  # capability:begin
+  # id: cs_unsnooze_team_deletion@ui_session
+  # action: cs_unsnooze_team_deletion
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=overview handle_event "unsnooze-schedule"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.Overview.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Resumes a scheduled team deletion
+  # capability:end
   def handle_event("unsnooze-schedule", _params, socket) do
     case TeamDeletionSchedules.unsnooze(socket.assigns.schedule) do
       {:ok, schedule} ->

@@ -6,6 +6,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
   import PlausibleWeb.CustomerSupport.Live
   alias Plausible.Auth.SSO
 
+  # capability:begin
+  # id: cs_get_team_sso@ui_session
+  # action: cs_get_team_sso
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=sso update
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.SSO.update/2
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: SSO integration, domains and policy
+  # capability:end
   def update(%{team: team}, socket) do
     sso_integration = get_sso_integration(team)
     {:ok, assign(socket, team: team, sso_integration: sso_integration)}
@@ -81,6 +99,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
     """
   end
 
+  # capability:begin
+  # id: cs_remove_sso_integration@ui_session
+  # action: cs_remove_sso_integration
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=sso handle_event "remove-sso-integration"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.SSO.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: force_deprovision?: true, so every SSO user of the team is deprovisioned
+  # capability:end
   def handle_event("remove-sso-integration", _, socket) do
     :ok = SSO.remove_integration(socket.assigns.sso_integration, force_deprovision?: true)
 
@@ -94,6 +130,24 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.SSO do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: cs_remove_sso_domain@ui_session
+  # action: cs_remove_sso_domain
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id?tab=sso handle_event "remove-sso-domain"
+  # handler: PlausibleWeb.CustomerSupport.Team.Components.SSO.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:delete
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: force_deprovision?: true for users on that domain
+  # capability:end
   def handle_event("remove-sso-domain", %{"identifier" => i}, socket) do
     domain = Enum.find(socket.assigns.sso_integration.sso_domains, &(&1.identifier == i))
     :ok = SSO.Domains.remove(domain, force_deprovision?: true)

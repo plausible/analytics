@@ -19,6 +19,24 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
 
   require Plausible.Billing.Subscription.Status
 
+  # capability:begin
+  # id: cs_get_team@ui_session
+  # action: cs_get_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id handle_params
+  # handler: PlausibleWeb.Live.CustomerSupport.Team.handle_params/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:read
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Team header: subscription status, usage against limits, lock and grace period state
+  # capability:end
   def handle_params(%{"id" => id} = params, _uri, socket) do
     tab = params["tab"] || "overview"
     team_id = String.to_integer(id)
@@ -39,14 +57,68 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     end
   end
 
+  # capability:begin
+  # id: cs_unlock_team@ui_session
+  # action: cs_unlock_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id handle_event "unlock"
+  # handler: PlausibleWeb.Live.CustomerSupport.Team.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Removes the grace period and unlocks the team's sites; no-op without a grace period; Every CS write should land in the audit log with the acting super admin, more so once a token can act
+  # capability:end
   def handle_event("unlock", _, socket) do
     {:noreply, unlock_team(socket)}
   end
 
+  # capability:begin
+  # id: cs_lock_team@ui_session
+  # action: cs_lock_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id handle_event "lock"
+  # handler: PlausibleWeb.Live.CustomerSupport.Team.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:write
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Ends the grace period and locks the team's sites; customers lose dashboard access
+  # capability:end
   def handle_event("lock", _, socket) do
     {:noreply, lock_team(socket)}
   end
 
+  # capability:begin
+  # id: cs_refund_lock_team@ui_session
+  # action: cs_refund_lock_team
+  # transport: ui_session
+  # entry: live /cs/teams/team/:id handle_event "refund-lock"
+  # handler: PlausibleWeb.Live.CustomerSupport.Team.handle_event/3
+  # credential: [session]
+  # resource: team
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [super_admin]
+  # current_role_enforced_by: router pipeline :flags (SuperAdminOnlyPlug) + live_session :customer_support on_mount SuperAdminLiveAuth
+  # current_feature_gate: none
+  # proposed_scope: cs:billing
+  # proposed_roles: [super_admin]
+  # confidence: verified
+  # notes: Locks the team and moves next_bill_date to yesterday, used after a refund
+  # capability:end
   def handle_event("refund-lock", _, socket) do
     team = socket.assigns.team
 
