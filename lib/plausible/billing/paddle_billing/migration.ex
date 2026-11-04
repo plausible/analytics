@@ -18,7 +18,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   alias Plausible.Billing.Plans
   alias Plausible.Billing.Subscription
 
-  @throttle if Mix.env() in [:test], do: 0, else: 1000
+  @throttle if Mix.env() == :test, do: 0, else: 1000
 
   currency_parity_file =
     Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
