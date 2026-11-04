@@ -206,6 +206,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     )
     |> Repo.all()
     |> Enum.uniq_by(& &1.paddle_plan_id)
+    |> Enum.filter(&classic_plans_by_id[&1.paddle_plan_id])
     |> Enum.map(fn enterprise_plan ->
       [{currency, amount}] =
         classic_plans_by_id

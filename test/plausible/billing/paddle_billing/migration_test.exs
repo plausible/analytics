@@ -415,13 +415,15 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
              }
     end
 
-    test "raises without sending any write when Classic doesn't know a plan" do
+    test "gracefully skips enterprise plans missing their Classic counterparts" do
       insert_enterprise_plan("123")
       insert_enterprise_plan("456")
       stub_classic_plans([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])
-      stub_empty_products()
+      stub_existing_enterprise_products()
 
-      assert_raise KeyError, fn -> sync_enterprise() end
+      assert sync_enterprise() == %{
+               "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
+             }
     end
 
     test "raises without sending any write when a plan has no recurring price" do
