@@ -9,6 +9,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   alias Plausible.ChangesetHelpers
   alias Plausible.Segments
 
+  # capability:begin
+  # id: create_segment@internal_api
+  # action: create_segment
+  # transport: internal_api
+  # entry: POST /api/:domain/segments (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.SegmentsController.create/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Segments.can_insert_one? (personal segments: viewer and above including billing; site segments: editor and above plus the SiteSegments feature)
+  # current_feature_gate: Plausible.Billing.Feature.SiteSegments
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site segments: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type; segment limit per site
+  # capability:end
   def create(
         %Plug.Conn{
           assigns: %{
@@ -40,6 +58,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   def create(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
+  # capability:begin
+  # id: update_segment@internal_api
+  # action: update_segment
+  # transport: internal_api
+  # entry: PATCH /api/:domain/segments/:segment_id (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.SegmentsController.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Segments.can_update_one? (personal segments: viewer and above including billing; site segments: editor and above plus the SiteSegments feature)
+  # current_feature_gate: Plausible.Billing.Feature.SiteSegments
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site segments: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type
+  # capability:end
   def update(
         %Plug.Conn{
           assigns: %{
@@ -74,6 +110,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   def update(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
+  # capability:begin
+  # id: delete_segment@internal_api
+  # action: delete_segment
+  # transport: internal_api
+  # entry: DELETE /api/:domain/segments/:segment_id (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.SegmentsController.delete/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Segments.delete_one (personal segments: viewer and above including billing; site segments: editor and above plus the SiteSegments feature)
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site segments: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type
+  # capability:end
   def delete(
         %Plug.Conn{
           assigns: %{
@@ -101,6 +155,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
+  # capability:begin
+  # id: list_segment_shared_links@internal_api
+  # action: list_segment_shared_links
+  # transport: internal_api
+  # entry: GET /api/:domain/segments/:segment_id/shared-links (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.SegmentsController.get_related_shared_links/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Segments.get_related_shared_links (roles_with_personal_segments)
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Shown before deleting a segment that shared links use
+  # capability:end
   def get_related_shared_links(
         %Plug.Conn{
           assigns: %{

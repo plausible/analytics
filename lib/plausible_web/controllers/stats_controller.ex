@@ -46,6 +46,24 @@ defmodule PlausibleWeb.StatsController do
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats])
 
+  # capability:begin
+  # id: view_dashboard@ui_session
+  # action: view_dashboard
+  # transport: ui_session
+  # entry: GET /:domain and GET /:domain/*path (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.StatsController.stats/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: StatsController plug AuthorizeSiteAccess (:all_roles)
+  # current_feature_gate: locked_check
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: The only place a dashboard read checks Teams.locked? (super admin bypasses it); the /api/stats endpoints it calls don't; public = anyone when site.public
+  # capability:end
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site =
       site
@@ -168,6 +186,24 @@ defmodule PlausibleWeb.StatsController do
 
     See: https://plausible.io/docs/shared-links
   """
+  # capability:begin
+  # id: view_dashboard@shared_link
+  # action: view_dashboard
+  # transport: shared_link
+  # entry: GET /share/:domain/*path (router.ex scope "/", pipe_through [:shared_link])
+  # handler: PlausibleWeb.StatsController.shared_link/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: StatsController.shared_link: slug lookup + validate_shared_link_password
+  # current_feature_gate: [Plausible.Billing.Feature.SharedLinks, locked_check]
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Checks lock and SharedLinks feature in render_shared_link, unlike the /api/stats calls the page makes
+  # capability:end
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     case find_shared_link(domain, auth) do
       {:ok, shared_link} ->
@@ -262,6 +298,24 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  # capability:begin
+  # id: authenticate_shared_link@shared_link
+  # action: authenticate_shared_link
+  # transport: shared_link
+  # entry: POST /share/:slug/authenticate (router.ex scope "/", pipe_through [:shared_link])
+  # handler: PlausibleWeb.StatsController.authenticate_shared_link/2
+  # credential: [none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: password check against the shared link
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Exchanges the shared link password for a session cookie
+  # capability:end
   def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)

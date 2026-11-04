@@ -10,6 +10,41 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias Plausible.Stats.{ApiQueryParser, QueryPeriod}
   alias PlausibleWeb.Api.Helpers, as: H
 
+  # capability:begin
+  # id: list_annotations@internal_api
+  # action: list_annotations
+  # transport: internal_api
+  # entry: GET /api/:domain/annotations (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.AnnotationsController.index/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: Annotations.get_all_for_site (public: site annotations only; members: also their personal ones)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # capability:end
+  # capability:begin
+  # id: list_annotations@shared_link
+  # action: list_annotations
+  # transport: shared_link
+  # entry: GET /api/:domain/annotations (router.ex scope "/api", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.Internal.AnnotationsController.index/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link; Annotations.get_all_for_site (site annotations only)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api
+  # capability:end
   def index(conn, params) do
     user = conn.assigns[:current_user]
     site = conn.assigns.site
@@ -66,6 +101,24 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
 
   defp parse_relative_date(_), do: {:ok, nil}
 
+  # capability:begin
+  # id: create_annotation@internal_api
+  # action: create_annotation
+  # transport: internal_api
+  # entry: POST /api/:domain/annotations (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.AnnotationsController.create/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Annotations.insert_one (personal annotations: viewer and above including billing; site annotations: editor and above plus the SiteSegments feature)
+  # current_feature_gate: Plausible.Billing.Feature.SiteSegments
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site annotations: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type; site annotations are gated on the SiteSegments feature, not one of their own
+  # capability:end
   def create(conn, params) do
     user = conn.assigns[:current_user]
     site = conn.assigns.site
@@ -90,6 +143,24 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     end
   end
 
+  # capability:begin
+  # id: update_annotation@internal_api
+  # action: update_annotation
+  # transport: internal_api
+  # entry: PATCH /api/:domain/annotations/:annotation_id (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.AnnotationsController.update/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Annotations.update_one (personal annotations: viewer and above including billing; site annotations: editor and above plus the SiteSegments feature)
+  # current_feature_gate: Plausible.Billing.Feature.SiteSegments
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site annotations: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type
+  # capability:end
   def update(conn, params) do
     user = conn.assigns[:current_user]
     site = conn.assigns.site
@@ -115,6 +186,24 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     end
   end
 
+  # capability:begin
+  # id: delete_annotation@internal_api
+  # action: delete_annotation
+  # transport: internal_api
+  # entry: DELETE /api/:domain/annotations/:annotation_id (router.ex scope "/api", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.Internal.AnnotationsController.delete/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Annotations.delete_one (personal annotations: viewer and above including billing; site annotations: editor and above plus the SiteSegments feature)
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: One handler for personal and site annotations: personal ones are per-user saved views and fit stats:read, site ones are shared with everyone on the site and fit sites:write, so the policy would split by type
+  # capability:end
   def delete(conn, params) do
     user = conn.assigns[:current_user]
     site = conn.assigns.site
