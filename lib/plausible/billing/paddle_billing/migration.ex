@@ -18,6 +18,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   alias Plausible.Billing.Plans
   alias Plausible.Billing.Subscription
 
+  @throttle if Mix.env() in [:test], do: 0, else: 1000
+
   currency_parity_file =
     Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
 
@@ -44,8 +46,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   The generation of a plan is only put in the price description, which is
   internal. Product and price names are displayed to customers.
   """
-  def sync_standard(overwrite? \\ false) do
-    canonical_plans = Plans.all()
+  def sync_standard(overwrite? \\ false, canonical_plans \\ Plans.all()) do
     {:ok, existing_products} = PaddleBilling.api().list_products()
 
     product_by_classic_plan_id =
@@ -68,7 +69,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     existing_mapping = classic_plan_mapping(existing_products)
 
     Enum.reduce(canonical_plans, existing_mapping, fn canonical_plan, acc ->
-      Process.sleep(1_000)
+      Process.sleep(@throttle)
       IO.write(".")
 
       existing_product =
@@ -120,7 +121,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     existing_mapping = classic_plan_mapping(existing_enterprise_products)
 
     Enum.reduce(enterprise_plans, existing_mapping, fn {enterprise_plan, price}, acc ->
-      Process.sleep(1_000)
+      Process.sleep(@throttle)
       IO.write(".")
 
       existing_product = Map.get(product_by_classic_plan_id, enterprise_plan.paddle_plan_id)
