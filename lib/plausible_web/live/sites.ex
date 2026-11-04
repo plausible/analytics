@@ -855,6 +855,24 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  # capability:begin
+  # id: pin_site@ui_session
+  # action: pin_site
+  # transport: ui_session
+  # entry: live /sites handle_event "pin-toggle"
+  # handler: PlausibleWeb.Live.Sites.handle_event/3
+  # credential: [session]
+  # resource: account
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # current_role_enforced_by: none (membership only; the site must be in the listed sites)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Per-user preference
+  # capability:end
   def handle_event("pin-toggle", %{"domain" => domain}, socket) do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
 

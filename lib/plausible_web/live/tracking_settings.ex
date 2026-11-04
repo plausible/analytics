@@ -127,6 +127,24 @@ defmodule PlausibleWeb.Live.TrackingSettings do
     """
   end
 
+  # capability:begin
+  # id: toggle_tracker_script_option@ui_session
+  # action: toggle_tracker_script_option
+  # transport: ui_session
+  # entry: live /:domain/settings/general (live_render TrackingSettings) handle_event "toggle"
+  # handler: PlausibleWeb.Live.TrackingSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: TrackingSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Toggles one field of the tracker script configuration, a subset of update_tracker_script_configuration
+  # capability:end
   def handle_event("toggle", %{"field" => field}, socket)
       when is_map_key(@toggleable_fields, field) do
     configuration = socket.assigns.tracker_script_configuration

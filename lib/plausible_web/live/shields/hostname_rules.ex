@@ -182,6 +182,24 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     """
   end
 
+  # capability:begin
+  # id: add_hostname_block_rule@ui_session
+  # action: add_hostname_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Hostnames) handle_event "save-hostname-rule"
+  # handler: PlausibleWeb.Live.Shields.HostnameRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Hostnames.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; hostname rules decide which traffic is recorded
+  # capability:end
   def handle_event("save-hostname-rule", %{"hostname_rule" => params}, socket) do
     user = socket.assigns.current_user
 
@@ -215,6 +233,24 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     end
   end
 
+  # capability:begin
+  # id: remove_hostname_block_rule@ui_session
+  # action: remove_hostname_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Hostnames) handle_event "remove-hostname-rule"
+  # handler: PlausibleWeb.Live.Shields.HostnameRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Hostnames.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; hostname rules decide which traffic is recorded
+  # capability:end
   def handle_event("remove-hostname-rule", %{"rule-id" => rule_id}, socket) do
     Shields.remove_hostname_rule(socket.assigns.site.id, rule_id)
 

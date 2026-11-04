@@ -110,6 +110,23 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     {:noreply, assign(socket, :create_token?, true)}
   end
 
+  # capability:begin
+  # id: revoke_plugins_token@ui_session
+  # action: revoke_plugins_token
+  # transport: ui_session
+  # entry: live /:domain/settings/integrations (live_render Plugins.API.Settings) handle_event "revoke-token"
+  # handler: PlausibleWeb.Live.Plugins.API.Settings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Plugins.API.Settings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def handle_event("revoke-token", %{"token-id" => token_id}, socket) do
     :ok = Tokens.delete(socket.assigns.site, token_id)
     displayed_tokens = Enum.reject(socket.assigns.displayed_tokens, &(&1.id == token_id))

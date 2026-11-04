@@ -178,6 +178,24 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     """
   end
 
+  # capability:begin
+  # id: add_page_block_rule@ui_session
+  # action: add_page_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Pages) handle_event "save-page-rule"
+  # handler: PlausibleWeb.Live.Shields.PageRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Pages.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; page rules decide which traffic is recorded
+  # capability:end
   def handle_event("save-page-rule", %{"page_rule" => params}, socket) do
     user = socket.assigns.current_user
 
@@ -211,6 +229,24 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     end
   end
 
+  # capability:begin
+  # id: remove_page_block_rule@ui_session
+  # action: remove_page_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Pages) handle_event "remove-page-rule"
+  # handler: PlausibleWeb.Live.Shields.PageRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Pages.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; page rules decide which traffic is recorded
+  # capability:end
   def handle_event("remove-page-rule", %{"rule-id" => rule_id}, socket) do
     Shields.remove_page_rule(socket.assigns.site.id, rule_id)
 

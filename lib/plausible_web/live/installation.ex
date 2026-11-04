@@ -408,6 +408,24 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
+  # capability:begin
+  # id: update_tracker_script_configuration@ui_session
+  # action: update_tracker_script_configuration
+  # transport: ui_session
+  # entry: live /:domain/installation handle_event "submit"
+  # handler: PlausibleWeb.Live.Installation.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Installation.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: mount admits :viewer, presumably to show install instructions, and submit has no role check of its own, so viewers and guest viewers can rewrite the tracker script configuration; TrackingSettings, the Sites API and the Plugins API all require editor or above
+  # capability:end
   def handle_event("submit", %{"tracker_script_configuration" => params}, socket) do
     PlausibleWeb.Tracker.update_script_configuration!(socket.assigns.site, params, :installation)
 

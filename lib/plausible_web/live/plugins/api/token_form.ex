@@ -111,6 +111,24 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
     """
   end
 
+  # capability:begin
+  # id: create_plugins_token@ui_session
+  # action: create_plugins_token
+  # transport: ui_session
+  # entry: live /:domain/settings/integrations (live_render Plugins.API.TokenForm) handle_event "generate-token"
+  # handler: PlausibleWeb.Live.Plugins.API.TokenForm.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Plugins.API.TokenForm.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Mints a credential with no user and no role; see the plugins_api rows
+  # capability:end
   def handle_event("generate-token", %{"token" => %{"description" => description}}, socket) do
     case Tokens.create(socket.assigns.site, description, socket.assigns.token) do
       {:ok, token, _} ->

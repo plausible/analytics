@@ -127,6 +127,24 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     {:noreply, assign(socket, setup_funnel?: true, funnel_id: String.to_integer(id))}
   end
 
+  # capability:begin
+  # id: delete_funnel@ui_session
+  # action: delete_funnel
+  # transport: ui_session
+  # entry: live /:domain/settings/funnels (live_render FunnelSettings) handle_event "delete-funnel"
+  # handler: PlausibleWeb.Live.FunnelSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor]
+  # current_role_enforced_by: handler re-checks Sites.get_for_user!(roles: [:owner, :admin, :editor]); mount: FunnelSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: EE only; the handler's own check leaves out :super_admin although mount allows it; no API equivalent
+  # capability:end
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
     site =
       Plausible.Sites.get_for_user!(

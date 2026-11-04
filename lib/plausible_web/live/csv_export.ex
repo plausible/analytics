@@ -209,6 +209,24 @@ defmodule PlausibleWeb.Live.CSVExport do
   end
 
   @impl true
+  # capability:begin
+  # id: schedule_site_export@ui_session
+  # action: schedule_site_export
+  # transport: ui_session
+  # entry: live /:domain/settings/imports-exports (live_render CSVExport) handle_event "export"
+  # handler: PlausibleWeb.Live.CSVExport.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: host page plug only: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin] (mount takes site_id from the signed session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Emails a download link to the current user; the LiveView has no role check of its own
+  # capability:end
   def handle_event("export", _params, socket) do
     %{storage: storage, site_id: site_id, email_to: email_to} =
       socket.assigns
@@ -233,11 +251,45 @@ defmodule PlausibleWeb.Live.CSVExport do
     {:noreply, socket}
   end
 
+  # capability:begin
+  # id: cancel_site_export@ui_session
+  # action: cancel_site_export
+  # transport: ui_session
+  # entry: live /:domain/settings/imports-exports (live_render CSVExport) handle_event "cancel"
+  # handler: PlausibleWeb.Live.CSVExport.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: host page plug only: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def handle_event("cancel", _params, socket) do
     if job = Exports.get_last_export_job(socket.assigns.site_id), do: Oban.cancel_job(job)
     {:noreply, fetch_export(socket)}
   end
 
+  # capability:begin
+  # id: delete_site_export@ui_session
+  # action: delete_site_export
+  # transport: ui_session
+  # entry: live /:domain/settings/imports-exports (live_render CSVExport) handle_event "delete"
+  # handler: PlausibleWeb.Live.CSVExport.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: host page plug only: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def handle_event("delete", _params, socket) do
     %{storage: storage, site_id: site_id} = socket.assigns
 

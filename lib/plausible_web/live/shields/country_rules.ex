@@ -161,6 +161,24 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     """
   end
 
+  # capability:begin
+  # id: add_country_block_rule@ui_session
+  # action: add_country_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Countries) handle_event "save-country-rule"
+  # handler: PlausibleWeb.Live.Shields.CountryRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Countries.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; country rules decide which traffic is recorded
+  # capability:end
   def handle_event("save-country-rule", %{"country_rule" => params}, socket) do
     user = socket.assigns.current_user
 
@@ -193,6 +211,24 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     end
   end
 
+  # capability:begin
+  # id: remove_country_block_rule@ui_session
+  # action: remove_country_block_rule
+  # transport: ui_session
+  # entry: live /:domain/settings/shields/:shield (live_render Shields.Countries) handle_event "remove-country-rule"
+  # handler: PlausibleWeb.Live.Shields.CountryRules.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: Shields.Countries.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role)) (parent LiveView); page: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Shields have no plan feature gate; country rules decide which traffic is recorded
+  # capability:end
   def handle_event("remove-country-rule", %{"rule-id" => rule_id}, socket) do
     Shields.remove_country_rule(socket.assigns.site.id, rule_id)
 

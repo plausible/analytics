@@ -319,6 +319,24 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, assign(socket, form: to_form(changeset), steps: steps)}
   end
 
+  # capability:begin
+  # id: create_funnel@ui_session
+  # action: create_funnel
+  # transport: ui_session
+  # entry: live /:domain/settings/funnels (live_render FunnelSettings.Form) handle_event "save"
+  # handler: PlausibleWeb.Live.FunnelSettings.Form.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: FunnelSettings.Form.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin]) (coalesce(guest role, team role))
+  # current_feature_gate: Plausible.Billing.Feature.Funnels
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: EE only; the same clause also updates an existing funnel (Funnels.update); Funnels feature checked in Plausible.Funnels
+  # capability:end
   def handle_event(
         "save",
         %{"funnel" => params},

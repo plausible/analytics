@@ -200,6 +200,24 @@ defmodule PlausibleWeb.Live.CSVImport do
     {:noreply, process_imported_tables(socket)}
   end
 
+  # capability:begin
+  # id: import_csv@ui_session
+  # action: import_csv
+  # transport: ui_session
+  # entry: live /:domain/settings/import (live_render CSVImport) handle_event "submit-upload-form"
+  # handler: PlausibleWeb.Live.CSVImport.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: host page plug only: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin] (mount takes site_id from the signed session)
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Writes imported stats; the LiveView has no role check of its own
+  # capability:end
   def handle_event("submit-upload-form", _params, socket) do
     %{
       storage: storage,

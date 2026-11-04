@@ -204,6 +204,24 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     {:noreply, socket |> assign(my_team_no_plan_error?: false) |> assign_form(params)}
   end
 
+  # capability:begin
+  # id: start_site_transfer@ui_session
+  # action: start_site_transfer
+  # transport: ui_session
+  # entry: live /:domain/settings/danger-zone (live_render SiteTransferSettings) handle_event "save"
+  # handler: PlausibleWeb.Live.SiteTransferSettings.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin]
+  # current_role_enforced_by: SiteTransferSettings.mount -> Sites.get_for_user!(roles: [:owner, :admin, :super_admin]) (coalesce(guest role, team role)); InviteToSite.invite(:owner) -> check_invitation_permissions (team member owner/admin)
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Hands the site to another account; super admin passes mount but not the invitation check
+  # capability:end
   def handle_event("save", %{"form" => params}, socket) do
     changeset = Form.changeset(params)
 

@@ -95,6 +95,24 @@ defmodule PlausibleWeb.Live.Verification do
     """
   end
 
+  # capability:begin
+  # id: verify_installation@ui_session
+  # action: verify_installation
+  # transport: ui_session
+  # entry: live /:domain (live_render Verification) handle_event "launch-verification"
+  # handler: PlausibleWeb.Live.Verification.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Verification.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: EE only; runs a server-side check against the site; read-only, "retry" repeats it
+  # capability:end
   def handle_event("launch-verification", _, socket) do
     reset_component(socket)
     start_verification(socket)
@@ -115,6 +133,24 @@ defmodule PlausibleWeb.Live.Verification do
     {:noreply, socket |> assign(dismissed?: true) |> push_event("disconnect-liveview", %{})}
   end
 
+  # capability:begin
+  # id: verify_installation_custom_url@ui_session
+  # action: verify_installation_custom_url
+  # transport: ui_session
+  # entry: live /:domain (live_render Verification) handle_event "verify-custom-url"
+  # handler: PlausibleWeb.Live.Verification.handle_event/3
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: Verification.mount -> Sites.get_for_user!(roles: [:owner, :admin, :editor, :super_admin, :viewer]) (coalesce(guest role, team role))
+  # current_feature_gate: none
+  # proposed_scope: sites:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: EE only; same check against a URL the user types in, so the server fetches a user-supplied URL
+  # capability:end
   def handle_event("verify-custom-url", %{"custom_url" => custom_url}, socket) do
     socket = assign(socket, url_to_verify: custom_url)
 

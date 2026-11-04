@@ -242,6 +242,24 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     end
   end
 
+  # capability:begin
+  # id: start_google_analytics_import@ui_session
+  # action: start_google_analytics_import
+  # transport: ui_session
+  # entry: POST /:domain/settings/google-import (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.GoogleAnalyticsController.import/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: GoogleAnalyticsController plug AuthorizeSiteAccess [:owner, :editor, :admin, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Last step of a multi-step flow (property_form, property, confirm) that needs Google OAuth in the browser
+  # capability:end
   def import(conn, %{
         "property" => property,
         "start_date" => start_date,

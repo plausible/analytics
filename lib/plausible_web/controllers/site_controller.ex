@@ -289,6 +289,24 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # capability:begin
+  # id: update_google_integration@ui_session
+  # action: update_google_integration
+  # transport: ui_session
+  # entry: PUT /:domain/settings/google (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.update_google_auth/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Sets the Search Console property on the site's Google connection, which needs a browser OAuth flow
+  # capability:end
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
@@ -300,6 +318,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/integrations")
   end
 
+  # capability:begin
+  # id: disconnect_google_integration@ui_session
+  # action: disconnect_google_integration
+  # transport: ui_session
+  # entry: DELETE /:domain/settings/google-search and DELETE /:domain/settings/google-import (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.delete_google_auth/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: none
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: One handler for two routes
+  # capability:end
   def delete_google_auth(conn, _params) do
     site =
       conn.assigns[:site]
@@ -313,6 +349,24 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: ~p"/#{site.domain}/settings/integrations")
   end
 
+  # capability:begin
+  # id: update_site_settings@ui_session
+  # action: update_site_settings
+  # transport: ui_session
+  # entry: PUT /:domain/settings (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.update_settings/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Site.update_changeset casts @changeset_cast_fields from the request, so this is a second way to change the domain besides ChangeDomain; on EE it also casts consolidated, so an editor could set the consolidated flag with a crafted request, worth checking; consolidated views allowed
+  # capability:end
   def update_settings(conn, %{"site" => site_params}) do
     site = conn.assigns[:site]
     changeset = Plausible.Site.update_changeset(site, site_params)
@@ -338,6 +392,24 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  # capability:begin
+  # id: reset_site_stats@ui_session
+  # action: reset_site_stats
+  # transport: ui_session
+  # entry: DELETE /:domain/stats (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.reset_stats/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :super_admin] (destructive actions)
+  # current_feature_gate: none
+  # proposed_scope: sites:provision
+  # proposed_roles: [owner, admin]
+  # confidence: verified
+  # notes: Irreversible; grouped with delete_site
+  # capability:end
   def reset_stats(conn, _params) do
     site = conn.assigns[:site]
     Plausible.Purge.reset!(site)
@@ -375,6 +447,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/sites")
   end
 
+  # capability:begin
+  # id: make_site_public@ui_session
+  # action: make_site_public
+  # transport: ui_session
+  # entry: POST /sites/:domain/make-public (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.make_public/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Makes the dashboard readable by anyone; editors can do this while inviting a guest needs owner or admin
+  # capability:end
   def make_public(conn, _params) do
     site =
       conn.assigns[:site]
@@ -386,6 +476,23 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/visibility")
   end
 
+  # capability:begin
+  # id: make_site_private@ui_session
+  # action: make_site_private
+  # transport: ui_session
+  # entry: POST /sites/:domain/make-private (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.make_private/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # capability:end
   def make_private(conn, _params) do
     site =
       conn.assigns[:site]
@@ -397,6 +504,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/visibility")
   end
 
+  # capability:begin
+  # id: enable_weekly_report@ui_session
+  # action: enable_weekly_report
+  # transport: ui_session
+  # entry: POST /sites/:domain/weekly-report/enable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.enable_weekly_report/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Enables the weekly report with the current user as the only recipient; consolidated views allowed
+  # capability:end
   def enable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
 
@@ -414,6 +539,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: disable_weekly_report@ui_session
+  # action: disable_weekly_report
+  # transport: ui_session
+  # entry: POST /sites/:domain/weekly-report/disable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.disable_weekly_report/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Deletes the weekly report for every recipient; consolidated views allowed
+  # capability:end
   def disable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
     Repo.delete_all(from(wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id))
@@ -423,6 +566,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: add_weekly_report_recipient@ui_session
+  # action: add_weekly_report_recipient
+  # transport: ui_session
+  # entry: POST /sites/:domain/weekly-report/recipients (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.add_weekly_report_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Recipients get stats by email without an account, so adding one grants access to data; consolidated views allowed
+  # capability:end
   def add_weekly_report_recipient(conn, %{"recipient" => recipient}) do
     site = conn.assigns[:site]
 
@@ -435,6 +596,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: remove_weekly_report_recipient@ui_session
+  # action: remove_weekly_report_recipient
+  # transport: ui_session
+  # entry: DELETE /sites/:domain/weekly-report/recipients/:recipient (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.remove_weekly_report_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: consolidated views allowed
+  # capability:end
   def remove_weekly_report_recipient(conn, %{"recipient" => recipient}) do
     site = conn.assigns[:site]
 
@@ -450,6 +629,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: enable_monthly_report@ui_session
+  # action: enable_monthly_report
+  # transport: ui_session
+  # entry: POST /sites/:domain/monthly-report/enable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.enable_monthly_report/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Enables the monthly report with the current user as the only recipient; consolidated views allowed
+  # capability:end
   def enable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
 
@@ -468,6 +665,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: disable_monthly_report@ui_session
+  # action: disable_monthly_report
+  # transport: ui_session
+  # entry: POST /sites/:domain/monthly-report/disable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.disable_monthly_report/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Deletes the monthly report for every recipient; consolidated views allowed
+  # capability:end
   def disable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
     Repo.delete_all(from(mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id))
@@ -477,6 +692,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: add_monthly_report_recipient@ui_session
+  # action: add_monthly_report_recipient
+  # transport: ui_session
+  # entry: POST /sites/:domain/monthly-report/recipients (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.add_monthly_report_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Recipients get stats by email without an account, so adding one grants access to data; consolidated views allowed
+  # capability:end
   def add_monthly_report_recipient(conn, %{"recipient" => recipient}) do
     site = conn.assigns[:site]
 
@@ -489,6 +722,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: remove_monthly_report_recipient@ui_session
+  # action: remove_monthly_report_recipient
+  # transport: ui_session
+  # entry: DELETE /sites/:domain/monthly-report/recipients/:recipient (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.remove_monthly_report_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: consolidated views allowed
+  # capability:end
   def remove_monthly_report_recipient(conn, %{"recipient" => recipient}) do
     site = conn.assigns[:site]
 
@@ -504,6 +755,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: enable_traffic_change_notification@ui_session
+  # action: enable_traffic_change_notification
+  # transport: ui_session
+  # entry: POST /sites/:domain/traffic-change-notification/:type/enable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.enable_traffic_change_notification/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Spike or drop notification with the current user as recipient; consolidated views allowed
+  # capability:end
   def enable_traffic_change_notification(conn, %{"type" => type}) do
     site = conn.assigns[:site]
 
@@ -532,6 +801,24 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  # capability:begin
+  # id: disable_traffic_change_notification@ui_session
+  # action: disable_traffic_change_notification
+  # transport: ui_session
+  # entry: POST /sites/:domain/traffic-change-notification/:type/disable (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.disable_traffic_change_notification/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: consolidated views allowed
+  # capability:end
   def disable_traffic_change_notification(conn, %{"type" => type}) do
     site = conn.assigns[:site]
 
@@ -546,6 +833,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: update_traffic_change_notification@ui_session
+  # action: update_traffic_change_notification
+  # transport: ui_session
+  # entry: PUT /sites/:domain/traffic-change-notification/:type (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.update_traffic_change_notification/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Changes the threshold; consolidated views allowed
+  # capability:end
   def update_traffic_change_notification(conn, %{
         "traffic_change_notification" => params,
         "type" => type
@@ -563,6 +868,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: add_traffic_change_notification_recipient@ui_session
+  # action: add_traffic_change_notification_recipient
+  # transport: ui_session
+  # entry: POST /sites/:domain/traffic-change-notification/:type/recipients (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.add_traffic_change_notification_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Recipients get stats by email without an account, so adding one grants access to data; consolidated views allowed
+  # capability:end
   def add_traffic_change_notification_recipient(conn, %{"recipient" => recipient, "type" => type}) do
     site = conn.assigns[:site]
 
@@ -575,6 +898,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: remove_traffic_change_notification_recipient@ui_session
+  # action: remove_traffic_change_notification_recipient
+  # transport: ui_session
+  # entry: DELETE /sites/:domain/traffic-change-notification/:type/recipients/:recipient (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.remove_traffic_change_notification_recipient/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: access:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: consolidated views allowed
+  # capability:end
   def remove_traffic_change_notification_recipient(conn, %{
         "recipient" => recipient,
         "type" => type
@@ -593,6 +934,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/email-reports")
   end
 
+  # capability:begin
+  # id: delete_import@ui_session
+  # action: delete_import
+  # transport: ui_session
+  # entry: DELETE /:domain/settings/forget-import/:import_id (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.forget_import/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Deletes imported stats; editors can, while reset_site_stats needs owner or admin
+  # capability:end
   def forget_import(conn, %{"import_id" => import_id}) do
     site = conn.assigns.site
 
@@ -615,6 +974,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: ~p"/#{site.domain}/settings/imports-exports")
   end
 
+  # capability:begin
+  # id: delete_all_imports@ui_session
+  # action: delete_all_imports
+  # transport: ui_session
+  # entry: DELETE /:domain/settings/forget-imported (router.ex scope "/", pipe_through [:browser, :csrf])
+  # handler: PlausibleWeb.SiteController.forget_imported/2
+  # credential: [session]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, guest_editor, super_admin]
+  # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+  # current_feature_gate: none
+  # proposed_scope: sites:write
+  # proposed_roles: [owner, admin, editor, guest_editor]
+  # confidence: verified
+  # notes: Deletes all imported stats; editors can, while reset_site_stats needs owner or admin
+  # capability:end
   def forget_imported(conn, _params) do
     site = conn.assigns.site
 
@@ -643,6 +1020,24 @@ defmodule PlausibleWeb.SiteController do
   end
 
   on_ee do
+    # capability:begin
+    # id: download_site_export@ui_session
+    # action: download_site_export
+    # transport: ui_session
+    # entry: GET /:domain/download/export (router.ex scope "/", pipe_through [:browser, :csrf])
+    # handler: PlausibleWeb.SiteController.download_export/2
+    # credential: [session]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [owner, admin, editor, guest_editor, super_admin]
+    # current_role_enforced_by: SiteController plug AuthorizeSiteAccess [:owner, :admin, :editor, :super_admin]
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [owner, admin, editor, guest_editor]
+    # confidence: verified
+    # notes: Two definitions: S3 redirect on EE, local file on CE; full raw export, editor and above, while dashboard CSV export (export_stats) is open to every role
+    # capability:end
     def download_export(conn, _params) do
       %{id: site_id, domain: domain} = conn.assigns.site
 
