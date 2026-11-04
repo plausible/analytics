@@ -142,26 +142,26 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         refute_received :plain_http_fetched
       end
 
-      test "does not retry" do
+      test "verifies after a transient failure" do
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
-        test_pid = self()
+        calls = :atomics.new(1, [])
 
         {ca, port} =
           TLSServer.start(
             cert_host: "good.example",
             handler: fn conn, _port ->
-              send(test_pid, :called)
-              Conn.send_resp(conn, 503, "")
+              case :atomics.add_get(calls, 1, 1) do
+                1 -> Conn.send_resp(conn, 503, "")
+                _ -> Conn.send_resp(conn, 200, "ex4mpl3")
+              end
             end
           )
 
         patch_trusted_certs(ca)
 
-        refute Verification.url("good.example:#{port}", "ex4mpl3")
-
-        assert_received :called
-        refute_received :called
+        assert Verification.url("good.example:#{port}", "ex4mpl3")
+        assert :atomics.get(calls, 1) == 2
       end
     end
 
@@ -356,6 +356,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
     end
 
-    defp patch_trusted_certs(ca), do: patch_env(Verification, req_opts: [cacerts: [ca]])
+    defp patch_trusted_certs(ca),
+      do: patch_env(Verification, req_opts: [cacerts: [ca], retry_delay: 0])
   end
 end
