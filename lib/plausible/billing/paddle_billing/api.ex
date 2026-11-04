@@ -20,14 +20,8 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   @spec create_price(String.t(), String.t(), Keyword.t()) :: {:ok, map()} | {:error, any()}
   def create_price(product_id, description, opts) do
     price = Keyword.fetch!(opts, :price)
+    type = Keyword.get(opts, :type, "standard")
     {amount, currency} = to_amount_currency(price)
-
-    type =
-      if Keyword.get(opts, :enterprise?) do
-        "custom"
-      else
-        "standard"
-      end
 
     interval =
       case Keyword.fetch!(opts, :interval) do
@@ -164,12 +158,13 @@ defmodule Plausible.Billing.PaddleBilling.Api do
   @spec create_product(String.t(), map(), Keyword.t()) :: {:ok, map()} | {:error, any()}
   def create_product(name, custom_data, opts \\ []) do
     description = Keyword.get(opts, :description)
+    type = Keyword.get(opts, :type, "standard")
 
-    type =
+    extra_data =
       if Keyword.get(opts, :enterprise?) do
-        "custom"
+        %{"enterprise" => true}
       else
-        "standard"
+        %{}
       end
 
     params = %{
@@ -177,7 +172,7 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       description: description,
       type: type,
       tax_category: "saas",
-      custom_data: custom_data
+      custom_data: Map.merge(custom_data, extra_data)
     }
 
     case HTTPClient.impl().post(products_url(), req_headers(), params) do
@@ -201,6 +196,13 @@ defmodule Plausible.Billing.PaddleBilling.Api do
       opts
       |> Keyword.take([:name, :description, :custom_data, :status])
       |> Map.new()
+
+    params =
+      if opts[:enterprise?] do
+        Map.update(params, :custom_data, %{}, &Map.merge(&1, %{"enterprise" => true}))
+      else
+        params
+      end
 
     if params != %{} do
       url =
@@ -227,20 +229,28 @@ defmodule Plausible.Billing.PaddleBilling.Api do
     end
   end
 
-  @spec list_products() :: {:ok, [map()]} | {:error, any()}
-  def list_products() do
-    params = %{
-      per_page: @products_page_size,
-      include: "prices"
-    }
+  @spec list_products(:standard | :custom | :all) :: {:ok, [map()]} | {:error, any()}
+  def list_products(type \\ :all) do
+    if type == :all do
+      with {:ok, standard_products} <- list_products(:standard),
+           {:ok, custom_products} <- list_products(:custom) do
+        {:ok, standard_products ++ custom_products}
+      end
+    else
+      params = %{
+        per_page: @products_page_size,
+        include: "prices",
+        type: type
+      }
 
-    url =
-      products_url()
-      |> URI.new!()
-      |> URI.append_query(URI.encode_query(params))
-      |> URI.to_string()
+      url =
+        products_url()
+        |> URI.new!()
+        |> URI.append_query(URI.encode_query(params))
+        |> URI.to_string()
 
-    list_products(url, [])
+      list_products(url, [])
+    end
   end
 
   defp list_products(next_url, acc) when is_binary(next_url) do

@@ -234,7 +234,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
         "https://sandbox-api.paddle.com/products", _headers, params ->
           assert %{
                    name: "Plausible Enterprise 200k/50 sites/20 members/2k API calls/Sites API",
-                   type: "custom",
+                   type: "standard",
                    custom_data: %{
                      "canonical_enterprise_plan" => %{
                        features: [Plausible.Billing.Feature.SitesAPI],
@@ -262,7 +262,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
         "https://sandbox-api.paddle.com/prices", _headers, params ->
           assert %{
-                   type: "custom",
+                   type: "standard",
                    description: "[enterprise] monthly (Classic plan 123)",
                    quantity: %{maximum: 1, minimum: 1},
                    tax_mode: :account_setting,
