@@ -268,27 +268,6 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
-  describe "last_used_humanize/2" do
-    test "returns humanized relative time" do
-      user = insert(:user)
-      now = NaiveDateTime.utc_now(:second)
-      thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
-      ninety_minutes_ago = NaiveDateTime.shift(now, minute: -90)
-      ten_hours_ago = NaiveDateTime.shift(now, hour: -10)
-      twenty_seven_hours_ago = NaiveDateTime.shift(now, hour: -27)
-      fifty_hours_ago = NaiveDateTime.shift(now, hour: -50)
-      ten_days_ago = NaiveDateTime.shift(now, day: -10)
-
-      assert last_used_humanize(user, now) == "Just recently"
-      assert last_used_humanize(user, thirty_minutes_ago) == "Just recently"
-      assert last_used_humanize(user, ninety_minutes_ago) == "1 hour ago"
-      assert last_used_humanize(user, ten_hours_ago) == "10 hours ago"
-      assert last_used_humanize(user, twenty_seven_hours_ago) == "Yesterday"
-      assert last_used_humanize(user, fifty_hours_ago) == "2 days ago"
-      assert last_used_humanize(user, ten_days_ago) == "10 days ago"
-    end
-  end
-
   describe "get_by_token/1" do
     setup do
       user = new_user()
@@ -534,12 +513,6 @@ defmodule Plausible.Auth.UserSessionsTest do
 
       assert :ok = UserSessions.revoke_all(user)
     end
-  end
-
-  defp last_used_humanize(user, dt) do
-    user
-    |> insert_session("Some Device", dt)
-    |> UserSessions.last_used_humanize()
   end
 
   defp insert_session(user, device_name, now) do

@@ -367,7 +367,8 @@ defmodule Plausible.OAuth do
   team preloaded. Revoked grants and grants whose refresh token has expired
   are left out, since neither can be used anymore.
 
-  Most recently connected grants come first.
+  Most recently used grants come first; never used ones are ordered by
+  when they were connected.
   """
   @spec list_grants(Plausible.Auth.User.t()) :: [Grant.t()]
   def list_grants(user) do
@@ -378,7 +379,7 @@ defmodule Plausible.OAuth do
           g.user_id == ^user.id and
             is_nil(g.revoked_at) and
             g.refresh_token_expires_at > ^now(),
-        order_by: [desc: g.inserted_at, desc: g.id],
+        order_by: [desc_nulls_last: g.last_used_at, desc: g.inserted_at, desc: g.id],
         preload: [team: t]
       )
     )

@@ -3,6 +3,28 @@ defmodule PlausibleWeb.TextHelpersTest do
   alias PlausibleWeb.TextHelpers
   doctest PlausibleWeb.TextHelpers
 
+  describe "humanize_last_used/2" do
+    test "returns humanized relative time" do
+      now = NaiveDateTime.utc_now(:second)
+
+      for {shift, expected} <- [
+            {[minute: 0], "Just recently"},
+            {[minute: -30], "Just recently"},
+            {[minute: -90], "1 hour ago"},
+            {[hour: -10], "10 hours ago"},
+            {[hour: -27], "Yesterday"},
+            {[hour: -50], "2 days ago"},
+            {[day: -10], "10 days ago"}
+          ] do
+        assert TextHelpers.humanize_last_used(NaiveDateTime.shift(now, shift), now) == expected
+      end
+    end
+
+    test "returns never when not used yet" do
+      assert TextHelpers.humanize_last_used(nil) == "Never"
+    end
+  end
+
   describe "number_format" do
     test "numbers under 1000 stay the same" do
       assert TextHelpers.number_format(0) == "0"
