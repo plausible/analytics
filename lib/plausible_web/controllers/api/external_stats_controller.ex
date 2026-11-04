@@ -4,11 +4,47 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Stats.{Query, Metrics, Filters, Interval, Legacy}
 
+  # capability:begin
+  # id: get_realtime_visitors@public_api_v1
+  # action: get_realtime_visitors
+  # transport: public_api_v1
+  # entry: GET /api/v1/stats/realtime/visitors (router.ex scope "/api/v1/stats", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalStatsController.realtime_visitors/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: stats:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: none (membership only; AuthorizePublicAPI.verify_site_access via Memberships.site_member?)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Guests pass, only logged as a warning in AuthorizePublicAPI.find_api_key; super admin bypasses membership, lock and feature checks; consolidated views rejected (no allow_consolidated_views)
+  # capability:end
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
     json(conn, Plausible.Stats.current_visitors(site))
   end
 
+  # capability:begin
+  # id: get_aggregate@public_api_v1
+  # action: get_aggregate
+  # transport: public_api_v1
+  # entry: GET /api/v1/stats/aggregate (router.ex scope "/api/v1/stats", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalStatsController.aggregate/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: stats:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: none (membership only; AuthorizePublicAPI.verify_site_access via Memberships.site_member?)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Guests pass, only logged as a warning in AuthorizePublicAPI.find_api_key; super admin bypasses membership, lock and feature checks; consolidated views rejected (no allow_consolidated_views)
+  # capability:end
   def aggregate(conn, params) do
     site = Repo.preload(conn.assigns.site, :owners)
 
@@ -30,6 +66,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
+  # capability:begin
+  # id: get_breakdown@public_api_v1
+  # action: get_breakdown
+  # transport: public_api_v1
+  # entry: GET /api/v1/stats/breakdown (router.ex scope "/api/v1/stats", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalStatsController.breakdown/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: stats:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: none (membership only; AuthorizePublicAPI.verify_site_access via Memberships.site_member?)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Guests pass, only logged as a warning in AuthorizePublicAPI.find_api_key; super admin bypasses membership, lock and feature checks; consolidated views rejected (no allow_consolidated_views)
+  # capability:end
   def breakdown(conn, params) do
     site = Repo.preload(conn.assigns.site, :owners)
 
@@ -250,6 +304,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?("event:props:" <> _), do: true
   defp event_only_property?(_), do: false
 
+  # capability:begin
+  # id: get_timeseries@public_api_v1
+  # action: get_timeseries
+  # transport: public_api_v1
+  # entry: GET /api/v1/stats/timeseries (router.ex scope "/api/v1/stats", pipe_through [:public_api, AuthorizePublicAPI])
+  # handler: PlausibleWeb.Api.ExternalStatsController.timeseries/2
+  # credential: [api_key_team, api_key_legacy]
+  # resource: site
+  # current_scope: stats:read:*
+  # current_scope_enforced_by: AuthorizePublicAPI.check_scope (implicit for every key)
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin]
+  # current_role_enforced_by: none (membership only; AuthorizePublicAPI.verify_site_access via Memberships.site_member?)
+  # current_feature_gate: [Plausible.Billing.Feature.StatsAPI, locked_check]
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor]
+  # confidence: verified
+  # notes: Guests pass, only logged as a warning in AuthorizePublicAPI.find_api_key; super admin bypasses membership, lock and feature checks; consolidated views rejected (no allow_consolidated_views)
+  # capability:end
   def timeseries(conn, params) do
     site = Repo.preload(conn.assigns.site, :owners)
 

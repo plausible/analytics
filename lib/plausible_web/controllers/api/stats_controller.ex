@@ -16,6 +16,42 @@ defmodule PlausibleWeb.Api.StatsController do
   plug(:date_validation_plug when action not in [:query, :csv_export_v2])
   plug(:validate_required_filters_plug when action not in [:current_visitors])
 
+  # capability:begin
+  # id: query_stats@internal_api
+  # action: query_stats
+  # transport: internal_api
+  # entry: POST /api/stats/:domain/query (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.query/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; Dashboard.QueryParser.parse + QueryBuilder.build, then Stats.query/2; v2 uses Query.parse_and_build
+  # capability:end
+  # capability:begin
+  # id: query_stats@shared_link
+  # action: query_stats
+  # transport: shared_link
+  # entry: POST /api/stats/:domain/query (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.query/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); Dashboard.QueryParser.parse + QueryBuilder.build, then Stats.query/2; v2 uses Query.parse_and_build
+  # capability:end
   def query(conn, params) do
     site = conn.assigns.site
     now = conn.private[:now]
@@ -35,6 +71,42 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  # capability:begin
+  # id: export_stats@internal_api
+  # action: export_stats
+  # transport: internal_api
+  # entry: POST /api/stats/:domain/export (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.csv_export/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock
+  # capability:end
+  # capability:begin
+  # id: export_stats@shared_link
+  # action: export_stats
+  # transport: shared_link
+  # entry: POST /api/stats/:domain/export (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.csv_export/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both)
+  # capability:end
   def csv_export(conn, params) do
     site = conn.assigns.site
 
@@ -79,6 +151,42 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     end
 
+    # capability:begin
+    # id: explore_next_steps@internal_api
+    # action: explore_next_steps
+    # transport: internal_api
+    # entry: POST /api/stats/:domain/exploration/next (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+    # handler: PlausibleWeb.Api.StatsController.exploration_next/2
+    # credential: [session, none]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+    # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
+    # capability:begin
+    # id: explore_next_steps@shared_link
+    # action: explore_next_steps
+    # transport: shared_link
+    # entry: POST /api/stats/:domain/exploration/next (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+    # handler: PlausibleWeb.Api.StatsController.exploration_next/2
+    # credential: [shared_link]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [public]
+    # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
     def exploration_next(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
@@ -102,6 +210,42 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     end
 
+    # capability:begin
+    # id: explore_journey_funnel@internal_api
+    # action: explore_journey_funnel
+    # transport: internal_api
+    # entry: POST /api/stats/:domain/exploration/funnel (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+    # handler: PlausibleWeb.Api.StatsController.exploration_funnel/2
+    # credential: [session, none]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+    # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
+    # capability:begin
+    # id: explore_journey_funnel@shared_link
+    # action: explore_journey_funnel
+    # transport: shared_link
+    # entry: POST /api/stats/:domain/exploration/funnel (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+    # handler: PlausibleWeb.Api.StatsController.exploration_funnel/2
+    # credential: [shared_link]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [public]
+    # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
     def exploration_funnel(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
 
@@ -126,6 +270,42 @@ defmodule PlausibleWeb.Api.StatsController do
 
     @exploration_max_candidates 50
 
+    # capability:begin
+    # id: explore_next_steps_with_funnel@internal_api
+    # action: explore_next_steps_with_funnel
+    # transport: internal_api
+    # entry: POST /api/stats/:domain/exploration/next-with-funnel (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+    # handler: PlausibleWeb.Api.StatsController.exploration_next_with_funnel/2
+    # credential: [session, none]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+    # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
+    # capability:begin
+    # id: explore_next_steps_with_funnel@shared_link
+    # action: explore_next_steps_with_funnel
+    # transport: shared_link
+    # entry: POST /api/stats/:domain/exploration/next-with-funnel (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+    # handler: PlausibleWeb.Api.StatsController.exploration_next_with_funnel/2
+    # credential: [shared_link]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [public]
+    # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+    # current_feature_gate: none
+    # proposed_scope: stats:read
+    # proposed_roles: [public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); EE only; Rate limited per site (check_exploration_rate_limit); no Funnels or other feature gate
+    # capability:end
     def exploration_next_with_funnel(conn, %{"journey" => steps} = params) do
       site = conn.assigns.site
       search_term = params["search_term"] || ""
@@ -190,6 +370,42 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_ee do
+    # capability:begin
+    # id: query_funnel@internal_api
+    # action: query_funnel
+    # transport: internal_api
+    # entry: GET /api/stats/:domain/funnels/:id (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+    # handler: PlausibleWeb.Api.StatsController.funnel/2
+    # credential: [session, none]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+    # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+    # current_feature_gate: Plausible.Billing.Feature.Funnels
+    # proposed_scope: stats:read
+    # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; EE only; feature checked in the controller
+    # capability:end
+    # capability:begin
+    # id: query_funnel@shared_link
+    # action: query_funnel
+    # transport: shared_link
+    # entry: GET /api/stats/:domain/funnels/:id (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+    # handler: PlausibleWeb.Api.StatsController.funnel/2
+    # credential: [shared_link]
+    # resource: site
+    # current_scope: none
+    # current_scope_enforced_by: none
+    # current_roles: [public]
+    # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+    # current_feature_gate: Plausible.Billing.Feature.Funnels
+    # proposed_scope: stats:read
+    # proposed_roles: [public]
+    # confidence: verified
+    # notes: Consolidated views rejected by AuthorizeSiteAccess; Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); EE only; feature checked in the controller
+    # capability:end
     def funnel(conn, %{"id" => funnel_id} = params) do
       site = Plausible.Repo.preload(conn.assigns.site, :team)
 
@@ -243,6 +459,42 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  # capability:begin
+  # id: get_search_terms@internal_api
+  # action: get_search_terms
+  # transport: internal_api
+  # entry: GET /api/stats/:domain/google-search-terms (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.google_search_terms/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock; is_admin in the error payload uses Memberships.has_editor_access?
+  # capability:end
+  # capability:begin
+  # id: get_search_terms@shared_link
+  # action: get_search_terms
+  # transport: shared_link
+  # entry: GET /api/stats/:domain/google-search-terms (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.google_search_terms/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both); is_admin in the error payload uses Memberships.has_editor_access?
+  # capability:end
   def google_search_terms(conn, params) do
     site = conn.assigns[:site]
 
@@ -297,6 +549,42 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  # capability:begin
+  # id: get_realtime_visitors@internal_api
+  # action: get_realtime_visitors
+  # transport: internal_api
+  # entry: GET /api/stats/:domain/current-visitors (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.current_visitors/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock
+  # capability:end
+  # capability:begin
+  # id: get_realtime_visitors@shared_link
+  # action: get_realtime_visitors
+  # transport: shared_link
+  # entry: GET /api/stats/:domain/current-visitors (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.current_visitors/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both)
+  # capability:end
   def current_visitors(conn, _) do
     site = conn.assigns[:site]
     json(conn, Stats.current_visitors(site))
@@ -304,6 +592,42 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
 
+  # capability:begin
+  # id: suggest_filter_values@internal_api
+  # action: suggest_filter_values
+  # transport: internal_api
+  # entry: GET /api/stats/:domain/suggestions/:filter_name (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.filter_suggestions/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock
+  # capability:end
+  # capability:begin
+  # id: suggest_filter_values@shared_link
+  # action: suggest_filter_values
+  # transport: shared_link
+  # entry: GET /api/stats/:domain/suggestions/:filter_name (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.filter_suggestions/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both)
+  # capability:end
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
     search_query = params["q"]
@@ -322,6 +646,42 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  # capability:begin
+  # id: suggest_custom_prop_values@internal_api
+  # action: suggest_custom_prop_values
+  # transport: internal_api
+  # entry: GET /api/stats/:domain/suggestions/custom-prop-values/:prop_key (router.ex scope "/api/stats", pipe_through :internal_stats_api)
+  # handler: PlausibleWeb.Api.StatsController.custom_prop_value_filter_suggestions/2
+  # credential: [session, none]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, super_admin, public]
+  # current_role_enforced_by: AuthorizeSiteAccess (:all_roles, pipeline :internal_stats_api)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [owner, admin, editor, viewer, billing, guest_viewer, guest_editor, public]
+  # confidence: verified
+  # notes: public = anyone when site.public, credential none; no Teams.locked? check, only the HTML dashboard (StatsController.stats) checks the lock
+  # capability:end
+  # capability:begin
+  # id: suggest_custom_prop_values@shared_link
+  # action: suggest_custom_prop_values
+  # transport: shared_link
+  # entry: GET /api/stats/:domain/suggestions/custom-prop-values/:prop_key (router.ex scope "/api/stats", pipe_through :internal_stats_api) with ?auth=<slug>
+  # handler: PlausibleWeb.Api.StatsController.custom_prop_value_filter_suggestions/2
+  # credential: [shared_link]
+  # resource: site
+  # current_scope: none
+  # current_scope_enforced_by: none
+  # current_roles: [public]
+  # current_role_enforced_by: AuthorizeSiteAccess.maybe_get_shared_link (slug from ?auth, password via session)
+  # current_feature_gate: none
+  # proposed_scope: stats:read
+  # proposed_roles: [public]
+  # confidence: verified
+  # notes: Same handler as internal_api; no lock or SharedLinks feature check here, unlike the HTML page (StatsController.render_shared_link checks both)
+  # capability:end
   def custom_prop_value_filter_suggestions(conn, %{"prop_key" => prop_key} = params) do
     site = conn.assigns[:site]
 
