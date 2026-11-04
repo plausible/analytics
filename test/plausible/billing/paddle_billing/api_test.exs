@@ -65,7 +65,7 @@ defmodule Plausible.Billing.PaddleBilling.ApiTest do
       assert_received {:amount, "950"}
     end
 
-    test "creates custom prices for enterprise plans" do
+    test "creates custom prices when explicitly instructed" do
       expect(Plausible.HTTPClient.Mock, :post, fn _url, _headers, params ->
         assert json_map(params)["type"] == "custom"
         {:ok, created(%{})}
@@ -75,7 +75,7 @@ defmodule Plausible.Billing.PaddleBilling.ApiTest do
                Api.create_price(@product_id, "enterprise",
                  price: Money.new(:USD, "319"),
                  interval: :monthly,
-                 enterprise?: true
+                 type: :custom
                )
     end
 
@@ -255,18 +255,19 @@ defmodule Plausible.Billing.PaddleBilling.ApiTest do
                Api.create_product("Plausible Growth", %{tier: "growth"})
     end
 
-    test "creates a custom product with a description for enterprise" do
+    test "creates a product with a description for enterprise" do
       expect(Plausible.HTTPClient.Mock, :post, fn _url, _headers, params ->
         json_map = json_map(params)
-        assert json_map["type"] == "custom"
-        assert json_map["description"] == "Custom deal"
+        assert json_map["type"] == "standard"
+        assert json_map["description"] == "Enterprise deal"
+        assert json_map["custom_data"]["enterprise"] == true
         {:ok, created(%{})}
       end)
 
       assert {:ok, _} =
                Api.create_product("Enterprise", %{},
                  enterprise?: true,
-                 description: "Custom deal"
+                 description: "Enterprise deal"
                )
     end
 
@@ -305,34 +306,52 @@ defmodule Plausible.Billing.PaddleBilling.ApiTest do
   end
 
   describe "list_products/0" do
-    test "requests the maximum page size with prices included" do
-      expect(Plausible.HTTPClient.Mock, :get, fn url, headers ->
+    test "requests the maximum page size with prices included across standard and custom products" do
+      expect(Plausible.HTTPClient.Mock, :get, 2, fn url, headers ->
         assert %URI{host: "sandbox-api.paddle.com", path: "/products"} = URI.parse(url)
 
-        assert URI.decode_query(URI.parse(url).query) == %{
+        query_params = URI.decode_query(URI.parse(url).query)
+
+        assert map_size(query_params) == 3
+
+        assert %{
                  "per_page" => "200",
-                 "include" => "prices"
-               }
+                 "include" => "prices",
+                 "type" => type
+               } = query_params
+
+        assert type in ["custom", "standard"]
+
+        prod_id = if(type == "standard", do: "pro_1", else: "pro_2")
 
         assert {"authorization", "Bearer test_api_key"} in headers
 
-        {:ok, ok([%{"id" => "pro_1"}], %{"pagination" => %{"has_more" => false}})}
+        {:ok, ok([%{"id" => prod_id}], %{"pagination" => %{"has_more" => false}})}
       end)
 
-      assert {:ok, [%{"id" => "pro_1"}]} = Api.list_products()
+      assert {:ok, [%{"id" => "pro_1"}, %{"id" => "pro_2"}]} = Api.list_products()
     end
 
     test "follows the next page url until there are no more" do
       next = "https://sandbox-api.paddle.com/products?after=pro_2&per_page=200&include=prices"
 
-      expect(Plausible.HTTPClient.Mock, :get, 2, fn
+      expect(Plausible.HTTPClient.Mock, :get, 3, fn
         ^next, _headers ->
           {:ok, ok([%{"id" => "pro_3"}], %{"pagination" => %{"has_more" => false}})}
 
-        _first, _headers ->
+        first, _headers ->
+          query_params = URI.decode_query(URI.parse(first).query)
+
+          {products, has_more?, next} =
+            if query_params["type"] == "standard" do
+              {[%{"id" => "pro_1"}, %{"id" => "pro_2"}], true, next}
+            else
+              {[], false, nil}
+            end
+
           {:ok,
-           ok([%{"id" => "pro_1"}, %{"id" => "pro_2"}], %{
-             "pagination" => %{"has_more" => true, "next" => next}
+           ok(products, %{
+             "pagination" => %{"has_more" => has_more?, "next" => next}
            })}
       end)
 

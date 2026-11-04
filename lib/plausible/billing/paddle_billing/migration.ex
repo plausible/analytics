@@ -149,7 +149,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     {:ok, product} =
       PaddleBilling.api().update_product(existing_product["id"],
         name: enterprise_product_name(enterprise_plan),
-        custom_data: enterprise_product_data(enterprise_plan)
+        custom_data: enterprise_product_data(enterprise_plan),
+        enterprise?: true
       )
 
     sync_enterprise_price(product["id"], enterprise_plan, price, acc, true)
@@ -180,7 +181,6 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
             PaddleBilling.api().create_price(product_id, description,
               interval: plan.billing_interval,
               price: price,
-              enterprise?: true,
               custom_data: custom_data
             )
 
@@ -232,7 +232,6 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   defp enterprise_product_data(plan) do
     %{
-      "enterprise" => true,
       "canonical_enterprise_plan" =>
         Map.take(plan, [
           :paddle_plan_id,
