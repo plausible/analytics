@@ -275,9 +275,8 @@ defmodule Plausible.Teams.Memberships do
   defp guest_memberships_query(user) do
     from(gm in Teams.GuestMembership,
       inner_join: tm in assoc(gm, :team_membership),
-      inner_join: s in ^Plausible.Site.regular(),
+      inner_join: s in assoc(gm, :site),
       as: :site,
-      on: s.id == gm.site_id,
       inner_join: t in assoc(s, :team),
       as: :team,
       where: tm.user_id == ^user.id and tm.role == :guest
