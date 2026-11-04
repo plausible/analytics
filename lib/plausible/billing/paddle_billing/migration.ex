@@ -90,12 +90,12 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   Enterprise plans are always single currency, but the database doesn't
   record which one. The currency and the amount are read from the plan in
-  Paddle Classic, by `paddle_plan_id`. Plans that Classic doesn't know, or
-  that don't have exactly one recurring price, are reported with a raise
-  before anything is written to Paddle Billing.
+  Paddle Classic, by `paddle_plan_id`. Plans that don't have exactly one
+  recurring price raise before anything is written to Paddle Billing.
 
-  Plans without a Classic counterpart (manual subscriptions) are skipped, and
-  so are duplicates: teams sharing a `paddle_plan_id` share its price.
+  Plans without a Classic counterpart are skipped and their ids are printed.
+  These are manual subscriptions and plans deleted from Classic. Duplicates
+  are skipped too: teams sharing a `paddle_plan_id` share its price.
 
   With `overwrite?` set, existing prices (and the product) are updated as well.
 
@@ -206,6 +206,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     )
     |> Repo.all()
     |> Enum.uniq_by(& &1.paddle_plan_id)
+    |> Enum.filter(&known_in_classic?(&1, classic_plans_by_id))
     |> Enum.map(fn enterprise_plan ->
       [{currency, amount}] =
         classic_plans_by_id
@@ -217,6 +218,16 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
       {enterprise_plan, price}
     end)
+  end
+
+  defp known_in_classic?(enterprise_plan, classic_plans_by_id) do
+    known? = Map.has_key?(classic_plans_by_id, enterprise_plan.paddle_plan_id)
+
+    unless known? do
+      IO.puts("\nSkipping plan #{enterprise_plan.paddle_plan_id}: not in Paddle Classic")
+    end
+
+    known?
   end
 
   defp enterprise_product_data(plan) do

@@ -415,13 +415,27 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
              }
     end
 
-    test "raises without sending any write when Classic doesn't know a plan" do
+    test "skips plans that Classic doesn't know" do
       insert_enterprise_plan("123")
       insert_enterprise_plan("456")
       stub_classic_plans([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])
       stub_empty_products()
 
-      assert_raise KeyError, fn -> sync_enterprise() end
+      stub(Plausible.HTTPClient.Mock, :post, fn
+        "https://vendors.paddle.com/api/2.0/subscription/plans", _headers, _params ->
+          {:ok,
+           classic_plans_response([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])}
+
+        "https://sandbox-api.paddle.com/products", _headers, _params ->
+          {:ok, ok_response(%{"data" => %{"id" => "prod_123"}}, 201)}
+
+        "https://sandbox-api.paddle.com/prices", _headers, _params ->
+          {:ok, ok_response(%{"data" => %{"id" => "price_123"}}, 201)}
+      end)
+
+      assert sync_enterprise() == %{
+               "123" => %{billing_product_id: "prod_123", billing_price_id: "price_123"}
+             }
     end
 
     test "raises without sending any write when a plan has no recurring price" do
