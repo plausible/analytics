@@ -3,25 +3,70 @@ defmodule PlausibleWeb.TextHelpersTest do
   alias PlausibleWeb.TextHelpers
   doctest PlausibleWeb.TextHelpers
 
-  describe "humanize_last_used/2" do
-    test "returns humanized relative time" do
-      now = NaiveDateTime.utc_now(:second)
+  describe "humanize_last_used_with_5_minute_precision/2" do
+    for {shift, expected} <- [
+          {[second: 0], "Less than 5 minutes ago"},
+          {[minute: -4, second: -59], "Less than 5 minutes ago"},
+          {[minute: -5], "Less than 10 minutes ago"},
+          {[minute: -9, second: -59], "Less than 10 minutes ago"},
+          {[minute: -10], "About 10 minutes ago"},
+          {[minute: -14, second: -59], "About 10 minutes ago"},
+          {[minute: -15], "About 15 minutes ago"},
+          {[minute: -59, second: -59], "About 55 minutes ago"},
+          {[minute: -60], "About 1 hour ago"},
+          {[minute: -92, second: -29], "About 1 hour ago"},
+          {[minute: -92, second: -30], "About 2 hours ago"},
+          {[hour: -5], "About 5 hours ago"},
+          {[hour: -23, minute: -59], "About 24 hours ago"},
+          {[hour: -24], "1 day ago"},
+          {[hour: -36, minute: -2, second: -29], "1 day ago"},
+          {[hour: -36, minute: -2, second: -30], "2 days ago"},
+          {[hour: -48], "2 days ago"},
+          {[hour: -60, minute: -2, second: -29], "2 days ago"},
+          {[hour: -60, minute: -2, second: -30], "3 days ago"},
+          {[day: -10], "10 days ago"}
+        ] do
+      test "#{inspect(shift)} is #{inspect(expected)}" do
+        now = NaiveDateTime.utc_now(:second)
+        last_used_at = NaiveDateTime.shift(now, unquote(shift))
 
-      for {shift, expected} <- [
-            {[minute: 0], "Just recently"},
-            {[minute: -30], "Just recently"},
-            {[minute: -90], "1 hour ago"},
-            {[hour: -10], "10 hours ago"},
-            {[hour: -27], "Yesterday"},
-            {[hour: -50], "2 days ago"},
-            {[day: -10], "10 days ago"}
-          ] do
-        assert TextHelpers.humanize_last_used(NaiveDateTime.shift(now, shift), now) == expected
+        assert TextHelpers.humanize_last_used_with_5_minute_precision(last_used_at, now) ==
+                 unquote(expected)
       end
     end
 
     test "returns never when not used yet" do
-      assert TextHelpers.humanize_last_used(nil) == "Never"
+      assert TextHelpers.humanize_last_used_with_5_minute_precision(nil) == "Never"
+    end
+  end
+
+  describe "humanize_last_used_with_hourly_precision/2" do
+    for {shift, expected} <- [
+          {[second: 0], "Less than an hour ago"},
+          {[minute: -59, second: -59], "Less than an hour ago"},
+          {[minute: -60], "Less than 2 hours ago"},
+          {[hour: -1, minute: -59, second: -59], "Less than 2 hours ago"},
+          {[hour: -2], "About 2 hours ago"},
+          {[hour: -2, minute: -59, second: -59], "About 2 hours ago"},
+          {[hour: -3], "About 3 hours ago"},
+          {[hour: -23, minute: -59], "About 23 hours ago"},
+          {[hour: -24], "1 day ago"},
+          {[hour: -36, minute: -29, second: -59], "1 day ago"},
+          {[hour: -36, minute: -30], "2 days ago"},
+          {[hour: -48], "2 days ago"},
+          {[day: -10], "10 days ago"}
+        ] do
+      test "#{inspect(shift)} is #{inspect(expected)}" do
+        now = NaiveDateTime.utc_now(:second)
+        last_used_at = NaiveDateTime.shift(now, unquote(shift))
+
+        assert TextHelpers.humanize_last_used_with_hourly_precision(last_used_at, now) ==
+                 unquote(expected)
+      end
+    end
+
+    test "returns never when not used yet" do
+      assert TextHelpers.humanize_last_used_with_hourly_precision(nil) == "Never"
     end
   end
 

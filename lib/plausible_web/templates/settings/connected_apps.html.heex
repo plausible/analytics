@@ -41,7 +41,9 @@
           </.td>
           <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
           <.td hide_on_mobile>
-            {PlausibleWeb.TextHelpers.humanize_last_used(grant.last_used_at)}
+            {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(
+              grant.last_used_at
+            )}
           </.td>
           <.td actions>
             <.delete_button

@@ -729,9 +729,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html =~ "Unknown"
       assert html =~ "Current session"
-      assert html =~ "Just recently"
+      assert html =~ "Less than an hour ago"
       assert html =~ "Some Device"
-      assert html =~ "1 hour ago"
+      assert html =~ "Less than 2 hours ago"
       assert html =~ ~p"/settings/security/user-sessions/#{another_session.id}"
     end
   end

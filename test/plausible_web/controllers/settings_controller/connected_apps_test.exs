@@ -129,7 +129,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
                   [named_grant.client_name, "Client ID: #{named_grant.client_id}"],
                   "My personal sites",
                   TextHelpers.format_date(yesterday),
-                  "5 hours ago",
+                  "About 5 hours ago",
                   # delete cell has no text
                   ""
                 ], ~p"/settings/connected-apps/#{named_grant.id}"},
