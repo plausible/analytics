@@ -44,6 +44,24 @@ defmodule PlausibleWeb.MCP.MCPController do
   # Every tool declares what scope is needed on the OAuth grant
   # and what role in the team is needed.
   @tool_specs [
+    # capability:begin
+    # id: list_sites@mcp
+    # action: list_sites
+    # transport: mcp
+    # entry: mcp tools/call list_sites (router.ex POST /mcp, pipe_through :external_api; MCPController plug :authorize -> AuthorizeOAuthAPI)
+    # handler: PlausibleWeb.MCP.MCPController.run_tool/3
+    # credential: [oauth]
+    # resource: team
+    # current_scope: sites:read:*
+    # current_scope_enforced_by: MCPController.require_scope (exact string in grant.scopes)
+    # current_roles: [owner, admin, editor, billing, viewer]
+    # current_role_enforced_by: tool spec roles: via MCPController.require_role (team role looked up by OAuth.find_access_token)
+    # current_feature_gate: none
+    # proposed_scope: sites:read
+    # proposed_roles: [owner, admin, editor, viewer, billing]
+    # confidence: verified
+    # notes: Grant is bound to one team (grant.team_id), and Sites.for_user_query(user, team) excludes guest sites, while a legacy API key also lists guest sites; no Teams.locked? or StatsAPI/SitesAPI feature check, only a rate limit keyed on grant.team; the only MCP tool, and the MCP resource advertises only sites:read:*, so no stats:read:* grant and no query_stats tool yet
+    # capability:end
     %{
       name: "list_sites",
       scope: ProtectedResources.scope!(@resource, Scopes.sites_read()),
