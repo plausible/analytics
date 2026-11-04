@@ -2,6 +2,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
   use Plausible.DataCase
   @moduletag :ee_only
 
+  import ExUnit.CaptureIO
   import Mox
 
   alias Plausible.Billing.PaddleBilling.Migration
@@ -16,7 +17,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       stub_standard_post()
       stub_empty_products()
 
-      assert Migration.sync_standard(false, plans) == %{
+      assert sync_standard(false, plans) == %{
                "857097" => %{
                  billing_product_id: "prod_Growth (10k)",
                  billing_price_id: "price_857097"
@@ -47,7 +48,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
       stub_empty_products()
 
-      Migration.sync_standard(false, [plan(:growth, "10k", 4)])
+      sync_standard(false, [plan(:growth, "10k", 4)])
 
       assert_received {:product, product}
 
@@ -100,7 +101,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       stub_empty_products()
 
       assert %{"648089" => _} =
-               mapping = Migration.sync_standard(false, [plan(:growth, "150M", 1)])
+               mapping = sync_standard(false, [plan(:growth, "150M", 1)])
 
       assert map_size(mapping) == 1
 
@@ -115,7 +116,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
         flunk("unexpected request")
       end)
 
-      assert Migration.sync_standard(false, [plan(:growth, "10k", 4)]) == %{
+      assert sync_standard(false, [plan(:growth, "10k", 4)]) == %{
                "857097" => %{billing_product_id: "prod_123", billing_price_id: "price_monthly"},
                "857079" => %{billing_product_id: "prod_123", billing_price_id: "price_yearly"}
              }
@@ -126,7 +127,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       stub_standard_post()
 
       mapping =
-        Migration.sync_standard(false, [plan(:growth, "10k", 4), plan(:growth, "150M", 1)])
+        sync_standard(false, [plan(:growth, "10k", 4), plan(:growth, "150M", 1)])
 
       assert mapping["857097"].billing_product_id == "prod_123"
 
@@ -149,7 +150,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
         flunk("unexpected request")
       end)
 
-      assert Migration.sync_standard(true, [plan(:growth, "10k", 4)]) == %{
+      assert sync_standard(true, [plan(:growth, "10k", 4)]) == %{
                "857097" => %{billing_product_id: "prod_123", billing_price_id: "price_monthly"},
                "857079" => %{billing_product_id: "prod_123", billing_price_id: "price_yearly"}
              }
@@ -201,7 +202,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       assert %{
                "857097" => %{billing_price_id: "price_monthly"},
                "857079" => %{billing_product_id: "prod_123", billing_price_id: "price_yearly"}
-             } = Migration.sync_standard(true, [plan(:growth, "10k", 4)])
+             } = sync_standard(true, [plan(:growth, "10k", 4)])
     end
   end
 
@@ -294,7 +295,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
       assert %{
                "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
-             } = Migration.sync_enterprise()
+             } = sync_enterprise()
     end
 
     test "updates existing enterprise plan" do
@@ -397,7 +398,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
       assert %{
                "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
-             } = Migration.sync_enterprise(true)
+             } = sync_enterprise(true)
     end
 
     test "creates nothing for existing plans without overwrite" do
@@ -409,7 +410,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
         flunk("unexpected PATCH #{url}")
       end)
 
-      assert Migration.sync_enterprise() == %{
+      assert sync_enterprise() == %{
                "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
              }
     end
@@ -420,7 +421,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       stub_classic_plans([%{"id" => 123, "recurring_price" => %{"USD" => "9.000"}}])
       stub_empty_products()
 
-      assert_raise KeyError, fn -> Migration.sync_enterprise() end
+      assert_raise KeyError, fn -> sync_enterprise() end
     end
 
     test "raises without sending any write when a plan has no recurring price" do
@@ -434,7 +435,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
       stub_empty_products()
 
-      assert_raise MatchError, fn -> Migration.sync_enterprise() end
+      assert_raise MatchError, fn -> sync_enterprise() end
     end
 
     test "raises without sending any write when a plan has several recurring prices" do
@@ -448,7 +449,7 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
 
       stub_empty_products()
 
-      assert_raise MatchError, fn -> Migration.sync_enterprise() end
+      assert_raise MatchError, fn -> sync_enterprise() end
     end
   end
 
@@ -531,6 +532,16 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       assert Migration.enterprise_product_name(ep) ==
                "Plausible Enterprise 200k/50 sites/20 members/2k API calls/Sites API,Single Sign-On"
     end
+  end
+
+  defp sync_standard(overwrite?, plans) do
+    {mapping, _progress} = with_io(fn -> Migration.sync_standard(overwrite?, plans) end)
+    mapping
+  end
+
+  defp sync_enterprise(overwrite? \\ false) do
+    {mapping, _progress} = with_io(fn -> Migration.sync_enterprise(overwrite?) end)
+    mapping
   end
 
   defp insert_enterprise_plan(paddle_plan_id) do
