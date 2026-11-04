@@ -48,9 +48,6 @@ defmodule PlausibleWeb.TextHelpers do
   @doc """
   Describes how long ago something was last used, for a timestamp rewritten at
   most every 5 minutes while in use, like connected apps and Plugins API tokens.
-
-  If the stored timestamp is at T1, the last actual use can be at T1 + 5 minutes,
-  so past the first 10 minutes, the description is "about" the middle of that range.
   """
   @spec humanize_last_used_with_5_minute_precision(NaiveDateTime.t() | nil, NaiveDateTime.t()) ::
           String.t()
@@ -65,14 +62,7 @@ defmodule PlausibleWeb.TextHelpers do
     minutes = NaiveDateTime.diff(now, last_used_at, :minute)
     hours = NaiveDateTime.diff(now, last_used_at, :hour)
 
-    # The last actual use was between the stored timestamp and 5 minutes after
-    # it, so its estimated age is the age of the middle of that range.
-    estimated_age =
-      NaiveDateTime.diff(
-        now,
-        NaiveDateTime.shift(last_used_at, minute: 2, second: 30),
-        :millisecond
-      )
+    estimated_age = estimated_age(last_used_at, now, minute: 5)
 
     cond do
       minutes < 5 -> "Less than 5 minutes ago"
@@ -86,9 +76,6 @@ defmodule PlausibleWeb.TextHelpers do
   @doc """
   Describes how long ago something was last used, for a timestamp rewritten at
   most every hour while in use, like login and SSO sessions.
-
-  If the stored timestamp is at T1, the last actual use can be at T1 + 1 hour,
-  so past the first 2 hours, the description is "about" the middle of that range.
   """
   @spec humanize_last_used_with_hourly_precision(NaiveDateTime.t() | nil, NaiveDateTime.t()) ::
           String.t()
@@ -102,10 +89,7 @@ defmodule PlausibleWeb.TextHelpers do
   def humanize_last_used_with_hourly_precision(last_used_at, now) do
     hours = NaiveDateTime.diff(now, last_used_at, :hour)
 
-    # The last actual use was between the stored timestamp and an hour after it,
-    # so its estimated age is the age of the middle of that range.
-    estimated_age =
-      NaiveDateTime.diff(now, NaiveDateTime.shift(last_used_at, minute: 30), :millisecond)
+    estimated_age = estimated_age(last_used_at, now, hour: 1)
 
     cond do
       hours < 1 -> "Less than an hour ago"
@@ -113,6 +97,24 @@ defmodule PlausibleWeb.TextHelpers do
       hours < 24 -> about_hours_ago(round(estimated_age / to_timeout(hour: 1)))
       true -> days_ago(round(estimated_age / to_timeout(day: 1)))
     end
+  end
+
+  # The stored timestamp is only rewritten once it's older than `precision`, so
+  # the last actual use was somewhere between the stored timestamp and
+  # `precision` after it. Estimating it as the middle of that range means the
+  # estimate is never off by more than half of `precision`, in either direction.
+  # The stored timestamp alone would always make the use look older than it was,
+  # by up to the whole `precision`.
+  #
+  # Returns the estimated age in milliseconds.
+  defp estimated_age(last_used_at, now, precision) do
+    half_precision = div(to_timeout(precision), 2)
+
+    NaiveDateTime.diff(
+      now,
+      NaiveDateTime.add(last_used_at, half_precision, :millisecond),
+      :millisecond
+    )
   end
 
   defp about_hours_ago(1), do: "About 1 hour ago"
