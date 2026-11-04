@@ -101,14 +101,29 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert html =~ ~s[value="https://#{site.domain}"]
       assert html =~ ~s[placeholder="https://#{site.domain}"]
 
+      test_pid = self()
+
+      Req.Test.stub(Plausible.InstallationSupport.Checks.VerifyInstallation, fn conn ->
+        send(test_pid, {:verification_started, self()})
+
+        receive do
+          :finish_verification -> :ok
+        end
+
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(200, Jason.encode!(%{"data" => %{"completed" => true}}))
+      end)
+
       lv
       |> element("form[phx-submit='verify-custom-url']")
       |> render_submit(%{"custom_url" => "https://abc.de"})
 
-      assert eventually(fn ->
-               html = render(lv)
-               {html =~ @in_progress_text, html}
-             end)
+      assert_receive {:verification_started, verification_pid}
+
+      assert render(lv) =~ @in_progress_text
+
+      send(verification_pid, :finish_verification)
     end
 
     @tag :ee_only

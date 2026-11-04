@@ -21,6 +21,7 @@ defmodule Plausible.OAuth do
   @access_token_ttl_seconds 3600
   @refresh_token_ttl_seconds 30 * 24 * 3600
   @refresh_grace_period_seconds 60
+  @last_used_precision_seconds 300
 
   @roles_with_oauth Membership.roles!([:owner, :admin, :editor, :billing, :viewer])
 
@@ -223,6 +224,7 @@ defmodule Plausible.OAuth do
         previous_refresh_token_hash: grant.refresh_token_hash,
         rotated_at: now
       )
+      |> mark_used(now)
       |> Repo.update!()
 
       {:ok, response}
@@ -237,6 +239,7 @@ defmodule Plausible.OAuth do
         grant
         |> Ecto.Changeset.change(grant_changes)
         |> Ecto.Changeset.change(previous_refresh_token_hash: grant.refresh_token_hash)
+        |> mark_used(now)
         |> Repo.update!()
 
         {:ok, response}
@@ -357,6 +360,77 @@ defmodule Plausible.OAuth do
       {%Grant{} = grant, role} when role in @roles_with_oauth -> {:ok, grant, role}
       _ -> {:error, :invalid_token}
     end
+  end
+
+  @doc """
+  Lists the grants a user can still use, across all of their teams, with the
+  team preloaded. Revoked grants and grants whose refresh token has expired
+  are left out, since neither can be used anymore.
+
+  Most recently used grants come first; never used ones are ordered by
+  when they were connected.
+  """
+  @spec list_grants(Plausible.Auth.User.t()) :: [Grant.t()]
+  def list_grants(user) do
+    Repo.all(
+      from(g in Grant,
+        inner_join: t in assoc(g, :team),
+        where:
+          g.user_id == ^user.id and
+            is_nil(g.revoked_at) and
+            g.refresh_token_expires_at > ^now(),
+        order_by: [desc_nulls_last: g.last_used_at, desc: g.inserted_at, desc: g.id],
+        preload: [team: t]
+      )
+    )
+  end
+
+  @doc """
+  Revokes one of the user's grants by its id.
+
+  Returns `{:error, :not_found}` for an id that doesn't belong to one of the
+  user's live grants, including one that is already revoked.
+  """
+  @spec revoke_user_grant(Plausible.Auth.User.t(), term()) :: :ok | {:error, :not_found}
+  def revoke_user_grant(user, grant_id) do
+    now = now()
+
+    with {id, ""} <- Integer.parse(to_string(grant_id)),
+         {1, _} <-
+           Repo.update_all(
+             from(g in Grant,
+               where: g.id == ^id and g.user_id == ^user.id and is_nil(g.revoked_at)
+             ),
+             set: [revoked_at: now, updated_at: now]
+           ) do
+      :ok
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Records that a grant's access token was used, for the connected apps
+  settings view. Refreshing tokens records it too, see `refresh_token/2`.
+
+  The timestamp is only rewritten once it is older than
+  #{@last_used_precision_seconds} seconds, so a busy client does not
+  update the row on every request.
+  """
+  @spec touch_grant(Grant.t(), NaiveDateTime.t()) :: :ok
+  def touch_grant(%Grant{} = grant, now \\ now()) do
+    if is_nil(grant.last_used_at) or
+         NaiveDateTime.diff(now, grant.last_used_at, :second) > @last_used_precision_seconds do
+      grant
+      |> mark_used(now)
+      |> Repo.update!(allow_stale: true)
+    end
+
+    :ok
+  end
+
+  defp mark_used(grant_or_changeset, now) do
+    Ecto.Changeset.change(grant_or_changeset, last_used_at: now)
   end
 
   @doc """

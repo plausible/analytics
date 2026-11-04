@@ -4,6 +4,7 @@ defmodule Plausible.Workers.ImportAnalytics do
   """
 
   use Plausible.Repo
+  require Logger
 
   use Oban.Worker,
     queue: :analytics_imports,
@@ -13,6 +14,8 @@ defmodule Plausible.Workers.ImportAnalytics do
   alias Plausible.Imported.ImportSources
   alias Plausible.Imported.Importer
   alias Plausible.Imported.SiteImport
+
+  @worker inspect(__MODULE__)
 
   @impl Oban.Worker
   def perform(%Oban.Job{
@@ -51,6 +54,50 @@ defmodule Plausible.Workers.ImportAnalytics do
     # 5 minutes
     300
   end
+
+  def install_exception_handler() do
+    :ok =
+      :telemetry.attach(
+        "import-analytics-exceptions",
+        [:oban, :job, :exception],
+        &__MODULE__.handle_event/4,
+        %{}
+      )
+  end
+
+  @doc false
+  def handle_event(_event, _measurements, meta, _config) do
+    on_job_exception(meta)
+  catch
+    kind, reason ->
+      Logger.error(Exception.format(kind, reason, __STACKTRACE__))
+  end
+
+  defp on_job_exception(%{
+         job: %Oban.Job{
+           worker: @worker,
+           args: %{"import_id" => import_id}
+         },
+         state: :discard
+       }) do
+    if site_import = Repo.get(SiteImport, import_id) do
+      import_fail(site_import, [])
+    end
+  end
+
+  defp on_job_exception(%{
+         job: %Oban.Job{
+           worker: @worker,
+           args: %{"import_id" => import_id}
+         },
+         state: :failure
+       }) do
+    if site_import = Repo.get(SiteImport, import_id) do
+      import_fail_transient(site_import)
+    end
+  end
+
+  defp on_job_exception(_meta), do: :ignore
 
   def import_complete(site_import) do
     site_import = Repo.preload(site_import, [:imported_by, site: :team])

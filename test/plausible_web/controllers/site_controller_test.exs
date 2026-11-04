@@ -888,11 +888,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") ==
-               "admin@example.com Editor"
-
-      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+      assert resp |> find("tbody tr") |> Enum.map(&text/1) |> Enum.sort() == [
+               "admin@example.com Editor",
                "viewer@example.com Viewer"
+             ]
+
+      assert resp =~ i1.invitation_id
+      assert resp =~ i2.invitation_id
     end
 
     test "lists pending site transfer", %{conn: conn, user: user} do
@@ -904,8 +906,25 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
-               "#{new_owner.email} Owner"
+      assert text_of_element(resp, "tbody tr") == "#{new_owner.email} Owner"
+      assert resp =~ st.transfer_id
+    end
+
+    test "does not expose pending invitation and transfer ids to editors", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :editor)
+      invitation = invite_guest(site, "viewer@example.com", role: :viewer, inviter: owner)
+      transfer = invite_transfer(site, new_user(), inviter: owner)
+
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      assert resp =~ "viewer@example.com"
+      refute resp =~ invitation.invitation_id
+      refute resp =~ transfer.transfer_id
     end
 
     test "renders distinct team management notices to owner", %{conn: conn, user: user} do
@@ -1760,6 +1779,27 @@ defmodule PlausibleWeb.SiteControllerTest do
           )
 
         assert notification.threshold == 15
+      end
+
+      test "does not allow changing site_id or type of #{type} notification", %{
+        conn: conn,
+        site: site
+      } do
+        other_site = new_site()
+        notification = insert(:"#{unquote(type)}_notification", site: site)
+        other_type = if unquote(type) == :spike, do: "drop", else: "spike"
+
+        put(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}", %{
+          "traffic_change_notification" => %{
+            "site_id" => to_string(other_site.id),
+            "type" => other_type
+          }
+        })
+
+        notification = Repo.reload!(notification)
+
+        assert notification.site_id == site.id
+        assert notification.type == unquote(type)
       end
     end
 

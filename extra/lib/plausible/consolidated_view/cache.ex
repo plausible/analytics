@@ -42,7 +42,7 @@ defmodule Plausible.ConsolidatedView.Cache do
       }
   end
 
-  @spec refresh_updated_recently(Keyword.t()) :: :ok
+  @spec refresh_updated_recently(Keyword.t()) :: :ok | {:error, any()}
   def refresh_updated_recently(opts) do
     recently_updated_site_ids =
       from sc in ConsolidatedView.sites(),

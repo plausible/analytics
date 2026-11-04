@@ -86,20 +86,6 @@ defmodule Plausible.Auth.UserSessions do
     end
   end
 
-  @spec last_used_humanize(Auth.UserSession.t(), NaiveDateTime.t()) :: String.t()
-  def last_used_humanize(user_session, now \\ NaiveDateTime.utc_now(:second)) do
-    diff = NaiveDateTime.diff(now, user_session.last_used_at, :hour)
-    diff_days = NaiveDateTime.diff(now, user_session.last_used_at, :day)
-
-    cond do
-      diff < 1 -> "Just recently"
-      diff == 1 -> "1 hour ago"
-      diff < 24 -> "#{diff} hours ago"
-      diff < 2 * 24 -> "Yesterday"
-      true -> "#{diff_days} days ago"
-    end
-  end
-
   @spec get_by_token(String.t()) ::
           {:ok, Auth.UserSession.t()}
           | {:error, :not_found}

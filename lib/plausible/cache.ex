@@ -62,7 +62,6 @@ defmodule Plausible.Cache do
       @modes [:all, :updated_recently]
 
       alias Plausible.Cache.Adapter
-      require Logger
 
       @spec put(any(), any(), Keyword.t()) :: any()
       def put(key, value, opts \\ []) do
@@ -131,7 +130,7 @@ defmodule Plausible.Cache do
       def repo(), do: Plausible.Repo
       defoverridable repo: 0
 
-      @spec refresh_all(Keyword.t()) :: :ok
+      @spec refresh_all(Keyword.t()) :: :ok | {:error, any()}
       def refresh_all(opts \\ []) do
         refresh(
           :all,
@@ -140,7 +139,7 @@ defmodule Plausible.Cache do
         )
       end
 
-      @spec refresh_updated_recently(Keyword.t()) :: :ok
+      @spec refresh_updated_recently(Keyword.t()) :: :ok | {:error, any()}
       def refresh_updated_recently(opts \\ [])
 
       def refresh_updated_recently(opts) do
@@ -229,13 +228,10 @@ defmodule Plausible.Cache do
               items = repo().all(query)
               :ok = merge_items(items, opts)
             catch
-              _, e ->
-                Logger.error("Error refreshing '#{cache_name}' - #{inspect(e)}")
+              _, e -> {:error, e}
             end
           end
         )
-
-        :ok
       end
     end
   end

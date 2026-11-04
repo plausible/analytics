@@ -145,6 +145,18 @@ end
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
+ch_query_timeout_ms = get_int_from_path_or_env(config_dir, "CLICKHOUSE_QUERY_TIMEOUT_MS", 15_000)
+
+# Server-side ClickHouse limit for stats queries. Kept slightly above the
+# client-side timeout by default (15s/20s), so that ClickHouse stops queries
+# the client has already given up on.
+ch_max_execution_time_sec =
+  get_int_from_path_or_env(
+    config_dir,
+    "CLICKHOUSE_MAX_EXECUTION_TIME_SEC",
+    div(ch_query_timeout_ms, 1000) + 5
+  )
+
 persistor_backend =
   case get_var_from_path_or_env(config_dir, "PERSISTOR_BACKEND", "embedded") do
     "embedded" -> Plausible.Ingestion.Persistor.Embedded
@@ -252,6 +264,7 @@ config :plausible, :runtime_metadata, runtime_metadata
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 paddle_classic_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 paddle_classic_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
+paddle_billing_api_key = get_var_from_path_or_env(config_dir, "PADDLE_BILLING_API_KEY")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
@@ -609,6 +622,8 @@ config :plausible, :paddle_classic,
   vendor_auth_code: paddle_classic_auth_code,
   vendor_id: paddle_classic_vendor_id
 
+config :plausible, :paddle_billing, api_key: paddle_billing_api_key
+
 config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret,
@@ -667,7 +682,7 @@ ch_query_condition_cache_settings =
 config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
-  timeout: 15_000,
+  timeout: ch_query_timeout_ms,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   settings:
@@ -676,11 +691,10 @@ config :plausible, Plausible.ClickhouseRepo,
       join_algorithm: "direct,parallel_hash,hash",
       # stops queries when ClickhouseRepo connection :timeout value reached
       cancel_http_readonly_queries_on_client_close: 1,
-      # stops queries when they will likely take over 20s
-      # NB! when :timeout is overridden to be over 20s,
-      # for it to have meaningful effect,
-      # this must be overridden as well
-      max_execution_time: 20
+      # stops queries when they will likely take over
+      # CLICKHOUSE_MAX_EXECUTION_TIME_SEC seconds, which defaults to
+      # CLICKHOUSE_QUERY_TIMEOUT_MS / 1000 + 5 (20s)
+      max_execution_time: ch_max_execution_time_sec
     ] ++ ch_query_condition_cache_settings
 
 config :plausible, Plausible.IngestRepo,
