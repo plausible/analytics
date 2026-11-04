@@ -74,6 +74,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
               handler: fn conn, port ->
                 case conn.request_path do
                   "/plausible-sso-verification" ->
+                    send(test_pid, {:redirected, target})
+
                     conn
                     |> Conn.put_resp_header("location", "https://#{target}:#{port}/moved")
                     |> Conn.send_resp(301, "")
@@ -88,6 +90,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
           patch_trusted_certs(ca)
 
           refute Verification.url("good.example:#{port}", "ex4mpl3")
+          assert_received {:redirected, ^target}
           refute_received {:followed, ^target}
         end
       end
@@ -121,6 +124,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
           TLSServer.start(
             cert_host: "good.example",
             handler: fn conn, _port ->
+              send(test_pid, :redirected)
+
               conn
               |> Conn.put_resp_header(
                 "location",
@@ -133,6 +138,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         patch_trusted_certs(ca)
 
         refute Verification.url("good.example:#{port}", "ex4mpl3")
+        assert_received :redirected
         refute_received :plain_http_fetched
       end
 
@@ -185,24 +191,34 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       test "fails on non-html" do
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
-        {ca, port} =
-          TLSServer.start(
-            cert_host: "good.example",
-            handler: fn conn, _port -> Conn.send_resp(conn, 200, @meta_tag) end
-          )
-
-        patch_trusted_certs(ca)
-
-        refute Verification.meta_tag("good.example:#{port}", "ex4mpl3")
-      end
-
-      test "fails on parse failure" do
-        stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+        test_pid = self()
 
         {ca, port} =
           TLSServer.start(
             cert_host: "good.example",
             handler: fn conn, _port ->
+              send(test_pid, :served)
+              Conn.send_resp(conn, 200, @meta_tag)
+            end
+          )
+
+        patch_trusted_certs(ca)
+
+        refute Verification.meta_tag("good.example:#{port}", "ex4mpl3")
+        assert_received :served
+      end
+
+      test "fails on parse failure" do
+        stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+        test_pid = self()
+
+        {ca, port} =
+          TLSServer.start(
+            cert_host: "good.example",
+            handler: fn conn, _port ->
+              send(test_pid, :served)
+
               conn
               |> Conn.put_resp_header("content-type", "text/html")
               |> Conn.send_resp(200, ~s|meta name="plausible-sso-verification" content="ex4mpl3|)
@@ -212,6 +228,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         patch_trusted_certs(ca)
 
         refute Verification.meta_tag("good.example:#{port}", "ex4mpl3")
+        assert_received :served
       end
 
       test "succeeds in case of multiple matches" do
@@ -251,6 +268,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
             handler: fn conn, port ->
               case conn.host do
                 "good.example" ->
+                  send(test_pid, :redirected)
+
                   conn
                   |> Conn.put_resp_header("location", "https://www.good.example:#{port}/")
                   |> Conn.send_resp(301, "")
@@ -268,6 +287,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
         patch_trusted_certs(ca)
 
         refute Verification.meta_tag("good.example:#{port}", "ex4mpl3")
+        assert_received :redirected
         refute_received :followed
       end
     end
