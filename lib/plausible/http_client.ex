@@ -30,6 +30,8 @@ defmodule Plausible.HTTPClient.Interface do
   @callback get(url()) :: response()
   @callback post(url(), headers(), params()) :: response()
   @callback post(url(), headers(), params(), finch_request_opts()) :: response()
+  @callback patch(url(), headers(), params()) :: response()
+  @callback patch(url(), headers(), params(), finch_request_opts()) :: response()
 end
 
 defmodule Plausible.HTTPClient do
@@ -54,6 +56,11 @@ defmodule Plausible.HTTPClient do
   @impl Plausible.HTTPClient.Interface
   def post(url, headers \\ [], params \\ nil, finch_req_opts \\ []) do
     call(:post, url, headers, params, finch_req_opts)
+  end
+
+  @impl Plausible.HTTPClient.Interface
+  def patch(url, headers \\ [], params \\ nil, finch_req_opts \\ []) do
+    call(:patch, url, headers, params, finch_req_opts)
   end
 
   @doc """

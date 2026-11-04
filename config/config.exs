@@ -50,6 +50,7 @@ config :ref_inspector,
 
 config :plausible,
   paddle_classic_api: Plausible.Billing.PaddleClassic.Api,
+  paddle_billing_api: Plausible.Billing.PaddleBilling.Api,
   google_api: Plausible.Google.API,
   verification_checks_mod: Plausible.InstallationSupport.Verification.Checks
 
