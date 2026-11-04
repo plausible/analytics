@@ -90,9 +90,9 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   Enterprise plans are always single currency, but the database doesn't
   record which one. The currency and the amount are read from the plan in
-  Paddle Classic, by `paddle_plan_id`. Plans that Classic doesn't know, or
-  that don't have exactly one recurring price, are reported with a raise
-  before anything is written to Paddle Billing.
+  Paddle Classic, by `paddle_plan_id`. Plans that don't have exactly
+  one recurring price, are reported with a raise before anything is written
+  to Paddle Billing.
 
   Plans without a Classic counterpart (manual subscriptions) are skipped, and
   so are duplicates: teams sharing a `paddle_plan_id` share its price.
