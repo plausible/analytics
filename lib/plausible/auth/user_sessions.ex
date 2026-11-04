@@ -86,20 +86,6 @@ defmodule Plausible.Auth.UserSessions do
     end
   end
 
-  @spec last_used_humanize(Auth.UserSession.t(), NaiveDateTime.t()) :: String.t()
-  def last_used_humanize(user_session, now \\ NaiveDateTime.utc_now(:second)) do
-    diff = NaiveDateTime.diff(now, user_session.last_used_at, :hour)
-    diff_days = NaiveDateTime.diff(now, user_session.last_used_at, :day)
-
-    cond do
-      diff < 1 -> "Just recently"
-      diff == 1 -> "1 hour ago"
-      diff < 24 -> "#{diff} hours ago"
-      diff < 2 * 24 -> "Yesterday"
-      true -> "#{diff_days} days ago"
-    end
-  end
-
   @spec get_by_token(String.t()) ::
           {:ok, Auth.UserSession.t()}
           | {:error, :not_found}
@@ -108,6 +94,13 @@ defmodule Plausible.Auth.UserSessions do
     now = NaiveDateTime.utc_now(:second)
 
     last_team_subscription_query = Plausible.Teams.last_subscription_join_query()
+
+    guest_memberships_query =
+      from(gtm in Plausible.Teams.Membership,
+        inner_join: gm in assoc(gtm, :guest_memberships),
+        where: gtm.user_id == parent_as(:user).id and gtm.role == :guest,
+        select: 1
+      )
 
     token_query =
       from(us in Auth.UserSession,
@@ -122,11 +115,14 @@ defmodule Plausible.Auth.UserSessions do
         on: true,
         where: us.token == ^token,
         order_by: t.id,
+        select: {us, exists(guest_memberships_query)},
         preload: [user: {u, team_memberships: {tm, team: {t, subscription: ts, owners: o}}}]
       )
 
     case Repo.one(token_query) do
-      %Auth.UserSession{} = user_session ->
+      {user_session, has_guest_memberships?} ->
+        user_session = put_in(user_session.user.has_guest_memberships?, has_guest_memberships?)
+
         if NaiveDateTime.compare(user_session.timeout_at, now) == :gt do
           {:ok, user_session}
         else

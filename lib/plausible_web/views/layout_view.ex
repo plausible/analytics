@@ -102,6 +102,9 @@ defmodule PlausibleWeb.LayoutView do
         [
           %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
           %{key: "Security", value: "security", icon: :lock_closed},
+          if(assigns.current_user.has_guest_memberships?,
+            do: %{key: "Guest sites", value: "guest-sites", icon: :globe_alt}
+          ),
           if(ee?() and not Teams.setup?(current_team),
             do: %{key: "Subscription", value: "billing/subscription", icon: :subscription}
           ),

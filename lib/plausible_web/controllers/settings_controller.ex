@@ -132,6 +132,34 @@ defmodule PlausibleWeb.SettingsController do
     render_security(conn)
   end
 
+  def guest_sites(conn, _params) do
+    case Teams.Memberships.guest_memberships(conn.assigns.current_user) do
+      [] ->
+        redirect(conn, to: ~p"/settings/preferences")
+
+      guest_memberships ->
+        render(conn, :guest_sites,
+          guest_memberships: guest_memberships,
+          layout: {PlausibleWeb.LayoutView, :settings}
+        )
+    end
+  end
+
+  def leave_guest_site(conn, %{"site_id" => site_id}) do
+    user = conn.assigns.current_user
+
+    conn =
+      case Teams.Memberships.remove(site_id, user, send_email?: false) do
+        {:ok, guest_membership} ->
+          put_flash(conn, :success, "You have left #{guest_membership.site.domain}")
+
+        {:error, :no_guest} ->
+          put_flash(conn, :error, "You're no longer a guest of this site")
+      end
+
+    redirect(conn, to: ~p"/settings/guest-sites")
+  end
+
   def redirect_invoices(conn, _params) do
     redirect(conn, to: ~p"/settings/billing/subscription")
   end

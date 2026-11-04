@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
 - Added light-mode support to tooltips
+- Added the ability to remove yourself as a guest member via Account Settings
 
 ### Removed
 

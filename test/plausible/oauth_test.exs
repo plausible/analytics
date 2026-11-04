@@ -9,7 +9,7 @@ defmodule Plausible.OAuthTest do
   - `Step 4: revoke_grant/1 and after_user_removed_from_team/2` invalidates both tokens
   - `Step 5: refresh_token/2` rotates both tokens
 
-  Also covers the connected apps view: `list_grants/1` and `revoke_user_grant/2`.
+  Outside the lifecycle, it covers the functions used to show grants table to user.
   """
 
   use Plausible.DataCase
@@ -517,6 +517,8 @@ defmodule Plausible.OAuthTest do
         )
         |> Repo.update!()
 
+      refute initial_grant.last_used_at
+
       assert {:ok, response_b} =
                OAuth.refresh_token(response_a.refresh_token, %{})
 
@@ -550,6 +552,8 @@ defmodule Plausible.OAuthTest do
                grant.refresh_token_expires_at,
                initial_grant.refresh_token_expires_at
              )
+
+      assert grant.last_used_at == grant.rotated_at
     end
 
     test "accepts a request specifying client ID, resource and scopes; rejects without invalidating the grant if any of them are invalid",
@@ -678,6 +682,36 @@ defmodule Plausible.OAuthTest do
       assert third.id == oldest.id
     end
 
+    test "lists most recently used grants first, then never used ones", %{
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+
+      never_used = insert(:oauth_grant, user: user, team: team, inserted_at: now)
+
+      used_long_ago =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -5, :day),
+          last_used_at: NaiveDateTime.add(now, -3, :day)
+        )
+
+      used_recently =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -5, :day),
+          last_used_at: NaiveDateTime.add(now, -1, :hour)
+        )
+
+      assert [first, second, third] = OAuth.list_grants(user)
+      assert first.id == used_recently.id
+      assert second.id == used_long_ago.id
+      assert third.id == never_used.id
+    end
+
     test "leaves out revoked and expired grants", %{user: user, team: team} do
       insert(:oauth_grant, user: user, team: team, revoked_at: past())
       insert(:oauth_grant, user: user, team: team, refresh_token_expires_at: past())
@@ -723,6 +757,31 @@ defmodule Plausible.OAuthTest do
 
     test "does not find a malformed id", %{user: user} do
       assert {:error, :not_found} = OAuth.revoke_user_grant(user, "not-an-id")
+    end
+  end
+
+  describe "touch_grant/2" do
+    test "records the first use", %{user: user, team: team} do
+      grant = insert(:oauth_grant, user: user, team: team)
+      now = NaiveDateTime.utc_now(:second)
+
+      assert :ok = OAuth.touch_grant(grant, now)
+
+      assert_matches %Grant{last_used_at: ^now} = Repo.reload!(grant)
+    end
+
+    test "rewrites the last use only once it is older than 5 minutes", %{user: user, team: team} do
+      grant = insert(:oauth_grant, user: user, team: team)
+      first_use = NaiveDateTime.utc_now(:second)
+      :ok = OAuth.touch_grant(grant, first_use)
+      grant = Repo.reload!(grant)
+
+      assert :ok = OAuth.touch_grant(grant, NaiveDateTime.add(first_use, 300, :second))
+      assert_matches %Grant{last_used_at: ^first_use} = Repo.reload!(grant)
+
+      later_use = NaiveDateTime.add(first_use, 301, :second)
+      assert :ok = OAuth.touch_grant(grant, later_use)
+      assert_matches %Grant{last_used_at: ^later_use} = Repo.reload!(grant)
     end
   end
 

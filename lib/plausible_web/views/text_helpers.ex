@@ -45,6 +45,36 @@ defmodule PlausibleWeb.TextHelpers do
     Calendar.strftime(date, "%b %-d, %Y")
   end
 
+  @doc """
+  Describes how long ago something was last used, e.g. a login session or a
+  connected app.
+
+  ### Examples:
+
+      iex> PlausibleWeb.TextHelpers.humanize_last_used(nil)
+      "Never"
+
+      iex> PlausibleWeb.TextHelpers.humanize_last_used(~N[2026-01-01 09:00:00], ~N[2026-01-01 12:30:00])
+      "3 hours ago"
+  """
+  @spec humanize_last_used(NaiveDateTime.t() | nil, NaiveDateTime.t()) :: String.t()
+  def humanize_last_used(last_used_at, now \\ NaiveDateTime.utc_now(:second))
+
+  def humanize_last_used(nil, _now), do: "Never"
+
+  def humanize_last_used(last_used_at, now) do
+    diff = NaiveDateTime.diff(now, last_used_at, :hour)
+    diff_days = NaiveDateTime.diff(now, last_used_at, :day)
+
+    cond do
+      diff < 1 -> "Just recently"
+      diff == 1 -> "1 hour ago"
+      diff < 24 -> "#{diff} hours ago"
+      diff < 2 * 24 -> "Yesterday"
+      true -> "#{diff_days} days ago"
+    end
+  end
+
   def number_format(number) when is_integer(number) do
     Cldr.Number.to_string!(number)
   end

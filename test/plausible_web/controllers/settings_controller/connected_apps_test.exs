@@ -70,7 +70,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       assert html =~ "No connected apps"
     end
 
-    test "lists the user's grants, most recently connected first", %{
+    test "lists the user's grants, most recently used first", %{
       conn: conn,
       user: user,
       team: team
@@ -83,7 +83,8 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
           user: user,
           team: team,
           client_name: "Claude",
-          inserted_at: now
+          inserted_at: yesterday,
+          last_used_at: NaiveDateTime.add(now, -5, :hour)
         )
 
       unnamed_grant =
@@ -91,7 +92,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
           user: user,
           team: team,
           client_name: nil,
-          inserted_at: yesterday
+          inserted_at: now
         )
 
       revoked_grant =
@@ -127,14 +128,16 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
                {[
                   [named_grant.client_name, "Client ID: #{named_grant.client_id}"],
                   "My personal sites",
-                  TextHelpers.format_date(now),
+                  TextHelpers.format_date(yesterday),
+                  "5 hours ago",
                   # delete cell has no text
                   ""
                 ], ~p"/settings/connected-apps/#{named_grant.id}"},
                {[
                   named_grant.client_id,
                   "My personal sites",
-                  TextHelpers.format_date(yesterday),
+                  TextHelpers.format_date(now),
+                  "Never",
                   ""
                 ], ~p"/settings/connected-apps/#{unnamed_grant.id}"}
              ]

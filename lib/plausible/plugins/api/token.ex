@@ -76,26 +76,6 @@ defmodule Plausible.Plugins.API.Token do
     end
   end
 
-  @spec last_used_humanize(t()) :: String.t()
-  def last_used_humanize(token) do
-    diff =
-      if token.last_used_at do
-        now = NaiveDateTime.utc_now()
-        NaiveDateTime.diff(now, token.last_used_at, :minute)
-      end
-
-    cond do
-      is_nil(diff) -> "Not yet"
-      diff < 5 -> "Just recently"
-      diff < 30 -> "Several minutes ago"
-      diff < 70 -> "An hour ago"
-      diff < 24 * 60 -> "Hours ago"
-      diff < 24 * 60 * 2 -> "Yesterday"
-      diff < 24 * 60 * 7 -> "Sometime this week"
-      true -> "Long time ago"
-    end
-  end
-
   defp prefixed(random_bytes) do
     Enum.join([prefix(), random_bytes], "-")
   end

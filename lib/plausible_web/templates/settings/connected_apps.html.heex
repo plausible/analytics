@@ -22,6 +22,7 @@
           <.th>Application</.th>
           <.th hide_on_mobile>Team</.th>
           <.th hide_on_mobile>Connected</.th>
+          <.th hide_on_mobile>Last used</.th>
           <.th invisible>Actions</.th>
         </:thead>
 
@@ -39,6 +40,9 @@
             {Plausible.Teams.name(grant.team)}
           </.td>
           <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
+          <.td hide_on_mobile>
+            {PlausibleWeb.TextHelpers.humanize_last_used(grant.last_used_at)}
+          </.td>
           <.td actions>
             <.delete_button
               method="delete"
