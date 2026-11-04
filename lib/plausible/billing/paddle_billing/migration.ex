@@ -28,8 +28,18 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   @external_resource currency_parity_file
   @external_resource prices_file
-  @currency_parity_file currency_parity_file
-  @prices_file prices_file
+
+  @multi_currency_plans currency_parity_file
+                        |> File.read!()
+                        |> JSON.decode!()
+                        |> Map.fetch!("multi_currency_classic_paddle_plan_ids")
+                        |> MapSet.new()
+
+  @plan_prices prices_file |> File.read!() |> JSON.decode!()
+
+  def currency_parity_file() do
+    Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
+  end
 
   @doc """
   Creates the products and prices for the standard plans that don't exist in
@@ -56,16 +66,6 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         {classic_plan_id, product}
       end
 
-    context = %{
-      multi_currency_plans:
-        @currency_parity_file
-        |> File.read!()
-        |> JSON.decode!()
-        |> Map.fetch!("multi_currency_classic_paddle_plan_ids")
-        |> MapSet.new(),
-      plan_prices: @prices_file |> File.read!() |> JSON.decode!()
-    }
-
     existing_mapping = classic_plan_mapping(existing_products)
 
     Enum.reduce(canonical_plans, existing_mapping, fn canonical_plan, acc ->
@@ -77,8 +77,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
           Map.get(product_by_classic_plan_id, canonical_plan.yearly_product_id)
 
       cond do
-        is_nil(existing_product) -> create_product(canonical_plan, context, acc)
-        overwrite? -> update_product(existing_product, canonical_plan, context, acc)
+        is_nil(existing_product) -> create_product(canonical_plan, acc)
+        overwrite? -> update_product(existing_product, canonical_plan, acc)
         true -> acc
       end
     end)
@@ -273,7 +273,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     "[enterprise] #{plan.billing_interval} (Classic plan #{plan.paddle_plan_id})"
   end
 
-  defp create_product(canonical_plan, context, acc) do
+  defp create_product(canonical_plan, acc) do
     {:ok, product} =
       PaddleBilling.api().create_product(
         product_name(canonical_plan),
@@ -281,10 +281,10 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         description: product_description(canonical_plan)
       )
 
-    sync_prices(product["id"], canonical_plan, context, acc, false)
+    sync_prices(product["id"], canonical_plan, acc, false)
   end
 
-  defp update_product(existing_product, canonical_plan, context, acc) do
+  defp update_product(existing_product, canonical_plan, acc) do
     {:ok, product} =
       PaddleBilling.api().update_product(existing_product["id"],
         name: product_name(canonical_plan),
@@ -292,19 +292,19 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         description: product_description(canonical_plan)
       )
 
-    sync_prices(product["id"], canonical_plan, context, acc, true)
+    sync_prices(product["id"], canonical_plan, acc, true)
   end
 
   # Updates the price the mapping already knows about when `update?` is set,
   # otherwise (or when there is none) creates it.
-  defp sync_prices(product_id, canonical_plan, context, acc, update?) do
+  defp sync_prices(product_id, canonical_plan, acc, update?) do
     # Some plans only come in one interval
     [monthly: canonical_plan.monthly_product_id, yearly: canonical_plan.yearly_product_id]
     |> Enum.reject(fn {_interval, classic_plan_id} -> is_nil(classic_plan_id) end)
     |> Enum.reduce(acc, fn {interval, classic_plan_id}, acc ->
       description = price_description(canonical_plan, interval)
-      price = Money.new!(Map.fetch!(context.plan_prices, classic_plan_id), :USD)
-      overrides? = MapSet.member?(context.multi_currency_plans, classic_plan_id)
+      price = Money.new!(Map.fetch!(@plan_prices, classic_plan_id), :USD)
+      overrides? = MapSet.member?(@multi_currency_plans, classic_plan_id)
       custom_data = %{"paddle_classic_plan_id" => classic_plan_id}
 
       billing_price =
