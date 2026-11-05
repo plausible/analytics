@@ -51,6 +51,27 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, ~s|a[href^="/sites?__team="]|) == "My personal sites"
     end
 
+    test "lists current team first, personal sites second, then other teams by name", %{
+      conn: conn,
+      user: user
+    } do
+      [zeta, beta, alpha] =
+        for name <- ["Zeta", "Beta", "Alpha"] do
+          team = insert(:team, name: name, identifier: Ecto.UUID.generate())
+          add_member(team, user: user, role: :viewer)
+          team
+        end
+
+      {:ok, _lv, html} = live(set_current_team(conn, zeta), "/sites")
+
+      assert html |> find(~s|a[href^="/sites?__team="]|) |> LazyHTML.attribute("href") == [
+               "/sites?__team=#{zeta.identifier}",
+               "/sites?__team=none",
+               "/sites?__team=#{alpha.identifier}",
+               "/sites?__team=#{beta.identifier}"
+             ]
+    end
+
     test "renders settings link when current team is set", %{user: user, conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 
