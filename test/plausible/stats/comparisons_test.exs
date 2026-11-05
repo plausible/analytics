@@ -158,6 +158,23 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.first == ~U[2022-12-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-03 23:59:59Z]
     end
+
+    test "shifts back to the nearest matching day of the week", %{site: site} do
+      query =
+        QueryBuilder.build!(site,
+          metrics: [:visitors],
+          input_date_range: {:date_range, ~D[2026-10-01], ~D[2026-10-12]},
+          include: [compare: :previous_period, compare_match_day_of_week: true],
+          now: ~U[2026-10-26 14:00:00Z]
+        )
+
+      comparison_query = Comparisons.get_comparison_query(query)
+
+      # Unshifted previous period: Sat 2026-09-19 to Wed 2026-09-30
+      # Nearest Thursday to 2026-09-19 is 2026-09-17 (-2 days), not 2026-09-24 (+5 days)
+      assert comparison_query.utc_time_range.first == ~U[2026-09-17 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2026-09-28 23:59:59Z]
+    end
   end
 
   describe "year_over_year, exact dates behavior with leap years" do

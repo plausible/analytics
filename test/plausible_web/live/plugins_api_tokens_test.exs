@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       assert resp =~ "test-token-2"
 
       assert resp =~ "Last used"
-      assert resp =~ "Not yet"
+      assert resp =~ "Never"
 
       assert resp =~ "**********" <> t1.hint
       assert resp =~ "**********" <> t2.hint

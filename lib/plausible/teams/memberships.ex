@@ -164,24 +164,28 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def remove(site, user) do
-    case get_guest_membership(site.id, user.id) do
-      {:ok, guest_membership} ->
-        guest_membership =
-          Repo.preload(guest_membership, [:site, team_membership: [:team, :user]])
+  def remove(site_or_site_id, user, opts \\ [])
 
-        {:ok, _} =
-          Repo.transaction(fn ->
-            Repo.delete!(guest_membership)
-            prune_guests(guest_membership.team_membership.team)
-            Plausible.Segments.after_user_removed_from_site(site, user)
-            Plausible.Annotations.after_user_removed_from_site(site, user)
-          end)
+  def remove(%Plausible.Site{} = site, user, opts), do: remove(site.id, user, opts)
 
-        send_site_member_removed_email(guest_membership)
+  def remove(site_id, user, opts) do
+    send_email? = Keyword.get(opts, :send_email?, true)
 
-      {:error, _} ->
-        :pass
+    with {:ok, guest_membership} <- get_guest_membership(site_id, user.id) do
+      guest_membership =
+        Repo.preload(guest_membership, [:site, team_membership: [:team, :user]])
+
+      {:ok, _} =
+        Repo.transaction(fn ->
+          Repo.delete!(guest_membership)
+          prune_guests(guest_membership.team_membership.team)
+          Plausible.Segments.after_user_removed_from_site(guest_membership.site, user)
+          Plausible.Annotations.after_user_removed_from_site(guest_membership.site, user)
+        end)
+
+      if send_email?, do: send_site_member_removed_email(guest_membership)
+
+      {:ok, guest_membership}
     end
   end
 
@@ -262,14 +266,32 @@ defmodule Plausible.Teams.Memberships do
     Repo.one(query) || Map.fetch!(defaults, option)
   end
 
+  @spec guest_memberships(Plausible.Auth.User.t()) :: [Teams.GuestMembership.t()]
+  def guest_memberships(user) do
+    user.id
+    |> guest_memberships_query()
+    |> join(:inner, [gm], s in assoc(gm, :site), as: :site)
+    |> join(:inner, [site: s], t in assoc(s, :team), as: :team)
+    |> join(:left, [team: t], o in assoc(t, :owners), as: :owners)
+    |> order_by([site: s], asc: s.domain)
+    |> preload([site: s, team: t, owners: o], site: {s, team: {t, owners: o}})
+    |> Repo.all()
+  end
+
+  defp guest_memberships_query(user_id) do
+    from(gm in Teams.GuestMembership,
+      inner_join: tm in assoc(gm, :team_membership),
+      as: :team_membership,
+      where: tm.user_id == ^user_id and tm.role == :guest
+    )
+  end
+
   defp get_guest_membership(site_id, user_id) do
     query =
-      from(
-        gm in Teams.GuestMembership,
-        inner_join: tm in assoc(gm, :team_membership),
-        where: gm.site_id == ^site_id and tm.user_id == ^user_id,
-        preload: [team_membership: tm]
-      )
+      user_id
+      |> guest_memberships_query()
+      |> where([gm], gm.site_id == ^site_id)
+      |> preload([team_membership: tm], team_membership: tm)
 
     case Repo.one(query) do
       nil -> {:error, :no_guest}

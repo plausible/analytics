@@ -22,6 +22,95 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPITest do
     assert conn.assigns.oauth_scopes == ProtectedResources.mcp().scopes_supported
   end
 
+  describe "recording when the grant was last used" do
+    test "does not set last_used_at on a revoked token", %{user: user, team: team} do
+      access_token = Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          access_token: access_token,
+          revoked_at: NaiveDateTime.utc_now(:second)
+        )
+
+      assert authorize(bypassed_conn(), access_token).halted
+
+      assert %Grant{last_used_at: nil} = Plausible.Repo.reload!(grant)
+    end
+
+    test "sets last_used_at on a grant that's never been used before", %{user: user, team: team} do
+      access_token = Token.generate(:access).raw
+      grant = insert(:oauth_grant, user: user, team: team, access_token: access_token)
+      assert is_nil(grant.last_used_at)
+      refute authorize(bypassed_conn(), access_token).halted
+
+      assert %Grant{last_used_at: %NaiveDateTime{}} = Plausible.Repo.reload!(grant)
+    end
+
+    test "does not overwrite last_used_at if it's within the last 5 minutes", %{
+      user: user,
+      team: team
+    } do
+      access_token = Token.generate(:access).raw
+      one_minute_ago = :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :minute)
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          access_token: access_token,
+          last_used_at: one_minute_ago
+        )
+
+      refute authorize(bypassed_conn(), access_token).halted
+
+      assert_matches %Grant{last_used_at: ^one_minute_ago} = Plausible.Repo.reload!(grant)
+    end
+
+    test "overwrites last_used_at if it's older than 5 minutes", %{user: user, team: team} do
+      access_token = Token.generate(:access).raw
+      ten_minutes_ago = :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-10, :minute)
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          access_token: access_token,
+          last_used_at: ten_minutes_ago
+        )
+
+      refute authorize(bypassed_conn(), access_token).halted
+
+      assert %Grant{last_used_at: last_used_at} = Plausible.Repo.reload!(grant)
+      assert NaiveDateTime.after?(last_used_at, ten_minutes_ago)
+    end
+
+    test "sets last_used_at even if the request itself will be rate limited", %{
+      user: user,
+      team: team
+    } do
+      team =
+        team |> Ecto.Changeset.change(hourly_api_request_limit: 0) |> Plausible.Repo.update!()
+
+      ten_minutes_ago = :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-10, :minute)
+      access_token = Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          access_token: access_token,
+          last_used_at: ten_minutes_ago
+        )
+
+      assert authorize(bypassed_conn(), access_token).halted
+
+      assert %Grant{last_used_at: last_used_at} = Plausible.Repo.reload!(grant)
+      assert NaiveDateTime.after?(last_used_at, ten_minutes_ago)
+    end
+  end
+
   test "assigns the role the user currently holds, not the one they had", %{
     user: user,
     team: team

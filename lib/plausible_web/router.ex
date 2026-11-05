@@ -547,6 +547,9 @@ defmodule PlausibleWeb.Router do
     post "/security/email", SettingsController, :update_email
     post "/security/password", SettingsController, :update_password
 
+    get "/guest-sites", SettingsController, :guest_sites
+    delete "/guest-sites/:site_id", SettingsController, :leave_guest_site
+
     live_session :settings, on_mount: PlausibleWeb.Live.SettingsContext do
       scope alias: Live, assigns: %{connect_live_socket: true} do
         live "/billing/subscription", SubscriptionSettings, :subscription, as: :settings

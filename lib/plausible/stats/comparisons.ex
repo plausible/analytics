@@ -243,7 +243,7 @@ defmodule Plausible.Stats.Comparisons do
       date
     else
       [next_occurring(day_of_week, date), previous_occurring(day_of_week, date)]
-      |> Enum.sort_by(&Date.diff(date, &1))
+      |> Enum.sort_by(&abs(Date.diff(date, &1)))
       |> Enum.reject(&(&1 == reject))
       |> List.first()
     end
