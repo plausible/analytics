@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
               **********{token.hint}
             </.td>
             <.td hide_on_mobile>
-              {PlausibleWeb.TextHelpers.humanize_last_used(token.last_used_at)}
+              {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(token.last_used_at)}
             </.td>
             <.td actions>
               <.delete_button

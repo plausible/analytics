@@ -10,6 +10,7 @@ defmodule Plausible.Auth.UserSessions do
   alias Plausible.Repo
 
   @socket_id_prefix "user_sessions:"
+  @last_used_precision_minutes 60
 
   @spec list_for_user(Auth.User.t(), NaiveDateTime.t()) :: [Auth.UserSession.t()]
   def list_for_user(user, now \\ NaiveDateTime.utc_now(:second)) do
@@ -149,7 +150,7 @@ defmodule Plausible.Auth.UserSessions do
 
   @spec touch(Auth.UserSession.t(), NaiveDateTime.t()) :: Auth.UserSession.t()
   def touch(user_session, now \\ NaiveDateTime.utc_now(:second)) do
-    if NaiveDateTime.diff(now, user_session.last_used_at, :hour) >= 1 do
+    if NaiveDateTime.diff(now, user_session.last_used_at, :minute) >= @last_used_precision_minutes do
       Plausible.Users.bump_last_seen(user_session.user_id, now)
 
       user_session
