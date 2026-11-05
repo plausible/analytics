@@ -220,7 +220,7 @@ defmodule PlausibleWeb.LayoutView do
           href={~p"/sites?#{[__team: team.identifier]}"}
         >
           <p
-            class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"
+            class="truncate text-gray-900 dark:text-gray-100 pr-4"
             role="none"
           >
             {Teams.name(team)}
