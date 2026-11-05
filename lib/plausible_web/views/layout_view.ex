@@ -164,6 +164,7 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  attr :current_user, :any, required: true
   attr :teams, :list, required: true
   attr :my_team, :any, default: nil
   attr :current_team, :any, default: nil
@@ -181,6 +182,7 @@ defmodule PlausibleWeb.LayoutView do
     assigns =
       assigns
       |> assign(:current_team, current_team)
+      |> assign(:personal_team, personal_team)
       |> assign(:other_teams, other_teams)
 
     ~H"""
@@ -208,6 +210,15 @@ defmodule PlausibleWeb.LayoutView do
         </p>
       </.dropdown_item>
     </div>
+    <.dropdown_item
+      :if={Plausible.Users.type(@current_user) == :standard}
+      href={~p"/team/setup?#{[__team: @personal_team.identifier]}"}
+    >
+      <div class="flex items-center justify-between gap-2" role="none">
+        <span data-test="create-a-team-cta">Create new team</span>
+        <Heroicons.plus class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
+      </div>
+    </.dropdown_item>
     """
   end
 

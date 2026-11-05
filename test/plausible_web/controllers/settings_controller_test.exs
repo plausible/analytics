@@ -2246,22 +2246,48 @@ defmodule PlausibleWeb.SettingsControllerTest do
   describe "account dropdown menu (_header.html)" do
     setup [:create_user, :log_in]
 
-    test "renders the 'Create a team' option", %{conn: conn, user: user} do
+    test "renders the 'Create new team' option", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a team"
+      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create new team"
     end
 
-    test "does not render the 'Create a team' option if a team is already set up", %{
-      conn: conn,
-      user: user
-    } do
+    test "renders the 'Create new team' option for the personal team when a team is already set up",
+         %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       Plausible.Teams.complete_setup(team)
-      conn = get(conn, ~p"/settings/preferences")
+      conn = get(set_current_team(conn, team), ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+
+      assert html |> find(~s|a[href^="/team/setup"]|) |> LazyHTML.attribute("href") == [
+               "/team/setup?__team=none"
+             ]
+    end
+
+    test "renders the 'Create new team' option for the existing personal team when another team is selected",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      other_team = insert(:team, name: "Zeta", identifier: Ecto.UUID.generate())
+      add_member(other_team, user: user, role: :viewer)
+      conn = get(set_current_team(conn, other_team), ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      assert html |> find(~s|a[href^="/team/setup"]|) |> LazyHTML.attribute("href") == [
+               "/team/setup?__team=#{site.team.identifier}"
+             ]
+    end
+  end
+
+  on_ee do
+    describe "account dropdown menu (_header.html) - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "does not render the 'Create new team' option", %{conn: conn} do
+        conn = get(conn, ~p"/settings/preferences")
+        html = html_response(conn, 200)
+        refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+      end
     end
   end
 
