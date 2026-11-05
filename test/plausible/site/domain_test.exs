@@ -111,10 +111,26 @@ defmodule Plausible.Site.DomainTest do
 
   test "new domain gets validated" do
     site = build(:site)
-    changeset = Site.update_changeset(site, %{domain: " "})
+    changeset = Site.domain_changeset(site, %{domain: " "})
     assert {"Please enter a domain or subdomain", _} = changeset.errors[:domain]
 
-    changeset = Site.update_changeset(site, %{domain: "?#[]"})
+    changeset = Site.domain_changeset(site, %{domain: "?#[]"})
     assert {"must not contain URI reserved characters" <> _, _} = changeset.errors[:domain]
+  end
+
+  test "only the domain is changed" do
+    site = build(:site, ingest_rate_limit_threshold: 100)
+
+    changeset =
+      Site.domain_changeset(site, %{
+        domain: "new.example.com",
+        timezone: "Europe/London",
+        consolidated: true,
+        legacy_time_on_page_cutoff: ~D[2020-01-01],
+        ingest_rate_limit_threshold: 5
+      })
+
+    assert Map.keys(changeset.changes) |> Enum.sort() ==
+             [:domain, :domain_changed_at, :domain_changed_from]
   end
 end

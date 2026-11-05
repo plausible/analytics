@@ -76,7 +76,7 @@ defmodule PlausibleWeb.SiteController do
 
   defp render_new_site_form(conn, flow, opts \\ []) do
     defaults = [
-      changeset: Plausible.Site.changeset(%Plausible.Site{}),
+      changeset: Plausible.Site.create_changeset(%Plausible.Site{}),
       site_limit_exceeded?: false,
       form_submit_url: "/sites?flow=#{flow}",
       bg_class: "bg-white dark:bg-gray-950",
