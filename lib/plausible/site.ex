@@ -141,6 +141,13 @@ defmodule Plausible.Site do
     |> handle_domain_change(at)
   end
 
+  def tz_changeset(site, attrs \\ %{}) do
+    site
+    |> cast(attrs, [:timezone])
+    |> validate_required([:timezone])
+    |> validate_timezone()
+  end
+
   def crm_changeset(site, attrs) do
     site
     |> cast(attrs, [

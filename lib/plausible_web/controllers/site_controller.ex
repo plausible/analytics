@@ -107,7 +107,7 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> render("settings_general.html",
       site: site,
-      changeset: Plausible.Site.changeset(site, %{}),
+      changeset: Plausible.Site.tz_changeset(site),
       connect_live_socket: true,
       dogfood_page_path: "/:dashboard/settings/general",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -279,7 +279,7 @@ defmodule PlausibleWeb.SiteController do
 
   def update_settings(conn, %{"site" => site_params}) do
     site = conn.assigns[:site]
-    changeset = Plausible.Site.update_changeset(site, site_params)
+    changeset = Plausible.Site.tz_changeset(site, site_params)
 
     case Repo.update(changeset) do
       {:ok, site} ->
