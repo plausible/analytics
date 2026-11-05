@@ -44,6 +44,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
                "Set up team"
     end
 
+    test "does not render the team switcher", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      refute html =~ "Create new team"
+    end
+
     test "suggests a team name based on the site domain", %{conn: conn, user: user} do
       site = new_site(owner: user, domain: "shop.my-company.co.uk")
 

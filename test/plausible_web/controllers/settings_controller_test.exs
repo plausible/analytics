@@ -1561,7 +1561,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
          %{conn: conn} do
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute html =~ "Team"
+      refute html =~ "Team settings"
 
       expected_account_menu =
         if(ee?(),
@@ -1700,11 +1700,21 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "does not render team settings, when team not set up", %{conn: conn, user: user} do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      {:ok, _team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute html =~ ~r/Team.*#{Regex.escape(team.name)}/s
-      refute html =~ team.name
+      refute html =~ "Team settings"
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :danger_zone],
+          else: [:preferences, :security, :api_keys, :danger_zone]
+        )
+
+      html
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
     end
 
     test "GET /settings/team/general", %{conn: conn, user: user} do

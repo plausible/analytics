@@ -40,6 +40,17 @@ defmodule PlausibleWeb.Live.SitesTest do
              )
     end
 
+    test "lists personal sites in team switcher when the user has no other teams", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text_of_element(html, ~s|a[href^="/sites?__team="]|) == "My personal sites"
+    end
+
     test "renders settings link when current team is set", %{user: user, conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 

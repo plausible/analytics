@@ -63,6 +63,7 @@
                     </p>
                   </.dropdown_item>
                   <PlausibleWeb.LayoutView.team_switcher
+                    :if={@team_switcher?}
                     teams={@teams}
                     my_team={@my_team}
                     current_team={@current_team}

@@ -169,68 +169,63 @@ defmodule PlausibleWeb.LayoutView do
   attr :current_team, :any, default: nil
 
   def team_switcher(assigns) do
-    teams = assigns[:teams]
+    teams = assigns.teams
+    current_team = assigns[:current_team]
+    my_team = assigns[:my_team]
+    current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
+    current_is_my? = current_team && my_team && current_team.id == my_team.id
 
-    if teams && teams != [] do
-      current_team = assigns[:current_team]
-      my_team = assigns[:my_team]
-      current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
-      current_is_my? = current_team && my_team && current_team.id == my_team.id
+    teams =
+      if current_team && !current_included? && !current_is_my? do
+        [current_team | teams]
+      else
+        teams
+      end
 
-      teams =
-        if current_team && !current_included? && !current_is_my? do
-          [current_team | teams]
-        else
-          teams
-        end
+    teams =
+      if my_team do
+        teams ++ [my_team]
+      else
+        teams ++ [%Teams.Team{identifier: "none", name: Teams.default_name()}]
+      end
 
-      teams =
-        if my_team do
-          teams ++ [my_team]
-        else
-          teams ++ [%Teams.Team{identifier: "none", name: Teams.default_name()}]
-        end
+    selected_id = current_team && current_team.id
+    {pinned_team, other_teams} = Enum.split_with(teams, &(&1.id == selected_id))
 
-      selected_id = current_team && current_team.id
-      {pinned_team, other_teams} = Enum.split_with(teams, &(&1.id == selected_id))
+    assigns =
+      assigns
+      |> assign(:pinned_team, List.first(pinned_team))
+      |> assign(:other_teams, other_teams)
 
-      assigns =
-        assigns
-        |> assign(:pinned_team, List.first(pinned_team))
-        |> assign(:other_teams, other_teams)
-
-      ~H"""
-      <.dropdown_item>
-        <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
-      </.dropdown_item>
-      <.dropdown_item
-        :if={@pinned_team}
-        href={~p"/sites?#{[__team: @pinned_team.identifier]}"}
-      >
-        <div class="flex items-center justify-between gap-2" role="none">
-          <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
-            {Teams.name(@pinned_team)}
-          </p>
-          <Heroicons.check class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
-        </div>
-      </.dropdown_item>
-      <div class="max-h-[200px] overflow-y-auto">
-        <.dropdown_item
-          :for={team <- @other_teams}
-          href={~p"/sites?#{[__team: team.identifier]}"}
-        >
-          <p
-            class="truncate text-gray-900 dark:text-gray-100 pr-4"
-            role="none"
-          >
-            {Teams.name(team)}
-          </p>
-        </.dropdown_item>
+    ~H"""
+    <.dropdown_item>
+      <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
+    </.dropdown_item>
+    <.dropdown_item
+      :if={@pinned_team}
+      href={~p"/sites?#{[__team: @pinned_team.identifier]}"}
+    >
+      <div class="flex items-center justify-between gap-2" role="none">
+        <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
+          {Teams.name(@pinned_team)}
+        </p>
+        <Heroicons.check class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
       </div>
-      """
-    else
-      ~H""
-    end
+    </.dropdown_item>
+    <div class="max-h-[200px] overflow-y-auto">
+      <.dropdown_item
+        :for={team <- @other_teams}
+        href={~p"/sites?#{[__team: team.identifier]}"}
+      >
+        <p
+          class="truncate text-gray-900 dark:text-gray-100 pr-4"
+          role="none"
+        >
+          {Teams.name(team)}
+        </p>
+      </.dropdown_item>
+    </div>
+    """
   end
 
   def trial_notification(team) do
