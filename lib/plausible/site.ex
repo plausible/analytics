@@ -82,7 +82,7 @@ defmodule Plausible.Site do
   end
 
   def new(params) do
-    changeset(%__MODULE__{}, params)
+    create_changeset(%__MODULE__{}, params)
     |> put_change(:onboarding_status, initial_onboarding_status(params))
   end
 
@@ -108,37 +108,35 @@ defmodule Plausible.Site do
     @changeset_cast_fields [:domain, :timezone, :legacy_time_on_page_cutoff]
   end
 
-  def changeset(site, attrs \\ %{}) do
+  def create_changeset(site, attrs \\ %{}) do
     site
     |> cast(attrs, @changeset_cast_fields)
-    |> clean_domain()
-    |> validate_required([:domain], message: "Please enter a domain or subdomain")
+    |> validate_domain()
     |> validate_required([:timezone])
     |> validate_timezone()
-    |> validate_domain_format()
-    |> validate_domain_reserved_characters()
-    |> unique_constraint(:domain,
-      message: @domain_unique_error
-    )
-    |> unique_constraint(:domain,
-      name: "domain_change_disallowed",
-      message: @domain_unique_error
-    )
     |> put_change(
       :ingest_rate_limit_threshold,
       Application.get_env(:plausible, __MODULE__)[:default_ingest_threshold]
     )
   end
 
-  def update_changeset(site, attrs \\ %{}, opts \\ []) do
+  def domain_changeset(site, attrs \\ %{}, opts \\ []) do
     at =
       opts
       |> Keyword.get(:at, NaiveDateTime.utc_now())
       |> NaiveDateTime.truncate(:second)
 
     site
-    |> changeset(attrs)
+    |> cast(attrs, [:domain])
+    |> validate_domain()
     |> handle_domain_change(at)
+  end
+
+  def tz_changeset(site, attrs \\ %{}) do
+    site
+    |> cast(attrs, [:timezone])
+    |> validate_required([:timezone])
+    |> validate_timezone()
   end
 
   def crm_changeset(site, attrs) do
@@ -216,6 +214,21 @@ defmodule Plausible.Site do
     else
       change(site_or_changeset)
     end
+  end
+
+  defp validate_domain(changeset) do
+    changeset
+    |> clean_domain()
+    |> validate_required([:domain], message: "Please enter a domain or subdomain")
+    |> validate_domain_format()
+    |> validate_domain_reserved_characters()
+    |> unique_constraint(:domain,
+      message: @domain_unique_error
+    )
+    |> unique_constraint(:domain,
+      name: "domain_change_disallowed",
+      message: @domain_unique_error
+    )
   end
 
   defp clean_domain(changeset) do
