@@ -22,7 +22,7 @@ import {
   isComparisonForbidden,
   isComparisonEnabled
 } from '../../dashboard-time-periods'
-import { useMatch } from 'react-router-dom'
+import { useMatch } from 'react-router'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
 import {
