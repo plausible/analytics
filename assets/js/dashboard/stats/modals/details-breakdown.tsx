@@ -58,6 +58,7 @@ type PaginatedData = { pages: QueryApiResponse[] }
 
 type DetailsBreakdownProps = SharedBreakdownReportProps & {
   title: ReactNode
+  orderByStorageId?: string
   defaultOrderBy?: MetricOrderBy
   searchEnabled?: boolean
   searchDimension?: NonTimeDimension
@@ -87,6 +88,7 @@ const getMetricCellWidthClass = (
 export function DetailsBreakdown({
   title,
   dimensionLabel,
+  orderByStorageId = dimensionLabel,
   dimensions,
   metrics,
   alwaysOnFilters,
@@ -105,7 +107,7 @@ export function DetailsBreakdown({
 
   const storedOrderBy = getStoredOrderBy({
     domain: site.domain,
-    dimensionLabel,
+    dimensionLabel: orderByStorageId,
     metrics,
     fallbackValue: defaultOrderBy
   })
@@ -118,7 +120,7 @@ export function DetailsBreakdown({
   useRememberOrderBy({
     effectiveOrderBy: orderBy,
     metrics,
-    dimensionLabel
+    dimensionLabel: orderByStorageId
   })
 
   const statsReportQueryKey: StatsReportQueryKey = [
