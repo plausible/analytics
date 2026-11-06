@@ -104,70 +104,66 @@ defmodule PlausibleWeb.Live.TeamSetup do
           more_sites_count={@more_sites_count}
         />
 
-        <div class="relative">
-          <PlausibleWeb.Components.Billing.feature_gate
-            current_user={@current_user}
-            current_team={@current_team}
-            locked?={@locked?}
-          >
-            <.input
-              type="text"
-              placeholder={"#{@current_user.name}'s team"}
-              autofocus={not @locked?}
-              field={f[:name]}
-              label="Name"
-              width="w-full"
-              required
-            />
+        <%= if @locked? do %>
+          <.locked_notice current_user={@current_user} current_team={@current_team} />
+        <% else %>
+          <.input
+            type="text"
+            placeholder={"#{@current_user.name}'s team"}
+            autofocus
+            field={f[:name]}
+            label="Name"
+            width="w-full"
+            required
+          />
 
-            <div id="member-rows-container" phx-hook="MemberRows">
-              <.label class="mb-2 mt-4">
-                Team members
-              </.label>
+          <div id="member-rows-container" phx-hook="MemberRows">
+            <.label class="mb-2 mt-4">
+              Team members
+            </.label>
 
-              <div id="member-rows" data-row-list>
-                <.member_row
-                  :for={n <- 1..@max_rows//1}
-                  row={%{id: n, email: "", role: :viewer}}
-                  hidden?={n > 1}
-                />
-              </div>
-
-              <button
-                type="button"
-                data-add-row
-                class="mt-3 inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                <Heroicons.plus class="size-4" /> Add another
-              </button>
-
-              <p
-                :if={more_members_later?(@team_member_limit, @max_rows)}
-                class="mt-2 text-sm text-gray-500 dark:text-gray-400"
-              >
-                You can add more members in Team Settings later
-              </p>
+            <div id="member-rows" data-row-list>
+              <.member_row
+                :for={n <- 1..@max_rows//1}
+                row={%{id: n, email: "", role: :viewer}}
+                hidden?={n > 1}
+              />
             </div>
 
-            <div class="mt-8 flex justify-end items-center gap-x-2">
-              <%= if @onboarding? do %>
-                <.button_link
-                  id="create-team-skip"
-                  theme="ghost"
-                  href={onboarding_next_step_path(@domain)}
-                >
-                  Skip
-                </.button_link>
-              <% else %>
-                <.button_link id="create-team-cancel" theme="ghost" href={~p"/sites"}>
-                  Cancel
-                </.button_link>
-              <% end %>
-              <.button id="create-team-submit" type="submit">
-                Create team
-              </.button>
-            </div>
-          </PlausibleWeb.Components.Billing.feature_gate>
+            <button
+              type="button"
+              data-add-row
+              class="mt-3 inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              <Heroicons.plus class="size-4" /> Add another
+            </button>
+
+            <p
+              :if={more_members_later?(@team_member_limit, @max_rows)}
+              class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+            >
+              You can add more members in Team Settings later
+            </p>
+          </div>
+        <% end %>
+
+        <div class="mt-8 flex justify-end items-center gap-x-2">
+          <%= if @onboarding? do %>
+            <.button_link
+              id="create-team-skip"
+              theme="ghost"
+              href={onboarding_next_step_path(@domain)}
+            >
+              Skip
+            </.button_link>
+          <% else %>
+            <.button_link id="create-team-cancel" theme="ghost" href={~p"/sites"}>
+              Cancel
+            </.button_link>
+          <% end %>
+          <.button :if={not @locked?} id="create-team-submit" type="submit">
+            Create team
+          </.button>
         </div>
       </.form>
     </div>
@@ -219,6 +215,24 @@ defmodule PlausibleWeb.Live.TeamSetup do
         help_text="Your personal sites stay where they are. You can move individual sites later in their site settings."
       />
     </fieldset>
+    """
+  end
+
+  attr(:current_user, :any, required: true)
+  attr(:current_team, :any, required: true)
+
+  defp locked_notice(assigns) do
+    ~H"""
+    <div id="team-setup-locked-notice" class="flex flex-col items-center gap-y-2 text-center">
+      <Heroicons.lock_closed solid class="size-6 text-gray-400 dark:text-gray-500" />
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Your plan doesn't include teams. To move your sites into a team,
+        <PlausibleWeb.Components.Billing.upgrade_call_to_action
+          current_user={@current_user}
+          current_team={@current_team}
+        />
+      </p>
+    </div>
     """
   end
 

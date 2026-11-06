@@ -166,6 +166,22 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert_redirect(lv, "/sites?__team=" <> team.identifier)
     end
 
+    @tag :ee_only
+    test "shows an upgrade notice with a working skip link on a solo plan", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_starter_plan(user)
+
+      {:ok, _lv, html} = live(conn, onboarding_url())
+
+      assert text_of_element(html, "#team-setup-locked-notice") =~
+               "Your plan doesn't include teams."
+
+      assert text_of_attr(html, "#create-team-skip", "href") == "/sites"
+      refute element_exists?(html, "#create-team-submit")
+    end
+
     test "skips ahead to /sites if the team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.create(user, "Onboarded Team", [])
       conn = set_current_team(conn, team)
@@ -413,17 +429,18 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     @tag :ee_only
-    test "blurs UI with an upgrade CTA if the subscription team member limit is 0", %{
-      conn: conn,
-      user: user
-    } do
+    test "shows an upgrade notice instead of the form if the subscription team member limit is 0",
+         %{conn: conn, user: user} do
       subscribe_to_starter_plan(user)
 
       {:ok, _lv, html} = live(conn, @url)
 
-      assert element_exists?(html, "#feature-gate-inner-block-container")
-      assert element_exists?(html, "#feature-gate-overlay")
-      assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
+      assert text_of_element(html, "#team-setup-locked-notice") =~
+               "Your plan doesn't include teams. To move your sites into a team, upgrade your subscription."
+
+      assert element_exists?(html, "#create-team-cancel")
+      refute element_exists?(html, "#create-team-submit")
+      refute element_exists?(html, "#feature-gate-overlay")
     end
 
     @tag :ee_only
@@ -631,7 +648,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       # there's no point to do so. However, their access to the team setup page is
       # not restricted on the plug level, so this test makes sure it behaves
       # correctly and doesn't crash even in that scenario.
-      {:ok, _lv, html} = live(conn, @url)
+      {:ok, lv, _html} = live(conn, @url)
+      html = select_move_from_current_team(lv, false)
 
       assert elem_count(html, row_el()) == 0
     end
