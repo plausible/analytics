@@ -277,8 +277,20 @@ defmodule Plausible.Auth do
     def super_admin?(user_id) when is_integer(user_id) do
       user_id in Application.get_env(:plausible, :super_admin_user_ids)
     end
+
+    @doc """
+    Whether the user may call the customer support automation API
+    (`/api/cs/v1`). Grants no access to the CS admin pages.
+    """
+    def cs_automation?(nil), do: false
+    def cs_automation?(%Plausible.Auth.User{id: id}), do: cs_automation?(id)
+
+    def cs_automation?(user_id) when is_integer(user_id) do
+      user_id in Application.get_env(:plausible, :cs_automation_user_ids, [])
+    end
   else
     def super_admin?(_), do: always(false)
+    def cs_automation?(_), do: always(false)
   end
 
   @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]
