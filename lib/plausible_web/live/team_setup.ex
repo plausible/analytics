@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           <.input
             type="text"
             placeholder={"#{@current_user.name}'s team"}
-            autofocus
+            autofocus={not @show_move_from_current_team?}
             field={f[:name]}
             label="Name"
             width="w-full"
@@ -187,6 +187,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         checked={@move?}
         wrapper_class={option_card_class(@move?)}
         phx-click="select-move-from-current-team"
+        autofocus
         label="Move into this team"
         help_text="Sites keep their stats, guests keep their access, and your subscription moves along."
       >
@@ -238,7 +239,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   defp option_card_class(selected?) do
     [
-      "p-4 rounded-lg border",
+      "p-4 rounded-lg border has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-gray-900 dark:has-focus-visible:outline-white",
       if(selected?,
         do: "border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20",
         else: "border-gray-300 dark:border-gray-700"
