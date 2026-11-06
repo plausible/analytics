@@ -10,6 +10,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias Plausible.Teams
   alias PlausibleWeb.{Flows, Layouts}
 
+  @owned_sites_display_limit 10
+
   def mount(params, _session, socket) do
     user = socket.assigns.current_user
     onboarding? = params["flow"] == Flows.register()
@@ -23,8 +25,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
       move? = match?(%{current_team: %{id: id}, my_team: %{id: id}}, socket.assigns)
       show_move? = move? and not onboarding?
 
-      owned_sites =
-        if show_move?, do: Teams.owned_sites(socket.assigns.current_team), else: []
+      team_to_move = if show_move?, do: socket.assigns.current_team
+      owned_sites = Teams.owned_sites(team_to_move, @owned_sites_display_limit)
+      more_sites_count = Teams.owned_sites_count(team_to_move) - length(owned_sites)
 
       socket =
         socket
@@ -33,7 +36,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
           domain: domain,
           team_name_form: to_form(name_changeset),
           show_move_from_current_team?: show_move?,
-          owned_sites: owned_sites
+          owned_sites: owned_sites,
+          more_sites_count: more_sites_count
         )
         |> assign_move_from_current_team(move?)
 
@@ -92,6 +96,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
           :if={@show_move_from_current_team?}
           move?={@move_from_current_team?}
           owned_sites={@owned_sites}
+          more_sites_count={@more_sites_count}
         />
 
         <div class="relative">
@@ -160,6 +165,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   attr(:move?, :boolean, required: true)
   attr(:owned_sites, :list, required: true)
+  attr(:more_sites_count, :integer, required: true)
 
   defp move_from_current_team_picker(assigns) do
     ~H"""
@@ -183,6 +189,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
               <PlausibleWeb.Live.Sites.favicon domain={site.domain} />
               {site.domain}
             </.pill>
+          </span>
+          <span :if={@more_sites_count > 0} class="mt-2 block">
+            and {@more_sites_count} more {if @more_sites_count == 1, do: "site", else: "sites"}
           </span>
         </:help_content>
       </.input>

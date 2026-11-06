@@ -189,6 +189,18 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert html =~ "second.example.com"
     end
 
+    test "lists up to 10 personal sites and counts the rest", %{conn: conn, user: user} do
+      for n <- 1..12 do
+        new_site(owner: user, domain: "site#{String.pad_leading("#{n}", 2, "0")}.example.com")
+      end
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert html =~ "site10.example.com"
+      refute html =~ "site11.example.com"
+      assert html =~ "and 2 more sites"
+    end
+
     test "moving the personal sites turns them into the team", %{conn: conn, user: user} do
       site = new_site(owner: user)
       {:ok, lv, _html} = live(conn, @url)
