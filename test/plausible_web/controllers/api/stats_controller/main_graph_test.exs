@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn: conn,
       site: site
     } do
-      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      Plausible.Site.tz_changeset(site, %{timezone: "Europe/Tallinn"})
       |> Plausible.Repo.update()
 
       populate_stats(site, [
@@ -1331,7 +1331,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     } do
       # On Oct 26, 2025, in Tallinn, Estonia, the clocks shifted back
       # from 04:00 -> 03:00, so there were 25 hours in that day.
-      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      Plausible.Site.tz_changeset(site, %{timezone: "Europe/Tallinn"})
       |> Plausible.Repo.update!()
 
       populate_stats(site, [
@@ -1458,7 +1458,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     } do
       site =
         site
-        |> Plausible.Site.changeset(%{timezone: "Europe/Copenhagen"})
+        |> Plausible.Site.tz_changeset(%{timezone: "Europe/Copenhagen"})
         |> Plausible.Repo.update!()
 
       populate_stats(site, [

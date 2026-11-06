@@ -95,7 +95,7 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoffTest do
 
     # Work around model defaults
     site
-    |> Plausible.Site.changeset(%{legacy_time_on_page_cutoff: cutoff})
+    |> Ecto.Changeset.change(legacy_time_on_page_cutoff: cutoff)
     |> Plausible.Repo.update()
 
     site
