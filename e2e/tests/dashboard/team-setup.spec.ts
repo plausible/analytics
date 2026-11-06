@@ -36,7 +36,7 @@ test('submitting team name via Enter key does not crash', async ({
   await expect(nameInput2).toHaveValue('My New Team')
 })
 
-test('add another button shows the next row, and disappears once the row limit is reached', async ({
+test('add another button shows the next row, and is disabled once the row limit is reached', async ({
   page,
   request
 }) => {
@@ -65,7 +65,7 @@ test('add another button shows the next row, and disappears once the row limit i
   }
 
   await expect(visibleRows).toHaveCount(maxRows)
-  await expect(addAnother).toBeHidden()
+  await expect(addAnother).toBeDisabled()
 })
 
 test('removing and re-adding a row', async ({ page, request }) => {
