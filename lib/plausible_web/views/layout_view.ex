@@ -188,7 +188,7 @@ defmodule PlausibleWeb.LayoutView do
     <.dropdown_item>
       <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
     </.dropdown_item>
-    <.dropdown_item href={~p"/sites?#{[__team: @current_team.identifier]}"}>
+    <.dropdown_item href={~p"/sites?#{[__team: @current_team.identifier]}"} aria-current="true">
       <div class="flex items-center justify-between gap-2" role="none">
         <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
           {Teams.name(@current_team)}
