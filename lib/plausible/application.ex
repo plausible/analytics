@@ -214,6 +214,7 @@ defmodule Plausible.Application do
         ReferrerBlocklist,
         {Plausible.RateLimit, clean_period: :timer.minutes(10)},
         {Finch, name: Plausible.Finch, pools: finch_pool_config()},
+        Plausible.SSRF.Pools,
         {Phoenix.PubSub, name: Plausible.PubSub},
         endpoint,
         {Oban, Application.get_env(:plausible, Oban)},
