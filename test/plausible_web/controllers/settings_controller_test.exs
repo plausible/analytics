@@ -2253,28 +2253,18 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create new team"
     end
 
-    test "renders the 'Create new team' option for the personal team when a team is already set up",
-         %{conn: conn, user: user} do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      Plausible.Teams.complete_setup(team)
-      conn = get(set_current_team(conn, team), ~p"/settings/preferences")
-      html = html_response(conn, 200)
-
-      assert html |> find(~s|a[href^="/team/setup"]|) |> LazyHTML.attribute("href") == [
-               "/team/setup?__team=none"
-             ]
-    end
-
-    test "renders the 'Create new team' option for the existing personal team when another team is selected",
-         %{conn: conn, user: user} do
-      site = new_site(owner: user)
+    test "links 'Create new team' to the team setup without switching teams", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
       other_team = insert(:team, name: "Zeta", identifier: Ecto.UUID.generate())
       add_member(other_team, user: user, role: :viewer)
       conn = get(set_current_team(conn, other_team), ~p"/settings/preferences")
       html = html_response(conn, 200)
 
       assert html |> find(~s|a[href^="/team/setup"]|) |> LazyHTML.attribute("href") == [
-               "/team/setup?__team=#{site.team.identifier}"
+               "/team/setup"
              ]
     end
   end

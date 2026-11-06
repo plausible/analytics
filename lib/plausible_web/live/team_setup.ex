@@ -11,21 +11,19 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias PlausibleWeb.{Flows, Layouts}
 
   def mount(params, _session, socket) do
-    team = socket.assigns.current_team
     onboarding? = params["flow"] == Flows.register()
     domain = accessible_domain(socket.assigns.current_user, params["domain"])
 
     socket =
       cond do
-        Teams.setup?(team) and onboarding? ->
+        Teams.setup?(socket.assigns.current_team) and onboarding? ->
           redirect(socket, to: onboarding_next_step_path(domain))
 
-        Teams.setup?(team) ->
-          socket
-          |> put_flash(:success, "Your team has already been created")
-          |> redirect(to: ~p"/settings/team/general")
-
         true ->
+          team =
+            if match?(%{current_team: %{id: id}, my_team: %{id: id}}, socket.assigns),
+              do: socket.assigns.current_team
+
           suggested_name =
             Teams.Team.suggested_name_from_domain(domain, socket.assigns.current_user.name)
 

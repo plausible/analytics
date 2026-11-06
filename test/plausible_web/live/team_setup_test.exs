@@ -13,11 +13,27 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   describe "/team/setup" do
     setup [:create_user, :log_in]
 
-    test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
-      {:ok, team} = Teams.get_or_create(user)
-      Teams.complete_setup(team)
-      conn = set_current_team(conn, team)
-      assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
+    test "creates another team when the current team is set up", %{conn: conn, user: user} do
+      {:ok, current_team} = Teams.create(user, "Current Team", [])
+
+      {:ok, lv, _html} = live(set_current_team(conn, current_team), @url)
+      finish_setup(lv, name: "Another Team")
+
+      assert [%{name: "Another Team"} = new_team, %{name: "Current Team"}] =
+               Teams.Users.teams(user)
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> new_team.identifier)
+    end
+
+    test "does not set up someone else's personal sites", %{conn: conn, user: user} do
+      other_site = new_site()
+      add_guest(other_site, user: user, role: :viewer)
+
+      {:ok, lv, _html} = live(set_current_team(conn, other_site.team), @url)
+      finish_setup(lv, name: "Own Team")
+
+      assert [%{name: "Own Team", setup_complete: true}] = Teams.Users.teams(user)
+      refute Teams.setup?(Teams.get(other_site.team.id))
     end
 
     test "renders a cancel link back to /sites", %{conn: conn} do
