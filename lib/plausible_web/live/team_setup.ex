@@ -42,9 +42,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
         |> assign_move_from_current_team(move?)
 
       max_rows =
-        if(show_move?, do: [true, false], else: [move?])
-        |> Enum.map(&max_rows(team_member_limit(socket, &1)))
-        |> Enum.min()
+        if show_move? do
+          min(
+            max_rows(team_member_limit(socket, true)),
+            max_rows(team_member_limit(socket, false))
+          )
+        else
+          max_rows(socket.assigns.team_member_limit)
+        end
 
       {:ok, assign(socket, max_rows: max_rows)}
     end
