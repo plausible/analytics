@@ -577,8 +577,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
 
       assert elem_count(html, row_el()) == 10
-
-      assert html =~ "Your account is limited to 10 team members."
+      refute html =~ "You can add more members in Team Settings later"
     end
 
     @tag :ee_only
@@ -592,14 +591,36 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
 
     @tag :ee_only
-    test "is capped at 20 for an unlimited plan", %{conn: conn, user: user} do
+    test "is capped at the trial limit for an unlimited plan", %{conn: conn, user: user} do
       subscribe_to_enterprise_plan(user, team_member_limit: :unlimited)
 
-      {:ok, _lv, html} = live(conn, @url)
+      {:ok, lv, html} = live(conn, @url)
 
-      assert elem_count(html, row_el()) == 20
+      assert elem_count(html, row_el()) == 10
+      assert html =~ "You can add more members in Team Settings later"
 
-      assert html =~ "You can invite more members later in team settings."
+      html = select_move_from_current_team(lv, false)
+
+      assert elem_count(html, row_el()) == 10
+      refute html =~ "You can add more members in Team Settings later"
+    end
+
+    @tag :ee_only
+    test "is capped at the plan limit when it is below the trial limit", %{
+      conn: conn,
+      team: team
+    } do
+      insert(:growth_subscription, team: team)
+
+      {:ok, lv, html} = live(conn, @url)
+
+      assert elem_count(html, row_el()) == 3
+      refute html =~ "You can add more members in Team Settings later"
+
+      html = select_move_from_current_team(lv, false)
+
+      assert elem_count(html, row_el()) == 3
+      assert html =~ "You can add more members in Team Settings later"
     end
 
     @tag :ee_only

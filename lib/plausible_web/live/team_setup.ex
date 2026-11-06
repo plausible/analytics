@@ -41,7 +41,12 @@ defmodule PlausibleWeb.Live.TeamSetup do
         )
         |> assign_move_from_current_team(move?)
 
-      {:ok, socket}
+      max_rows =
+        if(show_move?, do: [true, false], else: [move?])
+        |> Enum.map(&max_rows(team_member_limit(socket, &1)))
+        |> Enum.min()
+
+      {:ok, assign(socket, max_rows: max_rows)}
     end
   end
 
@@ -122,20 +127,26 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
               <div id="member-rows" data-row-list>
                 <.member_row
-                  :for={n <- 1..max_rows(@team_member_limit)//1}
+                  :for={n <- 1..@max_rows//1}
                   row={%{id: n, email: "", role: :viewer}}
                   hidden?={n > 1}
                 />
               </div>
 
-              <.add_row_button data-add-row class="mt-3" />
+              <button
+                type="button"
+                data-add-row
+                class="mt-3 inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+              >
+                <Heroicons.plus class="size-4" /> Add another
+              </button>
 
-              <div data-add-row-disabled class="mt-3 hidden">
-                <.tooltip hover_only?>
-                  <:tooltip_content>{add_row_tooltip(@team_member_limit)}</:tooltip_content>
-                  <.add_row_button disabled />
-                </.tooltip>
-              </div>
+              <p
+                :if={more_members_later?(@team_member_limit, @max_rows)}
+                class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+              >
+                You can add more members in Team Settings later
+              </p>
             </div>
 
             <div class="mt-8 flex justify-end items-center gap-x-2">
@@ -219,24 +230,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
         else: "border-gray-300 dark:border-gray-700"
       )
     ]
-  end
-
-  attr(:class, :string, default: nil)
-  attr(:rest, :global, include: ~w(disabled))
-
-  defp add_row_button(assigns) do
-    ~H"""
-    <button
-      type="button"
-      class={[
-        @class,
-        "inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 disabled:pointer-events-none disabled:text-gray-400 dark:disabled:text-gray-500"
-      ]}
-      {@rest}
-    >
-      <Heroicons.plus class="size-4" /> Add another
-    </button>
-    """
   end
 
   attr(:row, :map, required: true)
@@ -355,8 +348,12 @@ defmodule PlausibleWeb.Live.TeamSetup do
     assign(socket,
       move_from_current_team?: move?,
       locked?: move? and Teams.Billing.solo?(team),
-      team_member_limit: Teams.Billing.team_member_limit(team)
+      team_member_limit: team_member_limit(socket, move?)
     )
+  end
+
+  defp team_member_limit(socket, move?) do
+    Teams.Billing.team_member_limit(if move?, do: socket.assigns.current_team)
   end
 
   defp accessible_domain(user, domain) when is_binary(domain) do
@@ -393,8 +390,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
   defp max_rows(:unlimited), do: @max_rows_when_unlimited
   defp max_rows(limit), do: limit
 
-  defp add_row_tooltip(:unlimited), do: "You can invite more members later in team settings."
-  defp add_row_tooltip(limit), do: member_limit_message(limit)
+  defp more_members_later?(:unlimited, _max_rows), do: true
+  defp more_members_later?(limit, max_rows), do: limit > max_rows
 
   defp member_limit_message(limit) do
     "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit."
