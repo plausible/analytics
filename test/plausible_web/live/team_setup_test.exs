@@ -13,27 +13,21 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   describe "/team/setup" do
     setup [:create_user, :log_in]
 
-    test "creates another team when the current team is set up", %{conn: conn, user: user} do
+    test "creates another team, without a choice, when the current team is set up", %{
+      conn: conn,
+      user: user
+    } do
       {:ok, current_team} = Teams.create(user, "Current Team", [])
 
-      {:ok, lv, _html} = live(set_current_team(conn, current_team), @url)
+      {:ok, lv, html} = live(set_current_team(conn, current_team), @url)
+      assert move_from_current_team_options(html) == []
+
       finish_setup(lv, name: "Another Team")
 
       assert [%{name: "Another Team"} = new_team, %{name: "Current Team"}] =
                Teams.Users.teams(user)
 
       assert_redirect(lv, "/settings/team/general?__team=" <> new_team.identifier)
-    end
-
-    test "does not set up someone else's personal sites", %{conn: conn, user: user} do
-      other_site = new_site()
-      add_guest(other_site, user: user, role: :viewer)
-
-      {:ok, lv, _html} = live(set_current_team(conn, other_site.team), @url)
-      finish_setup(lv, name: "Own Team")
-
-      assert [%{name: "Own Team", setup_complete: true}] = Teams.Users.teams(user)
-      refute Teams.setup?(Teams.get(other_site.team.id))
     end
 
     test "renders a cancel link back to /sites", %{conn: conn} do
@@ -58,6 +52,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert text_of_attr(html, ~s|#flow-progress [aria-current="step"]|, "aria-label") ==
                "Set up team"
+    end
+
+    test "does not offer a choice for the personal sites", %{conn: conn, site: site} do
+      {:ok, _lv, html} = live(conn, onboarding_url(site.domain))
+
+      assert move_from_current_team_options(html) == []
     end
 
     test "does not render the team switcher", %{conn: conn, site: site} do
@@ -171,6 +171,65 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       conn = set_current_team(conn, team)
 
       assert {:error, {:redirect, %{to: "/sites"}}} = live(conn, onboarding_url())
+    end
+  end
+
+  describe "/team/setup - from My Personal Sites" do
+    setup [:create_user, :log_in]
+
+    test "offers to move the personal sites, selected by default", %{conn: conn, user: user} do
+      new_site(owner: user, domain: "first.example.com")
+      new_site(owner: user, domain: "second.example.com")
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert move_from_current_team_options(html) == ["true", "false"]
+      assert selected_move_from_current_team(html) == ["true"]
+      assert html =~ "first.example.com"
+      assert html =~ "second.example.com"
+    end
+
+    test "moving the personal sites turns them into the team", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      {:ok, lv, _html} = live(conn, @url)
+
+      finish_setup(lv, name: "Moved Team")
+
+      assert [%{name: "Moved Team", setup_complete: true} = team] = Teams.Users.teams(user)
+      assert Enum.map(Teams.owned_sites(team), & &1.domain) == [site.domain]
+    end
+
+    test "starting with an empty team leaves the personal sites in place", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      {:ok, lv, _html} = live(conn, @url)
+
+      select_move_from_current_team(lv, false)
+      finish_setup(lv, name: "Empty Team")
+
+      assert [
+               %{name: "Empty Team", setup_complete: true} = new_team,
+               %{name: "My personal sites", setup_complete: false} = personal_team
+             ] = Teams.Users.teams(user)
+
+      assert_redirect(lv, "/settings/team/general?__team=" <> new_team.identifier)
+      assert Teams.owned_sites(new_team) == []
+      assert Enum.map(Teams.owned_sites(personal_team), & &1.domain) == [site.domain]
+    end
+
+    test "does not offer to move someone else's personal sites", %{conn: conn, user: user} do
+      other_site = new_site()
+      add_guest(other_site, user: user, role: :viewer)
+
+      {:ok, lv, html} = live(set_current_team(conn, other_site.team), @url)
+      assert move_from_current_team_options(html) == []
+
+      finish_setup(lv, name: "Own Team")
+
+      assert [%{name: "Own Team", setup_complete: true}] = Teams.Users.teams(user)
+      refute Teams.setup?(Teams.get(other_site.team.id))
     end
   end
 
@@ -354,6 +413,18 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert element_exists?(html, "#feature-gate-overlay")
       assert text_of_element(html, "#feature-gate-overlay") =~ "Upgrade to unlock"
     end
+
+    @tag :ee_only
+    test "allows starting with an empty team on a solo plan", %{conn: conn, user: user} do
+      subscribe_to_starter_plan(user)
+      {:ok, lv, _html} = live(conn, @url)
+
+      select_move_from_current_team(lv, false)
+      finish_setup(lv, name: "Empty Team")
+
+      assert [%{name: "Empty Team", setup_complete: true}, %{name: "My personal sites"}] =
+               Teams.Users.teams(user)
+    end
   end
 
   # Adding/removing rows and picking a role all happen entirely client-side
@@ -494,6 +565,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
 
       assert elem_count(html, row_el()) == 10
+
+      assert html =~ "Your account is limited to 10 team members."
     end
 
     @tag :ee_only
@@ -513,6 +586,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, _lv, html} = live(conn, @url)
 
       assert elem_count(html, row_el()) == 20
+
+      assert html =~ "You can invite more members later in team settings."
     end
 
     @tag :ee_only
@@ -534,6 +609,24 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
   defp row_el(), do: ~s|#member-rows > div|
   defp visible_row_el(), do: ~s|#member-rows > div:not(.hidden)|
+
+  defp select_move_from_current_team(lv, move?) do
+    lv
+    |> element(~s|input[name="move_from_current_team"][value="#{move?}"]|)
+    |> render_click()
+  end
+
+  defp move_from_current_team_options(html) do
+    html
+    |> find(~s|input[name="move_from_current_team"]|)
+    |> LazyHTML.attribute("value")
+  end
+
+  defp selected_move_from_current_team(html) do
+    html
+    |> find(~s|input[name="move_from_current_team"][checked]|)
+    |> LazyHTML.attribute("value")
+  end
 
   defp finish_setup(lv, opts) do
     name = Keyword.get(opts, :name, "Jane Smith's team")

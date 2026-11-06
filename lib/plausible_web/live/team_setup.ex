@@ -11,36 +11,34 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias PlausibleWeb.{Flows, Layouts}
 
   def mount(params, _session, socket) do
+    user = socket.assigns.current_user
     onboarding? = params["flow"] == Flows.register()
-    domain = accessible_domain(socket.assigns.current_user, params["domain"])
+    domain = accessible_domain(user, params["domain"])
 
-    socket =
-      cond do
-        Teams.setup?(socket.assigns.current_team) and onboarding? ->
-          redirect(socket, to: onboarding_next_step_path(domain))
+    if onboarding? and Teams.setup?(socket.assigns.current_team) do
+      {:ok, redirect(socket, to: onboarding_next_step_path(domain))}
+    else
+      suggested_name = Teams.Team.suggested_name_from_domain(domain, user.name)
+      name_changeset = Teams.Team.name_changeset(%Teams.Team{}, %{name: suggested_name})
+      move? = match?(%{current_team: %{id: id}, my_team: %{id: id}}, socket.assigns)
+      show_move? = move? and not onboarding?
 
-        true ->
-          team =
-            if match?(%{current_team: %{id: id}, my_team: %{id: id}}, socket.assigns),
-              do: socket.assigns.current_team
+      owned_sites =
+        if show_move?, do: Teams.owned_sites(socket.assigns.current_team), else: []
 
-          suggested_name =
-            Teams.Team.suggested_name_from_domain(domain, socket.assigns.current_user.name)
+      socket =
+        socket
+        |> assign(
+          onboarding?: onboarding?,
+          domain: domain,
+          team_name_form: to_form(name_changeset),
+          show_move_from_current_team?: show_move?,
+          owned_sites: owned_sites
+        )
+        |> assign_move_from_current_team(move?)
 
-          name_changeset =
-            Teams.Team.name_changeset(team || %Teams.Team{}, %{name: suggested_name})
-
-          assign(socket,
-            team: team,
-            onboarding?: onboarding?,
-            domain: domain,
-            team_name_form: to_form(name_changeset),
-            locked?: not is_nil(team) and Plausible.Teams.Billing.solo?(team),
-            max_new_members: max_new_members(team)
-          )
-      end
-
-    {:ok, socket}
+      {:ok, socket}
+    end
   end
 
   def render(assigns) do
@@ -82,19 +80,25 @@ defmodule PlausibleWeb.Live.TeamSetup do
       subtitle="Name your team and optionally invite members by email."
     />
     <div class="w-full max-w-md mx-auto mt-10 pb-16 px-4 dark:text-gray-300">
-      <div class="relative">
-        <PlausibleWeb.Components.Billing.feature_gate
-          current_user={@current_user}
-          current_team={@team}
-          locked?={@locked?}
-        >
-          <.flash_messages flash={@flash} />
+      <.flash_messages flash={@flash} />
 
-          <.form
-            :let={f}
-            for={@team_name_form}
-            id="create-team-form"
-            phx-submit="create-team"
+      <.form
+        :let={f}
+        for={@team_name_form}
+        id="create-team-form"
+        phx-submit="create-team"
+      >
+        <.move_from_current_team_picker
+          :if={@show_move_from_current_team?}
+          move?={@move_from_current_team?}
+          owned_sites={@owned_sites}
+        />
+
+        <div class="relative">
+          <PlausibleWeb.Components.Billing.feature_gate
+            current_user={@current_user}
+            current_team={@current_team}
+            locked?={@locked?}
           >
             <.input
               type="text"
@@ -113,19 +117,20 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
               <div id="member-rows" data-row-list>
                 <.member_row
-                  :for={n <- 1..@max_new_members//1}
+                  :for={n <- 1..max_rows(@team_member_limit)//1}
                   row={%{id: n, email: "", role: :viewer}}
                   hidden?={n > 1}
                 />
               </div>
 
-              <button
-                type="button"
-                data-add-row
-                class="mt-3 inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                <Heroicons.plus class="size-4" /> Add another
-              </button>
+              <.add_row_button data-add-row class="mt-3" />
+
+              <div data-add-row-disabled class="mt-3 hidden">
+                <.tooltip hover_only?>
+                  <:tooltip_content>{add_row_tooltip(@team_member_limit)}</:tooltip_content>
+                  <.add_row_button disabled />
+                </.tooltip>
+              </div>
             </div>
 
             <div class="mt-8 flex justify-end items-center gap-x-2">
@@ -146,10 +151,82 @@ defmodule PlausibleWeb.Live.TeamSetup do
                 Create team
               </.button>
             </div>
-          </.form>
-        </PlausibleWeb.Components.Billing.feature_gate>
-      </div>
+          </PlausibleWeb.Components.Billing.feature_gate>
+        </div>
+      </.form>
     </div>
+    """
+  end
+
+  attr(:move?, :boolean, required: true)
+  attr(:owned_sites, :list, required: true)
+
+  defp move_from_current_team_picker(assigns) do
+    ~H"""
+    <fieldset id="move-from-current-team-picker" class="mb-6 flex flex-col gap-y-3">
+      <.label>What should happen to your personal sites?</.label>
+
+      <.input
+        type="radio"
+        id="move-from-current-team-true"
+        name="move_from_current_team"
+        value="true"
+        checked={@move?}
+        wrapper_class={option_card_class(@move?)}
+        phx-click="select-move-from-current-team"
+        label="Move into this team"
+        help_text="Sites keep their stats, guests keep their access, and your subscription moves along."
+      >
+        <:help_content>
+          <span class="mt-2 flex flex-wrap gap-2">
+            <.pill :for={site <- @owned_sites} class="gap-x-1.5">
+              <PlausibleWeb.Live.Sites.favicon domain={site.domain} />
+              {site.domain}
+            </.pill>
+          </span>
+        </:help_content>
+      </.input>
+
+      <.input
+        type="radio"
+        id="move-from-current-team-false"
+        name="move_from_current_team"
+        value="false"
+        checked={not @move?}
+        wrapper_class={option_card_class(not @move?)}
+        phx-click="select-move-from-current-team"
+        label="Start with an empty team"
+        help_text="Your personal sites stay where they are. You can move individual sites later in their site settings."
+      />
+    </fieldset>
+    """
+  end
+
+  defp option_card_class(selected?) do
+    [
+      "p-4 rounded-lg border",
+      if(selected?,
+        do: "border-indigo-600 ring-1 ring-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20",
+        else: "border-gray-300 dark:border-gray-700"
+      )
+    ]
+  end
+
+  attr(:class, :string, default: nil)
+  attr(:rest, :global, include: ~w(disabled))
+
+  defp add_row_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={[
+        @class,
+        "inline-flex items-center gap-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 disabled:pointer-events-none disabled:text-gray-400 dark:disabled:text-gray-500"
+      ]}
+      {@rest}
+    >
+      <Heroicons.plus class="size-4" /> Add another
+    </button>
     """
   end
 
@@ -191,6 +268,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
     """
   end
 
+  def handle_event("select-move-from-current-team", %{"value" => value}, socket) do
+    {:noreply, assign_move_from_current_team(socket, value == "true")}
+  end
+
   def handle_event("create-team", %{"team" => %{"name" => name}} = params, socket) do
     create_team(socket, name, Map.get(params, "rows", %{}))
   end
@@ -216,9 +297,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
     user = socket.assigns.current_user
 
     result =
-      case socket.assigns.team do
-        nil -> Teams.create(user, name, entries)
-        team -> Teams.setup(team, name, entries, user)
+      if socket.assigns.move_from_current_team? do
+        Teams.setup(socket.assigns.current_team, name, entries, user)
+      else
+        Teams.create(user, name, entries)
       end
 
     case result do
@@ -254,13 +336,18 @@ defmodule PlausibleWeb.Live.TeamSetup do
         {:noreply, put_live_flash(socket, :error, "You cannot invite yourself")}
 
       {:error, {:over_limit, limit}} ->
-        {:noreply,
-         put_live_flash(
-           socket,
-           :error,
-           "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
-         )}
+        {:noreply, put_live_flash(socket, :error, member_limit_message(limit))}
     end
+  end
+
+  defp assign_move_from_current_team(socket, move?) do
+    team = if move?, do: socket.assigns.current_team
+
+    assign(socket,
+      move_from_current_team?: move?,
+      locked?: move? and Teams.Billing.solo?(team),
+      team_member_limit: Teams.Billing.team_member_limit(team)
+    )
   end
 
   defp accessible_domain(user, domain) when is_binary(domain) do
@@ -294,10 +381,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
   # should render at most, in order to prevent the user getting a
   # "team member limit exceeded" error upon submit without any prior
   # indication about it.
-  defp max_new_members(team) do
-    case Teams.Billing.team_member_limit(team) do
-      :unlimited -> @max_rows_when_unlimited
-      limit -> limit
-    end
+  defp max_rows(:unlimited), do: @max_rows_when_unlimited
+  defp max_rows(limit), do: limit
+
+  defp add_row_tooltip(:unlimited), do: "You can invite more members later in team settings."
+  defp add_row_tooltip(limit), do: member_limit_message(limit)
+
+  defp member_limit_message(limit) do
+    "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit."
   end
 end

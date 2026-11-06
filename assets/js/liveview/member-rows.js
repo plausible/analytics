@@ -14,6 +14,7 @@ export default {
   mounted() {
     this.list = this.el.querySelector('[data-row-list]')
     this.addButton = this.el.querySelector('[data-add-row]')
+    this.disabledAddButton = this.el.querySelector('[data-add-row-disabled]')
 
     this.addButton.addEventListener('click', () => this.addRow())
 
@@ -22,6 +23,10 @@ export default {
       if (removeButton) this.removeRow(removeButton)
     })
 
+    this.updateAddButtonState()
+  },
+
+  updated() {
     this.updateAddButtonState()
   },
 
@@ -62,5 +67,6 @@ export default {
 
     this.addButton.classList.toggle('hidden', atLimit)
     this.addButton.classList.toggle('inline-flex', !atLimit)
+    this.disabledAddButton.classList.toggle('hidden', !atLimit)
   }
 }
