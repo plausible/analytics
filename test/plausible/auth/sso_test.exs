@@ -275,8 +275,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        sso_domain = verify_sso_domain(sso_domain)
 
         {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
       end
@@ -314,9 +314,9 @@ defmodule Plausible.Auth.SSOTest do
         other_domain = "other-example-#{Enum.random(1..10_000)}.com"
 
         {:ok, other_sso_domain} =
-          SSO.Domains.add(other_integration, other_domain, skip_checks?: true)
+          add_sso_domain(other_integration, other_domain)
 
-        _other_sso_domain = SSO.Domains.verify(other_sso_domain, skip_checks?: true)
+        _other_sso_domain = verify_sso_domain(other_sso_domain)
 
         identity = new_identity("Jane Sculley", "jane@" <> domain, other_integration)
 
@@ -554,8 +554,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         identity = new_identity("Clarence Fortridge", "clarence@" <> domain, integration)
         {:ok, _, _, user} = SSO.provision_user(identity)
@@ -681,8 +681,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -706,8 +706,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -728,8 +728,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         assert {:error, :no_sso_user} = SSO.check_force_sso(team, :all_but_owners)
       end
@@ -746,7 +746,7 @@ defmodule Plausible.Auth.SSOTest do
         domain = "example-#{Enum.random(1..10_000)}.com"
 
         # Unverified domain
-        {:ok, _sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
+        {:ok, _sso_domain} = add_sso_domain(integration, domain)
 
         assert {:error, :no_verified_domain} = SSO.check_force_sso(team, :all_but_owners)
       end
@@ -792,8 +792,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -828,8 +828,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -868,8 +868,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -896,8 +896,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -921,8 +921,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -949,8 +949,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        _sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -973,8 +973,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -1006,8 +1006,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -1031,8 +1031,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        sso_domain = verify_sso_domain(sso_domain)
 
         # Provisioned SSO identity
         #
@@ -1060,8 +1060,8 @@ defmodule Plausible.Auth.SSOTest do
         domain1 = "example-#{Enum.random(1..10_000)}.com"
         domain2 = "test-#{Enum.random(1..10_000)}.com"
 
-        {:ok, d1} = SSO.Domains.add(integration, domain1, skip_checks?: true)
-        {:ok, d2} = SSO.Domains.add(integration, domain2, skip_checks?: true)
+        {:ok, d1} = add_sso_domain(integration, domain1)
+        {:ok, d2} = add_sso_domain(integration, domain2)
 
         {:ok, _} = SSO.Domains.start_verification(domain1)
         {:ok, _} = SSO.Domains.start_verification(domain2)
@@ -1097,8 +1097,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        verify_sso_domain(sso_domain)
 
         identity = new_identity("Test User", "test@" <> domain, integration)
         {:ok, _, _, _} = SSO.provision_user(identity)
@@ -1133,8 +1133,8 @@ defmodule Plausible.Auth.SSOTest do
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        sso_domain = verify_sso_domain(sso_domain)
 
         {:ok,
          team: team,

@@ -25,11 +25,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   @spec run(String.t(), String.t(), Keyword.t()) ::
           {:ok, Domain.verification_method()} | {:error, :unverified}
   def run(sso_domain, domain_identifier, opts \\ []) do
-    available_methods = Domain.verification_methods()
-    methods = Keyword.get(opts, :methods, available_methods)
-    true = Enum.all?(methods, &(&1 in available_methods))
-
-    Enum.reduce_while(methods, {:error, :unverified}, fn method, acc ->
+    Enum.reduce_while(Domain.verification_methods(), {:error, :unverified}, fn method, acc ->
       case apply(__MODULE__, method, [sso_domain, domain_identifier, opts]) do
         true -> {:halt, {:ok, method}}
         false -> {:cont, acc}
@@ -38,16 +34,8 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   end
 
   @spec url(String.t(), String.t(), Keyword.t()) :: boolean()
-  def url(sso_domain, domain_identifier, opts \\ []) do
-    url_override = Keyword.get(opts, :url_override)
-
-    resp =
-      run_request(
-        url_override || "https://" <> Path.join(sso_domain, @prefix),
-        skip_checks?: not is_nil(url_override)
-      )
-
-    case resp do
+  def url(sso_domain, domain_identifier, _opts \\ []) do
+    case run_request("https://" <> Path.join(sso_domain, @prefix)) do
       %Req.Response{body: body}
       when is_binary(body) ->
         String.trim(body) == domain_identifier
@@ -58,13 +46,9 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
   end
 
   @spec meta_tag(String.t(), String.t(), Keyword.t()) :: boolean()
-  def meta_tag(sso_domain, domain_identifier, opts \\ []) do
-    url_override = Keyword.get(opts, :url_override)
-
+  def meta_tag(sso_domain, domain_identifier, _opts \\ []) do
     with %Req.Response{body: body} = response when is_binary(body) <-
-           run_request(url_override || "https://#{sso_domain}",
-             skip_checks?: not is_nil(url_override)
-           ),
+           run_request("https://#{sso_domain}"),
          true <- html?(response),
          html <- LazyHTML.from_document(body),
          [_ | _] <-
@@ -110,21 +94,11 @@ defmodule Plausible.Auth.SSO.Domain.Verification do
     |> String.contains?("text/html")
   end
 
-  # skip_checks?: true is only ever supplied by url_override escape hatch 
-  # used by tests (e.g. to point at a local Bypass server)
-  defp run_request(url, opts) do
-    skip_checks? = Keyword.get(opts, :skip_checks?, false)
+  defp run_request(url) do
     base_opts = [max_redirects: 4, max_retries: 3, retry_log_level: :warning]
+    fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 
-    result =
-      if skip_checks? do
-        Req.request(Keyword.merge(base_opts, url: url, method: :get))
-      else
-        fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
-        Plausible.SSRF.get(url, Keyword.merge(base_opts, fetch_body_opts))
-      end
-
-    case result do
+    case Plausible.SSRF.get(url, Keyword.merge(base_opts, fetch_body_opts)) do
       {:ok, resp} -> resp
       {:error, _reason} -> nil
     end
