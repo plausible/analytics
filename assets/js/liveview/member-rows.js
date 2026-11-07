@@ -25,6 +25,10 @@ export default {
     this.updateAddButtonState()
   },
 
+  updated() {
+    this.updateAddButtonState()
+  },
+
   addRow() {
     const nextRow = [...this.list.children].find((row) =>
       row.classList.contains('hidden')

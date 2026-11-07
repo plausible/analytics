@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Layouts do
   attr :footer?, :boolean, default: true
   attr :global_notices?, :boolean, default: true
   attr :trial_badge?, :boolean, default: true
+  attr :team_switcher?, :boolean, default: true
   attr :embedded?, :boolean, default: false
   attr :load_dashboard_js?, :boolean, default: false
   attr :flash, :map, default: %{}
@@ -38,6 +39,7 @@ defmodule PlausibleWeb.Layouts do
           current_team={@current_team}
           current_team_role={@current_team_role}
           trial_badge?={@trial_badge?}
+          team_switcher?={@team_switcher?}
           teams={@teams}
           my_team={@my_team}
         />
@@ -152,6 +154,7 @@ defmodule PlausibleWeb.Layouts do
       footer?={false}
       global_notices?={false}
       trial_badge?={false}
+      team_switcher?={false}
       current_user={@current_user}
       flash={@flash}
     >

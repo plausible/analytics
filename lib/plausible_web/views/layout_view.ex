@@ -164,73 +164,61 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  attr :current_user, :any, required: true
   attr :teams, :list, required: true
   attr :my_team, :any, default: nil
   attr :current_team, :any, default: nil
 
   def team_switcher(assigns) do
-    teams = assigns[:teams]
+    personal_team =
+      assigns.my_team || %Teams.Team{identifier: "none", name: Teams.default_name()}
 
-    if teams && teams != [] do
-      current_team = assigns[:current_team]
-      my_team = assigns[:my_team]
-      current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
-      current_is_my? = current_team && my_team && current_team.id == my_team.id
+    current_team = assigns.current_team || personal_team
 
-      teams =
-        if current_team && !current_included? && !current_is_my? do
-          [current_team | teams]
-        else
-          teams
-        end
+    other_teams =
+      [personal_team | Enum.sort_by(assigns.teams, &String.downcase(&1.name))]
+      |> Enum.reject(&(&1.id == current_team.id))
 
-      teams =
-        if my_team do
-          teams ++ [my_team]
-        else
-          teams ++ [%Teams.Team{identifier: "none", name: Teams.default_name()}]
-        end
+    assigns =
+      assigns
+      |> assign(:current_team, current_team)
+      |> assign(:other_teams, other_teams)
 
-      selected_id = current_team && current_team.id
-      {pinned_team, other_teams} = Enum.split_with(teams, &(&1.id == selected_id))
-
-      assigns =
-        assigns
-        |> assign(:pinned_team, List.first(pinned_team))
-        |> assign(:other_teams, other_teams)
-
-      ~H"""
-      <.dropdown_item>
-        <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
-      </.dropdown_item>
-      <.dropdown_item
-        :if={@pinned_team}
-        href={~p"/sites?#{[__team: @pinned_team.identifier]}"}
-      >
-        <div class="flex items-center justify-between gap-2" role="none">
-          <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
-            {Teams.name(@pinned_team)}
-          </p>
-          <Heroicons.check class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
-        </div>
-      </.dropdown_item>
-      <div class="max-h-[200px] overflow-y-auto">
-        <.dropdown_item
-          :for={team <- @other_teams}
-          href={~p"/sites?#{[__team: team.identifier]}"}
-        >
-          <p
-            class="font-medium truncate text-gray-900 dark:text-gray-100 pr-4"
-            role="none"
-          >
-            {Teams.name(team)}
-          </p>
-        </.dropdown_item>
+    ~H"""
+    <.dropdown_item>
+      <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
+    </.dropdown_item>
+    <.dropdown_item href={~p"/sites?#{[__team: @current_team.identifier]}"} aria-current="true">
+      <div class="flex items-center justify-between gap-2" role="none">
+        <p class="font-semibold truncate min-w-0 text-gray-900 dark:text-gray-100">
+          {Teams.name(@current_team)}
+        </p>
+        <Heroicons.check class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
       </div>
-      """
-    else
-      ~H""
-    end
+    </.dropdown_item>
+    <div class="max-h-[200px] overflow-y-auto">
+      <.dropdown_item
+        :for={team <- @other_teams}
+        href={~p"/sites?#{[__team: team.identifier]}"}
+      >
+        <p
+          class="truncate text-gray-900 dark:text-gray-100 pr-4"
+          role="none"
+        >
+          {Teams.name(team)}
+        </p>
+      </.dropdown_item>
+    </div>
+    <.dropdown_item
+      :if={Plausible.Users.type(@current_user) == :standard}
+      href={~p"/team/setup"}
+    >
+      <div class="flex items-center justify-between gap-2" role="none">
+        <span data-test="create-a-team-cta">Create new team</span>
+        <Heroicons.plus class="size-4 shrink-0 stroke-2 text-gray-500 dark:text-gray-400" />
+      </div>
+    </.dropdown_item>
+    """
   end
 
   def trial_notification(team) do
