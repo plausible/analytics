@@ -413,6 +413,19 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "My personal sites"
     end
 
+    test "keeps a typed name when switching what happens to personal sites", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      lv
+      |> element("#create-team-form")
+      |> render_change(%{team: %{name: "Typed Name"}})
+
+      html = select_move_from_current_team(lv, false)
+
+      assert text_of_attr(html, ~s|input#create-team-form_name[name="team[name]"]|, "value") ==
+               "Typed Name"
+    end
+
     test "creating the team goes through once a valid name is submitted", %{
       conn: conn,
       team: team
@@ -661,7 +674,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   defp row_el(), do: ~s|#member-rows > div|
   defp visible_row_el(), do: ~s|#member-rows > div:not(.hidden)|
 
+  # In the browser, clicking a radio triggers both the form's phx-change and its own phx-click.
   defp select_move_from_current_team(lv, move?) do
+    lv
+    |> element("#create-team-form")
+    |> render_change(%{move_from_current_team: "#{move?}"})
+
     lv
     |> element(~s|input[name="move_from_current_team"][value="#{move?}"]|)
     |> render_click()

@@ -100,6 +100,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         :let={f}
         for={@team_name_form}
         id="create-team-form"
+        phx-change="update-name"
         phx-submit="create-team"
       >
         <.move_from_current_team_picker
@@ -289,6 +290,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
     </div>
     """
   end
+
+  def handle_event("update-name", %{"team" => %{"name" => name}}, socket) do
+    name_changeset = Teams.Team.name_changeset(%Teams.Team{}, %{name: name})
+    {:noreply, assign(socket, team_name_form: to_form(name_changeset))}
+  end
+
+  def handle_event("update-name", _params, socket), do: {:noreply, socket}
 
   def handle_event("select-move-from-current-team", %{"value" => value}, socket) do
     {:noreply, assign_move_from_current_team(socket, value == "true")}
