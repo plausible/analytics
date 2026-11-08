@@ -641,7 +641,10 @@ defmodule PlausibleWeb.Email do
     email = base_email(%{layout: layout})
 
     if ee?() do
-      put_param(email, "MessageStream", "priority")
+      # Temporary: the Postmark 'priority' stream is broken, so route priority
+      # mail through the default transactional ('outbound') stream. Revert to
+      # "priority" once the stream is fixed.
+      put_param(email, "MessageStream", "outbound")
     else
       email
     end
