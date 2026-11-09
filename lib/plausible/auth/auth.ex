@@ -38,7 +38,7 @@ defmodule Plausible.Auth do
       @activation_request_limit 100_000
       @oauth_authorize_limit 10
       @oauth_authorize_ip_limit 100_000
-      @invitation_limit 10
+      @invitation_limit 5
 
     _ ->
       @ip_rate_limit 5

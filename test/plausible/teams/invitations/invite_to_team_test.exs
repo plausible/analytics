@@ -200,7 +200,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       team = team_of(owner)
       admin = add_member(team, role: :admin)
 
-      entries = for i <- 1..10, do: %{email: "member#{i}@example.com", role: :viewer}
+      entries = for i <- 1..5, do: %{email: "member#{i}@example.com", role: :viewer}
 
       assert {:ok, _} = InviteToTeam.invite_all(team, owner, entries)
 
