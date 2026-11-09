@@ -7,6 +7,8 @@ defmodule Plausible.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Plausible.Auth.DisposableEmail
+
   @type t() :: %__MODULE__{}
 
   @required [:email, :name, :password]
@@ -87,6 +89,20 @@ defmodule Plausible.Auth.User do
     |> hash_password()
     |> set_email_verification_status()
     |> unique_constraint(:email)
+  end
+
+  @doc """
+  Rejects emails on disposable domains. Kept out of `new/1` so that it only
+  applies to self-service signups, not to invitations or SSO provisioning.
+  """
+  def validate_email_not_disposable(changeset) do
+    validate_change(changeset, :email, fn :email, email ->
+      if DisposableEmail.disposable?(email) do
+        [email: {"Disposable email addresses are not allowed", validation: :disposable_email}]
+      else
+        []
+      end
+    end)
   end
 
   def name_changeset(user, attrs \\ %{}) do
