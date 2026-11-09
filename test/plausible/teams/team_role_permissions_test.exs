@@ -309,6 +309,34 @@ defmodule Plausible.Teams.TeamRolePermissionsTest do
     end
   end
 
+  describe "ensure_can_manage_team/2" do
+    setup [:create_user, :create_team]
+
+    test "allows the owner", %{user: owner, team: team} do
+      assert :ok = TeamRolePermissions.ensure_can_manage_team(team, owner)
+    end
+
+    test "allows an admin", %{team: team} do
+      admin = add_member(team, role: :admin)
+
+      assert :ok = TeamRolePermissions.ensure_can_manage_team(team, admin)
+    end
+
+    for role <- [:editor, :viewer, :billing, :guest] do
+      test "denies #{@as[role]}", %{team: team} do
+        actor = add_member(team, role: unquote(role))
+
+        assert {:error, :permission_denied} =
+                 TeamRolePermissions.ensure_can_manage_team(team, actor)
+      end
+    end
+
+    test "denies someone who is not a member of the team", %{team: team} do
+      assert {:error, :permission_denied} =
+               TeamRolePermissions.ensure_can_manage_team(team, new_user())
+    end
+  end
+
   defp get_membership(team, user) do
     {:ok, membership} = Plausible.Teams.Memberships.get_team_membership(team, user.id)
     membership

@@ -65,7 +65,7 @@ defmodule Plausible.Teams.Sites.Transfer do
 
     with {:ok, new_team} <- maybe_get_team(new_owner, team),
          :ok <- ensure_transfer_valid(site.team, new_team),
-         :ok <- Teams.Invitations.check_can_transfer_site(new_team, new_owner),
+         :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team, opts),
          :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team, opts) do
       Teams.Invitations.send_transfer_accepted_email(site_transfer, new_team)
@@ -81,7 +81,7 @@ defmodule Plausible.Teams.Sites.Transfer do
 
     with {:ok, new_team} <- maybe_get_team(new_owner, team),
          :ok <- ensure_transfer_valid(site.team, new_team),
-         :ok <- Teams.Invitations.check_can_transfer_site(new_team, new_owner),
+         :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
          :ok <- Teams.Invitations.transfer_site(site, new_team) do
       site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
