@@ -121,67 +121,6 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
       assert {:ok, _} = invite.(site2, u4.email)
     end
 
-    test "sends ownership transfer email when invitation role is owner" do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
-               InviteToSite.invite(site, inviter, "vini@plausible.test", :owner)
-
-      assert_email_delivered_with(
-        to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
-      )
-    end
-
-    test "admin can initiate ownership transfer too" do
-      inviter = new_user()
-      site = new_site()
-      add_member(site.team, user: inviter, role: :admin)
-
-      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
-               InviteToSite.invite(site, inviter, "vini@plausible.test", :owner)
-
-      assert_email_delivered_with(
-        to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
-      )
-    end
-
-    test "only allows owners and admins to transfer ownership" do
-      inviter = new_user()
-
-      site = new_site()
-      add_guest(site, user: inviter, role: :editor)
-
-      assert {:error, :permission_denied} =
-               InviteToSite.invite(site, inviter, "vini@plausible.test", :owner)
-    end
-
-    test "allows ownership transfer to existing site members" do
-      inviter = new_user()
-      invitee = new_user()
-      site = new_site(owner: inviter)
-      add_guest(site, user: invitee, role: :viewer)
-
-      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
-               InviteToSite.invite(site, inviter, invitee.email, :owner)
-    end
-
-    test "allows creating an ownership transfer even when at team member limit" do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-      for _ <- 1..3, do: add_guest(site, role: :viewer)
-
-      assert {:ok, _invitation} =
-               InviteToSite.invite(
-                 site,
-                 inviter,
-                 "newowner@plausible.test",
-                 :owner
-               )
-    end
-
     test "does not allow viewers to invite users" do
       inviter = new_user()
       owner = new_user()

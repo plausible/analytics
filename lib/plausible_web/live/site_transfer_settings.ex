@@ -266,7 +266,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
     user = socket.assigns.current_user
     site = socket.assigns.site
 
-    case Teams.Invitations.InviteToSite.invite(site, user, email, :owner) do
+    case Teams.Sites.Transfer.initiate(site, user, email) do
       {:ok, _invitation} ->
         {:noreply,
          socket

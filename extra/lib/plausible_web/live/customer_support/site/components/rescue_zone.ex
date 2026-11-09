@@ -56,11 +56,10 @@ defmodule PlausibleWeb.CustomerSupport.Site.Components.RescueZone do
   def handle_event("init-transfer", params, socket) do
     inviter = Plausible.Repo.get_by!(Plausible.Auth.User, email: params["inviter_email"])
 
-    case Plausible.Teams.Invitations.InviteToSite.invite(
+    case Plausible.Teams.Sites.Transfer.initiate(
            socket.assigns.site,
            inviter,
-           params["invitee_email"],
-           :owner
+           params["invitee_email"]
          ) do
       {:ok, _transfer} ->
         success("Transfer e-mail sent!")

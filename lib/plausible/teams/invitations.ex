@@ -207,20 +207,7 @@ defmodule Plausible.Teams.Invitations do
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
     site = Repo.preload(site, :team)
 
-    if role == :owner do
-      create_site_transfer(
-        site,
-        inviter,
-        invitee_email
-      )
-    else
-      create_invitation(
-        site,
-        invitee_email,
-        role,
-        inviter
-      )
-    end
+    create_invitation(site, invitee_email, role, inviter)
   end
 
   def remove_team_invitation(team_invitation) do
@@ -311,7 +298,7 @@ defmodule Plausible.Teams.Invitations do
 
   def ensure_transfer_valid(_team, _new_owner, _role), do: :ok
 
-  defp create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
+  def create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
     result =
       Ecto.Multi.new()
       |> Ecto.Multi.put(
@@ -622,9 +609,6 @@ defmodule Plausible.Teams.Invitations do
       {:ok, _} -> {:error, :already_a_member}
     end
   end
-
-  # Site ownership transfers are allowed to target existing site members
-  def ensure_new_membership(%Plausible.Site{}, _invitee, :owner), do: :ok
 
   def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do

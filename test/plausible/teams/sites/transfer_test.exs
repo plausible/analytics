@@ -6,6 +6,64 @@ defmodule Plausible.Teams.Sites.TransferTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
+  describe "initiate/3" do
+    test "sends ownership transfer email" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "admin can initiate ownership transfer too" do
+      inviter = new_user()
+      site = new_site()
+      add_member(site.team, user: inviter, role: :admin)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "only allows owners and admins to transfer ownership" do
+      inviter = new_user()
+
+      site = new_site()
+      add_guest(site, user: inviter, role: :editor)
+
+      assert {:error, :permission_denied} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+    end
+
+    test "allows ownership transfer to existing site members" do
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
+      add_guest(site, user: invitee, role: :viewer)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, invitee.email)
+    end
+
+    test "allows creating an ownership transfer even when at team member limit" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      for _ <- 1..3, do: add_guest(site, role: :viewer)
+
+      assert {:ok, _invitation} =
+               Transfer.initiate(site, inviter, "newowner@plausible.test")
+    end
+  end
+
   describe "change_team/3" do
     @tag :ce_build_only
     test "changes the team if owner in both teams (CE)" do
