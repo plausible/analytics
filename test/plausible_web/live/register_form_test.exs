@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert String.length(password_hash) > 0
     end
 
+    @tag :ee_only
     test "renders error for disposable email as it is typed", %{conn: conn} do
       lv = get_liveview(conn, "/register")
 
@@ -94,6 +95,23 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       refute render(lv) =~ "Disposable email addresses are not allowed"
     end
 
+    @tag :ce_build_only
+    test "allows disposable email on CE", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      refute html =~ "Disposable email addresses are not allowed"
+      assert Repo.get_by(User, email: "mary.sue@mailinator.com")
+    end
+
+    @tag :ee_only
     test "does not create user with disposable email", %{conn: conn} do
       mock_captcha_success()
 

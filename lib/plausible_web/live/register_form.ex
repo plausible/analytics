@@ -278,12 +278,16 @@ defmodule PlausibleWeb.Live.RegisterForm do
     end
   end
 
-  # Disposable emails are only rejected for self-service signups. Invited
-  # users get their email address from the invitation.
+  # Disposable emails are only rejected on EE, and only for self-service
+  # signups. Invited users get their email address from the invitation.
   defp signup_changeset(params) do
-    params
-    |> Auth.User.new()
-    |> Auth.User.validate_email_not_disposable()
+    changeset = Auth.User.new(params)
+
+    on_ee do
+      Auth.User.validate_email_not_disposable(changeset)
+    else
+      changeset
+    end
   end
 
   defp captcha_failed(socket) do

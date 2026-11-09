@@ -146,33 +146,36 @@ defmodule Plausible.Auth.UserTest do
     end
   end
 
-  describe "validate_email_not_disposable/1" do
-    defp new_changeset(email) do
-      User.new(%{
-        name: "Jane Doe",
-        email: email,
-        password: "very-secret-and-very-long-123",
-        password_confirmation: "very-secret-and-very-long-123"
-      })
-    end
+  on_ee do
+    describe "validate_email_not_disposable/1" do
+      defp new_changeset(email) do
+        User.new(%{
+          name: "Jane Doe",
+          email: email,
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      end
 
-    test "fails for a disposable email domain" do
-      changeset = "jane@mailinator.com" |> new_changeset() |> User.validate_email_not_disposable()
+      test "fails for a disposable email domain" do
+        changeset =
+          "jane@mailinator.com" |> new_changeset() |> User.validate_email_not_disposable()
 
-      refute changeset.valid?
+        refute changeset.valid?
 
-      assert {"Disposable email addresses are not allowed", [validation: :disposable_email]} =
-               changeset.errors[:email]
-    end
+        assert {"Disposable email addresses are not allowed", [validation: :disposable_email]} =
+                 changeset.errors[:email]
+      end
 
-    test "succeeds for a regular email domain" do
-      changeset = "jane@example.com" |> new_changeset() |> User.validate_email_not_disposable()
+      test "succeeds for a regular email domain" do
+        changeset = "jane@example.com" |> new_changeset() |> User.validate_email_not_disposable()
 
-      assert changeset.valid?
-    end
+        assert changeset.valid?
+      end
 
-    test "is not applied by new/1 itself" do
-      assert new_changeset("jane@mailinator.com").valid?
+      test "is not applied by new/1 itself" do
+        assert new_changeset("jane@mailinator.com").valid?
+      end
     end
   end
 end

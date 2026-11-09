@@ -14,6 +14,9 @@ defmodule Plausible.Auth.DisposableEmail do
   alias/forwarding services (SimpleLogin, Apple Hide My Email, ...).
 
   Only the exact domain of the address is matched, not its parent domains.
+
+  This is EE-only (it lives in `extra/lib`): Community Edition does not reject
+  disposable addresses.
   """
 
   @external_resource "priv/disposable_email_domains.txt"
