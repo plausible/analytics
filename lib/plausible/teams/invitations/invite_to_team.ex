@@ -24,7 +24,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
           {:ok, [Teams.Invitation.t()]} | {:error, any()}
   def invite_all(team, inviter, entries) do
     with :ok <- validate_emails(Enum.map(entries, & &1.email)) do
-      do_invite_all(Repo.preload(team, [:owners]), inviter, entries)
+      team = team |> Repo.preload([:owners]) |> Teams.with_subscription()
+      do_invite_all(team, inviter, entries)
     end
   end
 
@@ -73,8 +74,16 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(team, invitee, role),
          :ok <- Teams.Invitations.ensure_no_invitations(team, invitee_email),
-         :ok <- Plausible.Auth.rate_limit(:invitation_team, team) do
+         :ok <- check_rate_limit(team, inviter) do
       Teams.Invitations.invite(team, invitee_email, role, inviter)
+    end
+  end
+
+  defp check_rate_limit(team, inviter) do
+    if Plausible.Billing.Subscriptions.active?(team.subscription) do
+      :ok
+    else
+      Plausible.Auth.rate_limit(:team_invitation_user, inviter)
     end
   end
 end

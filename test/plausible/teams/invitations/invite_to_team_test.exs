@@ -194,7 +194,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
     end
 
-    test "rate limits invitations per team, across inviters" do
+    test "rate limits invitations per inviter when the team has no active subscription" do
       owner = new_user()
       _site = new_site(owner: owner)
       team = team_of(owner)
@@ -204,12 +204,30 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
       assert {:ok, _} = InviteToTeam.invite_all(team, owner, entries)
 
-      assert {:error, {:rate_limit, :invitation_team}} =
-               InviteToTeam.invite_all(team, admin, [
+      assert {:error, {:rate_limit, :team_invitation_user}} =
+               InviteToTeam.invite_all(team, owner, [
                  %{email: "one-too-many@example.com", role: :viewer}
                ])
 
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "one-too-many@example.com")
+
+      # the other user has its own rate limit
+      assert {:ok, _} =
+               InviteToTeam.invite_all(team, admin, [
+                 %{email: "from-admin@example.com", role: :viewer}
+               ])
+    end
+
+    on_ee do
+      test "does not rate limit invitations when the team has an active subscription" do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = owner |> team_of() |> subscribe_to_business_plan()
+
+        entries = for i <- 1..6, do: %{email: "member#{i}@example.com", role: :viewer}
+
+        assert {:ok, _} = InviteToTeam.invite_all(team, owner, entries)
+      end
     end
   end
 

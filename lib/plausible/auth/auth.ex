@@ -26,7 +26,7 @@ defmodule Plausible.Auth do
       @totp_setup_ip_limit 100_000
       @oauth_authorize_limit 100_000
       @oauth_authorize_ip_limit 100_000
-      @invitation_limit 100_000
+      @team_invitation_limit 100_000
 
     env when env in [:test, :ce_test] ->
       @ip_rate_limit 5
@@ -38,7 +38,7 @@ defmodule Plausible.Auth do
       @activation_request_limit 100_000
       @oauth_authorize_limit 10
       @oauth_authorize_ip_limit 100_000
-      @invitation_limit 5
+      @team_invitation_limit 5
 
     _ ->
       @ip_rate_limit 5
@@ -50,7 +50,7 @@ defmodule Plausible.Auth do
       @activation_request_limit 5
       @oauth_authorize_limit 10
       @oauth_authorize_ip_limit 30
-      @invitation_limit 20
+      @team_invitation_limit 10
   end
 
   @rate_limits %{
@@ -114,10 +114,11 @@ defmodule Plausible.Auth do
       limit: @oauth_authorize_limit,
       interval: :timer.minutes(1)
     },
-    invitation_team: %{
-      prefix: "invitation:team",
-      limit: @invitation_limit,
-      interval: :timer.hours(1)
+    # applies only to trial users
+    team_invitation_user: %{
+      prefix: "team-invitation:user",
+      limit: @team_invitation_limit,
+      interval: :timer.hours(24)
     }
   }
 
@@ -127,7 +128,7 @@ defmodule Plausible.Auth do
 
   @type rate_limit_type() :: unquote(Enum.reduce(@rate_limit_types, &{:|, [], [&1, &2]}))
 
-  @spec rate_limit(rate_limit_type(), Auth.User.t() | Teams.Team.t() | Plug.Conn.t()) ::
+  @spec rate_limit(rate_limit_type(), Auth.User.t() | Plug.Conn.t()) ::
           :ok | {:error, {:rate_limit, rate_limit_type()}}
   def rate_limit(limit_type, key) when limit_type in @rate_limit_types do
     %{prefix: prefix, limit: limit, interval: interval} = @rate_limits[limit_type]
@@ -422,6 +423,5 @@ defmodule Plausible.Auth do
   end
 
   defp rate_limit_key(%Auth.User{id: id}), do: id
-  defp rate_limit_key(%Teams.Team{id: id}), do: id
   defp rate_limit_key(%Plug.Conn{} = conn), do: PlausibleWeb.RemoteIP.get(conn)
 end
