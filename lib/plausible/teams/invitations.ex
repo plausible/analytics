@@ -496,30 +496,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def send_transfer_accepted_email(site_transfer, team) do
-    initiator_as_guest_editor? =
-      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
-        {:ok, {:guest_member, :editor}}
-
-    PlausibleWeb.Email.ownership_transfer_accepted(
-      site_transfer.email,
-      site_transfer.initiator.email,
-      team,
-      site_transfer.site,
-      initiator_as_guest_editor?
-    )
-    |> Plausible.Mailer.send()
-  end
-
-  def send_team_changed_email(site, user, team) do
-    owners = Repo.preload(team, :owners).owners
-
-    for owner <- owners do
-      PlausibleWeb.Email.team_changed(owner.email, user, team, site)
-      |> Plausible.Mailer.send()
-    end
-  end
-
   @doc false
   def check_team_member_limit(_team, :owner, _invitee_email), do: :ok
 
@@ -622,19 +598,6 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def send_invitation_email(%Teams.SiteTransfer{} = transfer, invitee) do
-    email =
-      PlausibleWeb.Email.ownership_transfer_request(
-        transfer.email,
-        transfer.transfer_id,
-        transfer.site,
-        transfer.initiator,
-        invitee
-      )
-
-    Plausible.Mailer.send(email)
-  end
-
   def send_invitation_email(%Teams.Invitation{} = team_invitation, invitee) do
     email =
       if invitee do

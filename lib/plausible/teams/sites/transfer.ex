@@ -43,7 +43,7 @@ defmodule Plausible.Teams.Sites.Transfer do
 
         site_transfer
         |> Repo.preload([:site, :initiator])
-        |> Teams.Invitations.send_invitation_email(invitee)
+        |> send_transfer_request_email(invitee)
 
         site_transfer
       else
@@ -56,7 +56,7 @@ defmodule Plausible.Teams.Sites.Transfer do
           :ok | {:error, transfer_error()}
   def change_team(site, user, new_team) do
     with {:ok, _} <- transfer_ownership(site, user, new_team) do
-      Teams.Invitations.send_team_changed_email(site, user, new_team)
+      send_team_changed_email(site, user, new_team)
       :ok
     end
   end
@@ -72,7 +72,7 @@ defmodule Plausible.Teams.Sites.Transfer do
          :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team, opts),
          :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team, opts) do
-      Teams.Invitations.send_transfer_accepted_email(site_transfer, new_team)
+      send_transfer_accepted_email(site_transfer, new_team)
 
       site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
 
@@ -139,5 +139,42 @@ defmodule Plausible.Teams.Sites.Transfer do
 
   defp maybe_get_team(user, nil) do
     Teams.get_or_create(user)
+  end
+
+  defp send_transfer_request_email(site_transfer, invitee) do
+    email =
+      PlausibleWeb.Email.ownership_transfer_request(
+        site_transfer.email,
+        site_transfer.transfer_id,
+        site_transfer.site,
+        site_transfer.initiator,
+        invitee
+      )
+
+    Plausible.Mailer.send(email)
+  end
+
+  defp send_transfer_accepted_email(site_transfer, team) do
+    initiator_as_guest_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
+        {:ok, {:guest_member, :editor}}
+
+    PlausibleWeb.Email.ownership_transfer_accepted(
+      site_transfer.email,
+      site_transfer.initiator.email,
+      team,
+      site_transfer.site,
+      initiator_as_guest_editor?
+    )
+    |> Plausible.Mailer.send()
+  end
+
+  defp send_team_changed_email(site, user, team) do
+    owners = Repo.preload(team, :owners).owners
+
+    for owner <- owners do
+      PlausibleWeb.Email.team_changed(owner.email, user, team, site)
+      |> Plausible.Mailer.send()
+    end
   end
 end
