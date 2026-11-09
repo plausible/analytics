@@ -3,6 +3,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   Service for inviting new or existing users to team.
   """
 
+  use Plausible
+
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -24,7 +26,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
           {:ok, [Teams.Invitation.t()]} | {:error, any()}
   def invite_all(team, inviter, entries) do
     with :ok <- validate_emails(Enum.map(entries, & &1.email)) do
-      do_invite_all(Repo.preload(team, [:owners]), inviter, entries)
+      team = team |> Repo.preload([:owners]) |> Teams.with_subscription()
+      do_invite_all(team, inviter, entries)
     end
   end
 
@@ -72,8 +75,24 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
          :ok <- Teams.Invitations.check_team_member_limit(team, role, invitee_email),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(team, invitee, role),
-         :ok <- Teams.Invitations.ensure_no_invitations(team, invitee_email) do
+         :ok <- Teams.Invitations.ensure_no_invitations(team, invitee_email),
+         :ok <- check_rate_limit(team, inviter) do
       Teams.Invitations.invite(team, invitee_email, role, inviter)
     end
+  end
+
+  on_ee do
+    # Enforces limits by inviter user rather than the team because creating a team is trivial.
+    # Creating a new user is a little bit less so.
+    defp check_rate_limit(team, inviter) do
+      limit_type =
+        if Plausible.Billing.Subscriptions.active?(team.subscription),
+          do: :team_invitation_while_subscribed_user,
+          else: :team_invitation_on_trial_user
+
+      Plausible.Auth.rate_limit(limit_type, inviter)
+    end
+  else
+    defp check_rate_limit(_team, _inviter), do: :ok
   end
 end

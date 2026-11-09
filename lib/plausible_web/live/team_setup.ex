@@ -262,6 +262,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
            :error,
            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
          )}
+
+      {:error, {:rate_limit, _}} ->
+        {:noreply,
+         put_live_flash(
+           socket,
+           :error,
+           "You've sent too many invitations. Please invite them later one by one"
+         )}
     end
   end
 

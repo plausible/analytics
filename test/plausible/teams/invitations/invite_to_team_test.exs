@@ -193,6 +193,55 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
 
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "new@example.com")
     end
+
+    on_ee do
+      @team_invitation_on_trial_limit 5
+
+      test "rate limits invitations per inviter when the team has no active subscription" do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = team_of(owner)
+        admin = add_member(team, role: :admin)
+
+        entries =
+          for i <- 1..@team_invitation_on_trial_limit,
+              do: %{email: "member#{i}@example.com", role: :viewer}
+
+        assert {:ok, _} = InviteToTeam.invite_all(team, owner, entries)
+
+        assert {:error, {:rate_limit, :team_invitation_on_trial_user}} =
+                 InviteToTeam.invite_all(team, owner, [
+                   %{email: "one-too-many@example.com", role: :viewer}
+                 ])
+
+        refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "one-too-many@example.com")
+
+        # the other user has its own rate limit
+        assert {:ok, _} =
+                 InviteToTeam.invite_all(team, admin, [
+                   %{email: "from-admin@example.com", role: :viewer}
+                 ])
+      end
+
+      @team_invitation_while_subscribed_limit 8
+
+      test "applies a higher rate limit when the team has an active subscription" do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = owner |> team_of() |> subscribe_to_business_plan()
+
+        entries =
+          for i <- 1..@team_invitation_while_subscribed_limit,
+              do: %{email: "member#{i}@example.com", role: :viewer}
+
+        assert {:ok, _} = InviteToTeam.invite_all(team, owner, entries)
+
+        assert {:error, {:rate_limit, :team_invitation_while_subscribed_user}} =
+                 InviteToTeam.invite_all(team, owner, [
+                   %{email: "one-too-many@example.com", role: :viewer}
+                 ])
+      end
+    end
   end
 
   describe "send_invitation_emails/1" do
