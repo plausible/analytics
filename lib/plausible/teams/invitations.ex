@@ -285,19 +285,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  @doc false
-  def ensure_transfer_valid(_team, nil, :owner), do: :ok
-
-  def ensure_transfer_valid(team, new_team, :owner) do
-    if team.id == new_team.id do
-      {:error, :transfer_to_self}
-    else
-      :ok
-    end
-  end
-
-  def ensure_transfer_valid(_team, _new_owner, _role), do: :ok
-
   def create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
     result =
       Ecto.Multi.new()
