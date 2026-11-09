@@ -1,20 +1,39 @@
 defmodule Plausible.SSRF.Pools do
   @moduledoc """
-  One Finch pool per `Plausible.SSRF` request.
+  Finch pools for `Plausible.SSRF`, keyed so repeat requests reuse a connection.
 
   SSRF connects to a checked IP, so the hostname for SNI and certificate checks
-  has to be set on the pool. Pools keyed by customer-supplied hostnames would
-  pile up, so each request gets its own and stops it when done. The pool is
-  linked to the caller, so it also goes away if the caller is killed.
+  has to be set on the pool, not read from the connection address. The pool key
+  is `{scheme, ip, port, host}`: the same host on the same IP and port reuse one
+  pool; a host that moves to another IP, or a different host on the same IP, gets
+  its own. Idle pools shut themselves down, so customer-supplied hostnames don't
+  pile up.
   """
 
-  @finch __MODULE__.Finch
+  use Supervisor
 
-  def child_spec(_opts), do: Finch.child_spec(name: @finch)
+  @finch __MODULE__.Finch
+  @pool_sup __MODULE__.PoolSupervisor
+  @pool_max_idle_time :timer.seconds(10)
+
+  def start_link(opts) do
+    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
+  @impl true
+  def init(_opts) do
+    children = [
+      {Finch, name: @finch},
+      {DynamicSupervisor, name: @pool_sup, strategy: :one_for_one}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
+  end
 
   @doc """
-  Starts a pool for one request, calls `fun` with the `:finch` options pointing
-  at it, then stops the pool. `cacerts` of `nil` means the system store.
+  Ensures the pool for `{host, ip, port}` is started, then calls `fun` with
+  `:finch` options pointing at it. `cacerts` of `nil` means the system store.
+  The pool stays idle for #{@pool_max_idle_time} ms and shuts down.
   """
   @spec with_pool(URI.t(), String.t(), :inet.ip_address(), [binary()] | nil, (keyword() -> r)) ::
           r
@@ -24,34 +43,27 @@ defmodule Plausible.SSRF.Pools do
       scheme: :https,
       host: pinned_url.host,
       port: pinned_url.port,
-      tag: {host, make_ref()}
+      tag: host
     }
 
     spec =
       Finch.Pool.child_spec(
         finch: @finch,
         pool: pool,
+        pool_max_idle_time: @pool_max_idle_time,
         conn_opts: [hostname: host, transport_opts: transport_opts(ip, cacerts)]
       )
 
-    {:ok, supervisor} = Supervisor.start_link([spec], strategy: :one_for_one)
-
-    try do
-      fun.(name: @finch, pool_tag: pool.tag)
-    after
-      stop(supervisor)
+    case DynamicSupervisor.start_child(@pool_sup, spec) do
+      {:ok, _} -> :ok
+      {:error, {:already_started, _}} -> :ok
     end
+
+    fun.(name: @finch, pool_tag: pool.tag)
   end
 
   # Mint verifies the certificate against `hostname` by default.
   defp transport_opts(ip, cacerts) do
     [inet6: tuple_size(ip) == 8] ++ if(cacerts, do: [cacerts: cacerts], else: [])
-  end
-
-  # The pool may already be gone; don't lose the response over it.
-  defp stop(supervisor) do
-    Supervisor.stop(supervisor)
-  catch
-    :exit, _ -> :ok
   end
 end
