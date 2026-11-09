@@ -31,8 +31,10 @@ defmodule Plausible.Teams.Sites.Transfer do
   @spec initiate(Site.t(), Auth.User.t(), String.t()) ::
           {:ok, Teams.SiteTransfer.t()} | {:error, Ecto.Changeset.t() | :permission_denied}
   def initiate(site, initiator, invitee_email) do
+    site = Repo.preload(site, :team)
+
     Repo.transaction(fn ->
-      with :ok <- Teams.Invitations.check_invitation_permissions(site, initiator, :owner),
+      with :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, initiator),
            {:ok, site_transfer} <-
              Teams.Invitations.create_site_transfer(site, initiator, invitee_email) do
         invitee = Auth.find_user_by(email: invitee_email)

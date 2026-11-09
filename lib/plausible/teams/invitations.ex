@@ -550,17 +550,6 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role) do
-    case Teams.Memberships.site_role(site, inviter) do
-      {:ok, {:team_member, inviter_role}} when inviter_role in [:owner, :admin] ->
-        :ok
-
-      _ ->
-        {:error, :permission_denied}
-    end
-  end
-
-  @doc false
   def check_team_member_limit(_team, :owner, _invitee_email), do: :ok
 
   def check_team_member_limit(team, _role, invitee_email) do

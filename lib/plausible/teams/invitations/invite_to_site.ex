@@ -33,7 +33,7 @@ defmodule Plausible.Teams.Invitations.InviteToSite do
 
   defp do_invite(site, inviter, invitee_email, role) do
     with site <- Repo.preload(site, [:owners, :team]),
-         :ok <- Teams.Invitations.check_invitation_permissions(site, inviter, role),
+         :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, inviter),
          :ok <- Teams.Invitations.check_team_member_limit(site.team, role, invitee_email),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(site, invitee, role),
