@@ -17,6 +17,37 @@ defmodule Plausible.Teams.Sites.Transfer do
           | :multiple_teams
           | :permission_denied
 
+  @doc """
+  Creates a site transfer to the given email and sends the invitee
+  an email to accept it. Only team owners and admins can do this.
+
+  If a transfer of this site to this email already exists, the email is
+  sent again with the existing transfer link. The transfer keeps its
+  original expiry.
+
+  Rejects if there's an existing guest invitation (not transfer) for
+  this site and this email.
+  """
+  @spec initiate(Site.t(), Auth.User.t(), String.t()) ::
+          {:ok, Teams.SiteTransfer.t()} | {:error, Ecto.Changeset.t() | :permission_denied}
+  def initiate(site, initiator, invitee_email) do
+    Repo.transaction(fn ->
+      with :ok <- Teams.Invitations.check_invitation_permissions(site, initiator, :owner),
+           {:ok, site_transfer} <-
+             Teams.Invitations.create_site_transfer(site, initiator, invitee_email) do
+        invitee = Auth.find_user_by(email: invitee_email)
+
+        site_transfer
+        |> Repo.preload([:site, :initiator])
+        |> Teams.Invitations.send_invitation_email(invitee)
+
+        site_transfer
+      else
+        {:error, cause} -> Repo.rollback(cause)
+      end
+    end)
+  end
+
   @spec change_team(Site.t(), Auth.User.t(), Teams.Team.t()) ::
           :ok | {:error, transfer_error()}
   def change_team(site, user, new_team) do
