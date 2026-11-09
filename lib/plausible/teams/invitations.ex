@@ -549,18 +549,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  @spec check_can_transfer_site(Teams.Team.t(), Auth.User.t()) ::
-          :ok | {:error, :permission_denied}
-  def check_can_transfer_site(team, user) do
-    case Teams.Memberships.team_role(team, user) do
-      {:ok, role} when role in [:owner, :admin] ->
-        :ok
-
-      _ ->
-        {:error, :permission_denied}
-    end
-  end
-
   @doc false
   def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role) do
     case Teams.Memberships.site_role(site, inviter) do
