@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         {:error, {:over_limit, _limit} = reason} ->
           put_error_flash(socket, reason)
 
-        {:error, {:rate_limit, :team_invitation_user} = reason} ->
+        {:error, {:rate_limit, _} = reason} ->
           put_error_flash(socket, reason)
       end
 
@@ -308,7 +308,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     do:
       "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
 
-  defp error_message({:rate_limit, :team_invitation_user}),
+  defp error_message({:rate_limit, _}),
     do: "Too many invitations sent. Please try again later"
 
   defp animate_role_change(socket, email) do

@@ -26,7 +26,8 @@ defmodule Plausible.Auth do
       @totp_setup_ip_limit 100_000
       @oauth_authorize_limit 100_000
       @oauth_authorize_ip_limit 100_000
-      @team_invitation_limit 100_000
+      @team_invitation_on_trial_limit 100_000
+      @team_invitation_while_subscribed_limit 100_000
 
     env when env in [:test, :ce_test] ->
       @ip_rate_limit 5
@@ -38,7 +39,8 @@ defmodule Plausible.Auth do
       @activation_request_limit 100_000
       @oauth_authorize_limit 10
       @oauth_authorize_ip_limit 100_000
-      @team_invitation_limit 5
+      @team_invitation_on_trial_limit 5
+      @team_invitation_while_subscribed_limit 8
 
     _ ->
       @ip_rate_limit 5
@@ -50,7 +52,8 @@ defmodule Plausible.Auth do
       @activation_request_limit 5
       @oauth_authorize_limit 10
       @oauth_authorize_ip_limit 30
-      @team_invitation_limit 10
+      @team_invitation_on_trial_limit 10
+      @team_invitation_while_subscribed_limit 50
   end
 
   @rate_limits %{
@@ -114,11 +117,15 @@ defmodule Plausible.Auth do
       limit: @oauth_authorize_limit,
       interval: :timer.minutes(1)
     },
-    # applies only to trial users
-    team_invitation_user: %{
-      prefix: "team-invitation:user",
-      limit: @team_invitation_limit,
+    team_invitation_on_trial_user: %{
+      prefix: "team-invitation-on-trial:user",
+      limit: @team_invitation_on_trial_limit,
       interval: :timer.hours(24)
+    },
+    team_invitation_while_subscribed_user: %{
+      prefix: "team-invitation-while-subscribed:user",
+      limit: @team_invitation_while_subscribed_limit,
+      interval: :timer.hours(1)
     }
   }
 

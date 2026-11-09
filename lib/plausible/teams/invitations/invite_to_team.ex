@@ -3,6 +3,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   Service for inviting new or existing users to team.
   """
 
+  use Plausible
+
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -79,11 +81,16 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
     end
   end
 
-  defp check_rate_limit(team, inviter) do
-    if Plausible.Billing.Subscriptions.active?(team.subscription) do
-      :ok
-    else
-      Plausible.Auth.rate_limit(:team_invitation_user, inviter)
+  on_ee do
+    defp check_rate_limit(team, inviter) do
+      limit_type =
+        if Plausible.Billing.Subscriptions.active?(team.subscription),
+          do: :team_invitation_while_subscribed_user,
+          else: :team_invitation_on_trial_user
+
+      Plausible.Auth.rate_limit(limit_type, inviter)
     end
+  else
+    defp check_rate_limit(_team, _inviter), do: :ok
   end
 end
