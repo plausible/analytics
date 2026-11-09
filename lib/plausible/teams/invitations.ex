@@ -465,37 +465,6 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  def ensure_can_take_ownership(site, team, opts \\ [])
-
-  on_ee do
-    def ensure_can_take_ownership(_site, nil, _opts), do: {:error, :no_plan}
-
-    def ensure_can_take_ownership(site, team, opts) do
-      team = Teams.with_subscription(team)
-      plan = Billing.Plans.get_subscription_plan(team.subscription)
-      active_subscription? = Billing.Subscriptions.active?(team.subscription)
-
-      if active_subscription? and plan != :free_10k do
-        team
-        |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
-        |> Billing.Quota.ensure_within_plan_limits(plan,
-          skip_site_limit_check?: Teams.Billing.grandfathered_team?(team),
-          skip_team_member_limit_check?: opts[:skip_site_members_transfer?] == true
-        )
-      else
-        {:error, :no_plan}
-      end
-    end
-  else
-    def ensure_can_take_ownership(_site, _team, _opts) do
-      if always(true) do
-        :ok
-      else
-        {:error, :no_plan}
-      end
-    end
-  end
-
   @doc false
   def check_team_member_limit(_team, :owner, _invitee_email), do: :ok
 
