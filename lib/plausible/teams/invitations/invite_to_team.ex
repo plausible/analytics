@@ -82,6 +82,8 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   end
 
   on_ee do
+    # Enforces limits by inviter user rather than the team because creating a team is trivial.
+    # Creating a new user is a little bit less so.
     defp check_rate_limit(team, inviter) do
       limit_type =
         if Plausible.Billing.Subscriptions.active?(team.subscription),
