@@ -9,6 +9,8 @@ defmodule Plausible.Teams.Sites.Transfer do
   alias Plausible.Site
   alias Plausible.Teams
 
+  import Ecto.Query, only: [from: 2]
+
   @type transfer_error() ::
           Billing.Quota.Limits.over_limits_error()
           | Ecto.Changeset.t()
@@ -36,7 +38,7 @@ defmodule Plausible.Teams.Sites.Transfer do
     Repo.transaction(fn ->
       with :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, initiator),
            {:ok, site_transfer} <-
-             Teams.Invitations.create_site_transfer(site, initiator, invitee_email) do
+             create_site_transfer(site, initiator, invitee_email) do
         invitee = Auth.find_user_by(email: invitee_email)
 
         site_transfer
@@ -98,6 +100,37 @@ defmodule Plausible.Teams.Sites.Transfer do
     else
       :ok
     end
+  end
+
+  @doc """
+  Creates a site transfer without sending any email. If a transfer of this
+  site to this email already exists, returns it and sets its `updated_at`
+  to `now`.
+  """
+  @spec create_site_transfer(Site.t(), Auth.User.t(), String.t(), NaiveDateTime.t()) ::
+          {:ok, Teams.SiteTransfer.t()} | {:error, Ecto.Changeset.t()}
+  def create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
+    changeset = Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
+
+    if guest_invitation_exists?(site, invitee_email) do
+      {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
+    else
+      Repo.insert(changeset,
+        on_conflict: [set: [updated_at: now]],
+        conflict_target: [:email, :site_id],
+        returning: true
+      )
+    end
+  end
+
+  defp guest_invitation_exists?(site, email) do
+    Repo.exists?(
+      from ti in Teams.Invitation,
+        inner_join: gi in assoc(ti, :guest_invitations),
+        where: ti.email == ^email,
+        where: ti.team_id == ^site.team_id,
+        where: gi.site_id == ^site.id
+    )
   end
 
   defp maybe_get_team(_user, %Teams.Team{} = team) do

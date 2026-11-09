@@ -285,45 +285,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.put(
-        :site_transfer_changeset,
-        Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
-      )
-      |> Ecto.Multi.run(:ensure_no_invitations, fn _repo, %{site_transfer_changeset: changeset} ->
-        q =
-          from ti in Teams.Invitation,
-            inner_join: gi in assoc(ti, :guest_invitations),
-            where: ti.email == ^invitee_email,
-            where: ti.team_id == ^site.team_id,
-            where: gi.site_id == ^site.id
-
-        if Repo.exists?(q) do
-          {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
-        else
-          {:ok, :pass}
-        end
-      end)
-      |> Ecto.Multi.insert(
-        :site_transfer,
-        fn %{site_transfer_changeset: changeset} -> changeset end,
-        on_conflict: [set: [updated_at: now]],
-        conflict_target: [:email, :site_id],
-        returning: true
-      )
-      |> Repo.transaction()
-
-    case result do
-      {:ok, success} ->
-        {:ok, success.site_transfer}
-
-      {:error, _, changeset, _} ->
-        {:error, changeset}
-    end
-  end
-
   defp do_accept(team_invitation, user, now, opts) do
     send_email? = Keyword.get(opts, :send_email?, true)
     guest_invitations = Keyword.get(opts, :guest_invitations, team_invitation.guest_invitations)
