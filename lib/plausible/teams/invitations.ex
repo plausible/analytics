@@ -207,7 +207,17 @@ defmodule Plausible.Teams.Invitations do
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
     site = Repo.preload(site, :team)
 
-    create_invitation(site, invitee_email, role, inviter)
+    Repo.transaction(fn ->
+      with {:ok, team_invitation} <-
+             create_team_invitation(site.team, invitee_email, inviter,
+               ensure_no_site_transfers_for: site.id
+             ),
+           {:ok, guest_invitation} <- create_guest_invitation(team_invitation, site, role) do
+        guest_invitation
+      else
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
   end
 
   def remove_team_invitation(team_invitation) do
@@ -557,20 +567,6 @@ defmodule Plausible.Teams.Invitations do
       :guest -> {:error, :invited_as_guest}
       _ -> {:error, :invited_as_member}
     end
-  end
-
-  defp create_invitation(site, invitee_email, role, inviter) do
-    Repo.transaction(fn ->
-      with {:ok, team_invitation} <-
-             create_team_invitation(site.team, invitee_email, inviter,
-               ensure_no_site_transfers_for: site.id
-             ),
-           {:ok, guest_invitation} <- create_guest_invitation(team_invitation, site, role) do
-        guest_invitation
-      else
-        {:error, changeset} -> Repo.rollback(changeset)
-      end
-    end)
   end
 
   defp create_team_invitation(team, invitee_email, inviter, opts \\ []) do
