@@ -14,6 +14,7 @@ defmodule Plausible.SSRF.Pools do
 
   @finch __MODULE__.Finch
   @pool_sup __MODULE__.PoolSupervisor
+  @task_sup __MODULE__.TaskSupervisor
   @pool_max_idle_time :timer.seconds(10)
 
   def start_link(opts) do
@@ -24,11 +25,15 @@ defmodule Plausible.SSRF.Pools do
   def init(_opts) do
     children = [
       {Finch, name: @finch},
-      {DynamicSupervisor, name: @pool_sup, strategy: :one_for_one}
+      {DynamicSupervisor, name: @pool_sup, strategy: :one_for_one},
+      {Task.Supervisor, name: @task_sup}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
+
+  @doc "Supervisor for the unlinked tasks that run SSRF requests."
+  def task_supervisor, do: @task_sup
 
   @doc """
   Ensures the pool for `{host, ip, port}` is started, then calls `fun` with

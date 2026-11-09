@@ -92,6 +92,26 @@ defmodule Plausible.SSRFTest do
 
       assert SSRF.get("https://evil.example/") == {:error, :restricted_address}
     end
+
+    @tag :capture_log
+    test "returns the exception when the request raises, without killing the caller" do
+      expect_no_dns_lookup()
+
+      Req.Test.stub(__MODULE__, fn _conn -> raise "boom" end)
+
+      assert {:error, %RuntimeError{message: "boom"}} =
+               SSRF.get("https://93.184.216.34/", plug: {Req.Test, __MODULE__})
+    end
+
+    @tag :capture_log
+    test "returns an error when the request exits, without killing the caller" do
+      expect_no_dns_lookup()
+
+      Req.Test.stub(__MODULE__, fn _conn -> exit(:boom) end)
+
+      assert SSRF.get("https://93.184.216.34/", plug: {Req.Test, __MODULE__}) ==
+               {:error, :request_failed}
+    end
   end
 
   # Real HTTPS server on loopback. `SSRFIPCheck` allows only 127.0.0.1, so

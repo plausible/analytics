@@ -13,6 +13,7 @@ defmodule Plausible.SSRF do
           | :restricted_address
           | :redirect_not_followed
           | :timeout
+          | :request_failed
 
   @redirect_statuses [301, 302, 303, 307, 308]
   @default_receive_timeout :timer.seconds(5)
@@ -68,12 +69,14 @@ defmodule Plausible.SSRF do
       # Req still honours it as an alias of :redirect, and it wins.
       |> Keyword.delete(:follow_redirects)
 
-    # The pool is linked to the task, so killing the task stops it too.
-    task = Task.async(fn -> request(url, opts) end)
+    # Make sure that Req exceptions are returned
+    task = Task.Supervisor.async_nolink(Pools.task_supervisor(), fn -> request(url, opts) end)
 
     case Task.yield(task, total_timeout) || Task.shutdown(task, :brutal_kill) do
       {:ok, result} -> result
-      _ -> {:error, :timeout}
+      {:exit, {exception, _stacktrace}} when is_exception(exception) -> {:error, exception}
+      {:exit, _reason} -> {:error, :request_failed}
+      nil -> {:error, :timeout}
     end
   end
 
