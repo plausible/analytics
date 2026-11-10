@@ -329,6 +329,34 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "list_for_team_member/2" do
+    test "lists the team's sites, newest first" do
+      user = new_user()
+      older = new_site(owner: user)
+      newer = new_site(owner: user)
+
+      assert [%{id: newer_id}, %{id: older_id}] =
+               Sites.list_for_team_member(user, team_of(user))
+
+      assert {newer_id, older_id} == {newer.id, older.id}
+    end
+
+    test "leaves out the user's sites in other teams and sites they are a guest of" do
+      user = new_user()
+      own = new_site(owner: user)
+
+      {:ok, other_team} = new_user() |> Plausible.Teams.get_or_create()
+      add_member(other_team, user: user, role: :viewer)
+      new_site(team: other_team)
+
+      guest_site = new_site()
+      add_guest(guest_site, user: user, role: :viewer)
+
+      assert [%{id: id}] = Sites.list_for_team_member(user, team_of(user))
+      assert id == own.id
+    end
+  end
+
   describe "toggle_pin/2" do
     test "billing role team member can pin a site" do
       owner = new_user()

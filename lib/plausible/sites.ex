@@ -295,6 +295,16 @@ defmodule Plausible.Sites do
     end
   end
 
+  @doc """
+  Lists the sites of `team` that `user` can access as a member of it.
+  """
+  @spec list_for_team_member(Auth.User.t(), Teams.Team.t()) :: [Site.t()]
+  def list_for_team_member(user, team) do
+    user
+    |> for_user_query(team)
+    |> Repo.all()
+  end
+
   def create(user, params, team \\ nil) do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
