@@ -40,7 +40,7 @@ jobs:
           cache-key: plausible/analytics/ee
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -48,7 +48,7 @@ jobs:
 
       - name: Build and push
         id: docker_build
-        uses: useblacksmith/build-push-action@7e8ecf9d494396e5c866bcda6c2ad7399c32d3f1 # v2
+        uses: useblacksmith/build-push-action@a0cbe4ded6fae40d41e91e47426f0edf1c59f8d6 # v2
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
