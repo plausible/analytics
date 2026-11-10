@@ -37,6 +37,8 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
   @plan_prices prices_file |> File.read!() |> JSON.decode!()
 
+  @plan_files ~w(legacy_plans plans_v1 plans_v2 plans_v3 plans_v4 plans_v5)
+
   def currency_parity_file() do
     Application.app_dir(:plausible, ["priv", "classic_plan_currency_parity.json"])
   end
@@ -132,6 +134,103 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
         true -> acc
       end
     end)
+  end
+
+  @doc """
+  Inlines Billing IDs of standard plans into static plan definitions
+  (`priv/plans_v*.json`).
+
+  Assumes migration was run already.
+  Every plan gets `billing_product_id`, `billing_monthly_price_id` and
+  `billing_yearly_price_id`, read from Paddle Billing. 
+
+  Plans are linked to them through their Classic ids, 
+  stored in `custom_data`.
+  """
+  def update_plan_files(dir \\ priv_dir(), plan_files \\ @plan_files) do
+    billing_ids_by_classic_plan_id = list_billing_ids()
+
+    Enum.each(plan_files, fn plan_file ->
+      IO.write(".")
+      path = Path.join(dir, "#{plan_file}.json")
+
+      rewrite_plans(path, fn plan ->
+        billing_ids_for_plan(plan, billing_ids_by_classic_plan_id)
+      end)
+    end)
+  end
+
+  @doc """
+  Like `update_plan_files/2`, but for sandbox plan definitions
+  (`priv/sandbox_*.json`).
+
+  Sandbox plans have their own Classic ids, so they are matched to the
+  "live" plan by the same generation, kind and monthly pageview limit,
+  so we can keep using Billing Sandbox on both environments (prod and staging)
+  for the time being.
+  """
+  def update_sandbox_plan_files(dir \\ priv_dir(), plan_files \\ @plan_files) do
+    billing_ids_by_classic_plan_id = list_billing_ids()
+
+    Enum.each(plan_files, fn plan_file ->
+      IO.write(".")
+
+      billing_ids_by_plan =
+        dir
+        |> Path.join("#{plan_file}.json")
+        |> File.read!()
+        |> Jason.decode!()
+        |> Map.new(fn plan ->
+          {plan_key(plan), billing_ids_for_plan(plan, billing_ids_by_classic_plan_id)}
+        end)
+
+      path = Path.join(dir, "sandbox_#{plan_file}.json")
+
+      rewrite_plans(path, fn plan ->
+        Map.fetch!(billing_ids_by_plan, plan_key(plan))
+      end)
+    end)
+  end
+
+  defp priv_dir(), do: Application.app_dir(:plausible, "priv")
+
+  defp list_billing_ids() do
+    {:ok, products} = PaddleBilling.api().list_products()
+    classic_plan_mapping(products)
+  end
+
+  defp rewrite_plans(path, billing_ids_fun) do
+    updated_plans =
+      path
+      |> File.read!()
+      |> Jason.decode!(objects: :ordered_objects)
+      |> Enum.map(fn plan ->
+        # this gymnastics is to ensure static files are updated without any reordering
+        values = Enum.reduce(billing_ids_fun.(plan), plan.values, &put_value/2)
+        %Jason.OrderedObject{values: values}
+      end)
+      |> Jason.encode!(pretty: true)
+
+    File.write!(path, updated_plans)
+
+    :ok
+  end
+
+  defp put_value({key, value}, values), do: List.keystore(values, key, 0, {key, value})
+
+  defp plan_key(plan) do
+    {plan["generation"], plan["kind"], plan["monthly_pageview_limit"]}
+  end
+
+  defp billing_ids_for_plan(plan, billing_ids) do
+    monthly = plan["monthly_product_id"] && Map.fetch!(billing_ids, plan["monthly_product_id"])
+    yearly = plan["yearly_product_id"] && Map.fetch!(billing_ids, plan["yearly_product_id"])
+
+    [
+      {"billing_product_id", (monthly || yearly).billing_product_id},
+      {"billing_monthly_price_id", monthly && monthly.billing_price_id},
+      {"billing_yearly_price_id", yearly && yearly.billing_price_id}
+    ]
   end
 
   defp create_enterprise_product(enterprise_plan, price, acc) do

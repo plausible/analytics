@@ -367,6 +367,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
       {:error, {:over_limit, limit}} ->
         {:noreply, put_live_flash(socket, :error, member_limit_message(limit))}
+
+      {:error, {:rate_limit, _}} ->
+        {:noreply,
+         put_live_flash(
+           socket,
+           :error,
+           "You've sent too many invitations. Please invite them later one by one"
+         )}
     end
   end
 

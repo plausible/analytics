@@ -1,22 +1,36 @@
 [
   {
-    "kind":"growth",
+    "kind": "growth",
     "generation": 1,
-    "monthly_pageview_limit":1000000,
-    "yearly_product_id":"590753", 
-    "monthly_product_id":"558746",
-    "site_limit":50,
-    "team_member_limit":"unlimited",
-    "features":["goals","props","stats_api"]
+    "monthly_pageview_limit": 1000000,
+    "yearly_product_id": "590753",
+    "monthly_product_id": "558746",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api"
+    ],
+    "billing_product_id": "pro_01m6gdeejbsr75fx5tm6ndgpv8",
+    "billing_monthly_price_id": "pri_01m6gdef1rg0c0bj11rw17ce52",
+    "billing_yearly_price_id": "pri_01m6gdef9a06nw8dy30ypdwa5f"
   },
   {
-    "kind":"growth",
+    "kind": "growth",
     "generation": 1,
-    "monthly_pageview_limit":150000000,
-    "yearly_product_id":"648089", 
-    "monthly_product_id":null,
-    "site_limit":50,
-    "team_member_limit":"unlimited",
-    "features":["goals","props","stats_api"]
+    "monthly_pageview_limit": 150000000,
+    "yearly_product_id": "648089",
+    "monthly_product_id": null,
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api"
+    ],
+    "billing_product_id": "pro_01m6gdegf21em156qg3w3yqhyv",
+    "billing_monthly_price_id": null,
+    "billing_yearly_price_id": "pri_01m6gdegmd3f2nz350gwjj83rt"
   }
 ]
