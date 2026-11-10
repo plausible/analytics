@@ -12,7 +12,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf0jrtx3e4y6318ygk4f1",
+    "billing_monthly_price_id": "pri_01m6gdf0q6xjbvpt5sg8sepayt",
+    "billing_yearly_price_id": "pri_01m6gdf0w0rnpp2xcbg02r8rbv"
   },
   {
     "kind": "growth",
@@ -27,7 +30,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf226tfvxhrxdkffte5rs",
+    "billing_monthly_price_id": "pri_01m6gdf26tdy2tm281shj7v5f0",
+    "billing_yearly_price_id": "pri_01m6gdf2bmaz5xz7c71t5hm9qb"
   },
   {
     "kind": "growth",
@@ -42,7 +48,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf3hppgta73x2gq703dwd",
+    "billing_monthly_price_id": "pri_01m6gdf3q7aj6zw6v6x70hxj3g",
+    "billing_yearly_price_id": "pri_01m6gdf3w17w8xdpepfgpf8ky3"
   },
   {
     "kind": "growth",
@@ -57,7 +66,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf51qeck5a5t7tyqacjxd",
+    "billing_monthly_price_id": "pri_01m6gdf56cvdr8pffnfkbmy90f",
+    "billing_yearly_price_id": "pri_01m6gdf5bbhv1df3851zw0s7x1"
   },
   {
     "kind": "growth",
@@ -72,7 +84,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf6haaedq2x5rcgkpnqkj",
+    "billing_monthly_price_id": "pri_01m6gdf6p35ehq1fp7j4wmm59n",
+    "billing_yearly_price_id": "pri_01m6gdf6tzwbgptg9dqsnw6qfn"
   },
   {
     "kind": "growth",
@@ -87,7 +102,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf80bexfd9ygvch97r366",
+    "billing_monthly_price_id": "pri_01m6gdf84z4t1jhgz8bmqz8m4t",
+    "billing_yearly_price_id": "pri_01m6gdf89ty9jgb6gxsttax3b6"
   },
   {
     "kind": "growth",
@@ -102,7 +120,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdf9f7dgcwy2tnrbzcyvc2",
+    "billing_monthly_price_id": "pri_01m6gdf9kq03gp7nbwrnb9vb0b",
+    "billing_yearly_price_id": "pri_01m6gdf9ry69y4a416pn48hzbk"
   },
   {
     "kind": "growth",
@@ -117,7 +138,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdfayxyv3rz2hv87xm8j2m",
+    "billing_monthly_price_id": "pri_01m6gdfb3mt16y6339gpgwg5wq",
+    "billing_yearly_price_id": "pri_01m6gdfb8f96z30z2e3h1w95gd"
   },
   {
     "kind": "growth",
@@ -132,7 +156,10 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdfce7j249f5hexrpayshb",
+    "billing_monthly_price_id": "pri_01m6gdfcjx1hzp1490668qpz8n",
+    "billing_yearly_price_id": "pri_01m6gdfcqssax5res4akt74ac5"
   },
   {
     "kind": "growth",
@@ -147,6 +174,9 @@
       "props",
       "stats_api",
       "shared_links"
-    ]
+    ],
+    "billing_product_id": "pro_01m6gdfdxt3c1wy6kkja31av7k",
+    "billing_monthly_price_id": "pri_01m6gdfe2ecjqes4p5b3fvrd9g",
+    "billing_yearly_price_id": "pri_01m6gdfe7a4gjn2wv9y1ffwwdz"
   }
 ]

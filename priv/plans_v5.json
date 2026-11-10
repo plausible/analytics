@@ -10,7 +10,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdgz5bdf6artj90167jvy7",
+    "billing_monthly_price_id": "pri_01m6gdgza5de83sq958j1d35kp",
+    "billing_yearly_price_id": "pri_01m6gdgzf5vm4n0vcaeaevdqdn"
   },
   {
     "kind": "starter",
@@ -23,7 +26,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh0n672rmpkchnjdcweb4",
+    "billing_monthly_price_id": "pri_01m6gdh0sz5hhm406y48a6zz0d",
+    "billing_yearly_price_id": "pri_01m6gdh0z1w72byskrr3s24wh0"
   },
   {
     "kind": "starter",
@@ -36,7 +42,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh250qe0fbvrafy82jhrm",
+    "billing_monthly_price_id": "pri_01m6gdh29jjrrr9n8g8f2k9e28",
+    "billing_yearly_price_id": "pri_01m6gdh2egpnb4dm8wdwb6b0kt"
   },
   {
     "kind": "starter",
@@ -49,7 +58,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh3m5mqczt4vn3qk3rht4",
+    "billing_monthly_price_id": "pri_01m6gdh3rtg1c8h435qjv1bn5z",
+    "billing_yearly_price_id": "pri_01m6gdh3xjp6h660pngkyshz28"
   },
   {
     "kind": "starter",
@@ -62,7 +74,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh538yk7p33yvsy6gzzkb",
+    "billing_monthly_price_id": "pri_01m6gdh57pvp3kpft8smdxezk0",
+    "billing_yearly_price_id": "pri_01m6gdh5ck8qekwvfsw44q9f39"
   },
   {
     "kind": "starter",
@@ -75,7 +90,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh6jggfcrqk9012h2f6vw",
+    "billing_monthly_price_id": "pri_01m6gdh6q74zffh90ks13jh66a",
+    "billing_yearly_price_id": "pri_01m6gdh6vwjxtvz84cpt4yvxmy"
   },
   {
     "kind": "starter",
@@ -88,7 +106,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh81cc9e15mhkcp13rkj3",
+    "billing_monthly_price_id": "pri_01m6gdh860xm8ag8wdfdybnrvd",
+    "billing_yearly_price_id": "pri_01m6gdh8aw30yfmtcpe61qekgm"
   },
   {
     "kind": "starter",
@@ -101,7 +122,10 @@
     "features": [
       "goals"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdh9g745jbb1fhm8baagqz",
+    "billing_monthly_price_id": "pri_01m6gdh9mqwvg3ac1h0h1n89z3",
+    "billing_yearly_price_id": "pri_01m6gdh9sevraesvh6573kc96d"
   },
   {
     "kind": "growth",
@@ -117,7 +141,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhaz9e9zexnnxc6j0pqb1",
+    "billing_monthly_price_id": "pri_01m6gdhb3ytrxwpr2qfpenz8w8",
+    "billing_yearly_price_id": "pri_01m6gdhb8zv2h3qwfsnc25c0sj"
   },
   {
     "kind": "growth",
@@ -133,7 +160,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhcejkj4ascka9hr1t7et",
+    "billing_monthly_price_id": "pri_01m6gdhck8pxjhz0y0hw6yk9ew",
+    "billing_yearly_price_id": "pri_01m6gdhcr2eajjqjymbm63ppv6"
   },
   {
     "kind": "growth",
@@ -149,7 +179,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhdxtdr6s98c7z28mb7tx",
+    "billing_monthly_price_id": "pri_01m6gdhe2d40sqg3q8day0ysej",
+    "billing_yearly_price_id": "pri_01m6gdhe7a5da5782yyvsx4s0w"
   },
   {
     "kind": "growth",
@@ -165,7 +198,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhfcqs88badsxya5tk65h",
+    "billing_monthly_price_id": "pri_01m6gdhfh69cdgbhfcxty4byz6",
+    "billing_yearly_price_id": "pri_01m6gdhfp2nyagdybm4eeqsg7w"
   },
   {
     "kind": "growth",
@@ -181,7 +217,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhgvmk2rnvs48wcmdpw81",
+    "billing_monthly_price_id": "pri_01m6gdhh0e516xb41dp6y9g471",
+    "billing_yearly_price_id": "pri_01m6gdhh5823m3jkgtsntbnfha"
   },
   {
     "kind": "growth",
@@ -197,7 +236,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhjat2y6jtn1hcn8djhv5",
+    "billing_monthly_price_id": "pri_01m6gdhjf7hb4d1f698bzjb2bk",
+    "billing_yearly_price_id": "pri_01m6gdhjm0hejshptf0neke7kf"
   },
   {
     "kind": "growth",
@@ -213,7 +255,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhkszv1ftztvj3t4drjbs",
+    "billing_monthly_price_id": "pri_01m6gdhkyjta2vqc7k7pxhey3q",
+    "billing_yearly_price_id": "pri_01m6gdhm35eet8vv44q6dm590h"
   },
   {
     "kind": "growth",
@@ -229,7 +274,10 @@
       "site_segments",
       "site_annotations"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdhn8rsxrx7br7fp829e10",
+    "billing_monthly_price_id": "pri_01m6gdhndbycbebzyt1k9cs472",
+    "billing_yearly_price_id": "pri_01m6gdhnj30bex3ve9kcj0vwr6"
   },
   {
     "kind": "business",
@@ -250,7 +298,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhpqq7d64s6g54b0wy2sm",
+    "billing_monthly_price_id": "pri_01m6gdhpwbhtzr3vh3x9fkwgaz",
+    "billing_yearly_price_id": "pri_01m6gdhq194fd9ygymgakd719n"
   },
   {
     "kind": "business",
@@ -271,7 +322,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhr7180dw0y7stqrbtk5r",
+    "billing_monthly_price_id": "pri_01m6gdhrbh3zfdpc3mrtawx2s7",
+    "billing_yearly_price_id": "pri_01m6gdhrgdbzbmm9n2sha9x2x1"
   },
   {
     "kind": "business",
@@ -292,7 +346,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhsnmq49y3w23nz5sdha9",
+    "billing_monthly_price_id": "pri_01m6gdhst2dnj9grgcb40qxj4s",
+    "billing_yearly_price_id": "pri_01m6gdhsyyc3km1swqpqwbg23h"
   },
   {
     "kind": "business",
@@ -313,7 +370,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhv47gtq1gzeqy9tf9cxs",
+    "billing_monthly_price_id": "pri_01m6gdhv8qqtctjqhaz4pk0tez",
+    "billing_yearly_price_id": "pri_01m6gdhvdecnc7tzy77aesya6q"
   },
   {
     "kind": "business",
@@ -334,7 +394,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhwjyy90479d77a40h0pk",
+    "billing_monthly_price_id": "pri_01m6gdhwqhz5cww7nh6fpr32jk",
+    "billing_yearly_price_id": "pri_01m6gdhwwb9v4ny52fsx9bkykw"
   },
   {
     "kind": "business",
@@ -355,7 +418,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhy2v3e5kt3363gdv3fe4",
+    "billing_monthly_price_id": "pri_01m6gdhy7axz8bvxyxqfpha24s",
+    "billing_yearly_price_id": "pri_01m6gdhyc24d9hgn87v5j00dmm"
   },
   {
     "kind": "business",
@@ -376,7 +442,10 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdhzhzpchsgy2a995xhtat",
+    "billing_monthly_price_id": "pri_01m6gdhzpjsndrmr0s6jg63t7q",
+    "billing_yearly_price_id": "pri_01m6gdhzvjexnh04m7w77053bp"
   },
   {
     "kind": "business",
@@ -397,6 +466,9 @@
       "funnels",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdj11by9m8az5vq3js63cr",
+    "billing_monthly_price_id": "pri_01m6gdj15sx2rjdpejbmcj4ekj",
+    "billing_yearly_price_id": "pri_01m6gdj1ane90ct8q156ykgtf6"
   }
 ]
