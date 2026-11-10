@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
 - Added light-mode support to tooltips
 - Added the ability to remove yourself as a guest member via Account Settings
+- Create a new team from any team in the team switcher, and choose to move My Personal Sites into it or start with an empty team
 
 ### Removed
 
@@ -49,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
 - Replaced the options menu on site cards with individual Settings and Pin/Unpin buttons that appear on hover
 - "Last used" times for login sessions, SSO sessions and Plugins API tokens now account for how often they are recorded, e.g. "Less than 10 minutes ago" or "About 5 hours ago"
+- My Personal Sites always shows in the team switcher, and teams are sorted by name
 
 ### Fixed
 
