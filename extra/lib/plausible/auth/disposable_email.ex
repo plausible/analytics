@@ -40,5 +40,15 @@ defmodule Plausible.Auth.DisposableEmail do
     |> String.trim()
     |> String.trim_trailing(".")
     |> String.downcase()
+    |> to_ascii()
+  end
+
+  defp to_ascii(domain) do
+    domain
+    |> String.to_charlist()
+    |> :idna.encode(uts46: true)
+    |> to_string()
+  catch
+    :exit, _reason -> domain
   end
 end

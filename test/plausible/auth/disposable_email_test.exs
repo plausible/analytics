@@ -32,6 +32,21 @@ defmodule Plausible.Auth.DisposableEmailTest do
         refute DisposableEmail.disposable?("someone@x7q-unlisted.mailinator.com")
       end
 
+      test "matches the Unicode form of a listed internationalized domain" do
+        # Listed as account.xn--yaho-sqa.com and xn----7sba2bgi3agqk.xn--p1ai
+        assert DisposableEmail.disposable?("someone@account.xn--yaho-sqa.com")
+        assert DisposableEmail.disposable?("someone@account.yahóo.com")
+        assert DisposableEmail.disposable?("someone@ACCOUNT.YAHÓO.COM")
+        assert DisposableEmail.disposable?("someone@скала-уфмс.рф")
+      end
+
+      test "matches Unicode lookalike spellings of a listed ASCII domain" do
+        # fullwidth letters
+        assert DisposableEmail.disposable?("someone@ｍａｉｌｉｎａｔｏｒ.com")
+        # ideographic full stop in place of the dot
+        assert DisposableEmail.disposable?("someone@mailinator。com")
+      end
+
       test "false for input that is not an address" do
         refute DisposableEmail.disposable?("")
         refute DisposableEmail.disposable?("mailinator.com")

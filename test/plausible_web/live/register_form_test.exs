@@ -95,6 +95,34 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       refute render(lv) =~ "Disposable email addresses are not allowed"
     end
 
+    @tag :ee_only
+    test "rejects the Unicode form of a disposable internationalized domain", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@account.yahóo.com")
+      assert render(lv) =~ "Disposable email addresses are not allowed"
+
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Disposable email addresses are not allowed"
+      refute Repo.get_by(User, email: "mary.sue@account.yahóo.com")
+    end
+
+    @tag :ee_only
+    test "does not crash while an invalid email domain is being typed", %{conn: conn} do
+      lv = get_liveview(conn, "/register")
+
+      for email <- ["mary.sue@", "mary.sue@a b.com", "mary.sue@-.com", "mary.sue@a_b.com"] do
+        type_into_input(lv, "user[email]", email)
+        refute render(lv) =~ "Disposable email addresses are not allowed"
+      end
+    end
+
     @tag :ce_build_only
     test "allows disposable email on CE", %{conn: conn} do
       mock_captcha_success()
