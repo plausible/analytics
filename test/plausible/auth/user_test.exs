@@ -147,7 +147,7 @@ defmodule Plausible.Auth.UserTest do
   end
 
   on_ee do
-    describe "validate_email_not_disposable/1" do
+    describe "new/1 email validation" do
       defp new_changeset(email) do
         User.new(%{
           name: "Jane Doe",
@@ -158,8 +158,7 @@ defmodule Plausible.Auth.UserTest do
       end
 
       test "fails for a disposable email domain" do
-        changeset =
-          "jane@mailinator.com" |> new_changeset() |> User.validate_email_not_disposable()
+        changeset = new_changeset("jane@mailinator.com")
 
         refute changeset.valid?
 
@@ -167,14 +166,13 @@ defmodule Plausible.Auth.UserTest do
                  changeset.errors[:email]
       end
 
-      test "succeeds for a regular email domain" do
-        changeset = "jane@example.com" |> new_changeset() |> User.validate_email_not_disposable()
-
-        assert changeset.valid?
+      test "does not hash the password for a rejected email" do
+        refute new_changeset("jane@mailinator.com").changes[:password_hash]
+        assert new_changeset("jane@example.com").changes[:password_hash]
       end
 
-      test "is not applied by new/1 itself" do
-        assert new_changeset("jane@mailinator.com").valid?
+      test "succeeds for a regular email domain" do
+        assert new_changeset("jane@example.com").valid?
       end
     end
 

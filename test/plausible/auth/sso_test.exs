@@ -306,6 +306,18 @@ defmodule Plausible.Auth.SSOTest do
         assert audited_entry("sso_user_provisioned", team_id: team.id, entity_id: "#{user.id}")
       end
 
+      test "does not provision a new user with a disposable email domain", %{
+        integration: integration
+      } do
+        {:ok, sso_domain} = SSO.Domains.add(integration, "mailinator.com", skip_checks?: true)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Sculley", "jane@mailinator.com", integration)
+
+        assert {:error, :disposable_email} = SSO.provision_user(identity)
+        refute Repo.get_by(Plausible.Auth.User, email: "jane@mailinator.com")
+      end
+
       test "does not provision a user from identity when identity integration does not match", %{
         domain: domain
       } do

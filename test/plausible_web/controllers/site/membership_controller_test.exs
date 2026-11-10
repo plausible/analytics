@@ -170,6 +170,22 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                "#{second_member.email} is already a member of #{site.domain}"
     end
 
+    @tag :ee_only
+    test "renders form with error if the invitee has a disposable email domain", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+
+      conn =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "someone@mailinator.com",
+          role: "editor"
+        })
+
+      assert html_response(conn, 200) =~ "Disposable email addresses are not allowed"
+    end
+
     test "handles repeat invitation gracefully", %{
       conn: conn,
       user: user

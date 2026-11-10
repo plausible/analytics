@@ -213,9 +213,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def handle_event("validate", %{"user" => params}, socket) do
     changeset =
-      if socket.assigns.invitation, do: Auth.User.new(params), else: signup_changeset(params)
-
-    changeset = Map.put(changeset, :action, :validate)
+      params
+      |> Auth.User.new()
+      |> Map.put(:action, :validate)
 
     password_strength = Auth.User.password_strength(changeset)
 
@@ -261,7 +261,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     case Plausible.Auth.check_registration_enabled(:default) do
       :ok ->
         if PlausibleWeb.Captcha.verify(params["frc-captcha-response"]) do
-          user = signup_changeset(params["user"])
+          user = Auth.User.new(params["user"])
 
           add_user(socket, user)
         else
@@ -275,18 +275,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
           |> redirect(to: ~p"/login")
 
         {:noreply, socket}
-    end
-  end
-
-  # Disposable emails are only rejected on EE, and only for self-service
-  # signups. Invited users get their email address from the invitation.
-  defp signup_changeset(params) do
-    changeset = Auth.User.new(params)
-
-    on_ee do
-      Auth.User.validate_email_not_disposable(changeset)
-    else
-      changeset
     end
   end
 

@@ -15,12 +15,13 @@ defmodule Plausible.Auth.DisposableEmail do
 
   Only the exact domain of the address is matched, not its parent domains.
 
-  This is EE-only (it lives in `extra/lib`): Community Edition does not reject
-  disposable addresses.
+  Call `Plausible.Auth.disposable_email?/1` instead of this module directly: it is
+  also available (always `false`) on Community Edition.
   """
 
-  @external_resource "priv/disposable_email_domains.txt"
-  @domains Application.app_dir(:plausible, "priv/disposable_email_domains.txt")
+  @domains_path "priv/disposable_email_domains.txt"
+  @external_resource @domains_path
+  @domains Application.app_dir(:plausible, @domains_path)
            |> File.read!()
            |> String.split("\n", trim: true)
            |> MapSet.new()

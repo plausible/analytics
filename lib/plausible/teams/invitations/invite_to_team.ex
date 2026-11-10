@@ -3,6 +3,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   Service for inviting new or existing users to team.
   """
 
+  alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -12,9 +13,10 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   Creates team invitations for all given entries in a single transaction.
   Either all of them get created, or none. Does not send any emails yet.
 
-  Returns `{:error, :invalid_email}` or `{:error, :duplicate_emails}`
-  without touching the database if any of the entries' emails is invalid,
-  or if the same email appears more than once.
+  Returns `{:error, :invalid_email}`, `{:error, :disposable_email}` or
+  `{:error, :duplicate_emails}` without touching the database if any of the
+  entries' emails is invalid or on a disposable domain (EE only), or if the
+  same email appears more than once.
   """
   @spec invite_all(
           Teams.Team.t(),
@@ -56,6 +58,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   defp validate_emails(emails) do
     cond do
       not Enum.all?(emails, &valid_email?/1) -> {:error, :invalid_email}
+      Enum.any?(emails, &Auth.disposable_email?/1) -> {:error, :disposable_email}
       # emails are case-insensitive in the database (citext)
       Enum.uniq_by(emails, &String.downcase/1) != emails -> {:error, :duplicate_emails}
       true -> :ok

@@ -7,6 +7,8 @@ defmodule Plausible.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Plausible.Auth
+
   @type t() :: %__MODULE__{}
 
   @required [:email, :name, :password]
@@ -82,33 +84,12 @@ defmodule Plausible.Auth.User do
     |> validate_required(:name, message: "Please enter your name")
     |> validate_required(:email, message: "Please enter your email")
     |> validate_required(:password, message: "Please enter a password")
+    |> validate_email_not_disposable()
     |> validate_password_length()
     |> validate_password_strength()
     |> hash_password()
     |> set_email_verification_status()
     |> unique_constraint(:email)
-  end
-
-  on_ee do
-    alias Plausible.Auth.DisposableEmail
-
-    @doc """
-    Rejects emails on disposable domains. Kept out of `new/1` so that it only
-    applies to self-service signups and email changes (`email_changeset/2`), not
-    to invitations or SSO provisioning.
-
-    Email changes have to be covered too: otherwise an address can be freed up
-    for re-registration by switching the account to a disposable one.
-    """
-    def validate_email_not_disposable(changeset) do
-      validate_change(changeset, :email, fn :email, email ->
-        if DisposableEmail.disposable?(email) do
-          [email: {"Disposable email addresses are not allowed", validation: :disposable_email}]
-        else
-          []
-        end
-      end)
-    end
   end
 
   def name_changeset(user, attrs \\ %{}) do
@@ -131,21 +112,15 @@ defmodule Plausible.Auth.User do
   end
 
   def email_changeset(user, attrs \\ %{}) do
-    changeset =
-      user
-      |> cast(attrs, [:email, :password])
-      |> validate_required([:email, :password])
-      |> validate_email_changed()
-      |> check_password()
-      |> unique_constraint(:email)
-      |> set_email_verification_status()
-      |> put_change(:previous_email, user.email)
-
-    on_ee do
-      validate_email_not_disposable(changeset)
-    else
-      changeset
-    end
+    user
+    |> cast(attrs, [:email, :password])
+    |> validate_required([:email, :password])
+    |> validate_email_changed()
+    |> validate_email_not_disposable()
+    |> check_password()
+    |> unique_constraint(:email)
+    |> set_email_verification_status()
+    |> put_change(:previous_email, user.email)
   end
 
   def cancel_email_changeset(user) do
@@ -240,6 +215,18 @@ defmodule Plausible.Auth.User do
 
   def profile_img_url(email) when is_binary(email) do
     profile_img_url(%__MODULE__{email: email})
+  end
+
+  # Applied to email changes as well as signups: otherwise an address could be freed
+  # up for re-registration by switching the account to a disposable one.
+  defp validate_email_not_disposable(changeset) do
+    validate_change(changeset, :email, fn :email, email ->
+      if Auth.disposable_email?(email) do
+        [email: {"Disposable email addresses are not allowed", validation: :disposable_email}]
+      else
+        []
+      end
+    end)
   end
 
   defp validate_email_changed(changeset) do

@@ -251,7 +251,8 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert String.length(password_hash) > 0
     end
 
-    test "registers invited user even if the email is on a disposable domain", %{
+    @tag :ee_only
+    test "does not register user from an existing invitation to a disposable email domain", %{
       conn: conn,
       site: site,
       inviter: inviter
@@ -267,8 +268,8 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       html = lv |> element("form") |> render_submit()
 
-      refute html =~ "Disposable email addresses are not allowed"
-      assert Repo.get_by(User, email: "invitee@mailinator.com")
+      assert html =~ "Disposable email addresses are not allowed"
+      refute Repo.get_by(User, email: "invitee@mailinator.com")
     end
 
     test "registers user from team invitation", %{conn: conn, inviter: inviter} do
