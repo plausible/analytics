@@ -59,7 +59,7 @@ defmodule Plausible.Teams.Sites.Transfer do
   def change_team(site, user, new_team) do
     site = Repo.preload(site, :team)
 
-    with :ok <- ensure_transfer_valid(site.team, new_team),
+    with :ok <- ensure_not_transfer_to_self(site.team, new_team),
          :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, user),
          :ok <- ensure_can_take_ownership(site, new_team) do
       {:ok, _} =
@@ -79,7 +79,7 @@ defmodule Plausible.Teams.Sites.Transfer do
     site = Repo.preload(site_transfer.site, :team)
 
     with {:ok, new_team} <- maybe_get_team(new_owner, team),
-         :ok <- ensure_transfer_valid(site.team, new_team),
+         :ok <- ensure_not_transfer_to_self(site.team, new_team),
          :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, new_owner),
          :ok <- ensure_can_take_ownership(site, new_team, opts),
          :ok <- accept_site_transfer(site_transfer, new_team, opts) do
@@ -122,7 +122,7 @@ defmodule Plausible.Teams.Sites.Transfer do
     end
   end
 
-  defp ensure_transfer_valid(team, new_team) do
+  defp ensure_not_transfer_to_self(team, new_team) do
     if team.id == new_team.id do
       {:error, :transfer_to_self}
     else
