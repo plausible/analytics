@@ -1,6 +1,31 @@
 defmodule Plausible.Teams.Sites.Transfer do
   @moduledoc """
-  Service for transferring sites.
+  Service for moving sites between teams.
+
+  There are two ways for a transfer to happen:
+
+  ### 1. The email path: `initiate/3` -> `accept/4`
+
+  An owner or admin of the site's team starts an ownership transfer
+  which sends out an invitation email. The invitee then chooses whether
+  to accept the transfer with or without "members" (guests).
+
+  If they accept with members:
+
+  * the site keeps its guests and pending guest invitations
+  * the owners of the prior team become guest editors of the site
+
+  If they accept without members:
+
+  * all guest memberships/invitations of the site are dropped
+  * the owners of the prior team do not keep guest access
+
+  ### 2. A single action: `change_team/3`
+
+  A user moves the site directly to another team that *they* manage.
+
+  * the site keeps its guests and pending guest invitations
+  * the owners of the prior team become guest editors of the site
   """
 
   alias Plausible.Auth
