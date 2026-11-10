@@ -57,7 +57,16 @@ defmodule Plausible.Teams.Sites.Transfer do
   @spec change_team(Site.t(), Auth.User.t(), Teams.Team.t()) ::
           :ok | {:error, transfer_error()}
   def change_team(site, user, new_team) do
-    with {:ok, _} <- transfer_ownership(site, user, new_team) do
+    site = Repo.preload(site, :team)
+
+    with :ok <- ensure_transfer_valid(site.team, new_team),
+         :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, user),
+         :ok <- ensure_can_take_ownership(site, new_team) do
+      {:ok, _} =
+        Repo.transaction(fn ->
+          :ok = move_site_to_team(site, new_team, NaiveDateTime.utc_now(:second))
+        end)
+
       send_team_changed_email(site, user, new_team)
       :ok
     end
@@ -113,20 +122,6 @@ defmodule Plausible.Teams.Sites.Transfer do
     end
   end
 
-  defp transfer_ownership(site, new_owner, team) do
-    site = Repo.preload(site, :team)
-
-    with {:ok, new_team} <- maybe_get_team(new_owner, team),
-         :ok <- ensure_transfer_valid(site.team, new_team),
-         :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(new_team, new_owner),
-         :ok <- ensure_can_take_ownership(site, new_team),
-         :ok <- transfer_site(site, new_team) do
-      site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
-
-      {:ok, site.ownerships}
-    end
-  end
-
   defp ensure_transfer_valid(team, new_team) do
     if team.id == new_team.id do
       {:error, :transfer_to_self}
@@ -173,15 +168,6 @@ defmodule Plausible.Teams.Sites.Transfer do
           move_site_to_team(site_transfer.site, team, NaiveDateTime.utc_now(:second), opts)
 
         Repo.delete_all(from st in Teams.SiteTransfer, where: st.id == ^site_transfer.id)
-      end)
-
-    :ok
-  end
-
-  defp transfer_site(site, team) do
-    {:ok, _} =
-      Repo.transaction(fn ->
-        :ok = move_site_to_team(site, team, NaiveDateTime.utc_now(:second))
       end)
 
     :ok
