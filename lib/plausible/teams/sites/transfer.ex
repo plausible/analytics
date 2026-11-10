@@ -170,7 +170,7 @@ defmodule Plausible.Teams.Sites.Transfer do
     {:ok, _} =
       Repo.transaction(fn ->
         :ok =
-          transfer_site_ownership(site_transfer.site, team, NaiveDateTime.utc_now(:second), opts)
+          move_site_to_team(site_transfer.site, team, NaiveDateTime.utc_now(:second), opts)
 
         Repo.delete_all(from st in Teams.SiteTransfer, where: st.id == ^site_transfer.id)
       end)
@@ -181,13 +181,13 @@ defmodule Plausible.Teams.Sites.Transfer do
   defp transfer_site(site, team) do
     {:ok, _} =
       Repo.transaction(fn ->
-        :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
+        :ok = move_site_to_team(site, team, NaiveDateTime.utc_now(:second))
       end)
 
     :ok
   end
 
-  defp transfer_site_ownership(site, team, now, opts \\ []) do
+  defp move_site_to_team(site, team, now, opts \\ []) do
     skip_site_members_transfer? = Keyword.get(opts, :skip_site_members_transfer?, false)
 
     site =
