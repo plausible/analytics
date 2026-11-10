@@ -94,7 +94,11 @@ defmodule Plausible.Auth.User do
 
     @doc """
     Rejects emails on disposable domains. Kept out of `new/1` so that it only
-    applies to self-service signups, not to invitations or SSO provisioning.
+    applies to self-service signups and email changes (`email_changeset/2`), not
+    to invitations or SSO provisioning.
+
+    Email changes have to be covered too: otherwise an address can be freed up
+    for re-registration by switching the account to a disposable one.
     """
     def validate_email_not_disposable(changeset) do
       validate_change(changeset, :email, fn :email, email ->
@@ -127,14 +131,21 @@ defmodule Plausible.Auth.User do
   end
 
   def email_changeset(user, attrs \\ %{}) do
-    user
-    |> cast(attrs, [:email, :password])
-    |> validate_required([:email, :password])
-    |> validate_email_changed()
-    |> check_password()
-    |> unique_constraint(:email)
-    |> set_email_verification_status()
-    |> put_change(:previous_email, user.email)
+    changeset =
+      user
+      |> cast(attrs, [:email, :password])
+      |> validate_required([:email, :password])
+      |> validate_email_changed()
+      |> check_password()
+      |> unique_constraint(:email)
+      |> set_email_verification_status()
+      |> put_change(:previous_email, user.email)
+
+    on_ee do
+      validate_email_not_disposable(changeset)
+    else
+      changeset
+    end
   end
 
   def cancel_email_changeset(user) do
