@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-434DF47B.js"></script>
+    <script src="dist/sidebar_items-06F4EBF1.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -186,6 +186,28 @@ Paddle Billing yet.</p></div>
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_plan_files/2" data-no-tooltip translate="no">update_plan_files(dir \\ priv_dir(), plan_files \\ [&quot;legacy_plans&quot;, &quot;plans_v1&quot;, &quot;plans_v2&quot;, &quot;plans_v3&quot;, &quot;plans_v4&quot;, &quot;plans_v5&quot;])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Inlines Billing IDs of standard plans into static plan definitions
+(<code class="inline">priv/plans_v*.json</code>).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_sandbox_plan_files/2" data-no-tooltip translate="no">update_sandbox_plan_files(dir \\ priv_dir(), plan_files \\ [&quot;legacy_plans&quot;, &quot;plans_v1&quot;, &quot;plans_v2&quot;, &quot;plans_v3&quot;, &quot;plans_v4&quot;, &quot;plans_v5&quot;])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Like <a href="#update_plan_files/2"><code class="inline">update_plan_files/2</code></a>, but for sandbox plan definitions
+(<code class="inline">priv/sandbox_*.json</code>).</p></div>
+
+    </div>
+
 </div>
 
   </section>
@@ -207,7 +229,7 @@ Paddle Billing yet.</p></div>
     </a>
     <h1 class="signature" translate="no">currency_parity_file()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L40" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -229,7 +251,7 @@ Paddle Billing yet.</p></div>
     </a>
     <h1 class="signature" translate="no">sync_enterprise(overwrite? \\ false)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L105" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L107" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -260,7 +282,7 @@ price ids, like <a href="#sync_standard/1"><code class="inline">sync_standard/1<
     </a>
     <h1 class="signature" translate="no">sync_standard(overwrite? \\ false, canonical_plans \\ Plans.all())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L59" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -276,6 +298,62 @@ definitions, and prices that are missing are created.</p><p>Returns the mapping 
 price ids, whether they were created now or found in Paddle, so repeated
 runs return the same mapping.</p><p>The generation of a plan is only put in the price description, which is
 internal. Product and price names are displayed to customers.</p>
+  </section>
+</section>
+<section class="detail" id="update_plan_files/2">
+
+    <span id="update_plan_files/0"></span>
+
+    <span id="update_plan_files/1"></span>
+
+  <div class="detail-header">
+    <a href="#update_plan_files/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">update_plan_files(dir \\ priv_dir(), plan_files \\ [&quot;legacy_plans&quot;, &quot;plans_v1&quot;, &quot;plans_v2&quot;, &quot;plans_v3&quot;, &quot;plans_v4&quot;, &quot;plans_v5&quot;])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L150" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Inlines Billing IDs of standard plans into static plan definitions
+(<code class="inline">priv/plans_v*.json</code>).</p><p>Assumes migration was run already.
+Every plan gets <code class="inline">billing_product_id</code>, <code class="inline">billing_monthly_price_id</code> and
+<code class="inline">billing_yearly_price_id</code>, read from Paddle Billing. </p><p>Plans are linked to them through their Classic ids, 
+stored in <code class="inline">custom_data</code>.</p>
+  </section>
+</section>
+<section class="detail" id="update_sandbox_plan_files/2">
+
+    <span id="update_sandbox_plan_files/0"></span>
+
+    <span id="update_sandbox_plan_files/1"></span>
+
+  <div class="detail-header">
+    <a href="#update_sandbox_plan_files/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">update_sandbox_plan_files(dir \\ priv_dir(), plan_files \\ [&quot;legacy_plans&quot;, &quot;plans_v1&quot;, &quot;plans_v2&quot;, &quot;plans_v3&quot;, &quot;plans_v4&quot;, &quot;plans_v5&quot;])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/migration.ex#L172" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Like <a href="#update_plan_files/2"><code class="inline">update_plan_files/2</code></a>, but for sandbox plan definitions
+(<code class="inline">priv/sandbox_*.json</code>).</p><p>Sandbox plans have their own Classic ids, so they are matched to the
+&quot;live&quot; plan by the same generation, kind and monthly pageview limit,
+so we can keep using Billing Sandbox on both environments (prod and staging)
+for the time being.</p>
   </section>
 </section>
 
