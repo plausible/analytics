@@ -138,7 +138,54 @@ Pages
 
 
     <section id="moduledoc">
-<p>LiveView for Team setup</p>
+<p>LiveView that lets the <code class="inline">current_user</code> name a new team and invite team
+members. The LiveView creates the new team from scratch, or converts the
+user's &quot;My personal sites&quot; team into it. &quot;My personal sites&quot; is the team
+that the user owns and that is not set up yet.</p><h3 id="module-1-onboarding-the-current-team-is-my-personal-sites" class="section-heading">
+  <a href="#module-1-onboarding-the-current-team-is-my-personal-sites" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">1. Onboarding, the current team is &quot;My personal sites&quot;</span>
+</h3>
+<p>The LiveView converts &quot;My personal sites&quot; into the new team. It does not
+show a choice.</p><h3 id="module-2-onboarding-the-current-team-is-not-my-personal-sites" class="section-heading">
+  <a href="#module-2-onboarding-the-current-team-is-not-my-personal-sites" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">2. Onboarding, the current team is not &quot;My personal sites&quot;</span>
+</h3>
+<p>The LiveView creates a team from scratch.</p><p>In both onboarding cases, if the current team is already set up, the
+LiveView redirects to the next onboarding step.</p><h3 id="module-3-outside-onboarding-the-current-team-is-not-my-personal-sites" class="section-heading">
+  <a href="#module-3-outside-onboarding-the-current-team-is-not-my-personal-sites" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">3. Outside onboarding, the current team is not &quot;My personal sites&quot;</span>
+</h3>
+<p>The LiveView creates a team from scratch. The user can have &quot;My personal
+sites&quot;, but the LiveView does not offer it, because it is not the current
+team.</p><h3 id="module-4-outside-onboarding-the-current-team-is-my-personal-sites" class="section-heading">
+  <a href="#module-4-outside-onboarding-the-current-team-is-my-personal-sites" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">4. Outside onboarding, the current team is &quot;My personal sites&quot;</span>
+</h3>
+<p>The LiveView shows two options, also when &quot;My personal sites&quot; has no
+sites and no subscription:</p><ul><li>Move (selected by default): the LiveView converts &quot;My personal sites&quot;
+into the new team. The sites, the guests and the subscription stay in
+the team.</li><li>Empty team: the LiveView creates a team from scratch. The personal
+sites stay in &quot;My personal sites&quot;.</li></ul><p>The LiveView shows member rows up to the lower of the two limits. Thus,
+the number of rows does not change when the user selects the other option.</p><h3 id="module-team-member-limit" class="section-heading">
+  <a href="#module-team-member-limit" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Team member limit</span>
+</h3>
+<p>When the LiveView creates a team from scratch, the trial limit applies.
+When it converts &quot;My personal sites&quot;, the limit of that team applies:
+the subscription limit, or the trial limit when there is no subscription.
+On a plan without team members (for example Starter), the LiveView locks
+the form and shows an upgrade CTA. The user can still skip the step in
+onboarding, or select the empty team option outside onboarding.</p>
     </section>
 
 </div>
@@ -216,7 +263,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L196" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L338" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -236,7 +283,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_info(arg, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L6" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -256,7 +303,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">mount(params, session, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L13" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L59" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -276,7 +323,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L48" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/team_setup.ex#L102" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
