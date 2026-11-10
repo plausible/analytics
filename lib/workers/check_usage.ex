@@ -48,8 +48,7 @@ defmodule Plausible.Workers.CheckUsage do
           as: :team,
           inner_join: o in assoc(t, :owners),
           left_join: bm in assoc(t, :billing_members),
-          inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-          on: true,
+          inner_join: s in assoc(t, :subscription),
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
           where:

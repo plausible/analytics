@@ -20,8 +20,7 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimit do
     active_enterprise_plans_query =
       from t in Teams.Team,
         as: :team,
-        inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-        on: true,
+        inner_join: s in assoc(t, :subscription),
         inner_join: ep in Billing.EnterprisePlan,
         on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
         select: ep

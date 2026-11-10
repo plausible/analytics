@@ -13,8 +13,7 @@ defmodule Plausible.Workers.LockSites do
       Repo.all(
         from t in Teams.Team,
           as: :team,
-          left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-          on: true,
+          left_join: s in assoc(t, :subscription),
           left_join: ep in EnterprisePlan,
           on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
           preload: [subscription: s, enterprise_plan: ep]

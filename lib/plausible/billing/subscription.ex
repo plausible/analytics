@@ -21,16 +21,27 @@ defmodule Plausible.Billing.Subscription do
 
   @optional_fields [:last_bill_date]
 
-  schema "subscriptions" do
+  schema "all_subscriptions" do
+    field :type, Ecto.Enum, values: [:classic, :billing], default: :classic
+
+    # Classic specific fields
     field :paddle_subscription_id, :string
     field :paddle_plan_id, :string
     field :update_url, :string
     field :cancel_url, :string
-    field :status, Ecto.Enum, values: Subscription.Status.valid_statuses()
+
+    # Billing specific fields
+    field :billing_subscription_id, :string
+    field :billing_customer_id, :string
+    field :billing_product_id, :string
+    field :billing_price_id, :string
+
+    # Common fields
     field :next_bill_amount, :string
     field :next_bill_date, :date
     field :last_bill_date, :date
     field :currency_code, :string
+    field :status, Ecto.Enum, values: Subscription.Status.valid_statuses()
 
     belongs_to :team, Plausible.Teams.Team
 
