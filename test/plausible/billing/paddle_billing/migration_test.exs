@@ -206,6 +206,123 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
     end
   end
 
+  describe "update_plan_files" do
+    @describetag :tmp_dir
+
+    test "writes billing ids into plans matched by Classic ids", %{tmp_dir: dir} do
+      path = Path.join(dir, "plans_v4.json")
+      File.write!(path, JSON.encode!(plans_fixture("857097", "857079", "857098", nil)))
+      stub_billing_products()
+
+      assert :ok = update_plan_files(dir, ["plans_v4"])
+
+      assert [p10k, p100k] = path |> File.read!() |> JSON.decode!()
+
+      assert %{
+               "billing_product_id" => "prod_10k",
+               "billing_monthly_price_id" => "price_10k_m",
+               "billing_yearly_price_id" => "price_10k_y"
+             } = p10k
+
+      assert %{
+               "billing_product_id" => "prod_100k",
+               "billing_monthly_price_id" => "price_100k_m",
+               "billing_yearly_price_id" => nil
+             } = p100k
+    end
+
+    test "keeps the key order and appends the new keys", %{tmp_dir: dir} do
+      path = Path.join(dir, "plans_v4.json")
+      File.write!(path, JSON.encode!(plans_fixture("857097", "857079", "857098", nil)))
+      stub_billing_products()
+
+      keys_before = plan_keys(path)
+
+      update_plan_files(dir, ["plans_v4"])
+      raw = File.read!(path)
+
+      assert plan_keys(path) ==
+               keys_before ++
+                 ["billing_product_id", "billing_monthly_price_id", "billing_yearly_price_id"]
+
+      update_plan_files(dir, ["plans_v4"])
+      assert File.read!(path) == raw
+    end
+
+    test "raises when a plan isn't in Paddle Billing", %{tmp_dir: dir} do
+      File.write!(
+        Path.join(dir, "plans_v4.json"),
+        JSON.encode!(plans_fixture("857097", "857079", "000000", nil))
+      )
+
+      stub_billing_products()
+
+      assert_raise KeyError, fn -> update_plan_files(dir, ["plans_v4"]) end
+    end
+  end
+
+  describe "update_sandbox_plan_files" do
+    @describetag :tmp_dir
+
+    setup %{tmp_dir: dir} do
+      File.write!(
+        Path.join(dir, "plans_v4.json"),
+        JSON.encode!(plans_fixture("857097", "857079", "857098", nil))
+      )
+
+      File.write!(
+        Path.join(dir, "sandbox_plans_v4.json"),
+        JSON.encode!(plans_fixture("63842", "63843", "63844", nil))
+      )
+
+      stub_billing_products()
+
+      :ok
+    end
+
+    test "writes billing ids into sandbox plans matched by generation, kind and volume", %{
+      tmp_dir: dir
+    } do
+      assert :ok = update_sandbox_plan_files(dir, ["plans_v4"])
+
+      assert [p10k, p100k] =
+               dir |> Path.join("sandbox_plans_v4.json") |> File.read!() |> JSON.decode!()
+
+      assert %{
+               "monthly_product_id" => "63842",
+               "yearly_product_id" => "63843",
+               "billing_product_id" => "prod_10k",
+               "billing_monthly_price_id" => "price_10k_m",
+               "billing_yearly_price_id" => "price_10k_y"
+             } = p10k
+
+      assert %{
+               "billing_product_id" => "prod_100k",
+               "billing_monthly_price_id" => "price_100k_m",
+               "billing_yearly_price_id" => nil
+             } = p100k
+    end
+
+    test "is idempotent", %{tmp_dir: dir} do
+      path = Path.join(dir, "sandbox_plans_v4.json")
+
+      update_sandbox_plan_files(dir, ["plans_v4"])
+      first = File.read!(path)
+      update_sandbox_plan_files(dir, ["plans_v4"])
+
+      assert File.read!(path) == first
+    end
+
+    test "raises when the production plan isn't in Paddle Billing", %{tmp_dir: dir} do
+      File.write!(
+        Path.join(dir, "plans_v4.json"),
+        JSON.encode!(plans_fixture("857097", "857079", "000000", nil))
+      )
+
+      assert_raise KeyError, fn -> update_sandbox_plan_files(dir, ["plans_v4"]) end
+    end
+  end
+
   describe "sync_enterprise" do
     test "syncs new enterprise plan" do
       team = new_site().team
@@ -556,6 +673,64 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
   defp sync_enterprise(overwrite? \\ false) do
     {mapping, _progress} = with_io(fn -> Migration.sync_enterprise(overwrite?) end)
     mapping
+  end
+
+  defp update_plan_files(dir, plan_files) do
+    {result, _io} = with_io(fn -> Migration.update_plan_files(dir, plan_files) end)
+    result
+  end
+
+  defp update_sandbox_plan_files(dir, plan_files) do
+    {result, _io} = with_io(fn -> Migration.update_sandbox_plan_files(dir, plan_files) end)
+    result
+  end
+
+  defp stub_billing_products() do
+    stub(Plausible.HTTPClient.Mock, :get, fn "https://sandbox-api.paddle.com/products" <> _,
+                                             _headers ->
+      {:ok,
+       ok_response(%{
+         "data" => [
+           product("prod_10k", %{"857097" => "price_10k_m", "857079" => "price_10k_y"}),
+           product("prod_100k", %{"857098" => "price_100k_m"})
+         ],
+         "meta" => %{"has_more" => false}
+       })}
+    end)
+  end
+
+  defp plans_fixture(p10k_monthly, p10k_yearly, p100k_monthly, p100k_yearly) do
+    for {limit, monthly, yearly} <- [
+          {10_000, p10k_monthly, p10k_yearly},
+          {100_000, p100k_monthly, p100k_yearly}
+        ] do
+      %{
+        "kind" => "growth",
+        "generation" => 4,
+        "monthly_pageview_limit" => limit,
+        "monthly_product_id" => monthly,
+        "yearly_product_id" => yearly,
+        "site_limit" => 10,
+        "team_member_limit" => 3,
+        "features" => ["goals"]
+      }
+    end
+  end
+
+  defp plan_keys(path) do
+    [first_plan | _] = path |> File.read!() |> Jason.decode!(objects: :ordered_objects)
+    Enum.map(first_plan.values, fn {key, _value} -> key end)
+  end
+
+  defp product(id, price_ids_by_classic_id) do
+    %{
+      "id" => id,
+      "custom_data" => %{},
+      "prices" =>
+        for {classic_id, price_id} <- price_ids_by_classic_id do
+          %{"id" => price_id, "custom_data" => %{"paddle_classic_plan_id" => classic_id}}
+        end
+    }
   end
 
   defp insert_enterprise_plan(paddle_plan_id) do
