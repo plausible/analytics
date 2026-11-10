@@ -1,6 +1,50 @@
 defmodule PlausibleWeb.Live.TeamSetup do
   @moduledoc """
-  LiveView for Team setup
+  LiveView that lets the `current_user` name a new team and invite team
+  members. The LiveView creates the new team from scratch, or converts the
+  user's "My personal sites" team into it. "My personal sites" is the team
+  that the user owns and that is not set up yet.
+
+  ### 1. Onboarding, the current team is "My personal sites"
+
+  The LiveView converts "My personal sites" into the new team. It does not
+  show a choice.
+
+  ### 2. Onboarding, the current team is not "My personal sites"
+
+  The LiveView creates a team from scratch.
+
+  In both onboarding cases, if the current team is already set up, the
+  LiveView redirects to the next onboarding step.
+
+  ### 3. Outside onboarding, the current team is not "My personal sites"
+
+  The LiveView creates a team from scratch. The user can have "My personal
+  sites", but the LiveView does not offer it, because it is not the current
+  team.
+
+  ### 4. Outside onboarding, the current team is "My personal sites"
+
+  The LiveView shows two options, also when "My personal sites" has no
+  sites and no subscription:
+
+    * Move (selected by default): the LiveView converts "My personal sites"
+      into the new team. The sites, the guests and the subscription stay in
+      the team.
+    * Empty team: the LiveView creates a team from scratch. The personal
+      sites stay in "My personal sites".
+
+  The LiveView shows member rows up to the lower of the two limits. Thus,
+  the number of rows does not change when the user selects the other option.
+
+  ### Team member limit
+
+  When the LiveView creates a team from scratch, the trial limit applies.
+  When it converts "My personal sites", the limit of that team applies:
+  the subscription limit, or the trial limit when there is no subscription.
+  On a plan without team members (for example Starter), the LiveView locks
+  the form and shows an upgrade CTA. The user can still skip the step in
+  onboarding, or select the empty team option outside onboarding.
   """
 
   use PlausibleWeb, :live_view
