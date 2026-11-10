@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
           |> Repo.preload([
             :owners,
             :completed_imports,
-            team: [:owners, subscription: Teams.last_subscription_query()]
+            team: [:owners, subscription: Teams.last_subscription_query(:value, site.team_id)]
           ])
 
         conn = merge_assigns(conn, site: site, site_role: role, shared_link: shared_link)

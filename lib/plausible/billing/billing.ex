@@ -36,7 +36,7 @@ defmodule Plausible.Billing do
   """
   def create_manual_subscription(team, %{id: plan_id} = enterprise_plan) do
     subscription =
-      Repo.one(from(s in Teams.last_subscription_query(), where: s.team_id == ^team.id))
+      Repo.one(from(s in Teams.last_subscription_query(:value, team.id)))
 
     already_manual? = Subscription.manual_subscription?(subscription)
 

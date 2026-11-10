@@ -8,6 +8,7 @@ defmodule Plausible.Teams do
   alias __MODULE__
   alias Plausible.Auth
   alias Plausible.Billing
+  alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
   alias Plausible.Teams.Invitations.InviteToTeam
   use Plausible
@@ -80,8 +81,17 @@ defmodule Plausible.Teams do
     Date.diff(team.trial_expiry_date, Date.utc_today())
   end
 
+  def last_subscription_query(team_filter \\ :field, value \\ nil) do
+    Subscriptions.last_subscription_query(team_filter, value)
+  end
+
+  def last_subscription_join_query() do
+    Subscriptions.last_subscription_join_query()
+  end
+
   def with_subscription(team) do
-    Repo.preload(team, subscription: last_subscription_query())
+    subscription = Repo.one(Subscriptions.last_subscription_query(:value, team.id))
+    %{team | subscription: subscription}
   end
 
   @spec owned_sites(Teams.Team.t() | nil, pos_integer() | nil) :: [Plausible.Site.t()]
@@ -370,21 +380,6 @@ defmodule Plausible.Teams do
     def accept_traffic_until(_user) do
       @accept_traffic_until_free
     end
-  end
-
-  @spec last_subscription_join_query() :: Ecto.Query.t()
-  def last_subscription_join_query() do
-    from(subscription in last_subscription_query(),
-      where: subscription.team_id == parent_as(:team).id
-    )
-  end
-
-  @spec last_subscription_query() :: Ecto.Query.t()
-  def last_subscription_query() do
-    from(subscription in Plausible.Billing.Subscription,
-      order_by: [desc: subscription.inserted_at, desc: subscription.id],
-      limit: 1
-    )
   end
 
   @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()

@@ -74,8 +74,11 @@ defmodule Plausible.Teams.Team do
     has_many :sites, Plausible.Site
     has_many :team_memberships, Plausible.Teams.Membership
     has_many :team_invitations, Plausible.Teams.Invitation
-    has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+
+    embeds_one :subscription, Plausible.Billing.Subscription, load_in_query: false
+
+    has_one :classic_subscription, Plausible.Billing.PaddleClassic.Subscription
 
     has_one :billing_subscription, Plausible.Billing.PaddleBilling.Subscription
     has_many :billing_subscription_events, Plausible.Billing.PaddleBilling.SubscriptionEvent
