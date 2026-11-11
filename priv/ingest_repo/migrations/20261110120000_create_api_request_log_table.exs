@@ -19,8 +19,10 @@ defmodule Plausible.IngestRepo.Migrations.CreateApiRequestLogTable do
               (
                 `timestamp` DateTime,
                 `team_id` UInt64,
+                `user_id` UInt64,
                 `credential_type` LowCardinality(String),
                 `credential_id` UInt64,
+                `credential_label` String,
                 `interface` LowCardinality(String),
                 `operation` LowCardinality(String),
                 `status` UInt16,
