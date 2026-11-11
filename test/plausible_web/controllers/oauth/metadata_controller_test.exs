@@ -30,7 +30,7 @@ defmodule PlausibleWeb.OAuth.MetadataControllerTest do
                        "resource" => ^(issuer <> "/mcp"),
                        "authorization_servers" => [^issuer],
                        "bearer_methods_supported" => ["header"],
-                       "scopes_supported" => ["sites:read:*"]
+                       "scopes_supported" => ["sites:read:*", "stats:read:*"]
                      }) = resp
     end
   end
