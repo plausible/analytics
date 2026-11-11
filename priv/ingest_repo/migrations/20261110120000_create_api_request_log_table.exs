@@ -30,7 +30,7 @@ defmodule Plausible.IngestRepo.Migrations.CreateApiRequestLogTable do
             ORDER BY (team_id, timestamp)
             TTL timestamp + INTERVAL 3 MONTH
             SETTINGS ttl_only_drop_parts = 1
-            #{Plausible.MigrationUtils.table_settings_expr()}
+            #{Plausible.MigrationUtils.table_settings_expr(:suffix)}
             """,
             """
             DROP TABLE IF EXISTS api_request_log #{on_cluster} SYNC
