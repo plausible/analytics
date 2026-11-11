@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - Always compare against the same time range in comparisons with "Today"
 - Added vertical indicator line to graph to make it easier to see what's hovered / selected
 - Added light-mode support to tooltips
+- Added the ability to remove yourself as a guest member via Account Settings
+- Create a new team from any team in the team switcher, and choose to move My Personal Sites into it or start with an empty team
 
 ### Removed
 
@@ -47,9 +49,13 @@ All notable changes to this project will be documented in this file.
 - Replaced HCaptcha with Friendly Captcha
 - Team names are now limited to 50 characters and cannot contain URLs with an explicit scheme (e.g. `https://`)
 - Replaced the options menu on site cards with individual Settings and Pin/Unpin buttons that appear on hover
+- "Last used" times for login sessions, SSO sessions and Plugins API tokens now account for how often they are recorded, e.g. "Less than 10 minutes ago" or "About 5 hours ago"
+- My Personal Sites always shows in the team switcher, and teams are sorted by name
 
 ### Fixed
 
+- "Previous period" comparison with "Match day of week" now shifts to the nearest matching weekday instead of always the next one, which could overlap the selected range
+- Cache warmer retries a failed warm-up of critical caches
 - Stats API `/api/v1/stats/breakdown` now returns a `400` error for an invalid `page` parameter instead of crashing with a `500`
 - Fixed "Create Team" going through when the team name was rejected, creating the team under a name the user never entered
 - Improve team member removal/team role change

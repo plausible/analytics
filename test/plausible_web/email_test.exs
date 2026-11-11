@@ -59,6 +59,10 @@ defmodule PlausibleWeb.EmailTest do
   end
 
   describe "priority email layout" do
+    # Temporarily skipped: priority mail is routed through the default
+    # transactional ('outbound') stream while the Postmark 'priority' stream is
+    # broken. Un-skip once email.ex is reverted to the 'priority' stream.
+    @tag :skip
     @tag :ee_only
     test "uses the `priority` message stream in Postmark in EE" do
       email =

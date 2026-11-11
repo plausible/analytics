@@ -3822,7 +3822,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
   describe "using the returned query object in a new POST request" do
     test "yields the same results for a simple aggregate query", %{conn: conn, site: site} do
-      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      Plausible.Site.tz_changeset(site, %{timezone: "Europe/Tallinn"})
       |> Plausible.Repo.update()
 
       populate_stats(site, [

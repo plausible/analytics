@@ -1113,6 +1113,31 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert updated.timezone == "Europe/London"
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/general"
     end
+
+    test "ignores fields other than the timezone", %{conn: conn, site: site} do
+      put(conn, "/#{site.domain}/settings", %{
+        "site" => %{
+          "timezone" => "Europe/London",
+          "domain" => "renamed.example.com",
+          "consolidated" => "true",
+          "legacy_time_on_page_cutoff" => "2020-01-01"
+        }
+      })
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert updated.timezone == "Europe/London"
+      assert updated.domain == site.domain
+      refute updated.domain_changed_from
+      refute updated.consolidated
+      assert updated.legacy_time_on_page_cutoff == site.legacy_time_on_page_cutoff
+    end
+
+    test "rejects an invalid timezone", %{conn: conn, site: site} do
+      conn = put(conn, "/#{site.domain}/settings", %{"site" => %{"timezone" => "Not/AZone"}})
+
+      assert html_response(conn, 200) =~ "Could not update your site settings"
+      assert Repo.get(Plausible.Site, site.id).timezone == site.timezone
+    end
   end
 
   describe "POST /sites/:domain/make-public" do
