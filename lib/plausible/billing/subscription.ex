@@ -5,6 +5,8 @@ defmodule Plausible.Billing.Subscription do
 
   alias Plausible.Billing.Subscription
 
+  @type t() :: %__MODULE__{}
+
   schema "all_subscriptions" do
     field :type, Ecto.Enum, values: [:classic, :billing], default: :classic
 
