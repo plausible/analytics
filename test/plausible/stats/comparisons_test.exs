@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
-  alias Plausible.Stats.{Query, Comparisons, QueryInclude}
+  alias Plausible.Stats.{Query, Comparisons}
   alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site]
@@ -449,7 +449,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       struct!(params,
         metrics: [:pageviews],
         input_date_range: {:date_range, ~D[2024-01-01], ~D[2024-02-01]},
-        include: %QueryInclude{compare: :previous_period}
+        include: %Query.Include{compare: :previous_period}
       )
     )
   end

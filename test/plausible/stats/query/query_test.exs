@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, QueryInclude}
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Query.ParsedParams
 
   @user_id 123
@@ -76,7 +76,7 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors],
           input_date_range: :month,
           dimensions: ["time:day"],
-          include: %QueryInclude{trim_relative_date_range: true},
+          include: %Query.Include{trim_relative_date_range: true},
           now: ~U[2021-01-15 12:00:00Z]
         })
 
@@ -144,7 +144,7 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2025-12-25], ~D[2026-01-06]},
           dimensions: ["time:week"],
-          include: %QueryInclude{
+          include: %Query.Include{
             compare: {:date_range, ~D[2025-12-12], ~D[2025-12-21]},
             time_labels: true,
             time_label_result_indices: true
@@ -188,7 +188,7 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
           dimensions: ["time:day"],
-          include: %QueryInclude{
+          include: %Query.Include{
             compare: {:date_range, ~D[2021-01-01], ~D[2021-01-05]},
             time_labels: true,
             time_label_result_indices: true
@@ -238,7 +238,7 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-02], ~D[2021-01-02]},
           dimensions: ["time:hour"],
-          include: %QueryInclude{total_rows: true}
+          include: %Query.Include{total_rows: true}
         })
 
       %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
@@ -296,7 +296,7 @@ defmodule Plausible.Stats.QueryTest do
           metrics: [:visitors],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:08:00Z], ~U[2021-01-01 00:12:00Z]},
           dimensions: ["time:minute"],
-          include: %QueryInclude{total_rows: true}
+          include: %Query.Include{total_rows: true}
         })
 
       %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
@@ -519,7 +519,7 @@ defmodule Plausible.Stats.QueryTest do
           Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true}
+            include: %Query.Include{empty_metrics: true}
           })
 
         %Stats.QueryResult{meta: meta} = Stats.query(site, query)
@@ -537,7 +537,7 @@ defmodule Plausible.Stats.QueryTest do
           Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true},
+            include: %Query.Include{empty_metrics: true},
             filters: [[:is, "event:page", ["/"]]]
           })
 
@@ -558,7 +558,7 @@ defmodule Plausible.Stats.QueryTest do
           Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true},
+            include: %Query.Include{empty_metrics: true},
             filters: [[:is, "event:goal", ["Signup"]]]
           })
 
@@ -576,7 +576,7 @@ defmodule Plausible.Stats.QueryTest do
         Query.Builder.build(site, %ParsedParams{
           metrics: [:average_revenue, :total_revenue],
           input_date_range: :all,
-          include: %QueryInclude{empty_metrics: true},
+          include: %Query.Include{empty_metrics: true},
           filters: [[:is, "event:goal", ["Purchase"]]]
         })
 
@@ -593,7 +593,7 @@ defmodule Plausible.Stats.QueryTest do
         Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
-          include: %QueryInclude{empty_metrics: true},
+          include: %Query.Include{empty_metrics: true},
           dimensions: ["event:goal"]
         })
 

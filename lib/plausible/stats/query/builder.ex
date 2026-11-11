@@ -14,7 +14,6 @@ defmodule Plausible.Stats.Query.Builder do
     TableDecider,
     DateTimeRange,
     QueryError,
-    QueryInclude,
     QueryPeriod
   }
 
@@ -60,7 +59,7 @@ defmodule Plausible.Stats.Query.Builder do
   end
 
   def build(site, params, debug_metadata) when is_list(params) do
-    include = struct!(QueryInclude, Keyword.get(params, :include, []))
+    include = struct!(Query.Include, Keyword.get(params, :include, []))
     parsed_query_params = struct!(ParsedParams, Keyword.put(params, :include, include))
 
     build(site, parsed_query_params, debug_metadata)
@@ -185,7 +184,7 @@ defmodule Plausible.Stats.Query.Builder do
 
     defp maybe_drop_revenue_metrics(
            %Query{
-             include: %QueryInclude{drop_unavailable_revenue_metrics: true},
+             include: %Query.Include{drop_unavailable_revenue_metrics: true},
              revenue_currencies: revenue_currencies
            } = query
          )

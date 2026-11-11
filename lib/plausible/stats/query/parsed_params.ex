@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Query.ParsedParams do
             order_by: nil,
             pagination: nil,
             now: nil,
-            include: %Plausible.Stats.QueryInclude{},
+            include: %Plausible.Stats.Query.Include{},
             # When true, skips the validation that goal names in `is` filters must be
             # configured for the site. Missing goals simply match nothing in SQL, matching
             # the behaviour of legacy endpoints like top_stats.

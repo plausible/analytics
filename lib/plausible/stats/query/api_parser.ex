@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query.ApiParser do
 
   alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError}
 
-  @default_include %Plausible.Stats.QueryInclude{
+  @default_include %Plausible.Stats.Query.Include{
     imports: false,
     imports_meta: false,
     time_labels: false,

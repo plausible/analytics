@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{QueryInclude, QueryError}
+  alias Plausible.Stats.{Query, QueryError}
 
   alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
@@ -82,7 +82,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
   defp parse_include(params) do
     with {:ok, compare} <- parse_include_compare(params["include"]) do
       {:ok,
-       %QueryInclude{
+       %Query.Include{
          imports: params["include"]["imports"] == true,
          imports_meta: params["include"]["imports_meta"] == true,
          compare: compare,

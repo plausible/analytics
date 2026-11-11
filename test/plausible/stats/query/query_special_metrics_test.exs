@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QuerySpecialMetricsTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, QueryInclude}
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site]
@@ -213,7 +213,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           input_date_range: {:date_range, ~D[2021-01-10], ~D[2021-01-10]},
           dimensions: ["visit:exit_page"],
           order_by: [{:exit_rate, :desc}],
-          include: %QueryInclude{compare: :previous_period}
+          include: %Query.Include{compare: :previous_period}
         })
 
       %Stats.QueryResult{results: results} = Stats.query(site, query)
@@ -264,7 +264,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           input_date_range: :all,
           dimensions: ["visit:exit_page"],
           order_by: [{:exit_rate, :desc}],
-          include: %QueryInclude{imports: true}
+          include: %Query.Include{imports: true}
         })
 
       %Stats.QueryResult{results: results} = Stats.query(site, query)
@@ -360,7 +360,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           input_date_range: {:date_range, ~D[2021-01-03], ~D[2021-01-04]},
           filters: [[:is, "event:page", ["/"]]],
           dimensions: ["time:day"],
-          include: %QueryInclude{compare: :previous_period}
+          include: %Query.Include{compare: :previous_period}
         })
 
       %Stats.QueryResult{results: results, comparison_results: comparison_results} =

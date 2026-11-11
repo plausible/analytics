@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QueryImportedTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, QueryInclude}
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Query.ParsedParams
 
   @unsupported_query_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_query
@@ -33,7 +33,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  metrics: [:visitors],
                  input_date_range: :all,
                  filters: [[:has_done, [:is, "event:name", ["pageview"]]]],
-                 include: %QueryInclude{imports: true}
+                 include: %Query.Include{imports: true}
                })
 
       assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
@@ -66,7 +66,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  input_date_range: :all,
                  dimensions: ["event:goal"],
                  filters: [[:has_not_done, [:is, "event:name", ["pageview"]]]],
-                 include: %QueryInclude{imports: true}
+                 include: %Query.Include{imports: true}
                })
 
       assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  metrics: [:visitors, :scroll_depth],
                  input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-12-31]},
                  filters: [[:is, "event:page", ["/"]]],
-                 include: %QueryInclude{imports: true, compare: :previous_period}
+                 include: %Query.Include{imports: true, compare: :previous_period}
                })
 
       assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)

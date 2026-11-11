@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QueryComparisonsTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, QueryInclude}
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site, :create_site_import]
@@ -18,7 +18,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
              Query.Builder.build(site, %ParsedParams{
                metrics: [:pageviews],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-               include: %QueryInclude{compare: :previous_period}
+               include: %Query.Include{compare: :previous_period}
              })
 
     assert %Stats.QueryResult{results: results} = Stats.query(site, query)
@@ -46,7 +46,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                metrics: [:pageviews],
                dimensions: ["time:day"],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-               include: %QueryInclude{compare: :previous_period}
+               include: %Query.Include{compare: :previous_period}
              })
 
     assert %Stats.QueryResult{results: results, comparison_results: comparison_results} =
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
         metrics: [:visitors],
         dimensions: ["time"],
         input_date_range: {:last_n_days, 28},
-        include: %QueryInclude{time_labels: true, compare: :previous_period},
+        include: %Query.Include{time_labels: true, compare: :previous_period},
         now: now
       })
 
@@ -123,7 +123,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                metrics: [:visitors],
                dimensions: ["time:day"],
                input_date_range: {:last_n_days, 91},
-               include: %QueryInclude{time_labels: true, compare: :year_over_year},
+               include: %Query.Include{time_labels: true, compare: :year_over_year},
                now: ~U[2022-07-01 14:00:00Z]
              })
 
@@ -175,7 +175,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
         metrics: [:visitors, :percentage],
         input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
         dimensions: ["visit:browser"],
-        include: %QueryInclude{
+        include: %Query.Include{
           compare: :previous_period
         },
         pagination: %{limit: 2, offset: 0}
@@ -256,7 +256,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                metrics: [:visitors, :percentage],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
                dimensions: ["visit:browser"],
-               include: %QueryInclude{
+               include: %Query.Include{
                  imports: true,
                  compare: :previous_period
                },
@@ -299,7 +299,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                Query.Builder.build(site, %ParsedParams{
                  metrics: [:pageviews],
                  input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-                 include: %QueryInclude{compare: {:date_range, ~D[2021-01-01], ~D[2021-01-06]}}
+                 include: %Query.Include{compare: {:date_range, ~D[2021-01-01], ~D[2021-01-06]}}
                })
 
       assert %Stats.QueryResult{results: results} = Stats.query(site, query)
@@ -327,7 +327,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                  metrics: [:visitors, :pageviews],
                  input_date_range:
                    {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
-                 include: %QueryInclude{
+                 include: %Query.Include{
                    compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
                  }
                })
@@ -362,7 +362,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                  metrics: [:pageviews],
                  input_date_range:
                    {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
-                 include: %QueryInclude{
+                 include: %Query.Include{
                    compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
                  }
                })
