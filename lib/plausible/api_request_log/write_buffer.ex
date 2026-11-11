@@ -14,6 +14,7 @@ defmodule Plausible.ApiRequestLog.WriteBuffer do
     opts =
       Keyword.merge(opts,
         name: __MODULE__,
+        flush_interval_ms: :timer.seconds(60),
         header: unquote(header),
         insert_sql: unquote(insert_sql),
         insert_opts: unquote(insert_opts)
