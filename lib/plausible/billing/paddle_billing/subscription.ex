@@ -7,9 +7,7 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
 
   use Ecto.Schema
 
-  @statuses [:active, :past_due, :paused, :deleted]
-
-  @type status() :: unquote(Enum.reduce(@statuses, &{:|, [], [&1, &2]}))
+  alias Plausible.Billing.Subscription.Status
 
   schema "billing_subscriptions" do
     field :billing_subscription_id, :string
@@ -20,7 +18,7 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
     field :next_bill_date, :date
     field :last_bill_date, :date
     field :currency_code, :string
-    field :status, Ecto.Enum, values: @statuses
+    field :status, Ecto.Enum, values: Status.valid_statuses()
 
     belongs_to :team, Plausible.Teams.Team
 

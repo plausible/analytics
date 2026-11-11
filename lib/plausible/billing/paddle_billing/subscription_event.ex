@@ -5,11 +5,9 @@ defmodule Plausible.Billing.PaddleBilling.SubscriptionEvent do
 
   use Ecto.Schema
 
-  @statuses [:active, :past_due, :paused, :canceled]
+  alias Plausible.Billing.Subscription.Status
 
   @event_types [:"subscription.created", :"subscription.updated"]
-
-  @type status() :: unquote(Enum.reduce(@statuses, &{:|, [], [&1, &2]}))
 
   schema "billing_subscription_events" do
     field :billing_event_id, :string
@@ -22,7 +20,7 @@ defmodule Plausible.Billing.PaddleBilling.SubscriptionEvent do
     field :next_bill_date, :date
     field :last_bill_date, :date
     field :currency_code, :string
-    field :status, Ecto.Enum, values: @statuses
+    field :status, Ecto.Enum, values: Status.valid_statuses()
 
     field :original_event_type, Ecto.Enum, values: @event_types
     field :original_event, :map
