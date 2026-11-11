@@ -249,11 +249,19 @@ defmodule Plausible.Site.CacheTest do
       assert :item1 == Cache.get("item1", cache_name: test, force?: true)
     end
 
-    test "merging no new items leaves the old cache intact", %{test: test} do
+    test "merging no new items removes stale items", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
       :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
       :ok = Cache.merge_items([], cache_name: test)
+      refute Cache.get("item1", cache_name: test, force?: true)
+    end
+
+    test "merging no new items optionally leaves the old cache intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge_items([], cache_name: test, delete_stale_items?: false)
       assert :item1 == Cache.get("item1", cache_name: test, force?: true)
     end
 

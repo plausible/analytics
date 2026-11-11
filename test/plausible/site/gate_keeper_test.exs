@@ -120,9 +120,6 @@ defmodule Plausible.Site.GateKeeperTest do
       )
 
     {:ok, _} = Plausible.Repo.delete(site)
-    # We need some dummy site, otherwise the cache won't refresh in case the DB
-    # is completely empty
-    new_site()
     deleted_site_id = site.id
 
     assert {:allow, %Plausible.Site{id: ^deleted_site_id, from_cache?: true}} =
