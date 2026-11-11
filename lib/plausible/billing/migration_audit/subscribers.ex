@@ -14,7 +14,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
 
   require Plausible.Billing.Subscription.Status
 
-  alias Plausible.Billing.{EnterprisePlan, Plan, Plans, Subscription}
+  alias Plausible.Billing.{EnterprisePlan, PaddleClassic, Plan, Plans, Subscription}
   alias Plausible.Billing.Subscription.Status
   alias Plausible.Teams.Team
 
@@ -62,7 +62,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
 
   defp statuses(today) do
     current =
-      from(s in Subscription,
+      from(s in PaddleClassic.Subscription,
         distinct: s.team_id,
         order_by: [asc: s.team_id, desc: s.inserted_at, desc: s.id],
         select: {s.paddle_plan_id, s.status, s.next_bill_date}
@@ -104,7 +104,8 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
     from(t in Team,
       as: :team,
       where: t.trial_expiry_date >= ^today,
-      where: not exists(from(s in Subscription, where: s.team_id == parent_as(:team).id)),
+      where:
+        not exists(from(s in PaddleClassic.Subscription, where: s.team_id == parent_as(:team).id)),
       select: count(t.id)
     )
     |> Repo.one()
@@ -114,7 +115,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
   defp live_rows(today) do
     live = [Status.active(), Status.past_due(), Status.paused()]
 
-    from(s in Subscription,
+    from(s in PaddleClassic.Subscription,
       where: s.status in ^live or (s.status == ^Status.deleted() and s.next_bill_date >= ^today),
       where: s.paddle_plan_id not in [^@free_plan_id, ^Subscription.manual_plan_id()],
       order_by: [asc: s.id]
@@ -265,7 +266,7 @@ defmodule Plausible.Billing.MigrationAudit.Subscribers do
 
   defp subscribed_enterprise_plans() do
     from(ep in EnterprisePlan,
-      join: s in Subscription,
+      join: s in PaddleClassic.Subscription,
       on: s.paddle_plan_id == ep.paddle_plan_id and s.team_id == ep.team_id,
       distinct: ep.id,
       select: ep
