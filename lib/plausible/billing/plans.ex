@@ -133,7 +133,7 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  @spec get_subscription_plan(nil | Subscription.t()) ::
+  @spec get_subscription_plan(nil | Subscription.t() | PaddleClassic.Subscription.t()) ::
           nil | :free_10k | Plan.t() | EnterprisePlan.t()
   def get_subscription_plan(nil), do: nil
 
