@@ -48,12 +48,6 @@ defmodule Plausible.Billing.Subscription do
     timestamps()
   end
 
-  def create_changeset(team, attrs \\ %{}) do
-    %__MODULE__{}
-    |> changeset(attrs)
-    |> put_assoc(:team, team)
-  end
-
   def changeset(subscription, attrs \\ %{}) do
     subscription
     |> cast(attrs, @required_fields ++ @optional_fields)
