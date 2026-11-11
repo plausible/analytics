@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryResult do
+defmodule Plausible.Stats.Query.Result do
   @moduledoc """
   This struct contains the (JSON-encodable) response for a query and
   is responsible for building it from database query results.
@@ -327,9 +327,9 @@ defmodule Plausible.Stats.QueryResult do
   end
 end
 
-defimpl Jason.Encoder, for: Plausible.Stats.QueryResult do
+defimpl Jason.Encoder, for: Plausible.Stats.Query.Result do
   def encode(
-        %Plausible.Stats.QueryResult{
+        %Plausible.Stats.Query.Result{
           results: results,
           comparison_results: comparison_results,
           meta: meta,

@@ -1,6 +1,6 @@
-defmodule Plausible.Stats.Query.QueryResultTest do
+defmodule Plausible.Stats.Query.ResultTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryResult}
+  alias Plausible.Stats.Query
 
   setup do
     user = insert(:user)
@@ -55,7 +55,7 @@ defmodule Plausible.Stats.Query.QueryResultTest do
 
     query_result_json =
       %Query.Runner{site: site, results: [], main_query: query}
-      |> QueryResult.from()
+      |> Query.Result.from()
       |> Jason.encode!(pretty: true)
       |> String.replace(site.domain, "dummy.site")
 

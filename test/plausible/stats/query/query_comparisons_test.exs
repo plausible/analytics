@@ -21,7 +21,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                include: %Query.Include{compare: :previous_period}
              })
 
-    assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+    assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
     assert results == [
              %{
@@ -49,7 +49,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                include: %Query.Include{compare: :previous_period}
              })
 
-    assert %Stats.QueryResult{results: results, comparison_results: comparison_results} =
+    assert %Stats.Query.Result{results: results, comparison_results: comparison_results} =
              Stats.query(site, query)
 
     assert results == [
@@ -81,8 +81,8 @@ defmodule Plausible.Stats.QueryComparisonsTest do
 
     query2 = Stats.Query.set_include(query1, :compare_match_day_of_week, true)
 
-    assert %Stats.QueryResult{meta: meta1} = Stats.query(site, query1)
-    assert %Stats.QueryResult{meta: meta2} = Stats.query(site, query2)
+    assert %Stats.Query.Result{meta: meta1} = Stats.query(site, query1)
+    assert %Stats.Query.Result{meta: meta2} = Stats.query(site, query2)
 
     assert meta1[:time_labels] == meta2[:time_labels]
     assert meta1[:comparison_time_labels] == meta2[:comparison_time_labels]
@@ -127,7 +127,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                now: ~U[2022-07-01 14:00:00Z]
              })
 
-    assert %Stats.QueryResult{
+    assert %Stats.Query.Result{
              results: results,
              comparison_results: comparison_results,
              meta: meta
@@ -181,7 +181,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
         pagination: %{limit: 2, offset: 0}
       })
 
-    assert %Stats.QueryResult{results: page_one_results} = Stats.query(site, page_one_query)
+    assert %Stats.Query.Result{results: page_one_results} = Stats.query(site, page_one_query)
 
     assert page_one_results == [
              %{
@@ -206,7 +206,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
 
     page_two_query = Stats.Query.set(page_one_query, pagination: %{limit: 2, offset: 2})
 
-    assert %Stats.QueryResult{results: page_two_results} = Stats.query(site, page_two_query)
+    assert %Stats.Query.Result{results: page_two_results} = Stats.query(site, page_two_query)
 
     assert page_two_results == [
              %{
@@ -263,7 +263,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                pagination: %{limit: 2, offset: 0}
              })
 
-    assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+    assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
     assert results == [
              %{
@@ -302,7 +302,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                  include: %Query.Include{compare: {:date_range, ~D[2021-01-01], ~D[2021-01-06]}}
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{
@@ -332,7 +332,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                  }
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{
@@ -367,7 +367,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
                  }
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(weird_tz_site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(weird_tz_site, query)
 
       assert results == [
                %{

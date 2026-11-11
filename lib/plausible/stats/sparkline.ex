@@ -88,7 +88,7 @@ defmodule Plausible.Stats.Sparkline do
         include: [compare: :previous_period]
       )
 
-    %Stats.QueryResult{
+    %Stats.Query.Result{
       results: [
         %{
           metrics: [visitors],
@@ -114,7 +114,7 @@ defmodule Plausible.Stats.Sparkline do
         include: [compare: :previous_period]
       )
 
-    %Stats.QueryResult{
+    %Stats.Query.Result{
       results: [
         %{
           metrics: [visitors, visits, pageviews, views_per_visit],
@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Sparkline do
         include: [time_labels: true]
       )
 
-    %Stats.QueryResult{results: results, meta: %{values: [time_labels: time_labels]}} =
+    %Stats.Query.Result{results: results, meta: %{values: [time_labels: time_labels]}} =
       Stats.query(view_or_site, graph_query)
 
     visitors_by_timestamp =

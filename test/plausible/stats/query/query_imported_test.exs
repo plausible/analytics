@@ -4,8 +4,8 @@ defmodule Plausible.Stats.QueryImportedTest do
   alias Plausible.Stats.Query
   alias Plausible.Stats.Query.ParsedParams
 
-  @unsupported_query_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_query
-  @no_imported_scroll_depth_warning Plausible.Stats.QueryResult.no_imported_scroll_depth_warning()
+  @unsupported_query_warning Plausible.Stats.Query.Result.imports_warnings().unsupported_query
+  @no_imported_scroll_depth_warning Plausible.Stats.Query.Result.no_imported_scroll_depth_warning()
 
   setup [:create_user, :create_site]
 
@@ -36,7 +36,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  include: %Query.Include{imports: true}
                })
 
-      assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results, meta: meta} = Stats.query(site, query)
 
       assert results == [%{dimensions: [], metrics: [2]}]
       refute meta[:imports_included]
@@ -69,7 +69,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  include: %Query.Include{imports: true}
                })
 
-      assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results, meta: meta} = Stats.query(site, query)
 
       assert results == []
       refute meta[:imports_included]
@@ -105,7 +105,7 @@ defmodule Plausible.Stats.QueryImportedTest do
                  include: %Query.Include{imports: true, compare: :previous_period}
                })
 
-      assert %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results, meta: meta} = Stats.query(site, query)
 
       assert results == [
                %{

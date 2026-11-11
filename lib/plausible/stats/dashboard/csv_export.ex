@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Dashboard.CsvExport do
   @moduledoc false
 
-  alias Plausible.Stats.{Time, Query, QueryResult}
+  alias Plausible.Stats.{Time, Query}
   alias Plausible.Stats.Query.{ParsedParams, DashboardParser}
 
   @csv_filenames [
@@ -125,7 +125,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     Query.Runner.run(site, query) |> query_result_to_csv()
   end
 
-  defp query_result_to_csv(%QueryResult{results: results, query: query}) do
+  defp query_result_to_csv(%Query.Result{results: results, query: query}) do
     results
     |> Enum.reduce([csv_first_row(query)], fn row, acc ->
       acc ++ [csv_dimension_values(query[:dimensions], row) ++ row.metrics]
@@ -133,7 +133,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     |> NimbleCSV.RFC4180.dump_to_iodata()
   end
 
-  defp timeseries_query_result_to_csv(%QueryResult{results: results, query: query, meta: meta}) do
+  defp timeseries_query_result_to_csv(%Query.Result{results: results, query: query, meta: meta}) do
     meta[:time_labels]
     |> Enum.reduce([csv_first_row(query)], fn timelabel, acc ->
       if result_item = find_result_item_by_timelabel(results, timelabel) do
@@ -264,7 +264,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
         [key]
 
       _ ->
-        %QueryResult{results: results} = Query.Runner.run(site, query)
+        %Query.Result{results: results} = Query.Runner.run(site, query)
 
         Enum.map(results, fn r -> hd(r.dimensions) end)
         |> maybe_allowed_props_only(site)
@@ -307,7 +307,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     prop_value_queries_by_prop_key
     |> Enum.map(fn {prop_key, query} ->
       fn ->
-        %QueryResult{results: results} = Query.Runner.run(site, query)
+        %Query.Result{results: results} = Query.Runner.run(site, query)
         Enum.map(results, &format_custom_props_data_row(prop_key, &1))
       end
     end)

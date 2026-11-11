@@ -30,7 +30,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
                  order_by: [{"visit:exit_page", :desc}]
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/two"], metrics: [100]},
@@ -55,7 +55,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
                  order_by: [{"visit:exit_page", :desc}]
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/one"], metrics: [66.7]}
@@ -93,7 +93,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
                  ]
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/one"], metrics: [60]}
@@ -138,7 +138,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
                  order_by: [{:exit_rate, :asc}]
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/one"], metrics: [50]},
@@ -170,7 +170,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
             pagination: pagination
           })
 
-        %Stats.QueryResult{results: results} = Stats.query(site, query)
+        %Stats.Query.Result{results: results} = Stats.query(site, query)
         results
       end
 
@@ -216,7 +216,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           include: %Query.Include{compare: :previous_period}
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{
@@ -267,7 +267,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           include: %Query.Include{imports: true}
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/two"], metrics: [100]},
@@ -303,7 +303,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           dimensions: ["event:page"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["/"], metrics: [1, 50]},
@@ -363,7 +363,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
           include: %Query.Include{compare: :previous_period}
         })
 
-      %Stats.QueryResult{results: results, comparison_results: comparison_results} =
+      %Stats.Query.Result{results: results, comparison_results: comparison_results} =
         Stats.query(site, query)
 
       assert results == [

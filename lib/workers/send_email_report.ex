@@ -7,7 +7,7 @@ defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
 
-  alias Plausible.Stats.{QueryResult, Query}
+  alias Plausible.Stats.Query
 
   alias Plausible.Stats.Query.ParsedParams
 
@@ -103,7 +103,7 @@ defmodule Plausible.Workers.SendEmailReport do
         )
       )
 
-    %QueryResult{
+    %Query.Result{
       results: [
         %{
           metrics: [pageviews, visitors, bounce_rate],
