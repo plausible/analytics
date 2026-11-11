@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             legacy_breakdown: false,
             preloaded_goals: [],
-            include: Plausible.Stats.ApiQueryParser.default_include(),
+            include: Plausible.Stats.Query.ApiParser.default_include(),
             debug_metadata: %{},
             pagination: nil,
             # Revenue metric specific metadata
@@ -39,12 +39,11 @@ defmodule Plausible.Stats.Query do
     Imported,
     Legacy,
     Comparisons,
-    ApiQueryParser,
     QueryBuilder,
     QueryError
   }
 
-  alias Plausible.Stats.Query.ParsedParams
+  alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
   @type t :: %__MODULE__{}
 
@@ -54,7 +53,7 @@ defmodule Plausible.Stats.Query do
         opts \\ []
       ) do
     with {:ok, %ParsedParams{} = parsed_query_params} <-
-           ApiQueryParser.parse(params, opts) do
+           ApiParser.parse(params, opts) do
       QueryBuilder.build(site, parsed_query_params, Keyword.get(opts, :debug_metadata, %{}))
     end
   end

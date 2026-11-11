@@ -5,8 +5,8 @@ defmodule Plausible.Segments.Segment do
   use Plausible
   use Ecto.Schema
   import Ecto.Changeset
-  alias Plausible.Stats.{ApiQueryParser, QueryBuilder, QueryError}
-  alias Plausible.Stats.Query.ParsedParams
+  alias Plausible.Stats.{QueryBuilder, QueryError}
+  alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
   @segment_types [:personal, :site]
 
@@ -116,7 +116,7 @@ defmodule Plausible.Segments.Segment do
   affecting query validity.
   """
   def validate_segment_data(%Plausible.Site{} = site, %{"filters" => filters}, restricted_depth?) do
-    with {:ok, parsed_filters} <- ApiQueryParser.parse_filters(filters),
+    with {:ok, parsed_filters} <- ApiParser.parse_filters(filters),
          {:ok, _} <-
            QueryBuilder.build(site, %ParsedParams{
              metrics: [:visitors],
