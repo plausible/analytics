@@ -9,6 +9,32 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
 
   @version "2026-07-28"
 
+  @valid_client_meta %{
+    "io.modelcontextprotocol/protocolVersion" => @version,
+    "io.modelcontextprotocol/clientCapabilities" => %{}
+  }
+
+  @tools_list_request %{
+    "jsonrpc" => "2.0",
+    "id" => 1,
+    "method" => "tools/list",
+    "params" => %{"_meta" => @valid_client_meta}
+  }
+
+  @list_sites_request %{
+    "jsonrpc" => "2.0",
+    "id" => 1,
+    "method" => "tools/call",
+    "params" => %{"name" => "list_sites", "arguments" => %{}, "_meta" => @valid_client_meta}
+  }
+
+  @expected_meta %{
+    "io.modelcontextprotocol/serverInfo" => %{
+      "name" => Plausible.product_name(),
+      "version" => to_string(Application.spec(:plausible, :vsn))
+    }
+  }
+
   setup [:create_user, :create_team]
 
   describe "authentication" do
@@ -17,17 +43,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         conn
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/list")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 401) == %{"error" => "unauthorized"}
 
@@ -50,19 +66,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
 
       assert json_response(conn, 401) == %{"error" => "unauthorized"}
     end
@@ -73,17 +77,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("authorization", "Bearer not-a-token")
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/list")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 401) == %{"error" => "invalid_token"}
     end
@@ -106,17 +100,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("authorization", "Bearer " <> token)
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/list")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 401) == %{"error" => "invalid_token"}
     end
@@ -154,17 +138,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("authorization", "Bearer " <> t)
         |> put_req_header("mcp-protocol-version", "2025-11-25")
         |> put_req_header("mcp-method", "tools/list")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 400) == %{
                "jsonrpc" => "2.0",
@@ -182,17 +156,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("authorization", "Bearer " <> t)
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "server/discover")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 400) == %{
                "jsonrpc" => "2.0",
@@ -211,19 +175,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "something_else")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
 
       assert json_response(conn, 400) == %{
                "jsonrpc" => "2.0",
@@ -242,20 +194,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "=?base64?" <> Base.encode64("list_sites") <> "?=")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
         |> json_response(200)
+        |> decode_text_content()
 
       assert resp == %{
                "jsonrpc" => "2.0",
@@ -264,17 +205,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "content" => [
                    %{
                      "type" => "text",
-                     "text" => JSON.encode!(%{sites: []})
+                     "text" => %{"sites" => []}
                    }
                  ],
                  "isError" => false,
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 }
+                 "_meta" => @expected_meta
                }
              }
     end
@@ -284,17 +220,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         conn
         |> put_req_header("authorization", "Bearer " <> t)
         |> put_req_header("mcp-protocol-version", @version)
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
 
       assert json_response(conn, 400) == %{
                "jsonrpc" => "2.0",
@@ -427,10 +353,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
               "id" => 1,
               "method" => "tools/list",
               "params" => %{
-                "_meta" => %{
-                  "io.modelcontextprotocol/protocolVersion" => @version,
-                  "io.modelcontextprotocol/clientCapabilities" => %{}
-                }
+                "_meta" => @valid_client_meta
               }
             }
           ])
@@ -457,10 +380,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
               "id" => 1,
               "method" => "tools/list",
               "params" => %{
-                "_meta" => %{
-                  "io.modelcontextprotocol/protocolVersion" => @version,
-                  "io.modelcontextprotocol/clientCapabilities" => %{}
-                }
+                "_meta" => @valid_client_meta
               }
             }
           ])
@@ -486,10 +406,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "jsonrpc" => "2.0",
           "method" => "notifications/progress",
           "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
+            "_meta" => @valid_client_meta
           }
         })
 
@@ -516,10 +433,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "id" => 1,
           "method" => "server/discover",
           "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
+            "_meta" => @valid_client_meta
           }
         })
         |> json_response(200)
@@ -533,12 +447,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "instructions" =>
                    "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access.",
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 },
+                 "_meta" => @expected_meta,
                  "ttlMs" => :timer.minutes(5),
                  "cacheScope" => "public"
                }
@@ -555,17 +464,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("authorization", "Bearer " <> t)
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/list")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/list",
-          "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @tools_list_request)
         |> json_response(200)
 
       assert resp == %{
@@ -585,12 +484,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                    }
                  ],
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 },
+                 "_meta" => @expected_meta,
                  "ttlMs" => :timer.minutes(5),
                  "cacheScope" => "public"
                }
@@ -615,10 +509,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "params" => %{
             "name" => "made_up_tool",
             "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
+            "_meta" => @valid_client_meta
           }
         })
 
@@ -642,20 +533,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
         |> json_response(200)
+        |> decode_text_content()
 
       assert resp == %{
                "jsonrpc" => "2.0",
@@ -664,20 +544,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "content" => [
                    %{
                      "type" => "text",
-                     "text" =>
-                       JSON.encode!(%{
-                         sites: [%{domain: site.domain, timezone: site.timezone}]
-                       })
+                     "text" => %{
+                       "sites" => [%{"domain" => site.domain, "timezone" => site.timezone}]
+                     }
                    }
                  ],
                  "isError" => false,
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 }
+                 "_meta" => @expected_meta
                }
              }
     end
@@ -689,20 +563,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
         |> json_response(200)
+        |> decode_text_content()
 
       assert resp == %{
                "jsonrpc" => "2.0",
@@ -711,17 +574,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "content" => [
                    %{
                      "type" => "text",
-                     "text" => JSON.encode!(%{sites: []})
+                     "text" => %{"sites" => []}
                    }
                  ],
                  "isError" => false,
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 }
+                 "_meta" => @expected_meta
                }
              }
     end
@@ -736,20 +594,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
         |> json_response(200)
+        |> decode_text_content()
 
       assert resp == %{
                "jsonrpc" => "2.0",
@@ -758,20 +605,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "content" => [
                    %{
                      "type" => "text",
-                     "text" =>
-                       JSON.encode!(%{
-                         sites: [%{domain: mine.domain, timezone: mine.timezone}]
-                       })
+                     "text" => %{
+                       "sites" => [%{"domain" => mine.domain, "timezone" => mine.timezone}]
+                     }
                    }
                  ],
                  "isError" => false,
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 }
+                 "_meta" => @expected_meta
                }
              }
     end
@@ -798,19 +639,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
 
       assert json_response(conn, 403) == %{"error" => "insufficient_scope"}
 
@@ -837,20 +666,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           |> put_req_header("mcp-protocol-version", @version)
           |> put_req_header("mcp-method", "tools/call")
           |> put_req_header("mcp-name", "list_sites")
-          |> post("/mcp", %{
-            "jsonrpc" => "2.0",
-            "id" => 1,
-            "method" => "tools/call",
-            "params" => %{
-              "name" => "list_sites",
-              "arguments" => %{},
-              "_meta" => %{
-                "io.modelcontextprotocol/protocolVersion" => @version,
-                "io.modelcontextprotocol/clientCapabilities" => %{}
-              }
-            }
-          })
+          |> post("/mcp", @list_sites_request)
           |> json_response(200)
+          |> decode_text_content()
 
         assert resp == %{
                  "jsonrpc" => "2.0",
@@ -859,20 +677,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                    "content" => [
                      %{
                        "type" => "text",
-                       "text" =>
-                         JSON.encode!(%{
-                           sites: [%{domain: site.domain, timezone: site.timezone}]
-                         })
+                       "text" => %{
+                         "sites" => [%{"domain" => site.domain, "timezone" => site.timezone}]
+                       }
                      }
                    ],
                    "isError" => false,
                    "resultType" => "complete",
-                   "_meta" => %{
-                     "io.modelcontextprotocol/serverInfo" => %{
-                       "name" => Plausible.product_name(),
-                       "version" => app_version()
-                     }
-                   }
+                   "_meta" => @expected_meta
                  }
                }
       end
@@ -893,10 +705,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
           "id" => 1,
           "method" => "resources/list",
           "params" => %{
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
+            "_meta" => @valid_client_meta
           }
         })
 
@@ -1007,20 +816,9 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
         |> json_response(200)
+        |> decode_text_content()
 
       assert resp == %{
                "jsonrpc" => "2.0",
@@ -1029,20 +827,14 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  "content" => [
                    %{
                      "type" => "text",
-                     "text" =>
-                       JSON.encode!(%{
-                         sites: [%{domain: site.domain, timezone: site.timezone}]
-                       })
+                     "text" => %{
+                       "sites" => [%{"domain" => site.domain, "timezone" => site.timezone}]
+                     }
                    }
                  ],
                  "isError" => false,
                  "resultType" => "complete",
-                 "_meta" => %{
-                   "io.modelcontextprotocol/serverInfo" => %{
-                     "name" => Plausible.product_name(),
-                     "version" => app_version()
-                   }
-                 }
+                 "_meta" => @expected_meta
                }
              }
 
@@ -1055,19 +847,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> put_req_header("mcp-protocol-version", @version)
         |> put_req_header("mcp-method", "tools/call")
         |> put_req_header("mcp-name", "list_sites")
-        |> post("/mcp", %{
-          "jsonrpc" => "2.0",
-          "id" => 1,
-          "method" => "tools/call",
-          "params" => %{
-            "name" => "list_sites",
-            "arguments" => %{},
-            "_meta" => %{
-              "io.modelcontextprotocol/protocolVersion" => @version,
-              "io.modelcontextprotocol/clientCapabilities" => %{}
-            }
-          }
-        })
+        |> post("/mcp", @list_sites_request)
 
       assert json_response(revoked, 401) == %{"error" => "invalid_token"}
     end
@@ -1080,5 +860,11 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
     {:ok, token: token}
   end
 
-  defp app_version, do: to_string(Application.spec(:plausible, :vsn))
+  # Tools return JSON as text. Decoding it lets a test compare the payload as
+  # data, regardless of the order the server encoded its keys in.
+  defp decode_text_content(resp) do
+    update_in(resp, ["result", "content"], fn content ->
+      Enum.map(content, &Map.update!(&1, "text", fn text -> JSON.decode!(text) end))
+    end)
+  end
 end
