@@ -211,6 +211,9 @@ defmodule Plausible.Application do
         end,
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
         Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
+        Supervisor.child_spec(Plausible.ApiRequestLog.WriteBuffer,
+          id: Plausible.ApiRequestLog.WriteBuffer
+        ),
         ReferrerBlocklist,
         {Plausible.RateLimit, clean_period: :timer.minutes(10)},
         {Finch, name: Plausible.Finch, pools: finch_pool_config()},
