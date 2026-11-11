@@ -7,8 +7,6 @@ defmodule PlausibleWeb.MCP.MCPController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
-  import Ecto.Query, only: [select: 3]
-
   alias Plausible.Auth.Scopes
   alias Plausible.OAuth.ProtectedResources
   alias Plausible.Teams.Membership
@@ -41,8 +39,8 @@ defmodule PlausibleWeb.MCP.MCPController do
   @capabilities_key "io.modelcontextprotocol/clientCapabilities"
   @server_info_key "io.modelcontextprotocol/serverInfo"
 
-  # Every tool declares what scope is needed on the OAuth grant
-  # and what role in the team is needed.
+  # Config for each tool. Public fields are served in `tools/list` call.
+  @public_fields [:name, :description, :inputSchema]
   @tool_specs [
     %{
       name: "list_sites",
@@ -54,7 +52,7 @@ defmodule PlausibleWeb.MCP.MCPController do
     }
   ]
 
-  @tools Enum.map(@tool_specs, &Map.drop(&1, [:scope, :roles]))
+  @tools Enum.map(@tool_specs, &Map.take(&1, @public_fields))
   @tools_by_name Map.new(@tool_specs, &{&1.name, &1})
 
   @doc """
@@ -226,9 +224,8 @@ defmodule PlausibleWeb.MCP.MCPController do
   defp run_tool(conn, "list_sites", _tool_args) do
     sites =
       conn.assigns.current_user
-      |> Plausible.Sites.for_user_query(conn.assigns.current_team)
-      |> select([site: s], %{domain: s.domain, timezone: s.timezone})
-      |> Repo.all()
+      |> Plausible.Sites.list_for_team_member(conn.assigns.current_team)
+      |> Enum.map(&Map.take(&1, [:domain, :timezone]))
 
     {:ok, %{sites: sites}}
   end
