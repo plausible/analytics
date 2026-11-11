@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Query.QueryResultTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, QueryResult}
 
   setup do
     user = insert(:user)
@@ -51,7 +51,7 @@ defmodule Plausible.Stats.Query.QueryResultTest do
         }
       )
 
-    query = QueryOptimizer.optimize(query)
+    query = Query.Optimizer.optimize(query)
 
     query_result_json =
       %QueryRunner{site: site, results: [], main_query: query}

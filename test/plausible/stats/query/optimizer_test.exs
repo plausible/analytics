@@ -1,14 +1,14 @@
-defmodule Plausible.Stats.Query.QueryOptimizerTest do
+defmodule Plausible.Stats.Query.OptimizerTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Stats.{Query, QueryOptimizer, DateTimeRange}
+  alias Plausible.Stats.{Query, DateTimeRange}
   alias Plausible.Stats.Query.ApiParser
 
   @default_params %{metrics: [:visitors]}
 
   def perform(params) do
     params = Map.merge(@default_params, params) |> Map.to_list()
-    struct!(Query, params) |> QueryOptimizer.optimize()
+    struct!(Query, params) |> Query.Optimizer.optimize()
   end
 
   describe "add_missing_order_by" do

@@ -16,7 +16,6 @@ defmodule Plausible.Stats.QueryRunner do
     Comparisons,
     Compare,
     Query,
-    QueryOptimizer,
     QueryResult,
     Metrics,
     SQL,
@@ -35,7 +34,7 @@ defmodule Plausible.Stats.QueryRunner do
   ]
 
   def run(site, query) do
-    optimized_query = QueryOptimizer.optimize(query)
+    optimized_query = Query.Optimizer.optimize(query)
 
     Query.trace(optimized_query, optimized_query.metrics)
 
@@ -67,7 +66,7 @@ defmodule Plausible.Stats.QueryRunner do
       query
       |> Comparisons.get_comparison_query()
       |> Comparisons.add_comparison_filters(main_results)
-      |> QueryOptimizer.optimize()
+      |> Query.Optimizer.optimize()
 
     struct!(runner, comparison_query: comparison_query)
   end

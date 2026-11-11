@@ -51,7 +51,7 @@ defmodule Plausible.Stats.TableDecider do
     conflicting_event_metrics = event_only_metrics -- @revenue_metrics
 
     cond do
-      # event:page (optionally with event:hostname) is a special case handled in QueryOptimizer.split_sessions_query
+      # event:page (optionally with event:hostname) is a special case handled in Query.Optimizer.split_sessions_query
       "event:page" in event_only_dimensions and
           event_only_dimensions -- ["event:page", "event:hostname"] == [] ->
         :ok
