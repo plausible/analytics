@@ -35,6 +35,13 @@ defmodule PlausibleWeb.Api.Helpers do
     |> halt()
   end
 
+  def unprocessable_entity(conn, msg) do
+    conn
+    |> put_status(422)
+    |> Phoenix.Controller.json(%{error: msg})
+    |> halt()
+  end
+
   def too_many_requests(conn, msg) do
     conn
     |> put_status(429)
