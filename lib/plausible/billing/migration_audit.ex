@@ -178,7 +178,7 @@ defmodule Plausible.Billing.MigrationAudit do
   @doc """
   Classifies the plan of a single subscription.
   """
-  @spec classify(%PaddleClassic.Subscription{}) :: category()
+  @spec classify(PaddleClassic.Subscription.t()) :: category()
   def classify(%PaddleClassic.Subscription{} = subscription) do
     if subscription.paddle_plan_id == Subscription.manual_plan_id() do
       :manual

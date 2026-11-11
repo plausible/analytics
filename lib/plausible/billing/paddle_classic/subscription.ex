@@ -22,6 +22,8 @@ defmodule Plausible.Billing.PaddleClassic.Subscription do
 
   @optional_fields [:last_bill_date]
 
+  @type t() :: %__MODULE__{}
+
   schema "subscriptions" do
     field :paddle_subscription_id, :string
     field :paddle_plan_id, :string
