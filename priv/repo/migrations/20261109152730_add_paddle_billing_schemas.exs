@@ -21,6 +21,7 @@ defmodule Plausible.Repo.Migrations.AddPaddleBillingSchemas do
 
     create unique_index(:billing_subscriptions, [:team_id])
     create unique_index(:billing_subscriptions, [:billing_subscription_id])
+    create index(:billing_subscriptions, [:billing_product_id, :billing_price_id])
 
     create table(:billing_subscription_events) do
       add :billing_event_id, :string, null: false
