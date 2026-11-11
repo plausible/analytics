@@ -6,6 +6,105 @@ defmodule Plausible.Teams.Sites.TransferTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
+  describe "initiate/3" do
+    test "sends ownership transfer email" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "admin can initiate ownership transfer too" do
+      inviter = new_user()
+      site = new_site()
+      add_member(site.team, user: inviter, role: :admin)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "only allows owners and admins to transfer ownership" do
+      inviter = new_user()
+
+      site = new_site()
+      add_guest(site, user: inviter, role: :editor)
+
+      assert {:error, :permission_denied} =
+               Transfer.initiate(site, inviter, "vini@plausible.test")
+    end
+
+    test "allows ownership transfer to existing site members" do
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
+      add_guest(site, user: invitee, role: :viewer)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Transfer.initiate(site, inviter, invitee.email)
+    end
+
+    test "sends the email again when the same transfer already exists" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      email = "vini@plausible.test"
+
+      assert {:ok, transfer} = Transfer.initiate(site, inviter, email)
+
+      assert_email_delivered_with(
+        to: [nil: email],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+
+      assert {:ok, resent} = Transfer.initiate(site, inviter, email)
+
+      assert_email_delivered_with(
+        to: [nil: email],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+
+      assert resent.transfer_id == transfer.transfer_id
+    end
+
+    test "allows creating an ownership transfer even when at team member limit" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      for _ <- 1..3, do: add_guest(site, role: :viewer)
+
+      assert {:ok, _invitation} =
+               Transfer.initiate(site, inviter, "newowner@plausible.test")
+    end
+  end
+
+  describe "create_site_transfer/4" do
+    test "returns the existing transfer and sets its updated_at to now" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      {:ok, transfer} = Transfer.create_site_transfer(site, inviter, "vini@plausible.test")
+
+      later = ~N[2026-01-02 00:00:00]
+
+      assert {:ok, resent} =
+               Transfer.create_site_transfer(site, inviter, "vini@plausible.test", later)
+
+      assert resent.id == transfer.id
+      assert resent.transfer_id == transfer.transfer_id
+      assert resent.updated_at == later
+    end
+  end
+
   describe "change_team/3" do
     @tag :ce_build_only
     test "changes the team if owner in both teams (CE)" do

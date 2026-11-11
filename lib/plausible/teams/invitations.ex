@@ -207,20 +207,17 @@ defmodule Plausible.Teams.Invitations do
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
     site = Repo.preload(site, :team)
 
-    if role == :owner do
-      create_site_transfer(
-        site,
-        inviter,
-        invitee_email
-      )
-    else
-      create_invitation(
-        site,
-        invitee_email,
-        role,
-        inviter
-      )
-    end
+    Repo.transaction(fn ->
+      with {:ok, team_invitation} <-
+             create_team_invitation(site.team, invitee_email, inviter,
+               ensure_no_site_transfers_for: site.id
+             ),
+           {:ok, guest_invitation} <- create_guest_invitation(team_invitation, site, role) do
+        guest_invitation
+      else
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
   end
 
   def remove_team_invitation(team_invitation) do
@@ -250,27 +247,6 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  def accept_site_transfer(site_transfer, team, opts \\ []) do
-    {:ok, _} =
-      Repo.transaction(fn ->
-        :ok =
-          transfer_site_ownership(site_transfer.site, team, NaiveDateTime.utc_now(:second), opts)
-
-        Repo.delete_all(from st in Teams.SiteTransfer, where: st.id == ^site_transfer.id)
-      end)
-
-    :ok
-  end
-
-  def transfer_site(site, team) do
-    {:ok, _} =
-      Repo.transaction(fn ->
-        :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
-      end)
-
-    :ok
-  end
-
   def accept_guest_invitation(guest_invitation, user) do
     guest_invitation = Repo.preload(guest_invitation, :site)
 
@@ -295,58 +271,6 @@ defmodule Plausible.Teams.Invitations do
       {:error, :permission_denied}
     else
       do_accept(team_invitation, user, now, guest_invitations: [])
-    end
-  end
-
-  @doc false
-  def ensure_transfer_valid(_team, nil, :owner), do: :ok
-
-  def ensure_transfer_valid(team, new_team, :owner) do
-    if team.id == new_team.id do
-      {:error, :transfer_to_self}
-    else
-      :ok
-    end
-  end
-
-  def ensure_transfer_valid(_team, _new_owner, _role), do: :ok
-
-  defp create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
-    result =
-      Ecto.Multi.new()
-      |> Ecto.Multi.put(
-        :site_transfer_changeset,
-        Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
-      )
-      |> Ecto.Multi.run(:ensure_no_invitations, fn _repo, %{site_transfer_changeset: changeset} ->
-        q =
-          from ti in Teams.Invitation,
-            inner_join: gi in assoc(ti, :guest_invitations),
-            where: ti.email == ^invitee_email,
-            where: ti.team_id == ^site.team_id,
-            where: gi.site_id == ^site.id
-
-        if Repo.exists?(q) do
-          {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
-        else
-          {:ok, :pass}
-        end
-      end)
-      |> Ecto.Multi.insert(
-        :site_transfer,
-        fn %{site_transfer_changeset: changeset} -> changeset end,
-        on_conflict: [set: [updated_at: now]],
-        conflict_target: [:email, :site_id],
-        returning: true
-      )
-      |> Repo.transaction()
-
-    case result do
-      {:ok, success} ->
-        {:ok, success.site_transfer}
-
-      {:error, _, changeset, _} ->
-        {:error, changeset}
     end
   end
 
@@ -398,108 +322,6 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  defp transfer_site_ownership(site, team, now, opts \\ []) do
-    skip_site_members_transfer? = Keyword.get(opts, :skip_site_members_transfer?, false)
-
-    site =
-      Repo.preload(site, [
-        :team,
-        :owners,
-        guest_memberships: [team_membership: :user],
-        guest_invitations: [team_invitation: :inviter]
-      ])
-
-    prior_team = site.team
-
-    site
-    |> Ecto.Changeset.change(team_id: team.id)
-    |> Repo.update!()
-
-    old_guest_invitations = site.guest_invitations
-
-    if not skip_site_members_transfer? do
-      Enum.each(old_guest_invitations, fn old_guest_invitation ->
-        recreate_guest_invitation(site, team, old_guest_invitation)
-      end)
-    end
-
-    old_guest_ids = Enum.map(old_guest_invitations, & &1.id)
-    Repo.delete_all(from gi in Teams.GuestInvitation, where: gi.id in ^old_guest_ids)
-    :ok = prune_guest_invitations(prior_team)
-
-    old_guest_memberships = site.guest_memberships
-
-    if not skip_site_members_transfer? do
-      Enum.each(old_guest_memberships, fn old_guest_membership ->
-        recreate_guest_membership(site, team, old_guest_membership, now)
-      end)
-    end
-
-    old_guest_ids = Enum.map(old_guest_memberships, & &1.id)
-    Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
-    :ok = Teams.Memberships.prune_guests(prior_team)
-
-    if not skip_site_members_transfer? do
-      add_prior_owners_as_site_editors(prior_team, team, site, now)
-    end
-
-    on_ee do
-      Billing.SiteLocker.update_for(prior_team, send_email?: false)
-      :unlocked = Billing.SiteLocker.update_for(team, send_email?: false)
-      Plausible.ConsolidatedView.reset_if_enabled(prior_team)
-    end
-
-    :ok
-  end
-
-  defp recreate_guest_invitation(site, new_team, old_guest_invitation) do
-    old_team_invitation = old_guest_invitation.team_invitation
-
-    {:ok, new_team_invitation} =
-      create_team_invitation(new_team, old_team_invitation.email, old_team_invitation.inviter)
-
-    {:ok, _new_guest_invitation} =
-      create_guest_invitation(new_team_invitation, site, old_guest_invitation.role)
-  end
-
-  defp recreate_guest_membership(site, new_team, old_guest_membership, now) do
-    old_team_membership = old_guest_membership.team_membership
-
-    {:ok, new_team_membership} =
-      create_team_membership(new_team, :guest, old_team_membership.user, now)
-
-    if new_team_membership.role == :guest do
-      {:ok, _} =
-        new_team_membership
-        |> Teams.GuestMembership.changeset(site, old_guest_membership.role)
-        |> Repo.insert(
-          on_conflict: [set: [updated_at: now, role: old_guest_membership.role]],
-          conflict_target: [:team_membership_id, :site_id],
-          returning: true
-        )
-    end
-  end
-
-  defp add_prior_owners_as_site_editors(prior_team, new_team, site, now) do
-    prior_owners = Repo.preload(prior_team, :owners).owners
-
-    for prior_owner <- prior_owners do
-      {:ok, prior_owner_team_membership} =
-        create_team_membership(new_team, :guest, prior_owner, now)
-
-      if prior_owner_team_membership.role == :guest do
-        {:ok, _} =
-          prior_owner_team_membership
-          |> Teams.GuestMembership.changeset(site, :editor)
-          |> Repo.insert(
-            on_conflict: [set: [updated_at: now, role: :editor]],
-            conflict_target: [:team_membership_id, :site_id],
-            returning: true
-          )
-      end
-    end
-  end
-
   def prune_guest_invitations(team) do
     guest_query =
       from(
@@ -518,90 +340,6 @@ defmodule Plausible.Teams.Invitations do
     )
 
     :ok
-  end
-
-  def ensure_can_take_ownership(site, team, opts \\ [])
-
-  on_ee do
-    def ensure_can_take_ownership(_site, nil, _opts), do: {:error, :no_plan}
-
-    def ensure_can_take_ownership(site, team, opts) do
-      team = Teams.with_subscription(team)
-      plan = Billing.Plans.get_subscription_plan(team.subscription)
-      active_subscription? = Billing.Subscriptions.active?(team.subscription)
-
-      if active_subscription? and plan != :free_10k do
-        team
-        |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
-        |> Billing.Quota.ensure_within_plan_limits(plan,
-          skip_site_limit_check?: Teams.Billing.grandfathered_team?(team),
-          skip_team_member_limit_check?: opts[:skip_site_members_transfer?] == true
-        )
-      else
-        {:error, :no_plan}
-      end
-    end
-  else
-    def ensure_can_take_ownership(_site, _team, _opts) do
-      if always(true) do
-        :ok
-      else
-        {:error, :no_plan}
-      end
-    end
-  end
-
-  def send_transfer_accepted_email(site_transfer, team) do
-    initiator_as_guest_editor? =
-      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
-        {:ok, {:guest_member, :editor}}
-
-    PlausibleWeb.Email.ownership_transfer_accepted(
-      site_transfer.email,
-      site_transfer.initiator.email,
-      team,
-      site_transfer.site,
-      initiator_as_guest_editor?
-    )
-    |> Plausible.Mailer.send()
-  end
-
-  def send_team_changed_email(site, user, team) do
-    owners = Repo.preload(team, :owners).owners
-
-    for owner <- owners do
-      PlausibleWeb.Email.team_changed(owner.email, user, team, site)
-      |> Plausible.Mailer.send()
-    end
-  end
-
-  @spec check_can_transfer_site(Teams.Team.t(), Auth.User.t()) ::
-          :ok | {:error, :permission_denied}
-  def check_can_transfer_site(team, user) do
-    case Teams.Memberships.team_role(team, user) do
-      {:ok, role} when role in [:owner, :admin] ->
-        :ok
-
-      _ ->
-        {:error, :permission_denied}
-    end
-  end
-
-  @doc false
-  def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
-    check_permissions? = Keyword.get(opts, :check_permissions, true)
-
-    if check_permissions? do
-      case Teams.Memberships.site_role(site, inviter) do
-        {:ok, {:team_member, inviter_role}} when inviter_role in [:owner, :admin] ->
-          :ok
-
-        _ ->
-          {:error, :permission_denied}
-      end
-    else
-      :ok
-    end
   end
 
   @doc false
@@ -629,9 +367,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  # Site ownership transfers are allowed to target existing site members
-  def ensure_new_membership(%Plausible.Site{}, _invitee, :owner), do: :ok
-
   def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do
       :ok
@@ -656,21 +391,8 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  defp create_invitation(site, invitee_email, role, inviter) do
-    Repo.transaction(fn ->
-      with {:ok, team_invitation} <-
-             create_team_invitation(site.team, invitee_email, inviter,
-               ensure_no_site_transfers_for: site.id
-             ),
-           {:ok, guest_invitation} <- create_guest_invitation(team_invitation, site, role) do
-        guest_invitation
-      else
-        {:error, changeset} -> Repo.rollback(changeset)
-      end
-    end)
-  end
-
-  defp create_team_invitation(team, invitee_email, inviter, opts \\ []) do
+  @doc false
+  def create_team_invitation(team, invitee_email, inviter, opts \\ []) do
     now = NaiveDateTime.utc_now(:second)
     role = Keyword.get(opts, :role, :guest)
 
@@ -710,7 +432,8 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  defp create_guest_invitation(team_invitation, site, role) do
+  @doc false
+  def create_guest_invitation(team_invitation, site, role) do
     now = NaiveDateTime.utc_now(:second)
 
     team_invitation
@@ -723,19 +446,6 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def send_invitation_email(%Teams.SiteTransfer{} = transfer, invitee) do
-    email =
-      PlausibleWeb.Email.ownership_transfer_request(
-        transfer.email,
-        transfer.transfer_id,
-        transfer.site,
-        transfer.initiator,
-        invitee
-      )
-
-    Plausible.Mailer.send(email)
-  end
-
   def send_invitation_email(%Teams.Invitation{} = team_invitation, invitee) do
     email =
       if invitee do

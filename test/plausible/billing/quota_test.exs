@@ -83,7 +83,7 @@ defmodule Plausible.Billing.QuotaTest do
         team = owner |> team_of()
 
         assert Plausible.Teams.Billing.site_limit(team) == :unlimited
-        assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
+        assert Plausible.Teams.Sites.Transfer.ensure_can_take_ownership(other_site, team) == :ok
       end
     end
   end
