@@ -47,11 +47,31 @@ defmodule Plausible.Stats.QueryResult do
   def from(%QueryRunner{results: results, comparison_results: comparison_results} = runner) do
     struct!(
       __MODULE__,
-      results: results,
-      comparison_results: comparison_results,
+      results: format_results(results, runner.main_query),
+      comparison_results: format_results(comparison_results, runner.comparison_query),
       meta: meta(runner) |> Jason.OrderedObject.new(),
       query: query(runner) |> Jason.OrderedObject.new()
     )
+  end
+
+  defp format_results(nil, _query), do: nil
+
+  defp format_results(results, query) do
+    Enum.map(results, fn row ->
+      dimensions =
+        Enum.zip_with(query.dimensions, row.dimensions, fn
+          "time:hour", key -> Plausible.Stats.Time.hour_label(key, query.timezone)
+          _dimension, value -> value
+        end)
+
+      case row do
+        %{comparison: comparison} ->
+          %{row | dimensions: dimensions, comparison: %{comparison | dimensions: dimensions}}
+
+        _ ->
+          %{row | dimensions: dimensions}
+      end
+    end)
   end
 
   defp meta(%QueryRunner{} = runner) do
@@ -133,7 +153,7 @@ defmodule Plausible.Stats.QueryResult do
       Map.put(
         meta,
         :time_label_result_indices,
-        result_indices_for_time_labels(time_labels, runner.main_results)
+        result_indices_for_time_labels(Plausible.Stats.Time.time_keys(query), runner.main_results)
       )
     else
       meta
@@ -150,7 +170,10 @@ defmodule Plausible.Stats.QueryResult do
       Map.put(
         meta,
         :comparison_time_label_result_indices,
-        result_indices_for_time_labels(comp_time_labels, runner.comparison_results)
+        result_indices_for_time_labels(
+          Plausible.Stats.Time.time_keys(runner.comparison_query),
+          runner.comparison_results
+        )
       )
     else
       meta
