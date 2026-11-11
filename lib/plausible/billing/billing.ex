@@ -23,7 +23,7 @@ defmodule Plausible.Billing do
   The enterprise plan's `paddle_plan_id` is rewritten to a conventional
   `manual-subscription` ID, which is also what the subscription gets, so the two
   stay linked. `paddle_subscription_id` is left empty. See
-  `Subscription.manual_changeset/2` for the remaining values.
+  `PaddleClassic.Subscription.manual_changeset/2` for the remaining values.
 
   ## Limitations for creating a manual subscription:
 
@@ -56,7 +56,7 @@ defmodule Plausible.Billing do
     Repo.transaction(fn ->
       with {:ok, _plan} <-
              Repo.update(EnterprisePlan.manual_subscription_changeset(enterprise_plan)),
-           {:ok, subscription} <- Repo.insert(Subscription.manual_changeset(team)) do
+           {:ok, subscription} <- Repo.insert(PaddleClassic.Subscription.manual_changeset(team)) do
         SubscriptionState.apply_subscription_state(subscription)
       else
         {:error, changeset} -> Repo.rollback(changeset)

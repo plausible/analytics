@@ -376,7 +376,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a past_due subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :past_due})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :past_due})
         |> Repo.update!()
 
       conn
@@ -386,7 +386,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       # for a deleted (but not expired) subscription
       subscription
-      |> Plausible.Billing.Subscription.changeset(%{
+      |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{
         status: :deleted,
         next_bill_date: Date.shift(Date.utc_today(), month: 6)
       })
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a paused subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :paused})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :paused})
         |> Repo.update!()
 
       conn
