@@ -154,7 +154,7 @@ defmodule Plausible.Repo.Migrations.AddAllSubscriptions do
                     team_id = NEW.team_id,
                     inserted_at = NEW.inserted_at,
                     updated_at = NEW.updated_at
-                  WHERE id = NEW.id;
+                  WHERE id = OLD.id;
 
                   RETURN NEW;
                 ELSIF NEW.type = 'billing' THEN
