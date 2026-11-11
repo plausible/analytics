@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryBuilder do
+defmodule Plausible.Stats.Query.Builder do
   @moduledoc """
   A module used for building the Query struct from already parsed params.
   """

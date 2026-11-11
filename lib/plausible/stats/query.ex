@@ -39,11 +39,10 @@ defmodule Plausible.Stats.Query do
     Imported,
     Legacy,
     Comparisons,
-    QueryBuilder,
     QueryError
   }
 
-  alias Plausible.Stats.Query.{ParsedParams, ApiParser}
+  alias Plausible.Stats.Query.{ParsedParams, ApiParser, Builder}
 
   @type t :: %__MODULE__{}
 
@@ -54,7 +53,7 @@ defmodule Plausible.Stats.Query do
       ) do
     with {:ok, %ParsedParams{} = parsed_query_params} <-
            ApiParser.parse(params, opts) do
-      QueryBuilder.build(site, parsed_query_params, Keyword.get(opts, :debug_metadata, %{}))
+      Builder.build(site, parsed_query_params, Keyword.get(opts, :debug_metadata, %{}))
     end
   end
 
@@ -70,7 +69,7 @@ defmodule Plausible.Stats.Query do
 
   @doc """
   Builds query from old-style stats APIv1 params. New code should use `Query.parse_and_build`
-  or `QueryBuilder.build` with already parsed params.
+  or `Query.Builder.build` with already parsed params.
   """
   def from(site, params, opts \\ []) do
     Legacy.QueryBuilder.from(

@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Query, QueryBuilder, DateTimeRange}
+  alias Plausible.Stats.{Filters, Query, DateTimeRange}
   alias Plausible.Stats.Query.ApiParser
   alias Plausible.Times
 
@@ -32,9 +32,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_consolidated_site_ids(site)
       |> put_order_by(params)
       |> put_include(params)
-      |> QueryBuilder.put_comparison_utc_time_range()
+      |> Query.Builder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
-      |> QueryBuilder.set_time_on_page_data(site)
+      |> Query.Builder.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -69,7 +69,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp preload_goals_and_revenue(query, site) do
     {preloaded_goals, revenue_warning, revenue_currencies} =
-      Plausible.Stats.QueryBuilder.preload_goals_and_revenue(
+      Plausible.Stats.Query.Builder.preload_goals_and_revenue(
         site,
         query.metrics,
         query.filters,

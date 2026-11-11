@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{QueryBuilder, QueryInclude}
+  alias Plausible.Stats.{Query, QueryInclude}
   alias Plausible.Stats.Query.ParsedParams
 
   @user_id 123
@@ -17,7 +17,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :pageviews],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"]
@@ -50,7 +50,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :visit_duration],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-02]},
           dimensions: ["time:hour"]
@@ -72,7 +72,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :month,
           dimensions: ["time:day"],
@@ -103,7 +103,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :visit_duration, :pageviews],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:30:00Z]},
           dimensions: ["time:minute"]
@@ -140,7 +140,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2025-12-25], ~D[2026-01-06]},
           dimensions: ["time:week"],
@@ -184,7 +184,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
           dimensions: ["time:day"],
@@ -234,7 +234,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-02], ~D[2021-01-02]},
           dimensions: ["time:hour"],
@@ -268,7 +268,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-01]},
           dimensions: ["time:hour"]
@@ -292,7 +292,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:08:00Z], ~U[2021-01-01 00:12:00Z]},
           dimensions: ["time:minute"],
@@ -329,7 +329,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :day,
           relative_date: ~D[2021-01-01],
@@ -354,7 +354,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-31]},
           dimensions: ["time:day"]
@@ -376,7 +376,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-31]},
           dimensions: ["time:week"]
@@ -399,7 +399,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-02-28]},
           dimensions: ["time:month"]
@@ -427,7 +427,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"],
@@ -452,7 +452,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :group_conversion_rate],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"],
@@ -476,7 +476,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :conversion_rate],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 23:59:59Z]},
           dimensions: ["time:hour"],
@@ -496,7 +496,7 @@ defmodule Plausible.Stats.QueryTest do
   describe "include.empty_metrics" do
     test "if not asked for, no empty_metrics are returned under meta", %{site: site} do
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all
         })
@@ -516,7 +516,7 @@ defmodule Plausible.Stats.QueryTest do
         ] do
       test "default: empty #{metric} is #{expected}", %{site: site} do
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
             include: %QueryInclude{empty_metrics: true}
@@ -534,7 +534,7 @@ defmodule Plausible.Stats.QueryTest do
         ] do
       test "page filter: empty #{metric} is #{expected}", %{site: site} do
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
             include: %QueryInclude{empty_metrics: true},
@@ -555,7 +555,7 @@ defmodule Plausible.Stats.QueryTest do
         insert(:goal, site: site, event_name: "Signup")
 
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
             include: %QueryInclude{empty_metrics: true},
@@ -573,7 +573,7 @@ defmodule Plausible.Stats.QueryTest do
       insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:average_revenue, :total_revenue],
           input_date_range: :all,
           include: %QueryInclude{empty_metrics: true},
@@ -590,7 +590,7 @@ defmodule Plausible.Stats.QueryTest do
 
     test "is ignored when event:goal dimension used", %{site: site} do
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           include: %QueryInclude{empty_metrics: true},
@@ -613,7 +613,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"]
@@ -636,7 +636,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"],
@@ -659,7 +659,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"],
@@ -700,7 +700,7 @@ defmodule Plausible.Stats.QueryTest do
         ])
 
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [:total_revenue, :average_revenue],
             input_date_range: :all,
             dimensions: [unquote(hostname_dim)],

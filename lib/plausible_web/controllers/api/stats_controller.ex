@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
 
-  alias Plausible.Stats.{Query, QueryBuilder, QueryError}
+  alias Plausible.Stats.{Query, QueryError}
 
   alias Plausible.Stats.Query.{ParsedParams, DashboardParser}
 
@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Api.StatsController do
     now = conn.private[:now]
 
     with {:ok, %ParsedParams{} = params} <- DashboardParser.parse(params, now: now),
-         {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
+         {:ok, %Query{} = query} <- Query.Builder.build(site, params, debug_metadata(conn)) do
       query =
         if query.include.time_labels do
           Query.set_include(query, :time_label_result_indices, true)

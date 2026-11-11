@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Dashboard.CsvExport do
   @moduledoc false
 
-  alias Plausible.Stats.{Time, Query, QueryBuilder, QueryRunner, QueryResult}
+  alias Plausible.Stats.{Time, Query, QueryRunner, QueryResult}
   alias Plausible.Stats.Query.{ParsedParams, DashboardParser}
 
   @csv_filenames [
@@ -77,7 +77,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
     params = construct_raw_query_params(filename, params)
 
     with {:ok, %ParsedParams{} = params} <- DashboardParser.parse(params) do
-      QueryBuilder.build(site, params, debug_metadata)
+      Query.Builder.build(site, params, debug_metadata)
     end
   end
 
@@ -253,7 +253,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
       })
 
     with {:ok, parsed} <- DashboardParser.parse(raw_params),
-         {:ok, query} <- QueryBuilder.build(site, parsed, debug_metadata) do
+         {:ok, query} <- Query.Builder.build(site, parsed, debug_metadata) do
       {:ok, Query.set(query, order_by: [{:visitors, :desc}, {"event:prop_key", :asc}])}
     end
   end
@@ -280,7 +280,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
         |> Map.put("dimensions", [dimension])
 
       with {:ok, parsed} <- DashboardParser.parse(raw_params),
-           {:ok, query} <- QueryBuilder.build(site, parsed, debug_metadata) do
+           {:ok, query} <- Query.Builder.build(site, parsed, debug_metadata) do
         query =
           query
           |> Query.set(order_by: [{:visitors, :desc}, {dimension, :asc}])

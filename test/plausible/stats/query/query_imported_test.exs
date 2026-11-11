@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.QueryImportedTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{QueryBuilder, QueryInclude}
+  alias Plausible.Stats.{Query, QueryInclude}
   alias Plausible.Stats.Query.ParsedParams
 
   @unsupported_query_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_query
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.QueryImportedTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:visitors],
                  input_date_range: :all,
                  filters: [[:has_done, [:is, "event:name", ["pageview"]]]],
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.QueryImportedTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:visitors],
                  input_date_range: :all,
                  dimensions: ["event:goal"],
@@ -98,7 +98,7 @@ defmodule Plausible.Stats.QueryImportedTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:visitors, :scroll_depth],
                  input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-12-31]},
                  filters: [[:is, "event:page", ["/"]]],
