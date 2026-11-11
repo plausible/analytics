@@ -9,7 +9,8 @@ defmodule Plausible.ApiRequestLog.Entry do
   alias Plausible.Teams.Team
 
   @interfaces [:rest, :mcp]
-  @user_agent_max_bytes 256
+  @plug_request_id_max_bytes 200
+  @sane_user_agent_max_bytes 256
 
   @type t() :: %__MODULE__{}
 
@@ -52,10 +53,11 @@ defmodule Plausible.ApiRequestLog.Entry do
     # Whether the request counts against the team's API quota
     field :billable, :boolean
 
-    # The `x-request-id` response header for correlation and search purposes.
+    # The `x-request-id` response header for correlation and search purposes,
+    # truncated to 200 bytes of valid UTF-8
     field :request_id, :string
 
-    # The `user-agent` request header, cut to 256 bytes of valid UTF-8
+    # The `user-agent` request header, truncated to 256 bytes of valid UTF-8
     field :user_agent, :string
   end
 
@@ -72,12 +74,15 @@ defmodule Plausible.ApiRequestLog.Entry do
       operation: attrs.operation,
       status: attrs.status,
       billable: attrs.billable,
-      request_id: attrs.request_id,
-      user_agent:
-        attrs.user_agent
-        |> binary_slice(0, @user_agent_max_bytes)
-        |> String.replace_invalid("")
+      request_id: truncate_utf8(attrs.request_id, @plug_request_id_max_bytes),
+      user_agent: truncate_utf8(attrs.user_agent, @sane_user_agent_max_bytes)
     }
+  end
+
+  defp truncate_utf8(string, max_bytes) do
+    string
+    |> binary_slice(0, max_bytes)
+    |> String.replace_invalid("")
   end
 
   defp credential(%ApiKey{id: id}), do: {"api_key", id}

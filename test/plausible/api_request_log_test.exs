@@ -67,21 +67,26 @@ defmodule Plausible.ApiRequestLogTest do
                        ] = recorded_entries(team)
       end
 
-      test "cuts the user agent to 256 bytes", %{team: team, api_key: api_key} do
-        assert recorded_user_agent(team, api_key, String.duplicate("a", 300)) ==
-                 String.duplicate("a", 256)
-      end
+      for {field, max_bytes} <- [request_id: 200, user_agent: 256] do
+        @field field
+        @max_bytes max_bytes
 
-      test "drops a user agent character that the 256-byte cut splits", %{
-        team: team,
-        api_key: api_key
-      } do
-        assert recorded_user_agent(team, api_key, String.duplicate("a", 255) <> "é") ==
-                 String.duplicate("a", 255)
-      end
+        test "truncates the #{field} to #{max_bytes} bytes", %{team: team, api_key: api_key} do
+          assert recorded(team, api_key, @field, String.duplicate("a", 300)) ==
+                   String.duplicate("a", @max_bytes)
+        end
 
-      test "drops invalid UTF-8 bytes from the user agent", %{team: team, api_key: api_key} do
-        assert recorded_user_agent(team, api_key, "python-requests\xFF") == "python-requests"
+        test "drops a #{field} character that the #{max_bytes}-byte truncation splits", %{
+          team: team,
+          api_key: api_key
+        } do
+          assert recorded(team, api_key, @field, String.duplicate("a", @max_bytes - 1) <> "é") ==
+                   String.duplicate("a", @max_bytes - 1)
+        end
+
+        test "drops invalid UTF-8 bytes from the #{field}", %{team: team, api_key: api_key} do
+          assert recorded(team, api_key, @field, "python-requests\xFF") == "python-requests"
+        end
       end
     end
 
@@ -99,10 +104,10 @@ defmodule Plausible.ApiRequestLogTest do
       })
     end
 
-    defp recorded_user_agent(team, api_key, user_agent) do
-      :ok = ApiRequestLog.record(entry_attrs(team, api_key, user_agent: user_agent))
-      [%Entry{user_agent: recorded}] = recorded_entries(team)
-      recorded
+    defp recorded(team, api_key, field, value) do
+      :ok = ApiRequestLog.record(entry_attrs(team, api_key, [{field, value}]))
+      [entry] = recorded_entries(team)
+      Map.fetch!(entry, field)
     end
 
     defp recorded_entries(team) do
