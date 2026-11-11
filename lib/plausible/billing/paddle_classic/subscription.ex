@@ -7,7 +7,8 @@ defmodule Plausible.Billing.PaddleClassic.Subscription do
 
   import Ecto.Changeset
 
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing
+  alias Plausible.Billing.Subscription.Status
 
   @required_fields [
     :paddle_subscription_id,
@@ -29,7 +30,7 @@ defmodule Plausible.Billing.PaddleClassic.Subscription do
     field :paddle_plan_id, :string
     field :update_url, :string
     field :cancel_url, :string
-    field :status, Ecto.Enum, values: Subscription.Status.valid_statuses()
+    field :status, Ecto.Enum, values: Status.valid_statuses()
     field :next_bill_amount, :string
     field :next_bill_date, :date
     field :last_bill_date, :date
@@ -42,7 +43,7 @@ defmodule Plausible.Billing.PaddleClassic.Subscription do
 
   def changeset(subscription, attrs \\ %{})
 
-  def changeset(%Subscription{} = subscription, attrs) do
+  def changeset(%Billing.Subscription{} = subscription, attrs) do
     subscription
     |> from_common()
     |> changeset(attrs)
@@ -70,8 +71,8 @@ defmodule Plausible.Billing.PaddleClassic.Subscription do
   """
   def manual_changeset(team, today \\ Date.utc_today()) do
     %__MODULE__{
-      paddle_plan_id: Subscription.manual_plan_id(),
-      status: Subscription.Status.active(),
+      paddle_plan_id: Billing.Subscription.manual_plan_id(),
+      status: Status.active(),
       currency_code: "XXX",
       next_bill_amount: "-1",
       last_bill_date: today,
