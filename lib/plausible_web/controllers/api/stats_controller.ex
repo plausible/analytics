@@ -6,7 +6,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
 
-  alias Plausible.Stats.{Query, Dashboard, ParsedQueryParams, QueryBuilder, QueryError}
+  alias Plausible.Stats.{Query, Dashboard, QueryBuilder, QueryError}
+
+  alias Plausible.Stats.Query.ParsedParams
 
   alias Plausible.Stats.Dashboard.CsvExport
   alias PlausibleWeb.Api.Helpers, as: H
@@ -20,7 +22,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns.site
     now = conn.private[:now]
 
-    with {:ok, %ParsedQueryParams{} = params} <- Dashboard.QueryParser.parse(params, now: now),
+    with {:ok, %ParsedParams{} = params} <- Dashboard.QueryParser.parse(params, now: now),
          {:ok, %Query{} = query} <- QueryBuilder.build(site, params, debug_metadata(conn)) do
       query =
         if query.include.time_labels do

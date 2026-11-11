@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.ParsedQueryParams do
+defmodule Plausible.Stats.Query.ParsedParams do
   @moduledoc false
 
   alias Plausible.Stats.Query

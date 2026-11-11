@@ -32,7 +32,7 @@ defmodule Plausible.Stats.ApiQueryParser do
          {:ok, pagination} <- parse_pagination(params["pagination"]),
          {:ok, include} <- parse_include(params["include"]) do
       {:ok,
-       Plausible.Stats.ParsedQueryParams.new!(%{
+       Plausible.Stats.Query.ParsedParams.new!(%{
          input_date_range: input_date_range,
          metrics: metrics,
          filters: filters,

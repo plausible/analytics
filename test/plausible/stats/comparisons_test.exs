@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
-  alias Plausible.Stats.{Query, Comparisons, QueryBuilder, ParsedQueryParams, QueryInclude}
+  alias Plausible.Stats.{Query, Comparisons, QueryBuilder, QueryInclude}
+  alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site]
 
@@ -358,7 +359,7 @@ defmodule Plausible.Stats.ComparisonsTest do
 
   describe "add_comparison_filters" do
     test "no results doesn't update filters", %{site: site} do
-      query = build_comparison_query(site, %ParsedQueryParams{dimensions: ["visit:browser"]})
+      query = build_comparison_query(site, %ParsedParams{dimensions: ["visit:browser"]})
 
       result_query = Comparisons.add_comparison_filters(query, [])
 
@@ -366,7 +367,7 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "no dimensions doesn't update filters", %{site: site} do
-      query = build_comparison_query(site, %ParsedQueryParams{})
+      query = build_comparison_query(site, %ParsedParams{})
 
       result_query =
         Comparisons.add_comparison_filters(query, [%{dimensions: [], metrics: [123]}])
@@ -375,7 +376,7 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "no time dimension doesn't update filters", %{site: site} do
-      query = build_comparison_query(site, %ParsedQueryParams{dimensions: ["time:day"]})
+      query = build_comparison_query(site, %ParsedParams{dimensions: ["time:day"]})
 
       result_query =
         Comparisons.add_comparison_filters(query, [%{dimensions: ["2024-01-01"], metrics: [123]}])
@@ -384,7 +385,7 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
 
     test "updates filters in a single-row case", %{site: site} do
-      query = build_comparison_query(site, %ParsedQueryParams{dimensions: ["visit:browser"]})
+      query = build_comparison_query(site, %ParsedParams{dimensions: ["visit:browser"]})
 
       result_query =
         Comparisons.add_comparison_filters(query, [%{dimensions: ["Chrome"], metrics: [123]}])
@@ -396,7 +397,7 @@ defmodule Plausible.Stats.ComparisonsTest do
 
     test "updates filters for a complex case", %{site: site} do
       query =
-        build_comparison_query(site, %ParsedQueryParams{
+        build_comparison_query(site, %ParsedParams{
           dimensions: ["visit:browser", "visit:browser_version", "time:day"],
           filters: [[:is, "visit:country_name", ["Estonia"]]]
         })
@@ -442,7 +443,7 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
   end
 
-  defp build_comparison_query(site, %ParsedQueryParams{} = params) do
+  defp build_comparison_query(site, %ParsedParams{} = params) do
     QueryBuilder.build!(
       site,
       struct!(params,

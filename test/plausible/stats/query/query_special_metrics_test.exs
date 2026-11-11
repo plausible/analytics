@@ -1,7 +1,8 @@
 defmodule Plausible.Stats.QuerySpecialMetricsTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
+  alias Plausible.Stats.{QueryBuilder, QueryInclude}
+  alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site]
 
@@ -22,7 +23,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               QueryBuilder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  input_date_range: :all,
                  dimensions: ["visit:exit_page"],
@@ -46,7 +47,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               QueryBuilder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  input_date_range: :all,
                  dimensions: ["visit:exit_page"],
@@ -82,7 +83,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               QueryBuilder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  input_date_range: :all,
                  dimensions: ["visit:exit_page"],
@@ -126,7 +127,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               QueryBuilder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  input_date_range: :all,
                  dimensions: ["visit:exit_page"],
@@ -161,7 +162,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
 
       do_query = fn order_by, pagination ->
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedQueryParams{
+          QueryBuilder.build(site, %ParsedParams{
             metrics: [:exit_rate],
             input_date_range: :all,
             dimensions: ["visit:exit_page"],
@@ -207,7 +208,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        QueryBuilder.build(site, %ParsedParams{
           metrics: [:exit_rate],
           input_date_range: {:date_range, ~D[2021-01-10], ~D[2021-01-10]},
           dimensions: ["visit:exit_page"],
@@ -258,7 +259,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        QueryBuilder.build(site, %ParsedParams{
           metrics: [:exit_rate],
           input_date_range: :all,
           dimensions: ["visit:exit_page"],
@@ -296,7 +297,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        QueryBuilder.build(site, %ParsedParams{
           metrics: [:visitors, :time_on_page],
           input_date_range: :all,
           dimensions: ["event:page"]
@@ -354,7 +355,7 @@ defmodule Plausible.Stats.QuerySpecialMetricsTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        QueryBuilder.build(site, %ParsedParams{
           metrics: [:time_on_page],
           input_date_range: {:date_range, ~D[2021-01-03], ~D[2021-01-04]},
           filters: [[:is, "event:page", ["/"]]],

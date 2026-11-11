@@ -2,7 +2,8 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
   @moduledoc false
 
   alias Plausible.Stats.Dashboard.QueryParser
-  alias Plausible.Stats.{Time, ParsedQueryParams, Query, QueryBuilder, QueryRunner, QueryResult}
+  alias Plausible.Stats.{Time, Query, QueryBuilder, QueryRunner, QueryResult}
+  alias Plausible.Stats.Query.ParsedParams
 
   @csv_filenames [
     "visitors.csv",
@@ -76,7 +77,7 @@ defmodule Plausible.Stats.Dashboard.CsvExport do
   defp parse_csv_query(site, filename, params, debug_metadata) do
     params = construct_raw_query_params(filename, params)
 
-    with {:ok, %ParsedQueryParams{} = params} <- QueryParser.parse(params) do
+    with {:ok, %ParsedParams{} = params} <- QueryParser.parse(params) do
       QueryBuilder.build(site, params, debug_metadata)
     end
   end

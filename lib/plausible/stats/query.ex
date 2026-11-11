@@ -40,10 +40,11 @@ defmodule Plausible.Stats.Query do
     Legacy,
     Comparisons,
     ApiQueryParser,
-    ParsedQueryParams,
     QueryBuilder,
     QueryError
   }
+
+  alias Plausible.Stats.Query.ParsedParams
 
   @type t :: %__MODULE__{}
 
@@ -52,7 +53,7 @@ defmodule Plausible.Stats.Query do
         %{"site_id" => domain} = params,
         opts \\ []
       ) do
-    with {:ok, %ParsedQueryParams{} = parsed_query_params} <-
+    with {:ok, %ParsedParams{} = parsed_query_params} <-
            ApiQueryParser.parse(params, opts) do
       QueryBuilder.build(site, parsed_query_params, Keyword.get(opts, :debug_metadata, %{}))
     end

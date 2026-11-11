@@ -1,11 +1,13 @@
 defmodule Plausible.Stats.Dashboard.QueryParser do
   @moduledoc """
-  Parses a dashboard query string into `%ParsedQueryParams{}`. Note that
+  Parses a dashboard query string into `%ParsedParams{}`. Note that
   `metrics` and `dimensions` do not exist at this step yet, and are expected
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, QueryInclude, ApiQueryParser, QueryError}
+  alias Plausible.Stats.{QueryInclude, ApiQueryParser, QueryError}
+
+  alias Plausible.Stats.Query.ParsedParams
 
   @valid_comparison_shorthands %{
     "previous_period" => :previous_period,
@@ -24,7 +26,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
          {:ok, pagination} <- ApiQueryParser.parse_pagination(params["pagination"]),
          {:ok, include} <- parse_include(params) do
       {:ok,
-       ParsedQueryParams.new!(%{
+       ParsedParams.new!(%{
          input_date_range: input_date_range,
          relative_date: relative_date,
          dimensions: dimensions,
