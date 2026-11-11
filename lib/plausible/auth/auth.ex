@@ -297,6 +297,18 @@ defmodule Plausible.Auth do
     def super_admin?(_), do: always(false)
   end
 
+  @doc """
+  Whether the email is on a disposable (throwaway) email domain.
+
+  This is the single entry point for the check, always `false` on Community Edition.
+  """
+  @spec disposable_email?(String.t() | nil) :: boolean()
+  on_ee do
+    def disposable_email?(email), do: Auth.DisposableEmail.disposable?(email)
+  else
+    def disposable_email?(_), do: always(false)
+  end
+
   @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]
   def list_api_keys(user, team) do
     query =

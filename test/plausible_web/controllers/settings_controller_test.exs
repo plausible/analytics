@@ -1095,6 +1095,32 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html_response(conn, 200) =~ "has already been taken"
     end
 
+    @tag :ee_only
+    test "renders form with error when changing to a disposable email domain", %{
+      conn: conn,
+      user: user
+    } do
+      password = "very-long-very-secret-123"
+
+      user
+      |> Auth.User.set_password(password)
+      |> Repo.update!()
+
+      conn =
+        post(conn, ~p"/settings/security/email", %{
+          "user" => %{"password" => password, "email" => "foobar@mailinator.com"}
+        })
+
+      assert text(html_response(conn, 200)) =~ "Disposable email addresses are not allowed"
+
+      # the account keeps its current address, so it can't be freed up for re-registration
+      updated_user = Repo.reload!(user)
+      assert updated_user.email == user.email
+      assert updated_user.previous_email == user.previous_email
+
+      assert_no_emails_delivered()
+    end
+
     test "renders form with error when email is identical with the current one", %{
       conn: conn,
       user: user

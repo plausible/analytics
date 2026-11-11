@@ -146,6 +146,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         {:error, reason}
         when reason in [
                :invalid_email,
+               :disposable_email,
                :already_a_member,
                :invited_as_member,
                :already_a_guest,
@@ -287,6 +288,8 @@ defmodule PlausibleWeb.Live.TeamManagement do
        when reason in [:invalid_email, :already_a_member, :invited_as_member],
        do:
          "Make sure the e-mail is valid and not already taken by an existing member or invitation"
+
+  defp error_message(:disposable_email), do: "Disposable email addresses are not allowed"
 
   defp error_message(:already_a_guest),
     do:

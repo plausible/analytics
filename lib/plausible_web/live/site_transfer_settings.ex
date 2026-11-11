@@ -273,6 +273,13 @@ defmodule PlausibleWeb.Live.SiteTransferSettings do
          |> put_flash(:success, "Site transfer request has been sent to #{email}")
          |> redirect(to: ~p"/#{site.domain}/settings/people")}
 
+      {:error, :disposable_email} ->
+        {:noreply,
+         assign_form(socket, params,
+           action: :insert,
+           field_errors: [{:email, "Disposable email addresses are not allowed"}]
+         )}
+
       {:error, %Ecto.Changeset{} = changeset} ->
         message =
           case Plausible.ChangesetHelpers.traverse_errors(changeset) do

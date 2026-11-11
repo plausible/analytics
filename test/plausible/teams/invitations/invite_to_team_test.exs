@@ -42,6 +42,21 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: me.email)
     end
 
+    @tag :ee_only
+    test "returns an error for a disposable email without creating any invitations" do
+      inviter = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      assert {:error, :disposable_email} =
+               InviteToTeam.invite_all(team, inviter, [
+                 %{email: "first@example.com", role: :editor},
+                 %{email: "someone@mailinator.com", role: :viewer}
+               ])
+
+      refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")
+    end
+
     for email <- ["", "no-at-sign.example.com", "no-dot@example"] do
       test "returns an error for invalid email #{inspect(email)} without creating any invitations" do
         inviter = new_user()

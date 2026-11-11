@@ -7,6 +7,8 @@ extend-exclude = [
 	"**/*.xml",
 	"**/*.html",
 	"tracker/eslint.config.mjs",
+	# Vendored list of domain names (not prose), regenerated upstream
+	"priv/disposable_email_domains.txt",
 	# Already-shipped migrations
 	"priv/repo/migrations/20200227092821_add_fingerprint_sesssions.exs",
 	"priv/repo/migrations/20231219083050_track_accept_traffic_until_notifcations.exs",

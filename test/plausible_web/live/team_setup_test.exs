@@ -525,6 +525,17 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert invitation.email == "second@example.com"
     end
 
+    @tag :ee_only
+    test "rejects e-mails on a disposable domain", %{conn: conn, team: team} do
+      {:ok, lv, _html} = live(conn, @url)
+
+      assert finish_setup(lv,
+               rows: %{"1" => %{"email" => "someone@mailinator.com", "role" => "viewer"}}
+             ) =~ "Disposable email addresses are not allowed"
+
+      refute Repo.reload!(team).setup_complete
+    end
+
     test "rejects invalid e-mails", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
 

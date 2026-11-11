@@ -395,6 +395,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
       {:error, :invalid_email} ->
         {:noreply, put_live_flash(socket, :error, "Make sure all e-mails are valid")}
 
+      {:error, :disposable_email} ->
+        {:noreply, put_live_flash(socket, :error, "Disposable email addresses are not allowed")}
+
       {:error, :duplicate_emails} ->
         {:noreply, put_live_flash(socket, :error, "Make sure e-mails are unique")}
 
