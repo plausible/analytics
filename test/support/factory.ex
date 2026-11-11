@@ -201,7 +201,7 @@ defmodule Plausible.Factory do
   end
 
   def subscription_factory do
-    %Plausible.Billing.Subscription{
+    %Plausible.Billing.PaddleClassic.Subscription{
       paddle_subscription_id: sequence(:paddle_subscription_id, &"subscription-#{&1}"),
       paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
       cancel_url: "cancel.com",
