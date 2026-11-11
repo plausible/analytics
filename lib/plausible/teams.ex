@@ -279,7 +279,13 @@ defmodule Plausible.Teams do
           Plausible.Site.Removal.run(site)
         end
 
-        Repo.delete_all(from s in Billing.Subscription, where: s.team_id == ^team.id)
+        for schema <- [
+              Billing.PaddleClassic.Subscription,
+              Billing.PaddleBilling.Subscription,
+              Billing.PaddleBilling.SubscriptionEvent
+            ] do
+          Repo.delete_all(from r in schema, where: r.team_id == ^team.id)
+        end
 
         Repo.delete_all(from ep in Billing.EnterprisePlan, where: ep.team_id == ^team.id)
 
