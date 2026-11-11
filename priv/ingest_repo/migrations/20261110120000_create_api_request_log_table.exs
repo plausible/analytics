@@ -29,6 +29,7 @@ defmodule Plausible.IngestRepo.Migrations.CreateApiRequestLogTable do
             PARTITION BY toYYYYMM(timestamp)
             ORDER BY (team_id, timestamp)
             TTL timestamp + INTERVAL 3 MONTH
+            SETTINGS ttl_only_drop_parts = 1
             #{Plausible.MigrationUtils.table_settings_expr()}
             """,
             """
