@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryRunner do
+defmodule Plausible.Stats.Query.Runner do
   @moduledoc """
   This module is responsible for executing a Plausible.Stats.Query
   and gathering results.
