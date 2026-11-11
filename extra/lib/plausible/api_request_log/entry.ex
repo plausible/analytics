@@ -34,11 +34,18 @@ defmodule Plausible.ApiRequestLog.Entry do
     # The team that the request belongs to
     field :team_id, Ch, type: "UInt64"
 
+    # The user who owns the credential
+    field :user_id, Ch, type: "UInt64"
+
     # What the caller authenticated with: `api_key` or `oauth_grant`
     field :credential_type, Ch, type: "LowCardinality(String)"
 
     # The ID of the credential in Postgres
     field :credential_id, Ch, type: "UInt64"
+
+    # A stable name for the credential used in the UI, e.g. the API key prefix
+    # or the OAuth client name
+    field :credential_label, :string
 
     # How the caller talked to us: `rest` or `mcp`
     field :interface, Ch, type: "LowCardinality(String)"
@@ -63,13 +70,15 @@ defmodule Plausible.ApiRequestLog.Entry do
 
   @spec new(attrs()) :: t()
   def new(%{interface: interface} = attrs) when interface in @interfaces do
-    {credential_type, credential_id} = credential(attrs.credential)
+    {credential_type, credential_label} = credential(attrs.credential)
 
     %__MODULE__{
       timestamp: attrs.timestamp,
       team_id: attrs.team.id,
+      user_id: attrs.credential.user_id,
       credential_type: credential_type,
-      credential_id: credential_id,
+      credential_id: attrs.credential.id,
+      credential_label: credential_label,
       interface: Atom.to_string(interface),
       operation: attrs.operation,
       status: attrs.status,
@@ -85,6 +94,6 @@ defmodule Plausible.ApiRequestLog.Entry do
     |> String.replace_invalid("")
   end
 
-  defp credential(%ApiKey{id: id}), do: {"api_key", id}
-  defp credential(%Grant{id: id}), do: {"oauth_grant", id}
+  defp credential(%ApiKey{key_prefix: key_prefix}), do: {"api_key", key_prefix}
+  defp credential(%Grant{} = grant), do: {"oauth_grant", Grant.label(grant)}
 end

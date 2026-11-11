@@ -17,7 +17,7 @@ defmodule Plausible.ApiRequestLogTest do
     end
 
     describe "record/1" do
-      test "records a request made with an API key", %{team: team, api_key: api_key} do
+      test "records a request made with an API key", %{user: user, team: team, api_key: api_key} do
         now = DateTime.utc_now(:second)
 
         :ok =
@@ -37,8 +37,10 @@ defmodule Plausible.ApiRequestLogTest do
                          %Entry{
                            timestamp: ^now,
                            team_id: ^team.id,
+                           user_id: ^user.id,
                            credential_type: "api_key",
                            credential_id: ^api_key.id,
+                           credential_label: ^api_key.key_prefix,
                            interface: "rest",
                            operation: "POST /api/v2/query",
                            status: 200,
@@ -50,7 +52,7 @@ defmodule Plausible.ApiRequestLogTest do
       end
 
       test "records a request made with an OAuth grant", %{user: user, team: team} do
-        grant = insert(:oauth_grant, user: user, team: team)
+        grant = insert(:oauth_grant, user: user, team: team, client_name: "Claude")
 
         :ok =
           ApiRequestLog.record(
@@ -59,12 +61,26 @@ defmodule Plausible.ApiRequestLogTest do
 
         assert_matches [
                          %Entry{
+                           user_id: ^user.id,
                            credential_type: "oauth_grant",
                            credential_id: ^grant.id,
+                           credential_label: "Claude",
                            interface: "mcp",
                            operation: "tools/call list_sites"
                          }
                        ] = recorded_entries(team)
+      end
+
+      test "labels an OAuth grant without a client name with its client ID", %{
+        user: user,
+        team: team
+      } do
+        grant = insert(:oauth_grant, user: user, team: team, client_name: nil)
+
+        :ok = ApiRequestLog.record(entry_attrs(team, grant, []))
+
+        assert [%Entry{credential_label: "https://client.example.com/oauth-metadata"}] =
+                 recorded_entries(team)
       end
 
       for {field, max_bytes} <- [request_id: 200, user_agent: 256] do
