@@ -84,16 +84,4 @@ defmodule Plausible.Billing.Subscription do
     |> change()
     |> put_assoc(:team, team)
   end
-
-  def free(team, attrs \\ %{}) do
-    %__MODULE__{
-      paddle_plan_id: "free_10k",
-      status: Subscription.Status.active(),
-      next_bill_amount: "0",
-      currency_code: "EUR"
-    }
-    |> cast(attrs, @required_fields ++ @optional_fields)
-    |> put_assoc(:team, team)
-    |> unique_constraint(:paddle_subscription_id)
-  end
 end

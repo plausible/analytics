@@ -214,6 +214,20 @@ defmodule Plausible.Factory do
     }
   end
 
+  def free_subscription_factory do
+    build(:subscription,
+      paddle_subscription_id: nil,
+      paddle_plan_id: "free_10k",
+      cancel_url: nil,
+      update_url: nil,
+      status: Plausible.Billing.Subscription.Status.active(),
+      next_bill_date: nil,
+      last_bill_date: nil,
+      next_bill_amount: "0",
+      currency_code: "EUR"
+    )
+  end
+
   def starter_subscription_factory do
     build(:subscription, paddle_plan_id: "910413")
   end
