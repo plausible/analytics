@@ -317,6 +317,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "We've sent an email with your code to:"
     end
 
+    test "submits the activation code with the register flow by default", %{conn: conn} do
+      conn =
+        post(conn, "/activate/request-code")
+        |> get("/activate")
+
+      assert text_of_attr(html_response(conn, 200), "form", "action") ==
+               "/activate?flow=register"
+    end
+
     test "passes team identifier in form data", %{conn: conn, user: user} do
       Auth.EmailVerification.issue_code(user)
 
@@ -413,11 +422,11 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: verification.code})
+      conn = post(conn, "/activate?flow=register", %{code: verification.code})
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
-      assert redirected_to(conn) == "/sites/new?flow="
+      assert redirected_to(conn) == "/sites/new?flow=register"
     end
 
     test "redirects to /sites if user has a guest invitation", %{conn: conn, user: user} do
