@@ -228,6 +228,20 @@ defmodule Plausible.Factory do
     )
   end
 
+  def billing_subscription_factory do
+    %Plausible.Billing.PaddleBilling.Subscription{
+      billing_subscription_id: sequence(:billing_subscription_id, &"sub_#{&1}"),
+      billing_customer_id: sequence(:billing_customer_id, &"ctm_#{&1}"),
+      billing_product_id: "pro_test",
+      billing_price_id: sequence(:billing_price_id, &"pri_#{&1}"),
+      status: Subscription.Status.active(),
+      next_bill_amount: "6.00",
+      next_bill_date: Date.utc_today(),
+      last_bill_date: Date.utc_today(),
+      currency_code: "USD"
+    }
+  end
+
   def starter_subscription_factory do
     build(:subscription, paddle_plan_id: "910413")
   end
