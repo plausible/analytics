@@ -114,8 +114,8 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       Allowed
                     </span>
                   </.td>
-                  <.td hide_on_mobile truncate>
-                    <span :if={rule.description} title={rule.description}>
+                  <.td hide_on_mobile max_width="max-w-sm">
+                    <span :if={rule.description} class="block truncate" title={rule.description}>
                       {rule.description}
                     </span>
                     <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">

@@ -49,8 +49,8 @@
         </:thead>
 
         <:tbody :let={api_key}>
-          <.td truncate max_width="max-w-40">
-            {api_key.name}
+          <.td max_width="max-w-40" title={api_key.name}>
+            <span class="block truncate">{api_key.name}</span>
           </.td>
           <.td hide_on_mobile>
             {api_key.key_prefix}
