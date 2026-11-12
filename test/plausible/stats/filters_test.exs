@@ -53,7 +53,7 @@ defmodule Plausible.Stats.FiltersTest do
   end
 
   def assert_parsed(input, expected_output) do
-    assert Filters.parse(input) == expected_output
+    assert Plausible.Stats.Legacy.QueryBuilder.parse_filters(input) == expected_output
   end
 
   describe "parses filter expression" do

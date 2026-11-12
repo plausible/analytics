@@ -4,8 +4,6 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Query
-  alias Plausible.Stats.Query.ApiParser
-  alias Plausible.Stats.Filters.LegacyStatsAPIFilterParser
 
   @visit_props [
     :source,
@@ -47,39 +45,6 @@ defmodule Plausible.Stats.Filters do
   @event_props [:name, :page, :goal, :hostname]
 
   def event_props(), do: @event_props |> Enum.map(&to_string/1)
-
-  @doc """
-  Parses different filter formats.
-
-  Depending on the format and type of the `filters` argument, returns:
-
-    * a parsed filter list, when `filters` is a filter expression string
-    * the same list, when `filters` is a map
-
-  Returns an empty list when argument type is unexpected (e.g. `nil`).
-
-  ## Examples:
-
-      iex> Filters.parse("visit:browser!=Chrome")
-      [[:is_not, "visit:browser", ["Chrome"]]]
-
-      iex> Filters.parse(nil)
-      []
-  """
-  def parse(filters) when is_binary(filters) do
-    case Jason.decode(filters) do
-      {:ok, filters} when is_list(filters) -> parse(filters)
-      {:ok, _} -> []
-      {:error, err} -> LegacyStatsAPIFilterParser.parse_filter_expression(err.data)
-    end
-  end
-
-  def parse(filters) when is_list(filters) do
-    {:ok, parsed_filters} = ApiParser.parse_filters(filters)
-    parsed_filters
-  end
-
-  def parse(_), do: []
 
   def without_prefix(dimension) do
     dimension
