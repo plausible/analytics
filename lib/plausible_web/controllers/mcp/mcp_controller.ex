@@ -11,6 +11,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.OAuth.ProtectedResources
   alias Plausible.Stats.{Query, QueryError}
   alias Plausible.Teams.Membership
+  alias PlausibleWeb.MCP.Span, as: MCPSpan
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
   require Logger
@@ -21,17 +22,10 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   @public_methods ["server/discover"]
 
-  plug :authorize when action == :handle
-
-  defp authorize(conn, _opts) do
-    case message(conn.body_params) do
-      {:ok, _message, method, _id} when method not in @public_methods ->
-        AuthorizeOAuthAPI.call(conn, resource: @resource)
-
-      _public_or_unroutable ->
-        conn
-    end
-  end
+  # Called from `handle/2` rather than as a plug, so that it runs inside the
+  # MCP span and the token lookup nests under it.
+  defp authorize(conn, method) when method in @public_methods, do: conn
+  defp authorize(conn, _method), do: AuthorizeOAuthAPI.call(conn, resource: @resource)
 
   @cache_ttl_ms :timer.minutes(5)
   @cache_scope "public"
@@ -73,7 +67,11 @@ defmodule PlausibleWeb.MCP.MCPController do
   def handle(conn, _params) do
     case message(conn.body_params) do
       {:ok, message, method, id} ->
-        handle_request(conn, message, method, id)
+        MCPSpan.with_span(conn, message, Map.keys(@tools_by_name), fn conn ->
+          conn = authorize(conn, method)
+
+          if conn.halted, do: conn, else: handle_request(conn, message, method, id)
+        end)
 
       :error ->
         send_json(conn, 400, error_response(nil, -32_600, "Invalid Request"))
@@ -276,6 +274,7 @@ defmodule PlausibleWeb.MCP.MCPController do
         {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
 
       site ->
+        Plausible.OpenTelemetry.add_site_attributes(site)
         {:ok, Repo.preload(site, [:owners, :completed_imports])}
     end
   end
@@ -369,6 +368,8 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp send_json(conn, status, body) do
     conn
+    # Read by `MCPSpan` to record the outcome
+    |> put_private(:mcp_response, body)
     |> put_status(status)
     |> json(body)
   end
