@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-F534AEB6.js"></script>
+    <script src="dist/sidebar_items-2CD30561.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -2758,17 +2758,6 @@ user, supporting alphanumeric or traffic-based sorting over the last 24 hours.</
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Stats.Dashboard.QueryParser.html" translate="no">Plausible.Stats.Dashboard.QueryParser</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Parses a dashboard query string into <code class="inline">%ParsedQueryParams{}</code>. Note that
-<code class="inline">metrics</code> and <code class="inline">dimensions</code> do not exist at this step yet, and are expected
-to be filled in by each specific report.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Plausible.Stats.DateTimeRange.html" translate="no">Plausible.Stats.DateTimeRange</a>
 
   </div>
@@ -2886,7 +2875,7 @@ for dimensions, filters and metrics used in import table queries</p></div>
   </div>
 
     <div class="summary-synopsis"><p>[DEPRECATED] Stats API v2 handles &quot;intervals&quot; as time dimensions.
-See <code class="inline">Plausible.Stats.ApiQueryParser.parse_dimensions/1</code>.</p></div>
+See <code class="inline">Plausible.Stats.Query.ApiParser.parse_dimensions/1</code>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2931,7 +2920,7 @@ See <code class="inline">Plausible.Stats.ApiQueryParser.parse_dimensions/1</code
 
   </div>
 
-    <div class="summary-synopsis"><p>Deprecated module. See ApiQueryParser for list of valid dimensions</p></div>
+    <div class="summary-synopsis"><p>Deprecated module. See Query.ApiParser for list of valid dimensions</p></div>
 
 </div>
 <div class="summary-row">
@@ -2974,7 +2963,7 @@ are used when site does not have engagement data for the requested dates.</p></d
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Stats.QueryBuilder.html" translate="no">Plausible.Stats.QueryBuilder</a>
+    <a href="Plausible.Stats.Query.Builder.html" translate="no">Plausible.Stats.Query.Builder</a>
 
   </div>
 
@@ -2983,7 +2972,18 @@ are used when site does not have engagement data for the requested dates.</p></d
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Stats.QueryOptimizer.html" translate="no">Plausible.Stats.QueryOptimizer</a>
+    <a href="Plausible.Stats.Query.DashboardParser.html" translate="no">Plausible.Stats.Query.DashboardParser</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Parses a dashboard query string into <code class="inline">%ParsedParams{}</code>. Note that
+<code class="inline">metrics</code> and <code class="inline">dimensions</code> do not exist at this step yet, and are expected
+to be filled in by each specific report.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Stats.Query.Optimizer.html" translate="no">Plausible.Stats.Query.Optimizer</a>
 
   </div>
 
@@ -2992,16 +2992,7 @@ are used when site does not have engagement data for the requested dates.</p></d
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Stats.QueryPeriod.html" translate="no">Plausible.Stats.QueryPeriod</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Builds the time range covered by a stats query from parsed parameters.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Stats.QueryResult.html" translate="no">Plausible.Stats.QueryResult</a>
+    <a href="Plausible.Stats.Query.Result.html" translate="no">Plausible.Stats.Query.Result</a>
 
   </div>
 
@@ -3011,12 +3002,21 @@ is responsible for building it from database query results.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Stats.QueryRunner.html" translate="no">Plausible.Stats.QueryRunner</a>
+    <a href="Plausible.Stats.Query.Runner.html" translate="no">Plausible.Stats.Query.Runner</a>
 
   </div>
 
     <div class="summary-synopsis"><p>This module is responsible for executing a Plausible.Stats.Query
 and gathering results.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Stats.QueryPeriod.html" translate="no">Plausible.Stats.QueryPeriod</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Builds the time range covered by a stats query from parsed parameters.</p></div>
 
 </div>
 <div class="summary-row">
