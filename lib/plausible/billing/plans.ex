@@ -125,6 +125,15 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
+  @doc """
+  List yearly plans Paddle Billing price IDs.
+  """
+  def yearly_billing_price_ids do
+    for %{billing_yearly_price_id: price_id} <- all(),
+        is_binary(price_id),
+        do: price_id
+  end
+
   def find(nil), do: nil
 
   def find(product_id) do
@@ -133,9 +142,20 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  def find_by_billing_product(nil), do: nil
+
+  def find_by_billing_product(product_id) do
+    Enum.find(all(), &(&1.billing_product_id == product_id))
+  end
+
   @spec get_subscription_plan(nil | Subscription.t() | PaddleClassic.Subscription.t()) ::
           nil | :free_10k | Plan.t() | EnterprisePlan.t()
   def get_subscription_plan(nil), do: nil
+
+  # Free and manual subscriptions exist only in Classic
+  def get_subscription_plan(%{type: :billing} = subscription) do
+    get_regular_plan(subscription) || get_enterprise_plan(subscription)
+  end
 
   def get_subscription_plan(subscription) do
     if subscription.paddle_plan_id == "free_10k" do
@@ -151,16 +171,18 @@ defmodule Plausible.Billing.Plans do
         interval
 
       %Plan{} = plan ->
-        if plan.monthly_product_id == subscription.paddle_plan_id do
-          "monthly"
-        else
-          "yearly"
-        end
+        if monthly?(plan, subscription), do: "monthly", else: "yearly"
 
       _any ->
         "N/A"
     end
   end
+
+  defp monthly?(plan, %{type: :billing} = subscription),
+    do: plan.billing_monthly_price_id == subscription.billing_price_id
+
+  defp monthly?(plan, subscription),
+    do: plan.monthly_product_id == subscription.paddle_plan_id
 
   @doc """
   This function takes a list of plans as an argument, gathers all product
@@ -192,9 +214,23 @@ defmodule Plausible.Billing.Plans do
     if Keyword.get(opts, :only_non_expired) && Subscriptions.expired?(subscription) do
       nil
     else
-      find(subscription.paddle_plan_id)
+      find_plan(subscription)
     end
   end
+
+  defp find_plan(%{type: :billing} = subscription),
+    do: find_by_billing_product(subscription.billing_product_id)
+
+  defp find_plan(subscription), do: find(subscription.paddle_plan_id)
+
+  @doc """
+  Tells whether the subscription is for the given enterprise plan.
+  """
+  def subscribed_to?(%{type: :billing} = subscription, %EnterprisePlan{} = plan),
+    do: plan.billing_product_id == subscription.billing_product_id
+
+  def subscribed_to?(subscription, %EnterprisePlan{} = plan),
+    do: plan.paddle_plan_id == subscription.paddle_plan_id
 
   def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}, customer_ip) do
     case Plausible.Billing.PaddleClassic.api().fetch_prices([product_id], customer_ip) do
@@ -203,7 +239,17 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp get_enterprise_plan(%struct{} = subscription) when struct in @allowed_structs do
+  @doc """
+  Returns the enterprise plan the subscription was made for, if any.
+  """
+  def get_enterprise_plan(%{type: :billing} = subscription) do
+    Repo.get_by(EnterprisePlan,
+      team_id: subscription.team_id,
+      billing_product_id: subscription.billing_product_id
+    )
+  end
+
+  def get_enterprise_plan(%struct{} = subscription) when struct in @allowed_structs do
     Repo.get_by(EnterprisePlan,
       team_id: subscription.team_id,
       paddle_plan_id: subscription.paddle_plan_id
