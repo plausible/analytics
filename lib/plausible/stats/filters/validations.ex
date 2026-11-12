@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Filters.Validations do
       |> Enum.find(fn filter ->
         case filter do
           [operator, _, _, modifiers] when operator in @pattern_filter_operators ->
-            is_map_key(modifiers, :case_insensitive)
+            is_map_key(modifiers, :case_sensitive)
 
           _ ->
             false

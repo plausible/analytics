@@ -36,9 +36,9 @@ defmodule Plausible.Stats.Filters.ValidationsTest do
     end
 
     for operation <- [:is, :is_not, :contains, :contains_not] do
-      test "accepts the case_insensitive modifier with #{operation}" do
+      test "accepts the case_sensitive modifier with #{operation}" do
         assert Filters.Validations.validate_case_sensitive_modifier([
-                 [unquote(operation), "event:page", ["a"], %{case_insensitive: true}]
+                 [unquote(operation), "event:page", ["a"], %{case_sensitive: false}]
                ]) == :ok
       end
     end
@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Filters.ValidationsTest do
       test "case_sensitive modifier is not valid for #{operation}" do
         assert {:error, %QueryError{message: error}} =
                  Filters.Validations.validate_case_sensitive_modifier([
-                   [unquote(operation), "event:page", ["a"], %{case_insensitive: true}]
+                   [unquote(operation), "event:page", ["a"], %{case_sensitive: false}]
                  ])
 
         assert error =~ "Invalid filters."
@@ -69,7 +69,7 @@ defmodule Plausible.Stats.Filters.ValidationsTest do
                          [:not, [:is, "visit:country_name", ["Canada"]]]
                        ]
                      ],
-                     [:matches, "event:page", ["a"], %{case_insensitive: true}]
+                     [:matches, "event:page", ["a"], %{case_sensitive: false}]
                    ]
                  ]
                ])
