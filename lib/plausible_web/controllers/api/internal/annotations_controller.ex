@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Annotations
   alias Plausible.ChangesetHelpers
-  alias Plausible.Stats.QueryPeriod
+  alias Plausible.Stats.{QueryError, QueryPeriod}
   alias PlausibleWeb.Api.Helpers, as: H
 
   def index(conn, params) do
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
     site_role = conn.assigns.site_role
 
     with {:ok, input_date_range} <- parse_input_date_range(params),
-         {:ok, relative_date} <- parse_relative_date(params) do
+         {:ok, relative_date} <- QueryPeriod.parse_relative_date(params["relative_date"]) do
       now = DateTime.utc_now(:second)
 
       range_in_site_tz =
@@ -30,41 +30,17 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
           json(conn, "Not enough permissions to get annotations")
       end
     else
-      {:error, message} -> H.bad_request(conn, message)
+      {:error, %QueryError{message: message}} -> H.bad_request(conn, message)
     end
   end
 
-  defp parse_input_date_range(%{
-         "date_range_start" => start,
-         "date_range_end" => end_
-       })
-       when is_binary(start) and is_binary(end_) do
-    case QueryPeriod.parse_input_date_range([start, end_]) do
-      {:ok, parsed} -> {:ok, parsed}
-      {:error, %{message: message}} -> {:error, message}
-    end
+  defp parse_input_date_range(%{"date_range_start" => from, "date_range_end" => to}) do
+    QueryPeriod.parse_dashboard_input_date_range([from, to])
   end
 
-  defp parse_input_date_range(%{"date_range" => "realtime"}), do: {:ok, :realtime}
-  defp parse_input_date_range(%{"date_range" => "realtime_30m"}), do: {:ok, :realtime_30m}
-
-  defp parse_input_date_range(%{"date_range" => date_range}) do
-    case QueryPeriod.parse_input_date_range(date_range) do
-      {:ok, parsed} -> {:ok, parsed}
-      {:error, %{message: message}} -> {:error, message}
-    end
+  defp parse_input_date_range(params) do
+    QueryPeriod.parse_dashboard_input_date_range(params["date_range"])
   end
-
-  defp parse_input_date_range(_), do: {:error, "Required 'date_range' parameter missing"}
-
-  defp parse_relative_date(%{"relative_date" => date}) when is_binary(date) do
-    case Date.from_iso8601(date) do
-      {:ok, date} -> {:ok, date}
-      _ -> {:error, "Failed to convert '#{date}' to date"}
-    end
-  end
-
-  defp parse_relative_date(_), do: {:ok, nil}
 
   def create(conn, params) do
     user = conn.assigns[:current_user]

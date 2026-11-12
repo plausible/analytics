@@ -34,9 +34,39 @@ defmodule Plausible.Stats.QueryPeriod do
     end
   end
 
+  def parse_input_date_range(nil) do
+    {:error,
+     %QueryError{code: :invalid_date_range, message: "Required 'date_range' parameter missing"}}
+  end
+
   def parse_input_date_range(unknown) do
     {:error, %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(unknown)}"}}
   end
+
+  @doc """
+  Same as `parse_input_date_range/1`, but also accepts the "realtime" and
+  "realtime_30m" which are currently exclusive to dashboard queries.
+  """
+  def parse_dashboard_input_date_range("realtime"), do: {:ok, :realtime}
+  def parse_dashboard_input_date_range("realtime_30m"), do: {:ok, :realtime_30m}
+  def parse_dashboard_input_date_range(date_range), do: parse_input_date_range(date_range)
+
+  @doc """
+  Parses the `relative_date` that the dashboard sends. Returns `nil` when
+  there is no `relative_date`.
+  """
+  def parse_relative_date(date) when is_binary(date) do
+    case Date.from_iso8601(date) do
+      {:ok, date} ->
+        {:ok, date}
+
+      _ ->
+        {:error,
+         %QueryError{code: :invalid_relative_date, message: "Failed to convert '#{date}' to date"}}
+    end
+  end
+
+  def parse_relative_date(_), do: {:ok, nil}
 
   def parse_date_strings(from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),

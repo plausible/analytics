@@ -17,8 +17,9 @@ defmodule Plausible.Stats.Query.DashboardParser do
   @valid_comparison_shorthand_keys Map.keys(@valid_comparison_shorthands)
 
   def parse(params, opts \\ []) do
-    with {:ok, input_date_range} <- parse_input_date_range(params),
-         {:ok, relative_date} <- parse_relative_date(params),
+    with {:ok, input_date_range} <-
+           QueryPeriod.parse_dashboard_input_date_range(params["date_range"]),
+         {:ok, relative_date} <- QueryPeriod.parse_relative_date(params["relative_date"]),
          {:ok, dimensions} <- ApiParser.parse_dimensions(params["dimensions"]),
          {:ok, filters} <- Filters.Parser.parse(params["filters"]),
          {:ok, metrics} <- parse_metrics(params),
@@ -40,32 +41,6 @@ defmodule Plausible.Stats.Query.DashboardParser do
        })}
     end
   end
-
-  defp parse_input_date_range(%{"date_range" => date_range}) do
-    case date_range do
-      "realtime" -> {:ok, :realtime}
-      "realtime_30m" -> {:ok, :realtime_30m}
-      date_range -> QueryPeriod.parse_input_date_range(date_range)
-    end
-  end
-
-  defp parse_input_date_range(_) do
-    {:error,
-     %QueryError{code: :invalid_date_range, message: "Required 'date_range' parameter missing"}}
-  end
-
-  defp parse_relative_date(%{"relative_date" => date}) when is_binary(date) do
-    case Date.from_iso8601(date) do
-      {:ok, date} ->
-        {:ok, date}
-
-      _ ->
-        {:error,
-         %QueryError{code: :invalid_relative_date, message: "Failed to convert '#{date}' to date"}}
-    end
-  end
-
-  defp parse_relative_date(_), do: {:ok, nil}
 
   defp parse_metrics(%{"metrics" => [_ | _] = metrics}) do
     ApiParser.parse_metrics(metrics)
