@@ -118,9 +118,9 @@ defmodule PlausibleWeb.Live.SharedLinkSettings do
                 <.th invisible>Actions</.th>
               </:thead>
               <:tbody :let={link}>
-                <.td truncate hide_on_mobile>
+                <.td hide_on_mobile max_width="max-w-sm">
                   <div class="flex items-center">
-                    {link.name}
+                    <span class="block truncate" title={link.name}>{link.name}</span>
                     <.tooltip
                       :if={Plausible.Site.SharedLink.password_protected?(link)}
                       enabled?={true}

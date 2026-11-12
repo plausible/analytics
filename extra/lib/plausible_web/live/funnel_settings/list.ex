@@ -25,8 +25,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
       <%= if Enum.count(@funnels) > 0 do %>
         <.table rows={@funnels}>
           <:tbody :let={funnel}>
-            <.td truncate>
-              <span class="font-medium">{funnel.name}</span>
+            <.td max_width="max-w-sm" title={funnel.name}>
+              <span class="block truncate font-medium">{funnel.name}</span>
             </.td>
             <.td hide_on_mobile>
               <span class="text-gray-500 dark:text-gray-400">
