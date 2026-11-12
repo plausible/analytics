@@ -132,4 +132,10 @@ defmodule Plausible.Segments.Filters do
       {:ok, original_filters}
     end
   end
+
+  def preload_and_resolve(%Plausible.Site{} = site, filters) do
+    with {:ok, preloaded_segments} <- preload_needed_segments(site, filters) do
+      resolve_segments(filters, preloaded_segments)
+    end
+  end
 end

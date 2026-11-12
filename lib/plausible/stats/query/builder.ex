@@ -32,11 +32,11 @@ defmodule Plausible.Stats.Query.Builder do
          {:ok, query} <- do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
-         :ok <- validate_case_sensitive_filter_modifier(query),
-         :ok <- validate_toplevel_only_filter_dimension(query),
+         :ok <- Filters.Validations.validate_case_sensitive_modifier(query.filters),
+         :ok <- Filters.Validations.validate_toplevel_only(query.filters),
          :ok <- validate_time_dimension_granularity(query),
          :ok <- validate_special_metrics_filters(query),
-         :ok <- validate_behavioral_filters(query),
+         :ok <- Filters.Validations.validate_behavioral(query.filters),
          :ok <- validate_filtered_goals_exist(query, parsed_query_params),
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
@@ -76,10 +76,7 @@ defmodule Plausible.Stats.Query.Builder do
   end
 
   defp resolve_segments_in_filters(%ParsedParams{} = parsed_query_params, site) do
-    with {:ok, preloaded_segments} <-
-           Segments.Filters.preload_needed_segments(site, parsed_query_params.filters),
-         {:ok, filters} <-
-           Segments.Filters.resolve_segments(parsed_query_params.filters, preloaded_segments) do
+    with {:ok, filters} <- Segments.Filters.preload_and_resolve(site, parsed_query_params.filters) do
       {:ok, struct!(parsed_query_params, filters: filters)}
     end
   end
@@ -233,52 +230,6 @@ defmodule Plausible.Stats.Query.Builder do
     end
   end
 
-  @pattern_filter_operators [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not]
-  defp validate_case_sensitive_filter_modifier(query) do
-    invalid_filter =
-      query.filters
-      |> Filters.all_leaf_filters()
-      |> Enum.find(fn filter ->
-        case filter do
-          [operator, _, _, modifiers] when operator in @pattern_filter_operators ->
-            is_map_key(modifiers, :case_insensitive)
-
-          _ ->
-            false
-        end
-      end)
-
-    if invalid_filter do
-      {:error,
-       %QueryError{
-         code: :invalid_filters,
-         message:
-           "Invalid filters. The case_sensitive modifier is not allowed with pattern operators (#{i(invalid_filter)})"
-       }}
-    else
-      :ok
-    end
-  end
-
-  @only_toplevel ["event:goal", "event:hostname"]
-  defp validate_toplevel_only_filter_dimension(query) do
-    not_toplevel =
-      query.filters
-      |> Filters.dimensions_used_in_filters(min_depth: 1, behavioral_filters: :ignore)
-      |> Enum.filter(&(&1 in @only_toplevel))
-
-    if not_toplevel != [] do
-      {:error,
-       %QueryError{
-         code: :invalid_filters,
-         message:
-           "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."
-       }}
-    else
-      :ok
-    end
-  end
-
   @max_hours_for_minute_interval 30
 
   defp validate_time_dimension_granularity(query) do
@@ -314,45 +265,6 @@ defmodule Plausible.Stats.Query.Builder do
     else
       :ok
     end
-  end
-
-  defp validate_behavioral_filters(query) do
-    query.filters
-    |> Filters.traverse(0, fn behavioral_depth, operator ->
-      if operator in [:has_done, :has_not_done] do
-        behavioral_depth + 1
-      else
-        behavioral_depth
-      end
-    end)
-    |> Enum.reduce_while(:ok, fn {[_operator, dimension | _rest], behavioral_depth}, :ok ->
-      cond do
-        behavioral_depth == 0 ->
-          # ignore non-behavioral filters
-          {:cont, :ok}
-
-        behavioral_depth > 1 ->
-          {:halt,
-           {:error,
-            %QueryError{
-              code: :invalid_filters,
-              message:
-                "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
-            }}}
-
-        not String.starts_with?(dimension, "event:") ->
-          {:halt,
-           {:error,
-            %QueryError{
-              code: :invalid_filters,
-              message:
-                "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
-            }}}
-
-        true ->
-          {:cont, :ok}
-      end
-    end)
   end
 
   defp validate_filtered_goals_exist(_query, %ParsedParams{skip_goal_existence_check: true}),
@@ -395,30 +307,21 @@ defmodule Plausible.Stats.Query.Builder do
   defp validate_custom_props_access(site, query) do
     allowed_props = Plausible.Props.allowed_for(site, bypass_setup?: true)
 
-    validate_custom_props_access(site, query, allowed_props)
+    with :ok <- Filters.Validations.validate_custom_props_access(query.filters, allowed_props) do
+      validate_custom_props_dimensions_access(query.dimensions, allowed_props)
+    end
   end
 
-  defp validate_custom_props_access(_site, _query, :all), do: :ok
+  defp validate_custom_props_dimensions_access(_dimensions, :all), do: :ok
 
-  defp validate_custom_props_access(_site, query, allowed_props) do
+  defp validate_custom_props_dimensions_access(dimensions, allowed_props) do
     valid? =
-      query.filters
-      |> Filters.dimensions_used_in_filters()
-      |> Enum.concat(query.dimensions)
-      |> Enum.all?(fn
+      Enum.all?(dimensions, fn
         "event:props:" <> prop -> prop in allowed_props
         _ -> true
       end)
 
-    if valid? do
-      :ok
-    else
-      {:error,
-       %QueryError{
-         code: :feature_access,
-         message: "The owner of this site does not have access to the custom properties feature."
-       }}
-    end
+    if valid?, do: :ok, else: {:error, Filters.Validations.custom_props_access_error()}
   end
 
   defp validate_metrics(query) do
