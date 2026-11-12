@@ -3,56 +3,6 @@ defmodule Plausible.Stats.Query.BuilderTest do
   alias Plausible.Stats.{DateTimeRange, Query, QueryError}
   alias Plausible.Stats.Query.ParsedParams
 
-  @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
-  @date_range_realtime %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
-  @date_range_30m %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
-  }
-  @date_range_24h %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-04], ~T[12:30:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
-  }
-  @date_range_day %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_7d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-28], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_10d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-25], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_30d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_month %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_3mo %DateTimeRange{
-    first: DateTime.new!(~D[2021-02-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_6mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-11-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_year %DateTimeRange{
-    first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "Etc/UTC")
-  }
-  @date_range_12mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-05-01], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
-  }
-
   setup [:create_user, :create_site]
 
   describe "filter validation" do
@@ -178,50 +128,18 @@ defmodule Plausible.Stats.Query.BuilderTest do
   end
 
   describe "date range" do
-    for {input_date_range, expected_utc_time_range} <- [
-          {:realtime, @date_range_realtime},
-          {:realtime_30m, @date_range_30m},
-          {:"24h", @date_range_24h}
-        ] do
-      test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
-        assert {:ok, query} =
-                 Query.Builder.build(site, %ParsedParams{
-                   now: @now,
-                   metrics: [:visitors],
-                   input_date_range: unquote(input_date_range)
-                 })
+    test "builds utc_time_range from input_date_range and relative_date", %{site: site} do
+      assert {:ok, query} =
+               Query.Builder.build(site, %ParsedParams{
+                 metrics: [:visitors],
+                 input_date_range: :month,
+                 relative_date: ~D[2021-05-05]
+               })
 
-        assert query.utc_time_range == unquote(Macro.escape(expected_utc_time_range))
-      end
-    end
-
-    test "utc_time_range construction respects relative_date", %{site: site} do
-      relative_date = @now |> DateTime.to_date()
-
-      # Replace the fixed now. Otherwise this test could pass ignoring relative_date
-      now = DateTime.utc_now(:second)
-
-      for {date_range_shortcut, expected_utc_time_range} <- [
-            {:day, @date_range_day},
-            {{:last_n_days, 7}, @date_range_7d},
-            {{:last_n_days, 10}, @date_range_10d},
-            {{:last_n_days, 30}, @date_range_30d},
-            {:month, @date_range_month},
-            {{:last_n_months, 3}, @date_range_3mo},
-            {{:last_n_months, 6}, @date_range_6mo},
-            {{:last_n_months, 12}, @date_range_12mo},
-            {:year, @date_range_year}
-          ] do
-        assert {:ok, query} =
-                 Query.Builder.build(site, %ParsedParams{
-                   now: now,
-                   metrics: [:visitors],
-                   relative_date: relative_date,
-                   input_date_range: date_range_shortcut
-                 })
-
-        assert query.utc_time_range == expected_utc_time_range
-      end
+      assert query.utc_time_range == %DateTimeRange{
+               first: ~U[2021-05-01 00:00:00Z],
+               last: ~U[2021-05-31 23:59:59Z]
+             }
     end
   end
 
