@@ -1051,7 +1051,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         |> team_of()
         |> Repo.preload(:subscription)
         |> Map.fetch!(:subscription)
-        |> Subscription.changeset(%{
+        |> Billing.PaddleClassic.Subscription.changeset(%{
           next_bill_date: DateTime.shift(DateTime.utc_now(), month: -2)
         })
         |> Repo.update!()

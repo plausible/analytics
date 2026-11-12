@@ -62,6 +62,10 @@ defmodule Plausible.Teams.Team do
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
+    # Customer ID in Paddle Billing; the presence of the value
+    # means the team is already on Paddle Billing
+    field :billing_customer_id, :string
+
     # Embed for storing team-wide policies
     embeds_one :policy, Plausible.Teams.Policy, on_replace: :update, defaults_to_struct: true
 
@@ -70,8 +74,14 @@ defmodule Plausible.Teams.Team do
     has_many :sites, Plausible.Site
     has_many :team_memberships, Plausible.Teams.Membership
     has_many :team_invitations, Plausible.Teams.Invitation
-    has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+
+    has_one :subscription, Plausible.Billing.Subscription
+
+    has_one :classic_subscription, Plausible.Billing.PaddleClassic.Subscription
+
+    has_one :billing_subscription, Plausible.Billing.PaddleBilling.Subscription
+    has_many :billing_subscription_events, Plausible.Billing.PaddleBilling.SubscriptionEvent
 
     has_one :team_deletion_schedule, Plausible.TeamDeletionSchedule,
       where: [status: {:in, Plausible.TeamDeletionSchedule.active_statuses()}]

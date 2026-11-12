@@ -240,6 +240,14 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload(:team_memberships)
   end
 
+  def subscribe_to_free_plan(user, attrs \\ []) do
+    {:ok, team} = Teams.get_or_create(user)
+    attrs = Keyword.merge([team: team], attrs)
+
+    insert(:free_subscription, attrs)
+    user
+  end
+
   def subscribe_to_starter_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
     attrs = Keyword.merge([team: team], attrs)

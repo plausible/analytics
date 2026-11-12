@@ -376,7 +376,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a past_due subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :past_due})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :past_due})
         |> Repo.update!()
 
       conn
@@ -386,7 +386,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       # for a deleted (but not expired) subscription
       subscription
-      |> Plausible.Billing.Subscription.changeset(%{
+      |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{
         status: :deleted,
         next_bill_date: Date.shift(Date.utc_today(), month: 6)
       })
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a paused subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :paused})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :paused})
         |> Repo.update!()
 
       conn
@@ -464,10 +464,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a free_10k subscription (without a `last_bill_date`)
       Repo.delete!(subscription)
 
-      user
-      |> team_of()
-      |> Plausible.Billing.Subscription.free()
-      |> Repo.insert!()
+      subscribe_to_free_plan(user)
 
       conn
       |> get(~p"/settings/billing/subscription")
@@ -518,10 +515,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
       new_site(owner: user)
 
-      user
-      |> team_of()
-      |> Plausible.Billing.Subscription.free(%{currency_code: "EUR"})
-      |> Repo.insert!()
+      subscribe_to_free_plan(user)
 
       html =
         conn

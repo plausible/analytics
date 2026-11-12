@@ -9,8 +9,10 @@ defmodule Plausible.Billing.Plans do
 
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
-  alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
+  alias Plausible.Billing.{PaddleClassic, Subscription, Plan, EnterprisePlan}
   alias Plausible.Teams
+
+  @allowed_structs [Subscription, PaddleClassic.Subscription]
 
   @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4, :plans_v5]
 
@@ -131,7 +133,7 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  @spec get_subscription_plan(nil | Subscription.t()) ::
+  @spec get_subscription_plan(nil | Subscription.t() | PaddleClassic.Subscription.t()) ::
           nil | :free_10k | Plan.t() | EnterprisePlan.t()
   def get_subscription_plan(nil), do: nil
 
@@ -186,7 +188,7 @@ defmodule Plausible.Billing.Plans do
 
   def get_regular_plan(nil, _opts), do: nil
 
-  def get_regular_plan(%Subscription{} = subscription, opts) do
+  def get_regular_plan(%struct{} = subscription, opts) when struct in @allowed_structs do
     if Keyword.get(opts, :only_non_expired) && Subscriptions.expired?(subscription) do
       nil
     else
@@ -201,7 +203,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp get_enterprise_plan(%Subscription{} = subscription) do
+  defp get_enterprise_plan(%struct{} = subscription) when struct in @allowed_structs do
     Repo.get_by(EnterprisePlan,
       team_id: subscription.team_id,
       paddle_plan_id: subscription.paddle_plan_id
@@ -210,7 +212,7 @@ defmodule Plausible.Billing.Plans do
 
   def business_tier?(nil), do: false
 
-  def business_tier?(%Subscription{} = subscription) do
+  def business_tier?(%struct{} = subscription) when struct in @allowed_structs do
     case get_subscription_plan(subscription) do
       %Plan{kind: :business} -> true
       _ -> false

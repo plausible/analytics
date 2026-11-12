@@ -56,7 +56,9 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
 
         Plausible.Repo.update!(
-          Plausible.Billing.Subscription.changeset(team.subscription, %{next_bill_date: yesterday})
+          Plausible.Billing.PaddleClassic.Subscription.changeset(team.subscription, %{
+            next_bill_date: yesterday
+          })
         )
 
         Resource.Team.get(team.id)

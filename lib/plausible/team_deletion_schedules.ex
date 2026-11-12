@@ -32,8 +32,7 @@ defmodule Plausible.TeamDeletionSchedules do
       Repo.all(
         from(t in Teams.Team,
           as: :team,
-          left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-          on: true,
+          left_join: s in assoc(t, :subscription),
           left_join: ep in assoc(t, :enterprise_plan),
           where: is_nil(ep.id),
           where: exists(from(s in Site.regular(), where: s.team_id == parent_as(:team).id)),

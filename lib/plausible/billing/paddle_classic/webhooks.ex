@@ -8,7 +8,7 @@ defmodule Plausible.Billing.PaddleClassic.Webhooks do
   use Plausible.Repo
 
   alias Plausible.Auth
-  alias Plausible.Billing.{PaddleClassic, Subscription, SubscriptionState}
+  alias Plausible.Billing.{PaddleClassic, SubscriptionState}
   alias Plausible.Teams
 
   def subscription_created(params) do
@@ -47,7 +47,8 @@ defmodule Plausible.Billing.PaddleClassic.Webhooks do
   end
 
   defp handle_subscription_updated(params) do
-    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+    subscription =
+      Repo.get_by(PaddleClassic.Subscription, paddle_subscription_id: params["subscription_id"])
 
     # In a situation where the subscription is paused and a payment succeeds, we
     # get notified of two "subscription_updated" webhook alerts from Paddle at the
@@ -70,7 +71,8 @@ defmodule Plausible.Billing.PaddleClassic.Webhooks do
   end
 
   defp handle_subscription_cancelled(params) do
-    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+    subscription =
+      Repo.get_by(PaddleClassic.Subscription, paddle_subscription_id: params["subscription_id"])
 
     if subscription do
       SubscriptionState.cancel(subscription, %{status: params["status"]})
@@ -78,7 +80,8 @@ defmodule Plausible.Billing.PaddleClassic.Webhooks do
   end
 
   defp handle_subscription_payment_succeeded(params) do
-    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+    subscription =
+      Repo.get_by(PaddleClassic.Subscription, paddle_subscription_id: params["subscription_id"])
 
     if subscription do
       {:ok, api_subscription} =
