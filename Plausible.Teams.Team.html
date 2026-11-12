@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C345EF2D.js"></script>
+    <script src="dist/sidebar_items-F534AEB6.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -307,8 +307,12 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
   __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   accept_traffic_until: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   allow_next_upgrade_override: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  billing_customer_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   billing_members: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   billing_memberships: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  billing_subscription: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  billing_subscription_events: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  classic_subscription: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   enterprise_plan: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   grace_period: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   hourly_api_request_limit: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -364,7 +368,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">changeset(team \\ %__MODULE__{}, attrs \\ %{}, today \\ Date.utc_today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L168" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L178" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -384,7 +388,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">crm_changeset(team, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L155" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L165" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -404,7 +408,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">default_hourly_api_request_limit()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L264" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L274" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -424,7 +428,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">end_trial(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L221" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L231" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -446,7 +450,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">name_changeset(team, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L178" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L188" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -468,7 +472,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">setup_changeset(team, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L204" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L214" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -490,7 +494,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">start_trial(team, today \\ Date.utc_today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L212" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L222" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -510,7 +514,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">subscription_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L268" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L278" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -530,7 +534,7 @@ before the public suffix, e.g. &quot;shop.wannabuy.co.uk/blog&quot; -&gt; &quot;
     </a>
     <h1 class="signature" translate="no">suggested_name(user_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L104" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L114" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -552,7 +556,7 @@ invalid, so that the suggestion is always safe to persist.</p>
     </a>
     <h1 class="signature" translate="no">suggested_name_from_domain(domain, user_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L129" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L139" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -574,7 +578,7 @@ label or is invalid according to the rules of <code class="inline">valid_suggest
     </a>
     <h1 class="signature" translate="no">trial_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L266" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L276" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -594,7 +598,7 @@ label or is invalid according to the rules of <code class="inline">valid_suggest
     </a>
     <h1 class="signature" translate="no">validate_not_reserved_name(changeset)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L186" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/team.ex#L196" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

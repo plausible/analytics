@@ -1,11 +1,7 @@
 404.html
-Mix.Tasks.CancelSubscription.html
 Mix.Tasks.DownloadCountryDatabase.html
 Mix.Tasks.DownloadIpRegistries.html
 Mix.Tasks.GenerateCountriesMeta.html
-Mix.Tasks.PaddleClassic.CreateProdPlans.html
-Mix.Tasks.PaddleClassic.CreateSandboxPlans.html
-Mix.Tasks.PaddleClassic.PullSandboxSubscription.html
 Mix.Tasks.SendPageview.html
 ObanErrorReporter.html
 Plasusible.Test.Support.DNSServer.html
@@ -55,6 +51,8 @@ Plausible.Billing.MigrationAudit.Subscribers.html
 Plausible.Billing.MigrationAudit.html
 Plausible.Billing.PaddleBilling.Api.html
 Plausible.Billing.PaddleBilling.Migration.html
+Plausible.Billing.PaddleBilling.Subscription.html
+Plausible.Billing.PaddleBilling.SubscriptionEvent.html
 Plausible.Billing.PaddleBilling.html
 Plausible.Billing.PaddleClassic.Api.html
 Plausible.Billing.PaddleClassic.DevApiMock.html
@@ -636,8 +634,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-10A11ED0.js
-dist/sidebar_items-C345EF2D.js
+dist/search_data-64020A4B.js
+dist/sidebar_items-F534AEB6.js
 index.html
 readme.html
 search.html

@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C345EF2D.js"></script>
+    <script src="dist/sidebar_items-F534AEB6.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -278,7 +278,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
     </a>
     <h1 class="signature" translate="no">active_grace_period_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L105" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L103" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -298,7 +298,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
     </a>
     <h1 class="signature" translate="no">allowed_roles()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L20" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L18" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -320,7 +320,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
     </a>
     <h1 class="signature" translate="no">cancelled_subscription_notice_dismiss_id(id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L100" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L98" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -340,7 +340,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
     </a>
     <h1 class="signature" translate="no">change_plan_preview(subscription, new_plan_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L82" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L80" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -360,7 +360,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
     </a>
     <h1 class="signature" translate="no">create_manual_subscription(team, enterprise_plan)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L37" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L35" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -372,7 +372,7 @@ provider are applied through <a href="Plausible.Billing.SubscriptionState.html">
 <p>Creates a subscription for a custom plan without Paddle checkout (for example, paid by bank transfer).</p><p>The enterprise plan's <code class="inline">paddle_plan_id</code> is rewritten to a conventional
 <code class="inline">manual-subscription</code> ID, which is also what the subscription gets, so the two
 stay linked. <code class="inline">paddle_subscription_id</code> is left empty. See
-<code class="inline">Subscription.manual_changeset/2</code> for the remaining values.</p><h2 id="create_manual_subscription/2-limitations-for-creating-a-manual-subscription" class="section-heading">
+<code class="inline">PaddleClassic.Subscription.manual_changeset/2</code> for the remaining values.</p><h2 id="create_manual_subscription/2-limitations-for-creating-a-manual-subscription" class="section-heading">
   <a href="#create_manual_subscription/2-limitations-for-creating-a-manual-subscription" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -389,7 +389,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">dashboard_locked_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L104" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L102" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -409,7 +409,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">format_price(money)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L96" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L94" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -435,7 +435,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">latest_enterprise_plan(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L72" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L70" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -455,7 +455,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">pending_site_ownerships_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L109" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L107" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -475,7 +475,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">subscription_cancelled_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L106" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L104" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -495,7 +495,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">subscription_past_due_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L105" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -515,7 +515,7 @@ stay linked. <code class="inline">paddle_subscription_id</code> is left empty. S
     </a>
     <h1 class="signature" translate="no">subscription_paused_notice_title()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L108" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L106" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

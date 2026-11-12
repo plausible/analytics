@@ -8,18 +8,18 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>mix paddle_classic.create_sandbox_plans — Plausible v0.0.1</title>
+    <title>Plausible.Billing.PaddleBilling.SubscriptionEvent — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C345EF2D.js"></script>
+    <script src="dist/sidebar_items-F534AEB6.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
-  <body data-type="tasks" class="page-task">
+  <body data-type="modules" class="page-module">
     <script>
 
       try {
@@ -126,97 +126,23 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/paddle_classic/create_sandbox_plans.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/paddle_billing/subscription_event.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">mix paddle_classic.create_sandbox_plans</span> 
+    <span translate="no">Plausible.Billing.PaddleBilling.SubscriptionEvent</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Utility for creating Sandbox plans that are used on staging. The product of
-this task is a <code class="inline">sandbox_plans_v*.json</code> file matching with the production
-plans, just with the monthly/yearly product_id's of the sandbox plans.</p><p>In principle, this task works like <a href="Mix.Tasks.PaddleClassic.CreateProdPlans.html"><code class="inline">Mix.Tasks.PaddleClassic.CreateProdPlans</code></a>, with
-the following differences:</p><ul><li><p>The <code class="inline">filename</code> argument should be the name of the JSON file containing the
-production plans (meaning that those should be created as the first step).
-No special &quot;input file&quot; required.</p></li><li><p>To copy the curl command from the browser, you need to add a plan from
-<a href="https://sandbox-vendors.paddle.com/subscriptions/plans">https://sandbox-vendors.paddle.com/subscriptions/plans</a>. Everything else is
-the same - please see <code class="inline">create_prod_plans.ex</code> for instructions.</p></li><li><p>This task can be executed multiple times in a row - it will not create
-duplicates in Sandbox Paddle. On staging we can use a specific plan-naming
-structure to determine whether a plan has been created already. On prod we
-cannot do that since the plan names need to look nice.</p></li><li><p>No need to copy paddle API credentials.</p></li></ul><h2 id="module-usage-example" class="section-heading">
-  <a href="#module-usage-example" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Usage example:</span>
-</h2>
-<pre><code class="makeup elixir" translate="no"><span class="n">mix</span><span class="w"> </span><span class="n">paddle_classic</span><span class="o">.</span><span class="n">create_sandbox_plans</span><span class="w"> </span><span class="n">plans_v5</span><span class="o">.</span><span class="n">json</span></code></pre>
+<p>Schema representing processed Paddle Billing events.</p>
     </section>
 
 </div>
 
-  <section id="summary" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#summary">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Summary</span>
-    </h1>
-<div class="summary-functions summary">
-  <h2>
-    <a href="#functions">Functions</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#run/1" data-no-tooltip translate="no">run(list)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/mix/Mix.Task.html#c:run/1"><code class="inline">Mix.Task.run/1</code></a>.</p></div>
-
-    </div>
-
-</div>
-
-  </section>
-
-
-  <section id="functions" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#functions">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Functions</span>
-    </h1>
-    <div class="functions-list">
-<section class="detail" id="run/1">
-
-  <div class="detail-header">
-    <a href="#run/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">run(list)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/paddle_classic/create_sandbox_plans.ex#L37" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/mix/Mix.Task.html#c:run/1"><code class="inline">Mix.Task.run/1</code></a>.</p>
-  </section>
-</section>
-
-    </div>
-  </section>
 
     <footer class="footer">
       <p>
