@@ -127,7 +127,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               <br />
 
               <.button
-                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                :if={not current_plan?(@team, plan)}
                 id={"manual-subscribe-#{plan.paddle_plan_id}"}
                 theme="secondary"
                 size="sm"
@@ -140,14 +140,14 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
               </.button>
 
               <span
-                :if={current_plan?(@team, plan.paddle_plan_id)}
+                :if={current_plan?(@team, plan)}
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
               >
                 CURRENT
               </span>
               <span
                 :if={
-                  current_plan?(@team, plan.paddle_plan_id) and
+                  current_plan?(@team, plan) and
                     Plausible.Billing.Subscription.manual_subscription?(@team.subscription)
                 }
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-green-100 text-green-800"
@@ -174,7 +174,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
             <.td class="align-top">
               <.edit_button phx-click="edit-plan" phx-value-id={plan.id} phx-target={@myself} />
               <.delete_button
-                :if={not current_plan?(@team, plan.paddle_plan_id)}
+                :if={not current_plan?(@team, plan)}
                 data-test-id={"delete-plan-#{plan.paddle_plan_id}"}
                 data-confirm="Are you sure you want to delete this plan?"
                 phx-click="delete-plan"
@@ -307,7 +307,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     %{team: team, plans: plans} = socket.assigns
     plan = Enum.find(plans, &(&1.id == String.to_integer(plan_id)))
 
-    if plan && not current_plan?(team, plan.paddle_plan_id) do
+    if plan && not current_plan?(team, plan) do
       case Plausible.Billing.create_manual_subscription(team, plan) do
         {:ok, _team} ->
           # Reload the whole page, so that e.g. the subscription status in the header updates too
@@ -361,7 +361,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   def handle_event("delete-plan", %{"id" => plan_id}, socket) do
     plan = Plausible.Repo.get(EnterprisePlan, plan_id)
 
-    if not current_plan?(socket.assigns.team, plan.paddle_plan_id),
+    if not current_plan?(socket.assigns.team, plan),
       do: Plausible.Repo.delete(plan)
 
     plans = get_plans(socket.assigns.team.id)
@@ -566,6 +566,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
     """
   end
 
-  defp current_plan?(%{subscription: %{paddle_plan_id: id}}, id), do: true
-  defp current_plan?(_, _), do: false
+  defp current_plan?(%{subscription: nil}, _plan), do: false
+
+  defp current_plan?(%{subscription: subscription}, plan),
+    do: Plans.subscribed_to?(subscription, plan)
 end
