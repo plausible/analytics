@@ -19,49 +19,7 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   }
 
   describe "input_date_range" do
-    test "is required" do
-      params = Map.drop(@base_params, ["date_range"])
-      assert {:error, %QueryError{code: :invalid_date_range}} = parse(params)
-    end
-
-    for period <- [:realtime, :day, :month, :year, :all] do
-      test "parses #{period} date_range" do
-        params = Map.merge(@base_params, %{"date_range" => Atom.to_string(unquote(period))})
-        {:ok, parsed} = parse(params)
-        assert_matches %ParsedParams{input_date_range: ^unquote(period)} = parsed
-      end
-    end
-
-    for i <- [7, 28, 30, 91] do
-      test "parses #{i}d date_range" do
-        params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}d"})
-        {:ok, parsed} = parse(params)
-
-        assert_matches %ParsedParams{
-                         input_date_range: {:last_n_days, ^unquote(i)}
-                       } = parsed
-      end
-    end
-
-    test "parses 24h period" do
-      params = Map.merge(@base_params, %{"date_range" => "24h"})
-      {:ok, parsed} = parse(params)
-      assert_matches %ParsedParams{input_date_range: :"24h"} = parsed
-    end
-
-    for i <- [6, 12] do
-      test "parses #{i}mo date_range" do
-        params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}mo"})
-        {:ok, parsed} = parse(params)
-
-        assert_matches %ParsedParams{
-                         input_date_range: {:last_n_months, ^unquote(i)}
-                       } =
-                         parsed
-      end
-    end
-
-    test "parses custom date_range" do
+    test "parses date_range" do
       params = Map.merge(@base_params, %{"date_range" => ["2021-01-01", "2021-03-05"]})
       {:ok, parsed} = parse(params)
 
@@ -72,21 +30,10 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "relative_date" do
-    test "parses a valid iso8601 date string" do
+    test "parses relative_date" do
       params = Map.merge(@base_params, %{"relative_date" => "2021-05-05"})
       {:ok, parsed} = parse(params)
       assert %ParsedParams{relative_date: ~D[2021-05-05]} = parsed
-    end
-
-    test "nil is accepted" do
-      params = Map.merge(@base_params, %{"relative_date" => nil})
-      {:ok, parsed} = parse(params)
-      assert %ParsedParams{relative_date: nil} = parsed
-    end
-
-    test "errors when invalid date" do
-      params = Map.merge(@base_params, %{"relative_date" => "2021-13-32"})
-      {:error, %QueryError{code: :invalid_relative_date}} = parse(params)
     end
   end
 

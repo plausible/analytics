@@ -1,11 +1,82 @@
 defmodule Plausible.Stats.QueryPeriodTest do
   use ExUnit.Case, async: true
 
-  alias Plausible.Stats.{DateTimeRange, QueryPeriod}
+  alias Plausible.Stats.{DateTimeRange, QueryError, QueryPeriod}
 
   doctest QueryPeriod, import: true
 
   @now_irrelevant ~U[2999-01-01 00:00:00Z]
+
+  describe "parse_input_date_range/1" do
+    for {date_range, expected} <- [
+          {"day", :day},
+          {"24h", :"24h"},
+          {"month", :month},
+          {"year", :year},
+          {"all", :all},
+          {"7d", {:last_n_days, 7}},
+          {"28d", {:last_n_days, 28}},
+          {"30d", {:last_n_days, 30}},
+          {"91d", {:last_n_days, 91}},
+          {"6mo", {:last_n_months, 6}},
+          {"12mo", {:last_n_months, 12}}
+        ] do
+      test "parses #{date_range}" do
+        assert QueryPeriod.parse_input_date_range(unquote(date_range)) ==
+                 {:ok, unquote(Macro.escape(expected))}
+      end
+    end
+
+    test "parses a custom date range" do
+      assert QueryPeriod.parse_input_date_range(["2021-01-01", "2021-03-05"]) ==
+               {:ok, {:date_range, ~D[2021-01-01], ~D[2021-03-05]}}
+    end
+
+    test "returns an error when date_range is missing" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_input_date_range(nil)
+    end
+
+    test "does not accept the realtime date ranges" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_input_date_range("realtime")
+    end
+  end
+
+  describe "parse_dashboard_input_date_range/1" do
+    test "parses realtime" do
+      assert QueryPeriod.parse_dashboard_input_date_range("realtime") == {:ok, :realtime}
+    end
+
+    test "parses realtime_30m" do
+      assert QueryPeriod.parse_dashboard_input_date_range("realtime_30m") ==
+               {:ok, :realtime_30m}
+    end
+
+    test "parses the other date ranges like parse_input_date_range/1" do
+      assert QueryPeriod.parse_dashboard_input_date_range("28d") == {:ok, {:last_n_days, 28}}
+    end
+
+    test "returns an error when date_range is missing" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_dashboard_input_date_range(nil)
+    end
+  end
+
+  describe "parse_relative_date/1" do
+    test "parses a valid iso8601 date string" do
+      assert QueryPeriod.parse_relative_date("2021-05-05") == {:ok, ~D[2021-05-05]}
+    end
+
+    test "nil is accepted" do
+      assert QueryPeriod.parse_relative_date(nil) == {:ok, nil}
+    end
+
+    test "errors when invalid date" do
+      assert {:error, %QueryError{code: :invalid_relative_date}} =
+               QueryPeriod.parse_relative_date("2021-13-32")
+    end
+  end
 
   describe "build_datetime_range/4" do
     test "the day period truncates at \"now\" when the date is today" do
