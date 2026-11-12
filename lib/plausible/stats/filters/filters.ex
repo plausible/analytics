@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Filters do
   @moduledoc """
-  A module for parsing filters used in stat queries.
+  Functions for working with parsed filter trees in stats queries. See
+  `Plausible.Stats.Filters.Parser` for parsing.
   """
 
   alias Plausible.Stats.Query

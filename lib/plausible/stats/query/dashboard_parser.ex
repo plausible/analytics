@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{Query, QueryError}
+  alias Plausible.Stats.{Filters, Query, QueryError}
 
   alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
@@ -20,7 +20,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
          {:ok, dimensions} <- ApiParser.parse_dimensions(params["dimensions"]),
-         {:ok, filters} <- ApiParser.parse_filters(params["filters"]),
+         {:ok, filters} <- Filters.Parser.parse(params["filters"]),
          {:ok, metrics} <- parse_metrics(params),
          {:ok, order_by} <- ApiParser.parse_order_by(params["order_by"]),
          {:ok, pagination} <- ApiParser.parse_pagination(params["pagination"]),

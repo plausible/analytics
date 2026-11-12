@@ -4,7 +4,6 @@ defmodule Plausible.Segments.Filters do
   """
   alias Plausible.Segments
   alias Plausible.Stats.{Filters, QueryError}
-  alias Plausible.Stats.Query.ApiParser
 
   @max_segment_filters_count 10
 
@@ -53,7 +52,7 @@ defmodule Plausible.Segments.Filters do
               segments,
               %{},
               fn %Segments.Segment{id: id, segment_data: segment_data} ->
-                case ApiParser.parse_filters(segment_data["filters"]) do
+                case Filters.Parser.parse(segment_data["filters"]) do
                   {:ok, filters} -> {id, filters}
                   _ -> {id, nil}
                 end

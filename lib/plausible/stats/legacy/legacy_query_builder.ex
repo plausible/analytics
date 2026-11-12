@@ -346,7 +346,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   def parse_filters(filters) when is_list(filters) do
-    {:ok, parsed_filters} = ApiParser.parse_filters(filters)
+    {:ok, parsed_filters} = Filters.Parser.parse(filters)
     parsed_filters
   end
 
