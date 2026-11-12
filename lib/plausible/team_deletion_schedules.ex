@@ -341,7 +341,8 @@ defmodule Plausible.TeamDeletionSchedules do
       [_t, s],
       not is_nil(s.id) and
         s.status in [^Subscription.Status.deleted(), ^Subscription.Status.paused()] and
-        s.paddle_plan_id != "free_10k" and s.next_bill_date < ^today
+        (is_nil(s.paddle_plan_id) or s.paddle_plan_id != "free_10k") and
+        s.next_bill_date < ^today
     )
   end
 

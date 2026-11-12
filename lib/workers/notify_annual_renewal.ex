@@ -14,6 +14,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   alias Plausible.Teams
 
   @yearly_plans Plausible.Billing.Plans.yearly_product_ids()
+  @yearly_billing_prices Plausible.Billing.Plans.yearly_billing_price_ids()
 
   @impl Oban.Worker
   @doc """
@@ -30,7 +31,9 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
       from(
         ep in EnterprisePlan,
         where: ep.team_id == parent_as(:team).id,
-        where: ep.paddle_plan_id == parent_as(:subscription).paddle_plan_id,
+        where:
+          ep.paddle_plan_id == parent_as(:subscription).paddle_plan_id or
+            ep.billing_product_id == parent_as(:subscription).billing_product_id,
         where: ep.paddle_plan_id != ^Subscription.manual_plan_id(),
         where: ep.billing_interval == :yearly,
         select: 1
@@ -47,7 +50,10 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           left_join: sent in ^sent_notification,
           on: o.id == sent.user_id,
           where: is_nil(sent.id),
-          where: s.paddle_plan_id in @yearly_plans or exists(yearly_enterprise_plan),
+          where:
+            s.paddle_plan_id in @yearly_plans or
+              s.billing_price_id in @yearly_billing_prices or
+              exists(yearly_enterprise_plan),
           where:
             s.next_bill_date > fragment("now()::date") and
               s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
