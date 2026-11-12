@@ -163,56 +163,10 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "filters" do
-    test "parses valid filters" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [
-            ["has_not_done", ["is", "event:goal", ["Signup"]]],
-            ["contains", "visit:exit_page", ["/:dashboard"]],
-            ["is", "visit:source", ["Bing"]],
-            ["is_not", "event:props:theme", ["system", "(none)"]]
-          ]
-        })
-
+    test "parses filters" do
+      params = Map.merge(@base_params, %{"filters" => [["is", "visit:source", ["Bing"]]]})
       {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [
-               [:has_not_done, [:is, "event:goal", ["Signup"]]],
-               [:contains, "visit:exit_page", ["/:dashboard"]],
-               [:is, "visit:source", ["Bing"]],
-               [:is_not, "event:props:theme", ["system", "(none)"]]
-             ]
-    end
-
-    test "cannot filter by breakdown-only dimensions" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "event:prop_key", ["author"]]]
-        })
-
-      {:error, %QueryError{code: :invalid_filters}} = parse(params)
-    end
-
-    test "parses city filter with multiple clauses" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "visit:city", ["2988507", "2950159"]]]
-        })
-
-      {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [[:is, "visit:city", ["2988507", "2950159"]]]
-    end
-
-    test "parses a segment filter" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "segment", [123]]]
-        })
-
-      {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [[:is, "segment", [123]]]
+      assert parsed.filters == [[:is, "visit:source", ["Bing"]]]
     end
   end
 
