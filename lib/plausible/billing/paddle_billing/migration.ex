@@ -15,6 +15,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
   alias Plausible.Billing.Feature
   alias Plausible.Billing.PaddleBilling
   alias Plausible.Billing.PaddleClassic
+  alias Plausible.Billing.Plan
   alias Plausible.Billing.Plans
   alias Plausible.Billing.Subscription
 
@@ -122,18 +123,35 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
 
     existing_mapping = classic_plan_mapping(existing_enterprise_products)
 
-    Enum.reduce(enterprise_plans, existing_mapping, fn {enterprise_plan, price}, acc ->
-      Process.sleep(@throttle)
-      IO.write(".")
+    mapping =
+      Enum.reduce(enterprise_plans, existing_mapping, fn {enterprise_plan, price}, acc ->
+        Process.sleep(@throttle)
+        IO.write(".")
 
-      existing_product = Map.get(product_by_classic_plan_id, enterprise_plan.paddle_plan_id)
+        existing_product = Map.get(product_by_classic_plan_id, enterprise_plan.paddle_plan_id)
 
-      cond do
-        is_nil(existing_product) -> create_enterprise_product(enterprise_plan, price, acc)
-        overwrite? -> update_enterprise_product(existing_product, enterprise_plan, price, acc)
-        true -> acc
-      end
-    end)
+        cond do
+          is_nil(existing_product) -> create_enterprise_product(enterprise_plan, price, acc)
+          overwrite? -> update_enterprise_product(existing_product, enterprise_plan, price, acc)
+          true -> acc
+        end
+      end)
+
+    link_enterprise_plans(mapping)
+
+    mapping
+  end
+
+  # Subscriptions in Billing point to the price, so the plans must know theirs
+  defp link_enterprise_plans(mapping) do
+    for {classic_plan_id, ids} <- mapping do
+      Repo.update_all(from(ep in EnterprisePlan, where: ep.paddle_plan_id == ^classic_plan_id),
+        set: [
+          billing_product_id: ids.billing_product_id,
+          billing_price_id: ids.billing_price_id
+        ]
+      )
+    end
   end
 
   @doc """
@@ -450,7 +468,9 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     end)
   end
 
-  defp product_data(canonical_plan), do: %{canonical_plan: Map.from_struct(canonical_plan)}
+  defp product_data(canonical_plan) do
+    %{canonical_plan: canonical_plan |> Map.from_struct() |> Map.drop(Plan.billing_fields())}
+  end
 
   defp canonical_plan_ids(product) do
     canonical_plan = get_in(product, ["custom_data", "canonical_plan"]) || %{}
