@@ -1,5 +1,6 @@
 defmodule Plausible.Billing.PaddleClassic.WebhooksTest do
   use Plausible.DataCase
+  @moduletag :classic_only
   use Bamboo.Test, shared: true
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.PaddleClassic.Webhooks

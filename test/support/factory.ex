@@ -2,7 +2,8 @@ defmodule Plausible.Factory do
   @moduledoc """
   See https://ecto.hexdocs.pm/test-factories.html
   """
-  use ExMachina.Ecto, repo: Plausible.Repo
+  use ExMachina
+  use Plausible.Factory.BillingModeStrategy, repo: Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 

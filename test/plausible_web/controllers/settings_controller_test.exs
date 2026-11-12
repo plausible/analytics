@@ -143,6 +143,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    @tag :classic_only
     test "renders a link to '/billing/choose-plan' with the text 'Change plan' + cancel link", %{
       conn: conn,
       user: user
@@ -214,6 +215,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    @tag :classic_only
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
@@ -374,10 +376,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> assert_cycles_rendered.()
 
       # for a past_due subscription
-      subscription =
-        subscription
-        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :past_due})
-        |> Repo.update!()
+      subscription = update_subscription(subscription, status: :past_due)
 
       conn
       |> get(~p"/settings/billing/subscription")
@@ -385,12 +384,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> assert_cycles_rendered.()
 
       # for a deleted (but not expired) subscription
-      subscription
-      |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{
+      update_subscription(subscription,
         status: :deleted,
         next_bill_date: Date.shift(Date.utc_today(), month: 6)
-      })
-      |> Repo.update!()
+      )
 
       conn
       |> get(~p"/settings/billing/subscription")
@@ -399,6 +396,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    @tag :classic_only
     test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
          %{
            conn: conn,
@@ -451,10 +449,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> assert_usage.()
 
       # for a paused subscription
-      subscription =
-        subscription
-        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :paused})
-        |> Repo.update!()
+      subscription = update_subscription(subscription, status: :paused)
 
       conn
       |> get(~p"/settings/billing/subscription")
@@ -526,6 +521,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    @tag :classic_only
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018")
 
@@ -541,6 +537,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
+    @tag :classic_only
     test "shows message on failed invoice request'", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018", paddle_subscription_id: "invalid_subscription_id")
 

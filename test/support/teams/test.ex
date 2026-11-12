@@ -367,6 +367,24 @@ defmodule Plausible.Teams.Test do
     user
   end
 
+  @doc """
+  Updates the underlying row of a subscription of either type.
+  """
+  def update_subscription(%{type: :billing, id: id} = subscription, attrs) do
+    Plausible.Billing.PaddleBilling.Subscription
+    |> Repo.get!(id)
+    |> Ecto.Changeset.cast(Map.new(attrs), Map.keys(Map.new(attrs)))
+    |> Repo.update!()
+
+    Repo.reload!(subscription)
+  end
+
+  def update_subscription(subscription, attrs) do
+    subscription
+    |> Plausible.Billing.PaddleClassic.Subscription.changeset(Map.new(attrs))
+    |> Repo.update!()
+  end
+
   def subscribe_to_enterprise_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
 

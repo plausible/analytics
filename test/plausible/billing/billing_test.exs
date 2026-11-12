@@ -71,6 +71,7 @@ defmodule Plausible.BillingTest do
                {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
+    @tag :classic_only
     test "is true for a deleted subscription if no next_bill_date specified" do
       team =
         new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
@@ -253,6 +254,7 @@ defmodule Plausible.BillingTest do
       end
     end
 
+    @tag :classic_only
     test "allows replacing a cancelled Paddle subscription" do
       team =
         new_user()
@@ -291,6 +293,7 @@ defmodule Plausible.BillingTest do
   end
 
   describe "change_plan" do
+    @tag :classic_only
     test "sets the next bill amount and date" do
       team = new_user() |> subscribe_to_growth_plan() |> team_of()
 

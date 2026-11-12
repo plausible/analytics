@@ -51,14 +51,15 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       for _ <- 1..11, do: new_site(owner: user)
 
-      conn = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
-
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
+      conn = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
+
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: site limit"
-      assert subscription.paddle_plan_id == "123123"
+      assert Plausible.Repo.reload!(subscription) == subscription
     end
 
+    @tag :classic_only
     test "can override allowing to upgrade when pageview limit is exceeded", %{
       conn: conn,
       user: user
@@ -93,6 +94,21 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert subscription.paddle_plan_id == @v4_growth_plan
     end
 
+    test "is unsupported for a Billing subscription (remove once implemented)", %{
+      conn: conn,
+      user: user
+    } do
+      plan = Plausible.Billing.Plans.all() |> Enum.find(&(&1.generation == 4))
+      subscribe_to_billing_plan(user, plan.billing_monthly_price_id)
+      subscription = user |> team_of() |> subscription_of()
+
+      conn = post(conn, ~p"/billing/change-plan/#{@v4_growth_plan}")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Something went wrong"
+      assert Plausible.Repo.reload!(subscription) == subscription
+    end
+
+    @tag :classic_only
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "321321")
       team = team_of(user)

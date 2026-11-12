@@ -947,6 +947,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     describe "for a user with a past_due subscription" do
       setup [:create_user, :create_site, :log_in, :create_past_due_subscription]
 
+      @tag :classic_only
       test "renders failed payment notice and link to update billing details", %{conn: conn} do
         {:ok, _lv, doc} = get_liveview(conn)
         check_notice_titles(doc, [Billing.subscription_past_due_notice_title()])
@@ -982,6 +983,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     describe "for a user with a paused v4 subscription" do
       setup [:create_user, :create_site, :log_in, :create_paused_subscription]
 
+      @tag :classic_only
       test "renders subscription paused notice and link to update billing details", %{conn: conn} do
         {:ok, _lv, doc} = get_liveview(conn)
         check_notice_titles(doc, [Billing.subscription_paused_notice_title()])
@@ -1051,10 +1053,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         |> team_of()
         |> Repo.preload(:subscription)
         |> Map.fetch!(:subscription)
-        |> Billing.PaddleClassic.Subscription.changeset(%{
-          next_bill_date: DateTime.shift(DateTime.utc_now(), month: -2)
-        })
-        |> Repo.update!()
+        |> update_subscription(next_bill_date: DateTime.shift(DateTime.utc_now(), month: -2))
 
         :ok
       end
