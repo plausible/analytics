@@ -1,7 +1,8 @@
 defmodule Plausible.Stats.QueryComparisonsTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
+  alias Plausible.Stats.Query
+  alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site, :create_site_import]
 
@@ -14,13 +15,13 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     ])
 
     assert {:ok, query} =
-             QueryBuilder.build(site, %ParsedQueryParams{
+             Query.Builder.build(site, %ParsedParams{
                metrics: [:pageviews],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-               include: %QueryInclude{compare: :previous_period}
+               include: %Query.Include{compare: :previous_period}
              })
 
-    assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+    assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
     assert results == [
              %{
@@ -41,14 +42,14 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     ])
 
     assert {:ok, query} =
-             QueryBuilder.build(site, %ParsedQueryParams{
+             Query.Builder.build(site, %ParsedParams{
                metrics: [:pageviews],
                dimensions: ["time:day"],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-               include: %QueryInclude{compare: :previous_period}
+               include: %Query.Include{compare: :previous_period}
              })
 
-    assert %Stats.QueryResult{results: results, comparison_results: comparison_results} =
+    assert %Stats.Query.Result{results: results, comparison_results: comparison_results} =
              Stats.query(site, query)
 
     assert results == [
@@ -70,18 +71,18 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     today = DateTime.to_date(now)
 
     {:ok, query1} =
-      QueryBuilder.build(site, %ParsedQueryParams{
+      Query.Builder.build(site, %ParsedParams{
         metrics: [:visitors],
         dimensions: ["time"],
         input_date_range: {:last_n_days, 28},
-        include: %QueryInclude{time_labels: true, compare: :previous_period},
+        include: %Query.Include{time_labels: true, compare: :previous_period},
         now: now
       })
 
     query2 = Stats.Query.set_include(query1, :compare_match_day_of_week, true)
 
-    assert %Stats.QueryResult{meta: meta1} = Stats.query(site, query1)
-    assert %Stats.QueryResult{meta: meta2} = Stats.query(site, query2)
+    assert %Stats.Query.Result{meta: meta1} = Stats.query(site, query1)
+    assert %Stats.Query.Result{meta: meta2} = Stats.query(site, query2)
 
     assert meta1[:time_labels] == meta2[:time_labels]
     assert meta1[:comparison_time_labels] == meta2[:comparison_time_labels]
@@ -118,15 +119,15 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     ])
 
     assert {:ok, query} =
-             QueryBuilder.build(site, %ParsedQueryParams{
+             Query.Builder.build(site, %ParsedParams{
                metrics: [:visitors],
                dimensions: ["time:day"],
                input_date_range: {:last_n_days, 91},
-               include: %QueryInclude{time_labels: true, compare: :year_over_year},
+               include: %Query.Include{time_labels: true, compare: :year_over_year},
                now: ~U[2022-07-01 14:00:00Z]
              })
 
-    assert %Stats.QueryResult{
+    assert %Stats.Query.Result{
              results: results,
              comparison_results: comparison_results,
              meta: meta
@@ -170,17 +171,17 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     ])
 
     {:ok, page_one_query} =
-      QueryBuilder.build(site, %ParsedQueryParams{
+      Query.Builder.build(site, %ParsedParams{
         metrics: [:visitors, :percentage],
         input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
         dimensions: ["visit:browser"],
-        include: %QueryInclude{
+        include: %Query.Include{
           compare: :previous_period
         },
         pagination: %{limit: 2, offset: 0}
       })
 
-    assert %Stats.QueryResult{results: page_one_results} = Stats.query(site, page_one_query)
+    assert %Stats.Query.Result{results: page_one_results} = Stats.query(site, page_one_query)
 
     assert page_one_results == [
              %{
@@ -205,7 +206,7 @@ defmodule Plausible.Stats.QueryComparisonsTest do
 
     page_two_query = Stats.Query.set(page_one_query, pagination: %{limit: 2, offset: 2})
 
-    assert %Stats.QueryResult{results: page_two_results} = Stats.query(site, page_two_query)
+    assert %Stats.Query.Result{results: page_two_results} = Stats.query(site, page_two_query)
 
     assert page_two_results == [
              %{
@@ -251,18 +252,18 @@ defmodule Plausible.Stats.QueryComparisonsTest do
     ])
 
     assert {:ok, query} =
-             QueryBuilder.build(site, %ParsedQueryParams{
+             Query.Builder.build(site, %ParsedParams{
                metrics: [:visitors, :percentage],
                input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
                dimensions: ["visit:browser"],
-               include: %QueryInclude{
+               include: %Query.Include{
                  imports: true,
                  compare: :previous_period
                },
                pagination: %{limit: 2, offset: 0}
              })
 
-    assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+    assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
     assert results == [
              %{
@@ -295,13 +296,13 @@ defmodule Plausible.Stats.QueryComparisonsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:pageviews],
                  input_date_range: {:date_range, ~D[2021-01-07], ~D[2021-01-13]},
-                 include: %QueryInclude{compare: {:date_range, ~D[2021-01-01], ~D[2021-01-06]}}
+                 include: %Query.Include{compare: {:date_range, ~D[2021-01-01], ~D[2021-01-06]}}
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{
@@ -322,16 +323,16 @@ defmodule Plausible.Stats.QueryComparisonsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:visitors, :pageviews],
                  input_date_range:
                    {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
-                 include: %QueryInclude{
+                 include: %Query.Include{
                    compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
                  }
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{
@@ -357,16 +358,16 @@ defmodule Plausible.Stats.QueryComparisonsTest do
       ])
 
       assert {:ok, query} =
-               QueryBuilder.build(weird_tz_site, %ParsedQueryParams{
+               Query.Builder.build(weird_tz_site, %ParsedParams{
                  metrics: [:pageviews],
                  input_date_range:
                    {:datetime_range, ~U[2021-01-02 03:00:00Z], ~U[2021-01-03 02:59:59Z]},
-                 include: %QueryInclude{
+                 include: %Query.Include{
                    compare: {:datetime_range, ~U[2021-01-01 03:00:00Z], ~U[2021-01-02 02:59:59Z]}
                  }
                })
 
-      assert %Stats.QueryResult{results: results} = Stats.query(weird_tz_site, query)
+      assert %Stats.Query.Result{results: results} = Stats.query(weird_tz_site, query)
 
       assert results == [
                %{

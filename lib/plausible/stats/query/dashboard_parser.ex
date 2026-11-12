@@ -1,11 +1,13 @@
-defmodule Plausible.Stats.Dashboard.QueryParser do
+defmodule Plausible.Stats.Query.DashboardParser do
   @moduledoc """
-  Parses a dashboard query string into `%ParsedQueryParams{}`. Note that
+  Parses a dashboard query string into `%ParsedParams{}`. Note that
   `metrics` and `dimensions` do not exist at this step yet, and are expected
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{ParsedQueryParams, QueryInclude, ApiQueryParser, QueryError}
+  alias Plausible.Stats.{Query, QueryError}
+
+  alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
   @valid_comparison_shorthands %{
     "previous_period" => :previous_period,
@@ -17,14 +19,14 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   def parse(params, opts \\ []) do
     with {:ok, input_date_range} <- parse_input_date_range(params),
          {:ok, relative_date} <- parse_relative_date(params),
-         {:ok, dimensions} <- ApiQueryParser.parse_dimensions(params["dimensions"]),
-         {:ok, filters} <- ApiQueryParser.parse_filters(params["filters"]),
+         {:ok, dimensions} <- ApiParser.parse_dimensions(params["dimensions"]),
+         {:ok, filters} <- ApiParser.parse_filters(params["filters"]),
          {:ok, metrics} <- parse_metrics(params),
-         {:ok, order_by} <- ApiQueryParser.parse_order_by(params["order_by"]),
-         {:ok, pagination} <- ApiQueryParser.parse_pagination(params["pagination"]),
+         {:ok, order_by} <- ApiParser.parse_order_by(params["order_by"]),
+         {:ok, pagination} <- ApiParser.parse_pagination(params["pagination"]),
          {:ok, include} <- parse_include(params) do
       {:ok,
-       ParsedQueryParams.new!(%{
+       ParsedParams.new!(%{
          input_date_range: input_date_range,
          relative_date: relative_date,
          dimensions: dimensions,
@@ -43,7 +45,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
     case date_range do
       "realtime" -> {:ok, :realtime}
       "realtime_30m" -> {:ok, :realtime_30m}
-      date_range -> ApiQueryParser.parse_input_date_range(date_range)
+      date_range -> ApiParser.parse_input_date_range(date_range)
     end
   end
 
@@ -66,7 +68,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   defp parse_relative_date(_), do: {:ok, nil}
 
   defp parse_metrics(%{"metrics" => [_ | _] = metrics}) do
-    ApiQueryParser.parse_metrics(metrics)
+    ApiParser.parse_metrics(metrics)
   end
 
   defp parse_metrics(_),
@@ -80,7 +82,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
   defp parse_include(params) do
     with {:ok, compare} <- parse_include_compare(params["include"]) do
       {:ok,
-       %QueryInclude{
+       %Query.Include{
          imports: params["include"]["imports"] == true,
          imports_meta: params["include"]["imports_meta"] == true,
          compare: compare,
@@ -103,7 +105,7 @@ defmodule Plausible.Stats.Dashboard.QueryParser do
 
   defp parse_include_compare(%{"compare" => [from, to] = compare})
        when is_binary(from) and is_binary(to) do
-    case ApiQueryParser.parse_date_strings(from, to) do
+    case ApiParser.parse_date_strings(from, to) do
       {:ok, compare} ->
         {:ok, compare}
 

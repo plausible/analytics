@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Query
-  alias Plausible.Stats.ApiQueryParser
+  alias Plausible.Stats.Query.ApiParser
   alias Plausible.Stats.Filters.LegacyStatsAPIFilterParser
 
   @visit_props [
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.Filters do
   end
 
   def parse(filters) when is_list(filters) do
-    {:ok, parsed_filters} = ApiQueryParser.parse_filters(filters)
+    {:ok, parsed_filters} = ApiParser.parse_filters(filters)
     parsed_filters
   end
 

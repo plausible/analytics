@@ -4,16 +4,16 @@ defmodule Plausible.Stats.Legacy.Aggregate do
   """
 
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
+  alias Plausible.Stats.Query
 
   def aggregate(site, query, metrics) do
     query =
       query
       |> Query.set(metrics: metrics)
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
-      |> QueryOptimizer.optimize()
+      |> Query.Optimizer.optimize()
 
-    %QueryResult{results: [entry], meta: meta} = QueryRunner.run(site, query)
+    %Query.Result{results: [entry], meta: meta} = Query.Runner.run(site, query)
 
     results =
       query.metrics

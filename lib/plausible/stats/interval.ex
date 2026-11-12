@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Interval do
   @moduledoc """
   [DEPRECATED] Stats API v2 handles "intervals" as time dimensions.
-  See `Plausible.Stats.ApiQueryParser.parse_dimensions/1`.
+  See `Plausible.Stats.Query.ApiParser.parse_dimensions/1`.
   """
 
   alias Plausible.Stats.{DateTimeRange, Query}

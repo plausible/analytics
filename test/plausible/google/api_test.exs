@@ -3,7 +3,7 @@ defmodule Plausible.Google.APITest do
   use Plausible.Test.Support.HTTPMocker
 
   alias Plausible.Google
-  alias Plausible.Stats.{DateTimeRange, QueryBuilder}
+  alias Plausible.Stats.{DateTimeRange, Query}
 
   import ExUnit.CaptureLog
   import Mox
@@ -43,7 +43,7 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
         )
 
@@ -63,7 +63,7 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
         )
 
@@ -83,7 +83,7 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
         )
 
@@ -111,7 +111,7 @@ defmodule Plausible.Google.APITest do
     )
 
     query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
       )
 
@@ -141,7 +141,7 @@ defmodule Plausible.Google.APITest do
       mock_http_with("google_search_console.json")
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]}
         )
 
@@ -174,7 +174,7 @@ defmodule Plausible.Google.APITest do
       )
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]},
           filters: [[:is, "event:page", ["/page"]]]
         )
@@ -188,7 +188,7 @@ defmodule Plausible.Google.APITest do
       insert(:goal, event_name: "Signup", site: site)
 
       query =
-        QueryBuilder.build!(site,
+        Query.Builder.build!(site,
           input_date_range: {:date_range, ~D[2022-01-01], ~D[2022-01-05]},
           filters: [[:is, "event:goal", ["Signup"]]]
         )

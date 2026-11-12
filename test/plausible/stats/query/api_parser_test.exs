@@ -1,6 +1,6 @@
-defmodule Plausible.Stats.ApiQueryParserTest do
+defmodule Plausible.Stats.Query.ApiParserTest do
   use Plausible.DataCase
-  import Plausible.Stats.ApiQueryParser
+  import Plausible.Stats.Query.ApiParser
   alias Plausible.Stats.QueryError
 
   test "parsing empty map fails" do

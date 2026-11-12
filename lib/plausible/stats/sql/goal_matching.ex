@@ -6,7 +6,7 @@ defmodule Plausible.Stats.SQL.GoalMatching do
   are required. Other goals use regex matching and additional filters.
 
   Goal indices are assigned by `Plausible.Stats.Goals.indexed_goals/1` and
-  decoded by `Plausible.Stats.Goals.goal_at_index/2` in QueryRunner.
+  decoded by `Plausible.Stats.Goals.goal_at_index/2` in Query.Runner.
   """
 
   import Ecto.Query

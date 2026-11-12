@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryBuilder do
+defmodule Plausible.Stats.Query.Builder do
   @moduledoc """
   A module used for building the Query struct from already parsed params.
   """
@@ -8,26 +8,26 @@ defmodule Plausible.Stats.QueryBuilder do
 
   alias Plausible.Stats.{
     Query,
-    ParsedQueryParams,
     Comparisons,
     Filters,
     Time,
     TableDecider,
     DateTimeRange,
     QueryError,
-    QueryInclude,
     QueryPeriod
   }
+
+  alias Plausible.Stats.Query.ParsedParams
 
   @doc """
   Runs various validations and builds a `%Query{}` from already parsed params.
 
   For convenience, the "parsed params" can also be given as a keyword list, in
-  which case it gets turned in to `ParsedQueryParams` by the function itself.
+  which case it gets turned in to `ParsedParams` by the function itself.
   """
   def build(site, parsed_query_params, debug_metadata \\ %{})
 
-  def build(site, %ParsedQueryParams{} = parsed_query_params, debug_metadata) do
+  def build(site, %ParsedParams{} = parsed_query_params, debug_metadata) do
     with {:ok, parsed_query_params} <- resolve_segments_in_filters(parsed_query_params, site),
          {:ok, query} <- do_build(parsed_query_params, site, debug_metadata),
          :ok <- validate_order_by(query),
@@ -59,8 +59,8 @@ defmodule Plausible.Stats.QueryBuilder do
   end
 
   def build(site, params, debug_metadata) when is_list(params) do
-    include = struct!(QueryInclude, Keyword.get(params, :include, []))
-    parsed_query_params = struct!(ParsedQueryParams, Keyword.put(params, :include, include))
+    include = struct!(Query.Include, Keyword.get(params, :include, []))
+    parsed_query_params = struct!(ParsedParams, Keyword.put(params, :include, include))
 
     build(site, parsed_query_params, debug_metadata)
   end
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.QueryBuilder do
     end
   end
 
-  defp resolve_segments_in_filters(%ParsedQueryParams{} = parsed_query_params, site) do
+  defp resolve_segments_in_filters(%ParsedParams{} = parsed_query_params, site) do
     with {:ok, preloaded_segments} <-
            Segments.Filters.preload_needed_segments(site, parsed_query_params.filters),
          {:ok, filters} <-
@@ -86,7 +86,7 @@ defmodule Plausible.Stats.QueryBuilder do
 
   defp do_build(parsed_query_params, site, debug_metadata) do
     parsed_query_params
-    |> ParsedQueryParams.to_query!()
+    |> ParsedParams.to_query!()
     |> set_now()
     |> set_utc_time_range(site, Map.get(parsed_query_params, :relative_date))
     |> set_preloaded_goals_and_revenue(site)
@@ -184,7 +184,7 @@ defmodule Plausible.Stats.QueryBuilder do
 
     defp maybe_drop_revenue_metrics(
            %Query{
-             include: %QueryInclude{drop_unavailable_revenue_metrics: true},
+             include: %Query.Include{drop_unavailable_revenue_metrics: true},
              revenue_currencies: revenue_currencies
            } = query
          )
@@ -357,10 +357,10 @@ defmodule Plausible.Stats.QueryBuilder do
     end)
   end
 
-  defp validate_filtered_goals_exist(_query, %ParsedQueryParams{skip_goal_existence_check: true}),
+  defp validate_filtered_goals_exist(_query, %ParsedParams{skip_goal_existence_check: true}),
     do: :ok
 
-  defp validate_filtered_goals_exist(query, %ParsedQueryParams{}) do
+  defp validate_filtered_goals_exist(query, %ParsedParams{}) do
     # Note: We don't check :contains goal filters since it's acceptable if they match nothing.
     goal_filter_clauses =
       query.filters

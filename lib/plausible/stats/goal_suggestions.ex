@@ -4,7 +4,7 @@ defmodule Plausible.Stats.GoalSuggestions do
   use Plausible.Stats.SQL.Fragments
 
   alias Plausible.{Repo, ClickhouseRepo}
-  alias Plausible.Stats.{Query, QueryBuilder}
+  alias Plausible.Stats.Query
   import Plausible.Stats.Base
   import Ecto.Query
 
@@ -41,7 +41,7 @@ defmodule Plausible.Stats.GoalSuggestions do
     from_date = Date.shift(to_date, month: -6)
 
     query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         input_date_range: {:date_range, from_date, to_date},
         metrics: [:pageviews],
         include: [imports: true]

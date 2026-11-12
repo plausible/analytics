@@ -8,7 +8,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Query, ApiQueryParser, QueryBuilder, DateTimeRange}
+  alias Plausible.Stats.{Filters, Query, DateTimeRange}
+  alias Plausible.Stats.Query.ApiParser
   alias Plausible.Times
 
   def from(site, params, debug_metadata, now \\ nil) do
@@ -31,9 +32,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_consolidated_site_ids(site)
       |> put_order_by(params)
       |> put_include(params)
-      |> QueryBuilder.put_comparison_utc_time_range()
+      |> Query.Builder.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
-      |> QueryBuilder.set_time_on_page_data(site)
+      |> Query.Builder.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -68,7 +69,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp preload_goals_and_revenue(query, site) do
     {preloaded_goals, revenue_warning, revenue_currencies} =
-      Plausible.Stats.QueryBuilder.preload_goals_and_revenue(
+      Plausible.Stats.Query.Builder.preload_goals_and_revenue(
         site,
         query.metrics,
         query.filters,
@@ -283,7 +284,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   def parse_order_by(order_by) do
     with true <- is_binary(order_by),
          {:ok, order_by} <- JSON.decode(order_by),
-         {:ok, order_by} <- ApiQueryParser.parse_order_by(order_by) do
+         {:ok, order_by} <- ApiParser.parse_order_by(order_by) do
       order_by
     else
       _ -> []
@@ -293,22 +294,22 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   @doc """
   ### Examples:
     iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-    Plausible.Stats.ApiQueryParser.default_include()
+    Plausible.Stats.Query.ApiParser.default_include()
 
     iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
-    Map.merge(Plausible.Stats.ApiQueryParser.default_include(), %{total_rows: true})
+    Map.merge(Plausible.Stats.Query.ApiParser.default_include(), %{total_rows: true})
   """
   def parse_include(include) do
     include =
       with true <- is_binary(include),
            {:ok, include} <- JSON.decode(include),
-           {:ok, include} <- ApiQueryParser.parse_include(include) do
+           {:ok, include} <- ApiParser.parse_include(include) do
         include
       else
         _ -> %{}
       end
 
-    Plausible.Stats.ApiQueryParser.default_include()
+    Plausible.Stats.Query.ApiParser.default_include()
     |> Map.merge(include)
   end
 
