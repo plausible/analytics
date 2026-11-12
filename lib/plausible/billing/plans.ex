@@ -156,24 +156,21 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  def subscription_interval(%{type: :billing, billing_interval: interval}),
+    do: Atom.to_string(interval)
+
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
       %EnterprisePlan{billing_interval: interval} ->
         interval
 
       %Plan{} = plan ->
-        if monthly?(plan, subscription), do: "monthly", else: "yearly"
+        if plan.monthly_product_id == subscription.paddle_plan_id, do: "monthly", else: "yearly"
 
       _any ->
         "N/A"
     end
   end
-
-  defp monthly?(_plan, %{type: :billing} = subscription),
-    do: subscription.billing_interval == :monthly
-
-  defp monthly?(plan, subscription),
-    do: plan.monthly_product_id == subscription.paddle_plan_id
 
   @doc """
   This function takes a list of plans as an argument, gathers all product

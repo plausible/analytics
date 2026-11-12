@@ -40,7 +40,7 @@ defmodule Plausible.Factory.BillingModeStrategy do
        when plan_id not in @classic_only_plan_ids do
     replace_existing(subscription)
     n = System.unique_integer([:positive])
-    {product_id, price_id, interval} = billing_ids(plan_id)
+    {product_id, price_id, interval} = billing_ids(plan_id, team_id_of(subscription))
 
     %PaddleBilling.Subscription{
       billing_subscription_id: "sub_#{n}",
@@ -62,7 +62,7 @@ defmodule Plausible.Factory.BillingModeStrategy do
 
   defp do_convert(%EnterprisePlan{billing_price_id: nil, paddle_plan_id: plan_id} = plan)
        when plan_id not in @classic_only_plan_ids do
-    {product_id, price_id, _interval} = billing_ids(plan_id)
+    {product_id, price_id, _interval} = billing_ids(plan_id, nil)
     %{plan | billing_product_id: product_id, billing_price_id: price_id}
   end
 
@@ -78,7 +78,7 @@ defmodule Plausible.Factory.BillingModeStrategy do
 
   defp replace_existing(_), do: :ok
 
-  defp billing_ids(paddle_plan_id) do
+  defp billing_ids(paddle_plan_id, team_id) do
     case Plans.find(paddle_plan_id) do
       %{monthly_product_id: ^paddle_plan_id} = plan ->
         {plan.billing_product_id, plan.billing_monthly_price_id, :monthly}
@@ -87,8 +87,23 @@ defmodule Plausible.Factory.BillingModeStrategy do
         {plan.billing_product_id, plan.billing_yearly_price_id, :yearly}
 
       nil ->
-        {"pro_#{paddle_plan_id}", "pri_#{paddle_plan_id}", :monthly}
+        {"pro_#{paddle_plan_id}", "pri_#{paddle_plan_id}",
+         enterprise_interval(paddle_plan_id, team_id)}
     end
+  end
+
+  defp team_id_of(%{team_id: team_id}) when is_integer(team_id), do: team_id
+  defp team_id_of(%{team: %{id: team_id}}), do: team_id
+  defp team_id_of(_), do: nil
+
+  defp enterprise_interval(_plan_id, nil), do: :monthly
+
+  defp enterprise_interval(plan_id, team_id) do
+    Repo.one(
+      from ep in EnterprisePlan,
+        where: ep.team_id == ^team_id and ep.paddle_plan_id == ^plan_id,
+        select: ep.billing_interval
+    ) || :monthly
   end
 
   defp link_team(%PaddleBilling.Subscription{team_id: team_id, billing_customer_id: id} = s) do

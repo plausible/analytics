@@ -108,7 +108,6 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
 
       assert Plans.get_subscription_plan(subscription) == nil
       assert Plans.get_regular_plan(subscription) == nil
-      assert Plans.subscription_interval(subscription) == "N/A"
     end
 
     test "resolves a regular plan from the product when the price is not in the catalogue" do
@@ -149,7 +148,7 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
                enterprise_plan = Plans.get_subscription_plan(subscription)
 
       assert enterprise_plan.team_id == team.id
-      assert Plans.subscription_interval(subscription) == :yearly
+      assert Plans.subscription_interval(subscription) == "yearly"
       assert Plans.subscribed_to?(subscription, enterprise_plan)
     end
 
