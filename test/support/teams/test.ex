@@ -312,7 +312,8 @@ defmodule Plausible.Teams.Test do
         [
           team: team,
           billing_price_id: billing_price_id,
-          billing_product_id: billing_product_id_for(billing_price_id)
+          billing_product_id: billing_product_id_for(billing_price_id),
+          billing_interval: billing_interval_for(billing_price_id)
         ],
         attrs
       )
@@ -325,6 +326,12 @@ defmodule Plausible.Teams.Test do
 
     insert(subscription)
     team
+  end
+
+  defp billing_interval_for(price_id) do
+    if price_id in Enum.map(Plausible.Billing.Plans.all(), & &1.billing_yearly_price_id),
+      do: :yearly,
+      else: :monthly
   end
 
   defp billing_product_id_for(price_id) do
@@ -358,7 +365,10 @@ defmodule Plausible.Teams.Test do
         team,
         enterprise_plan.billing_price_id,
         Keyword.merge(
-          [billing_product_id: enterprise_plan.billing_product_id],
+          [
+            billing_product_id: enterprise_plan.billing_product_id,
+            billing_interval: enterprise_plan.billing_interval
+          ],
           subscription_attrs
         )
       )

@@ -235,6 +235,7 @@ defmodule Plausible.Factory do
       billing_customer_id: sequence(:billing_customer_id, &"ctm_#{&1}"),
       billing_product_id: "pro_test",
       billing_price_id: sequence(:billing_price_id, &"pri_#{&1}"),
+      billing_interval: :monthly,
       status: Subscription.Status.active(),
       next_bill_amount: "6.00",
       next_bill_date: Date.utc_today(),

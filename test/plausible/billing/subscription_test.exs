@@ -97,6 +97,7 @@ defmodule Plausible.Billing.SubscriptionTest do
       billing_customer_id: customer_id,
       billing_product_id: "pro_1",
       billing_price_id: "pri_1",
+      billing_interval: :monthly,
       next_bill_amount: "10.00",
       next_bill_date: Date.utc_today(),
       currency_code: "EUR",

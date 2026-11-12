@@ -14,7 +14,6 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   alias Plausible.Teams
 
   @yearly_plans Plausible.Billing.Plans.yearly_product_ids()
-  @yearly_billing_prices Plausible.Billing.Plans.yearly_billing_price_ids()
 
   @impl Oban.Worker
   @doc """
@@ -52,7 +51,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           where: is_nil(sent.id),
           where:
             s.paddle_plan_id in @yearly_plans or
-              s.billing_price_id in @yearly_billing_prices or
+              s.billing_interval == ^:yearly or
               exists(yearly_enterprise_plan),
           where:
             s.next_bill_date > fragment("now()::date") and

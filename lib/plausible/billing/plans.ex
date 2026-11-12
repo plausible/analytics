@@ -125,15 +125,6 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
-  @doc """
-  List yearly plans Paddle Billing price IDs.
-  """
-  def yearly_billing_price_ids do
-    for %{billing_yearly_price_id: price_id} <- all(),
-        is_binary(price_id),
-        do: price_id
-  end
-
   def find(nil), do: nil
 
   def find(product_id) do
@@ -178,8 +169,8 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp monthly?(plan, %{type: :billing} = subscription),
-    do: plan.billing_monthly_price_id == subscription.billing_price_id
+  defp monthly?(_plan, %{type: :billing} = subscription),
+    do: subscription.billing_interval == :monthly
 
   defp monthly?(plan, subscription),
     do: plan.monthly_product_id == subscription.paddle_plan_id

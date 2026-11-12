@@ -65,6 +65,40 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
       assert Plans.subscription_interval(yearly) == "yearly"
     end
 
+    test "tells the interval from the subscription when the price is not in the catalogue" do
+      plan = growth_10k()
+
+      for interval <- [:monthly, :yearly] do
+        subscription =
+          subscription_of(
+            new_user()
+            |> subscribe_to_billing_plan("pri_imported_#{interval}",
+              billing_product_id: plan.billing_product_id,
+              billing_interval: interval
+            )
+          )
+
+        assert Plans.subscription_interval(subscription) == Atom.to_string(interval)
+      end
+    end
+
+    test "NotifyAnnualRenewal reminds yearly subscribers whose price is not in the catalogue" do
+      due = Date.shift(Date.utc_today(), day: 7)
+
+      yearly =
+        new_user()
+        |> subscribe_to_billing_plan("pri_imported",
+          billing_product_id: growth_10k().billing_product_id,
+          billing_interval: :yearly,
+          next_bill_date: due
+        )
+
+      NotifyAnnualRenewal.perform(nil)
+
+      assert delivered_recipients("Your Plausible subscription is up for renewal") ==
+               [yearly.email]
+    end
+
     test "resolves nothing from an unknown product" do
       subscription =
         subscription_of(
