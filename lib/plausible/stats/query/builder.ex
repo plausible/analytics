@@ -105,9 +105,7 @@ defmodule Plausible.Stats.Query.Builder do
 
   defp set_utc_time_range(query, site, relative_date) do
     utc_time_range =
-      query.input_date_range
-      |> QueryPeriod.build_range_for_site(site, relative_date, query.now)
-      |> DateTimeRange.to_timezone("Etc/UTC")
+      QueryPeriod.build_utc_range_for_site(query.input_date_range, site, relative_date, query.now)
 
     Query.set(query, utc_time_range: utc_time_range)
   end

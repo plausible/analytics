@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
   to be filled in by each specific report.
   """
 
-  alias Plausible.Stats.{Filters, Query, QueryError}
+  alias Plausible.Stats.{Filters, Query, QueryError, QueryPeriod}
 
   alias Plausible.Stats.Query.{ParsedParams, ApiParser}
 
@@ -45,7 +45,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
     case date_range do
       "realtime" -> {:ok, :realtime}
       "realtime_30m" -> {:ok, :realtime_30m}
-      date_range -> ApiParser.parse_input_date_range(date_range)
+      date_range -> QueryPeriod.parse_input_date_range(date_range)
     end
   end
 
@@ -105,7 +105,7 @@ defmodule Plausible.Stats.Query.DashboardParser do
 
   defp parse_include_compare(%{"compare" => [from, to] = compare})
        when is_binary(from) and is_binary(to) do
-    case ApiParser.parse_date_strings(from, to) do
+    case QueryPeriod.parse_date_strings(from, to) do
       {:ok, compare} ->
         {:ok, compare}
 

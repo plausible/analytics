@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   alias Plausible.Annotations
   alias Plausible.ChangesetHelpers
   alias Plausible.Stats.QueryPeriod
-  alias Plausible.Stats.Query.ApiParser
   alias PlausibleWeb.Api.Helpers, as: H
 
   def index(conn, params) do
@@ -40,7 +39,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
          "date_range_end" => end_
        })
        when is_binary(start) and is_binary(end_) do
-    case ApiParser.parse_input_date_range([start, end_]) do
+    case QueryPeriod.parse_input_date_range([start, end_]) do
       {:ok, parsed} -> {:ok, parsed}
       {:error, %{message: message}} -> {:error, message}
     end
@@ -50,7 +49,7 @@ defmodule PlausibleWeb.Api.Internal.AnnotationsController do
   defp parse_input_date_range(%{"date_range" => "realtime_30m"}), do: {:ok, :realtime_30m}
 
   defp parse_input_date_range(%{"date_range" => date_range}) do
-    case ApiParser.parse_input_date_range(date_range) do
+    case QueryPeriod.parse_input_date_range(date_range) do
       {:ok, parsed} -> {:ok, parsed}
       {:error, %{message: message}} -> {:error, message}
     end

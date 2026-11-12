@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Query.ApiParser do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError}
+  alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError, QueryPeriod}
 
   @default_include %Plausible.Stats.Query.Include{
     imports: false,
@@ -24,7 +24,7 @@ defmodule Plausible.Stats.Query.ApiParser do
 
   def parse(params, opts \\ []) when is_map(params) do
     with :ok <- JSONSchema.validate(params),
-         {:ok, input_date_range} <- parse_input_date_range(params["date_range"]),
+         {:ok, input_date_range} <- QueryPeriod.parse_input_date_range(params["date_range"]),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
          {:ok, filters} <- Filters.Parser.parse(params["filters"]),
          {:ok, dimensions} <- parse_dimensions(params["dimensions"]),
@@ -57,55 +57,6 @@ defmodule Plausible.Stats.Query.ApiParser do
       _ ->
         {:error,
          %QueryError{code: :invalid_metrics, message: "Unknown metric '#{i(metric_str)}'."}}
-    end
-  end
-
-  def parse_input_date_range("day"), do: {:ok, :day}
-  def parse_input_date_range("24h"), do: {:ok, :"24h"}
-  def parse_input_date_range("month"), do: {:ok, :month}
-  def parse_input_date_range("year"), do: {:ok, :year}
-  def parse_input_date_range("all"), do: {:ok, :all}
-
-  def parse_input_date_range(shorthand) when is_binary(shorthand) do
-    case Integer.parse(shorthand) do
-      {n, "d"} when n > 0 and n <= 5_000 ->
-        {:ok, {:last_n_days, n}}
-
-      {n, "mo"} when n > 0 and n <= 100 ->
-        {:ok, {:last_n_months, n}}
-
-      _ ->
-        {:error,
-         %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(shorthand)}"}}
-    end
-  end
-
-  def parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
-    case parse_date_strings(from, to) do
-      {:ok, dates} -> {:ok, dates}
-      {:error, _} -> parse_timestamp_strings(from, to)
-    end
-  end
-
-  def parse_input_date_range(unknown) do
-    {:error, %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(unknown)}"}}
-  end
-
-  def parse_date_strings(from, to) do
-    with {:ok, from_date} <- Date.from_iso8601(from),
-         {:ok, to_date} <- Date.from_iso8601(to) do
-      {:ok, {:date_range, from_date, to_date}}
-    end
-  end
-
-  defp parse_timestamp_strings(from, to) do
-    with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
-         {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
-      {:ok, {:datetime_range, from_datetime, to_datetime}}
-    else
-      _ ->
-        {:error,
-         %QueryError{code: :invalid_date_range, message: "Invalid date_range '#{i([from, to])}'."}}
     end
   end
 
