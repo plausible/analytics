@@ -15,7 +15,6 @@ defmodule Plausible.ApiRequestLog.Entry do
   @type t() :: %__MODULE__{}
 
   @type attrs() :: %{
-          timestamp: DateTime.t(),
           team: Team.t(),
           credential: ApiKey.t() | Grant.t(),
           interface: :rest | :mcp,
@@ -28,7 +27,7 @@ defmodule Plausible.ApiRequestLog.Entry do
 
   @primary_key false
   schema "api_request_log" do
-    # When the request arrived
+    # When the request was recorded
     field :timestamp, :utc_datetime
 
     # The team that the request belongs to
@@ -73,7 +72,7 @@ defmodule Plausible.ApiRequestLog.Entry do
     {credential_type, credential_label} = credential(attrs.credential)
 
     %__MODULE__{
-      timestamp: attrs.timestamp,
+      timestamp: DateTime.utc_now(:second),
       team_id: attrs.team.id,
       user_id: attrs.credential.user_id,
       credential_type: credential_type,

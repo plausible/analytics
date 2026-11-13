@@ -1,5 +1,5 @@
 defmodule Plausible.ApiRequestLogTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
 
   @moduletag :ee_only
 
@@ -12,17 +12,17 @@ defmodule Plausible.ApiRequestLogTest do
       user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
       api_key = insert(:api_key, user: user, team: team)
+      FunWithFlags.enable(:record_api_requests, for_actor: team)
 
       {:ok, user: user, team: team, api_key: api_key}
     end
 
     describe "record/1" do
       test "records a request made with an API key", %{user: user, team: team, api_key: api_key} do
-        now = DateTime.utc_now(:second)
+        before_record = DateTime.utc_now(:second)
 
         :ok =
           ApiRequestLog.record(%{
-            timestamp: DateTime.add(now, 789, :millisecond),
             team: team,
             credential: api_key,
             interface: :rest,
@@ -35,7 +35,7 @@ defmodule Plausible.ApiRequestLogTest do
 
         assert_matches [
                          %Entry{
-                           timestamp: ^now,
+                           timestamp: timestamp,
                            team_id: ^team.id,
                            user_id: ^user.id,
                            credential_type: "api_key",
@@ -49,6 +49,8 @@ defmodule Plausible.ApiRequestLogTest do
                            user_agent: "python-requests/2.32.3"
                          }
                        ] = recorded_entries(team)
+
+        assert DateTime.compare(timestamp, before_record) != :lt
       end
 
       test "records a request made with an OAuth grant", %{user: user, team: team} do
@@ -83,6 +85,23 @@ defmodule Plausible.ApiRequestLogTest do
                  recorded_entries(team)
       end
 
+      test "records nothing when the flag is off for the team", %{team: team, api_key: api_key} do
+        FunWithFlags.clear(:record_api_requests, for_actor: team)
+
+        :ok = ApiRequestLog.record(entry_attrs(team, api_key, []))
+
+        assert recorded_entries(team) == []
+      end
+
+      test "records a 2xx that the caller marks as not billable", %{
+        team: team,
+        api_key: api_key
+      } do
+        :ok = ApiRequestLog.record(entry_attrs(team, api_key, status: 200, billable: false))
+
+        assert [%Entry{status: 200, billable: false}] = recorded_entries(team)
+      end
+
       for {field, max_bytes} <- [request_id: 200, user_agent: 256] do
         @field field
         @max_bytes max_bytes
@@ -108,7 +127,6 @@ defmodule Plausible.ApiRequestLogTest do
 
     defp entry_attrs(team, credential, overrides) do
       Enum.into(overrides, %{
-        timestamp: DateTime.utc_now(),
         team: team,
         credential: credential,
         interface: :rest,
