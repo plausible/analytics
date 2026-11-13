@@ -100,6 +100,7 @@ export function PagesDetails({
       <DetailsBreakdown
         title={pagesDetailsTitle(breakdownReportKey, dashboardState)}
         dimensionLabel={reportConfig.dimensionLabel}
+        orderByStorageId={reportConfig.orderByStorageId}
         dimensions={reportConfig.dimensions}
         metrics={metrics}
         alwaysOnFilters={reportConfig.alwaysOnFilters}
