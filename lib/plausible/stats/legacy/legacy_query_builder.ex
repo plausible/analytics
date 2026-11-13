@@ -257,29 +257,29 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   @doc """
   ### Examples:
-    iex> QueryBuilder.parse_order_by(nil)
-    []
+      iex> QueryBuilder.parse_order_by(nil)
+      []
 
-    iex> QueryBuilder.parse_order_by("")
-    []
+      iex> QueryBuilder.parse_order_by("")
+      []
 
-    iex> QueryBuilder.parse_order_by("0")
-    []
+      iex> QueryBuilder.parse_order_by("0")
+      []
 
-    iex> QueryBuilder.parse_order_by("[}")
-    []
+      iex> QueryBuilder.parse_order_by("[}")
+      []
 
-    iex> QueryBuilder.parse_order_by(~s({"any":"object"}))
-    []
+      iex> QueryBuilder.parse_order_by(~s({"any":"object"}))
+      []
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","invalid"]]))
-    []
+      iex> QueryBuilder.parse_order_by(~s([["visitors","invalid"]]))
+      []
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","desc"]]))
-    [{:visitors, :desc}]
+      iex> QueryBuilder.parse_order_by(~s([["visitors","desc"]]))
+      [{:visitors, :desc}]
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
-    [{:visitors, :asc}, {"visit:source", :desc}]
+      iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
+      [{:visitors, :asc}, {"visit:source", :desc}]
   """
   def parse_order_by(order_by) do
     with true <- is_binary(order_by),
@@ -293,11 +293,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   @doc """
   ### Examples:
-    iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-    Plausible.Stats.Query.ApiParser.default_include()
+      iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
+      Plausible.Stats.Query.ApiParser.default_include()
 
-    iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
-    Map.merge(Plausible.Stats.Query.ApiParser.default_include(), %{total_rows: true})
+      iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
+      Map.merge(Plausible.Stats.Query.ApiParser.default_include(), %{total_rows: true})
   """
   def parse_include(include) do
     include =
@@ -328,14 +328,14 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   Returns an empty list when `filters` is `nil` or JSON that is not a list.
 
   ### Examples:
-    iex> QueryBuilder.parse_filters("visit:browser!=Chrome")
-    [[:is_not, "visit:browser", ["Chrome"]]]
+      iex> QueryBuilder.parse_filters("visit:browser!=Chrome")
+      [[:is_not, "visit:browser", ["Chrome"]]]
 
-    iex> QueryBuilder.parse_filters(~s([["is","visit:browser",["Chrome"]]]))
-    [[:is, "visit:browser", ["Chrome"]]]
+      iex> QueryBuilder.parse_filters(~s([["is","visit:browser",["Chrome"]]]))
+      [[:is, "visit:browser", ["Chrome"]]]
 
-    iex> QueryBuilder.parse_filters(nil)
-    []
+      iex> QueryBuilder.parse_filters(nil)
+      []
   """
   def parse_filters(filters) when is_binary(filters) do
     case Jason.decode(filters) do
