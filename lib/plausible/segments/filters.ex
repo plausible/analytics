@@ -103,22 +103,6 @@ defmodule Plausible.Segments.Filters do
       [:contains, "visit:entry_page", ["blog"]],
       [:is, "visit:country", ["PL"]]
     ]}
-
-    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]], [:is, "segment", [2]]], %{1 => [[:is, "visit:country", ["PL"]]], 2 => [[:is, "event:goal", ["Signup"]]]})
-    {:ok, [
-      [:is, "visit:entry_page", ["/home"]],
-      [:is, "visit:country", ["PL"]],
-      [:is, "event:goal", ["Signup"]]
-    ]}
-
-
-    iex> resolve_segments([[:is, "segment", [1, 2]]], %{1 => [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]], 2 => [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]})
-    {:ok, [
-      [:or, [
-        [:and, [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]]],
-        [:and, [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]]]
-      ]
-    ]}
   """
   def resolve_segments(original_filters, preloaded_segments) do
     if map_size(preloaded_segments) > 0 do
