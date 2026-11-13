@@ -307,6 +307,36 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
         assert conn.assigns.site.id == site.id
       end
 
+      test "passes and sets site when valid API key and site ID provided to Sites API", %{
+        conn: conn
+      } do
+        user = new_user()
+        site = new_site(owner: user)
+        api_key = insert_api_key(unquote(key_type), user: user)
+
+        conn =
+          conn
+          |> authorize(api_key, site: site, api_context: :site, api_scope: "sites:read:*")
+
+        refute conn.halted
+        assert conn.assigns.site.id == site.id
+      end
+
+      test "sets current credential but not site when access is denied", %{conn: conn} do
+        user = new_user()
+        site = new_site(owner: user)
+        site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+        api_key = insert_api_key(unquote(key_type), user: user)
+
+        conn =
+          conn
+          |> authorize(api_key, site: site, api_scope: "stats:read:*")
+
+        assert json_response(conn, 402)
+        assert conn.assigns.current_credential.id == api_key.id
+        refute Map.has_key?(conn.assigns, :site)
+      end
+
       @tag :ee_only
       test "passes for super admin user even if not a member of the requested site", %{conn: conn} do
         user = new_user()

@@ -23,6 +23,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   `stats:read:*`, where valid site ID is expected among parameters too.
 
   All API requests are rate limited per API key, enforcing a given hourly request limit.
+
+  ## Assigns
+
+    * `:current_credential` - the API key. Set before the access checks, so
+      error responses from this plug also carry it.
+    * `:current_user` and `:current_team` - set only when access is granted.
+    * `:site` - the site from the `site_id` param, set only when site access is
+      verified. On the Stats API, `completed_imports` is preloaded. On the
+      Sites API, nothing is preloaded.
   """
 
   use Plausible.Repo
@@ -53,13 +62,24 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
-         :ok <- RateLimit.check_rate_limit(limit_key, hourly_limit),
-         {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
+         :ok <- RateLimit.check_rate_limit(limit_key, hourly_limit) do
       conn
-      |> assign(:current_user, api_key.user)
-      |> assign(:current_team, api_key.team)
+      |> assign(:current_credential, api_key)
+      |> authorize(api_key, requested_scope)
     else
       error -> send_error(conn, requested_scope, error)
+    end
+  end
+
+  defp authorize(conn, api_key, requested_scope) do
+    case verify_by_scope(conn, api_key, requested_scope) do
+      {:ok, conn} ->
+        conn
+        |> assign(:current_user, api_key.user)
+        |> assign(:current_team, api_key.team)
+
+      error ->
+        send_error(conn, requested_scope, error)
     end
   end
 
@@ -140,7 +160,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       end
 
     with :ok <- check_scope(api_key, scope),
-         :ok <- maybe_verify_site_access(conn, api_key, feature),
+         {:ok, conn} <- maybe_verify_site_access(conn, api_key, feature),
          :ok <- maybe_verify_team_access(conn, api_key, feature) do
       {:ok, conn}
     end
@@ -186,15 +206,18 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   defp maybe_verify_site_access(conn, api_key, feature) do
     case find_site(conn.params["site_id"]) do
       {:ok, site} ->
-        verify_site_access(
-          site: site,
-          api_key: api_key,
-          feature: feature,
-          allow_consolidated_views: conn.private[:allow_consolidated_views]
-        )
+        with :ok <-
+               verify_site_access(
+                 site: site,
+                 api_key: api_key,
+                 feature: feature,
+                 allow_consolidated_views: conn.private[:allow_consolidated_views]
+               ) do
+          {:ok, assign(conn, :site, site)}
+        end
 
       _ ->
-        :ok
+        {:ok, conn}
     end
   end
 
