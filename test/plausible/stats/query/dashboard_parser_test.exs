@@ -58,59 +58,19 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "include.compare" do
-    for mode <- [:previous_period, :year_over_year] do
-      test "parses #{mode} mode" do
-        params = %{
-          @base_params
-          | "include" => %{@base_params["include"] | "compare" => "#{unquote(mode)}"}
-        }
-
-        {:ok, parsed} = parse(params)
-        assert parsed.include.compare == unquote(mode)
-      end
-    end
-
-    test "parses custom date range mode" do
+    test "parses compare" do
       params = %{
         @base_params
-        | "include" => %{@base_params["include"] | "compare" => ["2021-01-01", "2021-04-30"]}
+        | "include" => %{@base_params["include"] | "compare" => "previous_period"}
       }
 
       {:ok, parsed} = parse(params)
-      assert parsed.include.compare == {:date_range, ~D[2021-01-01], ~D[2021-04-30]}
-    end
-
-    test "fails with invalid custom dates" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare" => ["2021-13-01", "2021-04-30"]}
-      }
-
-      assert {:error, %QueryError{code: :invalid_include}} = parse(params)
-    end
-
-    test "fails with random invalid compare value" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare" => "foo"}
-      }
-
-      assert {:error, %QueryError{code: :invalid_include}} = parse(params)
-    end
-
-    test "compare is nil if not provided" do
-      params = %{
-        @base_params
-        | "include" => Map.drop(@base_params["include"], ["compare"])
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare == nil
+      assert parsed.include.compare == :previous_period
     end
   end
 
   describe "include.compare_match_day_of_week" do
-    test "true -> true" do
+    test "parses compare_match_day_of_week" do
       params = %{
         @base_params
         | "include" => %{@base_params["include"] | "compare_match_day_of_week" => true}
@@ -118,26 +78,6 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
 
       {:ok, parsed} = parse(params)
       assert parsed.include.compare_match_day_of_week == true
-    end
-
-    test "invalid -> false" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare_match_day_of_week" => "foo"}
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare_match_day_of_week == false
-    end
-
-    test "false -> false" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare_match_day_of_week" => false}
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare_match_day_of_week == false
     end
   end
 
