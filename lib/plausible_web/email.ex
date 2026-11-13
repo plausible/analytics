@@ -576,12 +576,12 @@ defmodule PlausibleWeb.Email do
   end
 
   def deletion_full_notice_email(user, team, schedule, sites_summary) do
-    days = Plausible.Teams.DeletionSchedule.first_notice_before_deletion_days()
+    deletion_date = PlausibleWeb.EmailView.date_format(schedule.deletion_date)
 
     base_email()
     |> to(user)
     |> tag("deletion-full-notice")
-    |> subject("Your Plausible dashboards and stats will be deleted in #{days} days")
+    |> subject("Your Plausible dashboards and stats will be deleted on #{deletion_date}")
     |> render("deletion_full_notice_email.html",
       user: user,
       team: team,
@@ -592,13 +592,13 @@ defmodule PlausibleWeb.Email do
   end
 
   def deletion_reminder_email(user, team, schedule, sites_summary) do
-    days = Plausible.Teams.DeletionSchedule.reminder_before_deletion_days()
+    deletion_date = PlausibleWeb.EmailView.date_format(schedule.deletion_date)
 
     base_email()
     |> to(user)
     |> tag("deletion-reminder")
     |> subject(
-      "Final notice: your Plausible dashboards and stats will be deleted in #{days} days"
+      "Final notice: your Plausible dashboards and stats will be deleted on #{deletion_date}"
     )
     |> render("deletion_reminder_email.html",
       user: user,
