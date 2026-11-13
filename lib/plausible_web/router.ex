@@ -90,6 +90,7 @@ defmodule PlausibleWeb.Router do
 
   pipeline :public_api do
     plug :accepts, ["json"]
+    on_ee(do: plug(PlausibleWeb.Plugs.RecordApiRequest))
   end
 
   on_ee do
