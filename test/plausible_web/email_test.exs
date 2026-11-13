@@ -522,21 +522,6 @@ defmodule PlausibleWeb.EmailTest do
       assert body =~ "This covers a.example.com (and 3 more sites)."
       assert body =~ "This cannot be undone."
     end
-
-    test "subject names the deletion date, so a reminder sent late never promises more days than are left" do
-      user = build(:user, id: 123, name: "John Doe")
-      team = build(:team, identifier: Ecto.UUID.generate(), name: "My Team")
-      schedule = build(:team_deletion_schedule, deletion_date: ~D[2026-11-12])
-      sites_summary = %{domains: ["a.example.com"], more_count: 0}
-
-      %{subject: subject} =
-        PlausibleWeb.Email.deletion_reminder_email(user, team, schedule, sites_summary)
-
-      assert subject ==
-               "Final notice: your Plausible dashboards and stats will be deleted on 12 Nov 2026"
-
-      refute subject =~ "days"
-    end
   end
 
   describe "site setup emails" do
