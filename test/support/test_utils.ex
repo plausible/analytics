@@ -117,12 +117,43 @@ defmodule Plausible.TestUtils do
       team = Plausible.Teams.complete_setup(team)
       integration = SSO.initiate_saml_integration(team)
 
-      {:ok, sso_domain} =
-        SSO.Domains.add(integration, ctx[:domain] || "example.com", skip_checks?: true)
-
-      _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+      {:ok, sso_domain} = add_sso_domain(integration, ctx[:domain] || "example.com")
+      _sso_domain = verify_sso_domain(sso_domain)
 
       {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
+    end
+
+    @doc """
+    Inserts a pending domain without the add-time DNS check.
+    `SSO.Domains.add/2` is tested on its own.
+    """
+    def add_sso_domain(integration, domain) do
+      %SSO.Domain{}
+      |> Ecto.Changeset.change(domain: domain, identifier: Ecto.UUID.generate())
+      |> Ecto.Changeset.put_assoc(:sso_integration, integration)
+      |> Repo.insert()
+    end
+
+    @doc """
+    Marks the domain verified via DNS TXT without running the checks.
+    `SSO.Domains.verify/2` is tested on its own.
+    """
+    def verify_sso_domain(sso_domain) do
+      SSO.Domains.mark_verified!(sso_domain, :dns_txt)
+    end
+
+    @doc """
+    Makes every verification check fail for the domain and returns the
+    nameservers to verify with: the TXT record doesn't match and the HTTP
+    checks fail on the address check, without any network.
+    """
+    def fail_sso_checks(domain) do
+      {:ok, port} =
+        Plasusible.Test.Support.DNSServer.start("plausible-sso-verification=something-else")
+
+      Plausible.Test.Support.DNS.stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
+
+      [{{0, 0, 0, 0}, port}]
     end
 
     def provision_sso_user(%{user: user, sso_integration: integration}) do

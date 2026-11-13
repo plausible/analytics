@@ -8,6 +8,8 @@ defmodule Plasusible.Test.Support.DNSServer do
     {:ok, port} = :inet.port(socket)
     child = spawn(fn -> loop(socket, fixed_response) end)
     :ok = :gen_udp.controlling_process(socket, child)
+    # The socket closes with its owner.
+    ExUnit.Callbacks.on_exit(fn -> Process.exit(child, :kill) end)
     {:ok, port}
   end
 
