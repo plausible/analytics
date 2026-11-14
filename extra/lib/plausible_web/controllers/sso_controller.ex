@@ -46,7 +46,7 @@ defmodule PlausibleWeb.SSOController do
         |> redirect(to: ~p"/sso/login")
 
       {:error, {:rate_limit, _}} ->
-        Auth.log_failed_login_attempt("too many login attempts for #{email}")
+        Auth.log_failed_login_attempt("too many login attempts for #{email}", conn)
 
         render_error(
           conn,

@@ -8,6 +8,36 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
     alias Plausible.Auth.SSO
     alias Plausible.Repo
 
+    test "logs the client IP on too many SSO login attempts", %{conn: conn} do
+      patch_env(:log_failed_login_attempts, true)
+      conn = put_req_header(conn, "x-forwarded-for", "192.0.2.30")
+      email = "invalid@example.com"
+
+      {response, logs} =
+        eventually(
+          fn ->
+            ExUnit.CaptureLog.capture_log(fn ->
+              Enum.each(1..5, fn _ ->
+                post(conn, ~p"/sso/login", %{"email" => email})
+              end)
+            end)
+
+            {conn, logs} =
+              ExUnit.CaptureLog.with_log(fn ->
+                post(conn, ~p"/sso/login", %{"email" => email})
+              end)
+
+            {conn.status == 429, {conn, logs}}
+          end,
+          500
+        )
+
+      assert html_response(response, 429) =~ "Too many login attempts"
+
+      assert logs =~
+               ~s([warning] [login] too many login attempts for #{email} source_ip="192.0.2.30")
+    end
+
     @cert_pem """
     -----BEGIN CERTIFICATE-----
     MIICmjCCAYICCQDX5sKPsYV3+jANBgkqhkiG9w0BAQsFADAPMQ0wCwYDVQQDDAR0
