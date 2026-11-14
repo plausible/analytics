@@ -121,6 +121,47 @@ defmodule Plausible.Cache.Adapter do
       :ok
   end
 
+  @doc """
+  Deletes everything that is not among `items`, a list of `{key, value}` tuples
+  as passed to `put_many/2`.
+
+  Regular tables are cleaned up by key. Bag tables can hold many objects under
+  a single key, so there the individual objects are compared. Otherwise a deleted
+  object would stay in the cache for as long as its key has any other objects.
+  """
+  @spec delete_stale(atom(), [any()]) :: :ok
+  def delete_stale(cache_name, items) when is_list(items) do
+    new_keys = MapSet.new(items, fn {key, _} -> key end)
+
+    Enum.each(get_names(cache_name), fn full_cache_name ->
+      ets = ConCache.ets(full_cache_name)
+
+      if :ets.info(ets, :type) == :bag do
+        delete_stale_objects(ets, MapSet.new(items))
+      else
+        delete_stale_keys(full_cache_name, new_keys)
+      end
+    end)
+  catch
+    :exit, _ ->
+      Logger.error("Error deleting stale keys in '#{inspect(cache_name)}'")
+      :ok
+  end
+
+  defp delete_stale_keys(full_cache_name, new_keys) do
+    full_cache_name
+    |> get_keys()
+    |> Enum.reject(&MapSet.member?(new_keys, &1))
+    |> Enum.each(&ConCache.dirty_delete(full_cache_name, &1))
+  end
+
+  defp delete_stale_objects(ets, new_objects) do
+    ets
+    |> :ets.tab2list()
+    |> Enum.reject(&MapSet.member?(new_objects, &1))
+    |> Enum.each(&:ets.delete_object(ets, &1))
+  end
+
   @spec keys(atom()) :: Enumerable.t()
   def keys(cache_name) do
     cache_name
