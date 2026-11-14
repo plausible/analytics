@@ -294,6 +294,107 @@ defmodule Plausible.Teams.Test do
     user
   end
 
+  @doc """
+  Subscribes the team to a Paddle Billing price. The team is linked to the
+  Paddle customer, so that its current subscription is the Billing one.
+  """
+  def subscribe_to_billing_plan(user_or_team, billing_price_id, attrs \\ [])
+
+  def subscribe_to_billing_plan(%Plausible.Auth.User{} = user, billing_price_id, attrs) do
+    {:ok, team} = Teams.get_or_create(user)
+    subscribe_to_billing_plan(team, billing_price_id, attrs)
+    user
+  end
+
+  def subscribe_to_billing_plan(%Plausible.Teams.Team{} = team, billing_price_id, attrs) do
+    attrs =
+      Keyword.merge(
+        [
+          team: team,
+          billing_price_id: billing_price_id,
+          billing_product_id: billing_product_id_for(billing_price_id),
+          billing_interval: billing_interval_for(billing_price_id)
+        ],
+        attrs
+      )
+
+    subscription = build(:billing_subscription, attrs)
+
+    team
+    |> Ecto.Changeset.change(billing_customer_id: subscription.billing_customer_id)
+    |> Repo.update!()
+
+    insert(subscription)
+    team
+  end
+
+  defp billing_interval_for(price_id) do
+    if price_id in Enum.map(Plausible.Billing.Plans.all(), & &1.billing_yearly_price_id),
+      do: :yearly,
+      else: :monthly
+  end
+
+  defp billing_product_id_for(price_id) do
+    Enum.find_value(Plausible.Billing.Plans.all(), "pro_test", fn plan ->
+      if price_id in [plan.billing_monthly_price_id, plan.billing_yearly_price_id],
+        do: plan.billing_product_id
+    end)
+  end
+
+  def subscribe_to_billing_enterprise_plan(user, attrs \\ []) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
+    {subscription_attrs, attrs} = Keyword.pop(attrs, :subscription, [])
+
+    n = System.unique_integer([:positive])
+    price_id = "pri_enterprise_#{n}"
+    product_id = "pro_enterprise_#{n}"
+
+    enterprise_plan =
+      insert(
+        :enterprise_plan,
+        Keyword.merge(
+          [team: team, billing_product_id: product_id, billing_price_id: price_id],
+          attrs
+        )
+      )
+
+    if subscription? do
+      subscribe_to_billing_plan(
+        team,
+        enterprise_plan.billing_price_id,
+        Keyword.merge(
+          [
+            billing_product_id: enterprise_plan.billing_product_id,
+            billing_interval: enterprise_plan.billing_interval
+          ],
+          subscription_attrs
+        )
+      )
+    end
+
+    user
+  end
+
+  @doc """
+  Updates the underlying row of a subscription of either type.
+  """
+  def update_subscription(%{type: :billing, id: id} = subscription, attrs) do
+    Plausible.Billing.PaddleBilling.Subscription
+    |> Repo.get!(id)
+    |> Ecto.Changeset.cast(Map.new(attrs), Map.keys(Map.new(attrs)))
+    |> Repo.update!()
+
+    Repo.reload!(subscription)
+  end
+
+  def update_subscription(subscription, attrs) do
+    subscription
+    |> Plausible.Billing.PaddleClassic.Subscription.changeset(Map.new(attrs))
+    |> Repo.update!()
+  end
+
   def subscribe_to_enterprise_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
 

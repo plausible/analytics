@@ -50,7 +50,10 @@ defmodule Plausible.Workers.CheckUsage do
           left_join: bm in assoc(t, :billing_members),
           inner_join: s in assoc(t, :subscription),
           left_join: ep in Plausible.Billing.EnterprisePlan,
-          on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
+          on:
+            ep.team_id == t.id and
+              (ep.paddle_plan_id == s.paddle_plan_id or
+                 ep.billing_product_id == s.billing_product_id),
           where:
             s.status in [
               ^Subscription.Status.active(),

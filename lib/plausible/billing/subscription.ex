@@ -21,6 +21,7 @@ defmodule Plausible.Billing.Subscription do
     field :billing_customer_id, :string
     field :billing_product_id, :string
     field :billing_price_id, :string
+    field :billing_interval, Ecto.Enum, values: [:monthly, :yearly]
 
     # Common fields
     field :next_bill_amount, :string

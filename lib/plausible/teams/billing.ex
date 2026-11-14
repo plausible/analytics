@@ -63,6 +63,8 @@ defmodule Plausible.Teams.Billing do
          do: do_change_plan(subscription, new_plan_id)
   end
 
+  defp do_change_plan(%{type: :billing}, _new_plan_id), do: {:error, :change_plan_unsupported}
+
   defp do_change_plan(subscription, new_plan_id) do
     res =
       Plausible.Billing.PaddleClassic.api().update_subscription(
@@ -324,7 +326,10 @@ defmodule Plausible.Teams.Billing do
 
       _any ->
         Sentry.capture_message("Unknown monthly pageview limit for plan",
-          extra: %{paddle_plan_id: subscription.paddle_plan_id}
+          extra: %{
+            paddle_plan_id: subscription.paddle_plan_id,
+            billing_price_id: subscription.billing_price_id
+          }
         )
 
         @monthly_pageview_limit_for_trials

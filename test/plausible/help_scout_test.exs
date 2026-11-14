@@ -102,16 +102,19 @@ defmodule Plausible.HelpScoutTest do
 
         subscribe_to_plan(user, @v4_business_monthly_plan_id)
 
-        paddle_subscription_id =
+        %{paddle_subscription_id: paddle_subscription_id} =
           user
           |> team_of(with_subscription?: true)
           |> Map.fetch!(:subscription)
-          |> Map.fetch!(:paddle_subscription_id)
 
         stub_help_scout_requests(email)
 
         plan_link =
-          "https://vendors.paddle.com/subscriptions/customers/manage/#{paddle_subscription_id}"
+          if paddle_subscription_id do
+            "https://vendors.paddle.com/subscriptions/customers/manage/#{paddle_subscription_id}"
+          else
+            "#"
+          end
 
         assert {:ok,
                 %{
@@ -127,16 +130,19 @@ defmodule Plausible.HelpScoutTest do
 
         subscribe_to_plan(user, @v4_business_yearly_plan_id)
 
-        paddle_subscription_id =
+        %{paddle_subscription_id: paddle_subscription_id} =
           user
           |> team_of(with_subscription?: true)
           |> Map.fetch!(:subscription)
-          |> Map.fetch!(:paddle_subscription_id)
 
         stub_help_scout_requests(email)
 
         plan_link =
-          "https://vendors.paddle.com/subscriptions/customers/manage/#{paddle_subscription_id}"
+          if paddle_subscription_id do
+            "https://vendors.paddle.com/subscriptions/customers/manage/#{paddle_subscription_id}"
+          else
+            "#"
+          end
 
         assert {:ok,
                 %{
