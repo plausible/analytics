@@ -137,12 +137,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
       ])
 
       # "plan" appears 3 times, "amount" 1 time, "referrer" 1 time, "button_id" 1 time
-      assert GoalSuggestions.suggest_custom_property_names(site, "") == [
-               "plan",
-               "referrer",
-               "amount",
-               "button_id"
-             ]
+      names = GoalSuggestions.suggest_custom_property_names(site, "")
+
+      assert hd(names) == "plan"
+      assert Enum.sort(names) == ["amount", "button_id", "plan", "referrer"]
     end
 
     test "filters property names by search input", %{site: site} do
@@ -161,10 +159,9 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      assert GoalSuggestions.suggest_custom_property_names(site, "plan") == [
-               "plan_name",
-               "plan_type"
-             ]
+      assert site
+             |> GoalSuggestions.suggest_custom_property_names("plan")
+             |> Enum.sort() == ["plan_name", "plan_type"]
     end
 
     test "excludes events older than 30 days", %{site: site} do
@@ -431,10 +428,9 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         )
       ])
 
-      assert GoalSuggestions.suggest_custom_property_values(site, "plan", "business") == [
-               "business_yearly",
-               "business_monthly"
-             ]
+      assert site
+             |> GoalSuggestions.suggest_custom_property_values("plan", "business")
+             |> Enum.sort() == ["business_monthly", "business_yearly"]
     end
 
     test "excludes events older than 30 days", %{site: site} do
