@@ -296,7 +296,7 @@ defmodule Plausible.Teams.Test do
   end
 
   @doc """
-  Subscribes the team to a Paddle Billing price. The team is linked to the
+  Subscribes the team to a Paddle Billing product. The team is linked to the
   Paddle customer, so that its current subscription is the Billing one.
   """
   def subscribe_to_billing_plan(user_or_team, billing_price_id, attrs \\ [])
