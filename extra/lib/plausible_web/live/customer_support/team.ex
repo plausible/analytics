@@ -9,6 +9,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
 
   import Ecto.Query, only: [from: 2]
 
+  alias Plausible.Billing.Subscription
+
   alias PlausibleWeb.CustomerSupport.Team.Components.{
     Overview,
     Members,
@@ -65,7 +67,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
     {:noreply, assign(socket, team: team)}
   end
 
-  defp set_next_bill_date(%{type: :billing} = subscription, date) do
+  defp set_next_bill_date(%Subscription{type: :billing} = subscription, date) do
     Plausible.Repo.update_all(
       from(s in Plausible.Billing.PaddleBilling.Subscription, where: s.id == ^subscription.id),
       set: [next_bill_date: date]

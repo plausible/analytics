@@ -135,7 +135,7 @@ defmodule Plausible.Billing.Plans do
 
   def find_by_billing_product(nil), do: nil
 
-  def find_by_billing_product(product_id) do
+  def find_by_billing_product(product_id) when is_binary(product_id) do
     Enum.find(all(), &(&1.billing_product_id == product_id))
   end
 
@@ -144,7 +144,7 @@ defmodule Plausible.Billing.Plans do
   def get_subscription_plan(nil), do: nil
 
   # Free and manual subscriptions exist only in Classic
-  def get_subscription_plan(%{type: :billing} = subscription) do
+  def get_subscription_plan(%Subscription{type: :billing} = subscription) do
     get_regular_plan(subscription) || get_enterprise_plan(subscription)
   end
 
@@ -156,7 +156,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def subscription_interval(%{type: :billing, billing_interval: interval}),
+  def subscription_interval(%Subscription{type: :billing, billing_interval: interval}),
     do: Atom.to_string(interval)
 
   def subscription_interval(subscription) do
@@ -206,18 +206,18 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp find_plan(%{type: :billing} = subscription),
+  defp find_plan(%Subscription{type: :billing} = subscription),
     do: find_by_billing_product(subscription.billing_product_id)
 
-  defp find_plan(subscription), do: find(subscription.paddle_plan_id)
+  defp find_plan(%Subscription{} = subscription), do: find(subscription.paddle_plan_id)
 
   @doc """
   Tells whether the subscription is for the given enterprise plan.
   """
-  def subscribed_to?(%{type: :billing} = subscription, %EnterprisePlan{} = plan),
+  def subscribed_to?(%Subscription{type: :billing} = subscription, %EnterprisePlan{} = plan),
     do: plan.billing_product_id == subscription.billing_product_id
 
-  def subscribed_to?(subscription, %EnterprisePlan{} = plan),
+  def subscribed_to?(%Subscription{} = subscription, %EnterprisePlan{} = plan),
     do: plan.paddle_plan_id == subscription.paddle_plan_id
 
   def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}, customer_ip) do
@@ -230,7 +230,7 @@ defmodule Plausible.Billing.Plans do
   @doc """
   Returns the enterprise plan the subscription was made for, if any.
   """
-  def get_enterprise_plan(%{type: :billing} = subscription) do
+  def get_enterprise_plan(%Subscription{type: :billing} = subscription) do
     Repo.get_by(EnterprisePlan,
       team_id: subscription.team_id,
       billing_product_id: subscription.billing_product_id

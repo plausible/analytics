@@ -4,6 +4,7 @@ defmodule Plausible.Teams.Test do
   """
   use Plausible
 
+  alias Plausible.Billing.Subscription
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -380,7 +381,7 @@ defmodule Plausible.Teams.Test do
   @doc """
   Updates the underlying row of a subscription of either type.
   """
-  def update_subscription(%{type: :billing, id: id} = subscription, attrs) do
+  def update_subscription(%Subscription{type: :billing, id: id} = subscription, attrs) do
     Plausible.Billing.PaddleBilling.Subscription
     |> Repo.get!(id)
     |> Ecto.Changeset.cast(Map.new(attrs), Map.keys(Map.new(attrs)))

@@ -63,7 +63,8 @@ defmodule Plausible.Teams.Billing do
          do: do_change_plan(subscription, new_plan_id)
   end
 
-  defp do_change_plan(%{type: :billing}, _new_plan_id), do: {:error, :change_plan_unsupported}
+  defp do_change_plan(%Subscription{type: :billing}, _new_plan_id),
+    do: {:error, :change_plan_unsupported}
 
   defp do_change_plan(subscription, new_plan_id) do
     res =
