@@ -309,8 +309,8 @@ defmodule Plausible.Auth.SSOTest do
       test "does not provision a new user with a disposable email domain", %{
         integration: integration
       } do
-        {:ok, sso_domain} = SSO.Domains.add(integration, "mailinator.com", skip_checks?: true)
-        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, "mailinator.com")
+        _sso_domain = verify_sso_domain(sso_domain)
 
         identity = new_identity("Jane Sculley", "jane@mailinator.com", integration)
 
