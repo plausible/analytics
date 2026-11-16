@@ -32,7 +32,7 @@ defmodule Plausible.Billing.SubscriptionTest do
       team = new_team()
       insert(:subscription, team: team, paddle_plan_id: "classic")
       team = set_billing_customer_id(team, "ctm_1")
-      insert_billing_subscription(team, "ctm_1", :active)
+      insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: :active)
 
       assert %Subscription{type: :billing, billing_customer_id: "ctm_1", status: :active} =
                Teams.with_subscription(team).subscription
@@ -55,7 +55,7 @@ defmodule Plausible.Billing.SubscriptionTest do
         inserted_at: ~N[2026-02-01 00:00:00]
       )
 
-      insert_billing_subscription(team, "ctm_1", :deleted)
+      insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: :deleted)
 
       Repo.insert!(%PaddleBilling.SubscriptionEvent{
         team_id: team.id,
@@ -88,20 +88,5 @@ defmodule Plausible.Billing.SubscriptionTest do
 
   defp set_billing_customer_id(team, customer_id) do
     team |> Ecto.Changeset.change(billing_customer_id: customer_id) |> Repo.update!()
-  end
-
-  defp insert_billing_subscription(team, customer_id, status) do
-    Repo.insert!(%PaddleBilling.Subscription{
-      team_id: team.id,
-      billing_subscription_id: "sub_#{System.unique_integer([:positive])}",
-      billing_customer_id: customer_id,
-      billing_product_id: "pro_1",
-      billing_price_id: "pri_1",
-      billing_interval: :monthly,
-      next_bill_amount: "10.00",
-      next_bill_date: Date.utc_today(),
-      currency_code: "EUR",
-      status: status
-    })
   end
 end
