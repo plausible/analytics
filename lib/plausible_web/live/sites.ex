@@ -1011,7 +1011,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   on_ee do
-    defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
+    defdelegate ensure_can_take_ownership(site, team), to: Teams.Sites.Transfer
   else
     defp ensure_can_take_ownership(_site, _team), do: :ok
   end

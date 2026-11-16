@@ -59,10 +59,6 @@ defmodule PlausibleWeb.EmailTest do
   end
 
   describe "priority email layout" do
-    # Temporarily skipped: priority mail is routed through the default
-    # transactional ('outbound') stream while the Postmark 'priority' stream is
-    # broken. Un-skip once email.ex is reverted to the 'priority' stream.
-    @tag :skip
     @tag :ee_only
     test "uses the `priority` message stream in Postmark in EE" do
       email =
@@ -444,8 +440,7 @@ defmodule PlausibleWeb.EmailTest do
 
       body = text(body)
 
-      days = Plausible.Teams.DeletionSchedule.first_notice_before_deletion_days()
-      assert subject == "Your Plausible dashboards and stats will be deleted in #{days} days"
+      assert subject == "Your Plausible dashboards and stats will be deleted on 19 Oct 2026"
       assert body =~ "Your Plausible trial ended a while ago"
       refute body =~ "subscription lapsed"
 
@@ -514,10 +509,8 @@ defmodule PlausibleWeb.EmailTest do
 
       body = text(body)
 
-      days = Plausible.Teams.DeletionSchedule.reminder_before_deletion_days()
-
       assert subject ==
-               "Final notice: your Plausible dashboards and stats will be deleted in #{days} days"
+               "Final notice: your Plausible dashboards and stats will be deleted on 19 Oct 2026"
 
       assert body =~
                "We'll permanently delete the Plausible dashboards and stats for your My Team team on 19 Oct 2026."
