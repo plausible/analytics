@@ -142,7 +142,7 @@ defmodule Plausible.Billing.PaddleBilling.Migration do
     mapping
   end
 
-  # Subscriptions in Billing point to the price, so the plans must know theirs
+  # Subscriptions in Billing point to the product, so the plans must know theirs
   defp link_enterprise_plans(mapping) do
     for {classic_plan_id, ids} <- mapping do
       Repo.update_all(from(ep in EnterprisePlan, where: ep.paddle_plan_id == ^classic_plan_id),
