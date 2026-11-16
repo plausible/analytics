@@ -209,15 +209,18 @@ defmodule Plausible.Billing.Plans do
   defp find_plan(%Subscription{type: :billing} = subscription),
     do: find_by_billing_product(subscription.billing_product_id)
 
-  defp find_plan(%Subscription{} = subscription), do: find(subscription.paddle_plan_id)
+  defp find_plan(subscription), do: find(subscription.paddle_plan_id)
 
   @doc """
   Tells whether the subscription is for the given enterprise plan.
   """
-  def subscribed_to?(%Subscription{type: :billing} = subscription, %EnterprisePlan{} = plan),
-    do: plan.billing_product_id == subscription.billing_product_id
+  def subscribed_to_enterprise?(
+        %Subscription{type: :billing} = subscription,
+        %EnterprisePlan{} = plan
+      ),
+      do: plan.billing_product_id == subscription.billing_product_id
 
-  def subscribed_to?(%Subscription{} = subscription, %EnterprisePlan{} = plan),
+  def subscribed_to_enterprise?(%Subscription{} = subscription, %EnterprisePlan{} = plan),
     do: plan.paddle_plan_id == subscription.paddle_plan_id
 
   def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}, customer_ip) do

@@ -43,7 +43,7 @@ defmodule PlausibleWeb.BillingController do
 
     subscribed_to_latest? =
       subscription_resumable? and not is_nil(latest_enterprise_plan) and
-        Plans.subscribed_to?(subscription, latest_enterprise_plan)
+        Plans.subscribed_to_enterprise?(subscription, latest_enterprise_plan)
 
     cond do
       is_nil(latest_enterprise_plan) ->

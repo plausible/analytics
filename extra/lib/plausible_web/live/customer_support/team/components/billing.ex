@@ -569,5 +569,5 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Billing do
   defp current_plan?(%{subscription: nil}, _plan), do: false
 
   defp current_plan?(%{subscription: subscription}, plan),
-    do: Plans.subscribed_to?(subscription, plan)
+    do: Plans.subscribed_to_enterprise?(subscription, plan)
 end

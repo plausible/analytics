@@ -133,7 +133,7 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
       other_product = %{subscription | billing_product_id: "pro_other"}
 
       assert Plans.get_enterprise_plan(other_product) == nil
-      refute Plans.subscribed_to?(other_product, enterprise_plan)
+      refute Plans.subscribed_to_enterprise?(other_product, enterprise_plan)
     end
 
     test "resolves the enterprise plan of the team from the product" do
@@ -149,7 +149,7 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
 
       assert enterprise_plan.team_id == team.id
       assert Plans.subscription_interval(subscription) == "yearly"
-      assert Plans.subscribed_to?(subscription, enterprise_plan)
+      assert Plans.subscribed_to_enterprise?(subscription, enterprise_plan)
     end
 
     test "does not resolve an enterprise plan of another team sharing the product" do
