@@ -1070,21 +1070,72 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
     end
   end
 
-  # These only ever answer 405, so they stay unauthenticated - a 401 would hide
-  # the signal an older client uses to detect the protocol revision.
+  # The 2026-07-28 revision removed the standalone GET stream and sessions, so only
+  # clients of earlier revisions send GET or DELETE. A server supporting only this
+  # revision answers both with 405:
+  # https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions
+  #
+  # That is also what earlier revisions expect from a server without a GET stream
+  # (https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#listening-for-messages-from-the-server)
+  # or without client-terminated sessions
+  # (https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#session-management).
+  #
+  # The response is exactly the same whatever the request carries: it is the
+  # signal an older client relies on, so neither content negotiation nor
+  # authentication gets to replace it.
   describe "GET /mcp and DELETE /mcp" do
-    test "GET is 405 without a token", %{conn: conn} do
-      assert conn |> get("/mcp") |> json_response(405) == %{
-               "error" => "method_not_allowed",
-               "error_description" => "Use POST for MCP."
-             }
+    setup %{user: user, team: team} do
+      insert(:oauth_grant, user: user, team: team, access_token: "valid-access-token")
+      :ok
     end
 
-    test "DELETE is 405 without a token", %{conn: conn} do
-      assert conn |> delete("/mcp") |> json_response(405) == %{
-               "error" => "method_not_allowed",
-               "error_description" => "Use POST for MCP."
-             }
+    for method <- [:get, :delete],
+        {request, headers} <- [
+          {"without headers", []},
+          # An earlier-revision client opens its GET stream accepting only `text/event-stream`:
+          # https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#listening-for-messages-from-the-server
+          {"accepting text/event-stream", [{"accept", "text/event-stream"}]},
+          {"accepting application/json", [{"accept", "application/json"}]},
+          {"accepting application/json and text/event-stream",
+           [{"accept", "application/json, text/event-stream"}]},
+          {"accepting anything", [{"accept", "*/*"}]},
+          {"accepting text/html", [{"accept", "text/html"}]},
+          {"with a valid token", [{"authorization", "Bearer valid-access-token"}]},
+          {"with an unknown token", [{"authorization", "Bearer unknown-access-token"}]},
+          # Session and resumption headers of earlier revisions are ignored:
+          # https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions
+          {"as sent by a 2025-11-25 client",
+           [
+             {"accept", "text/event-stream"},
+             {"authorization", "Bearer valid-access-token"},
+             {"mcp-protocol-version", "2025-11-25"},
+             {"mcp-session-id", "1868a90c"},
+             {"last-event-id", "42"}
+           ]}
+        ] do
+      test "#{method} #{request} answers 405", %{conn: conn} do
+        conn =
+          unquote(headers)
+          |> Enum.reduce(conn, fn {name, value}, conn -> put_req_header(conn, name, value) end)
+          |> dispatch(@endpoint, unquote(method), "/mcp")
+
+        assert conn.status == 405
+
+        assert [
+                 {"content-type", "application/json; charset=utf-8"},
+                 {"cache-control", "max-age=0, private, must-revalidate"},
+                 {"x-request-id", _request_id},
+                 {"access-control-allow-credentials", "true"},
+                 {"access-control-allow-origin", "*"},
+                 {"access-control-expose-headers", ""},
+                 # A 405 names the methods the resource supports:
+                 # https://www.rfc-editor.org/rfc/rfc9110#name-405-method-not-allowed
+                 {"allow", "POST"}
+               ] = conn.resp_headers
+
+        assert conn.resp_body ==
+                 ~s({"error":"method_not_allowed","error_description":"Use POST for MCP."})
+      end
     end
   end
 
