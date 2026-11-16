@@ -96,10 +96,10 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                   <.th invisible>Actions</.th>
                 </:thead>
                 <:tbody :let={rule}>
-                  <.td max_width="max-w-40" truncate>
+                  <.td max_width="max-w-40">
                     <span
                       id={"page-#{rule.id}"}
-                      class="cursor-help"
+                      class="block cursor-help truncate"
                       title={"#{rule.page_path}\n\nAdded at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                     >
                       {rule.page_path}

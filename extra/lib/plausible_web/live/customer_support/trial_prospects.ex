@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TrialProspects do
             <.td>{StatsView.large_number_format(p.estimated_monthly)}</.td>
             <.td>{format_date(trial_start(p.team))}</.td>
             <.td>{format_date(p.team.trial_expiry_date)}</.td>
-            <.td truncate max_width="max-w-40" title={p.team.notes}>{p.team.notes}</.td>
+            <.td text={p.team.notes} max_width="max-w-40" />
           </:tbody>
         </.table>
 

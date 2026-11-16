@@ -932,12 +932,14 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  slot :inner_block, required: true
-  attr :truncate, :boolean, default: false
+  # three modes: <.td text={session.device} />, <.td actions>...buttons</.td>, <.td>...custom</td>
+  attr :text, :string, default: nil, doc: "renders as truncated text with the full text on hover"
+  attr :actions, :boolean, default: nil, doc: "renders the inner block as action buttons"
+  slot :inner_block, doc: "custom cell content, rendered as-is when `text` is not set"
+
   attr :max_width, :string, default: ""
   attr :height, :string, default: ""
   attr :class, :string, default: ""
-  attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
   attr :rest, :global
 
@@ -945,7 +947,7 @@ defmodule PlausibleWeb.Components.Generic do
     max_width =
       cond do
         assigns.max_width != "" -> assigns.max_width
-        assigns.truncate -> "max-w-sm"
+        assigns.text -> "max-w-sm"
         true -> ""
       end
 
@@ -957,7 +959,7 @@ defmodule PlausibleWeb.Components.Generic do
         [
           @height,
           "text-sm px-3 md:px-6 py-3 md:py-4 first:pl-0 last:pr-0 whitespace-nowrap",
-          # allow tooltips overflow cells vertically
+          # allow tooltips overflow cells
           "overflow-visible",
           @max_width,
           @actions && "flex items-center text-right justify-end",
@@ -965,12 +967,14 @@ defmodule PlausibleWeb.Components.Generic do
           @class
         ]
       }
+      title={@text}
       {@rest}
     >
       <div :if={@actions} class="flex items-center gap-1">
         {render_slot(@inner_block)}
       </div>
-      <div :if={!@actions} class={@truncate && "truncate"}>
+      <div :if={@text} class="truncate">{@text}</div>
+      <div :if={!@actions && !@text}>
         {render_slot(@inner_block)}
       </div>
     </td>

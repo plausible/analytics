@@ -94,16 +94,16 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Audit do
           <.td>{Calendar.strftime(entry.datetime, "%Y-%m-%d")}</.td>
           <.td>{Calendar.strftime(entry.datetime, "%H:%M:%S")}</.td>
           <.td class="font-mono">{entry.name}</.td>
-          <.td truncate>
-            <.audit_entity entry={entry} />
+          <.td max_width="max-w-sm">
+            <div class="truncate"><.audit_entity entry={entry} /></div>
           </.td>
           <.td :if={entry.actor_type == :system}>
             <div class="flex items-center gap-x-1">
               <Heroicons.cog_6_tooth class="size-4" /> SYSTEM
             </div>
           </.td>
-          <.td :if={entry.actor_type == :user} truncate>
-            <.audit_user user={entry.meta.user} />
+          <.td :if={entry.actor_type == :user} max_width="max-w-sm">
+            <div class="truncate"><.audit_user user={entry.meta.user} /></div>
           </.td>
 
           <.td actions>

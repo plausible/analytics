@@ -19,7 +19,7 @@
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={session}>
-        <.td truncate max_width="max-w-40" title={session.user.name}>{session.user.name}</.td>
+        <.td text={session.user.name} max_width="max-w-40" />
         <.td hide_on_mobile>{session.device}</.td>
         <.td hide_on_mobile>
           {PlausibleWeb.TextHelpers.humanize_last_used_with_hourly_precision(session.last_used_at)}

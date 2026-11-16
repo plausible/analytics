@@ -36,14 +36,7 @@
               Client ID: {grant.client_id}
             </span>
           </.td>
-          <.td
-            hide_on_mobile
-            truncate
-            max_width="max-w-40"
-            title={Plausible.Teams.name(grant.team)}
-          >
-            {Plausible.Teams.name(grant.team)}
-          </.td>
+          <.td hide_on_mobile text={Plausible.Teams.name(grant.team)} max_width="max-w-40" />
           <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
           <.td hide_on_mobile>
             {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(

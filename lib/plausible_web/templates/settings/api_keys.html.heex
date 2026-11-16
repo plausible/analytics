@@ -49,7 +49,7 @@
         </:thead>
 
         <:tbody :let={api_key}>
-          <.td truncate max_width="max-w-40" title={api_key.name}>{api_key.name}</.td>
+          <.td text={api_key.name} max_width="max-w-40" />
           <.td hide_on_mobile>
             {api_key.key_prefix}
             {String.duplicate("*", 32 - 6)}
