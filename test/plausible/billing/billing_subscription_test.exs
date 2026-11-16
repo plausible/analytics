@@ -305,6 +305,39 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
       assert Repo.reload!(subscription) == subscription
     end
 
+    test "needs an upgrade when the grace period of a Billing subscription ended over the limit" do
+      user =
+        new_user(trial_expiry_date: yesterday())
+        |> subscribe_to_billing_plan(growth_10k().billing_monthly_price_id)
+
+      team = user |> team_of() |> Repo.reload!() |> Teams.end_grace_period()
+
+      usage_stub =
+        Teams.Billing
+        |> stub(:monthly_pageview_usage, fn _team ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 11_000},
+            last_cycle: %{date_range: @date_range, total: 11_000}
+          }
+        end)
+
+      assert Teams.Billing.check_needs_to_upgrade(team, usage_stub) ==
+               {:needs_to_upgrade, :grace_period_ended}
+    end
+
+    test "needs an upgrade when a Billing subscription was cancelled and its period is over" do
+      team =
+        new_user(trial_expiry_date: yesterday())
+        |> subscribe_to_billing_plan(growth_10k().billing_monthly_price_id,
+          status: Subscription.Status.deleted(),
+          next_bill_date: yesterday()
+        )
+        |> team_of()
+
+      assert Teams.Billing.check_needs_to_upgrade(team) ==
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
+    end
+
     test "accepts traffic until after the next bill date" do
       user = new_user() |> subscribe_to_billing_plan(growth_10k().billing_monthly_price_id)
       team = team_of(user)
