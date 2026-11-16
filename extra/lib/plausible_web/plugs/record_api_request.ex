@@ -18,8 +18,6 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
 
   alias Plausible.ApiRequestLog
   alias Plausible.Auth
-  alias Plausible.Repo
-  alias Plausible.Teams.Team
 
   def init(opts), do: opts
 
@@ -28,11 +26,11 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
   end
 
   defp record(%{assigns: %{current_credential: credential}} = conn) do
-    team = team(conn, credential)
+    team_id = team_id(conn, credential)
 
-    if team do
+    if team_id do
       ApiRequestLog.record(%{
-        team: team,
+        team_id: team_id,
         credential: credential,
         interface: :rest,
         operation: operation(conn),
@@ -53,9 +51,9 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
 
   defp record(conn), do: conn
 
-  defp team(_conn, %{team: %Team{} = team}), do: team
-  defp team(%{assigns: %{site: site}}, _credential), do: Repo.preload(site, :team).team
-  defp team(_conn, _credential), do: nil
+  defp team_id(_conn, %{team_id: team_id}) when is_integer(team_id), do: team_id
+  defp team_id(%{assigns: %{site: site}}, _credential), do: site.team_id
+  defp team_id(_conn, _credential), do: nil
 
   defp operation(conn) do
     %{route: route} =

@@ -23,7 +23,7 @@ defmodule Plausible.ApiRequestLogTest do
 
         :ok =
           ApiRequestLog.record(%{
-            team: team,
+            team_id: team.id,
             credential: api_key,
             interface: :rest,
             operation: "POST /api/v2/query",
@@ -127,7 +127,7 @@ defmodule Plausible.ApiRequestLogTest do
 
     defp entry_attrs(team, credential, overrides) do
       Enum.into(overrides, %{
-        team: team,
+        team_id: team.id,
         credential: credential,
         interface: :rest,
         operation: "POST /api/v2/query",
