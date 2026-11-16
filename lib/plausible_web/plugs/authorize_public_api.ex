@@ -29,9 +29,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     * `:current_credential` - the API key. Set before the access checks, so
       error responses from this plug also carry it.
     * `:current_user` and `:current_team` - set only when access is granted.
-    * `:site` - the site from the `site_id` param, set only when site access is
-      verified. On the Stats API, `completed_imports` is preloaded. On the
-      Sites API, nothing is preloaded.
+    * `:site` - the site from the `site_id` param, set only when API access to
+      the site is verified. The plug does not check the site role. Controllers
+      check the role that each action needs. On the Stats API,
+      `completed_imports` is preloaded. On the Sites API, nothing is preloaded.
   """
 
   use Plausible.Repo

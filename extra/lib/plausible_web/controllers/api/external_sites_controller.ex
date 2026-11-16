@@ -30,11 +30,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def guests_index(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+    with {:ok, _} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       opts = [cursor_fields: [sort_index: :asc], limit: 100, maximum_limit: 1000]
       page = site |> Sites.list_guests_query() |> paginate(params, opts)
 
@@ -80,11 +77,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def goals_index(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+    with {:ok, _} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       page =
         site
         |> Plausible.Goals.for_site_query()
@@ -172,11 +166,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def get_site(conn, %{"site_id" => site_id}) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]),
+  def get_site(conn, _params) do
+    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]),
          {:ok, tracker_script_configuration} <- get_or_create_config(site, %{}) do
       site = struct(site, tracker_script_configuration: tracker_script_configuration)
 
@@ -187,11 +178,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def delete_site(conn, %{"site_id" => site_id}) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    case find_site(user, team, site_id, [:owner]) do
+  def delete_site(conn, _params) do
+    case find_site(conn, [:owner]) do
       {:ok, site} ->
         {:ok, _} = Plausible.Site.Removal.run(site)
         json(conn, %{"deleted" => true})
@@ -201,12 +189,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def update_site(conn, %{"site_id" => site_id} = params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
+  def update_site(conn, params) do
     with {:ok, params} <- validate_update_payload(params),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, site} <- do_update_site(site, params) do
       json(conn, get_site_response(site))
     else
@@ -269,13 +254,10 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_guest(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, email} <- expect_param_key(params, "email"),
          {:ok, role} <- expect_param_key(params, "role", ["viewer", "editor"]),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin]) do
+         {:ok, site} <- find_site(conn, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
       if existing do
@@ -318,12 +300,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_guest(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, email} <- expect_param_key(params, "email"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin]) do
+         {:ok, site} <- find_site(conn, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
       case existing do
@@ -353,12 +332,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_shared_link(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]) do
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
       shared_link =
@@ -397,12 +373,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_goal(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, _} <- expect_param_key(params, "goal_type"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, goal} <- Goals.find_or_create(site, params) do
       json(conn, goal)
     else
@@ -429,12 +402,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_goal(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          :ok <- Goals.delete(goal_id, site) do
       json(conn, %{"deleted" => true})
     else
@@ -456,11 +426,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def custom_props_index(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor, :viewer]) do
+    with {:ok, _} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       properties =
         (site.allowed_event_props || [])
         |> Enum.sort()
@@ -477,12 +444,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def add_custom_prop(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, property} <- expect_param_key(params, "property"),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, _} <- Props.allow(site, property) do
       json(conn, %{"created" => true})
     else
@@ -518,15 +482,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_custom_prop(conn, params) do
-    user = conn.assigns.current_user
-    team = conn.assigns.current_team
-
-    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+    with {:ok, _} <- expect_param_key(params, "site_id"),
          {:ok, property} <- expect_param_key(params, "property"),
          # Property name is extracted from route URL via wildcard,
          # which returns a list.
          property = Path.join(property),
-         {:ok, site} <- find_site(user, team, site_id, [:owner, :admin, :editor]),
+         {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, _} <- Props.disallow(site, property) do
       json(conn, %{"deleted" => true})
     else
@@ -549,19 +510,16 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     }
   end
 
-  defp find_site(user, team, site_id, roles) do
-    case Plausible.Sites.get_for_user(user, site_id, roles: roles) do
-      nil ->
-        {:error, :site_not_found}
+  defp find_site(conn, roles) do
+    team = conn.assigns.current_team
 
-      site ->
-        site = Repo.preload(site, :team)
-
-        if team && team.id != site.team_id do
-          {:error, :site_not_found}
-        else
-          {:ok, site}
-        end
+    with %Plausible.Site{} = site <- conn.assigns[:site],
+         true <- is_nil(team) or team.id == site.team_id,
+         {:ok, {_, role}} <- Teams.Memberships.site_role(site, conn.assigns.current_user),
+         true <- role in roles do
+      {:ok, site}
+    else
+      _ -> {:error, :site_not_found}
     end
   end
 
