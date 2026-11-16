@@ -17,7 +17,6 @@ defmodule Plausible.Teams.DeletionSchedule do
 
   def trial_deletion_offset_days, do: @trial_deletion_offset_days
   def subscription_deletion_offset_days, do: @subscription_deletion_offset_days
-  def first_notice_before_deletion_days, do: @first_notice_before_deletion_days
   def reminder_before_deletion_days, do: @reminder_before_deletion_days
   def backlog_deletion_offset_days, do: @backlog_deletion_offset_days
   def backlog_release_window_days, do: @backlog_release_window_days

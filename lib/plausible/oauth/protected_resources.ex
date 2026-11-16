@@ -15,7 +15,7 @@ defmodule Plausible.OAuth.ProtectedResources do
   def mcp(),
     do: %{
       resource_path: "/mcp",
-      scopes_supported: [Plausible.Auth.Scopes.sites_read()]
+      scopes_supported: [Plausible.Auth.Scopes.sites_read(), Plausible.Auth.Scopes.stats_read()]
     }
 
   defp resources(), do: [mcp()]

@@ -76,7 +76,7 @@ defmodule Plausible.Teams.Billing do
       {:ok, response} ->
         amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
 
-        Subscription.changeset(subscription, %{
+        Plausible.Billing.PaddleClassic.Subscription.changeset(subscription, %{
           paddle_plan_id: Integer.to_string(response["plan_id"]),
           next_bill_amount: amount,
           next_bill_date: response["next_payment"]["date"]

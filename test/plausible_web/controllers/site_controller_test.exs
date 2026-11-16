@@ -25,18 +25,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "Add a website"
     end
 
-    test "default flow is 'register', shows onboarding steps regardless of sites provisioned", %{
-      conn: conn1,
-      user: user
-    } do
-      conn = get(conn1, "/sites/new")
+    test "default flow is 'provisioning', does not show onboarding steps", %{conn: conn} do
+      conn = get(conn, "/sites/new")
+      refute html_response(conn, 200) =~ ~s(id="flow-progress")
+    end
 
-      assert html_response(conn, 200) =~ ~s(id="flow-progress")
-
-      new_site(owner: user, domain: "test-site.com")
-
-      conn = get(conn1, "/sites/new")
-
+    test "shows onboarding steps when ?flow=register", %{conn: conn} do
+      conn = get(conn, "/sites/new?flow=register")
       assert html_response(conn, 200) =~ ~s(id="flow-progress")
     end
 
@@ -888,11 +883,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") ==
-               "admin@example.com Editor"
-
-      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+      assert resp |> find("tbody tr") |> Enum.map(&text/1) |> Enum.sort() == [
+               "admin@example.com Editor",
                "viewer@example.com Viewer"
+             ]
+
+      assert resp =~ i1.invitation_id
+      assert resp =~ i2.invitation_id
     end
 
     test "lists pending site transfer", %{conn: conn, user: user} do
@@ -904,8 +901,25 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
-               "#{new_owner.email} Owner"
+      assert text_of_element(resp, "tbody tr") == "#{new_owner.email} Owner"
+      assert resp =~ st.transfer_id
+    end
+
+    test "does not expose pending invitation and transfer ids to editors", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :editor)
+      invitation = invite_guest(site, "viewer@example.com", role: :viewer, inviter: owner)
+      transfer = invite_transfer(site, new_user(), inviter: owner)
+
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      assert resp =~ "viewer@example.com"
+      refute resp =~ invitation.invitation_id
+      refute resp =~ transfer.transfer_id
     end
 
     test "renders distinct team management notices to owner", %{conn: conn, user: user} do
@@ -1093,6 +1107,31 @@ defmodule PlausibleWeb.SiteControllerTest do
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.timezone == "Europe/London"
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/general"
+    end
+
+    test "ignores fields other than the timezone", %{conn: conn, site: site} do
+      put(conn, "/#{site.domain}/settings", %{
+        "site" => %{
+          "timezone" => "Europe/London",
+          "domain" => "renamed.example.com",
+          "consolidated" => "true",
+          "legacy_time_on_page_cutoff" => "2020-01-01"
+        }
+      })
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert updated.timezone == "Europe/London"
+      assert updated.domain == site.domain
+      refute updated.domain_changed_from
+      refute updated.consolidated
+      assert updated.legacy_time_on_page_cutoff == site.legacy_time_on_page_cutoff
+    end
+
+    test "rejects an invalid timezone", %{conn: conn, site: site} do
+      conn = put(conn, "/#{site.domain}/settings", %{"site" => %{"timezone" => "Not/AZone"}})
+
+      assert html_response(conn, 200) =~ "Could not update your site settings"
+      assert Repo.get(Plausible.Site, site.id).timezone == site.timezone
     end
   end
 
@@ -1760,6 +1799,27 @@ defmodule PlausibleWeb.SiteControllerTest do
           )
 
         assert notification.threshold == 15
+      end
+
+      test "does not allow changing site_id or type of #{type} notification", %{
+        conn: conn,
+        site: site
+      } do
+        other_site = new_site()
+        notification = insert(:"#{unquote(type)}_notification", site: site)
+        other_type = if unquote(type) == :spike, do: "drop", else: "spike"
+
+        put(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}", %{
+          "traffic_change_notification" => %{
+            "site_id" => to_string(other_site.id),
+            "type" => other_type
+          }
+        })
+
+        notification = Repo.reload!(notification)
+
+        assert notification.site_id == site.id
+        assert notification.type == unquote(type)
       end
     end
 

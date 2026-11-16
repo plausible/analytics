@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   import PlausibleWeb.Live.Components.Form
 
   alias Plausible.Funnels
-  alias Plausible.Stats.QueryBuilder
+  alias Plausible.Stats.Query
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     site =
@@ -379,9 +379,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Enum.map(&elem(&1, 1))
 
     query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         metrics: [:pageviews],
-        input_date_range: {:last_n_days, 30}
+        input_date_range: query_date_range()
       )
 
     {goals_for_query, other_goals} =
@@ -617,12 +617,18 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       )
 
     query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         metrics: [:pageviews],
-        input_date_range: :month
+        input_date_range: query_date_range()
       )
 
     {:ok, {definition, query}}
+  end
+
+  defp query_date_range() do
+    now = DateTime.utc_now()
+    thirty_days_ago = DateTime.add(now, -30, :day)
+    {:datetime_range, thirty_days_ago, now}
   end
 
   defp prepare_socket(socket, site, funnel_id) when is_integer(funnel_id) do

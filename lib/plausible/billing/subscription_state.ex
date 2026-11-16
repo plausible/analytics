@@ -11,7 +11,7 @@ defmodule Plausible.Billing.SubscriptionState do
   """
   use Plausible.Repo
 
-  alias Plausible.Billing.{EnterprisePlan, SiteLocker, Subscription}
+  alias Plausible.Billing.{EnterprisePlan, PaddleClassic, SiteLocker}
   alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
@@ -23,7 +23,7 @@ defmodule Plausible.Billing.SubscriptionState do
   returned, after reporting to Sentry if the incoming data differs from it.
   """
   def create(team, attrs) do
-    changeset = Subscription.create_changeset(team, attrs)
+    changeset = PaddleClassic.Subscription.create_changeset(team, attrs)
 
     case Repo.insert(changeset,
            on_conflict: :nothing,
@@ -42,7 +42,7 @@ defmodule Plausible.Billing.SubscriptionState do
   """
   def update(subscription, attrs) do
     subscription
-    |> Subscription.changeset(attrs)
+    |> PaddleClassic.Subscription.changeset(attrs)
     |> Repo.update!()
     |> apply_subscription_state()
   end
@@ -57,7 +57,7 @@ defmodule Plausible.Billing.SubscriptionState do
 
     updated =
       subscription
-      |> Subscription.changeset(attrs)
+      |> PaddleClassic.Subscription.changeset(attrs)
       |> Repo.update!()
 
     for recipient <- subscription.team.owners ++ subscription.team.billing_members do
@@ -76,7 +76,7 @@ defmodule Plausible.Billing.SubscriptionState do
   def record_payment(subscription, attrs) do
     subscription =
       subscription
-      |> Subscription.changeset(attrs)
+      |> PaddleClassic.Subscription.changeset(attrs)
       |> Repo.update!()
       |> Repo.preload(:team)
 
@@ -129,7 +129,8 @@ defmodule Plausible.Billing.SubscriptionState do
   end
 
   defp handle_conflict(webhook_type, paddle_subscription_id, changeset) do
-    existing = Repo.get_by!(Subscription, paddle_subscription_id: paddle_subscription_id)
+    existing =
+      Repo.get_by!(PaddleClassic.Subscription, paddle_subscription_id: paddle_subscription_id)
 
     diff = changeset_diff(changeset, existing)
 

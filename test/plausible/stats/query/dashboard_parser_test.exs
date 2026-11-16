@@ -1,7 +1,8 @@
-defmodule Plausible.Stats.Dashboard.QueryParserTest do
+defmodule Plausible.Stats.Query.DashboardParserTest do
   use Plausible.DataCase
-  import Plausible.Stats.Dashboard.QueryParser
-  alias Plausible.Stats.{ParsedQueryParams, QueryError}
+  import Plausible.Stats.Query.DashboardParser
+  alias Plausible.Stats.QueryError
+  alias Plausible.Stats.Query.ParsedParams
 
   @base_params %{
     "date_range" => "28d",
@@ -27,7 +28,7 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       test "parses #{period} date_range" do
         params = Map.merge(@base_params, %{"date_range" => Atom.to_string(unquote(period))})
         {:ok, parsed} = parse(params)
-        assert_matches %ParsedQueryParams{input_date_range: ^unquote(period)} = parsed
+        assert_matches %ParsedParams{input_date_range: ^unquote(period)} = parsed
       end
     end
 
@@ -36,7 +37,7 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
         params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}d"})
         {:ok, parsed} = parse(params)
 
-        assert_matches %ParsedQueryParams{
+        assert_matches %ParsedParams{
                          input_date_range: {:last_n_days, ^unquote(i)}
                        } = parsed
       end
@@ -45,7 +46,7 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
     test "parses 24h period" do
       params = Map.merge(@base_params, %{"date_range" => "24h"})
       {:ok, parsed} = parse(params)
-      assert_matches %ParsedQueryParams{input_date_range: :"24h"} = parsed
+      assert_matches %ParsedParams{input_date_range: :"24h"} = parsed
     end
 
     for i <- [6, 12] do
@@ -53,7 +54,7 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
         params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}mo"})
         {:ok, parsed} = parse(params)
 
-        assert_matches %ParsedQueryParams{
+        assert_matches %ParsedParams{
                          input_date_range: {:last_n_months, ^unquote(i)}
                        } =
                          parsed
@@ -64,7 +65,7 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
       params = Map.merge(@base_params, %{"date_range" => ["2021-01-01", "2021-03-05"]})
       {:ok, parsed} = parse(params)
 
-      assert %ParsedQueryParams{
+      assert %ParsedParams{
                input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-03-05]}
              } = parsed
     end
@@ -74,13 +75,13 @@ defmodule Plausible.Stats.Dashboard.QueryParserTest do
     test "parses a valid iso8601 date string" do
       params = Map.merge(@base_params, %{"relative_date" => "2021-05-05"})
       {:ok, parsed} = parse(params)
-      assert %ParsedQueryParams{relative_date: ~D[2021-05-05]} = parsed
+      assert %ParsedParams{relative_date: ~D[2021-05-05]} = parsed
     end
 
     test "nil is accepted" do
       params = Map.merge(@base_params, %{"relative_date" => nil})
       {:ok, parsed} = parse(params)
-      assert %ParsedQueryParams{relative_date: nil} = parsed
+      assert %ParsedParams{relative_date: nil} = parsed
     end
 
     test "errors when invalid date" do

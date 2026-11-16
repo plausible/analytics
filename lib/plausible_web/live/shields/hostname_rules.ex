@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  alias Plausible.Stats.QueryBuilder
+  alias Plausible.Stats.Query
 
   def update(assigns, socket) do
     socket =
@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
   def suggest_hostnames(input, _options, site) do
     query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         input_date_range: :all,
         metrics: [:pageviews]
       )

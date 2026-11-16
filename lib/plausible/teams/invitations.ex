@@ -605,6 +605,15 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
+  def ensure_not_disposable_email(email) do
+    if Auth.disposable_email?(email) do
+      {:error, :disposable_email}
+    else
+      :ok
+    end
+  end
+
+  @doc false
   def check_team_member_limit(_team, :owner, _invitee_email), do: :ok
 
   def check_team_member_limit(team, _role, invitee_email) do

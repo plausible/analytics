@@ -6,6 +6,10 @@ on:
       - 'priv/repo/migrations/**'
       - 'priv/ingest_repo/migrations/**'
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   validate:
     name: App code does not change at the same time

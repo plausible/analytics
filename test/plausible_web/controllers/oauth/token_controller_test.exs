@@ -134,7 +134,7 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                        ),
                      "token_type" => "Bearer",
                      "expires_in" => ^OAuth.access_token_ttl_seconds(),
-                     "scope" => "sites:read:*"
+                     "scope" => "sites:read:* stats:read:*"
                    }) = resp
 
     refute resp["refresh_token"] == resp["access_token"]
@@ -264,7 +264,7 @@ defmodule PlausibleWeb.OAuth.TokenControllerTest do
                          ),
                        "token_type" => "Bearer",
                        "expires_in" => ^OAuth.access_token_ttl_seconds(),
-                       "scope" => "sites:read:*"
+                       "scope" => "sites:read:* stats:read:*"
                      }) = resp
 
       refute resp["refresh_token"] == valid_refresh_params["refresh_token"]

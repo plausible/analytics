@@ -9,6 +9,7 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimit do
   import Ecto.Query
 
   alias Plausible.Billing
+  alias Plausible.Billing.PaddleClassic
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -17,10 +18,16 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimit do
 
     log("DRY RUN: #{dry_run?}")
 
+    last_subscription_query =
+      from s in PaddleClassic.Subscription,
+        where: s.team_id == parent_as(:team).id,
+        order_by: [desc: s.inserted_at, desc: s.id],
+        limit: 1
+
     active_enterprise_plans_query =
       from t in Teams.Team,
         as: :team,
-        inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+        inner_lateral_join: s in subquery(last_subscription_query),
         on: true,
         inner_join: ep in Billing.EnterprisePlan,
         on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,

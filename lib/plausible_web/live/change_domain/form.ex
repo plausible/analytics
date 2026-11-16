@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
   import Ecto.Query
 
   def update(assigns, socket) do
-    changeset = Site.update_changeset(assigns.site)
+    changeset = Site.domain_changeset(assigns.site)
 
     {:ok,
      socket
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.ChangeDomain.Form do
 
   def handle_event("submit", %{"site" => %{"domain" => new_domain}}, socket) do
     site = socket.assigns.site
-    preview_changeset = Site.update_changeset(site, %{domain: new_domain})
+    preview_changeset = Site.domain_changeset(site, %{domain: new_domain})
     cleaned_domain = Ecto.Changeset.get_field(preview_changeset, :domain)
 
     if same_team_owns_domain?(site, cleaned_domain) do

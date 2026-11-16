@@ -376,7 +376,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a past_due subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :past_due})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :past_due})
         |> Repo.update!()
 
       conn
@@ -386,7 +386,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       # for a deleted (but not expired) subscription
       subscription
-      |> Plausible.Billing.Subscription.changeset(%{
+      |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{
         status: :deleted,
         next_bill_date: Date.shift(Date.utc_today(), month: 6)
       })
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a paused subscription
       subscription =
         subscription
-        |> Plausible.Billing.Subscription.changeset(%{status: :paused})
+        |> Plausible.Billing.PaddleClassic.Subscription.changeset(%{status: :paused})
         |> Repo.update!()
 
       conn
@@ -464,10 +464,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a free_10k subscription (without a `last_bill_date`)
       Repo.delete!(subscription)
 
-      user
-      |> team_of()
-      |> Plausible.Billing.Subscription.free()
-      |> Repo.insert!()
+      subscribe_to_free_plan(user)
 
       conn
       |> get(~p"/settings/billing/subscription")
@@ -518,10 +515,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
       new_site(owner: user)
 
-      user
-      |> team_of()
-      |> Plausible.Billing.Subscription.free(%{currency_code: "EUR"})
-      |> Repo.insert!()
+      subscribe_to_free_plan(user)
 
       html =
         conn
@@ -729,9 +723,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html =~ "Unknown"
       assert html =~ "Current session"
-      assert html =~ "Just recently"
+      assert html =~ "Less than an hour ago"
       assert html =~ "Some Device"
-      assert html =~ "1 hour ago"
+      assert html =~ "Less than 2 hours ago"
       assert html =~ ~p"/settings/security/user-sessions/#{another_session.id}"
     end
   end
@@ -1095,6 +1089,32 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html_response(conn, 200) =~ "has already been taken"
     end
 
+    @tag :ee_only
+    test "renders form with error when changing to a disposable email domain", %{
+      conn: conn,
+      user: user
+    } do
+      password = "very-long-very-secret-123"
+
+      user
+      |> Auth.User.set_password(password)
+      |> Repo.update!()
+
+      conn =
+        post(conn, ~p"/settings/security/email", %{
+          "user" => %{"password" => password, "email" => "foobar@mailinator.com"}
+        })
+
+      assert text(html_response(conn, 200)) =~ "Disposable email addresses are not allowed"
+
+      # the account keeps its current address, so it can't be freed up for re-registration
+      updated_user = Repo.reload!(user)
+      assert updated_user.email == user.email
+      assert updated_user.previous_email == user.previous_email
+
+      assert_no_emails_delivered()
+    end
+
     test "renders form with error when email is identical with the current one", %{
       conn: conn,
       user: user
@@ -1450,8 +1470,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
   @menu_items [
     preferences: {"Preferences", "/settings/preferences"},
     security: {"Security", "/settings/security"},
+    guest_sites: {"Guest sites", "/settings/guest-sites"},
     subscription: {"Subscription", "/settings/billing/subscription"},
     api_keys: {"API keys", "/settings/api-keys"},
+    connected_apps: {"Connected apps", "/settings/connected-apps"},
     danger_zone: {"Danger zone", "/settings/danger-zone"},
     team_general: {"General", "/settings/team/general"},
     sso: {"Single Sign-On", "/settings/sso/info"},
@@ -1475,6 +1497,20 @@ defmodule PlausibleWeb.SettingsControllerTest do
           :team_danger_zone,
           :danger_zone
         ])
+        |> LazyHTML.from_document()
+        |> assert_sidebar_menu(expected_account_menu)
+        |> assert_mobile_menu(expected_account_menu)
+      end
+
+      test "shows guest sites when the SSO user is a guest of a site", %{conn: conn, user: user} do
+        add_guest(new_site(), user: Repo.reload!(user), role: :viewer)
+
+        conn = get(conn, ~p"/settings/preferences")
+        assert html = html_response(conn, 200)
+
+        expected_account_menu = [:preferences, :security, :guest_sites, :subscription, :api_keys]
+
+        html
         |> LazyHTML.from_document()
         |> assert_sidebar_menu(expected_account_menu)
         |> assert_mobile_menu(expected_account_menu)
@@ -1509,6 +1545,35 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "Account settings - connected apps" do
+    setup [:create_user, :log_in]
+
+    test "are listed in the account menu with the feature flag", %{conn: conn, user: user} do
+      FunWithFlags.enable(:mcp, for_actor: user)
+
+      conn = get(conn, ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :connected_apps, :danger_zone],
+          else: [:preferences, :security, :api_keys, :connected_apps, :danger_zone]
+        )
+
+      html
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
+    end
+
+    test "are not listed without the feature flag", %{conn: conn} do
+      conn = get(conn, ~p"/settings/preferences")
+
+      html_response(conn, 200)
+      |> refute_unexpected_menu_items([:connected_apps])
+    end
+  end
+
   describe "Team settings" do
     setup [:create_user, :log_in]
 
@@ -1516,7 +1581,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
          %{conn: conn} do
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute html =~ "Team"
+      refute html =~ "Team settings"
 
       expected_account_menu =
         if(ee?(),
@@ -1527,10 +1592,30 @@ defmodule PlausibleWeb.SettingsControllerTest do
       html
       |> refute_unexpected_menu_items(
         if(ee?(),
-          do: [:team_general, :sso],
-          else: [:subscription, :team_general, :sso]
+          do: [:guest_sites, :team_general, :sso],
+          else: [:guest_sites, :subscription, :team_general, :sso]
         )
       )
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
+    end
+
+    test "when the user is a guest of a site, the account menu shows guest sites",
+         %{conn: conn, user: user} do
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
+
+      conn = get(conn, ~p"/settings/preferences")
+      html = html_response(conn, 200)
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :guest_sites, :subscription, :api_keys, :danger_zone],
+          else: [:preferences, :security, :guest_sites, :api_keys, :danger_zone]
+        )
+
+      html
       |> LazyHTML.from_document()
       |> assert_sidebar_menu(expected_account_menu)
       |> assert_mobile_menu(expected_account_menu)
@@ -1635,11 +1720,21 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "does not render team settings, when team not set up", %{conn: conn, user: user} do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      {:ok, _team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute html =~ ~r/Team.*#{Regex.escape(team.name)}/s
-      refute html =~ team.name
+      refute html =~ "Team settings"
+
+      expected_account_menu =
+        if(ee?(),
+          do: [:preferences, :security, :subscription, :api_keys, :danger_zone],
+          else: [:preferences, :security, :api_keys, :danger_zone]
+        )
+
+      html
+      |> LazyHTML.from_document()
+      |> assert_sidebar_menu(expected_account_menu)
+      |> assert_mobile_menu(expected_account_menu)
     end
 
     test "GET /settings/team/general", %{conn: conn, user: user} do
@@ -2171,22 +2266,38 @@ defmodule PlausibleWeb.SettingsControllerTest do
   describe "account dropdown menu (_header.html)" do
     setup [:create_user, :log_in]
 
-    test "renders the 'Create a team' option", %{conn: conn, user: user} do
+    test "renders the 'Create new team' option", %{conn: conn, user: user} do
       subscribe_to_growth_plan(user)
       conn = get(conn, ~p"/settings/preferences")
       html = html_response(conn, 200)
-      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a team"
+      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create new team"
     end
 
-    test "does not render the 'Create a team' option if a team is already set up", %{
+    test "links 'Create new team' to the team setup without switching teams", %{
       conn: conn,
       user: user
     } do
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      Plausible.Teams.complete_setup(team)
-      conn = get(conn, ~p"/settings/preferences")
+      new_site(owner: user)
+      other_team = insert(:team, name: "Zeta", identifier: Ecto.UUID.generate())
+      add_member(other_team, user: user, role: :viewer)
+      conn = get(set_current_team(conn, other_team), ~p"/settings/preferences")
       html = html_response(conn, 200)
-      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+
+      assert html |> find(~s|a[href^="/team/setup"]|) |> LazyHTML.attribute("href") == [
+               "/team/setup"
+             ]
+    end
+  end
+
+  on_ee do
+    describe "account dropdown menu (_header.html) - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "does not render the 'Create new team' option", %{conn: conn} do
+        conn = get(conn, ~p"/settings/preferences")
+        html = html_response(conn, 200)
+        refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+      end
     end
   end
 

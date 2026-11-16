@@ -81,7 +81,7 @@ defmodule Plausible.Auth.SSO do
 
   @spec provision_user(SSO.Identity.t()) ::
           {:ok, :standard | :sso | :integration, Teams.Team.t(), Auth.User.t()}
-          | {:error, :integration_not_found | :over_limit}
+          | {:error, :integration_not_found | :over_limit | :disposable_email}
           | {:error, :multiple_memberships | :active_personal_team, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
     case find_user(identity) do
@@ -92,7 +92,11 @@ defmodule Plausible.Auth.SSO do
         provision_sso_user(user, identity, integration, domain)
 
       {:ok, :integration, _, integration, domain} ->
-        provision_identity(identity, integration, domain)
+        # Only a brand new user has their email "entered" here. Existing users
+        # are matched by the email they already have.
+        with :ok <- Teams.Invitations.ensure_not_disposable_email(identity.email) do
+          provision_identity(identity, integration, domain)
+        end
 
       {:error, :not_found} ->
         {:error, :integration_not_found}

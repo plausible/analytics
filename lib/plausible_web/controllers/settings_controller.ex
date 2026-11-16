@@ -24,6 +24,8 @@ defmodule PlausibleWeb.SettingsController do
   plug Plausible.Plugs.RestrictUserType,
        [deny: :sso] when action in [:update_name, :update_email, :update_password]
 
+  plug :require_mcp_feature_flag when action in [:connected_apps, :revoke_connected_app]
+
   def index(conn, _params) do
     redirect(conn, to: ~p"/settings/preferences")
   end
@@ -130,6 +132,34 @@ defmodule PlausibleWeb.SettingsController do
     render_security(conn)
   end
 
+  def guest_sites(conn, _params) do
+    case Teams.Memberships.guest_memberships(conn.assigns.current_user) do
+      [] ->
+        redirect(conn, to: ~p"/settings/preferences")
+
+      guest_memberships ->
+        render(conn, :guest_sites,
+          guest_memberships: guest_memberships,
+          layout: {PlausibleWeb.LayoutView, :settings}
+        )
+    end
+  end
+
+  def leave_guest_site(conn, %{"site_id" => site_id}) do
+    user = conn.assigns.current_user
+
+    conn =
+      case Teams.Memberships.remove(site_id, user, send_email?: false) do
+        {:ok, guest_membership} ->
+          put_flash(conn, :success, "You have left #{guest_membership.site.domain}")
+
+        {:error, :no_guest} ->
+          put_flash(conn, :error, "You're no longer a guest of this site")
+      end
+
+    redirect(conn, to: ~p"/settings/guest-sites")
+  end
+
   def redirect_invoices(conn, _params) do
     redirect(conn, to: ~p"/settings/billing/subscription")
   end
@@ -198,6 +228,37 @@ defmodule PlausibleWeb.SettingsController do
         conn
         |> put_flash(:error, "Could not find API Key to delete")
         |> redirect(to: ~p"/settings/api-keys#api-keys")
+    end
+  end
+
+  def connected_apps(conn, _params) do
+    grants = Plausible.OAuth.list_grants(conn.assigns.current_user)
+
+    render(conn, :connected_apps, layout: {PlausibleWeb.LayoutView, :settings}, grants: grants)
+  end
+
+  def revoke_connected_app(conn, %{"id" => id}) do
+    case Plausible.OAuth.revoke_user_grant(conn.assigns.current_user, id) do
+      :ok ->
+        conn
+        |> put_flash(:success, "Access revoked successfully")
+        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Could not find connected app to revoke")
+        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+    end
+  end
+
+  # remove on rollout
+  defp require_mcp_feature_flag(conn, _opts) do
+    if FunWithFlags.enabled?(:mcp, for: conn.assigns.current_user) do
+      conn
+    else
+      conn
+      |> render_error(404)
+      |> halt()
     end
   end
 

@@ -67,6 +67,13 @@ defmodule PlausibleWeb.Site.MembershipController do
           skip_plausible_tracking: true
         )
 
+      {:error, :disposable_email} ->
+        render(conn, "invite_member_form.html",
+          error: "Disposable email addresses are not allowed",
+          site: site,
+          skip_plausible_tracking: true
+        )
+
       {:error, {:over_limit, limit}} ->
         render(conn, "invite_member_form.html",
           error:

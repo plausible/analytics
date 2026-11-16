@@ -1,7 +1,6 @@
 defmodule Plausible.CustomerSupport.Resource.Team do
   @moduledoc false
   use Plausible.CustomerSupport.Resource, type: "team"
-  alias Plausible.Teams
   alias Plausible.Repo
 
   @impl true
@@ -21,8 +20,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
         inner_join: o in assoc(t, :owners),
         limit: ^limit,
         where: not is_nil(t.trial_expiry_date),
-        left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-        on: true,
+        left_join: s in assoc(t, :subscription),
         order_by: [desc: :id],
         preload: [:team_deletion_schedule, owners: o, subscription: s]
       )
@@ -63,14 +61,12 @@ defmodule Plausible.CustomerSupport.Resource.Team do
     q =
       if opts[:with_subscription_only?] do
         from(t in q,
-          inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-          on: true,
+          inner_join: s in assoc(t, :subscription),
           preload: [subscription: s]
         )
       else
         from(t in q,
-          left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
-          on: true,
+          left_join: s in assoc(t, :subscription),
           preload: [subscription: s]
         )
       end

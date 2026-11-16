@@ -47,21 +47,21 @@ defmodule PlausibleWeb.UserAuth do
           |> Phoenix.Controller.redirect(to: redirect_to)
 
         {:error, :integration_not_found} ->
-          conn
-          |> log_out_user()
-          |> Phoenix.Controller.put_flash(
-            :login_error,
-            "We couldn't find a Single Sign-On account for that email."
+          sso_login_error(
+            conn,
+            "We couldn't find a Single Sign-On account for that email.",
+            redirect_path
           )
-          |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: redirect_path]}")
 
         {:error, :over_limit} ->
-          error = "Team can't accept more members. Please contact the owner."
+          sso_login_error(
+            conn,
+            "Team can't accept more members. Please contact the owner.",
+            redirect_path
+          )
 
-          conn
-          |> log_out_user()
-          |> Phoenix.Controller.put_flash(:login_error, error)
-          |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: redirect_path]}")
+        {:error, :disposable_email} ->
+          sso_login_error(conn, "Disposable email addresses are not allowed.", redirect_path)
 
         {:error, reason, _team, _user}
         when reason in [:multiple_memberships, :active_personal_team] ->
@@ -71,6 +71,13 @@ defmodule PlausibleWeb.UserAuth do
           |> log_out_user()
           |> Phoenix.Controller.redirect(to: ~p"/sso/issue?#{[issue: issue]}")
       end
+    end
+
+    defp sso_login_error(conn, error, redirect_path) do
+      conn
+      |> log_out_user()
+      |> Phoenix.Controller.put_flash(:login_error, error)
+      |> Phoenix.Controller.redirect(to: ~p"/sso/login?#{[return_to: redirect_path]}")
     end
   end
 

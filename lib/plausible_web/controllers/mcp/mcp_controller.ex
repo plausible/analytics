@@ -7,10 +7,9 @@ defmodule PlausibleWeb.MCP.MCPController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
-  import Ecto.Query, only: [select: 3]
-
   alias Plausible.Auth.Scopes
   alias Plausible.OAuth.ProtectedResources
+  alias Plausible.Stats.{Query, QueryError}
   alias Plausible.Teams.Membership
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
@@ -41,20 +40,31 @@ defmodule PlausibleWeb.MCP.MCPController do
   @capabilities_key "io.modelcontextprotocol/clientCapabilities"
   @server_info_key "io.modelcontextprotocol/serverInfo"
 
-  # Every tool declares what scope is needed on the OAuth grant
-  # and what role in the team is needed.
+  # Config for each tool. Public fields are served in `tools/list` call.
+  @public_fields [:name, :description, :inputSchema]
   @tool_specs [
     %{
       name: "list_sites",
       scope: ProtectedResources.scope!(@resource, Scopes.sites_read()),
       roles: Membership.roles!([:owner, :admin, :editor, :billing, :viewer]),
+      can_be_used_with_locked_team?: true,
       description:
         "List the sites (websites) the authorized team has access to. Returns each site's domain and timezone.",
       inputSchema: %{type: "object", properties: %{}, additionalProperties: false}
+    },
+    %{
+      name: "query_stats",
+      scope: ProtectedResources.scope!(@resource, Scopes.stats_read()),
+      roles: Membership.roles!([:owner, :admin, :editor, :billing, :viewer]),
+      description:
+        "Query a site's analytics. Accepts the same query as the #{Plausible.product_name()} Stats API v2 " <>
+          "(POST /api/v2/query): `site_id` is a domain from list_sites. Returns the results, " <>
+          "along with the query as it was interpreted.",
+      inputSchema: Plausible.Stats.JSONSchema.raw_schema()
     }
   ]
 
-  @tools Enum.map(@tool_specs, &Map.drop(&1, [:scope, :roles]))
+  @tools Enum.map(@tool_specs, &Map.take(&1, @public_fields))
   @tools_by_name Map.new(@tool_specs, &{&1.name, &1})
 
   @doc """
@@ -212,13 +222,14 @@ defmodule PlausibleWeb.MCP.MCPController do
       supportedVersions: @supported_versions,
       capabilities: %{tools: %{}},
       instructions:
-        "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access."
+        "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access, then query_stats to query their analytics."
     }
   end
 
   defp call_tool(conn, spec, tool_args) do
     with :ok <- require_scope(conn, spec.scope),
-         :ok <- require_role(conn, spec.roles) do
+         :ok <- require_role(conn, spec.roles),
+         :ok <- maybe_require_unlocked_team(conn, spec) do
       run_tool(conn, spec.name, tool_args)
     end
   end
@@ -226,12 +237,51 @@ defmodule PlausibleWeb.MCP.MCPController do
   defp run_tool(conn, "list_sites", _tool_args) do
     sites =
       conn.assigns.current_user
-      |> Plausible.Sites.for_user_query(conn.assigns.current_team)
-      |> select([site: s], %{domain: s.domain, timezone: s.timezone})
-      |> Repo.all()
+      |> Plausible.Sites.list_for_team_member(conn.assigns.current_team)
+      |> Enum.map(&Map.take(&1, [:domain, :timezone]))
 
     {:ok, %{sites: sites}}
   end
+
+  defp run_tool(conn, "query_stats", tool_args) do
+    query_params = tool_args["arguments"]
+
+    with :ok <- validate_arguments(query_params),
+         {:ok, site} <- find_site(conn, query_params["site_id"]),
+         {:ok, query} <-
+           Query.parse_and_build(site, query_params,
+             debug_metadata: debug_metadata(assign(conn, :site, site)),
+             now: conn.private[:now]
+           ) do
+      # `QueryResult` only implements `Jason.Encoder`, so it is encoded here
+      # rather than by `text_content/1`.
+      {:ok, site |> Plausible.Stats.query(query) |> Jason.encode!()}
+    else
+      {:error, %QueryError{message: message}} -> {:error, message}
+      {:error, message} -> {:error, message}
+    end
+  end
+
+  defp validate_arguments(arguments) when is_map(arguments), do: :ok
+  defp validate_arguments(_arguments), do: {:error, "Tool arguments must be an object"}
+
+  # Looks the site up within the grant's team only, the same set list_sites returns.
+  defp find_site(conn, domain) when is_binary(domain) do
+    case Plausible.Sites.get_for_team_member(
+           conn.assigns.current_user,
+           conn.assigns.current_team,
+           domain
+         ) do
+      nil ->
+        {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
+
+      site ->
+        {:ok, Repo.preload(site, [:owners, :completed_imports])}
+    end
+  end
+
+  defp find_site(_conn, _domain),
+    do: {:error, "Missing site_id. Use list_sites to see the sites you can query."}
 
   defp require_scope(conn, scope) do
     if scope in (conn.assigns[:oauth_scopes] || []) do
@@ -250,6 +300,18 @@ defmodule PlausibleWeb.MCP.MCPController do
       {:error,
        "Your role in this team (#{role}) does not permit this action. It requires one of: " <>
          Enum.map_join(roles, ", ", &to_string/1)}
+    end
+  end
+
+  # Like a role, a lock is not something re-authorizing can change,
+  # so it is a tool error naming what the team has to do.
+  defp maybe_require_unlocked_team(conn, spec) do
+    if Map.get(spec, :can_be_used_with_locked_team?, false) or
+         not Plausible.Teams.locked?(conn.assigns.current_team) do
+      :ok
+    else
+      {:error,
+       "This team is locked due to missing active subscription. In order to use this tool, the team owner should subscribe to a suitable plan."}
     end
   end
 

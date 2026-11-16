@@ -295,6 +295,28 @@ defmodule Plausible.Sites do
     end
   end
 
+  @doc """
+  Lists the sites of `team` that `user` can access as a member of it.
+  """
+  @spec list_for_team_member(Auth.User.t(), Teams.Team.t()) :: [Site.t()]
+  def list_for_team_member(user, team) do
+    user
+    |> for_user_query(team)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets the site of `team` with the current `domain`, if `user` can access it as
+  a member of that team. Unlike `get_for_user/3`, does not match a previous domain.
+  """
+  @spec get_for_team_member(Auth.User.t(), Teams.Team.t(), String.t()) :: Site.t() | nil
+  def get_for_team_member(user, team, domain) do
+    user
+    |> for_user_query(team)
+    |> where([site: s], s.domain == ^domain)
+    |> Repo.one()
+  end
+
   def create(user, params, team \\ nil) do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))

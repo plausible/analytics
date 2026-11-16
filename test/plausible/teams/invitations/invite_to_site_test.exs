@@ -24,6 +24,21 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
       assert {"can't be blank", _} = changeset.errors[:email]
     end
 
+    @tag :ee_only
+    test "returns error for a disposable email domain, for both guests and ownership transfers" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      for role <- [:viewer, :owner] do
+        assert {:error, :disposable_email} =
+                 InviteToSite.invite(site, inviter, "someone@mailinator.com", role)
+      end
+
+      assert Repo.aggregate(Plausible.Teams.GuestInvitation, :count) == 0
+      assert Repo.aggregate(Plausible.Teams.SiteTransfer, :count) == 0
+      assert_no_emails_delivered()
+    end
+
     test "returns error when user is already a member" do
       inviter = new_user()
       invitee = new_user()

@@ -145,4 +145,61 @@ defmodule Plausible.Auth.UserTest do
       assert {"is too weak", [validation: :strength]} = changeset.errors[:password]
     end
   end
+
+  on_ee do
+    describe "new/1 email validation" do
+      defp new_changeset(email) do
+        User.new(%{
+          name: "Jane Doe",
+          email: email,
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      end
+
+      test "fails for a disposable email domain" do
+        changeset = new_changeset("jane@mailinator.com")
+
+        refute changeset.valid?
+
+        assert {"Disposable email addresses are not allowed", [validation: :disposable_email]} =
+                 changeset.errors[:email]
+      end
+
+      test "does not hash the password for a rejected email" do
+        refute new_changeset("jane@mailinator.com").changes[:password_hash]
+        assert new_changeset("jane@example.com").changes[:password_hash]
+      end
+
+      test "succeeds for a regular email domain" do
+        assert new_changeset("jane@example.com").valid?
+      end
+    end
+
+    describe "email_changeset/2" do
+      @password "very-secret-and-very-long-123"
+
+      defp change_email(email) do
+        user = %User{
+          email: "jane@example.com",
+          password_hash: Plausible.Auth.Password.hash(@password)
+        }
+
+        User.email_changeset(user, %{email: email, password: @password})
+      end
+
+      test "fails when changing to a disposable email domain" do
+        changeset = change_email("jane@mailinator.com")
+
+        refute changeset.valid?
+
+        assert {"Disposable email addresses are not allowed", [validation: :disposable_email]} =
+                 changeset.errors[:email]
+      end
+
+      test "succeeds when changing to a regular email domain" do
+        assert change_email("jane@hotmail.com").valid?
+      end
+    end
+  end
 end

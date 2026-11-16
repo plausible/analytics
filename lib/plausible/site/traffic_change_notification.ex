@@ -24,6 +24,13 @@ defmodule Plausible.Site.TrafficChangeNotification do
     |> unique_constraint([:site_id, :type])
   end
 
+  def update_changeset(schema, attrs) do
+    schema
+    |> cast(attrs, [:recipients, :threshold])
+    |> validate_required([:recipients, :threshold])
+    |> validate_number(:threshold, greater_than_or_equal_to: 1)
+  end
+
   def add_recipient(schema, recipient) do
     schema
     |> change(recipients: schema.recipients ++ [recipient])

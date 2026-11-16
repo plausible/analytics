@@ -55,7 +55,7 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalog do
   defp live_subscriptions(today) do
     live = [Status.active(), Status.past_due(), Status.paused()]
 
-    from(s in Subscription,
+    from(s in PaddleClassic.Subscription,
       where: s.status in ^live or (s.status == ^Status.deleted() and s.next_bill_date >= ^today),
       select: {s.paddle_plan_id, s.paddle_subscription_id}
     )

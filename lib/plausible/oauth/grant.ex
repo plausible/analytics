@@ -95,4 +95,12 @@ defmodule Plausible.OAuth.Grant do
     |> unique_constraint(:access_token_hash)
     |> unique_constraint(:refresh_token_hash)
   end
+
+  @doc """
+  The name people see for the OAuth client, falling back to its client ID.
+  """
+  @spec label(t()) :: String.t()
+  def label(%__MODULE__{client_name: client_name, client_id: client_id}) do
+    client_name || client_id
+  end
 end

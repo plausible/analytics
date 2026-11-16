@@ -329,6 +329,62 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "list_for_team_member/2" do
+    test "lists the team's sites, newest first" do
+      user = new_user()
+      older = new_site(owner: user)
+      newer = new_site(owner: user)
+
+      assert [%{id: newer_id}, %{id: older_id}] =
+               Sites.list_for_team_member(user, team_of(user))
+
+      assert {newer_id, older_id} == {newer.id, older.id}
+    end
+
+    test "leaves out the user's sites in other teams and sites they are a guest of" do
+      user = new_user()
+      own = new_site(owner: user)
+
+      {:ok, other_team} = new_user() |> Plausible.Teams.get_or_create()
+      add_member(other_team, user: user, role: :viewer)
+      new_site(team: other_team)
+
+      guest_site = new_site()
+      add_guest(guest_site, user: user, role: :viewer)
+
+      assert [%{id: id}] = Sites.list_for_team_member(user, team_of(user))
+      assert id == own.id
+    end
+  end
+
+  describe "get_for_team_member/3" do
+    test "gets the team's site by its domain" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      assert %{id: id} = Sites.get_for_team_member(user, team_of(user), site.domain)
+      assert id == site.id
+    end
+
+    test "does not get a site of another team the user is a member of" do
+      user = new_user()
+      new_site(owner: user)
+
+      {:ok, other_team} = new_user() |> Plausible.Teams.get_or_create()
+      add_member(other_team, user: user, role: :viewer)
+      other = new_site(team: other_team)
+
+      refute Sites.get_for_team_member(user, team_of(user), other.domain)
+    end
+
+    test "does not match a previous domain" do
+      user = new_user()
+      new_site(owner: user, domain_changed_from: "old.example.com")
+
+      refute Sites.get_for_team_member(user, team_of(user), "old.example.com")
+    end
+  end
+
   describe "toggle_pin/2" do
     test "billing role team member can pin a site" do
       owner = new_user()

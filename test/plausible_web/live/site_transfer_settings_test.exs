@@ -315,6 +315,21 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
       assert html =~ "Invitation has already been sent"
     end
 
+    @tag :ee_only
+    test "renders an inline error for a disposable email domain", %{conn: conn, site: site} do
+      {:ok, lv, _html} = get_liveview(conn, site)
+
+      html =
+        lv
+        |> element("#site-transfer-form")
+        |> render_submit(%{
+          "form" => %{"destination" => "account", "email" => "john.doe@mailinator.com"}
+        })
+
+      assert html =~ "Disposable email addresses are not allowed"
+      assert_no_emails_delivered()
+    end
+
     test "validates that an email is required", %{conn: conn, site: site} do
       {:ok, lv, _html} = get_liveview(conn, site)
 

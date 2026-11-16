@@ -15,8 +15,6 @@ defmodule Plausible.Site.Cache do
 
   Also see tests for more comprehensive examples.
   """
-  require Logger
-
   import Ecto.Query
 
   alias Plausible.Site

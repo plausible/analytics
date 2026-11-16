@@ -11,7 +11,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdg72eep109pqmpzwd77m9",
+    "billing_monthly_price_id": "pri_01m6gdg7am04e2mzyd47k01mev",
+    "billing_yearly_price_id": "pri_01m6gdg7fjexvm5vwaqe0s9b04"
   },
   {
     "kind": "growth",
@@ -25,7 +28,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdg8nphs55jbenwkvxkfac",
+    "billing_monthly_price_id": "pri_01m6gdg8tph83s81cjwcqgnqhf",
+    "billing_yearly_price_id": "pri_01m6gdg90c2mzm9nwz44y35zbw"
   },
   {
     "kind": "growth",
@@ -39,7 +45,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdga6t7a27egkxysnyfrzj",
+    "billing_monthly_price_id": "pri_01m6gdgabc5t5yq363h2amk244",
+    "billing_yearly_price_id": "pri_01m6gdgag2fexr50hzc8s1twb1"
   },
   {
     "kind": "growth",
@@ -53,7 +62,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdgbnv52n31ezc4j9c8mk8",
+    "billing_monthly_price_id": "pri_01m6gdgbtaxq08dr5jbb5dbgw2",
+    "billing_yearly_price_id": "pri_01m6gdgbz47jwkh8cpnmw8cd1f"
   },
   {
     "kind": "growth",
@@ -67,7 +79,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdgd4gwxn4sdk4czdfmkp2",
+    "billing_monthly_price_id": "pri_01m6gdgd8zpnb12k2d5ykzr0ha",
+    "billing_yearly_price_id": "pri_01m6gdgddv5b1bneqp3628bwwj"
   },
   {
     "kind": "growth",
@@ -81,7 +96,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdgekn22b47mec57xpab4k",
+    "billing_monthly_price_id": "pri_01m6gdger7h36adrg4pqhswsp2",
+    "billing_yearly_price_id": "pri_01m6gdgex71g7b4px35sp90g5e"
   },
   {
     "kind": "growth",
@@ -95,7 +113,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdgg2k5axy74mwxga9xqfp",
+    "billing_monthly_price_id": "pri_01m6gdgg78p6bca38rbtanhre1",
+    "billing_yearly_price_id": "pri_01m6gdggc4egtdb76hp7hzhthg"
   },
   {
     "kind": "growth",
@@ -109,7 +130,10 @@
       "goals",
       "shared_links"
     ],
-    "data_retention_in_years": 3
+    "data_retention_in_years": 3,
+    "billing_product_id": "pro_01m6gdghhxbqnxbc35vhcv6nec",
+    "billing_monthly_price_id": "pri_01m6gdghpkjy2zeckg8fftt4x7",
+    "billing_yearly_price_id": "pri_01m6gdghvb4pmap95cbfe9j7ad"
   },
   {
     "kind": "business",
@@ -130,7 +154,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgk0kazm2m7jef56j5cd5",
+    "billing_monthly_price_id": "pri_01m6gdgk58e00wdkmr7gmg6qy1",
+    "billing_yearly_price_id": "pri_01m6gdgka48fzx5stvwx82hmb2"
   },
   {
     "kind": "business",
@@ -151,7 +178,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgmfg8g5pzmk6q4293qvr",
+    "billing_monthly_price_id": "pri_01m6gdgmm0a99dtmbnbjdmrz67",
+    "billing_yearly_price_id": "pri_01m6gdgmrwd898g4n8b81jrqmm"
   },
   {
     "kind": "business",
@@ -172,7 +202,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgnyvha06ss1f6t0vmj8a",
+    "billing_monthly_price_id": "pri_01m6gdgp3bzhzf5nb2qgtkfnv6",
+    "billing_yearly_price_id": "pri_01m6gdgp8bf1wz9zt3hn9ady16"
   },
   {
     "kind": "business",
@@ -193,7 +226,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgqe79mq3k69npvqgn61y",
+    "billing_monthly_price_id": "pri_01m6gdgqjtcnr6mrv9ae2w0nty",
+    "billing_yearly_price_id": "pri_01m6gdgqqpjcmq91whmh4kc6jg"
   },
   {
     "kind": "business",
@@ -214,7 +250,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgrz68ekbbss0wdeys0bw",
+    "billing_monthly_price_id": "pri_01m6gdgs68pb8ndhrezy8jqpa3",
+    "billing_yearly_price_id": "pri_01m6gdgsez72nqvyx3vrt091xt"
   },
   {
     "kind": "business",
@@ -235,7 +274,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgtq2abzj0m3w5yy5v1sc",
+    "billing_monthly_price_id": "pri_01m6gdgtvqrg625an3hp31ve0t",
+    "billing_yearly_price_id": "pri_01m6gdgv0gk6p0da11t5fydjyw"
   },
   {
     "kind": "business",
@@ -256,7 +298,10 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgw6ckphj7920e1r72max",
+    "billing_monthly_price_id": "pri_01m6gdgwb0k3v1eqk0psm2tky6",
+    "billing_yearly_price_id": "pri_01m6gdgwg38xhz64rmarc6h54d"
   },
   {
     "kind": "business",
@@ -277,6 +322,9 @@
       "shared_links",
       "consolidated_view"
     ],
-    "data_retention_in_years": 5
+    "data_retention_in_years": 5,
+    "billing_product_id": "pro_01m6gdgxp3zs56kpyveezap9jc",
+    "billing_monthly_price_id": "pri_01m6gdgxtthy0r6be1nmse96nw",
+    "billing_yearly_price_id": "pri_01m6gdgxzpeqsvk0g9q58rcn53"
   }
 ]

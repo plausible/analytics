@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
         for recipient <- recipients do
           assert_email_delivered_with(
             to: [{recipient.name, recipient.email}],
-            subject: "Your Plausible dashboards and stats will be deleted in 30 days"
+            subject: "Your Plausible dashboards and stats will be deleted on 19 Oct 2026"
           )
         end
 
@@ -117,7 +117,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
         SendDeletionNotifications.perform(nil, @today)
 
         refute_email_delivered_with(
-          subject: "Your Plausible dashboards and stats will be deleted in 30 days"
+          subject: ~r/^Your Plausible dashboards and stats will be deleted on/
         )
 
         assert Repo.reload!(schedule).status == :scheduled
@@ -140,7 +140,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
         SendDeletionNotifications.perform(nil, @today)
 
         refute_email_delivered_with(
-          subject: "Your Plausible dashboards and stats will be deleted in 30 days"
+          subject: ~r/^Your Plausible dashboards and stats will be deleted on/
         )
 
         assert Repo.reload!(schedule).status == :cancelled
@@ -164,7 +164,8 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
 
         assert_email_delivered_with(
           to: [{owner.name, owner.email}],
-          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
+          subject:
+            "Final notice: your Plausible dashboards and stats will be deleted on 23 Aug 2026"
         )
 
         updated = Repo.reload!(schedule)
@@ -187,7 +188,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
         SendDeletionNotifications.perform(nil, @today)
 
         refute_email_delivered_with(
-          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
+          subject: ~r/^Final notice: your Plausible dashboards and stats will be deleted on/
         )
 
         assert Repo.reload!(schedule).status == :first_notice_sent
@@ -210,7 +211,7 @@ defmodule Plausible.Workers.SendDeletionNotificationsTest do
         SendDeletionNotifications.perform(nil, @today)
 
         refute_email_delivered_with(
-          subject: "Final notice: your Plausible dashboards and stats will be deleted in 5 days"
+          subject: ~r/^Final notice: your Plausible dashboards and stats will be deleted on/
         )
 
         assert Repo.reload!(schedule).status == :cancelled

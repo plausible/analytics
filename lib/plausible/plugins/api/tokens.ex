@@ -9,6 +9,8 @@ defmodule Plausible.Plugins.API.Tokens do
 
   import Ecto.Query
 
+  @last_used_precision_minutes 5
+
   @spec create(Site.t(), String.t()) ::
           {:ok, Token.t(), String.t()} | {:error, Ecto.Changeset.t()}
   def create(%Site{} = site, description, generated_token \\ Token.generate()) do
@@ -63,7 +65,8 @@ defmodule Plausible.Plugins.API.Tokens do
     now = NaiveDateTime.truncate(now, :second)
     last_used = token.last_used_at
 
-    if is_nil(last_used) or NaiveDateTime.diff(now, last_used, :minute) > 5 do
+    if is_nil(last_used) or
+         NaiveDateTime.diff(now, last_used, :minute) > @last_used_precision_minutes do
       token
       |> Ecto.Changeset.change(%{last_used_at: now})
       |> Repo.update()

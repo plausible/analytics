@@ -84,6 +84,83 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert String.length(password_hash) > 0
     end
 
+    @tag :ee_only
+    test "renders error for disposable email as it is typed", %{conn: conn} do
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      assert render(lv) =~ "Disposable email addresses are not allowed"
+
+      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
+      refute render(lv) =~ "Disposable email addresses are not allowed"
+    end
+
+    @tag :ee_only
+    test "rejects the Unicode form of a disposable internationalized domain", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@account.yahóo.com")
+      assert render(lv) =~ "Disposable email addresses are not allowed"
+
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Disposable email addresses are not allowed"
+      refute Repo.get_by(User, email: "mary.sue@account.yahóo.com")
+    end
+
+    @tag :ee_only
+    test "does not crash while an invalid email domain is being typed", %{conn: conn} do
+      lv = get_liveview(conn, "/register")
+
+      for email <- ["mary.sue@", "mary.sue@a b.com", "mary.sue@-.com", "mary.sue@a_b.com"] do
+        type_into_input(lv, "user[email]", email)
+        refute render(lv) =~ "Disposable email addresses are not allowed"
+      end
+    end
+
+    @tag :ce_build_only
+    test "allows disposable email on CE", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      refute html =~ "Disposable email addresses are not allowed"
+      assert Repo.get_by(User, email: "mary.sue@mailinator.com")
+    end
+
+    @tag :ee_only
+    test "does not create user with disposable email", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Disposable email addresses are not allowed"
+      assert_push_event(lv, "reset-frc-captcha", %{})
+
+      on_ee do
+        assert_signup_tracking(html, "email")
+      end
+
+      refute Repo.one(User)
+    end
+
     test "renders error on failed captcha", %{conn: conn} do
       mock_captcha_failure()
 
@@ -172,6 +249,27 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert team_of(user) == nil
 
       assert String.length(password_hash) > 0
+    end
+
+    @tag :ee_only
+    test "does not register user from an existing invitation to a disposable email domain", %{
+      conn: conn,
+      site: site,
+      inviter: inviter
+    } do
+      mock_captcha_success()
+
+      invitation = invite_guest(site, "invitee@mailinator.com", role: :editor, inviter: inviter)
+
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Disposable email addresses are not allowed"
+      refute Repo.get_by(User, email: "invitee@mailinator.com")
     end
 
     test "registers user from team invitation", %{conn: conn, inviter: inviter} do

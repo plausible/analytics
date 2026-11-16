@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.TableDeciderTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, QueryBuilder, QueryError}
+  alias Plausible.Stats.{Query, QueryError}
 
   import Plausible.Stats.TableDecider
 
@@ -257,7 +257,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   defp make_query(filter_dimensions \\ [], dimensions \\ []) do
     site = insert(:site)
 
-    QueryBuilder.build!(site,
+    Query.Builder.build!(site,
       metrics: [:visitors],
       input_date_range: :all,
       filters:
@@ -269,7 +269,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   defp make_query_full_filters(filters) do
     site = insert(:site)
 
-    QueryBuilder.build!(site,
+    Query.Builder.build!(site,
       metrics: [:visitors],
       input_date_range: :all,
       dimensions: [],

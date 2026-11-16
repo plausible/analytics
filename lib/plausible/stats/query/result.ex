@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryResult do
+defmodule Plausible.Stats.Query.Result do
   @moduledoc """
   This struct contains the (JSON-encodable) response for a query and
   is responsible for building it from database query results.
@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, QueryRunner, Filters}
+  alias Plausible.Stats.{Query, Filters}
 
   defstruct results: [],
             comparison_results: nil,
@@ -42,9 +42,9 @@ defmodule Plausible.Stats.QueryResult do
   @doc """
   Builds full JSON-serializable query response.
 
-  `results` should already-built by Plausible.Stats.QueryRunner
+  `results` should already-built by Plausible.Stats.Query.Runner
   """
-  def from(%QueryRunner{results: results, comparison_results: comparison_results} = runner) do
+  def from(%Query.Runner{results: results, comparison_results: comparison_results} = runner) do
     struct!(
       __MODULE__,
       results: results,
@@ -54,7 +54,7 @@ defmodule Plausible.Stats.QueryResult do
     )
   end
 
-  defp meta(%QueryRunner{} = runner) do
+  defp meta(%Query.Runner{} = runner) do
     %{}
     |> add_imports_meta(runner.main_query)
     |> add_metric_warnings_meta(runner.main_query)
@@ -106,7 +106,7 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_time_labels_meta(meta, %QueryRunner{main_query: query}) do
+  defp add_time_labels_meta(meta, %Query.Runner{main_query: query}) do
     if query.include.time_labels do
       Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
     else
@@ -114,7 +114,7 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_comparison_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
+  defp add_comparison_time_labels_meta(meta, %Query.Runner{main_query: query} = runner) do
     if query.include.time_labels && query.include.compare do
       Map.put(
         meta,
@@ -126,7 +126,7 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_time_labels_result_indices_meta(meta, %QueryRunner{main_query: query} = runner) do
+  defp add_time_labels_result_indices_meta(meta, %Query.Runner{main_query: query} = runner) do
     time_labels = meta[:time_labels]
 
     if query.include.time_label_result_indices and is_list(time_labels) do
@@ -142,7 +142,7 @@ defmodule Plausible.Stats.QueryResult do
 
   defp add_comparison_time_label_result_indices_meta(
          meta,
-         %QueryRunner{main_query: query} = runner
+         %Query.Runner{main_query: query} = runner
        ) do
     comp_time_labels = meta[:comparison_time_labels]
 
@@ -181,7 +181,7 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_comparison_partial_time_labels_meta(meta, %QueryRunner{main_query: query} = runner) do
+  defp add_comparison_partial_time_labels_meta(meta, %Query.Runner{main_query: query} = runner) do
     comparison_time_labels = meta[:comparison_time_labels]
 
     if query.include.partial_time_labels and is_list(comparison_time_labels) do
@@ -203,7 +203,7 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp query(%QueryRunner{site: site, main_query: query}) do
+  defp query(%Query.Runner{site: site, main_query: query}) do
     [
       site_id: site.domain,
       metrics: query.metrics,
@@ -327,9 +327,9 @@ defmodule Plausible.Stats.QueryResult do
   end
 end
 
-defimpl Jason.Encoder, for: Plausible.Stats.QueryResult do
+defimpl Jason.Encoder, for: Plausible.Stats.Query.Result do
   def encode(
-        %Plausible.Stats.QueryResult{
+        %Plausible.Stats.Query.Result{
           results: results,
           comparison_results: comparison_results,
           meta: meta,

@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryOptimizer do
+defmodule Plausible.Stats.Query.Optimizer do
   @moduledoc """
   Methods to manipulate Query for business logic reasons before building an ecto query.
   """

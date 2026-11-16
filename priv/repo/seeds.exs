@@ -81,13 +81,12 @@ another_site =
 user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "plausible")
 site2 = new_site(domain: "computer.example.com", owner: user2)
 invite_guest(site2, user, inviter: user2, role: :viewer)
-invite_transfer(site2, user, inviter: user2)
-invite_member(team_of(user), user2, inviter: user, role: :editor)
 
 user3 = new_user(name: "Harvey Dent", email: "user3@plausible.test", password: "plausible")
 _site3 = new_site(domain: "bank.example.com", owner: user3)
 subscribe_to_business_plan(user3)
-invite_member(team_of(user3), "user@plausible.test", role: :editor, inviter: user3)
+{:ok, team3} = Plausible.Teams.setup(team_of(user3), "Gotham Bank", [], user3)
+invite_member(team3, "user@plausible.test", role: :editor, inviter: user3)
 
 user4 = new_user(name: "Bruce Wayne", email: "user4@plausible.test", password: "plausible")
 site4 = new_site(domain: "cave.example.com", owner: user4)

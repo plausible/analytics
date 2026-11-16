@@ -8,13 +8,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Query, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
   alias Plausible.Stats.Legacy.TimeOnPage
 
   def build(query, site) do
     query
-    |> QueryOptimizer.split()
+    |> Query.Optimizer.split()
     |> Enum.map(fn {table_type, table_query} ->
       q = build_table_query(table_type, site, table_query)
       {table_type, table_query, q}

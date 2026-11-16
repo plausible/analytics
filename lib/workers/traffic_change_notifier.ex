@@ -7,7 +7,9 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
   use PlausibleWeb.VerifiedRoutes
 
-  alias Plausible.Stats.{Clickhouse, ParsedQueryParams, QueryBuilder}
+  alias Plausible.Stats.{Clickhouse, Query}
+
+  alias Plausible.Stats.Query.ParsedParams
   alias Plausible.Site.TrafficChangeNotification
 
   use Oban.Worker, queue: :spike_notifications
@@ -128,7 +130,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     |> put_pages(site)
   end
 
-  @base_query_params %ParsedQueryParams{
+  @base_query_params %ParsedParams{
     metrics: [:visitors],
     pagination: %{limit: 3, offset: 0},
     input_date_range: :realtime
@@ -136,7 +138,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
 
   defp put_sources(stats, site) do
     query =
-      QueryBuilder.build!(
+      Query.Builder.build!(
         site,
         struct!(@base_query_params,
           dimensions: ["visit:source"],
@@ -150,7 +152,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp put_pages(stats, site) do
-    query = QueryBuilder.build!(site, struct!(@base_query_params, dimensions: ["event:page"]))
+    query = Query.Builder.build!(site, struct!(@base_query_params, dimensions: ["event:page"]))
 
     %{results: pages} = Plausible.Stats.query(site, query)
 

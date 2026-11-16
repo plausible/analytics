@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
   use PlausibleWeb.ConnCase, async: true
 
-  alias Plausible.Plugins.API.{Token, Tokens}
+  alias Plausible.Plugins.API.Tokens
   alias PlausibleWeb.Plugs.AuthorizePluginsAPI
   alias Plausible.Repo
 
@@ -78,21 +78,21 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
     refute conn.halted
   end
 
-  test "plug updates last seen timestamp" do
+  test "plug sets last used at timestamp" do
     site = insert(:site, domain: "pass.example.com")
     {:ok, token, raw} = Tokens.create(site, "Some token")
 
     refute token.last_used_at
-    assert Token.last_used_humanize(token) == "Not yet"
 
     credentials = "Basic " <> Base.encode64(raw)
+
+    now = NaiveDateTime.utc_now(:second)
 
     build_conn()
     |> put_req_header("authorization", credentials)
     |> AuthorizePluginsAPI.call()
 
     token = Repo.reload!(token)
-    assert token.last_used_at
-    assert Token.last_used_humanize(token) == "Just recently"
+    assert NaiveDateTime.diff(token.last_used_at, now, :second) >= 0
   end
 end

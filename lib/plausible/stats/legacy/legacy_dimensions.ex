@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Legacy.Dimensions do
   @moduledoc """
-  Deprecated module. See ApiQueryParser for list of valid dimensions
+  Deprecated module. See Query.ApiParser for list of valid dimensions
   """
   @event_props ["event:page", "event:name", "event:goal", "event:hostname"]
   @session_props [

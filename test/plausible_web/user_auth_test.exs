@@ -185,6 +185,31 @@ defmodule PlausibleWeb.UserAuthTest do
         refute get_session(conn, :user_token)
       end
 
+      test "tries to log out and redirects if SSO identity has a disposable email domain", %{
+        conn: conn
+      } do
+        integration = SSO.initiate_saml_integration(new_site().team)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, "mailinator.com", skip_checks?: true)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Doe", "jane@mailinator.com", integration)
+
+        conn =
+          conn
+          |> init_session()
+          |> fetch_flash()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) == ~p"/sso/login?#{[return_to: ""]}"
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :login_error) ==
+                 "Disposable email addresses are not allowed."
+
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
       test "tries to log out for user matching SSO identity on multiple teams, redirecting to issue notice",
            %{
              conn: conn,

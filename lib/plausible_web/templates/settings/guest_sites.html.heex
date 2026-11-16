@@ -1,0 +1,41 @@
+<.settings_tiles>
+  <.tile docs="users-roles">
+    <:title>Guest sites</:title>
+    <:subtitle>
+      Sites you've been invited to as a guest. Leaving a site removes your access to its stats.
+    </:subtitle>
+
+    <div id="guest-site-list">
+      <div
+        :for={guest_membership <- @guest_memberships}
+        id={"guest-site-#{guest_membership.site.id}"}
+        class="mt-6 first:mt-0 flex items-center gap-x-3 sm:gap-x-5"
+      >
+        <PlausibleWeb.Live.Sites.favicon domain={guest_membership.site.domain} />
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+            {guest_membership.site.domain}
+          </span>
+          <span class="text-gray-500 text-xs truncate">
+            {owned_by(guest_membership.site.team)}
+          </span>
+        </div>
+        <div class="flex-1 shrink-0 flex items-center justify-end gap-x-2">
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {String.capitalize(to_string(guest_membership.role))}
+          </span>
+          <.button_link
+            id={"guest-site-#{guest_membership.site.id}-leave"}
+            href={~p"/settings/guest-sites/#{guest_membership.site.id}"}
+            method="delete"
+            theme="secondary"
+            size="sm"
+            data-confirm={"Are you sure you want to leave #{guest_membership.site.domain}? You will lose access to its stats."}
+          >
+            Leave
+          </.button_link>
+        </div>
+      </div>
+    </div>
+  </.tile>
+</.settings_tiles>

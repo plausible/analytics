@@ -24,7 +24,7 @@ defmodule Plausible.Billing.MigrationAudit do
 
   require Plausible.Billing.Subscription.Status
 
-  alias Plausible.Billing.{EnterprisePlan, Plans, Subscription}
+  alias Plausible.Billing.{EnterprisePlan, PaddleClassic, Plans, Subscription}
   alias Plausible.Billing.MigrationAudit.{ClassicCatalog, Subscribers}
   alias Plausible.Billing.Subscription.Status
 
@@ -178,9 +178,9 @@ defmodule Plausible.Billing.MigrationAudit do
   @doc """
   Classifies the plan of a single subscription.
   """
-  @spec classify(Subscription.t()) :: category()
-  def classify(%Subscription{} = subscription) do
-    if Subscription.manual_subscription?(subscription) do
+  @spec classify(PaddleClassic.Subscription.t()) :: category()
+  def classify(%PaddleClassic.Subscription{} = subscription) do
+    if subscription.paddle_plan_id == Subscription.manual_plan_id() do
       :manual
     else
       case Plans.get_subscription_plan(subscription) do
@@ -193,12 +193,12 @@ defmodule Plausible.Billing.MigrationAudit do
   end
 
   defp subscriptions_query(:live, today) do
-    from(s in Subscription, where: ^live_condition(today), order_by: [asc: s.id])
+    from(s in PaddleClassic.Subscription, where: ^live_condition(today), order_by: [asc: s.id])
   end
 
   defp subscriptions_query(:current, _today) do
     # one row per team: the last subscription, as in Teams.last_subscription_query/0
-    from(s in Subscription,
+    from(s in PaddleClassic.Subscription,
       distinct: s.team_id,
       order_by: [asc: s.team_id, desc: s.inserted_at, desc: s.id]
     )
@@ -261,10 +261,14 @@ defmodule Plausible.Billing.MigrationAudit do
 
   defp teams_with_multiple_subscriptions(today) do
     all =
-      from(s in Subscription, group_by: s.team_id, having: count(s.id) > 1, select: s.team_id)
+      from(s in PaddleClassic.Subscription,
+        group_by: s.team_id,
+        having: count(s.id) > 1,
+        select: s.team_id
+      )
 
     live =
-      from(s in Subscription,
+      from(s in PaddleClassic.Subscription,
         where: ^live_condition(today),
         group_by: s.team_id,
         having: count(s.id) > 1,
@@ -280,7 +284,7 @@ defmodule Plausible.Billing.MigrationAudit do
         as: :ep,
         where:
           exists(
-            from(s in Subscription,
+            from(s in PaddleClassic.Subscription,
               where: s.team_id == parent_as(:ep).team_id,
               where: s.paddle_plan_id == parent_as(:ep).paddle_plan_id,
               where: ^condition

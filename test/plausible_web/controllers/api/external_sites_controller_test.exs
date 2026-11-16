@@ -1185,6 +1185,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         )
       end
 
+      test "returns 400 for an email on a disposable domain", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@mailinator.com"
+          })
+
+        assert %{"error" => "Disposable email addresses are not allowed"} =
+                 json_response(conn, 400)
+
+        assert_no_emails_delivered()
+      end
+
       test "is idempotent", %{conn: conn, user: user} do
         site = new_site(owner: user)
 

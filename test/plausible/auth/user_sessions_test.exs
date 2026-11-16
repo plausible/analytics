@@ -268,27 +268,6 @@ defmodule Plausible.Auth.UserSessionsTest do
     end
   end
 
-  describe "last_used_humanize/2" do
-    test "returns humanized relative time" do
-      user = insert(:user)
-      now = NaiveDateTime.utc_now(:second)
-      thirty_minutes_ago = NaiveDateTime.shift(now, minute: -30)
-      ninety_minutes_ago = NaiveDateTime.shift(now, minute: -90)
-      ten_hours_ago = NaiveDateTime.shift(now, hour: -10)
-      twenty_seven_hours_ago = NaiveDateTime.shift(now, hour: -27)
-      fifty_hours_ago = NaiveDateTime.shift(now, hour: -50)
-      ten_days_ago = NaiveDateTime.shift(now, day: -10)
-
-      assert last_used_humanize(user, now) == "Just recently"
-      assert last_used_humanize(user, thirty_minutes_ago) == "Just recently"
-      assert last_used_humanize(user, ninety_minutes_ago) == "1 hour ago"
-      assert last_used_humanize(user, ten_hours_ago) == "10 hours ago"
-      assert last_used_humanize(user, twenty_seven_hours_ago) == "Yesterday"
-      assert last_used_humanize(user, fifty_hours_ago) == "2 days ago"
-      assert last_used_humanize(user, ten_days_ago) == "10 days ago"
-    end
-  end
-
   describe "get_by_token/1" do
     setup do
       user = new_user()
@@ -314,6 +293,40 @@ defmodule Plausible.Auth.UserSessionsTest do
       assert ownership.team.subscription.id
       assert [owner] = ownership.team.owners
       assert owner.id == user.id
+    end
+
+    test "marks a user without guest memberships", %{session: session} do
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == false
+    end
+
+    test "marks a user with guest memberships", %{session: session, user: user} do
+      new_site(owner: user)
+      add_guest(new_site(), user: user, role: :viewer)
+      add_guest(new_site(), user: user, role: :editor)
+
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == true
+      assert [%{role: :owner}] = fetched.user.team_memberships
+    end
+
+    test "marks a guest who is also a member of several teams", %{session: session, user: user} do
+      new_site(owner: user)
+
+      for _ <- 1..2 do
+        new_site().team
+        |> Plausible.Teams.complete_setup()
+        |> add_member(user: user, role: :viewer)
+      end
+
+      add_guest(new_site(), user: user, role: :viewer)
+
+      assert {:ok, fetched} = UserSessions.get_by_token(session.token)
+
+      assert fetched.user.has_guest_memberships? == true
+      assert length(fetched.user.team_memberships) == 3
     end
 
     test "returns not found when no matching session found" do
@@ -534,12 +547,6 @@ defmodule Plausible.Auth.UserSessionsTest do
 
       assert :ok = UserSessions.revoke_all(user)
     end
-  end
-
-  defp last_used_humanize(user, dt) do
-    user
-    |> insert_session("Some Device", dt)
-    |> UserSessions.last_used_humanize()
   end
 
   defp insert_session(user, device_name, now) do

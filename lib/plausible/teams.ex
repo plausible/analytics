@@ -81,7 +81,7 @@ defmodule Plausible.Teams do
   end
 
   def with_subscription(team) do
-    Repo.preload(team, subscription: last_subscription_query())
+    Repo.preload(team, :subscription)
   end
 
   @spec owned_sites(Teams.Team.t() | nil, pos_integer() | nil) :: [Plausible.Site.t()]
@@ -279,7 +279,13 @@ defmodule Plausible.Teams do
           Plausible.Site.Removal.run(site)
         end
 
-        Repo.delete_all(from s in Billing.Subscription, where: s.team_id == ^team.id)
+        for schema <- [
+              Billing.PaddleClassic.Subscription,
+              Billing.PaddleBilling.Subscription,
+              Billing.PaddleBilling.SubscriptionEvent
+            ] do
+          Repo.delete_all(from r in schema, where: r.team_id == ^team.id)
+        end
 
         Repo.delete_all(from ep in Billing.EnterprisePlan, where: ep.team_id == ^team.id)
 
@@ -370,21 +376,6 @@ defmodule Plausible.Teams do
     def accept_traffic_until(_user) do
       @accept_traffic_until_free
     end
-  end
-
-  @spec last_subscription_join_query() :: Ecto.Query.t()
-  def last_subscription_join_query() do
-    from(subscription in last_subscription_query(),
-      where: subscription.team_id == parent_as(:team).id
-    )
-  end
-
-  @spec last_subscription_query() :: Ecto.Query.t()
-  def last_subscription_query() do
-    from(subscription in Plausible.Billing.Subscription,
-      order_by: [desc: subscription.inserted_at, desc: subscription.id],
-      limit: 1
-    )
   end
 
   @spec force_2fa_enabled?(Teams.Team.t() | nil) :: boolean()

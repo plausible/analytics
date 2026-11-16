@@ -241,6 +241,15 @@ defmodule PlausibleWeb.Live.TeamManagementTest do
                "Error! Make sure the e-mail is valid and not already taken by an existing member or invitation"
     end
 
+    @tag :ee_only
+    test "fails to invite an e-mail on a disposable domain", %{conn: conn, team: team} do
+      lv = get_liveview(conn)
+      add_invite(lv, "someone@mailinator.com", "admin")
+
+      assert lv |> render() |> text() =~ "Error! Disposable email addresses are not allowed"
+      assert Plausible.Teams.Invitations.pending_team_invitations_for(team) == []
+    end
+
     test "fails to invite an e-mail that already has a pending invitation", %{
       conn: conn,
       user: user,
