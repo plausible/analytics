@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       new_owner = new_user()
 
       {:ok, _invitation} =
-        Plausible.Teams.Invitations.InviteToSite.invite(site, user, new_owner.email, :owner)
+        Plausible.Teams.Sites.Transfer.initiate(site, user, new_owner.email)
 
       assert_site_transfer(site, new_owner.email)
 
