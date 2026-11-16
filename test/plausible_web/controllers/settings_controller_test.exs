@@ -143,7 +143,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "renders a link to '/billing/choose-plan' with the text 'Change plan' + cancel link", %{
       conn: conn,
       user: user
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
@@ -396,7 +396,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
          %{
            conn: conn,
@@ -521,7 +521,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018")
 
@@ -537,7 +537,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     @tag :ee_only
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "shows message on failed invoice request'", %{conn: conn, user: user} do
       subscribe_to_plan(user, "558018", paddle_subscription_id: "invalid_subscription_id")
 

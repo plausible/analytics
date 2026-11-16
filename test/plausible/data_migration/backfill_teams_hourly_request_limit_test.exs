@@ -28,7 +28,7 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimitTest do
       assert real_run_output =~ "Done!"
     end
 
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "updates teams with active subscriptions and matching enterprise plans" do
       user1 =
         new_user() |> subscribe_to_enterprise_plan(hourly_api_request_limit: 5000)

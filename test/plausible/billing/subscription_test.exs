@@ -1,6 +1,6 @@
 defmodule Plausible.Billing.SubscriptionTest do
   use Plausible.DataCase, async: true
-  @moduletag :classic_only
+  @moduletag :skip_extra_billing_run
   use Plausible.Teams.Test
 
   alias Plausible.Billing.PaddleBilling

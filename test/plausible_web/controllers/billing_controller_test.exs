@@ -59,7 +59,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert Plausible.Repo.reload!(subscription) == subscription
     end
 
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "can override allowing to upgrade when pageview limit is exceeded", %{
       conn: conn,
       user: user
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert Plausible.Repo.reload!(subscription) == subscription
     end
 
-    @tag :classic_only
+    @tag :skip_extra_billing_run
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "321321")
       team = team_of(user)

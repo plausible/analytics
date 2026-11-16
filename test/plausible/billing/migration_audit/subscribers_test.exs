@@ -1,6 +1,6 @@
 defmodule Plausible.Billing.MigrationAudit.SubscribersTest do
   use Plausible.DataCase, async: true
-  @moduletag :classic_only
+  @moduletag :skip_extra_billing_run
   alias Plausible.Billing.MigrationAudit.Subscribers
   alias Plausible.Billing.{Plans, Subscription}
 
