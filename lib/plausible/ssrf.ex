@@ -21,6 +21,9 @@ defmodule Plausible.SSRF do
   @default_retry_delay :timer.seconds(1)
   @dns_timeout 1_000
 
+  # Swappable for tests
+  @ip_check Application.compile_env(:plausible, :ssrf_ip_check, Plausible.IP.Tools)
+
   @doc """
   Resolves bare hostname or literal IP and returns its address(es),
   only if all are allowed
@@ -143,10 +146,7 @@ defmodule Plausible.SSRF do
   end
 
   defp validate_ips(ips) do
-    # Swappable so tests can allow their own loopback server.
-    check = Application.get_env(:plausible, :ssrf_ip_check) || Plausible.IP.Tools
-
-    if Enum.all?(ips, &check.allowed?(&1)) do
+    if Enum.all?(ips, &@ip_check.allowed?(&1)) do
       {:ok, ips}
     else
       {:error, :restricted_address}

@@ -1,5 +1,5 @@
 defmodule Plausible.Auth.SSO.Domain.VerificationTest do
-  # Not async: patches the global address check and Verification's req_opts.
+  # Not async: patches Verification's req_opts.
   use Plausible.DataCase, async: false
 
   @moduletag :ee_only
@@ -10,13 +10,10 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
     alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plausible.Test.Support.TLSServer
-
-    require TLSServer
     alias Plug.Conn
 
     # Requests go through Plausible.SSRF. The port rides along in the domain,
     # since the test server can't listen on 443.
-    TLSServer.setup_allow_loopback()
 
     @meta_tag ~s|<html><meta name="plausible-sso-verification" content="ex4mpl3"/></html>|
 
@@ -34,6 +31,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
     describe "url/3" do
       test "verifies a domain serving the identifier over https" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {ca, port} =
@@ -60,6 +59,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
       # Not even within the domain: sites that redirect verify with DNS TXT.
       test "does not follow redirects, even to the same domain or a subdomain" do
+        TLSServer.allow_loopback()
+
         test_pid = self()
 
         stub_dns(%{
@@ -96,6 +97,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "fails on a certificate issued for another hostname" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {ca, port} =
@@ -110,6 +113,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "fails when redirected to plain http, even if it would match" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         test_pid = self()
@@ -143,6 +148,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "verifies after a transient failure" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         calls = :atomics.new(1, [])
@@ -167,6 +174,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
 
     describe "meta_tag/3" do
       test "verifies a domain serving the meta tag over https" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {ca, port} =
@@ -189,6 +198,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "fails on non-html" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         test_pid = self()
@@ -209,6 +220,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "fails on parse failure" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         test_pid = self()
@@ -232,6 +245,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "succeeds in case of multiple matches" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {ca, port} =
@@ -255,6 +270,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "does not follow the domain to its www subdomain" do
+        TLSServer.allow_loopback()
+
         test_pid = self()
 
         stub_dns(%{
@@ -304,6 +321,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "DNS fails to match, url check succeeds" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {:ok, dns_port} = DNSServer.start("plausible-sso-verification=something-else")
@@ -327,6 +346,8 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
       end
 
       test "DNS and url checks fail to match, meta tag check succeeds" do
+        TLSServer.allow_loopback()
+
         stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
         {:ok, dns_port} = DNSServer.start("plausible-sso-verification=something-else")

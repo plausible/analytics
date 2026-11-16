@@ -4,6 +4,10 @@ defmodule Plausible.OAuth.CIMDTest do
 
   alias Plausible.OAuth.CIMD
 
+  setup do
+    Plausible.Test.Support.TLSServer.use_real_ip_check()
+  end
+
   @client_id "https://client.example.com/oauth-metadata"
   @redirect_uri "https://client.example.com/callback"
 

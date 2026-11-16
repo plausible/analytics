@@ -5,6 +5,9 @@ defmodule Plausible.Test.Support.TLSServer do
 
   @behaviour Plug
 
+  # Dev compiles test/support too, but Mox is test-only.
+  @compile {:no_warn_undefined, Mox}
+
   @doc """
   Starts a server and returns `{ca, port}`.
 
@@ -30,17 +33,22 @@ defmodule Plausible.Test.Support.TLSServer do
   end
 
   @doc """
-  Lets `Plausible.SSRF` connect to 127.0.0.1. Tests still stub DNS for the
-  hostnames they use.
+  Lets `Plausible.SSRF` connect to 127.0.0.1 in the calling test. Every other
+  address is still checked by `Plausible.IP.Tools`.
   """
-  defmacro setup_allow_loopback do
-    quote do
-      require Plausible.TestUtils
+  def allow_loopback do
+    Mox.stub(Plausible.IP.Tools.Mock, :allowed?, fn
+      {127, 0, 0, 1} -> true
+      ip -> Plausible.IP.Tools.allowed?(ip)
+    end)
+  end
 
-      setup do
-        Plausible.TestUtils.patch_env(:ssrf_ip_check, Plausible.Test.Support.SSRFIPCheck)
-      end
-    end
+  @doc """
+  Makes `Plausible.SSRF` check addresses with the real `Plausible.IP.Tools`.
+  """
+  def use_real_ip_check do
+    Mox.stub_with(Plausible.IP.Tools.Mock, Plausible.IP.Tools)
+    :ok
   end
 
   @impl Plug

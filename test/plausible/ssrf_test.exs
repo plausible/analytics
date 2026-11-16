@@ -1,12 +1,13 @@
 defmodule Plausible.SSRFTest do
-  # Not async: patches the global address check.
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   use Plausible.Test.Support.DNS
 
   alias Plausible.SSRF
   alias Plausible.Test.Support.TLSServer
 
-  require TLSServer
+  setup do
+    TLSServer.use_real_ip_check()
+  end
 
   describe "resolve_host/1" do
     test "rejects bare single-label hosts (no dot)" do
@@ -94,12 +95,12 @@ defmodule Plausible.SSRFTest do
     end
   end
 
-  # Real HTTPS server on loopback. `SSRFIPCheck` allows only 127.0.0.1, so
-  # every other address rule still applies.
+  # Real HTTPS server on loopback. `TLSServer.allow_loopback/0` lets only
+  # 127.0.0.1 through, so every other address rule still applies.
   describe "get/2 against a local server" do
-    TLSServer.setup_allow_loopback()
-
     test "resolves via DNS and sends the hostname in the Host header" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       test_pid = self()
@@ -121,6 +122,8 @@ defmodule Plausible.SSRFTest do
 
     @tag :capture_log
     test "stops at total_timeout even while the server is still silent" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       {ca, port} =
@@ -140,6 +143,8 @@ defmodule Plausible.SSRFTest do
     end
 
     test "retries a transient failure twice, then returns it" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       test_pid = self()
@@ -161,6 +166,8 @@ defmodule Plausible.SSRFTest do
     end
 
     test "ignores the server's Retry-After" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       test_pid = self()
@@ -187,6 +194,8 @@ defmodule Plausible.SSRFTest do
     end
 
     test "follows no redirect" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
       test_pid = self()
 
@@ -217,6 +226,8 @@ defmodule Plausible.SSRFTest do
 
     # Req would follow on either option, past the address checks.
     test "follows no redirect even when asked to" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
       test_pid = self()
 
@@ -246,6 +257,8 @@ defmodule Plausible.SSRFTest do
     end
 
     test "returns a 3xx without a Location" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       {ca, port} =
@@ -260,10 +273,10 @@ defmodule Plausible.SSRFTest do
   end
 
   describe "certificate checks" do
-    TLSServer.setup_allow_loopback()
-
     # Control: without it, the test below would pass on any connection failure.
     test "accepts a certificate issued for the requested hostname" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       {ca, port} =
@@ -277,6 +290,8 @@ defmodule Plausible.SSRFTest do
     end
 
     test "refuses a certificate issued for another hostname" do
+      TLSServer.allow_loopback()
+
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
 
       {ca, port} =
