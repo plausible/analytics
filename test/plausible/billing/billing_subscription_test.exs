@@ -213,7 +213,10 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
       assert Plans.business_tier?(subscription)
 
       refute Plans.business_tier?(
-               subscription_of(new_user() |> subscribe_to_growth_plan() |> team_of())
+               subscription_of(
+                 new_user()
+                 |> subscribe_to_billing_plan(growth_10k().billing_monthly_price_id)
+               )
              )
     end
   end
