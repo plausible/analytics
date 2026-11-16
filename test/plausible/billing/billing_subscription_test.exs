@@ -47,6 +47,17 @@ defmodule Plausible.Billing.BillingSubscriptionTest do
     end
   end
 
+  describe "billing mode" do
+    test "BILLING_SUBSCRIPTIONS=1 turns Classic test subscriptions into Billing ones" do
+      expected_type =
+        if System.get_env("BILLING_SUBSCRIPTIONS") == "1", do: :billing, else: :classic
+
+      subscription = subscription_of(new_user() |> subscribe_to_growth_plan() |> team_of())
+
+      assert subscription.type == expected_type
+    end
+  end
+
   describe "Plans" do
     test "resolves a regular plan from the monthly and the yearly price" do
       plan = growth_10k()
