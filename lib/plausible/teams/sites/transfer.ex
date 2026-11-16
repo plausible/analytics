@@ -51,23 +51,23 @@ defmodule Plausible.Teams.Sites.Transfer do
   an email to accept it. Only team owners and admins can do this.
 
   If a transfer of this site to this email already exists, the email is
-  sent again with the existing transfer link. The transfer keeps its
-  original expiry.
+  sent again with the existing transfer link, and the transfer's
+  `updated_at` is set to `now`. The transfer keeps its original expiry.
 
   Rejects if there's an existing guest invitation (not transfer) for
   this site and this email.
   """
-  @spec initiate(Site.t(), Auth.User.t(), String.t()) ::
+  @spec initiate(Site.t(), Auth.User.t(), String.t(), NaiveDateTime.t()) ::
           {:ok, Teams.SiteTransfer.t()}
           | {:error, Ecto.Changeset.t() | :permission_denied | :disposable_email}
-  def initiate(site, initiator, invitee_email) do
+  def initiate(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
     site = Repo.preload(site, :team)
 
     Repo.transaction(fn ->
       with :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, initiator),
            :ok <- Teams.Invitations.ensure_not_disposable_email(invitee_email),
            {:ok, site_transfer} <-
-             create_site_transfer(site, initiator, invitee_email) do
+             create_site_transfer(site, initiator, invitee_email, now) do
         invitee = Auth.find_user_by(email: invitee_email)
 
         site_transfer
@@ -160,14 +160,7 @@ defmodule Plausible.Teams.Sites.Transfer do
     end
   end
 
-  @doc """
-  Creates a site transfer without sending any email. If a transfer of this
-  site to this email already exists, returns it and sets its `updated_at`
-  to `now`.
-  """
-  @spec create_site_transfer(Site.t(), Auth.User.t(), String.t(), NaiveDateTime.t()) ::
-          {:ok, Teams.SiteTransfer.t()} | {:error, Ecto.Changeset.t()}
-  def create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
+  defp create_site_transfer(site, initiator, invitee_email, now) do
     changeset = Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
 
     if guest_invitation_exists?(site, invitee_email) do

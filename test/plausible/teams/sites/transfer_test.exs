@@ -77,6 +77,21 @@ defmodule Plausible.Teams.Sites.TransferTest do
       assert resent.transfer_id == transfer.transfer_id
     end
 
+    test "sets updated_at to now when the same transfer already exists" do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      {:ok, transfer} = Transfer.initiate(site, inviter, "vini@plausible.test")
+
+      later = NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(hour: 1)
+
+      assert {:ok, resent} = Transfer.initiate(site, inviter, "vini@plausible.test", later)
+
+      assert resent.id == transfer.id
+      assert resent.transfer_id == transfer.transfer_id
+      assert resent.updated_at == later
+    end
+
     test "allows creating an ownership transfer even when at team member limit" do
       inviter = new_user()
       site = new_site(owner: inviter)
@@ -84,24 +99,6 @@ defmodule Plausible.Teams.Sites.TransferTest do
 
       assert {:ok, _invitation} =
                Transfer.initiate(site, inviter, "newowner@plausible.test")
-    end
-  end
-
-  describe "create_site_transfer/4" do
-    test "returns the existing transfer and sets its updated_at to now" do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-
-      {:ok, transfer} = Transfer.create_site_transfer(site, inviter, "vini@plausible.test")
-
-      later = ~N[2026-01-02 00:00:00]
-
-      assert {:ok, resent} =
-               Transfer.create_site_transfer(site, inviter, "vini@plausible.test", later)
-
-      assert resent.id == transfer.id
-      assert resent.transfer_id == transfer.transfer_id
-      assert resent.updated_at == later
     end
   end
 
