@@ -127,9 +127,7 @@
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={session}>
-        <.td max_width="max-w-40" title={session.device}>
-          <span class="block truncate">{session.device}</span>
-        </.td>
+        <.td truncate max_width="max-w-40" title={session.device}>{session.device}</.td>
         <.td hide_on_mobile>
           {PlausibleWeb.TextHelpers.humanize_last_used_with_hourly_precision(session.last_used_at)}
         </.td>

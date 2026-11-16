@@ -959,7 +959,6 @@ defmodule PlausibleWeb.Components.Generic do
           "text-sm px-3 md:px-6 py-3 md:py-4 first:pl-0 last:pr-0 whitespace-nowrap",
           # allow tooltips overflow cells vertically
           "overflow-visible",
-          @truncate && "truncate",
           @max_width,
           @actions && "flex items-center text-right justify-end",
           @hide_on_mobile && "hidden md:table-cell",
@@ -971,7 +970,7 @@ defmodule PlausibleWeb.Components.Generic do
       <div :if={@actions} class="flex items-center gap-1">
         {render_slot(@inner_block)}
       </div>
-      <div :if={!@actions}>
+      <div :if={!@actions} class={@truncate && "truncate"}>
         {render_slot(@inner_block)}
       </div>
     </td>

@@ -49,14 +49,12 @@
         </:thead>
 
         <:tbody :let={api_key}>
-          <.td max_width="max-w-40" title={api_key.name}>
-            <span class="block truncate">{api_key.name}</span>
-          </.td>
+          <.td truncate max_width="max-w-40" title={api_key.name}>{api_key.name}</.td>
           <.td hide_on_mobile>
             {api_key.key_prefix}
             {String.duplicate("*", 32 - 6)}
           </.td>
-          <.td :if={ee?()}>
+          <.td :if={ee?()} hide_on_mobile>
             <span :if={api_key.type == "stats_api"}>Stats API</span>
             <span :if={api_key.type == "sites_api"}>Sites API</span>
           </.td>
