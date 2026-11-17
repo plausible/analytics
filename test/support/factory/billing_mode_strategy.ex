@@ -40,7 +40,8 @@ defmodule Plausible.Factory.BillingModeStrategy do
        when plan_id not in @classic_only_plan_ids do
     replace_existing(subscription)
     n = System.unique_integer([:positive])
-    {product_id, price_id, interval} = billing_ids(plan_id, team_id_of(subscription))
+    {product_id, price_id} = billing_ids(plan_id)
+    interval = resolve_interval(plan_id, team_id_of(subscription))
 
     %PaddleBilling.Subscription{
       billing_subscription_id: "sub_#{n}",
@@ -62,7 +63,7 @@ defmodule Plausible.Factory.BillingModeStrategy do
 
   defp do_convert(%EnterprisePlan{billing_price_id: nil, paddle_plan_id: plan_id} = plan)
        when plan_id not in @classic_only_plan_ids do
-    {product_id, price_id, _interval} = billing_ids(plan_id, nil)
+    {product_id, price_id} = billing_ids(plan_id)
     %{plan | billing_product_id: product_id, billing_price_id: price_id}
   end
 
@@ -78,17 +79,24 @@ defmodule Plausible.Factory.BillingModeStrategy do
 
   defp replace_existing(_), do: :ok
 
-  defp billing_ids(paddle_plan_id, team_id) do
+  defp billing_ids(paddle_plan_id) do
     case Plans.find(paddle_plan_id) do
       %{monthly_product_id: ^paddle_plan_id} = plan ->
-        {plan.billing_product_id, plan.billing_monthly_price_id, :monthly}
+        {plan.billing_product_id, plan.billing_monthly_price_id}
 
       %{} = plan ->
-        {plan.billing_product_id, plan.billing_yearly_price_id, :yearly}
+        {plan.billing_product_id, plan.billing_yearly_price_id}
 
       nil ->
-        {"pro_#{paddle_plan_id}", "pri_#{paddle_plan_id}",
-         enterprise_interval(paddle_plan_id, team_id)}
+        {"pro_#{paddle_plan_id}", "pri_#{paddle_plan_id}"}
+    end
+  end
+
+  defp resolve_interval(paddle_plan_id, team_id) do
+    case Plans.find(paddle_plan_id) do
+      %{monthly_product_id: ^paddle_plan_id} -> :monthly
+      %{} -> :yearly
+      nil -> enterprise_interval(paddle_plan_id, team_id)
     end
   end
 
