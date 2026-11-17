@@ -133,7 +133,7 @@ defmodule Plausible.Stats.Query.ApiParser do
     if dimension in @breakdown_only_non_time_dimensions do
       {:ok, dimension}
     else
-      Filters.Parser.parse_filter_dimension_string(dimension)
+      Filters.Parser.parse_filter_dimension(dimension)
     end
   end
 

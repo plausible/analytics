@@ -11,36 +11,19 @@ defmodule Plausible.Stats.Filters.Parser do
 
   def parse(nil), do: {:ok, []}
 
-  def parse_filter_dimension_string(dimension, error_message \\ "") do
-    case dimension do
-      "event:props:" <> property_name ->
-        if String.length(property_name) > 0 do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "event:" <> key ->
-        if key in Filters.event_props() do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "visit:" <> key ->
-        if key in Filters.visit_props() do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "segment" ->
-        {:ok, dimension}
-
-      _ ->
-        {:error, %QueryError{code: :invalid_filters, message: error_message}}
+  def parse_filter_dimension(dimension) do
+    if valid_filter_dimension?(dimension) do
+      {:ok, dimension}
+    else
+      {:error, :invalid_filter_dimension}
     end
   end
+
+  defp valid_filter_dimension?("event:props:" <> property_name), do: property_name != ""
+  defp valid_filter_dimension?("event:" <> key), do: key in Filters.event_props()
+  defp valid_filter_dimension?("visit:" <> key), do: key in Filters.visit_props()
+  defp valid_filter_dimension?("segment"), do: true
+  defp valid_filter_dimension?(_), do: false
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
@@ -76,13 +59,17 @@ defmodule Plausible.Stats.Filters.Parser do
        when operator in [:not, :has_done, :has_not_done],
        do: parse_filter(filter)
 
-  defp parse_filter_second(_operator, filter), do: parse_filter_dimension(filter)
+  defp parse_filter_second(_operator, [_, filter_dimension | _rest] = filter) do
+    case parse_filter_dimension(filter_dimension) do
+      {:ok, dimension} ->
+        {:ok, dimension}
 
-  defp parse_filter_dimension([_operator, filter_dimension | _rest] = filter) do
-    parse_filter_dimension_string(filter_dimension, "Invalid filter '#{i(filter)}'.")
+      {:error, :invalid_filter_dimension} ->
+        {:error, %QueryError{code: :invalid_filters, message: "Invalid filter '#{i(filter)}'."}}
+    end
   end
 
-  defp parse_filter_dimension(filter),
+  defp parse_filter_second(_operator, filter),
     do: {:error, %QueryError{code: :invalid_filters, message: "Invalid filter '#{i(filter)}'."}}
 
   defp parse_filter_rest(operator, filter)
