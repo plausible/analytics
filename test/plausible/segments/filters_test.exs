@@ -40,8 +40,10 @@ defmodule Plausible.Segments.FiltersTest do
     end
 
     test "returns an error for a segment that does not exist", %{site: site} do
-      assert {:error, %QueryError{code: :invalid_filters}} =
+      assert {:error, %QueryError{code: :invalid_filters, message: message}} =
                Segments.Filters.preload_needed_segments(site, [[:is, "segment", [0]]])
+
+      assert message == "Invalid filters. Some segments don't exist or aren't accessible."
     end
 
     test "returns an error for a segment with filters that do not parse", %{
@@ -57,8 +59,10 @@ defmodule Plausible.Segments.FiltersTest do
           segment_data: %{"filters" => [["unknown_operator", "visit:entry_page", ["/blog"]]]}
         )
 
-      assert {:error, %QueryError{code: :invalid_filters}} =
+      assert {:error, %QueryError{code: :invalid_filters, message: message}} =
                Segments.Filters.preload_needed_segments(site, [[:is, "segment", [segment.id]]])
+
+      assert message == "Invalid filters. Some segments don't exist or aren't accessible."
     end
   end
 
