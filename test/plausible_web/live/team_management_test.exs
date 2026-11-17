@@ -244,7 +244,7 @@ defmodule PlausibleWeb.Live.TeamManagementTest do
     @tag :ee_only
     test "fails to invite an e-mail on a disposable domain", %{conn: conn, team: team} do
       lv = get_liveview(conn)
-      add_invite(lv, "someone@mailinator.com", "admin")
+      add_invite(lv, "someone@disposable.test", "admin")
 
       assert lv |> render() |> text() =~ "Error! Disposable email addresses are not allowed"
       assert Plausible.Teams.Invitations.pending_team_invitations_for(team) == []

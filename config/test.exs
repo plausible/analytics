@@ -33,6 +33,10 @@ config :plausible,
 
 config :plausible, Plausible.Cache, enabled: false
 
+# Never on a real list, so tests don't depend on the vendored one
+config :plausible, Plausible.Auth.DisposableEmail,
+  extra_domains: ["disposable.test", "xn--dispsable-86a.test", "xn--80aafgq8afccr4o.test"]
+
 config :ex_money, api_module: Plausible.ExchangeRateMock
 
 config :plausible, Plausible.Ingestion.Counters, enabled: false

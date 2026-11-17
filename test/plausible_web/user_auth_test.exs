@@ -190,10 +190,10 @@ defmodule PlausibleWeb.UserAuthTest do
       } do
         integration = SSO.initiate_saml_integration(new_site().team)
 
-        {:ok, sso_domain} = SSO.Domains.add(integration, "mailinator.com", skip_checks?: true)
+        {:ok, sso_domain} = SSO.Domains.add(integration, "disposable.test", skip_checks?: true)
         _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        identity = new_identity("Jane Doe", "jane@mailinator.com", integration)
+        identity = new_identity("Jane Doe", "jane@disposable.test", integration)
 
         conn =
           conn

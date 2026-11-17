@@ -1191,7 +1191,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
             "role" => "viewer",
-            "email" => "test@mailinator.com"
+            "email" => "test@disposable.test"
           })
 
         assert %{"error" => "Disposable email addresses are not allowed"} =

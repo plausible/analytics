@@ -158,7 +158,7 @@ defmodule Plausible.Auth.UserTest do
       end
 
       test "fails for a disposable email domain" do
-        changeset = new_changeset("jane@mailinator.com")
+        changeset = new_changeset("jane@disposable.test")
 
         refute changeset.valid?
 
@@ -167,7 +167,7 @@ defmodule Plausible.Auth.UserTest do
       end
 
       test "does not hash the password for a rejected email" do
-        refute new_changeset("jane@mailinator.com").changes[:password_hash]
+        refute new_changeset("jane@disposable.test").changes[:password_hash]
         assert new_changeset("jane@example.com").changes[:password_hash]
       end
 
@@ -189,7 +189,7 @@ defmodule Plausible.Auth.UserTest do
       end
 
       test "fails when changing to a disposable email domain" do
-        changeset = change_email("jane@mailinator.com")
+        changeset = change_email("jane@disposable.test")
 
         refute changeset.valid?
 

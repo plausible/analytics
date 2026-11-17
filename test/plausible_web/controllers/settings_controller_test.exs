@@ -1102,7 +1102,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       conn =
         post(conn, ~p"/settings/security/email", %{
-          "user" => %{"password" => password, "email" => "foobar@mailinator.com"}
+          "user" => %{"password" => password, "email" => "foobar@disposable.test"}
         })
 
       assert text(html_response(conn, 200)) =~ "Disposable email addresses are not allowed"

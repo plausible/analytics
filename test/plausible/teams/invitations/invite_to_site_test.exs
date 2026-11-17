@@ -31,7 +31,7 @@ defmodule Plausible.Teams.Invitations.InviteToSiteTest do
 
       for role <- [:viewer, :owner] do
         assert {:error, :disposable_email} =
-                 InviteToSite.invite(site, inviter, "someone@mailinator.com", role)
+                 InviteToSite.invite(site, inviter, "someone@disposable.test", role)
       end
 
       assert Repo.aggregate(Plausible.Teams.GuestInvitation, :count) == 0

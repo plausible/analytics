@@ -51,7 +51,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
       assert {:error, :disposable_email} =
                InviteToTeam.invite_all(team, inviter, [
                  %{email: "first@example.com", role: :editor},
-                 %{email: "someone@mailinator.com", role: :viewer}
+                 %{email: "someone@disposable.test", role: :viewer}
                ])
 
       refute Repo.get_by(Teams.Invitation, team_id: team.id, email: "first@example.com")

@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     test "renders error for disposable email as it is typed", %{conn: conn} do
       lv = get_liveview(conn, "/register")
 
-      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[email]", "mary.sue@disposable.test")
       assert render(lv) =~ "Disposable email addresses are not allowed"
 
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       lv = get_liveview(conn, "/register")
 
       type_into_input(lv, "user[name]", "Mary Sue")
-      type_into_input(lv, "user[email]", "mary.sue@account.yahóo.com")
+      type_into_input(lv, "user[email]", "mary.sue@dispósable.test")
       assert render(lv) =~ "Disposable email addresses are not allowed"
 
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       assert html =~ "Disposable email addresses are not allowed"
-      refute Repo.get_by(User, email: "mary.sue@account.yahóo.com")
+      refute Repo.get_by(User, email: "mary.sue@dispósable.test")
     end
 
     @tag :ee_only
@@ -130,13 +130,13 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       lv = get_liveview(conn, "/register")
 
       type_into_input(lv, "user[name]", "Mary Sue")
-      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[email]", "mary.sue@disposable.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
 
       refute html =~ "Disposable email addresses are not allowed"
-      assert Repo.get_by(User, email: "mary.sue@mailinator.com")
+      assert Repo.get_by(User, email: "mary.sue@disposable.test")
     end
 
     @tag :ee_only
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       lv = get_liveview(conn, "/register")
 
       type_into_input(lv, "user[name]", "Mary Sue")
-      type_into_input(lv, "user[email]", "mary.sue@mailinator.com")
+      type_into_input(lv, "user[email]", "mary.sue@disposable.test")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
@@ -259,7 +259,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     } do
       mock_captcha_success()
 
-      invitation = invite_guest(site, "invitee@mailinator.com", role: :editor, inviter: inviter)
+      invitation = invite_guest(site, "invitee@disposable.test", role: :editor, inviter: inviter)
 
       lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
 
@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       assert html =~ "Disposable email addresses are not allowed"
-      refute Repo.get_by(User, email: "invitee@mailinator.com")
+      refute Repo.get_by(User, email: "invitee@disposable.test")
     end
 
     test "registers user from team invitation", %{conn: conn, inviter: inviter} do

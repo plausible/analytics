@@ -179,7 +179,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
-          email: "someone@mailinator.com",
+          email: "someone@disposable.test",
           role: "editor"
         })
 

@@ -323,7 +323,7 @@ defmodule PlausibleWeb.Live.SiteTransferSettingsTest do
         lv
         |> element("#site-transfer-form")
         |> render_submit(%{
-          "form" => %{"destination" => "account", "email" => "john.doe@mailinator.com"}
+          "form" => %{"destination" => "account", "email" => "john.doe@disposable.test"}
         })
 
       assert html =~ "Disposable email addresses are not allowed"

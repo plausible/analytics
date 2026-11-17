@@ -2,16 +2,15 @@ defmodule Plausible.Auth.DisposableEmail do
   @moduledoc """
   Detects email addresses on disposable (throwaway) email domains.
 
-  Uses the "normal" list from https://github.com/disposable/disposable,
+  Uses the list from https://github.com/castle/disposable-email-domains,
   vendored at `priv/disposable_email_domains.txt` (one domain per line, MIT licensed).
   The list is read at compile time, so refreshing it needs a recompile:
 
       curl -fsSL -o priv/disposable_email_domains.txt \\
-        https://raw.githubusercontent.com/disposable/disposable-email-domains/master/domains.txt
+        https://raw.githubusercontent.com/castle/disposable-email-domains/master/disposable-email-domains.txt
 
-  The "normal" list only contains domains used for temporary mailboxes. Unlike the
-  "strict" list, it does not include freemail providers (Outlook, Hotmail, ...) or
-  alias/forwarding services (SimpleLogin, Apple Hide My Email, ...).
+  `:extra_domains` in this module's config are matched too, at compile time. Tests
+  use it for domains that no real list contains, see `config/test.exs`.
 
   Only the exact domain of the address is matched, not its parent domains.
 
@@ -24,7 +23,11 @@ defmodule Plausible.Auth.DisposableEmail do
   @domains Application.app_dir(:plausible, @domains_path)
            |> File.read!()
            |> String.split("\n", trim: true)
+           |> Enum.concat(Application.compile_env(:plausible, [__MODULE__, :extra_domains], []))
            |> MapSet.new()
+
+  @doc false
+  def domains_count, do: MapSet.size(@domains)
 
   @spec disposable?(String.t() | nil) :: boolean()
   def disposable?(email) when is_binary(email) do

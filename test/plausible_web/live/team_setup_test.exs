@@ -530,7 +530,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, lv, _html} = live(conn, @url)
 
       assert finish_setup(lv,
-               rows: %{"1" => %{"email" => "someone@mailinator.com", "role" => "viewer"}}
+               rows: %{"1" => %{"email" => "someone@disposable.test", "role" => "viewer"}}
              ) =~ "Disposable email addresses are not allowed"
 
       refute Repo.reload!(team).setup_complete
