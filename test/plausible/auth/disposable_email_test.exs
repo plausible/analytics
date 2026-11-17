@@ -26,6 +26,12 @@ defmodule Plausible.Auth.DisposableEmailTest do
         refute DisposableEmail.disposable?("someone@plausible.io")
       end
 
+      test "false for a listed domain on our allowlist" do
+        # lake-capital.com is on the vendored list but is a real company domain
+        refute DisposableEmail.disposable?("someone@lake-capital.com")
+        refute DisposableEmail.disposable?("Someone@LAKE-CAPITAL.com")
+      end
+
       test "only matches the exact domain, not the local part or related domains" do
         refute DisposableEmail.disposable?("mailinator.com@gmail.com")
         refute DisposableEmail.disposable?("someone@mailinator.com.example.com")

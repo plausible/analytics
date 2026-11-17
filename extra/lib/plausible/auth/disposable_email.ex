@@ -9,6 +9,10 @@ defmodule Plausible.Auth.DisposableEmail do
       curl -fsSL -o priv/disposable_email_domains.txt \\
         https://raw.githubusercontent.com/disposable/disposable-email-domains/master/domains.txt
 
+  Real domains wrongly on that list go in `priv/disposable_email_domains_allowlist.txt`
+  (one domain per line, `#` for comments). That file isn't touched by the refresh,
+  so the exceptions survive it.
+
   The "normal" list only contains domains used for temporary mailboxes. Unlike the
   "strict" list, it does not include freemail providers (Outlook, Hotmail, ...) or
   alias/forwarding services (SimpleLogin, Apple Hide My Email, ...).
@@ -20,11 +24,20 @@ defmodule Plausible.Auth.DisposableEmail do
   """
 
   @domains_path "priv/disposable_email_domains.txt"
+  @allowlist_path "priv/disposable_email_domains_allowlist.txt"
   @external_resource @domains_path
-  @domains Application.app_dir(:plausible, @domains_path)
-           |> File.read!()
-           |> String.split("\n", trim: true)
-           |> MapSet.new()
+  @external_resource @allowlist_path
+
+  read_domains = fn path ->
+    Application.app_dir(:plausible, path)
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == "" or String.starts_with?(&1, "#")))
+    |> MapSet.new()
+  end
+
+  @domains MapSet.difference(read_domains.(@domains_path), read_domains.(@allowlist_path))
 
   @spec disposable?(String.t() | nil) :: boolean()
   def disposable?(email) when is_binary(email) do

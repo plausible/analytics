@@ -1,0 +1,7 @@
+# Domains on the vendored disposable list (disposable_email_domains.txt) that are
+# real company domains and must be allowed at signup. One domain per line, lowercase.
+# Kept in a separate file so refreshing the vendored list doesn't drop these.
+# Lines starting with # are comments.
+
+# Lake Capital (real estate investment, Madrid), rejected at signup on 2026-11-16
+lake-capital.com
