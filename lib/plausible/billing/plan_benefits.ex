@@ -75,8 +75,8 @@ defmodule Plausible.Billing.PlanBenefits do
     team_members =
       cond do
         "Unlimited team members" in business_benefits -> nil
-        "Up to 10 team members" in business_benefits -> "10+ team members"
-        "Up to 50 team members" in business_benefits -> "50+ team members"
+        "Up to 10 team members" in business_benefits -> "10+"
+        "Up to 50 team members" in business_benefits -> "50+"
         # if there's nothing about team members in Business benefits, then
         # Growth has unlimited team members already. In that case, we don't
         # mention team members at all.
@@ -85,26 +85,34 @@ defmodule Plausible.Billing.PlanBenefits do
 
     sites =
       cond do
-        "Up to 10 sites" in business_benefits -> "10+ sites"
-        "Up to 50 sites" in business_benefits -> "50+ sites"
+        "Up to 10 sites" in business_benefits -> "10+"
+        "Up to 50 sites" in business_benefits -> "50+"
         # Before v4, every plan (both Growth and Business) had 50 sites.
         # Therefore, if Business benefits do not mention site limit, then
         # it's 50. Newer Business plans always define a higher site limit.
-        true -> "50+ sites"
+        true -> "50+"
+      end
+
+    # One line for sites and team members keeps the Enterprise list as long
+    # as the Business one.
+    sites_and_team_members =
+      cond do
+        is_nil(team_members) -> "#{sites} sites"
+        sites == team_members -> "#{sites} sites and team members"
+        true -> "#{sites} sites and #{team_members} team members"
       end
 
     [
       "Everything in Business",
-      sites,
-      team_members,
+      sites_and_team_members,
       "600+ Stats API requests per hour",
       "Sites API",
       "Single Sign-On (SSO)",
       "Managed Proxy",
       "Scheduled raw event data exports",
+      "Annual billing by invoice",
       "Priority support"
     ]
-    |> Enum.filter(& &1)
   end
 
   defp benefits_available_on_lowest_plan do
