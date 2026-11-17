@@ -30,18 +30,19 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def guests_index(conn, params) do
-    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
-      opts = [cursor_fields: [sort_index: :asc], limit: 100, maximum_limit: 1000]
-      page = site |> Sites.list_guests_query() |> paginate(params, opts)
+    case find_site(conn, [:owner, :admin, :editor, :viewer]) do
+      {:ok, site} ->
+        opts = [cursor_fields: [sort_index: :asc], limit: 100, maximum_limit: 1000]
+        page = site |> Sites.list_guests_query() |> paginate(params, opts)
 
-      json(conn, %{
-        guests:
-          Enum.map(page.entries, fn entry ->
-            Map.take(entry, [:email, :role, :status])
-          end),
-        meta: pagination_meta(page.metadata)
-      })
-    else
+        json(conn, %{
+          guests:
+            Enum.map(page.entries, fn entry ->
+              Map.take(entry, [:email, :role, :status])
+            end),
+          meta: pagination_meta(page.metadata)
+        })
+
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -73,27 +74,28 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def goals_index(conn, params) do
-    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
-      page =
-        site
-        |> Plausible.Goals.for_site_query()
-        |> paginate(params, @pagination_opts)
+    case find_site(conn, [:owner, :admin, :editor, :viewer]) do
+      {:ok, site} ->
+        page =
+          site
+          |> Plausible.Goals.for_site_query()
+          |> paginate(params, @pagination_opts)
 
-      json(conn, %{
-        goals:
-          Enum.map(page.entries, fn goal ->
-            %{
-              id: goal.id,
-              display_name: goal.display_name,
-              goal_type: Goal.type(goal),
-              event_name: goal.event_name,
-              page_path: goal.page_path,
-              custom_props: goal.custom_props
-            }
-          end),
-        meta: pagination_meta(page.metadata)
-      })
-    else
+        json(conn, %{
+          goals:
+            Enum.map(page.entries, fn goal ->
+              %{
+                id: goal.id,
+                display_name: goal.display_name,
+                goal_type: Goal.type(goal),
+                event_name: goal.event_name,
+                page_path: goal.page_path,
+                custom_props: goal.custom_props
+              }
+            end),
+          meta: pagination_meta(page.metadata)
+        })
+
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -407,14 +409,15 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def custom_props_index(conn, _params) do
-    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
-      properties =
-        (site.allowed_event_props || [])
-        |> Enum.sort()
-        |> Enum.map(fn prop -> %{property: prop} end)
+    case find_site(conn, [:owner, :admin, :editor, :viewer]) do
+      {:ok, site} ->
+        properties =
+          (site.allowed_event_props || [])
+          |> Enum.sort()
+          |> Enum.map(fn prop -> %{property: prop} end)
 
-      json(conn, %{custom_properties: properties})
-    else
+        json(conn, %{custom_properties: properties})
+
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
