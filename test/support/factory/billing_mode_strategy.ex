@@ -39,13 +39,10 @@ defmodule Plausible.Factory.BillingModeStrategy do
   defp do_convert(%PaddleClassic.Subscription{paddle_plan_id: plan_id} = subscription)
        when plan_id not in @classic_only_plan_ids do
     replace_existing(subscription)
-    n = System.unique_integer([:positive])
     {product_id, price_id} = billing_ids(plan_id)
     interval = resolve_interval(plan_id, team_id_of(subscription))
 
-    %PaddleBilling.Subscription{
-      billing_subscription_id: "sub_#{n}",
-      billing_customer_id: "ctm_#{n}",
+    Plausible.Factory.build(:billing_subscription,
       billing_product_id: product_id,
       billing_price_id: price_id,
       billing_interval: interval,
@@ -58,7 +55,7 @@ defmodule Plausible.Factory.BillingModeStrategy do
       team_id: subscription.team_id,
       inserted_at: subscription.inserted_at,
       updated_at: subscription.updated_at
-    }
+    )
   end
 
   defp do_convert(%EnterprisePlan{billing_price_id: nil, paddle_plan_id: plan_id} = plan)
