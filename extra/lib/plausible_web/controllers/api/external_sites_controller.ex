@@ -30,8 +30,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def guests_index(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
+    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       opts = [cursor_fields: [sort_index: :asc], limit: 100, maximum_limit: 1000]
       page = site |> Sites.list_guests_query() |> paginate(params, opts)
 
@@ -43,9 +42,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         meta: pagination_meta(page.metadata)
       })
     else
-      {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to list goals")
-
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -77,8 +73,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def goals_index(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
+    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       page =
         site
         |> Plausible.Goals.for_site_query()
@@ -99,9 +94,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         meta: pagination_meta(page.metadata)
       })
     else
-      {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to list goals")
-
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
     end
@@ -254,8 +246,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_guest(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, email} <- expect_param_key(params, "email"),
+    with {:ok, email} <- expect_param_key(params, "email"),
          {:ok, role} <- expect_param_key(params, "role", ["viewer", "editor"]),
          {:ok, site} <- find_site(conn, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
@@ -300,8 +291,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_guest(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, email} <- expect_param_key(params, "email"),
+    with {:ok, email} <- expect_param_key(params, "email"),
          {:ok, site} <- find_site(conn, [:owner, :admin]) do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
@@ -332,8 +322,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_shared_link(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, link_name} <- expect_param_key(params, "name"),
+    with {:ok, link_name} <- expect_param_key(params, "name"),
          {:ok, site} <- find_site(conn, [:owner, :admin, :editor]) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
@@ -361,9 +350,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
 
-      {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to create a shared link")
-
       {:missing, "name"} ->
         H.bad_request(conn, "Parameter `name` is required to create a shared link")
 
@@ -373,8 +359,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def find_or_create_goal(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, _} <- expect_param_key(params, "goal_type"),
+    with {:ok, _} <- expect_param_key(params, "goal_type"),
          {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, goal} <- Goals.find_or_create(site, params) do
       json(conn, goal)
@@ -402,8 +387,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_goal(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, goal_id} <- expect_param_key(params, "goal_id"),
+    with {:ok, goal_id} <- expect_param_key(params, "goal_id"),
          {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          :ok <- Goals.delete(goal_id, site) do
       json(conn, %{"deleted" => true})
@@ -414,9 +398,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:error, :not_found} ->
         H.not_found(conn, "Goal could not be found")
 
-      {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to delete a goal")
-
       {:missing, "goal_id"} ->
         H.bad_request(conn, "Parameter `goal_id` is required to delete a goal")
 
@@ -425,9 +406,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def custom_props_index(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
+  def custom_props_index(conn, _params) do
+    with {:ok, site} <- find_site(conn, [:owner, :admin, :editor, :viewer]) do
       properties =
         (site.allowed_event_props || [])
         |> Enum.sort()
@@ -437,15 +417,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     else
       {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
-
-      {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to list custom properties")
     end
   end
 
   def add_custom_prop(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, property} <- expect_param_key(params, "property"),
+    with {:ok, property} <- expect_param_key(params, "property"),
          {:ok, site} <- find_site(conn, [:owner, :admin, :editor]),
          {:ok, _} <- Props.allow(site, property) do
       json(conn, %{"created" => true})
@@ -482,8 +458,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def delete_custom_prop(conn, params) do
-    with {:ok, _} <- expect_param_key(params, "site_id"),
-         {:ok, property} <- expect_param_key(params, "property"),
+    with {:ok, property} <- expect_param_key(params, "property"),
          # Property name is extracted from route URL via wildcard,
          # which returns a list.
          property = Path.join(property),
