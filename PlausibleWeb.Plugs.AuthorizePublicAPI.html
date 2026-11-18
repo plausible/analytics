@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-26C89244.js"></script>
+    <script src="dist/sidebar_items-31E44984.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -140,17 +140,27 @@ Pages
     <section id="moduledoc">
 <p>Plug for authorizing access to Stats and Sites APIs.</p><p>The plug expects <code class="inline">:api_scope</code> to be provided in the assigns. The scope
 will then be used to check for API key validity. The assign can be
-provided in the router configuration in a following way:</p><pre><code class="makeup elixir" translate="no"><span class="n">scope</span><span class="w"> </span><span class="s">&quot;/api/v1/stats&quot;</span><span class="p">,</span><span class="w"> </span><span class="nc">PlausibleWeb.Api</span><span class="p">,</span><span class="w"> </span><span class="ss">assigns</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8317283359-1">%{</span><span class="ss">api_scope</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;some:scope:*&quot;</span><span class="p" data-group-id="8317283359-1">}</span><span class="w"> </span><span class="k" data-group-id="8317283359-2">do</span><span class="w">
-  </span><span class="n">pipe_through</span><span class="w"> </span><span class="p" data-group-id="8317283359-3">[</span><span class="ss">:public_api</span><span class="p">,</span><span class="w"> </span><span class="nc">PlausibleWeb.Plugs.AuthorizePublicAPI</span><span class="p" data-group-id="8317283359-3">]</span><span class="w">
+provided in the router configuration in a following way:</p><pre><code class="makeup elixir" translate="no"><span class="n">scope</span><span class="w"> </span><span class="s">&quot;/api/v1/stats&quot;</span><span class="p">,</span><span class="w"> </span><span class="nc">PlausibleWeb.Api</span><span class="p">,</span><span class="w"> </span><span class="ss">assigns</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0918966236-1">%{</span><span class="ss">api_scope</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;some:scope:*&quot;</span><span class="p" data-group-id="0918966236-1">}</span><span class="w"> </span><span class="k" data-group-id="0918966236-2">do</span><span class="w">
+  </span><span class="n">pipe_through</span><span class="w"> </span><span class="p" data-group-id="0918966236-3">[</span><span class="ss">:public_api</span><span class="p">,</span><span class="w"> </span><span class="nc">PlausibleWeb.Plugs.AuthorizePublicAPI</span><span class="p" data-group-id="0918966236-3">]</span><span class="w">
 
   </span><span class="c1"># route definitions follow</span><span class="w">
   </span><span class="c1"># ...</span><span class="w">
-</span><span class="k" data-group-id="8317283359-2">end</span></code></pre><p>The scope from <code class="inline">:api_scope</code> is checked for match against all scopes from API key's
+</span><span class="k" data-group-id="0918966236-2">end</span></code></pre><p>The scope from <code class="inline">:api_scope</code> is checked for match against all scopes from API key's
 <code class="inline">scopes</code> field. If the scope is among <code class="inline">@implicit_scopes</code>, it's considered to be
 present for any valid API key. Scopes are checked for match by prefix, so if we have
 <code class="inline">some:scope:*</code> in matching route <code class="inline">:api_scope</code> and the API key has <code class="inline">some:*</code> in its
 <code class="inline">scopes</code> field, they will match.</p><p>After a match is found, additional verification can be conducted, like in case of
-<code class="inline">stats:read:*</code>, where valid site ID is expected among parameters too.</p><p>All API requests are rate limited per API key, enforcing a given hourly request limit.</p>
+<code class="inline">stats:read:*</code>, where valid site ID is expected among parameters too.</p><p>All API requests are rate limited per API key, enforcing a given hourly request limit.</p><h2 id="module-assigns" class="section-heading">
+  <a href="#module-assigns" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Assigns</span>
+</h2>
+<ul><li><code class="inline">:current_credential</code> - the API key. Set before the access checks, so
+error responses from this plug also carry it.</li><li><code class="inline">:current_user</code> and <code class="inline">:current_team</code> - set only when access is granted.</li><li><code class="inline">:site</code> - the site from the <code class="inline">site_id</code> param, set only when API access to
+the site is verified. The plug does not check the site role. Controllers
+check the role that each action needs. On the Stats API,
+<code class="inline">completed_imports</code> is preloaded. On the Sites API, nothing is preloaded.</li></ul>
     </section>
 
 </div>
@@ -204,7 +214,7 @@ present for any valid API key. Scopes are checked for match by prefix, so if we 
     </a>
     <h1 class="signature" translate="no">call(conn, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_public_api.ex#L50" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_public_api.ex#L60" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -224,7 +234,7 @@ present for any valid API key. Scopes are checked for match by prefix, so if we 
     </a>
     <h1 class="signature" translate="no">init(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_public_api.ex#L46" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_public_api.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
