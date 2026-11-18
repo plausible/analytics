@@ -41,17 +41,17 @@ defmodule Plausible.Workers.CheckUsageTest do
 
     subscribe_to_plan(
       user,
-      @paddle_id_10k,
-      last_bill_date: Date.shift(Date.utc_today(), day: -1),
-      status: :active
-    )
-
-    subscribe_to_plan(
-      user,
       "wont-exist-should-crash",
       last_bill_date: Date.shift(Date.utc_today(), day: -1),
       inserted_at: DateTime.shift(DateTime.utc_now(), day: -2),
       status: :deleted
+    )
+
+    subscribe_to_plan(
+      user,
+      @paddle_id_10k,
+      last_bill_date: Date.shift(Date.utc_today(), day: -1),
+      status: :active
     )
 
     CheckUsage.perform(nil, usage_stub)

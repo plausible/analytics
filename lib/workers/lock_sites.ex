@@ -15,7 +15,10 @@ defmodule Plausible.Workers.LockSites do
           as: :team,
           left_join: s in assoc(t, :subscription),
           left_join: ep in EnterprisePlan,
-          on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
+          on:
+            ep.team_id == t.id and
+              (ep.paddle_plan_id == s.paddle_plan_id or
+                 ep.billing_product_id == s.billing_product_id),
           preload: [subscription: s, enterprise_plan: ep]
       )
 

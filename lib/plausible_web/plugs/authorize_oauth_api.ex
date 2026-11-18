@@ -75,8 +75,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
   does not carry `scope`. See [runtime insufficient scope errors](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization#runtime-insufficient-scope-errors).
 
   ## Examples
-  iex> challenge(Plausible.OAuth.ProtectedResources.mcp(), "sites:read:*")
-  ~s(Bearer resource_metadata="http://localhost:8000/.well-known/oauth-protected-resource/mcp", scope="sites:read:*", error="insufficient_scope")
+      iex> challenge(Plausible.OAuth.ProtectedResources.mcp(), "sites:read:*")
+      ~s(Bearer resource_metadata="http://localhost:8000/.well-known/oauth-protected-resource/mcp", scope="sites:read:*", error="insufficient_scope")
   """
   @spec challenge(ProtectedResources.t(), String.t()) :: String.t()
   def challenge(resource, scope),

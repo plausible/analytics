@@ -186,7 +186,7 @@ defmodule Plausible.Billing.PlansTest do
 
       subscription = user |> team_of(with_subscription?: true) |> Map.fetch!(:subscription)
 
-      assert Plans.subscription_interval(subscription) == :yearly
+      assert to_string(Plans.subscription_interval(subscription)) == "yearly"
     end
   end
 

@@ -24,16 +24,21 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }}, ${{ matrix.mix_test_partition }})"
+    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }}, ${{ matrix.mix_test_partition }}${{ matrix.billing_subscriptions == '1' && ', billing subscriptions' || '' }})"
     runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       matrix:
         mix_env: ["test", "ce_test"]
         postgres_image: ["postgres:18"]
         mix_test_partition: [1, 2, 3, 4, 5, 6]
+        billing_subscriptions: ["0", "1"]
+        exclude:
+          - mix_env: ce_test
+            billing_subscriptions: "1"
 
     env:
       MIX_ENV: ${{ matrix.mix_env }}
+      BILLING_SUBSCRIPTIONS: ${{ matrix.billing_subscriptions }}
     services:
       postgres:
         image: ${{ matrix.postgres_image }}
@@ -104,9 +109,9 @@ jobs:
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
       - run: make minio
-        if: env.MIX_ENV == 'test'
+        if: env.MIX_ENV == 'test' && env.BILLING_SUBSCRIPTIONS == '0'
       - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6
-        if: env.MIX_ENV == 'test'
+        if: env.MIX_ENV == 'test' && env.BILLING_SUBSCRIPTIONS == '0'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
@@ -114,6 +119,12 @@ jobs:
 
       - run: mix test --include slow --include migrations --max-failures 1 --warnings-as-errors --partitions 6
         if: env.MIX_ENV == 'ce_test'
+        env:
+          MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
+
+      - name: Run tests against Billing subscriptions
+        run: mix test --max-failures 1 --warnings-as-errors --partitions 6
+        if: env.BILLING_SUBSCRIPTIONS == '1'
         env:
           MIX_TEST_PARTITION: ${{ matrix.mix_test_partition }}
 

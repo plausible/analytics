@@ -257,29 +257,29 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   @doc """
   ### Examples:
-    iex> QueryBuilder.parse_order_by(nil)
-    []
+      iex> QueryBuilder.parse_order_by(nil)
+      []
 
-    iex> QueryBuilder.parse_order_by("")
-    []
+      iex> QueryBuilder.parse_order_by("")
+      []
 
-    iex> QueryBuilder.parse_order_by("0")
-    []
+      iex> QueryBuilder.parse_order_by("0")
+      []
 
-    iex> QueryBuilder.parse_order_by("[}")
-    []
+      iex> QueryBuilder.parse_order_by("[}")
+      []
 
-    iex> QueryBuilder.parse_order_by(~s({"any":"object"}))
-    []
+      iex> QueryBuilder.parse_order_by(~s({"any":"object"}))
+      []
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","invalid"]]))
-    []
+      iex> QueryBuilder.parse_order_by(~s([["visitors","invalid"]]))
+      []
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","desc"]]))
-    [{:visitors, :desc}]
+      iex> QueryBuilder.parse_order_by(~s([["visitors","desc"]]))
+      [{:visitors, :desc}]
 
-    iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
-    [{:visitors, :asc}, {"visit:source", :desc}]
+      iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
+      [{:visitors, :asc}, {"visit:source", :desc}]
   """
   def parse_order_by(order_by) do
     with true <- is_binary(order_by),
@@ -293,11 +293,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   @doc """
   ### Examples:
-    iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
-    Plausible.Stats.Query.ApiParser.default_include()
+      iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(nil)
+      Plausible.Stats.Query.ApiParser.default_include()
 
-    iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
-    Map.merge(Plausible.Stats.Query.ApiParser.default_include(), %{total_rows: true})
+      iex> Plausible.Stats.Legacy.QueryBuilder.parse_include(~s({"total_rows": true}))
+      Map.merge(Plausible.Stats.Query.ApiParser.default_include(), %{total_rows: true})
   """
   def parse_include(include) do
     include =
@@ -313,12 +313,51 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     |> Map.merge(include)
   end
 
+  @doc """
+  Parses the `filters` param of a `Query.from/3` call.
+
+  We are in the process of moving away from `Query.from/3`, but two kinds of
+  clients still use it, and they send filters in different formats:
+
+    * Stats API v1 (aggregate, breakdown, timeseries) sends a filter expression
+      string, e.g. `visit:browser==Chrome;event:page==/blog`.
+    * Some dashboard endpoints (that are not migrated to API v2 yet) send
+      JSON-encoded filters in the Stats API v2 format: filter suggestions,
+      funnels, exploration and Google search terms.
+
+  Returns an empty list when `filters` is `nil` or JSON that is not a list.
+
+  ### Examples:
+      iex> QueryBuilder.parse_filters("visit:browser!=Chrome")
+      [[:is_not, "visit:browser", ["Chrome"]]]
+
+      iex> QueryBuilder.parse_filters(~s([["is","visit:browser",["Chrome"]]]))
+      [[:is, "visit:browser", ["Chrome"]]]
+
+      iex> QueryBuilder.parse_filters(nil)
+      []
+  """
+  def parse_filters(filters) when is_binary(filters) do
+    case Jason.decode(filters) do
+      {:ok, filters} when is_list(filters) -> parse_filters(filters)
+      {:ok, _} -> []
+      {:error, err} -> Filters.LegacyStatsAPIFilterParser.parse_filter_expression(err.data)
+    end
+  end
+
+  def parse_filters(filters) when is_list(filters) do
+    {:ok, parsed_filters} = Filters.Parser.parse(filters)
+    parsed_filters
+  end
+
+  def parse_filters(_), do: []
+
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
   end
 
   defp put_parsed_filters(query, params) do
-    struct!(query, filters: Filters.parse(params["filters"]))
+    struct!(query, filters: parse_filters(params["filters"]))
   end
 
   defp today(query) do

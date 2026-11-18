@@ -1,11 +1,134 @@
 defmodule Plausible.Stats.QueryPeriodTest do
   use ExUnit.Case, async: true
 
-  alias Plausible.Stats.{DateTimeRange, QueryPeriod}
+  alias Plausible.Stats.{DateTimeRange, QueryError, QueryPeriod}
 
   doctest QueryPeriod, import: true
 
   @now_irrelevant ~U[2999-01-01 00:00:00Z]
+
+  @site %Plausible.Site{timezone: "Etc/UTC"}
+
+  @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
+  @date_range_realtime %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
+  }
+  @date_range_30m %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
+  }
+  @date_range_24h %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-04], ~T[12:30:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
+  }
+  @date_range_day %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_7d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-28], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_10d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-25], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_30d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_month %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_3mo %DateTimeRange{
+    first: DateTime.new!(~D[2021-02-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_6mo %DateTimeRange{
+    first: DateTime.new!(~D[2020-11-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_year %DateTimeRange{
+    first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_12mo %DateTimeRange{
+    first: DateTime.new!(~D[2020-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-04-30], ~T[23:59:59], "Etc/UTC")
+  }
+
+  describe "parse_input_date_range/1" do
+    for {date_range, expected} <- [
+          {"day", :day},
+          {"24h", :"24h"},
+          {"month", :month},
+          {"year", :year},
+          {"all", :all},
+          {"7d", {:last_n_days, 7}},
+          {"28d", {:last_n_days, 28}},
+          {"30d", {:last_n_days, 30}},
+          {"91d", {:last_n_days, 91}},
+          {"6mo", {:last_n_months, 6}},
+          {"12mo", {:last_n_months, 12}}
+        ] do
+      test "parses #{date_range}" do
+        assert QueryPeriod.parse_input_date_range(unquote(date_range)) ==
+                 {:ok, unquote(Macro.escape(expected))}
+      end
+    end
+
+    test "parses a custom date range" do
+      assert QueryPeriod.parse_input_date_range(["2021-01-01", "2021-03-05"]) ==
+               {:ok, {:date_range, ~D[2021-01-01], ~D[2021-03-05]}}
+    end
+
+    test "returns an error when date_range is missing" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_input_date_range(nil)
+    end
+
+    test "does not accept the realtime date ranges" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_input_date_range("realtime")
+    end
+  end
+
+  describe "parse_dashboard_input_date_range/1" do
+    test "parses realtime" do
+      assert QueryPeriod.parse_dashboard_input_date_range("realtime") == {:ok, :realtime}
+    end
+
+    test "parses realtime_30m" do
+      assert QueryPeriod.parse_dashboard_input_date_range("realtime_30m") ==
+               {:ok, :realtime_30m}
+    end
+
+    test "parses the other date ranges like parse_input_date_range/1" do
+      assert QueryPeriod.parse_dashboard_input_date_range("28d") == {:ok, {:last_n_days, 28}}
+    end
+
+    test "returns an error when date_range is missing" do
+      assert {:error, %QueryError{code: :invalid_date_range}} =
+               QueryPeriod.parse_dashboard_input_date_range(nil)
+    end
+  end
+
+  describe "parse_relative_date/1" do
+    test "parses a valid iso8601 date string" do
+      assert QueryPeriod.parse_relative_date("2021-05-05") == {:ok, ~D[2021-05-05]}
+    end
+
+    test "nil is accepted" do
+      assert QueryPeriod.parse_relative_date(nil) == {:ok, nil}
+    end
+
+    test "errors when invalid date" do
+      assert {:error, %QueryError{code: :invalid_relative_date}} =
+               QueryPeriod.parse_relative_date("2021-13-32")
+    end
+  end
 
   describe "build_datetime_range/4" do
     test "the day period truncates at \"now\" when the date is today" do
@@ -63,6 +186,49 @@ defmodule Plausible.Stats.QueryPeriodTest do
 
       assert range.first == ~U[2024-01-01 00:00:00Z]
       assert range.last == ~U[2024-12-31 23:59:59Z]
+    end
+  end
+
+  describe "build_utc_range_for_site/4" do
+    for {input_date_range, expected_utc_time_range} <- [
+          {:realtime, @date_range_realtime},
+          {:realtime_30m, @date_range_30m},
+          {:"24h", @date_range_24h}
+        ] do
+      test "builds utc_time_range for #{input_date_range} input_date_range" do
+        assert QueryPeriod.build_utc_range_for_site(
+                 unquote(input_date_range),
+                 @site,
+                 nil,
+                 @now
+               ) == unquote(Macro.escape(expected_utc_time_range))
+      end
+    end
+
+    test "utc_time_range construction respects relative_date" do
+      relative_date = @now |> DateTime.to_date()
+
+      # Replace the fixed now. Otherwise this test could pass ignoring relative_date
+      now = DateTime.utc_now(:second)
+
+      for {date_range_shortcut, expected_utc_time_range} <- [
+            {:day, @date_range_day},
+            {{:last_n_days, 7}, @date_range_7d},
+            {{:last_n_days, 10}, @date_range_10d},
+            {{:last_n_days, 30}, @date_range_30d},
+            {:month, @date_range_month},
+            {{:last_n_months, 3}, @date_range_3mo},
+            {{:last_n_months, 6}, @date_range_6mo},
+            {{:last_n_months, 12}, @date_range_12mo},
+            {:year, @date_range_year}
+          ] do
+        assert QueryPeriod.build_utc_range_for_site(
+                 date_range_shortcut,
+                 @site,
+                 relative_date,
+                 now
+               ) == expected_utc_time_range
+      end
     end
   end
 

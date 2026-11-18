@@ -53,7 +53,7 @@ defmodule Plausible.Billing.MigrationAudit do
 
     or, from a remote shell:
 
-  iex> IO.puts(Plausible.Billing.MigrationAudit.json_report())
+      iex> IO.puts(Plausible.Billing.MigrationAudit.json_report())
   """
   @spec json_report(Keyword.t()) :: String.t()
   def json_report(opts \\ []) do

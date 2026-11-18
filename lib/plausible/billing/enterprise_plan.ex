@@ -17,6 +17,8 @@ defmodule Plausible.Billing.EnterprisePlan do
 
   schema "enterprise_plans" do
     field :paddle_plan_id, :string
+    field :billing_product_id, :string
+    field :billing_price_id, :string
     field :billing_interval, Ecto.Enum, values: [:monthly, :yearly]
     field :monthly_pageview_limit, :integer
     field :site_limit, :integer
@@ -65,6 +67,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     |> validate_number(:hourly_api_request_limit, less_than: @max)
     |> validate_required(@required_fields)
     |> unique_paddle_plan_id_constraint()
+    |> unique_constraint([:team_id, :billing_product_id], error_key: :billing_product_id)
   end
 
   defp unique_paddle_plan_id_constraint(changeset) do
