@@ -25,8 +25,10 @@ defmodule Plausible.SSRF do
   @ip_check Application.compile_env(:plausible, :ssrf_ip_check, Plausible.IP.Tools)
 
   def child_spec(_opts) do
-    # if a default pool should be started, these opts ensure it's automatically cleaned up
-    default_opts = [pool_max_idle_time: @pool_max_idle_time]
+    # Workaround. An idle pool lingers for a 1s grace period, then stops. A request landing
+    # just as it stops gets a replacement from these defaults, without our other options.
+    # This closes it ASAP, which is 1ms idle + 1s grace period without requests.
+    default_opts = [pool_max_idle_time: 1]
     Finch.child_spec(name: @finch, pools: %{default: default_opts})
   end
 
