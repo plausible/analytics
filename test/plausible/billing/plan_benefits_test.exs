@@ -143,13 +143,13 @@ defmodule Plausible.Billing.PlanBenefitsTest do
 
       assert PlanBenefits.for_enterprise(v5_business_benefits) == [
                "Everything in Business",
-               "10+ sites",
-               "10+ team members",
+               "10+ sites and team members",
                "600+ Stats API requests per hour",
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
                "Scheduled raw event data exports",
+               "Annual billing by invoice",
                "Priority support"
              ]
     end
@@ -163,13 +163,13 @@ defmodule Plausible.Billing.PlanBenefitsTest do
 
       assert PlanBenefits.for_enterprise(v4_business_benefits) == [
                "Everything in Business",
-               "50+ sites",
-               "10+ team members",
+               "50+ sites and 10+ team members",
                "600+ Stats API requests per hour",
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
                "Scheduled raw event data exports",
+               "Annual billing by invoice",
                "Priority support"
              ]
     end
@@ -189,6 +189,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Single Sign-On (SSO)",
                "Managed Proxy",
                "Scheduled raw event data exports",
+               "Annual billing by invoice",
                "Priority support"
              ]
     end
