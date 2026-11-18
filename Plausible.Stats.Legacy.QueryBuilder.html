@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-31E44984.js"></script>
+    <script src="dist/sidebar_items-BAEBF428.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -180,11 +180,11 @@ and v1 of our Stats API.</p><p>@deprecated</p>
 
       </div>
 
-        <div class="summary-synopsis"><h3>Examples:</h3><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="0589885860-1">(</span><span class="no">nil</span><span class="p" data-group-id="0589885860-1">)</span><span class="w">
-</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="0589885860-2">(</span><span class="p" data-group-id="0589885860-2">)</span><span class="w">
+        <div class="summary-synopsis"><h3>Examples:</h3><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="9747048194-1">(</span><span class="no">nil</span><span class="p" data-group-id="9747048194-1">)</span><span class="w">
+</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="9747048194-2">(</span><span class="p" data-group-id="9747048194-2">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="0589885860-3">(</span><span class="s">~s({&quot;total_rows&quot;: true})</span><span class="p" data-group-id="0589885860-3">)</span><span class="w">
-</span><span class="nc">Map</span><span class="o">.</span><span class="n">merge</span><span class="p" data-group-id="0589885860-4">(</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="0589885860-5">(</span><span class="p" data-group-id="0589885860-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0589885860-6">%{</span><span class="ss">total_rows</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="0589885860-6">}</span><span class="p" data-group-id="0589885860-4">)</span></code></pre></div>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="9747048194-3">(</span><span class="s">~s({&quot;total_rows&quot;: true})</span><span class="p" data-group-id="9747048194-3">)</span><span class="w">
+</span><span class="nc">Map</span><span class="o">.</span><span class="n">merge</span><span class="p" data-group-id="9747048194-4">(</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="9747048194-5">(</span><span class="p" data-group-id="9747048194-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9747048194-6">%{</span><span class="ss">total_rows</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="9747048194-6">}</span><span class="p" data-group-id="9747048194-4">)</span></code></pre></div>
 
     </div>
 
@@ -194,29 +194,29 @@ and v1 of our Stats API.</p><p>@deprecated</p>
 
       </div>
 
-        <div class="summary-synopsis"><h3>Examples:</h3><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-1">(</span><span class="no">nil</span><span class="p" data-group-id="0923803386-1">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-2">[</span><span class="p" data-group-id="0923803386-2">]</span><span class="w">
+        <div class="summary-synopsis"><h3>Examples:</h3><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-1">(</span><span class="no">nil</span><span class="p" data-group-id="3617543496-1">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-2">[</span><span class="p" data-group-id="3617543496-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-3">(</span><span class="s">&quot;&quot;</span><span class="p" data-group-id="0923803386-3">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-4">[</span><span class="p" data-group-id="0923803386-4">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-3">(</span><span class="s">&quot;&quot;</span><span class="p" data-group-id="3617543496-3">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-4">[</span><span class="p" data-group-id="3617543496-4">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-5">(</span><span class="s">&quot;0&quot;</span><span class="p" data-group-id="0923803386-5">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-6">[</span><span class="p" data-group-id="0923803386-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-5">(</span><span class="s">&quot;0&quot;</span><span class="p" data-group-id="3617543496-5">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-6">[</span><span class="p" data-group-id="3617543496-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-7">(</span><span class="s">&quot;[}&quot;</span><span class="p" data-group-id="0923803386-7">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-8">[</span><span class="p" data-group-id="0923803386-8">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-7">(</span><span class="s">&quot;[}&quot;</span><span class="p" data-group-id="3617543496-7">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-8">[</span><span class="p" data-group-id="3617543496-8">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-9">(</span><span class="s">~s({&quot;any&quot;:&quot;object&quot;})</span><span class="p" data-group-id="0923803386-9">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-10">[</span><span class="p" data-group-id="0923803386-10">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-9">(</span><span class="s">~s({&quot;any&quot;:&quot;object&quot;})</span><span class="p" data-group-id="3617543496-9">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-10">[</span><span class="p" data-group-id="3617543496-10">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-11">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;invalid&quot;]])</span><span class="p" data-group-id="0923803386-11">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-12">[</span><span class="p" data-group-id="0923803386-12">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-11">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;invalid&quot;]])</span><span class="p" data-group-id="3617543496-11">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-12">[</span><span class="p" data-group-id="3617543496-12">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-13">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="0923803386-13">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-14">[</span><span class="p" data-group-id="0923803386-15">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="0923803386-15">}</span><span class="p" data-group-id="0923803386-14">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-13">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="3617543496-13">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-14">[</span><span class="p" data-group-id="3617543496-15">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="3617543496-15">}</span><span class="p" data-group-id="3617543496-14">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-16">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;asc&quot;],[&quot;visit:source&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="0923803386-16">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-17">[</span><span class="p" data-group-id="0923803386-18">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:asc</span><span class="p" data-group-id="0923803386-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0923803386-19">{</span><span class="s">&quot;visit:source&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="0923803386-19">}</span><span class="p" data-group-id="0923803386-17">]</span></code></pre></div>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-16">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;asc&quot;],[&quot;visit:source&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="3617543496-16">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-17">[</span><span class="p" data-group-id="3617543496-18">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:asc</span><span class="p" data-group-id="3617543496-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3617543496-19">{</span><span class="s">&quot;visit:source&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="3617543496-19">}</span><span class="p" data-group-id="3617543496-17">]</span></code></pre></div>
 
     </div>
 
@@ -282,14 +282,14 @@ funnels, exploration and Google search terms.</li></ul><p>Returns an empty list 
   </a>
   <span class="text">Examples:</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="9345377691-1">(</span><span class="s">&quot;visit:browser!=Chrome&quot;</span><span class="p" data-group-id="9345377691-1">)</span><span class="w">
-</span><span class="p" data-group-id="9345377691-2">[</span><span class="p" data-group-id="9345377691-3">[</span><span class="ss">:is_not</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9345377691-4">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="9345377691-4">]</span><span class="p" data-group-id="9345377691-3">]</span><span class="p" data-group-id="9345377691-2">]</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="1750443572-1">(</span><span class="s">&quot;visit:browser!=Chrome&quot;</span><span class="p" data-group-id="1750443572-1">)</span><span class="w">
+</span><span class="p" data-group-id="1750443572-2">[</span><span class="p" data-group-id="1750443572-3">[</span><span class="ss">:is_not</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1750443572-4">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="1750443572-4">]</span><span class="p" data-group-id="1750443572-3">]</span><span class="p" data-group-id="1750443572-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="9345377691-5">(</span><span class="s">~s([[&quot;is&quot;,&quot;visit:browser&quot;,[&quot;Chrome&quot;]]])</span><span class="p" data-group-id="9345377691-5">)</span><span class="w">
-</span><span class="p" data-group-id="9345377691-6">[</span><span class="p" data-group-id="9345377691-7">[</span><span class="ss">:is</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9345377691-8">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="9345377691-8">]</span><span class="p" data-group-id="9345377691-7">]</span><span class="p" data-group-id="9345377691-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="1750443572-5">(</span><span class="s">~s([[&quot;is&quot;,&quot;visit:browser&quot;,[&quot;Chrome&quot;]]])</span><span class="p" data-group-id="1750443572-5">)</span><span class="w">
+</span><span class="p" data-group-id="1750443572-6">[</span><span class="p" data-group-id="1750443572-7">[</span><span class="ss">:is</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1750443572-8">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="1750443572-8">]</span><span class="p" data-group-id="1750443572-7">]</span><span class="p" data-group-id="1750443572-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="9345377691-9">(</span><span class="no">nil</span><span class="p" data-group-id="9345377691-9">)</span><span class="w">
-</span><span class="p" data-group-id="9345377691-10">[</span><span class="p" data-group-id="9345377691-10">]</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_filters</span><span class="p" data-group-id="1750443572-9">(</span><span class="no">nil</span><span class="p" data-group-id="1750443572-9">)</span><span class="w">
+</span><span class="p" data-group-id="1750443572-10">[</span><span class="p" data-group-id="1750443572-10">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="parse_include/1">
@@ -315,11 +315,11 @@ funnels, exploration and Google search terms.</li></ul><p>Returns an empty list 
   </a>
   <span class="text">Examples:</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="0589885860-1">(</span><span class="no">nil</span><span class="p" data-group-id="0589885860-1">)</span><span class="w">
-</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="0589885860-2">(</span><span class="p" data-group-id="0589885860-2">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="9747048194-1">(</span><span class="no">nil</span><span class="p" data-group-id="9747048194-1">)</span><span class="w">
+</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="9747048194-2">(</span><span class="p" data-group-id="9747048194-2">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="0589885860-3">(</span><span class="s">~s({&quot;total_rows&quot;: true})</span><span class="p" data-group-id="0589885860-3">)</span><span class="w">
-</span><span class="nc">Map</span><span class="o">.</span><span class="n">merge</span><span class="p" data-group-id="0589885860-4">(</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="0589885860-5">(</span><span class="p" data-group-id="0589885860-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0589885860-6">%{</span><span class="ss">total_rows</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="0589885860-6">}</span><span class="p" data-group-id="0589885860-4">)</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Stats.Legacy.QueryBuilder</span><span class="o">.</span><span class="n">parse_include</span><span class="p" data-group-id="9747048194-3">(</span><span class="s">~s({&quot;total_rows&quot;: true})</span><span class="p" data-group-id="9747048194-3">)</span><span class="w">
+</span><span class="nc">Map</span><span class="o">.</span><span class="n">merge</span><span class="p" data-group-id="9747048194-4">(</span><span class="nc">Plausible.Stats.Query.ApiParser</span><span class="o">.</span><span class="n">default_include</span><span class="p" data-group-id="9747048194-5">(</span><span class="p" data-group-id="9747048194-5">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9747048194-6">%{</span><span class="ss">total_rows</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="9747048194-6">}</span><span class="p" data-group-id="9747048194-4">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="parse_order_by/1">
@@ -345,29 +345,29 @@ funnels, exploration and Google search terms.</li></ul><p>Returns an empty list 
   </a>
   <span class="text">Examples:</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-1">(</span><span class="no">nil</span><span class="p" data-group-id="0923803386-1">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-2">[</span><span class="p" data-group-id="0923803386-2">]</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-1">(</span><span class="no">nil</span><span class="p" data-group-id="3617543496-1">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-2">[</span><span class="p" data-group-id="3617543496-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-3">(</span><span class="s">&quot;&quot;</span><span class="p" data-group-id="0923803386-3">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-4">[</span><span class="p" data-group-id="0923803386-4">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-3">(</span><span class="s">&quot;&quot;</span><span class="p" data-group-id="3617543496-3">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-4">[</span><span class="p" data-group-id="3617543496-4">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-5">(</span><span class="s">&quot;0&quot;</span><span class="p" data-group-id="0923803386-5">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-6">[</span><span class="p" data-group-id="0923803386-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-5">(</span><span class="s">&quot;0&quot;</span><span class="p" data-group-id="3617543496-5">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-6">[</span><span class="p" data-group-id="3617543496-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-7">(</span><span class="s">&quot;[}&quot;</span><span class="p" data-group-id="0923803386-7">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-8">[</span><span class="p" data-group-id="0923803386-8">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-7">(</span><span class="s">&quot;[}&quot;</span><span class="p" data-group-id="3617543496-7">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-8">[</span><span class="p" data-group-id="3617543496-8">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-9">(</span><span class="s">~s({&quot;any&quot;:&quot;object&quot;})</span><span class="p" data-group-id="0923803386-9">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-10">[</span><span class="p" data-group-id="0923803386-10">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-9">(</span><span class="s">~s({&quot;any&quot;:&quot;object&quot;})</span><span class="p" data-group-id="3617543496-9">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-10">[</span><span class="p" data-group-id="3617543496-10">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-11">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;invalid&quot;]])</span><span class="p" data-group-id="0923803386-11">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-12">[</span><span class="p" data-group-id="0923803386-12">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-11">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;invalid&quot;]])</span><span class="p" data-group-id="3617543496-11">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-12">[</span><span class="p" data-group-id="3617543496-12">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-13">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="0923803386-13">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-14">[</span><span class="p" data-group-id="0923803386-15">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="0923803386-15">}</span><span class="p" data-group-id="0923803386-14">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-13">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="3617543496-13">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-14">[</span><span class="p" data-group-id="3617543496-15">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="3617543496-15">}</span><span class="p" data-group-id="3617543496-14">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="0923803386-16">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;asc&quot;],[&quot;visit:source&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="0923803386-16">)</span><span class="w">
-</span><span class="p" data-group-id="0923803386-17">[</span><span class="p" data-group-id="0923803386-18">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:asc</span><span class="p" data-group-id="0923803386-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0923803386-19">{</span><span class="s">&quot;visit:source&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="0923803386-19">}</span><span class="p" data-group-id="0923803386-17">]</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">QueryBuilder</span><span class="o">.</span><span class="n">parse_order_by</span><span class="p" data-group-id="3617543496-16">(</span><span class="s">~s([[&quot;visitors&quot;,&quot;asc&quot;],[&quot;visit:source&quot;,&quot;desc&quot;]])</span><span class="p" data-group-id="3617543496-16">)</span><span class="w">
+</span><span class="p" data-group-id="3617543496-17">[</span><span class="p" data-group-id="3617543496-18">{</span><span class="ss">:visitors</span><span class="p">,</span><span class="w"> </span><span class="ss">:asc</span><span class="p" data-group-id="3617543496-18">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3617543496-19">{</span><span class="s">&quot;visit:source&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:desc</span><span class="p" data-group-id="3617543496-19">}</span><span class="p" data-group-id="3617543496-17">]</span></code></pre>
   </section>
 </section>
 
