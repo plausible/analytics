@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'url-search-params-polyfill'
 
-import { RouterProvider } from 'react-router-dom'
+import { RouterProvider } from 'react-router'
 import { createAppRouter } from './dashboard/router'
 import ErrorBoundary from './dashboard/error/error-boundary'
 import * as api from './dashboard/api'

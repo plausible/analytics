@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import RocketIcon from '../stats/modals/rocket-icon'
-import { useInRouterContext } from 'react-router-dom'
+import { useInRouterContext } from 'react-router'
 import { PlausibleSite } from '../site-context'
 import { getRouterBasepath, rootRoute } from '../router'
 import { AppNavigationLink } from '../navigation/use-app-navigate'

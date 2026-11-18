@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter, Outlet, useRouteError } from 'react-router-dom'
+import { createBrowserRouter, Outlet, useRouteError } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { PlausibleSite, useSiteContext } from './site-context'
@@ -261,11 +261,7 @@ export function createAppRouter(site: PlausibleSite) {
       }
     ],
     {
-      basename: basepath,
-      future: {
-        // @ts-expect-error valid according to docs (https://reactrouter.com/en/main/routers/create-browser-router#optsfuture)
-        v7_prependBasename: true
-      }
+      basename: basepath
     }
   )
 

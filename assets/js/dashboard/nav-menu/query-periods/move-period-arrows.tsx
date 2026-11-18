@@ -9,7 +9,7 @@ import { useSiteContext } from '../../site-context'
 import { NavigateKeybind } from '../../keybinding'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { DashboardPeriod } from '../../dashboard-time-periods'
-import { useMatch } from 'react-router-dom'
+import { useMatch } from 'react-router'
 import { rootRoute } from '../../router'
 import { isDateRangeCalendarOpen } from './date-range-calendar'
 

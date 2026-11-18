@@ -7,7 +7,7 @@ import {
   Params,
   NavigateOptions,
   LinkProps
-} from 'react-router-dom'
+} from 'react-router'
 import { parseSearch, stringifySearch } from '../util/url-search-params'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { getSearchToSetSegmentFilter } from '../filtering/segments'

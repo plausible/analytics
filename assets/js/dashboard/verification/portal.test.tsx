@@ -1,6 +1,6 @@
 import React from 'react'
 import { act, render, screen } from '@testing-library/react'
-import { useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import {
   VERIFICATION_FINISHED_EVENT,
