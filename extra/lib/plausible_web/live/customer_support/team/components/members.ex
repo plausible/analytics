@@ -23,8 +23,8 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
           <.th>Role</.th>
         </:thead>
         <:tbody :let={{_, member}}>
-          <.td truncate>
-            <div :if={not Roster.Entry.invitation?(member)} class="flex items-center">
+          <.td max_width="max-w-sm">
+            <div :if={not Roster.Entry.invitation?(member)} class="flex items-center truncate">
               <.styled_link
                 patch={~p"/cs/users/user/#{member.source.user.id}"}
                 class="cursor-pointer flex block items-center"
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.CustomerSupport.Team.Components.Members do
               </.styled_link>
               <.suppression_warning email={member.email} />
             </div>
-            <div :if={Roster.Entry.invitation?(member)} class="flex items-center">
+            <div :if={Roster.Entry.invitation?(member)} class="flex items-center truncate">
               <img
                 src={Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})}
                 class="mr-4 w-6 rounded-full bg-gray-300"

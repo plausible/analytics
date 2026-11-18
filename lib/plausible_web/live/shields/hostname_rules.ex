@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                       <span
                         id={"hostname-#{rule.id}"}
                         class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                        title={"#{rule.hostname}\n\nAdded at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
                         {rule.hostname}
                       </span>

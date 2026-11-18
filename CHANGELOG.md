@@ -72,6 +72,7 @@ All notable changes to this project will be documented in this file.
 - Fixed period arrow keys hijacking custom-range calendar
 - Fixed dashboard CSV export failing when the dashboard is filtered by entry page or exit page
 - Fixed entry page hostname breakdown crashing when revenue metrics are queried
+- Fixed issue with cell contents overflowing when longer than expected in various settings tables
 
 ## v3.2.0 - 2026-01-16
 
