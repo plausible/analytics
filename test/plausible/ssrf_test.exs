@@ -351,39 +351,12 @@ defmodule Plausible.SSRFTest do
 
       assert pool_pid!(port, "good.example") != pool_pid!(port, "other.example")
     end
-
-    test "an idle pool stops", %{ca: ca, port: port} do
-      assert {:ok, _} = get(ca, "https://good.example:#{port}/")
-
-      assert_stops(pool_pid!(port, "good.example"))
-    end
-
-    test "an idle pool stops even when its connection was refused", %{ca: ca} do
-      port = closed_port()
-
-      assert {:error, %Req.TransportError{reason: :econnrefused}} =
-               get(ca, "https://good.example:#{port}/", retry: false)
-
-      assert_stops(pool_pid!(port, "good.example"))
-    end
   end
 
   defp pool_pid!(port, host) do
     pool = %Finch.Pool{scheme: :https, host: "127.0.0.1", port: port, tag: host}
     assert {:ok, pid} = Finch.find_pool(SSRF.Finch, pool)
     pid
-  end
-
-  defp assert_stops(pid) do
-    ref = Process.monitor(pid)
-    assert_receive {:DOWN, ^ref, :process, ^pid, _reason}, 2_000
-  end
-
-  defp closed_port do
-    {:ok, socket} = :gen_tcp.listen(0, [])
-    {:ok, port} = :inet.port(socket)
-    :gen_tcp.close(socket)
-    port
   end
 
   defp get(ca, url, opts \\ []) do

@@ -19,11 +19,7 @@ defmodule Plausible.SSRF do
   @dns_timeout 1_000
   @connect_timeout :timer.seconds(5)
   @finch __MODULE__.Finch
-  @pool_max_idle_time Application.compile_env(
-                        :plausible,
-                        [__MODULE__, :pool_max_idle_time],
-                        :timer.seconds(10)
-                      )
+  @pool_max_idle_time :timer.seconds(10)
 
   # Swappable for tests
   @ip_check Application.compile_env(:plausible, :ssrf_ip_check, Plausible.IP.Tools)
