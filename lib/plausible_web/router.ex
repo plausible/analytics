@@ -515,6 +515,11 @@ defmodule PlausibleWeb.Router do
     pipe_through :external_api
 
     post "/mcp", MCP.MCPController, :handle
+  end
+
+  scope "/", PlausibleWeb do
+    # Not piped through :external_api: its `accepts` plug would answer 406 when 405 is needed.
+    # See handler for details.
     get "/mcp", MCP.MCPController, :not_supported
     delete "/mcp", MCP.MCPController, :not_supported
   end

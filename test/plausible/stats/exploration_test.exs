@@ -4,7 +4,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
   on_ee do
     alias Plausible.Stats.Exploration
-    alias Plausible.Stats.QueryBuilder
+    alias Plausible.Stats.Query
 
     @journey_end_event Exploration.Journey.Step.journey_end_event()
     @journey_end_label Exploration.Journey.Step.journey_end_label()
@@ -76,7 +76,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
     describe "journey_funnel" do
       test "queries 3-step journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -141,7 +141,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/register"},
@@ -205,7 +205,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -226,7 +226,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
       test "respects filters in the query", %{site: site} do
         query =
-          QueryBuilder.build!(site,
+          Query.Builder.build!(site,
             input_date_range: :all,
             filters: [[:is, "visit:browser", ["Firefox"]]]
           )
@@ -260,13 +260,13 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "returns error on empty journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:error, :empty_journey} = Exploration.journey_funnel(query, [])
       end
 
       test "returns error on too long journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey =
           Enum.map(1..21, fn idx ->
@@ -301,7 +301,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -318,7 +318,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "supports backward journey funnel", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/logout"},
@@ -376,7 +376,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, [step1, step2]} = Exploration.journey_funnel(query, journey)
 
@@ -437,7 +437,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, [step1, step2]} = Exploration.journey_funnel(query, journey)
 
@@ -458,7 +458,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
     describe "next_steps" do
       test "suggests the next step for a 2-step journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -507,7 +507,7 @@ defmodule Plausible.Stats.ExplorationTest do
         {:ok, _} =
           Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, steps} = Exploration.next_steps(site, query, [])
 
@@ -521,7 +521,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "respects max_candidates", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -533,7 +533,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "returns error on too long journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey =
           Enum.map(1..20, fn idx ->
@@ -544,7 +544,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "suggests the first step in the journey", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, [next_step1, next_step2, next_step3, next_step4]} =
                  Exploration.next_steps(site, query, [])
@@ -561,7 +561,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
       test "respects filters in the query", %{site: site} do
         query =
-          QueryBuilder.build!(site,
+          Query.Builder.build!(site,
             input_date_range: :all,
             filters: [[:is, "visit:browser", ["Firefox"]]]
           )
@@ -580,7 +580,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "allows to filter the next step suggestions", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -641,7 +641,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -679,7 +679,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, [next_step1, next_step2]} = Exploration.next_steps(site, query, [])
 
@@ -714,7 +714,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
@@ -730,7 +730,7 @@ defmodule Plausible.Stats.ExplorationTest do
       end
 
       test "supports backward exploration", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
@@ -765,7 +765,7 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/login"}
         ]
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok,
                 [
@@ -824,7 +824,7 @@ defmodule Plausible.Stats.ExplorationTest do
           %Exploration.Journey.Step{name: "pageview", pathname: "/sites"}
         ]
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok,
                 [
@@ -914,7 +914,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"},
@@ -986,7 +986,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/logout"}
@@ -1042,7 +1042,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok, [next_step1, next_step2, next_step3]} =
                  Exploration.next_steps(site, query, [])
@@ -1179,7 +1179,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {:ok,
                 [
@@ -1258,7 +1258,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
@@ -1298,7 +1298,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "pageview", pathname: "/home"}
@@ -1337,7 +1337,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{name: "actress", pathname: ""}
@@ -1387,7 +1387,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{
@@ -1455,7 +1455,7 @@ defmodule Plausible.Stats.ExplorationTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         journey = [
           %Exploration.Journey.Step{
@@ -1548,7 +1548,7 @@ defmodule Plausible.Stats.ExplorationTest do
 
       test "implicit wildcard path visitors computation is correct and consistent between next_step and journey_funnel",
            %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         result = Exploration.next_steps(site, query, [])
 
@@ -1588,7 +1588,7 @@ defmodule Plausible.Stats.ExplorationTest do
       test "implicit wildcard paths are not returned in suggestions when explicitly disabled", %{
         site: site
       } do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         result = Exploration.next_steps(site, query, [], include_wildcard?: false)
 

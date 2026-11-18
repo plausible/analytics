@@ -86,6 +86,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   """
   def not_supported(conn, _params) do
     conn
+    |> put_resp_header("allow", "POST")
     |> put_status(405)
     |> json(%{error: "method_not_allowed", error_description: "Use POST for MCP."})
   end

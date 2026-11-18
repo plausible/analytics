@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Legacy.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryRunner, Metrics, Time, QueryOptimizer}
+  alias Plausible.Stats.{Query, Metrics, Time}
 
   def timeseries(site, query, metrics) do
     [time_dimension] = query.dimensions
@@ -17,9 +17,9 @@ defmodule Plausible.Stats.Legacy.Timeseries do
         order_by: [{time_dimension, :asc}]
       )
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
-      |> QueryOptimizer.optimize()
+      |> Query.Optimizer.optimize()
 
-    query_result = QueryRunner.run(site, query)
+    query_result = Query.Runner.run(site, query)
 
     {
       build_result(query_result, query),

@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Legacy.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner, QueryResult, Comparisons}
+  alias Plausible.Stats.{Query, Comparisons}
 
   def breakdown(
         site,
@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Legacy.Breakdown do
       )
       |> Query.set_include(:drop_unavailable_revenue_metrics, true)
 
-    %QueryResult{results: results, meta: meta} = QueryRunner.run(site, query_with_metrics)
+    %Query.Result{results: results, meta: meta} = Query.Runner.run(site, query_with_metrics)
 
     %{
       results: build_breakdown_result(results, query_with_metrics, metrics),

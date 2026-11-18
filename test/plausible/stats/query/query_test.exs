@@ -1,7 +1,8 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase
   alias Plausible.Stats
-  alias Plausible.Stats.{ParsedQueryParams, QueryBuilder, QueryInclude}
+  alias Plausible.Stats.Query
+  alias Plausible.Stats.Query.ParsedParams
 
   @user_id 123
 
@@ -16,13 +17,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :pageviews],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 1, 1]},
@@ -49,13 +50,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :visit_duration],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-02]},
           dimensions: ["time:hour"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 1, 0]},
@@ -71,15 +72,15 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :month,
           dimensions: ["time:day"],
-          include: %QueryInclude{trim_relative_date_range: true},
+          include: %Query.Include{trim_relative_date_range: true},
           now: ~U[2021-01-15 12:00:00Z]
         })
 
-      %Stats.QueryResult{results: results, query: query} = Stats.query(site, query)
+      %Stats.Query.Result{results: results, query: query} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01"], metrics: [1]},
@@ -102,13 +103,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :visits, :visit_duration, :pageviews],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:30:00Z]},
           dimensions: ["time:minute"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 1, 0, 1]},
@@ -139,18 +140,18 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2025-12-25], ~D[2026-01-06]},
           dimensions: ["time:week"],
-          include: %QueryInclude{
+          include: %Query.Include{
             compare: {:date_range, ~D[2025-12-12], ~D[2025-12-21]},
             time_labels: true,
             time_label_result_indices: true
           }
         })
 
-      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+      %Stats.Query.Result{results: results, comparison_results: comparison_results, meta: meta} =
         Stats.query(site, query)
 
       assert results == [
@@ -183,18 +184,18 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :pageviews],
           input_date_range: {:date_range, ~D[2021-02-01], ~D[2021-02-01]},
           dimensions: ["time:day"],
-          include: %QueryInclude{
+          include: %Query.Include{
             compare: {:date_range, ~D[2021-01-01], ~D[2021-01-05]},
             time_labels: true,
             time_label_result_indices: true
           }
         })
 
-      %Stats.QueryResult{results: results, comparison_results: comparison_results, meta: meta} =
+      %Stats.Query.Result{results: results, comparison_results: comparison_results, meta: meta} =
         Stats.query(site, query)
 
       assert results == [
@@ -233,14 +234,14 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-02], ~D[2021-01-02]},
           dimensions: ["time:hour"],
-          include: %QueryInclude{total_rows: true}
+          include: %Query.Include{total_rows: true}
         })
 
-      %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+      %Stats.Query.Result{results: results, meta: meta} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-02 00:00:00"], metrics: [1]},
@@ -267,13 +268,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-01]},
           dimensions: ["time:hour"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:00:00"], metrics: [1]},
@@ -291,14 +292,14 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:08:00Z], ~U[2021-01-01 00:12:00Z]},
           dimensions: ["time:minute"],
-          include: %QueryInclude{total_rows: true}
+          include: %Query.Include{total_rows: true}
         })
 
-      %Stats.QueryResult{results: results, meta: meta} = Stats.query(site, query)
+      %Stats.Query.Result{results: results, meta: meta} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:08:00"], metrics: [2]},
@@ -328,14 +329,14 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :day,
           relative_date: ~D[2021-01-01],
           dimensions: ["time:minute"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["2021-01-01 00:00:00"], metrics: [1]},
@@ -353,13 +354,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-31]},
           dimensions: ["time:day"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       # Without clamping the session would bucket to "2021-02-01" (outside range)
       assert results == [
@@ -375,13 +376,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-01-31]},
           dimensions: ["time:week"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       # Without clamping the session would bucket to "2021-02-01" (outside range).
       # Clamped to Jan 31 23:59:59 -> toMonday(Jan 31) = Jan 25.
@@ -398,13 +399,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:date_range, ~D[2021-01-01], ~D[2021-02-28]},
           dimensions: ["time:month"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       # Without clamping the session would bucket to "2021-03-01" (outside range).
       # Clamped to Feb 28 23:59:59 -> toStartOfMonth -> Feb 1.
@@ -426,7 +427,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"],
@@ -434,7 +435,7 @@ defmodule Plausible.Stats.QueryTest do
           skip_goal_existence_check: true
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert [%{dimensions: ["2021-01-01 00:05:00"], metrics: [1]}] = results
     end
@@ -451,7 +452,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :group_conversion_rate],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 00:10:00Z]},
           dimensions: ["time:minute"],
@@ -459,7 +460,7 @@ defmodule Plausible.Stats.QueryTest do
           skip_goal_existence_check: true
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert [%{dimensions: ["2021-01-01 00:05:00"], metrics: [1, 50.0]}] = results
     end
@@ -475,7 +476,7 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors, :conversion_rate],
           input_date_range: {:datetime_range, ~U[2021-01-01 00:00:00Z], ~U[2021-01-01 23:59:59Z]},
           dimensions: ["time:hour"],
@@ -486,7 +487,7 @@ defmodule Plausible.Stats.QueryTest do
           skip_goal_existence_check: true
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert [%{dimensions: ["2021-01-01 00:00:00"], metrics: [1, 50.0]}] = results
     end
@@ -495,12 +496,12 @@ defmodule Plausible.Stats.QueryTest do
   describe "include.empty_metrics" do
     test "if not asked for, no empty_metrics are returned under meta", %{site: site} do
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all
         })
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
       assert is_nil(meta[:empty_metrics])
     end
@@ -515,13 +516,13 @@ defmodule Plausible.Stats.QueryTest do
         ] do
       test "default: empty #{metric} is #{expected}", %{site: site} do
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedQueryParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true}
+            include: %Query.Include{empty_metrics: true}
           })
 
-        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+        %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
         assert meta[:empty_metrics] == [unquote(expected)]
       end
@@ -533,14 +534,14 @@ defmodule Plausible.Stats.QueryTest do
         ] do
       test "page filter: empty #{metric} is #{expected}", %{site: site} do
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedQueryParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true},
+            include: %Query.Include{empty_metrics: true},
             filters: [[:is, "event:page", ["/"]]]
           })
 
-        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+        %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
         assert meta[:empty_metrics] == [unquote(expected)]
       end
@@ -554,14 +555,14 @@ defmodule Plausible.Stats.QueryTest do
         insert(:goal, site: site, event_name: "Signup")
 
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedQueryParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [unquote(metric)],
             input_date_range: :all,
-            include: %QueryInclude{empty_metrics: true},
+            include: %Query.Include{empty_metrics: true},
             filters: [[:is, "event:goal", ["Signup"]]]
           })
 
-        %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+        %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
         assert meta[:empty_metrics] == [unquote(expected)]
       end
@@ -572,14 +573,14 @@ defmodule Plausible.Stats.QueryTest do
       insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:average_revenue, :total_revenue],
           input_date_range: :all,
-          include: %QueryInclude{empty_metrics: true},
+          include: %Query.Include{empty_metrics: true},
           filters: [[:is, "event:goal", ["Purchase"]]]
         })
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
       assert meta[:empty_metrics] == [
                %{currency: :EUR, long: "€0.00", short: "€0.0", value: 0.0},
@@ -589,14 +590,14 @@ defmodule Plausible.Stats.QueryTest do
 
     test "is ignored when event:goal dimension used", %{site: site} do
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
-          include: %QueryInclude{empty_metrics: true},
+          include: %Query.Include{empty_metrics: true},
           dimensions: ["event:goal"]
         })
 
-      %Stats.QueryResult{meta: meta} = Stats.query(site, query)
+      %Stats.Query.Result{meta: meta} = Stats.query(site, query)
 
       assert is_nil(meta[:empty_metrics])
     end
@@ -612,13 +613,13 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert [
                %{dimensions: ["author"], metrics: [2]},
@@ -635,14 +636,14 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"],
           order_by: [{"event:prop_key", :desc}]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [
                %{dimensions: ["logged_in"], metrics: [1]},
@@ -658,14 +659,14 @@ defmodule Plausible.Stats.QueryTest do
       ])
 
       {:ok, query} =
-        QueryBuilder.build(site, %ParsedQueryParams{
+        Query.Builder.build(site, %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           dimensions: ["event:prop_key"],
           filters: [[:is, "event:name", ["purchase"]]]
         })
 
-      %Stats.QueryResult{results: results} = Stats.query(site, query)
+      %Stats.Query.Result{results: results} = Stats.query(site, query)
 
       assert results == [%{dimensions: ["author"], metrics: [1]}]
     end
@@ -699,14 +700,14 @@ defmodule Plausible.Stats.QueryTest do
         ])
 
         {:ok, query} =
-          QueryBuilder.build(site, %ParsedQueryParams{
+          Query.Builder.build(site, %ParsedParams{
             metrics: [:total_revenue, :average_revenue],
             input_date_range: :all,
             dimensions: [unquote(hostname_dim)],
             filters: [[:is, "event:goal", ["Purchase"]]]
           })
 
-        %Stats.QueryResult{results: results} = Stats.query(site, query)
+        %Stats.Query.Result{results: results} = Stats.query(site, query)
 
         assert results == [
                  %{

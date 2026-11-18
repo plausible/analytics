@@ -25,10 +25,25 @@ defmodule Plausible.Teams.TeamRolePermissions do
 
   @doc """
   Whether someone with `role` may manage the team: invite people, change
-  roles and remove members or invitations.
+  roles, remove members or invitations, or transfer sites into or out of
+  the team.
   """
   @spec can_manage_team?(Membership.role()) :: boolean()
   def can_manage_team?(role), do: role in [:owner, :admin]
+
+  @doc """
+  Checks whether `actor` may manage `team`. See `can_manage_team?/1`.
+  """
+  @spec ensure_can_manage_team(Teams.Team.t(), Auth.User.t()) ::
+          :ok | {:error, :permission_denied}
+  def ensure_can_manage_team(team, actor) do
+    with {:ok, role} <- Teams.Memberships.team_role(team, actor),
+         true <- can_manage_team?(role) do
+      :ok
+    else
+      _ -> {:error, :permission_denied}
+    end
+  end
 
   @doc """
   Checks whether `actor` may change `membership`'s role to `new_role`.

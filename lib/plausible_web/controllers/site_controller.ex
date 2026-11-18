@@ -24,7 +24,7 @@ defmodule PlausibleWeb.SiteController do
   )
 
   def new(conn, params) do
-    flow = params["flow"] || PlausibleWeb.Flows.register()
+    flow = params["flow"] || PlausibleWeb.Flows.provisioning()
     team = conn.assigns.current_team
 
     render_new_site_form(conn, flow,

@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Sparkline do
   """
 
   alias Plausible.{Site, Stats}
-  alias Plausible.Stats.QueryBuilder
+  alias Plausible.Stats.Query
 
   @spec parallel_overview([Site.t()], NaiveDateTime.t()) :: map()
   def parallel_overview(sites, now \\ NaiveDateTime.utc_now()) when is_list(sites) do
@@ -81,14 +81,14 @@ defmodule Plausible.Stats.Sparkline do
 
   defp query_24h_stats_regular(site, now) do
     stats_query =
-      QueryBuilder.build!(site,
+      Query.Builder.build!(site,
         now: DateTime.from_naive!(now, "Etc/UTC"),
         input_date_range: :"24h",
         metrics: [:visitors],
         include: [compare: :previous_period]
       )
 
-    %Stats.QueryResult{
+    %Stats.Query.Result{
       results: [
         %{
           metrics: [visitors],
@@ -107,14 +107,14 @@ defmodule Plausible.Stats.Sparkline do
 
   defp query_24h_stats_consolidated(view, now) do
     stats_query =
-      QueryBuilder.build!(view,
+      Query.Builder.build!(view,
         now: DateTime.from_naive!(now, "Etc/UTC"),
         input_date_range: :"24h",
         metrics: [:visitors, :visits, :pageviews, :views_per_visit],
         include: [compare: :previous_period]
       )
 
-    %Stats.QueryResult{
+    %Stats.Query.Result{
       results: [
         %{
           metrics: [visitors, visits, pageviews, views_per_visit],
@@ -139,7 +139,7 @@ defmodule Plausible.Stats.Sparkline do
 
   defp query_24h_intervals(view_or_site, now) do
     graph_query =
-      QueryBuilder.build!(view_or_site,
+      Query.Builder.build!(view_or_site,
         now: DateTime.from_naive!(now, "Etc/UTC"),
         metrics: [:visitors],
         input_date_range: :"24h",
@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Sparkline do
         include: [time_labels: true]
       )
 
-    %Stats.QueryResult{results: results, meta: %{values: [time_labels: time_labels]}} =
+    %Stats.Query.Result{results: results, meta: %{values: [time_labels: time_labels]}} =
       Stats.query(view_or_site, graph_query)
 
     visitors_by_timestamp =

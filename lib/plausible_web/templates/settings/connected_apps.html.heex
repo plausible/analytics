@@ -28,7 +28,7 @@
 
         <:tbody :let={grant}>
           <.td max_width="max-w-60" title={grant.client_id}>
-            <span class="block truncate font-medium">{grant.client_name || grant.client_id}</span>
+            <span class="block truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
             <span
               :if={grant.client_name}
               class="block truncate text-xs text-gray-500 dark:text-gray-400"
@@ -49,8 +49,8 @@
             <.delete_button
               method="delete"
               href={~p"/settings/connected-apps/#{grant.id}"}
-              aria-label={"Revoke access for #{grant.client_name || grant.client_id}"}
-              data-confirm={"Are you sure you want to revoke access for #{grant.client_name || grant.client_id}? The application will need to be authorized again to reconnect."}
+              aria-label={"Revoke access for #{Plausible.OAuth.Grant.label(grant)}"}
+              data-confirm={"Are you sure you want to revoke access for #{Plausible.OAuth.Grant.label(grant)}? The application will need to be authorized again to reconnect."}
             />
           </.td>
         </:tbody>

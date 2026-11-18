@@ -7,7 +7,7 @@ defmodule Plausible.Stats.FunnelTest do
     alias Plausible.Funnels
     alias Plausible.Goals
     alias Plausible.Stats
-    alias Plausible.Stats.QueryBuilder
+    alias Plausible.Stats.Query
 
     setup do
       site = new_site()
@@ -26,7 +26,7 @@ defmodule Plausible.Stats.FunnelTest do
 
     describe "suggest/3" do
       test "returns empty on no goals and no stats", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {[], []} = Stats.Funnel.suggest(site, query)
       end
@@ -35,7 +35,7 @@ defmodule Plausible.Stats.FunnelTest do
         site: site,
         goals: [g1, g2, g3 | _]
       } do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         assert {[], unmatched} = Stats.Funnel.suggest(site, query, goals: [g1, g2, g3])
 
@@ -48,7 +48,7 @@ defmodule Plausible.Stats.FunnelTest do
       end
 
       test "returns suggestions from stats when no goals provided", %{site: site} do
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         populate_stats(site, [
           build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
@@ -73,7 +73,7 @@ defmodule Plausible.Stats.FunnelTest do
 
       test "returns only unmatched goals", %{site: site, goals: [g1, g2, g3 | _]} do
         {:ok, g4} = Goals.create(site, %{"event_name" => "Unmatched"})
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         populate_stats(site, [
           build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
@@ -149,7 +149,7 @@ defmodule Plausible.Stats.FunnelTest do
           build(:event, name: "Signup", user_id: 666)
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         funnel_data = Stats.funnel(site, query, funnel_definition)
 
@@ -228,7 +228,7 @@ defmodule Plausible.Stats.FunnelTest do
           build(:event, name: "Signup", user_id: 666)
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         funnel_data = Stats.funnel(site, query, funnel_definition)
 
@@ -287,7 +287,7 @@ defmodule Plausible.Stats.FunnelTest do
           build(:event, name: "Signup", user_id: 666)
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         funnel_data = Stats.funnel(site, query, funnel.id)
 
@@ -368,7 +368,7 @@ defmodule Plausible.Stats.FunnelTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         {:ok, non_strict_funnel_data} = Stats.funnel(site, query, non_strict_funnel.id)
         {:ok, strict_funnel_data} = Stats.funnel(site, query, strict_funnel.id)
@@ -412,7 +412,7 @@ defmodule Plausible.Stats.FunnelTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         {:ok, non_flexible_funnel_data} = Stats.funnel(site, query, non_flexible_funnel.id)
         {:ok, flexible_funnel_data} = Stats.funnel(site, query, flexible_funnel.id)
@@ -464,7 +464,7 @@ defmodule Plausible.Stats.FunnelTest do
           )
         ])
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         {:ok, non_flexible_funnel_data} = Stats.funnel(site, query, non_flexible_funnel.id)
         {:ok, flexible_funnel_data} = Stats.funnel(site, query, flexible_funnel.id)
@@ -491,7 +491,7 @@ defmodule Plausible.Stats.FunnelTest do
             [g1, g2, g3]
           )
 
-        query = QueryBuilder.build!(site, input_date_range: :all)
+        query = Query.Builder.build!(site, input_date_range: :all)
 
         funnel_data = Stats.funnel(site, query, funnel.id)
 

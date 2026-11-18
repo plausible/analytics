@@ -1,11 +1,11 @@
-defmodule Plausible.Stats.ApiQueryParser do
+defmodule Plausible.Stats.Query.ApiParser do
   @moduledoc false
 
   use Plausible
 
   alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError}
 
-  @default_include %Plausible.Stats.QueryInclude{
+  @default_include %Plausible.Stats.Query.Include{
     imports: false,
     imports_meta: false,
     time_labels: false,
@@ -32,7 +32,7 @@ defmodule Plausible.Stats.ApiQueryParser do
          {:ok, pagination} <- parse_pagination(params["pagination"]),
          {:ok, include} <- parse_include(params["include"]) do
       {:ok,
-       Plausible.Stats.ParsedQueryParams.new!(%{
+       Plausible.Stats.Query.ParsedParams.new!(%{
          input_date_range: input_date_range,
          metrics: metrics,
          filters: filters,

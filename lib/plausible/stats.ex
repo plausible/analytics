@@ -7,11 +7,11 @@ defmodule Plausible.Stats do
   alias Plausible.Stats.{
     CurrentVisitors,
     FilterSuggestions,
-    QueryRunner
+    Query
   }
 
   def query(site, query) do
-    QueryRunner.run(site, query)
+    Query.Runner.run(site, query)
   end
 
   def current_visitors(site, duration \\ Duration.new!(minute: -5)) do

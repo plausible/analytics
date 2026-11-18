@@ -7,7 +7,9 @@ defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
 
-  alias Plausible.Stats.{QueryResult, QueryBuilder, ParsedQueryParams, QueryInclude}
+  alias Plausible.Stats.Query
+
+  alias Plausible.Stats.Query.ParsedParams
 
   import Ecto.Query, only: [from: 2]
 
@@ -74,7 +76,7 @@ defmodule Plausible.Workers.SendEmailReport do
   defp report_name(@monthly, first), do: Calendar.strftime(first, "%B")
 
   defp stats(site, date_range) do
-    shared_params = %ParsedQueryParams{
+    shared_params = %ParsedParams{
       metrics: [:visitors],
       input_date_range: {:date_range, date_range.first, date_range.last},
       pagination: %{limit: 5, offset: 0}
@@ -91,17 +93,17 @@ defmodule Plausible.Workers.SendEmailReport do
     |> Map.put(:goals, goals)
   end
 
-  defp stats_aggregates(site, %ParsedQueryParams{} = shared_params) do
+  defp stats_aggregates(site, %ParsedParams{} = shared_params) do
     query =
-      QueryBuilder.build!(
+      Query.Builder.build!(
         site,
         struct!(shared_params,
           metrics: [:pageviews, :visitors, :bounce_rate],
-          include: %QueryInclude{compare: :previous_period}
+          include: %Query.Include{compare: :previous_period}
         )
       )
 
-    %QueryResult{
+    %Query.Result{
       results: [
         %{
           metrics: [pageviews, visitors, bounce_rate],
@@ -119,8 +121,8 @@ defmodule Plausible.Workers.SendEmailReport do
     }
   end
 
-  defp pages(site, %ParsedQueryParams{} = shared_params) do
-    query = QueryBuilder.build!(site, struct!(shared_params, dimensions: ["event:page"]))
+  defp pages(site, %ParsedParams{} = shared_params) do
+    query = Query.Builder.build!(site, struct!(shared_params, dimensions: ["event:page"]))
 
     site
     |> Plausible.Stats.query(query)
@@ -133,9 +135,9 @@ defmodule Plausible.Workers.SendEmailReport do
     end)
   end
 
-  defp sources(site, %ParsedQueryParams{} = shared_params) do
+  defp sources(site, %ParsedParams{} = shared_params) do
     query =
-      QueryBuilder.build!(
+      Query.Builder.build!(
         site,
         struct!(shared_params,
           dimensions: ["visit:source"],
@@ -154,8 +156,8 @@ defmodule Plausible.Workers.SendEmailReport do
     end)
   end
 
-  defp goals(site, %ParsedQueryParams{} = shared_params) do
-    query = QueryBuilder.build!(site, struct!(shared_params, dimensions: ["event:goal"]))
+  defp goals(site, %ParsedParams{} = shared_params) do
+    query = Query.Builder.build!(site, struct!(shared_params, dimensions: ["event:goal"]))
 
     site
     |> Plausible.Stats.query(query)

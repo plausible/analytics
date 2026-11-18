@@ -1,6 +1,7 @@
-defmodule Plausible.Stats.QueryBuilderTest do
+defmodule Plausible.Stats.Query.BuilderTest do
   use Plausible.DataCase
-  alias Plausible.Stats.{DateTimeRange, ParsedQueryParams, QueryBuilder, Query, QueryError}
+  alias Plausible.Stats.{DateTimeRange, Query, QueryError}
+  alias Plausible.Stats.Query.ParsedParams
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
@@ -66,19 +67,19 @@ defmodule Plausible.Stats.QueryBuilderTest do
           :contains_not
         ] do
       test "valid simple #{operation} filter passes validation", %{site: site} do
-        params = %ParsedQueryParams{
+        params = %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           filters: [[unquote(operation), "event:name", ["foo"]]]
         }
 
-        assert {:ok, query} = QueryBuilder.build(site, params)
+        assert {:ok, query} = Query.Builder.build(site, params)
 
         assert_matches %Query{filters: [[^unquote(operation), "event:name", ["foo"]]]} = query
       end
 
       test "valid complex nested #{operation} filter passes validation", %{site: site} do
-        params = %ParsedQueryParams{
+        params = %ParsedParams{
           metrics: [:visitors],
           input_date_range: :all,
           filters: [
@@ -95,7 +96,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
           ]
         }
 
-        assert {:ok, query} = QueryBuilder.build(site, params)
+        assert {:ok, query} = Query.Builder.build(site, params)
 
         assert_matches %Query{
                          filters: [
@@ -117,13 +118,13 @@ defmodule Plausible.Stats.QueryBuilderTest do
     test "event goal name is checked within behavioral filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      params = %ParsedQueryParams{
+      params = %ParsedParams{
         metrics: [:visitors],
         input_date_range: :all,
         filters: [[:has_done, [:is, "event:goal", ["Unknown"]]]]
       }
 
-      assert {:error, %QueryError{message: error}} = QueryBuilder.build(site, params)
+      assert {:error, %QueryError{message: error}} = Query.Builder.build(site, params)
 
       assert error ==
                "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
@@ -132,7 +133,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
     for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
       test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
         assert {:error, %QueryError{message: error}} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
+                 Query.Builder.build(site, %ParsedParams{
                    metrics: [:visitors],
                    input_date_range: :all,
                    filters: [
@@ -150,7 +151,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
       site: site
     } do
       assert {:error, %QueryError{message: error}} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:visitors],
                  input_date_range: :all,
                  filters: [
@@ -184,7 +185,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
         ] do
       test "builds utc_time_range for #{input_date_range} input_date_range", %{site: site} do
         assert {:ok, query} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
+                 Query.Builder.build(site, %ParsedParams{
                    now: @now,
                    metrics: [:visitors],
                    input_date_range: unquote(input_date_range)
@@ -212,7 +213,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
             {:year, @date_range_year}
           ] do
         assert {:ok, query} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
+                 Query.Builder.build(site, %ParsedParams{
                    now: now,
                    metrics: [:visitors],
                    relative_date: relative_date,
@@ -227,7 +228,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
   describe "exit_rate metric" do
     test "fails validation without visit:exit_page dimension", %{site: site} do
       assert {:error, %QueryError{message: error}} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  input_date_range: :all
                })
@@ -238,7 +239,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
     test "fails validation with event only filters", %{site: site} do
       assert {:error, %QueryError{message: error}} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  dimensions: ["visit:exit_page"],
                  filters: [[:is, "event:page", ["/"]]],
@@ -250,7 +251,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
     test "fails validation with event metrics", %{site: site} do
       assert {:error, %QueryError{message: error}} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:exit_rate, :pageviews],
                  dimensions: ["visit:exit_page"],
                  input_date_range: :all
@@ -262,7 +263,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
 
     test "passes validation", %{site: site} do
       assert {:ok, query} =
-               QueryBuilder.build(site, %ParsedQueryParams{
+               Query.Builder.build(site, %ParsedParams{
                  metrics: [:exit_rate],
                  dimensions: ["visit:exit_page"],
                  input_date_range: :all
@@ -279,7 +280,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
     describe "query.consolidated_site_ids" do
       test "is set to nil when site is regular", %{site: site} do
         assert {:ok, %Query{consolidated_site_ids: nil}} =
-                 QueryBuilder.build(site, %ParsedQueryParams{
+                 Query.Builder.build(site, %ParsedParams{
                    metrics: [:visitors],
                    input_date_range: :all
                  })
@@ -290,7 +291,7 @@ defmodule Plausible.Stats.QueryBuilderTest do
         cv = new_consolidated_view(site.team)
 
         assert {:ok, %Query{consolidated_site_ids: consolidated_site_ids}} =
-                 QueryBuilder.build(cv, %ParsedQueryParams{
+                 Query.Builder.build(cv, %ParsedParams{
                    metrics: [:visitors],
                    input_date_range: :all
                  })

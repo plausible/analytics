@@ -3,8 +3,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
   @user_id Enum.random(1000..9999)
 
-  @unsupported_interval_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_interval
-  @unsupported_query_warning Plausible.Stats.QueryResult.imports_warnings().unsupported_query
+  @unsupported_interval_warning Plausible.Stats.Query.Result.imports_warnings().unsupported_interval
+  @unsupported_query_warning Plausible.Stats.Query.Result.imports_warnings().unsupported_query
 
   def unsupported_query_warning(), do: @unsupported_query_warning
 
@@ -1612,7 +1612,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       assert bounce_rate_warning = meta["metric_warnings"]["bounce_rate"]
 
-      expected_warning = Plausible.Stats.QueryResult.no_imported_bounce_rate_warning()
+      expected_warning = Plausible.Stats.Query.Result.no_imported_bounce_rate_warning()
       assert bounce_rate_warning["code"] == to_string(expected_warning.code)
       assert bounce_rate_warning["warning"] == expected_warning.warning
     end
@@ -1654,7 +1654,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       assert bounce_rate_warning = meta["metric_warnings"]["bounce_rate"]
 
-      expected_warning = Plausible.Stats.QueryResult.no_imported_bounce_rate_warning()
+      expected_warning = Plausible.Stats.Query.Result.no_imported_bounce_rate_warning()
       assert bounce_rate_warning["code"] == to_string(expected_warning.code)
       assert bounce_rate_warning["warning"] == expected_warning.warning
     end

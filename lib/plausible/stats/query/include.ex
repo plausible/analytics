@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryInclude do
+defmodule Plausible.Stats.Query.Include do
   @moduledoc false
 
   defstruct imports: false,

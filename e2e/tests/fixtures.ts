@@ -155,10 +155,6 @@ export async function addSite({
 
   await page.getByRole('button', { name: 'Add site' }).click()
 
-  await expect(page).toHaveURL(/\/team\/setup/)
-
-  await page.getByRole('link', { name: 'Skip' }).click()
-
   await expect(page).toHaveURL(/\/installation/)
 
   await expect(
