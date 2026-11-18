@@ -288,6 +288,8 @@ Plausible.Stats.DateTimeRange.html
 Plausible.Stats.Exploration.html
 Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.LegacyStatsAPIFilterParser.html
+Plausible.Stats.Filters.Parser.html
+Plausible.Stats.Filters.Validations.html
 Plausible.Stats.Filters.html
 Plausible.Stats.Funnel.html
 Plausible.Stats.Goal.Revenue.html
@@ -637,8 +639,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-EDAABC77.js
-dist/sidebar_items-9F1FC00D.js
+dist/search_data-F73A7708.js
+dist/sidebar_items-26C89244.js
 index.html
 readme.html
 search.html

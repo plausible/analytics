@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9F1FC00D.js"></script>
+    <script src="dist/sidebar_items-26C89244.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -341,10 +341,14 @@ ugly URLs, e.g. <code class="inline">https://plausible.io/café.com</code> trans
   </a>
   <span class="text">Examples</span>
 </h2>
-<p>   iex&gt; PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: &quot;user.gittea.io/repo&quot;})
-   &quot;<a href="http://localhost:8000/user.gittea.io%2Frepo%22">http://localhost:8000/user.gittea.io%2Frepo&quot;</a></p><p>   iex&gt; PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: &quot;anakin.test&quot;})
-   &quot;<a href="http://localhost:8000/anakin.test%22">http://localhost:8000/anakin.test&quot;</a></p><p>   iex&gt; PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: &quot;café.test&quot;})
-   &quot;<a href="http://localhost:8000/caf%C3%A9.test%22">http://localhost:8000/café.test&quot;</a></p>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">PlausibleWeb.StatsView</span><span class="o">.</span><span class="n">pretty_stats_url</span><span class="p" data-group-id="6440777002-1">(</span><span class="p" data-group-id="6440777002-2">%</span><span class="nc" data-group-id="6440777002-2">Plausible.Site</span><span class="p" data-group-id="6440777002-2">{</span><span class="ss">domain</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;user.gittea.io/repo&quot;</span><span class="p" data-group-id="6440777002-2">}</span><span class="p" data-group-id="6440777002-1">)</span><span class="w">
+</span><span class="s">&quot;http://localhost:8000/user.gittea.io%2Frepo&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">PlausibleWeb.StatsView</span><span class="o">.</span><span class="n">pretty_stats_url</span><span class="p" data-group-id="6440777002-3">(</span><span class="p" data-group-id="6440777002-4">%</span><span class="nc" data-group-id="6440777002-4">Plausible.Site</span><span class="p" data-group-id="6440777002-4">{</span><span class="ss">domain</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;anakin.test&quot;</span><span class="p" data-group-id="6440777002-4">}</span><span class="p" data-group-id="6440777002-3">)</span><span class="w">
+</span><span class="s">&quot;http://localhost:8000/anakin.test&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">PlausibleWeb.StatsView</span><span class="o">.</span><span class="n">pretty_stats_url</span><span class="p" data-group-id="6440777002-5">(</span><span class="p" data-group-id="6440777002-6">%</span><span class="nc" data-group-id="6440777002-6">Plausible.Site</span><span class="p" data-group-id="6440777002-6">{</span><span class="ss">domain</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;café.test&quot;</span><span class="p" data-group-id="6440777002-6">}</span><span class="p" data-group-id="6440777002-5">)</span><span class="w">
+</span><span class="s">&quot;http://localhost:8000/café.test&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="render/2">
