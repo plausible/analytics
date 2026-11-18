@@ -110,7 +110,7 @@ jobs:
 
       - run: make minio
         if: env.MIX_ENV == 'test' && env.BILLING_SUBSCRIPTIONS == '0'
-      - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors --partitions 6
+      - run: mix test --include slow --include minio --include mcp_conformance --include migrations --max-failures 1 --warnings-as-errors --partitions 6
         if: env.MIX_ENV == 'test' && env.BILLING_SUBSCRIPTIONS == '0'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"

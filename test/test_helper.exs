@@ -25,9 +25,9 @@ end
 
 default_exclude =
   if System.get_env("BILLING_SUBSCRIPTIONS") == "1" do
-    [:skip_extra_billing_run, :slow, :minio, :migrations]
+    [:skip_extra_billing_run, :slow, :minio, :mcp_conformance, :migrations]
   else
-    [:slow, :minio, :migrations]
+    [:slow, :minio, :mcp_conformance, :migrations]
   end
 
 # avoid slowdowns contacting the code server

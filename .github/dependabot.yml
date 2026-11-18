@@ -14,6 +14,13 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
+  - package-ecosystem: "docker"
+    directory: "/test/plausible_web/controllers/mcp/conformance"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
   - package-ecosystem: "npm"
     directory: "/assets"
     schedule:

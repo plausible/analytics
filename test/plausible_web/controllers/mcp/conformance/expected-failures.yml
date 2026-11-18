@@ -1,0 +1,62 @@
+server:
+  # Test tool: the scenario calls a test tool that we do not have.
+  - tools-call-simple-text:tools-call-simple-text
+  - tools-call-error:tools-call-error
+  # Not supported: image, audio, embedded and mixed content
+  - tools-call-image:tools-call-image
+  - tools-call-audio:tools-call-audio
+  - tools-call-embedded-resource:tools-call-embedded-resource
+  - tools-call-mixed-content:tools-call-mixed-content
+  # Not supported: progress
+  - tools-call-with-progress:tools-call-with-progress
+  # Not supported: logging
+  - logging-set-level:logging-set-level
+  - tools-call-with-logging:tools-call-with-logging
+  # Not supported: completion
+  - completion-complete:completion-complete
+  # Not supported: resources
+  - resources-list:resources-list
+  - resources-read-text:resources-read-text
+  - resources-read-binary:resources-read-binary
+  - resources-templates-read:resources-templates-read
+  - resources-subscribe:resources-subscribe
+  - resources-unsubscribe:resources-unsubscribe
+  - sep-2164-resource-not-found:sep-2164-error-code
+  - sep-2164-resource-not-found:sep-2164-data-uri
+  - caching:sep-2549-resources-list-caching-hints
+  - caching:sep-2549-resources-templates-list-caching-hints
+  # Not supported: prompts
+  - prompts-list:prompts-list
+  - prompts-get-simple:prompts-get-simple
+  - prompts-get-with-args:prompts-get-with-args
+  - prompts-get-embedded-resource:prompts-get-embedded-resource
+  - prompts-get-with-image:prompts-get-with-image
+  - caching:sep-2549-prompts-list-caching-hints
+  # Not supported: sampling
+  - tools-call-sampling:tools-call-sampling
+  # Not supported: elicitation
+  - tools-call-elicitation:tools-call-elicitation
+  - elicitation-sep1034-defaults:elicitation-sep1034-general
+  - elicitation-sep1330-enums:elicitation-sep1330-general
+  # Not supported: input-required results (elicitation, sampling, roots)
+  - input-required-result-basic-elicitation:sep-2322-elicitation-incomplete
+  - input-required-result-basic-sampling:sep-2322-sampling-incomplete
+  - input-required-result-basic-list-roots:sep-2322-list-roots-incomplete
+  - input-required-result-request-state:sep-2322-request-state-incomplete
+  - input-required-result-multiple-input-requests:sep-2322-multiple-inputs-incomplete
+  - input-required-result-multi-round:sep-2322-multi-round-r1
+  - input-required-result-missing-input-response:sep-2322-missing-response-rerequests
+  - input-required-result-non-tool-request:sep-2322-non-tool-incomplete
+  - input-required-result-result-type:sep-2322-result-type-included
+  - input-required-result-tampered-state:sep-2322-reject-tampered-state
+  - input-required-result-capability-check:sep-2322-respect-client-capabilities
+  - input-required-result-ignore-extra-params:sep-2322-ignore-unexpected-params
+  # Not supported: these checks need logging, elicitation or a client capability
+  - server-stateless:sep-2575-server-rejects-undeclared-capability
+  - server-stateless:sep-2575-missing-capability-http-400
+  - server-stateless:sep-2575-http-server-no-independent-requests-on-stream
+  - server-stateless:sep-2575-server-no-log-without-loglevel
+  # Not applicable: only for localhost servers with no auth
+  - dns-rebinding-protection:localhost-host-rebinding-rejected
+  # Not applicable: we use no sessions. The spec makes Mcp-Session-Id optional.
+  - server-sse-multiple-streams:server-sse-multiple-streams-session
