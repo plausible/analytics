@@ -31,7 +31,7 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimit do
         on: true,
         inner_join: ep in Billing.EnterprisePlan,
         on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
-        select: ep
+        select: %{team_id: ep.team_id, hourly_api_request_limit: ep.hourly_api_request_limit}
 
     active_enterprise_plans_query
     |> Repo.all()

@@ -7,6 +7,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
   """
   use PlausibleWeb.CustomerSupport.Live
 
+  import Ecto.Query, only: [from: 2]
+
+  alias Plausible.Billing.Subscription
+
   alias PlausibleWeb.CustomerSupport.Team.Components.{
     Overview,
     Members,
@@ -55,16 +59,27 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
         yesterday = Date.shift(Date.utc_today(), day: -1)
         Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
 
-        Plausible.Repo.update!(
-          Plausible.Billing.PaddleClassic.Subscription.changeset(team.subscription, %{
-            next_bill_date: yesterday
-          })
-        )
+        set_next_bill_date(team.subscription, yesterday)
 
         Resource.Team.get(team.id)
       end)
 
     {:noreply, assign(socket, team: team)}
+  end
+
+  defp set_next_bill_date(%Subscription{type: :billing} = subscription, date) do
+    Plausible.Repo.update_all(
+      from(s in Plausible.Billing.PaddleBilling.Subscription, where: s.id == ^subscription.id),
+      set: [next_bill_date: date]
+    )
+  end
+
+  defp set_next_bill_date(subscription, date) do
+    Plausible.Repo.update!(
+      Plausible.Billing.PaddleClassic.Subscription.changeset(subscription, %{
+        next_bill_date: date
+      })
+    )
   end
 
   def render(assigns) do
@@ -322,6 +337,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.Team do
           {@quota} ({@interval})
         </.styled_link>
         """
+
+      Plausible.Billing.Subscription.Status.active?(subscription) &&
+          subscription.type == :billing ->
+        "#{PlausibleWeb.AuthView.subscription_quota(subscription)} (#{PlausibleWeb.AuthView.subscription_interval(subscription)})"
 
       Plausible.Billing.Subscription.Status.active?(subscription) &&
           Plausible.Billing.Subscription.manual_subscription?(subscription) ->

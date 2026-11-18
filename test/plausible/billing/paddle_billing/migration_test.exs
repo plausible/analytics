@@ -413,6 +413,9 @@ defmodule Plausible.Billing.PaddleBilling.MigrationTest do
       assert %{
                "123" => %{billing_product_id: "prod_123", billing_price_id: "price_456"}
              } = sync_enterprise()
+
+      assert %{billing_product_id: "prod_123", billing_price_id: "price_456"} =
+               Repo.get_by!(Plausible.Billing.EnterprisePlan, team_id: team.id)
     end
 
     test "updates existing enterprise plan" do

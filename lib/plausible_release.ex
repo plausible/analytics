@@ -209,7 +209,7 @@ defmodule Plausible.Release do
         {:ok, team_member_limit} = Plausible.Billing.Ecto.Limit.dump(plan.team_member_limit)
 
         plan
-        |> Map.drop([:id])
+        |> Map.drop([:id | Plausible.Billing.Plan.billing_fields()])
         |> Map.put(:kind, Atom.to_string(plan.kind))
         |> Map.put(:monthly_cost, monthly_cost)
         |> Map.put(:yearly_cost, yearly_cost)

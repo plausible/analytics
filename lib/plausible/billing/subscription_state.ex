@@ -11,7 +11,7 @@ defmodule Plausible.Billing.SubscriptionState do
   """
   use Plausible.Repo
 
-  alias Plausible.Billing.{EnterprisePlan, PaddleClassic, SiteLocker}
+  alias Plausible.Billing.{EnterprisePlan, PaddleClassic, Plans, SiteLocker}
   alias Plausible.TeamDeletionSchedules
   alias Plausible.Teams
 
@@ -112,17 +112,15 @@ defmodule Plausible.Billing.SubscriptionState do
   end
 
   defp maybe_adjust_api_key_limits(team) do
-    plan =
-      Repo.get_by(EnterprisePlan,
-        team_id: team.id,
-        paddle_plan_id: team.subscription.paddle_plan_id
-      )
+    case Plans.get_enterprise_plan(team.subscription) do
+      %EnterprisePlan{hourly_api_request_limit: limit} ->
+        Repo.update_all(
+          from(t in Teams.Team, where: t.id == ^team.id),
+          set: [hourly_api_request_limit: limit]
+        )
 
-    if plan do
-      Repo.update_all(
-        from(t in Teams.Team, where: t.id == ^team.id),
-        set: [hourly_api_request_limit: plan.hourly_api_request_limit]
-      )
+      _ ->
+        :ok
     end
 
     team

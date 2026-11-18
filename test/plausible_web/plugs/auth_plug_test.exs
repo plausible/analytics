@@ -15,7 +15,10 @@ defmodule PlausibleWeb.AuthPlugTest do
   end
 
   test "looks up current user if they are logged in", %{conn: conn, user: user} do
-    subscribe_to_plan(user, "123", inserted_at: NaiveDateTime.utc_now())
+    subscribe_to_plan(user, "123",
+      inserted_at: NaiveDateTime.utc_now(),
+      next_bill_amount: "123.00"
+    )
 
     conn =
       conn
@@ -23,7 +26,7 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_user].id == user.id
-    assert conn.assigns[:my_team].subscription.paddle_plan_id == "123"
+    assert conn.assigns[:my_team].subscription.next_bill_amount == "123.00"
     assert conn.assigns[:current_team_role] == :owner
   end
 
@@ -32,13 +35,15 @@ defmodule PlausibleWeb.AuthPlugTest do
     subscribe_to_plan(
       user,
       "123",
-      inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+      inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1),
+      next_bill_amount: "123.00"
     )
 
     subscribe_to_plan(
       user,
       "456",
-      inserted_at: NaiveDateTime.utc_now()
+      inserted_at: NaiveDateTime.utc_now(),
+      next_bill_amount: "456.00"
     )
 
     conn =
@@ -47,7 +52,7 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_user].id == user.id
-    assert conn.assigns[:my_team].subscription.paddle_plan_id == "456"
+    assert conn.assigns[:my_team].subscription.next_bill_amount == "456.00"
   end
 
   test "switches current team when `team` parameter provided", %{conn: conn, user: user} do

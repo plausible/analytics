@@ -29,11 +29,21 @@ defmodule Plausible.Billing.Plan do
     field :monthly_product_id, :string
     field :yearly_cost
     field :yearly_product_id, :string
+
+    field :billing_product_id, :string
+    field :billing_monthly_price_id, :string
+    field :billing_yearly_price_id, :string
   end
 
   @required_fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume)a
-  @optional_fields ~w(monthly_cost yearly_cost monthly_product_id yearly_product_id data_retention_in_years)a
+  @optional_fields ~w(monthly_cost yearly_cost monthly_product_id yearly_product_id data_retention_in_years billing_product_id billing_monthly_price_id billing_yearly_price_id)a
   @fields @required_fields ++ @optional_fields
+
+  @doc """
+  Fields holding Paddle Billing identifiers of the plan.
+  """
+  def billing_fields(),
+    do: ~w(billing_product_id billing_monthly_price_id billing_yearly_price_id)a
 
   def changeset(plan, attrs) do
     plan

@@ -14,6 +14,7 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
     field :billing_customer_id, :string
     field :billing_product_id, :string
     field :billing_price_id, :string
+    field :billing_interval, Ecto.Enum, values: [:monthly, :yearly]
     field :next_bill_amount, :string
     field :next_bill_date, :date
     field :last_bill_date, :date

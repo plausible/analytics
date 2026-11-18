@@ -23,7 +23,12 @@ if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
   Plausible.TestUtils.ensure_minio()
 end
 
-default_exclude = [:slow, :minio, :migrations]
+default_exclude =
+  if System.get_env("BILLING_SUBSCRIPTIONS") == "1" do
+    [:skip_extra_billing_run, :slow, :minio, :migrations]
+  else
+    [:slow, :minio, :migrations]
+  end
 
 # avoid slowdowns contacting the code server
 for {app, _, _} <- Application.loaded_applications() do

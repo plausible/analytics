@@ -177,6 +177,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     <aside class={@class}>
       <.notice title={Plausible.Billing.subscription_past_due_notice_title()}>
         There was a problem with your latest payment. Please update your payment information to keep using Plausible.<.link
+          :if={@subscription.update_url}
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
         > Update billing info <span aria-hidden="true"> &rarr;</span></.link>
@@ -200,6 +201,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         theme={:red}
       >
         Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
+          :if={@subscription.update_url}
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
         > Update billing info <span aria-hidden="true"> &rarr;</span></.link>
