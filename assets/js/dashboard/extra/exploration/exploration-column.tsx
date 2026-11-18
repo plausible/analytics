@@ -417,7 +417,7 @@ export function ExplorationColumn({
             defaultValue={filter}
             placeholder="Search"
             onChange={debouncedFilterChange}
-            className="peer max-w-48 w-full h-full py-0 text-xs dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
+            className="peer max-w-48 w-full h-full py-0 text-base dark:text-gray-100 block border-gray-300 dark:border-gray-700 rounded-md dark:bg-gray-700 dark:placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500"
           />
         )}
 

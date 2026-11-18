@@ -8,8 +8,7 @@ export const isOverMaxLength = (value: string, maxLength: number): boolean =>
   getCharacterCount(value) > maxLength
 
 const fieldClassName =
-  'block px-3.5 py-2.5 w-full text-sm dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500'
-
+  'block px-3.5 py-2.5 w-full text-base dark:text-gray-300 rounded-md border border-gray-300 dark:border-gray-750 dark:bg-gray-750 focus:outline-none focus:ring-3 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/25 focus:border-indigo-500'
 interface LabeledFieldProps {
   label: string
   id: string
