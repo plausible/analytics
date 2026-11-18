@@ -12,8 +12,8 @@ defmodule Plausible.ChangesetHelpers do
   end
 
   @doc """
-  iex> serialize_first_error([{"name", {"should be at most %{count} byte(s)", [count: 255]}}])
-  "name should be at most 255 byte(s)"
+      iex> serialize_first_error([{"name", {"should be at most %{count} byte(s)", [count: 255]}}])
+      "name should be at most 255 byte(s)"
   """
   def serialize_first_error(errors) do
     {field, {message, opts}} = List.first(errors)

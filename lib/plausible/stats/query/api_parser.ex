@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Query.ApiParser do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError}
+  alias Plausible.Stats.{Filters, Metrics, JSONSchema, QueryError, QueryPeriod}
 
   @default_include %Plausible.Stats.Query.Include{
     imports: false,
@@ -24,9 +24,9 @@ defmodule Plausible.Stats.Query.ApiParser do
 
   def parse(params, opts \\ []) when is_map(params) do
     with :ok <- JSONSchema.validate(params),
-         {:ok, input_date_range} <- parse_input_date_range(params["date_range"]),
+         {:ok, input_date_range} <- QueryPeriod.parse_input_date_range(params["date_range"]),
          {:ok, metrics} <- parse_metrics(Map.fetch!(params, "metrics")),
-         {:ok, filters} <- parse_filters(params["filters"]),
+         {:ok, filters} <- Filters.Parser.parse(params["filters"]),
          {:ok, dimensions} <- parse_dimensions(params["dimensions"]),
          {:ok, order_by} <- parse_order_by(params["order_by"]),
          {:ok, pagination} <- parse_pagination(params["pagination"]),
@@ -57,167 +57,6 @@ defmodule Plausible.Stats.Query.ApiParser do
       _ ->
         {:error,
          %QueryError{code: :invalid_metrics, message: "Unknown metric '#{i(metric_str)}'."}}
-    end
-  end
-
-  def parse_filters(filters) when is_list(filters) do
-    parse_list(filters, &parse_filter/1)
-  end
-
-  def parse_filters(nil), do: {:ok, []}
-
-  defp parse_filter(filter) do
-    with {:ok, operator} <- parse_operator(filter),
-         {:ok, second} <- parse_filter_second(operator, filter),
-         {:ok, rest} <- parse_filter_rest(operator, filter) do
-      {:ok, [operator, second | rest]}
-    end
-  end
-
-  defp parse_operator(["is" | _rest]), do: {:ok, :is}
-  defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
-  defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
-  defp parse_operator(["matches_not" | _rest]), do: {:ok, :matches_not}
-  defp parse_operator(["matches_wildcard" | _rest]), do: {:ok, :matches_wildcard}
-  defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
-  defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
-  defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
-  defp parse_operator(["and" | _rest]), do: {:ok, :and}
-  defp parse_operator(["or" | _rest]), do: {:ok, :or}
-  defp parse_operator(["not" | _rest]), do: {:ok, :not}
-  defp parse_operator(["has_done" | _rest]), do: {:ok, :has_done}
-  defp parse_operator(["has_not_done" | _rest]), do: {:ok, :has_not_done}
-
-  defp parse_operator(filter),
-    do:
-      {:error,
-       %QueryError{code: :invalid_filters, message: "Unknown operator for filter '#{i(filter)}'."}}
-
-  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
-    do: parse_filters(filters)
-
-  def parse_filter_second(operator, [_, filter | _rest])
-      when operator in [:not, :has_done, :has_not_done],
-      do: parse_filter(filter)
-
-  def parse_filter_second(_operator, filter), do: parse_filter_dimension(filter)
-
-  defp parse_filter_dimension([_operator, filter_dimension | _rest] = filter) do
-    parse_filter_dimension_string(filter_dimension, "Invalid filter '#{i(filter)}'.")
-  end
-
-  defp parse_filter_dimension(filter),
-    do: {:error, %QueryError{code: :invalid_filters, message: "Invalid filter '#{i(filter)}'."}}
-
-  defp parse_filter_rest(operator, filter)
-       when operator in [
-              :is,
-              :is_not,
-              :matches,
-              :matches_not,
-              :matches_wildcard,
-              :matches_wildcard_not,
-              :contains,
-              :contains_not
-            ] do
-    with {:ok, clauses} <- parse_clauses_list(filter),
-         {:ok, modifiers} <- parse_filter_modifiers(Enum.at(filter, 3)) do
-      {:ok, [clauses | modifiers]}
-    end
-  end
-
-  defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or, :has_done, :has_not_done],
-       do: {:ok, []}
-
-  defp parse_clauses_list([operator, dimension, list | _rest] = filter) when is_list(list) do
-    all_strings? = Enum.all?(list, &is_binary/1)
-    all_integers? = Enum.all?(list, &is_integer/1)
-
-    case {dimension, all_strings?} do
-      {"visit:city", false} when all_integers? ->
-        {:ok, list}
-
-      {"visit:country", true} when operator in ["is", "is_not"] ->
-        if Enum.all?(list, &(String.length(&1) == 2)) do
-          {:ok, list}
-        else
-          {:error,
-           %QueryError{
-             code: :invalid_filters,
-             message:
-               "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
-           }}
-        end
-
-      {"segment", _} when all_integers? ->
-        {:ok, list}
-
-      {_, true} when dimension !== "segment" ->
-        {:ok, list}
-
-      _ ->
-        {:error, %QueryError{code: :invalid_filters, message: "Invalid filter '#{i(filter)}'."}}
-    end
-  end
-
-  defp parse_clauses_list(filter),
-    do: {:error, %QueryError{code: :invalid_filters, message: "Invalid filter '#{i(filter)}'."}}
-
-  defp parse_filter_modifiers(modifiers) when is_map(modifiers) do
-    {:ok, [atomize_keys(modifiers)]}
-  end
-
-  defp parse_filter_modifiers(nil) do
-    {:ok, []}
-  end
-
-  def parse_input_date_range("day"), do: {:ok, :day}
-  def parse_input_date_range("24h"), do: {:ok, :"24h"}
-  def parse_input_date_range("month"), do: {:ok, :month}
-  def parse_input_date_range("year"), do: {:ok, :year}
-  def parse_input_date_range("all"), do: {:ok, :all}
-
-  def parse_input_date_range(shorthand) when is_binary(shorthand) do
-    case Integer.parse(shorthand) do
-      {n, "d"} when n > 0 and n <= 5_000 ->
-        {:ok, {:last_n_days, n}}
-
-      {n, "mo"} when n > 0 and n <= 100 ->
-        {:ok, {:last_n_months, n}}
-
-      _ ->
-        {:error,
-         %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(shorthand)}"}}
-    end
-  end
-
-  def parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
-    case parse_date_strings(from, to) do
-      {:ok, dates} -> {:ok, dates}
-      {:error, _} -> parse_timestamp_strings(from, to)
-    end
-  end
-
-  def parse_input_date_range(unknown) do
-    {:error, %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(unknown)}"}}
-  end
-
-  def parse_date_strings(from, to) do
-    with {:ok, from_date} <- Date.from_iso8601(from),
-         {:ok, to_date} <- Date.from_iso8601(to) do
-      {:ok, {:date_range, from_date, to_date}}
-    end
-  end
-
-  defp parse_timestamp_strings(from, to) do
-    with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
-         {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
-      {:ok, {:datetime_range, from_datetime, to_datetime}}
-    else
-      _ ->
-        {:error,
-         %QueryError{code: :invalid_date_range, message: "Invalid date_range '#{i([from, to])}'."}}
     end
   end
 
@@ -294,7 +133,7 @@ defmodule Plausible.Stats.Query.ApiParser do
     if dimension in @breakdown_only_non_time_dimensions do
       {:ok, dimension}
     else
-      parse_filter_dimension_string(dimension)
+      Filters.Parser.parse_filter_dimension(dimension)
     end
   end
 
@@ -345,37 +184,6 @@ defmodule Plausible.Stats.Query.ApiParser do
     Map.new(map, fn {key, value} ->
       {String.to_existing_atom(key), value}
     end)
-  end
-
-  defp parse_filter_dimension_string(dimension, error_message \\ "") do
-    case dimension do
-      "event:props:" <> property_name ->
-        if String.length(property_name) > 0 do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "event:" <> key ->
-        if key in Filters.event_props() do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "visit:" <> key ->
-        if key in Filters.visit_props() do
-          {:ok, dimension}
-        else
-          {:error, %QueryError{code: :invalid_filters, message: error_message}}
-        end
-
-      "segment" ->
-        {:ok, dimension}
-
-      _ ->
-        {:error, %QueryError{code: :invalid_filters, message: error_message}}
-    end
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)

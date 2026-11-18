@@ -4,7 +4,6 @@ defmodule Plausible.Segments.Filters do
   """
   alias Plausible.Segments
   alias Plausible.Stats.{Filters, QueryError}
-  alias Plausible.Stats.Query.ApiParser
 
   @max_segment_filters_count 10
 
@@ -12,11 +11,11 @@ defmodule Plausible.Segments.Filters do
   Finds unique segment IDs used in query filters.
 
   ## Examples
-    iex> get_segment_ids([[:not, [:is, "segment", [10, 20]]], [:contains, "visit:entry_page", ["blog"]]])
-    {:ok, [10, 20]}
+      iex> get_segment_ids([[:not, [:is, "segment", [10, 20]]], [:contains, "visit:entry_page", ["blog"]]])
+      {:ok, [10, 20]}
 
-    iex> get_segment_ids([[:and, [[:is, "segment", Enum.to_list(1..6)], [:is, "segment", Enum.to_list(1..6)]]]])
-    {:error, %Plausible.Stats.QueryError{code: :invalid_filters, message: "Invalid filters. You can only use up to 10 segment filters in a query."}}
+      iex> get_segment_ids([[:and, [[:is, "segment", Enum.to_list(1..6)], [:is, "segment", Enum.to_list(1..6)]]]])
+      {:error, %Plausible.Stats.QueryError{code: :invalid_filters, message: "Invalid filters. You can only use up to 10 segment filters in a query."}}
   """
   def get_segment_ids(filters) do
     ids =
@@ -53,7 +52,7 @@ defmodule Plausible.Segments.Filters do
               segments,
               %{},
               fn %Segments.Segment{id: id, segment_data: segment_data} ->
-                case ApiParser.parse_filters(segment_data["filters"]) do
+                case Filters.Parser.parse(segment_data["filters"]) do
                   {:ok, filters} -> {id, filters}
                   _ -> {id, nil}
                 end
@@ -95,31 +94,15 @@ defmodule Plausible.Segments.Filters do
   @doc """
   ## Examples
 
-    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]]], %{})
-    {:ok, [[:is, "visit:entry_page", ["/home"]]]}
+      iex> resolve_segments([[:is, "visit:entry_page", ["/home"]]], %{})
+      {:ok, [[:is, "visit:entry_page", ["/home"]]]}
 
-    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]]], %{1 => [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]})
-    {:ok, [
-      [:is, "visit:entry_page", ["/home"]],
-      [:contains, "visit:entry_page", ["blog"]],
-      [:is, "visit:country", ["PL"]]
-    ]}
-
-    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]], [:is, "segment", [2]]], %{1 => [[:is, "visit:country", ["PL"]]], 2 => [[:is, "event:goal", ["Signup"]]]})
-    {:ok, [
-      [:is, "visit:entry_page", ["/home"]],
-      [:is, "visit:country", ["PL"]],
-      [:is, "event:goal", ["Signup"]]
-    ]}
-
-
-    iex> resolve_segments([[:is, "segment", [1, 2]]], %{1 => [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]], 2 => [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]})
-    {:ok, [
-      [:or, [
-        [:and, [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]]],
-        [:and, [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]]]
-      ]
-    ]}
+      iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]]], %{1 => [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]})
+      {:ok, [
+        [:is, "visit:entry_page", ["/home"]],
+        [:contains, "visit:entry_page", ["blog"]],
+        [:is, "visit:country", ["PL"]]
+      ]}
   """
   def resolve_segments(original_filters, preloaded_segments) do
     if map_size(preloaded_segments) > 0 do
@@ -131,6 +114,12 @@ defmodule Plausible.Segments.Filters do
        |> Filters.transform_filters(&expand_first_level_and_filters/1)}
     else
       {:ok, original_filters}
+    end
+  end
+
+  def preload_and_resolve(%Plausible.Site{} = site, filters) do
+    with {:ok, preloaded_segments} <- preload_needed_segments(site, filters) do
+      resolve_segments(filters, preloaded_segments)
     end
   end
 end

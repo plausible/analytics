@@ -63,14 +63,14 @@ defmodule PlausibleWeb.StatsView do
 
   ## Examples
 
-     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "user.gittea.io/repo"})
-     "http://localhost:8000/user.gittea.io%2Frepo"
+      iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "user.gittea.io/repo"})
+      "http://localhost:8000/user.gittea.io%2Frepo"
 
-     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "anakin.test"})
-     "http://localhost:8000/anakin.test"
+      iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "anakin.test"})
+      "http://localhost:8000/anakin.test"
 
-     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "café.test"})
-     "http://localhost:8000/café.test"
+      iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "café.test"})
+      "http://localhost:8000/café.test"
 
   """
   def pretty_stats_url(%Plausible.Site{domain: domain}) when is_binary(domain) do

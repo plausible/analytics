@@ -8,8 +8,38 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.{DateTimeRange, Query, Time}
+  alias Plausible.Stats.{DateTimeRange, Query, QueryError, QueryPeriod, Time}
   alias Plausible.Times
+
+  @compare_shorthands %{
+    "previous_period" => :previous_period,
+    "year_over_year" => :year_over_year
+  }
+
+  @compare_shorthand_keys Map.keys(@compare_shorthands)
+
+  @doc false
+  def parse_compare(compare) when compare in @compare_shorthand_keys do
+    {:ok, @compare_shorthands[compare]}
+  end
+
+  def parse_compare([from, to] = compare) when is_binary(from) and is_binary(to) do
+    case QueryPeriod.parse_date_strings(from, to) do
+      {:ok, compare} -> {:ok, compare}
+      {:error, _} -> {:error, invalid_compare_error(compare)}
+    end
+  end
+
+  def parse_compare(nil), do: {:ok, nil}
+
+  def parse_compare(compare), do: {:error, invalid_compare_error(compare)}
+
+  @doc false
+  def parse_compare_match_day_of_week(value), do: value == true
+
+  defp invalid_compare_error(compare) do
+    %QueryError{code: :invalid_include, message: "Invalid include.compare '#{inspect(compare)}'"}
+  end
 
   @spec get_comparison_utc_time_range(Stats.Query.t()) :: DateTimeRange.t()
   @doc """

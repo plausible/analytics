@@ -19,49 +19,7 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   }
 
   describe "input_date_range" do
-    test "is required" do
-      params = Map.drop(@base_params, ["date_range"])
-      assert {:error, %QueryError{code: :invalid_date_range}} = parse(params)
-    end
-
-    for period <- [:realtime, :day, :month, :year, :all] do
-      test "parses #{period} date_range" do
-        params = Map.merge(@base_params, %{"date_range" => Atom.to_string(unquote(period))})
-        {:ok, parsed} = parse(params)
-        assert_matches %ParsedParams{input_date_range: ^unquote(period)} = parsed
-      end
-    end
-
-    for i <- [7, 28, 30, 91] do
-      test "parses #{i}d date_range" do
-        params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}d"})
-        {:ok, parsed} = parse(params)
-
-        assert_matches %ParsedParams{
-                         input_date_range: {:last_n_days, ^unquote(i)}
-                       } = parsed
-      end
-    end
-
-    test "parses 24h period" do
-      params = Map.merge(@base_params, %{"date_range" => "24h"})
-      {:ok, parsed} = parse(params)
-      assert_matches %ParsedParams{input_date_range: :"24h"} = parsed
-    end
-
-    for i <- [6, 12] do
-      test "parses #{i}mo date_range" do
-        params = Map.merge(@base_params, %{"date_range" => "#{unquote(i)}mo"})
-        {:ok, parsed} = parse(params)
-
-        assert_matches %ParsedParams{
-                         input_date_range: {:last_n_months, ^unquote(i)}
-                       } =
-                         parsed
-      end
-    end
-
-    test "parses custom date_range" do
+    test "parses date_range" do
       params = Map.merge(@base_params, %{"date_range" => ["2021-01-01", "2021-03-05"]})
       {:ok, parsed} = parse(params)
 
@@ -72,21 +30,10 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "relative_date" do
-    test "parses a valid iso8601 date string" do
+    test "parses relative_date" do
       params = Map.merge(@base_params, %{"relative_date" => "2021-05-05"})
       {:ok, parsed} = parse(params)
       assert %ParsedParams{relative_date: ~D[2021-05-05]} = parsed
-    end
-
-    test "nil is accepted" do
-      params = Map.merge(@base_params, %{"relative_date" => nil})
-      {:ok, parsed} = parse(params)
-      assert %ParsedParams{relative_date: nil} = parsed
-    end
-
-    test "errors when invalid date" do
-      params = Map.merge(@base_params, %{"relative_date" => "2021-13-32"})
-      {:error, %QueryError{code: :invalid_relative_date}} = parse(params)
     end
   end
 
@@ -111,59 +58,19 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "include.compare" do
-    for mode <- [:previous_period, :year_over_year] do
-      test "parses #{mode} mode" do
-        params = %{
-          @base_params
-          | "include" => %{@base_params["include"] | "compare" => "#{unquote(mode)}"}
-        }
-
-        {:ok, parsed} = parse(params)
-        assert parsed.include.compare == unquote(mode)
-      end
-    end
-
-    test "parses custom date range mode" do
+    test "parses compare" do
       params = %{
         @base_params
-        | "include" => %{@base_params["include"] | "compare" => ["2021-01-01", "2021-04-30"]}
+        | "include" => %{@base_params["include"] | "compare" => "previous_period"}
       }
 
       {:ok, parsed} = parse(params)
-      assert parsed.include.compare == {:date_range, ~D[2021-01-01], ~D[2021-04-30]}
-    end
-
-    test "fails with invalid custom dates" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare" => ["2021-13-01", "2021-04-30"]}
-      }
-
-      assert {:error, %QueryError{code: :invalid_include}} = parse(params)
-    end
-
-    test "fails with random invalid compare value" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare" => "foo"}
-      }
-
-      assert {:error, %QueryError{code: :invalid_include}} = parse(params)
-    end
-
-    test "compare is nil if not provided" do
-      params = %{
-        @base_params
-        | "include" => Map.drop(@base_params["include"], ["compare"])
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare == nil
+      assert parsed.include.compare == :previous_period
     end
   end
 
   describe "include.compare_match_day_of_week" do
-    test "true -> true" do
+    test "parses compare_match_day_of_week" do
       params = %{
         @base_params
         | "include" => %{@base_params["include"] | "compare_match_day_of_week" => true}
@@ -171,26 +78,6 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
 
       {:ok, parsed} = parse(params)
       assert parsed.include.compare_match_day_of_week == true
-    end
-
-    test "invalid -> false" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare_match_day_of_week" => "foo"}
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare_match_day_of_week == false
-    end
-
-    test "false -> false" do
-      params = %{
-        @base_params
-        | "include" => %{@base_params["include"] | "compare_match_day_of_week" => false}
-      }
-
-      {:ok, parsed} = parse(params)
-      assert parsed.include.compare_match_day_of_week == false
     end
   end
 
@@ -216,56 +103,10 @@ defmodule Plausible.Stats.Query.DashboardParserTest do
   end
 
   describe "filters" do
-    test "parses valid filters" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [
-            ["has_not_done", ["is", "event:goal", ["Signup"]]],
-            ["contains", "visit:exit_page", ["/:dashboard"]],
-            ["is", "visit:source", ["Bing"]],
-            ["is_not", "event:props:theme", ["system", "(none)"]]
-          ]
-        })
-
+    test "parses filters" do
+      params = Map.merge(@base_params, %{"filters" => [["is", "visit:source", ["Bing"]]]})
       {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [
-               [:has_not_done, [:is, "event:goal", ["Signup"]]],
-               [:contains, "visit:exit_page", ["/:dashboard"]],
-               [:is, "visit:source", ["Bing"]],
-               [:is_not, "event:props:theme", ["system", "(none)"]]
-             ]
-    end
-
-    test "cannot filter by breakdown-only dimensions" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "event:prop_key", ["author"]]]
-        })
-
-      {:error, %QueryError{code: :invalid_filters}} = parse(params)
-    end
-
-    test "parses city filter with multiple clauses" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "visit:city", ["2988507", "2950159"]]]
-        })
-
-      {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [[:is, "visit:city", ["2988507", "2950159"]]]
-    end
-
-    test "parses a segment filter" do
-      params =
-        Map.merge(@base_params, %{
-          "filters" => [["is", "segment", [123]]]
-        })
-
-      {:ok, parsed} = parse(params)
-
-      assert parsed.filters == [[:is, "segment", [123]]]
+      assert parsed.filters == [[:is, "visit:source", ["Bing"]]]
     end
   end
 

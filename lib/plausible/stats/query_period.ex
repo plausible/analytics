@@ -1,10 +1,101 @@
 defmodule Plausible.Stats.QueryPeriod do
   @moduledoc """
-  Builds the time range covered by a stats query from parsed parameters.
+  Parses the `date_range` input of a stats query, and builds the time range
+  that the query covers.
   """
 
-  alias Plausible.Stats.DateTimeRange
+  alias Plausible.Stats.{DateTimeRange, QueryError}
   alias Plausible.Times
+
+  def parse_input_date_range("day"), do: {:ok, :day}
+  def parse_input_date_range("24h"), do: {:ok, :"24h"}
+  def parse_input_date_range("month"), do: {:ok, :month}
+  def parse_input_date_range("year"), do: {:ok, :year}
+  def parse_input_date_range("all"), do: {:ok, :all}
+
+  def parse_input_date_range(shorthand) when is_binary(shorthand) do
+    case Integer.parse(shorthand) do
+      {n, "d"} when n > 0 and n <= 5_000 ->
+        {:ok, {:last_n_days, n}}
+
+      {n, "mo"} when n > 0 and n <= 100 ->
+        {:ok, {:last_n_months, n}}
+
+      _ ->
+        {:error,
+         %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(shorthand)}"}}
+    end
+  end
+
+  def parse_input_date_range([from, to]) when is_binary(from) and is_binary(to) do
+    case parse_date_strings(from, to) do
+      {:ok, dates} -> {:ok, dates}
+      {:error, _} -> parse_timestamp_strings(from, to)
+    end
+  end
+
+  def parse_input_date_range(nil) do
+    {:error,
+     %QueryError{code: :invalid_date_range, message: "Required 'date_range' parameter missing"}}
+  end
+
+  def parse_input_date_range(unknown) do
+    {:error, %QueryError{code: :invalid_date_range, message: "Invalid date_range #{i(unknown)}"}}
+  end
+
+  @doc """
+  Same as `parse_input_date_range/1`, but also accepts the "realtime" and
+  "realtime_30m" which are currently exclusive to dashboard queries.
+  """
+  def parse_dashboard_input_date_range("realtime"), do: {:ok, :realtime}
+  def parse_dashboard_input_date_range("realtime_30m"), do: {:ok, :realtime_30m}
+  def parse_dashboard_input_date_range(date_range), do: parse_input_date_range(date_range)
+
+  @doc """
+  Parses the `relative_date` that the dashboard sends. Returns `nil` when
+  there is no `relative_date`.
+  """
+  def parse_relative_date(date) when is_binary(date) do
+    case Date.from_iso8601(date) do
+      {:ok, date} ->
+        {:ok, date}
+
+      _ ->
+        {:error,
+         %QueryError{code: :invalid_relative_date, message: "Failed to convert '#{date}' to date"}}
+    end
+  end
+
+  def parse_relative_date(_), do: {:ok, nil}
+
+  def parse_date_strings(from, to) do
+    with {:ok, from_date} <- Date.from_iso8601(from),
+         {:ok, to_date} <- Date.from_iso8601(to) do
+      {:ok, {:date_range, from_date, to_date}}
+    end
+  end
+
+  defp parse_timestamp_strings(from, to) do
+    with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
+         {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
+      {:ok, {:datetime_range, from_datetime, to_datetime}}
+    else
+      _ ->
+        {:error,
+         %QueryError{code: :invalid_date_range, message: "Invalid date_range '#{i([from, to])}'."}}
+    end
+  end
+
+  defp i(value), do: inspect(value, charlists: :as_lists)
+
+  @doc """
+  Same as `build_range_for_site/4`, but returns the range in UTC.
+  """
+  def build_utc_range_for_site(input_date_range, %Plausible.Site{} = site, relative_date, now) do
+    input_date_range
+    |> build_range_for_site(site, relative_date, now)
+    |> DateTimeRange.to_timezone("Etc/UTC")
+  end
 
   @doc """
   Resolves an `input_date_range` for the site and builds the corresponding

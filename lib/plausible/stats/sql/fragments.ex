@@ -171,8 +171,8 @@ defmodule Plausible.Stats.SQL.Fragments do
 
   ### Examples
 
-    iex> wrap_alias([t], %{ foo: t.column }) |> expand_macro_once
-    "%{foo: dynamic([t], selected_as(t.column, :foo))}"
+      iex> wrap_alias([t], %{ foo: t.column }) |> expand_macro_once
+      "%{foo: dynamic([t], selected_as(t.column, :foo))}"
   """
   defmacro wrap_alias(binding, map_literal) do
     update_literal_map_values(map_literal, fn {key, expr} ->
@@ -192,8 +192,8 @@ defmodule Plausible.Stats.SQL.Fragments do
 
   ### Examples
 
-    iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
-    "select_merge(q, [], ^wrap_alias([t], %{foo: t.column}))"
+      iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
+      "select_merge(q, [], ^wrap_alias([t], %{foo: t.column}))"
   """
   defmacro select_merge_as(q, binding, map_literal) do
     quote do

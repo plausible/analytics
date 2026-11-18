@@ -80,18 +80,20 @@ defmodule Plausible.Event.SystemEvents do
   Checks if the event name is for a system event / system goal that should have the event.props.path synced with the event.pathname property.
 
   ### Examples
-  iex> sync_props_path_with_pathname?("404", [{"path", "/foo"}])
-  false
+
+      iex> sync_props_path_with_pathname?("404", [{"path", "/foo"}])
+      false
 
   Note: Should not override event.props.path if it is set deliberately to nil
-  iex> sync_props_path_with_pathname?("404", [{"path", nil}])
-  false
 
-  iex> sync_props_path_with_pathname?("404", [{"other", "value"}])
-  true
+      iex> sync_props_path_with_pathname?("404", [{"path", nil}])
+      false
 
-  iex> sync_props_path_with_pathname?("404", [])
-  true
+      iex> sync_props_path_with_pathname?("404", [{"other", "value"}])
+      true
+
+      iex> sync_props_path_with_pathname?("404", [])
+      true
   """
   @spec sync_props_path_with_pathname?(String.t(), [{String.t(), String.t()}]) :: boolean()
   def sync_props_path_with_pathname?(event_name, props_in_request) do

@@ -1,9 +1,49 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
-  alias Plausible.Stats.{Query, Comparisons}
+  alias Plausible.Stats.{Query, QueryError, Comparisons}
   alias Plausible.Stats.Query.ParsedParams
 
   setup [:create_user, :create_site]
+
+  describe "parse_compare/1" do
+    for mode <- [:previous_period, :year_over_year] do
+      test "parses #{mode} mode" do
+        assert Comparisons.parse_compare(unquote(Atom.to_string(mode))) == {:ok, unquote(mode)}
+      end
+    end
+
+    test "parses custom date range mode" do
+      assert Comparisons.parse_compare(["2021-01-01", "2021-04-30"]) ==
+               {:ok, {:date_range, ~D[2021-01-01], ~D[2021-04-30]}}
+    end
+
+    test "fails with invalid custom dates" do
+      assert {:error, %QueryError{code: :invalid_include}} =
+               Comparisons.parse_compare(["2021-13-01", "2021-04-30"])
+    end
+
+    test "fails with random invalid compare value" do
+      assert {:error, %QueryError{code: :invalid_include}} = Comparisons.parse_compare("foo")
+    end
+
+    test "compare is nil if not provided" do
+      assert Comparisons.parse_compare(nil) == {:ok, nil}
+    end
+  end
+
+  describe "parse_compare_match_day_of_week/1" do
+    test "true -> true" do
+      assert Comparisons.parse_compare_match_day_of_week(true) == true
+    end
+
+    test "invalid -> false" do
+      assert Comparisons.parse_compare_match_day_of_week("foo") == false
+    end
+
+    test "false -> false" do
+      assert Comparisons.parse_compare_match_day_of_week(false) == false
+    end
+  end
 
   describe "with period set to this month" do
     test "shifts back this month period when mode is previous_period", %{site: site} do
