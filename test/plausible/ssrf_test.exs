@@ -319,6 +319,73 @@ defmodule Plausible.SSRFTest do
     end
   end
 
+  describe "get/2 pools" do
+    setup do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{
+        "good.example" => {[{127, 0, 0, 1}], []},
+        "other.example" => {[{127, 0, 0, 1}], []}
+      })
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: ["good.example", "other.example"],
+          handler: fn conn, _port -> Plug.Conn.send_resp(conn, 200, "ok") end
+        )
+
+      {:ok, ca: ca, port: port}
+    end
+
+    test "requests to one hostname share a pool", %{ca: ca, port: port} do
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/foo")
+      pid = pool_pid!(port, "good.example")
+
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/bar")
+      assert pool_pid!(port, "good.example") == pid
+    end
+
+    test "hostnames on one address get pools of their own", %{ca: ca, port: port} do
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/")
+      assert {:ok, _} = get(ca, "https://other.example:#{port}/")
+
+      assert pool_pid!(port, "good.example") != pool_pid!(port, "other.example")
+    end
+
+    test "an idle pool stops", %{ca: ca, port: port} do
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/")
+
+      assert_stops(pool_pid!(port, "good.example"))
+    end
+
+    test "an idle pool stops even when its connection was refused", %{ca: ca} do
+      port = closed_port()
+
+      assert {:error, %Req.TransportError{reason: :econnrefused}} =
+               get(ca, "https://good.example:#{port}/", retry: false)
+
+      assert_stops(pool_pid!(port, "good.example"))
+    end
+  end
+
+  defp pool_pid!(port, host) do
+    pool = %Finch.Pool{scheme: :https, host: "127.0.0.1", port: port, tag: host}
+    assert {:ok, pid} = Finch.find_pool(SSRF.Finch, pool)
+    pid
+  end
+
+  defp assert_stops(pid) do
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, :process, ^pid, _reason}, 2_000
+  end
+
+  defp closed_port do
+    {:ok, socket} = :gen_tcp.listen(0, [])
+    {:ok, port} = :inet.port(socket)
+    :gen_tcp.close(socket)
+    port
+  end
+
   defp get(ca, url, opts \\ []) do
     SSRF.get(url, [cacerts: [ca]] ++ opts)
   end

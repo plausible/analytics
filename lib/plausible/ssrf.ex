@@ -4,8 +4,6 @@ defmodule Plausible.SSRF do
   hostnames reaching internal, private or local network space
   """
 
-  alias Plausible.SSRF.Pools
-
   @type error_reason ::
           :invalid_url
           | :invalid_host
@@ -19,9 +17,22 @@ defmodule Plausible.SSRF do
   @default_max_retries 2
   @default_retry_delay :timer.seconds(1)
   @dns_timeout 1_000
+  @connect_timeout :timer.seconds(5)
+  @finch __MODULE__.Finch
+  @pool_max_idle_time Application.compile_env(
+                        :plausible,
+                        [__MODULE__, :pool_max_idle_time],
+                        :timer.seconds(10)
+                      )
 
   # Swappable for tests
   @ip_check Application.compile_env(:plausible, :ssrf_ip_check, Plausible.IP.Tools)
+
+  def child_spec(_opts) do
+    # if a default pool should be started, these opts ensure it's automatically cleaned up
+    default_opts = [pool_max_idle_time: @pool_max_idle_time]
+    Finch.child_spec(name: @finch, pools: %{default: default_opts})
+  end
 
   @doc """
   Resolves bare hostname or literal IP and returns its address(es),
@@ -50,9 +61,8 @@ defmodule Plausible.SSRF do
 
   Retries transient failures twice, a second apart.
 
-  Each attempt has 5s to connect and `:request_timeout` ms for the whole
-  response. Finch checks the latter between reads, so it can overrun by up to
-  `:receive_timeout`.
+  Each attempt has 5s to connect and `:request_timeout` ms to respond, which
+  can overrun by up to `:receive_timeout`.
 
   Provide the option `:cacerts` when testing against mock https server. It replaces the system CA store.
   """
@@ -91,8 +101,6 @@ defmodule Plausible.SSRF do
   end
 
   # Connects to the checked IP, not the hostname, so DNS can't change in between.
-  # Never pass the hostname as `:connect_options`: Req starts a Finch instance per
-  # distinct value and never stops them.
   defp do_request(uri, ip, opts) do
     host = uri.host
     pinned_url = %{uri | host: ip |> :inet.ntoa() |> to_string()}
@@ -103,10 +111,31 @@ defmodule Plausible.SSRF do
       method: :get,
       url: pinned_url,
       headers: [{"host", host}],
-      finch: Pools.finch_opts(pinned_url, host, ip, cacerts),
+      finch: finch_opts(pinned_url, host, ip, cacerts),
       redirect: false
     )
     |> Req.request()
+  end
+
+  # One pool per IP and hostname, carrying the hostname for the certificate
+  # check. Idle pools stop on their own.
+  defp finch_opts(pinned_url, host, ip, cacerts) do
+    pool = %Finch.Pool{scheme: :https, host: pinned_url.host, port: pinned_url.port, tag: host}
+
+    :ok =
+      Finch.start_pool(@finch, pool,
+        conn_opts: [hostname: host, transport_opts: transport_opts(ip, cacerts)],
+        pool_max_idle_time: @pool_max_idle_time
+      )
+
+    [name: @finch, pool_tag: pool.tag]
+  end
+
+  # Mint verifies the certificate against `hostname` by default.
+  # `cacerts` of `nil` means the system store.
+  defp transport_opts(ip, cacerts) do
+    [inet6: tuple_size(ip) == 8, timeout: @connect_timeout] ++
+      if(cacerts, do: [cacerts: cacerts], else: [])
   end
 
   defp handle_response(%Req.Response{status: status} = resp)

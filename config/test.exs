@@ -33,7 +33,7 @@ config :plausible,
 
 config :plausible, ssrf_ip_check: Plausible.IP.Tools.Mock
 
-config :plausible, Plausible.SSRF.Pools, max_idle_time: 200
+config :plausible, Plausible.SSRF, pool_max_idle_time: 200
 
 config :plausible, Plausible.Cache, enabled: false
 
