@@ -33,6 +33,8 @@ config :plausible,
 
 config :plausible, ssrf_ip_check: Plausible.IP.Tools.Mock
 
+config :plausible, Plausible.SSRF.Pools, max_idle_time: 200
+
 config :plausible, Plausible.Cache, enabled: false
 
 config :ex_money, api_module: Plausible.ExchangeRateMock

@@ -12,11 +12,10 @@ defmodule Plausible.SSRF do
           | :dns_resolution_failed
           | :restricted_address
           | :redirect_not_followed
-          | :timeout
 
   @redirect_statuses [301, 302, 303, 307, 308]
   @default_receive_timeout :timer.seconds(5)
-  @default_total_timeout :timer.seconds(30)
+  @default_request_timeout :timer.seconds(5)
   @default_max_retries 2
   @default_retry_delay :timer.seconds(1)
   @dns_timeout 1_000
@@ -51,15 +50,15 @@ defmodule Plausible.SSRF do
 
   Retries transient failures twice, a second apart.
 
-  The whole call is cut off after `:total_timeout` ms.
+  Each attempt has 5s to connect and `:request_timeout` ms for the whole
+  response. Finch checks the latter between reads, so it can overrun by up to
+  `:receive_timeout`.
 
   Provide the option `:cacerts` when testing against mock https server. It replaces the system CA store.
   """
   @spec get(String.t(), keyword()) ::
           {:ok, Req.Response.t()} | {:error, error_reason() | Exception.t()}
   def get(url, opts \\ []) do
-    {total_timeout, opts} = Keyword.pop(opts, :total_timeout, @default_total_timeout)
-
     opts =
       opts
       |> Keyword.put_new(:retry, :safe_transient)
@@ -68,19 +67,10 @@ defmodule Plausible.SSRF do
       |> Keyword.put_new(:retry_delay, @default_retry_delay)
       |> Keyword.put_new(:retry_log_level, false)
       |> Keyword.put_new(:receive_timeout, @default_receive_timeout)
+      |> Keyword.put_new(:request_timeout, @default_request_timeout)
       # Req still honours it as an alias of :redirect, and it wins.
       |> Keyword.delete(:follow_redirects)
 
-    # The pool is linked to the task, so killing the task stops it too.
-    task = Task.async(fn -> request(url, opts) end)
-
-    case Task.yield(task, total_timeout) || Task.shutdown(task, :brutal_kill) do
-      {:ok, result} -> result
-      _ -> {:error, :timeout}
-    end
-  end
-
-  defp request(url, opts) do
     with {:ok, uri} <- parse_url(url),
          {:ok, ips} <- resolve_host(uri.host),
          {:ok, resp} <- do_request(uri, hd(ips), opts) do
@@ -108,17 +98,15 @@ defmodule Plausible.SSRF do
     pinned_url = %{uri | host: ip |> :inet.ntoa() |> to_string()}
     {cacerts, opts} = Keyword.pop(opts, :cacerts)
 
-    Pools.with_pool(pinned_url, host, ip, cacerts, fn finch ->
-      opts
-      |> Keyword.merge(
-        method: :get,
-        url: pinned_url,
-        headers: [{"host", host}],
-        finch: finch,
-        redirect: false
-      )
-      |> Req.request()
-    end)
+    opts
+    |> Keyword.merge(
+      method: :get,
+      url: pinned_url,
+      headers: [{"host", host}],
+      finch: Pools.finch_opts(pinned_url, host, ip, cacerts),
+      redirect: false
+    )
+    |> Req.request()
   end
 
   defp handle_response(%Req.Response{status: status} = resp)

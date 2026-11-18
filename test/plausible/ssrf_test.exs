@@ -120,8 +120,7 @@ defmodule Plausible.SSRFTest do
       assert_received {:host, ["good.example"]}
     end
 
-    @tag :capture_log
-    test "stops at total_timeout even while the server is still silent" do
+    test "gives up on a response that keeps trickling in" do
       TLSServer.allow_loopback()
 
       stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
@@ -130,15 +129,28 @@ defmodule Plausible.SSRFTest do
         TLSServer.start(
           cert_host: "good.example",
           handler: fn conn, _port ->
-            Process.sleep(1_000)
-            Plug.Conn.send_resp(conn, 200, "eventually")
+            conn = Plug.Conn.send_chunked(conn, 200)
+
+            Stream.repeatedly(fn -> Process.sleep(50) end)
+            |> Enum.reduce_while(conn, fn _, conn ->
+              case Plug.Conn.chunk(conn, ".") do
+                {:ok, conn} -> {:cont, conn}
+                {:error, _} -> {:halt, conn}
+              end
+            end)
           end
         )
 
       {microseconds, result} =
-        :timer.tc(fn -> get(ca, "https://good.example:#{port}/", total_timeout: 200) end)
+        :timer.tc(fn ->
+          get(ca, "https://good.example:#{port}/",
+            request_timeout: 200,
+            receive_timeout: 100,
+            retry: false
+          )
+        end)
 
-      assert result == {:error, :timeout}
+      assert {:error, %Req.TransportError{reason: :timeout}} = result
       assert microseconds < 500_000
     end
 
