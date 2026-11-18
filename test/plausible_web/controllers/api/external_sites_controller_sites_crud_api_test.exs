@@ -452,6 +452,22 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
         assert error =~ "API key does not have access to Sites API"
       end
 
+      test "is 404 when the user is a team member but not the owner", %{conn: conn, user: user} do
+        owner =
+          new_user()
+          |> subscribe_to_enterprise_plan(
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+          )
+
+        site = new_site(owner: owner)
+        add_member(team_of(owner), user: user, role: :editor)
+
+        conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert Repo.reload(site)
+      end
+
       test "cannot delete if team not matching team-scoped API key", %{
         conn: conn,
         user: user,
@@ -466,6 +482,23 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         assert %{"error" => error} = json_response(conn, 401)
         assert error =~ "Invalid API key"
+      end
+
+      test "is 404 for a super admin when team not matching team-scoped API key", %{
+        conn: conn,
+        user: user,
+        site: site
+      } do
+        patch_env(:super_admin_user_ids, [user.id])
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+        assert Repo.reload(site)
       end
 
       test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
@@ -745,6 +778,22 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerSitesCrudApiTest do
 
         assert %{"error" => error} = json_response(conn, 401)
         assert error =~ "Invalid API key"
+      end
+
+      test "is 404 when the user is a billing member of the site's team", %{
+        conn: conn,
+        user: user
+      } do
+        owner =
+          new_user()
+          |> subscribe_to_enterprise_plan(features: [Plausible.Billing.Feature.StatsAPI])
+
+        site = new_site(owner: owner)
+        add_member(team_of(owner), user: user, role: :billing)
+
+        conn = get(conn, "/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
       end
     end
 
