@@ -132,6 +132,7 @@ Plausible.EmailSuppression.html
 Plausible.EmailSuppressions.html
 Plausible.Event.SystemEvents.html
 Plausible.Exports.html
+Plausible.Factory.BillingModeStrategy.html
 Plausible.Factory.html
 Plausible.File.html
 Plausible.Funnel.Const.html
@@ -636,8 +637,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C3C28003.js
-dist/sidebar_items-A730DF2F.js
+dist/search_data-EDAABC77.js
+dist/sidebar_items-9F1FC00D.js
 index.html
 readme.html
 search.html

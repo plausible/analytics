@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-A730DF2F.js"></script>
+    <script src="dist/sidebar_items-9F1FC00D.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -230,6 +230,8 @@ subscriptions are linked to the plan by it.</p></div>
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Billing.EnterprisePlan{
   __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   billing_interval: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  billing_price_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  billing_product_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   features: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   hourly_api_request_limit: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -271,7 +273,7 @@ subscriptions are linked to the plan by it.</p></div>
     </a>
     <h1 class="signature" translate="no">create_changeset(model, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L35" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L37" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -291,7 +293,7 @@ subscriptions are linked to the plan by it.</p></div>
     </a>
     <h1 class="signature" translate="no">manual_subscription_changeset(plan)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L55" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L57" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -314,7 +316,7 @@ subscriptions are linked to the plan by it.</p></div>
     </a>
     <h1 class="signature" translate="no">update_changeset(plan, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L45" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/enterprise_plan.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
