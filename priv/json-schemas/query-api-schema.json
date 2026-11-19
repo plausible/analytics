@@ -167,18 +167,6 @@
         }
       ]
     },
-    "comparison_mode": {
-      "oneOf": [
-        {
-          "const": "previous_period",
-          "description": "Comparison date range shortcut - shift back the original query date range by its length"
-        },
-        {
-          "const": "year_over_year",
-          "description": "Comparison date range shortcut - shift back the original query date range by a year"
-        }
-      ]
-    },
     "metric": {
       "oneOf": [
         {
