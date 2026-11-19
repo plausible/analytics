@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def new_user_invitation(email, invitation_id, site, inviter) do
-    priority_email()
+    untrusted_recipient_email()
     |> to(email)
     |> tag("new-user-invitation")
     |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def existing_user_invitation(email, site, inviter) do
-    priority_email()
+    untrusted_recipient_email()
     |> to(email)
     |> tag("existing-user-invitation")
     |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def new_user_team_invitation(email, invitation_id, team, inviter) do
-    priority_email()
+    untrusted_recipient_email()
     |> to(email)
     |> tag("new-user-team-invitation")
     |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def existing_user_team_invitation(email, team, inviter) do
-    priority_email()
+    untrusted_recipient_email()
     |> to(email)
     |> tag("existing-user-team-invitation")
     |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
@@ -314,7 +314,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
-    priority_email()
+    untrusted_recipient_email()
     |> to(email)
     |> tag("ownership-transfer-request")
     |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
@@ -637,11 +637,23 @@ defmodule PlausibleWeb.Email do
   """
   def priority_email(), do: priority_email(%{layout: "priority_email.html"})
 
-  def priority_email(%{layout: layout}) do
+  def priority_email(%{layout: layout}), do: transactional_email("priority", layout)
+
+  @doc """
+    For emails sent to addresses typed in by users (invitations, ownership transfers), which may
+    be mistyped, nonexistent or abusive. A separate 'untrusted-recipients' Postmark stream keeps
+    their bounces and spam complaints from hurting the 'priority' stream's reputation.
+
+    Same layout as priority emails (no unsubscribe), but unlike them, still subject to e-mail
+    suppressions (see `Plausible.Mailer`).
+  """
+  def untrusted_recipient_email(), do: transactional_email("untrusted-recipients")
+
+  defp transactional_email(message_stream, layout \\ "priority_email.html") do
     email = base_email(%{layout: layout})
 
     if ee?() do
-      put_param(email, "MessageStream", "priority")
+      put_param(email, "MessageStream", message_stream)
     else
       email
     end

@@ -142,6 +142,55 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "untrusted recipient email" do
+    @tag :ce_build_only
+    test "doesn't use a dedicated message stream in Postmark in CE" do
+      email = Email.untrusted_recipient_email()
+
+      refute email.private[:message_params]["MessageStream"]
+    end
+
+    test "uses the priority layout, so it can't be unsubscribed from" do
+      email =
+        Email.untrusted_recipient_email()
+        |> Email.render("password_reset_email.html", %{reset_link: "imaginary"})
+
+      assert email.html_body =~ "Hey,"
+      refute email.html_body =~ "{{{ pm:unsubscribe }}}"
+    end
+
+    @tag :ee_only
+    test "team invitations, guest invitations and site transfers use the `untrusted-recipients` stream" do
+      site = build(:site)
+      team = build(:team, identifier: Ecto.UUID.generate())
+      inviter = build(:user)
+      invitee = build(:user)
+
+      emails = [
+        Email.new_user_invitation("new@example.com", "invitation-id", site, inviter),
+        Email.existing_user_invitation("existing@example.com", site, inviter),
+        Email.new_user_team_invitation("new@example.com", "invitation-id", team, inviter),
+        Email.existing_user_team_invitation("existing@example.com", team, inviter),
+        Email.ownership_transfer_request("new@example.com", "transfer-id", site, inviter, invitee)
+      ]
+
+      for email <- emails do
+        assert %{"MessageStream" => "untrusted-recipients"} = email.private[:message_params]
+      end
+    end
+
+    @tag :ee_only
+    test "invitation outcome notifications stay on the `priority` stream" do
+      site = build(:site)
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      email =
+        Email.guest_invitation_accepted("inviter@example.com", "invitee@example.com", team, site)
+
+      assert %{"MessageStream" => "priority"} = email.private[:message_params]
+    end
+  end
+
   describe "over_limit_email/3" do
     test "renders usage, suggested plan, and links to upgrade and account settings" do
       user = build(:user)

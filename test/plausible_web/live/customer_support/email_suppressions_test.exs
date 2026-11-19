@@ -170,7 +170,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.EmailSuppressionsTest do
       Req.Test.stub(Postmark, fn conn ->
         assert conn.request_path in [
                  "/message-streams/outbound/suppressions/delete",
-                 "/message-streams/priority/suppressions/delete"
+                 "/message-streams/priority/suppressions/delete",
+                 "/message-streams/untrusted-recipients/suppressions/delete"
                ]
 
         Req.Test.json(conn, %{

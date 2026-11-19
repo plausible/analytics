@@ -22,7 +22,7 @@ defmodule Plausible.Postmark do
   @spec suppressing_reason(String.t()) :: {:ok, atom()} | :error
   def suppressing_reason(type), do: Map.fetch(@suppressing_bounce_types, type)
 
-  @streams ["outbound", "priority"]
+  @streams ["outbound", "priority", "untrusted-recipients"]
 
   @doc """
   https://postmarkapp.com/developer/api/suppressions-api#delete-a-suppression
