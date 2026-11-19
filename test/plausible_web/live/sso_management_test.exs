@@ -66,9 +66,7 @@ defmodule PlausibleWeb.Live.SSOManagementTest do
       setup [:create_user, :log_in, :create_team, :add_plan, :setup_team]
 
       setup do
-        # Some tests below add a domain through the real LiveView form (not
-        # a direct SSO.Domains.add/3 call we could pass skip_checks?: true
-        # to), which goes through actual DNS-backed domain validation.
+        # The add-domain form resolves the domain.
         stub_dns()
         :ok
       end
@@ -297,8 +295,8 @@ defmodule PlausibleWeb.Live.SSOManagementTest do
 
       defp setup_integration(team, domain) do
         integration = SSO.initiate_saml_integration(team)
-        {:ok, sso_domain} = SSO.Domains.add(integration, domain, skip_checks?: true)
-        SSO.Domains.verify(sso_domain, skip_checks?: true)
+        {:ok, sso_domain} = add_sso_domain(integration, domain)
+        verify_sso_domain(sso_domain)
 
         {:ok, integration} =
           SSO.update_integration(integration, %{

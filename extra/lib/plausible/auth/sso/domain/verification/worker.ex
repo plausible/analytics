@@ -1,9 +1,6 @@
 defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   @moduledoc """
   Background service validating SSO domains ownership
-
-  `bypass_checks` and `skip_checks` job args are for testing purposes only
-  (former will fail the verification, latter will succeed with `dns_txt` method)
   """
   use Oban.Worker,
     queue: :sso_domain_ownership_verification,
@@ -39,25 +36,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   end
 
   @impl true
-  def perform(%{
-        attempt: attempt,
-        meta: meta,
-        args: %{"domain" => domain}
-      })
+  def perform(%{attempt: attempt, args: %{"domain" => domain}})
       when attempt <= @max_snoozes do
     service_opts = [
-      skip_checks?: meta["skip_checks"] == true,
       verification_opts: [
         nameservers: Application.get_env(:plausible, :sso_verification_nameservers)
       ]
     ]
-
-    service_opts =
-      if meta["bypass_checks"] == true do
-        Keyword.merge(service_opts, verification_opts: [methods: []])
-      else
-        service_opts
-      end
 
     case SSO.Domains.get(domain) do
       {:ok, sso_domain} ->

@@ -75,6 +75,11 @@ config :plausible, Plausible.OAuth.CIMD,
     plug: {Req.Test, Plausible.OAuth.CIMD}
   ]
 
+config :plausible, Plausible.Auth.SSO.Domain.Verification,
+  req_opts: [
+    plug: {Req.Test, Plausible.Auth.SSO.Domain.Verification}
+  ]
+
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
 
 config :plausible, max_goals_per_site: 10

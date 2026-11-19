@@ -46,15 +46,13 @@ defmodule Plausible.Auth.SSO.Domain do
     timestamps()
   end
 
-  @spec create_changeset(SSO.Integration.t(), String.t() | nil, Keyword.t()) :: Ecto.Changeset.t()
-  def create_changeset(integration, domain, opts \\ []) do
-    skip_checks? = Keyword.get(opts, :skip_checks?, false)
-
+  @spec create_changeset(SSO.Integration.t(), String.t() | nil) :: Ecto.Changeset.t()
+  def create_changeset(integration, domain) do
     %__MODULE__{}
     |> cast(%{domain: domain}, [:domain])
     |> validate_required(:domain)
     |> normalize_domain(:domain)
-    |> validate_domain(:domain, skip_checks?)
+    |> validate_domain(:domain)
     |> unique_constraint(:domain, message: "is already in use")
     |> put_change(:identifier, Ecto.UUID.generate())
     |> put_assoc(:sso_integration, integration)
@@ -83,14 +81,12 @@ defmodule Plausible.Auth.SSO.Domain do
     |> put_change(:status, status)
   end
 
-  @spec valid_domain?(String.t(), Keyword.t()) :: boolean()
-  def valid_domain?(domain, opts \\ []) do
-    skip_checks? = Keyword.get(opts, :skip_checks?, false)
-
+  @spec valid_domain?(String.t()) :: boolean()
+  def valid_domain?(domain) do
     case URI.new("https://" <> domain) do
       {:ok, %{host: host, port: port, path: nil, query: nil, fragment: nil, userinfo: nil}}
       when is_binary(host) and port in [80, 443] ->
-        skip_checks? or match?({:ok, _ips}, Plausible.SSRF.resolve_host(host))
+        match?({:ok, _ips}, Plausible.SSRF.resolve_host(host))
 
       _ ->
         false
@@ -120,9 +116,9 @@ defmodule Plausible.Auth.SSO.Domain do
     end
   end
 
-  defp validate_domain(changeset, field, skip_checks?) do
+  defp validate_domain(changeset, field) do
     if domain = get_change(changeset, field) do
-      if valid_domain?(domain, skip_checks?: skip_checks?) do
+      if valid_domain?(domain) do
         changeset
       else
         add_error(changeset, field, "invalid domain", validation: :domain)
