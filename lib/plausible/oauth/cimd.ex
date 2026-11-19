@@ -68,7 +68,7 @@ defmodule Plausible.OAuth.CIMD do
 
   defp ssrf_get(url) do
     opts =
-      [decode_body: false]
+      [decode_body: false, into: &collect_up_to_limit/2]
       |> Keyword.merge(Application.get_env(:plausible, __MODULE__, [])[:req_opts] || [])
 
     case Plausible.SSRF.get(url, opts) do
@@ -84,6 +84,17 @@ defmodule Plausible.OAuth.CIMD do
 
       {:error, reason} ->
         {:error, reason}
+    end
+  end
+
+  # Stops reading once the body is over the limit
+  defp collect_up_to_limit({:data, data}, {req, resp}) do
+    resp = %{resp | body: resp.body <> data}
+
+    if byte_size(resp.body) > @max_metadata_bytes do
+      {:halt, {req, resp}}
+    else
+      {:cont, {req, resp}}
     end
   end
 
