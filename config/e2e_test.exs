@@ -19,3 +19,5 @@ config :plausible, Plausible.Ingestion.Counters, enabled: false
 config :plausible, Oban, testing: :manual
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
+
+config :plausible, PlausibleWeb.Api.RateLimit, burst_request_limit: 10_000
