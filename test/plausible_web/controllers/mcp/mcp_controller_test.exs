@@ -1355,6 +1355,19 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                }
              }
     end
+
+    test "rejects a notification with an unknown protocol version header", %{
+      conn: conn,
+      token: t
+    } do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2024-11-05")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert %{"error" => %{"code" => -32_022}} = json_response(conn, 400)
+    end
   end
 
   defp insert_token(%{user: user, team: team}) do

@@ -87,7 +87,9 @@ defmodule PlausibleWeb.MCP.MCPController do
         end
 
       {:notification, message} ->
-        if legacy?(conn, message), do: send_resp(conn, 202, ""), else: invalid_request(conn)
+        if legacy?(conn, message),
+          do: handle_legacy_notification(conn),
+          else: invalid_request(conn)
 
       :error ->
         invalid_request(conn)
@@ -250,12 +252,22 @@ defmodule PlausibleWeb.MCP.MCPController do
     do: send_dispatch(conn, legacy_dispatch(conn, id, method, message))
 
   defp handle_legacy_request(conn, message, method, id) do
-    version = get_header(conn, "mcp-protocol-version") || @version_without_header
-
-    case validate_version(version, @supported_versions ++ @legacy_versions) do
+    case validate_legacy_version(conn) do
       :ok -> send_dispatch(conn, legacy_dispatch(conn, id, method, message))
       error -> send_error(conn, id, error)
     end
+  end
+
+  defp handle_legacy_notification(conn) do
+    case validate_legacy_version(conn) do
+      :ok -> send_resp(conn, 202, "")
+      error -> send_error(conn, nil, error)
+    end
+  end
+
+  defp validate_legacy_version(conn) do
+    version = get_header(conn, "mcp-protocol-version") || @version_without_header
+    validate_version(version, @supported_versions ++ @legacy_versions)
   end
 
   defp legacy_dispatch(_conn, id, "initialize", message) do
