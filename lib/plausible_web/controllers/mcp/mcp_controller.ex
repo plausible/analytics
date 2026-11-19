@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.MCP.MCPController do
   @moduledoc """
   Model Context Protocol (MCP) endpoint over Streamable HTTP, implementing the
-  stateless `2026-07-28` revision of the protocol. Clients on `2025-11-25`,
-  `2025-06-18` and `2025-03-26` are served without sessions.
+  stateless `2026-07-28` revision of the protocol. Clients on `2025-11-25`
+  are served without sessions.
   """
 
   use PlausibleWeb, :controller
@@ -20,8 +20,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   @resource ProtectedResources.mcp()
 
   @supported_versions ["2026-07-28"]
-  @legacy_versions ["2025-11-25", "2025-06-18", "2025-03-26"]
-  @version_without_header "2025-03-26"
+  @legacy_versions ["2025-11-25"]
 
   @public_methods ["server/discover"]
 
@@ -266,8 +265,10 @@ defmodule PlausibleWeb.MCP.MCPController do
   end
 
   defp validate_legacy_version(conn) do
-    version = get_header(conn, "mcp-protocol-version") || @version_without_header
-    validate_version(version, @supported_versions ++ @legacy_versions)
+    case get_header(conn, "mcp-protocol-version") do
+      nil -> header_mismatch("Missing required header: mcp-protocol-version")
+      version -> validate_version(version, @supported_versions ++ @legacy_versions)
+    end
   end
 
   defp legacy_dispatch(_conn, id, "initialize", message) do
