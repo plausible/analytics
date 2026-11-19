@@ -3,8 +3,9 @@ defmodule Plausible.EmailSuppressions do
   Tracks email addresses we should not attempt to send transactional mail to
   and guards `Plausible.Mailer` against sending to them.
 
-  Entries are created from Postmark bounce/spam-complaint webhooks and from a
-  one-off backfill against the Postmark Bounce API. A suppression is lifted by
+  Entries are created from Postmark bounce/spam-complaint webhooks (older
+  entries were imported by a one-off backfill against Postmark's API, hence
+  the `:backfill` source). A suppression is lifted by
   a manual review (e.g. via the customer support module), which is recorded
   as a `reactivated_at`/`reactivated_by_user_id` pair on the record.
   """
