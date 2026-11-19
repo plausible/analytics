@@ -19,7 +19,8 @@ defmodule Plausible.Cache do
   executed on every cache refresh.
 
   There are two modes of refresh operation: `:all` and `:updated_recently`;
-  the former will invoke the query as is and clear all the existing entries,
+  the former will invoke the query as is and clear all the existing entries
+  that are no longer returned by it (including all of them, if the query returns nothing),
   while the latter will attempt to limit the query to only the records that
   have been updated in the last 15 minutes and try to merge the new results with
   existing cache entries.
@@ -162,7 +163,6 @@ defmodule Plausible.Cache do
 
       @spec merge_items(new_items :: [any()], opts :: Keyword.t()) :: :ok
       def merge_items(new_items, opts \\ [])
-      def merge_items([], _), do: :ok
 
       def merge_items(new_items, opts) do
         new_items = unwrap_cache_keys(new_items)
@@ -170,16 +170,7 @@ defmodule Plausible.Cache do
         :ok = Adapter.put_many(cache_name, new_items)
 
         if Keyword.get(opts, :delete_stale_items?, true) do
-          old_keys = Adapter.keys(cache_name)
-
-          new = MapSet.new(Enum.into(new_items, [], fn {k, _} -> k end))
-          old = MapSet.new(old_keys)
-
-          old
-          |> MapSet.difference(new)
-          |> Enum.each(fn k ->
-            Adapter.delete(cache_name, k)
-          end)
+          Adapter.delete_stale(cache_name, new_items)
         end
 
         :ok

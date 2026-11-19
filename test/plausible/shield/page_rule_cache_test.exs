@@ -101,6 +101,43 @@ defmodule Plausible.Shield.PageRuleCacheTest do
     end
   end
 
+  describe "removed rules" do
+    test "a removed rule leaves the cache on the next full refresh, other rules stay", %{
+      test: test
+    } do
+      {:ok, _} = start_test_cache(test)
+      cache_opts = [force?: true, cache_name: test]
+      site = insert(:site)
+
+      {:ok, removed} = Shields.add_page_rule(site, %{"page_path" => "/a"})
+      {:ok, kept} = Shields.add_page_rule(site, %{"page_path" => "/b"})
+      :ok = PageRuleCache.refresh_all(cache_name: test)
+      assert [_, _] = PageRuleCache.get(site.domain, cache_opts)
+
+      :ok = Shields.remove_page_rule(site, removed.id)
+      :ok = PageRuleCache.refresh_all(cache_name: test)
+
+      assert %PageRule{id: kept_id} = PageRuleCache.get(site.domain, cache_opts)
+      assert kept_id == kept.id
+      assert PageRuleCache.size(test) == 1
+    end
+
+    test "removing the last rule empties the cache on the next full refresh", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      site = insert(:site)
+
+      {:ok, rule} = Shields.add_page_rule(site, %{"page_path" => "/a"})
+      :ok = PageRuleCache.refresh_all(cache_name: test)
+      assert PageRuleCache.get(site.domain, force?: true, cache_name: test)
+
+      :ok = Shields.remove_page_rule(site, rule.id)
+      :ok = PageRuleCache.refresh_all(cache_name: test)
+
+      refute PageRuleCache.get(site.domain, force?: true, cache_name: test)
+      assert PageRuleCache.size(test) == 0
+    end
+  end
+
   defp start_test_cache(cache_name) do
     %{start: {m, f, a}} = PageRuleCache.child_spec(cache_name: cache_name, ets_options: [:bag])
     apply(m, f, a)

@@ -73,6 +73,24 @@ defmodule Plausible.Shield.IPRuleCacheTest do
     end
   end
 
+  describe "removed rules" do
+    test "removing the last rule empties the cache on the next full refresh", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      cache_opts = [force?: true, cache_name: test]
+      site = insert(:site)
+
+      {:ok, rule} = Shields.add_ip_rule(site, %{"inet" => "203.0.113.7"})
+      :ok = IPRuleCache.refresh_all(cache_name: test)
+      assert IPRuleCache.get({site.domain, "203.0.113.7"}, cache_opts)
+
+      :ok = Shields.remove_ip_rule(site, rule.id)
+      :ok = IPRuleCache.refresh_all(cache_name: test)
+
+      refute IPRuleCache.get({site.domain, "203.0.113.7"}, cache_opts)
+      assert IPRuleCache.size(test) == 0
+    end
+  end
+
   defp start_test_cache(cache_name) do
     %{start: {m, f, a}} = IPRuleCache.child_spec(cache_name: cache_name)
     apply(m, f, a)
