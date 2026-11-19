@@ -33,7 +33,9 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   @unverified_request_message "This authorization request has expired or could not be verified. Return to the application and start again."
 
   @doc """
-  Renders the consent form if it's valid authorization request. If not, it renders an error page, with a link back to the application when the redirect_uri is valid.
+  Renders the consent form if it's valid authorization request.
+  If not, it renders an error page, with a link back to the application when the redirect_uri is valid.
+  Valid doesn't mean it's trusted.
   """
   def authorize_form(conn, params) do
     with :ok <- rate_limit(conn),
