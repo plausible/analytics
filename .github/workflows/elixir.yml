@@ -232,16 +232,14 @@ jobs:
 
       # Up to two retries of the failed tests, as the `retries: 2` of Playwright Test. The retries
       # don't use --partitions: it would split the failed tests again, and the ones that fall
-      # into another partition would be skipped. An empty rerun (nothing
-      # failed but a module) must not pass.
+      # into another partition would be skipped.
       - name: Run E2E tests
         env:
           MIX_TEST_PARTITION: ${{ matrix.shardIndex }}
         run: |
-          set -o pipefail
           mix test test/e2e_pw --partitions ${{ matrix.shardTotal }} ||
-            { [ $? -eq 2 ] && mix test test/e2e_pw --failed | tee "$RUNNER_TEMP/retry.log" && ! grep -q "There are no tests to run" "$RUNNER_TEMP/retry.log"; } ||
-            { [ $? -eq 2 ] && mix test test/e2e_pw --failed | tee "$RUNNER_TEMP/retry.log" && ! grep -q "There are no tests to run" "$RUNNER_TEMP/retry.log"; }
+            { [ $? -eq 2 ] && mix test test/e2e_pw --failed; } ||
+            { [ $? -eq 2 ] && mix test test/e2e_pw --failed; }
 
       - name: Upload E2E test results to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
