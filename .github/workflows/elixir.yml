@@ -47,7 +47,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
       clickhouse:
-        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        image: clickhouse/clickhouse-server:26.10.3.7-alpine
         ports:
           - 8123:8123
         env:
@@ -146,7 +146,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
       clickhouse:
-        image: clickhouse/clickhouse-server:25.11.5.8-alpine
+        image: clickhouse/clickhouse-server:26.10.3.7-alpine
         ports:
           - 8123:8123
         env:
