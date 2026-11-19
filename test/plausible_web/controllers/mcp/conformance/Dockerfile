@@ -4,7 +4,8 @@ WORKDIR /app
 RUN npm install --ignore-scripts --no-audit --no-fund --before=2026-11-01 \
   @modelcontextprotocol/conformance@0.2.0-alpha.12 \
   @modelcontextprotocol/sdk@1.32.2 \
-  @modelcontextprotocol/client@2.4.0
+  @modelcontextprotocol/client@2.4.0 \
+  ajv@8.20.0
 COPY client.mjs expected-failures.yml ./
 
 USER node

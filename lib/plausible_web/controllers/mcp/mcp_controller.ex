@@ -11,6 +11,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.Auth.Scopes
   alias Plausible.OAuth.ProtectedResources
   alias Plausible.Stats.{Query, QueryError}
+  alias Plausible.Stats.JSONSchema.Utils
   alias Plausible.Teams.Membership
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
@@ -63,7 +64,7 @@ defmodule PlausibleWeb.MCP.MCPController do
         "Query a site's analytics. Accepts the same query as the #{Plausible.product_name()} Stats API v2 " <>
           "(POST /api/v2/query): `site_id` is a domain from list_sites. Returns the results, " <>
           "along with the query as it was interpreted.",
-      inputSchema: Plausible.Stats.JSONSchema.raw_schema()
+      inputSchema: Utils.to_draft_2020_12(Plausible.Stats.JSONSchema.raw_schema())
     }
   ]
 

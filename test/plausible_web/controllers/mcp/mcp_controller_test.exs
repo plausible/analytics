@@ -488,7 +488,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                        "Query a site's analytics. Accepts the same query as the #{Plausible.product_name()} Stats API v2 " <>
                          "(POST /api/v2/query): `site_id` is a domain from list_sites. Returns the results, " <>
                          "along with the query as it was interpreted.",
-                     "inputSchema" => JSONSchema.raw_schema()
+                     "inputSchema" => JSONSchema.Utils.to_draft_2020_12(JSONSchema.raw_schema())
                    }
                  ],
                  "resultType" => "complete",
