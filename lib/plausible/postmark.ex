@@ -8,8 +8,6 @@ defmodule Plausible.Postmark do
 
   require Logger
 
-  alias Plausible.EmailSuppressions
-
   @base_api_url "https://api.postmarkapp.com"
 
   # https://postmarkapp.com/developer/api/bounce-api#bounce-types
@@ -25,11 +23,6 @@ defmodule Plausible.Postmark do
   def suppressing_reason(type), do: Map.fetch(@suppressing_bounce_types, type)
 
   @streams ["outbound", "priority"]
-
-  @suppression_reasons %{
-    "HardBounce" => :hard_bounce,
-    "SpamComplaint" => :spam_complaint
-  }
 
   @doc """
   https://postmarkapp.com/developer/api/suppressions-api#delete-a-suppression
@@ -107,110 +100,6 @@ defmodule Plausible.Postmark do
 
         false
     end
-  end
-
-  @doc """
-  One-off backfill of e-mail suppressions from Postmark's Suppressions API,
-  across every message stream we send from.
-
-  If an address suppressed on more than one stream is reported once,
-  we pick the winner ourselves - see: `pick_winner/1`
-  """
-  @spec backfill_suppressions() :: %{
-          processed: non_neg_integer(),
-          distinct_addresses: non_neg_integer(),
-          upsert_errors: non_neg_integer(),
-          fetch_errors: non_neg_integer()
-        }
-  def backfill_suppressions() do
-    {fetch_errors, suppressions} =
-      Enum.reduce(@streams, {0, []}, fn stream, {fetch_errors, suppressions} ->
-        case fetch_stream(stream) do
-          {:error, _reason} -> {fetch_errors + 1, suppressions}
-          {:ok, stream_suppressions} -> {fetch_errors, suppressions ++ stream_suppressions}
-        end
-      end)
-
-    winners =
-      suppressions
-      |> Enum.group_by(&String.downcase(&1["EmailAddress"]))
-      |> Map.values()
-      |> Enum.map(&pick_winner/1)
-
-    {:ok, upsert_results} =
-      Plausible.Repo.transact(fn ->
-        {:ok, Enum.map(winners, &upsert_suppression/1)}
-      end)
-
-    %{
-      processed: length(suppressions),
-      distinct_addresses: length(winners),
-      upsert_errors: Enum.count(upsert_results, &match?({:error, _}, &1)),
-      fetch_errors: fetch_errors
-    }
-  end
-
-  defp fetch_stream(stream) do
-    case get("/message-streams/#{stream}/suppressions/dump", %{}) do
-      {:ok, %{"Suppressions" => suppressions}} ->
-        {:ok, suppressions}
-
-      {:error, reason} ->
-        Logger.error(
-          "Failed to fetch Postmark suppressions for backfill, stream=#{stream}: #{inspect(reason)}"
-        )
-
-        {:error, reason}
-    end
-  end
-
-  # Spam complaint always wins regardless of timing. Otherwise, the most
-  # recent one wins, since it best reflects the address' current state.
-  defp pick_winner(entries) do
-    {spam_complaints, others} =
-      Enum.split_with(entries, &(&1["SuppressionReason"] == "SpamComplaint"))
-
-    candidates = if spam_complaints != [], do: spam_complaints, else: others
-
-    Enum.max_by(candidates, &created_at/1)
-  end
-
-  defp created_at(entry) do
-    with created_at when is_binary(created_at) <- entry["CreatedAt"],
-         {:ok, datetime, _utc_offset} <- DateTime.from_iso8601(created_at) do
-      datetime
-    else
-      # missing/invalid = oldest
-      _ -> DateTime.from_unix!(0)
-    end
-  end
-
-  defp upsert_suppression(entry) do
-    %{
-      email: entry["EmailAddress"],
-      source: :backfill,
-      reason: suppression_reason(entry),
-      details: "Postmark suppression (origin: #{entry["Origin"]})"
-    }
-    |> EmailSuppressions.create_from_bounce()
-  end
-
-  # Postmark's API has no distinct "Unsubscribe" value - the dashboard shows
-  # that label for a ManualSuppression whose Origin is the recipient themself.
-  defp suppression_reason(%{"SuppressionReason" => "ManualSuppression", "Origin" => "Recipient"}) do
-    :unsubscribe
-  end
-
-  defp suppression_reason(%{"SuppressionReason" => "ManualSuppression"}), do: :manual
-
-  defp suppression_reason(%{"SuppressionReason" => reason}) do
-    # :manual as a fallback: Postmark only documents HardBounce/SpamComplaint/
-    # ManualSuppression, but an unrecognized reason shouldn't crash the backfill
-    Map.get(@suppression_reasons, reason, :manual)
-  end
-
-  defp get(path, params) do
-    request(&Req.get/2, path, params: params)
   end
 
   defp post(path, body) do
