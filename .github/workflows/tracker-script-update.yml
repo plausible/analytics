@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout master for comparison
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           ref: master
@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Commit and push changes
-        uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8
+        uses: EndBug/add-and-commit@v11.1.1
         if: steps.increment.outputs.changed == 'true'
         with:
           message: 'chore: Bump tracker_script_version to ${{ steps.increment.outputs.version }}'
@@ -102,7 +102,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Comment script size report on PR
-        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
+        uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           message: |
             ${{ steps.analyze.outputs.sizes }}
@@ -125,7 +125,7 @@ jobs:
 
       - name: Get changed files
         id: changelog_changed
-        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+        uses: tj-actions/changed-files@v47.0.6
         with:
           files: |
             tracker/npm_package/CHANGELOG.md
