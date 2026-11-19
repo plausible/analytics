@@ -1,0 +1,20 @@
+<Layouts.auth heading={@heading} subtitle={@message} flash={@flash}>
+  <.auth_container class="flex flex-col gap-y-3 justify-center">
+    <div class="text-gray-600 dark:text-gray-400">
+      <p>Continuing will take you to:</p>
+      <p
+        class="font-mono text-gray-900 dark:text-gray-100 break-all"
+        data-test-id="redirect-target-hint"
+      >
+        {@redirect_target_hint}
+      </p>
+    </div>
+    <.button_link href={@redirect_url} data-test-id="return-to-client">
+      Continue outside Plausible
+      <PlausibleWeb.Components.Icons.external_link_icon class="size-4 ml-1" />
+    </.button_link>
+    <p class="text-sm text-center text-gray-600 dark:text-gray-400">
+      If you don't trust this link, you can close this tab.
+    </p>
+  </.auth_container>
+</Layouts.auth>
