@@ -24,7 +24,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
     flush_interval_ms = opts[:flush_interval_ms] || default_flush_interval_ms()
 
     Process.flag(:trap_exit, true)
-    timer = Process.send_after(self(), :tick, flush_interval_ms)
+    timer = schedule_tick(flush_interval_ms)
 
     {:ok,
      %{
@@ -50,9 +50,9 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
     if state.buffer_size >= state.max_buffer_size do
       Logger.notice("#{state.name} buffer full, flushing to ClickHouse")
-      Process.cancel_timer(state.timer)
+      cancel_tick(state.timer)
       do_flush(state)
-      new_timer = Process.send_after(self(), :tick, state.flush_interval_ms)
+      new_timer = schedule_tick(state.flush_interval_ms)
       {:noreply, %{state | buffer: [], timer: new_timer, buffer_size: 0}}
     else
       {:noreply, state}
@@ -60,10 +60,15 @@ defmodule Plausible.Ingestion.WriteBuffer do
   end
 
   @impl true
-  def handle_info(:tick, state) do
+  def handle_info({:tick, ref}, %{timer: {_timer_ref, ref}} = state) do
     do_flush(state)
-    timer = Process.send_after(self(), :tick, state.flush_interval_ms)
+    timer = schedule_tick(state.flush_interval_ms)
     {:noreply, %{state | buffer: [], buffer_size: 0, timer: timer}}
+  end
+
+  # a tick from a timer that was cancelled after it had already fired
+  def handle_info({:tick, _stale_ref}, state) do
+    {:noreply, state}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
@@ -74,9 +79,9 @@ defmodule Plausible.Ingestion.WriteBuffer do
   @impl true
   def handle_call(:flush, _from, state) do
     %{timer: timer, flush_interval_ms: flush_interval_ms} = state
-    Process.cancel_timer(timer)
+    cancel_tick(timer)
     do_flush(state)
-    new_timer = Process.send_after(self(), :tick, flush_interval_ms)
+    new_timer = schedule_tick(flush_interval_ms)
     {:reply, :ok, %{state | buffer: [], buffer_size: 0, timer: new_timer}}
   end
 
@@ -85,6 +90,13 @@ defmodule Plausible.Ingestion.WriteBuffer do
     Logger.notice("Flushing #{name} buffer before shutdown...")
     do_flush(state)
   end
+
+  defp schedule_tick(interval_ms) do
+    ref = make_ref()
+    {Process.send_after(self(), {:tick, ref}, interval_ms), ref}
+  end
+
+  defp cancel_tick({timer_ref, _ref}), do: Process.cancel_timer(timer_ref)
 
   defp do_flush(state) do
     %{

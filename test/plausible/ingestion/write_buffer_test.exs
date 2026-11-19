@@ -43,4 +43,27 @@ defmodule Plausible.Ingestion.WriteBufferTest do
     assert log =~ "received EXIT, keeping buffer alive"
     assert log =~ ":shutdown"
   end
+
+  test "ignores a stale tick left in the mailbox by a cancelled timer", %{test: test} do
+    opts = [
+      header: @compile_time_opts.header,
+      insert_sql: @compile_time_opts.insert_sql,
+      insert_opts: @compile_time_opts.insert_opts,
+      name: test,
+      flush_interval_ms: 1_000_000_000
+    ]
+
+    {:ok, pid} = WriteBuffer.start_link(opts)
+
+    %{timer: {_, current_ref}} = :sys.get_state(pid)
+
+    # a tick from an earlier, already cancelled timer
+    send(pid, {:tick, make_ref()})
+    assert %{timer: {_, ^current_ref}} = :sys.get_state(pid)
+
+    # the current tick still reschedules
+    send(pid, {:tick, current_ref})
+    assert %{timer: {_, new_ref}} = :sys.get_state(pid)
+    refute new_ref == current_ref
+  end
 end
