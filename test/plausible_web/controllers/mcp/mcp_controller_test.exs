@@ -71,6 +71,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       assert json_response(conn, 401) == %{"error" => "unauthorized"}
     end
 
+    test "a notification requires a token", %{conn: conn} do
+      conn = post(conn, "/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert json_response(conn, 401) == %{"error" => "unauthorized"}
+    end
+
     test "401s an unknown token", %{conn: conn} do
       conn =
         conn

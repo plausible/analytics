@@ -29,11 +29,14 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp authorize(conn, _opts) do
     case message(conn.body_params) do
-      {:ok, _message, method, _id} when method not in @public_methods ->
-        AuthorizeOAuthAPI.call(conn, resource: @resource)
-
-      _public_or_unroutable ->
+      {:ok, _message, method, _id} when method in @public_methods ->
         conn
+
+      :error ->
+        conn
+
+      _request_or_notification ->
+        AuthorizeOAuthAPI.call(conn, resource: @resource)
     end
   end
 
