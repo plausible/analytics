@@ -539,11 +539,11 @@ db_socket_dir? = String.starts_with?(db_host, "%2F") or db_host == ""
 
 if db_socket_dir? do
   [database] = String.split(db_uri.path, "/", trim: true)
+  db_query = URI.decode_query(db_uri.query || "")
 
   socket_dir =
     if db_host == "" do
-      db_host = (db_uri.query || "") |> URI.decode_query() |> Map.get("host")
-      db_host || raise ArgumentError, "DATABASE_URL=#{db_url} doesn't include host info"
+      db_query["host"] || raise ArgumentError, "DATABASE_URL=#{db_url} doesn't include host info"
     else
       URI.decode_www_form(db_host)
     end
@@ -551,6 +551,18 @@ if db_socket_dir? do
   config :plausible, Plausible.Repo,
     socket_dir: socket_dir,
     database: database
+
+  # The port is not used for networking over a Unix socket, but PostgreSQL appends it
+  # to the name of the socket file: `.s.PGSQL.<port>`
+  if db_port = db_uri.port || db_query["port"] do
+    case Integer.parse("#{db_port}") do
+      {db_port, ""} ->
+        config :plausible, Plausible.Repo, port: db_port
+
+      _ ->
+        raise ArgumentError, "DATABASE_URL=#{db_url} includes an invalid port: #{db_port}"
+    end
+  end
 
   if userinfo = db_uri.userinfo do
     [username, password] = String.split(userinfo, ":")
