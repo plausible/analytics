@@ -231,10 +231,29 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
-  def connected_apps(conn, _params) do
-    grants = Plausible.OAuth.list_grants(conn.assigns.current_user)
+  def connected_apps(conn, params) do
+    include_revoked = params["include_revoked"] == "true"
 
-    render(conn, :connected_apps, layout: {PlausibleWeb.LayoutView, :settings}, grants: grants)
+    page =
+      with page when is_binary(page) <- params["page"],
+           {page, ""} when page >= 1 <- Integer.parse(page) do
+        page
+      else
+        _ -> 1
+      end
+
+    grants =
+      Plausible.OAuth.list_grants(conn.assigns.current_user,
+        include_revoked: include_revoked,
+        page: page
+      )
+
+    render(conn, :connected_apps,
+      layout: {PlausibleWeb.LayoutView, :settings},
+      grants: grants,
+      grant_counts: Plausible.OAuth.count_grants(conn.assigns.current_user),
+      include_revoked: include_revoked
+    )
   end
 
   def revoke_connected_app(conn, %{"id" => id}) do

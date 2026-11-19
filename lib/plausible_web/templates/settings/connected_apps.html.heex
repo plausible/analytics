@@ -1,13 +1,38 @@
 <.settings_tiles>
-  <.tile>
+  <.tile docs="mcp">
     <:title>
       <a id="connected-apps">Connected apps</a>
     </:title>
     <:subtitle>
-      Applications you have authorized to access your Plausible data.
+      Applications you have authorized to access your Plausible data, such as MCP clients.
     </:subtitle>
 
-    <%= if Enum.empty?(@grants) do %>
+    <div
+      :if={@grant_counts.all > 0}
+      class="mb-4 inline-flex rounded-md bg-gray-100 dark:bg-gray-800 p-0.5 text-xs font-medium"
+    >
+      <a
+        :for={
+          {label, count, include_revoked, href} <- [
+            {"Active", @grant_counts.active, false, ~p"/settings/connected-apps"},
+            {"All", @grant_counts.all, true, ~p"/settings/connected-apps?include_revoked=true"}
+          ]
+        }
+        href={href}
+        aria-current={if include_revoked == @include_revoked, do: "page"}
+        class={[
+          "px-3 py-1 rounded",
+          if(include_revoked == @include_revoked,
+            do: "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100",
+            else: "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          )
+        ]}
+      >
+        {label} ({count})
+      </a>
+    </div>
+
+    <%= if @grants.total_entries == 0 do %>
       <div class="flex flex-col items-center justify-center pt-5 pb-6 max-w-md mx-auto">
         <h3 class="text-center text-base font-medium text-gray-900 dark:text-gray-100 leading-7">
           No connected apps
@@ -15,20 +40,38 @@
         <p class="text-center text-sm mt-1 text-gray-500 dark:text-gray-400 leading-5 text-pretty">
           Applications you authorize to access your Plausible account will appear here.
         </p>
+        <.button_link
+          href="https://plausible.io/docs/mcp"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-6"
+        >
+          Connect an app <PlausibleWeb.Components.Icons.external_link_icon class="size-4" />
+        </.button_link>
       </div>
     <% else %>
-      <.table rows={@grants}>
+      <.table rows={@grants.entries}>
         <:thead>
           <.th>Application</.th>
           <.th hide_on_mobile>Team</.th>
           <.th hide_on_mobile>Connected</.th>
-          <.th hide_on_mobile>Last used</.th>
+          <.th hide_on_mobile><span class="whitespace-nowrap">Last used</span></.th>
           <.th invisible>Actions</.th>
         </:thead>
 
         <:tbody :let={grant}>
-          <.td max_width="max-w-60" title={grant.client_id}>
-            <span class="block truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
+          <% expired? =
+            NaiveDateTime.before?(grant.refresh_token_expires_at, NaiveDateTime.utc_now()) %>
+          <.td max_width="max-w-0" class="w-full" title={grant.client_id}>
+            <div class="flex items-center gap-x-1">
+              <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
+              <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
+                Revoked
+              </.pill>
+              <.pill :if={expired?} color={:gray} class="shrink-0 !py-0.5 !px-1.5">
+                Expired
+              </.pill>
+            </div>
             <span
               :if={grant.client_name}
               class="block truncate text-xs text-gray-500 dark:text-gray-400"
@@ -37,22 +80,58 @@
             </span>
           </.td>
           <.td hide_on_mobile text={Plausible.Teams.name(grant.team)} max_width="max-w-40" />
-          <.td hide_on_mobile>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</.td>
+          <.td
+            hide_on_mobile
+            title={Calendar.strftime(grant.inserted_at, "%Y-%m-%d %H:%M:%S UTC")}
+          >
+            {PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}
+          </.td>
           <.td hide_on_mobile>
             {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(
               grant.last_used_at
             )}
           </.td>
           <.td actions>
-            <.delete_button
+            <.form
+              :if={is_nil(grant.revoked_at) and not expired?}
+              for={%{}}
+              action={~p"/settings/connected-apps/#{grant.id}"}
               method="delete"
-              href={~p"/settings/connected-apps/#{grant.id}"}
-              aria-label={"Revoke access for #{Plausible.OAuth.Grant.label(grant)}"}
-              data-confirm={"Are you sure you want to revoke access for #{Plausible.OAuth.Grant.label(grant)}? The application will need to be authorized again to reconnect."}
-            />
+            >
+              <.button
+                type="submit"
+                theme="ghost"
+                size="sm"
+                icon?={true}
+                class="btn-text-danger"
+                aria-label={"Revoke access for #{Plausible.OAuth.Grant.label(grant)}"}
+                title="Revoke access"
+                data-confirm={"Are you sure you want to revoke access for #{Plausible.OAuth.Grant.label(grant)}? The application will need to be authorized again to reconnect."}
+              >
+                <Heroicons.x_mark class="size-4" />
+              </.button>
+            </.form>
           </.td>
         </:tbody>
       </.table>
     <% end %>
+
+    <%!-- the pagination nav brings its own padding and border, made for the /sites page --%>
+    <div
+      :if={@grants.total_pages > 1}
+      class="mt-6 [&>nav]:p-0 [&>nav]:border-0"
+    >
+      <PlausibleWeb.Live.Components.Pagination.pagination
+        uri={
+          URI.new!(
+            ~p"/settings/connected-apps?#{if @include_revoked, do: [include_revoked: true], else: []}"
+          )
+        }
+        page_number={@grants.page_number}
+        total_pages={@grants.total_pages}
+      >
+        Page {@grants.page_number} of {@grants.total_pages}
+      </PlausibleWeb.Live.Components.Pagination.pagination>
+    </div>
   </.tile>
 </.settings_tiles>
