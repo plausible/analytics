@@ -1,7 +1,8 @@
 defmodule PlausibleWeb.MCP.MCPController do
   @moduledoc """
   Model Context Protocol (MCP) endpoint over Streamable HTTP, implementing the
-  stateless `2026-07-28` revision of the protocol.
+  stateless `2026-07-28` revision of the protocol. Clients on `2025-11-25`
+  are served without sessions.
   """
 
   use PlausibleWeb, :controller
@@ -10,6 +11,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.Auth.Scopes
   alias Plausible.OAuth.ProtectedResources
   alias Plausible.Stats.{Query, QueryError}
+  alias Plausible.Stats.JSONSchema.Utils
   alias Plausible.Teams.Membership
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
@@ -18,6 +20,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   @resource ProtectedResources.mcp()
 
   @supported_versions ["2026-07-28"]
+  @legacy_versions ["2025-11-25"]
 
   @public_methods ["server/discover"]
 
@@ -25,11 +28,14 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp authorize(conn, _opts) do
     case message(conn.body_params) do
-      {:ok, _message, method, _id} when method not in @public_methods ->
-        AuthorizeOAuthAPI.call(conn, resource: @resource)
-
-      _public_or_unroutable ->
+      {:ok, _message, method, _id} when method in @public_methods ->
         conn
+
+      :error ->
+        conn
+
+      _request_or_notification ->
+        AuthorizeOAuthAPI.call(conn, resource: @resource)
     end
   end
 
@@ -60,7 +66,7 @@ defmodule PlausibleWeb.MCP.MCPController do
         "Query a site's analytics. Accepts the same query as the #{Plausible.product_name()} Stats API v2 " <>
           "(POST /api/v2/query): `site_id` is a domain from list_sites. Returns the results, " <>
           "along with the query as it was interpreted.",
-      inputSchema: Plausible.Stats.JSONSchema.raw_schema()
+      inputSchema: Utils.to_draft_2020_12(Plausible.Stats.JSONSchema.raw_schema())
     }
   ]
 
@@ -73,16 +79,25 @@ defmodule PlausibleWeb.MCP.MCPController do
   def handle(conn, _params) do
     case message(conn.body_params) do
       {:ok, message, method, id} ->
-        handle_request(conn, message, method, id)
+        if legacy?(conn, message) do
+          handle_legacy_request(conn, message, method, id)
+        else
+          handle_request(conn, message, method, id)
+        end
+
+      {:notification, message} ->
+        if legacy?(conn, message),
+          do: handle_legacy_notification(conn),
+          else: invalid_request(conn)
 
       :error ->
-        send_json(conn, 400, error_response(nil, -32_600, "Invalid Request"))
+        invalid_request(conn)
     end
   end
 
   @doc """
-  Rejects `GET` and `DELETE`, which earlier MCP versions used for session management.
-  This implementation is not backwards-compatible (https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#earlier-streamable-http-revisions).
+  Rejects `GET` and `DELETE`. We use no sessions and no server-sent stream, so `405` is the
+  response the spec allows (https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#listening-for-messages-from-the-server).
   """
   def not_supported(conn, _params) do
     conn
@@ -97,20 +112,19 @@ defmodule PlausibleWeb.MCP.MCPController do
     with :ok <- validate_headers_present(conn, method),
          :ok <- validate_meta_fields(meta),
          :ok <- validate_header_body_match(conn, message, method, meta),
-         :ok <- validate_version(meta) do
-      case dispatch(conn, id, method, message) do
-        {status, body} -> send_json(conn, status, body)
-        {status, body, headers} -> conn |> merge_resp_headers(headers) |> send_json(status, body)
-      end
+         :ok <- validate_version(meta[@version_key], @supported_versions) do
+      send_dispatch(conn, dispatch(conn, id, method, message))
     else
-      {:error, status, code, error_message, data} ->
-        send_json(conn, status, error_response(id, code, error_message, data))
+      error -> send_error(conn, id, error)
     end
   end
 
   defp message(%{"jsonrpc" => "2.0", "method" => method, "id" => id} = message)
        when is_binary(method),
        do: {:ok, message, method, id}
+
+  defp message(%{"jsonrpc" => "2.0", "method" => method} = message) when is_binary(method),
+    do: {:notification, message}
 
   defp message(_body_params), do: :error
 
@@ -164,14 +178,12 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp validate_version(meta) do
-    version = meta[@version_key]
-
-    if version in @supported_versions do
+  defp validate_version(version, supported) do
+    if version in supported do
       :ok
     else
       {:error, 400, -32_022, "Unsupported protocol version",
-       %{supported: @supported_versions, requested: version}}
+       %{supported: supported, requested: version}}
     end
   end
 
@@ -222,9 +234,65 @@ defmodule PlausibleWeb.MCP.MCPController do
     %{
       supportedVersions: @supported_versions,
       capabilities: %{tools: %{}},
-      instructions:
-        "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access, then query_stats to query their analytics."
+      instructions: instructions()
     }
+  end
+
+  defp instructions do
+    "#{Plausible.product_name()} MCP server. Use list_sites to discover the sites the authorized team can access, then query_stats to query their analytics."
+  end
+
+  defp legacy?(conn, message) do
+    get_header(conn, "mcp-protocol-version") not in @supported_versions and
+      is_nil(meta(message)[@version_key])
+  end
+
+  defp handle_legacy_request(conn, message, "initialize" = method, id),
+    do: send_dispatch(conn, legacy_dispatch(conn, id, method, message))
+
+  defp handle_legacy_request(conn, message, method, id) do
+    case validate_legacy_version(conn) do
+      :ok -> send_dispatch(conn, legacy_dispatch(conn, id, method, message))
+      error -> send_error(conn, id, error)
+    end
+  end
+
+  defp handle_legacy_notification(conn) do
+    case validate_legacy_version(conn) do
+      :ok -> send_resp(conn, 202, "")
+      error -> send_error(conn, nil, error)
+    end
+  end
+
+  defp validate_legacy_version(conn) do
+    case get_header(conn, "mcp-protocol-version") do
+      nil -> header_mismatch("Missing required header: mcp-protocol-version")
+      version -> validate_version(version, @supported_versions ++ @legacy_versions)
+    end
+  end
+
+  defp legacy_dispatch(_conn, id, "initialize", message) do
+    requested = params(message)["protocolVersion"]
+    version = if requested in @legacy_versions, do: requested, else: hd(@legacy_versions)
+
+    {200,
+     success_response(id, %{
+       protocolVersion: version,
+       capabilities: %{tools: %{}},
+       serverInfo: server_info(),
+       instructions: instructions()
+     })}
+  end
+
+  defp legacy_dispatch(_conn, id, "ping", _message),
+    do: {200, %{jsonrpc: "2.0", id: id, result: %{}}}
+
+  # Legacy clients treat any non-2xx status as a transport error, so JSON-RPC errors go out with 200.
+  defp legacy_dispatch(conn, id, method, message) do
+    case dispatch(conn, id, method, message) do
+      {_status, %{error: %{}} = body} -> {200, body}
+      other -> other
+    end
   end
 
   defp call_tool(conn, spec, tool_args) do
@@ -322,9 +390,9 @@ defmodule PlausibleWeb.MCP.MCPController do
     %{jsonrpc: "2.0", id: id, result: result}
   end
 
-  defp server_meta do
-    %{@server_info_key => %{name: Plausible.product_name(), version: app_version()}}
-  end
+  defp server_meta, do: %{@server_info_key => server_info()}
+
+  defp server_info, do: %{name: Plausible.product_name(), version: app_version()}
 
   defp error_response(id, code, message, data \\ nil) do
     error = %{code: code, message: message}
@@ -367,6 +435,18 @@ defmodule PlausibleWeb.MCP.MCPController do
   end
 
   defp decode_header_value(value), do: value
+
+  defp invalid_request(conn) do
+    send_json(conn, 400, error_response(nil, -32_600, "Invalid Request"))
+  end
+
+  defp send_error(conn, id, {:error, status, code, message, data}),
+    do: send_json(conn, status, error_response(id, code, message, data))
+
+  defp send_dispatch(conn, {status, body}), do: send_json(conn, status, body)
+
+  defp send_dispatch(conn, {status, body, headers}),
+    do: conn |> merge_resp_headers(headers) |> send_json(status, body)
 
   defp send_json(conn, status, body) do
     conn

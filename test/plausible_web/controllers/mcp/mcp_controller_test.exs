@@ -71,6 +71,12 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
       assert json_response(conn, 401) == %{"error" => "unauthorized"}
     end
 
+    test "a notification requires a token", %{conn: conn} do
+      conn = post(conn, "/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert json_response(conn, 401) == %{"error" => "unauthorized"}
+    end
+
     test "401s an unknown token", %{conn: conn} do
       conn =
         conn
@@ -488,7 +494,7 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                        "Query a site's analytics. Accepts the same query as the #{Plausible.product_name()} Stats API v2 " <>
                          "(POST /api/v2/query): `site_id` is a domain from list_sites. Returns the results, " <>
                          "along with the query as it was interpreted.",
-                     "inputSchema" => JSONSchema.raw_schema()
+                     "inputSchema" => JSONSchema.Utils.to_draft_2020_12(JSONSchema.raw_schema())
                    }
                  ],
                  "resultType" => "complete",
@@ -1254,6 +1260,134 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
         |> post("/mcp", @list_sites_request)
 
       assert json_response(revoked, 401) == %{"error" => "invalid_token"}
+    end
+  end
+
+  describe "legacy versions" do
+    setup :insert_token
+
+    test "initialize without a protocol version header", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> post("/mcp", %{
+          "jsonrpc" => "2.0",
+          "id" => 0,
+          "method" => "initialize",
+          "params" => %{"protocolVersion" => "2025-11-25", "capabilities" => %{}}
+        })
+
+      assert %{
+               "result" => %{
+                 "protocolVersion" => "2025-11-25",
+                 "capabilities" => %{"tools" => %{}}
+               }
+             } =
+               json_response(conn, 200)
+    end
+
+    test "initialize with an unsupported version offers the latest legacy version", %{
+      conn: conn,
+      token: t
+    } do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> post("/mcp", %{
+          "jsonrpc" => "2.0",
+          "id" => 0,
+          "method" => "initialize",
+          "params" => %{"protocolVersion" => "2025-03-26", "capabilities" => %{}}
+        })
+
+      assert %{"result" => %{"protocolVersion" => "2025-11-25"}} = json_response(conn, 200)
+    end
+
+    test "accepts a notification", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert response(conn, 202) == ""
+    end
+
+    test "lists tools", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "tools/list"})
+
+      assert %{"result" => %{"tools" => [_ | _]}} = json_response(conn, 200)
+    end
+
+    test "rejects a request without a protocol version header", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "tools/list"})
+
+      assert %{"id" => 1, "error" => %{"code" => -32_020}} = json_response(conn, 400)
+    end
+
+    test "rejects a notification without a protocol version header", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> post("/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert %{"error" => %{"code" => -32_020}} = json_response(conn, 400)
+    end
+
+    test "returns JSON-RPC errors with HTTP 200", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{
+          "jsonrpc" => "2.0",
+          "id" => 1,
+          "method" => "tools/call",
+          "params" => %{"name" => "unknown_tool", "arguments" => %{}}
+        })
+
+      assert %{"id" => 1, "error" => %{"code" => -32_602}} = json_response(conn, 200)
+    end
+
+    test "rejects an unknown protocol version header", %{conn: conn, token: t} do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2024-11-05")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "tools/list"})
+
+      assert json_response(conn, 400) == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "error" => %{
+                 "code" => -32_022,
+                 "message" => "Unsupported protocol version",
+                 "data" => %{
+                   "supported" => ["2026-07-28", "2025-11-25"],
+                   "requested" => "2024-11-05"
+                 }
+               }
+             }
+    end
+
+    test "rejects a notification with an unknown protocol version header", %{
+      conn: conn,
+      token: t
+    } do
+      conn =
+        conn
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2024-11-05")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+      assert %{"error" => %{"code" => -32_022}} = json_response(conn, 400)
     end
   end
 
