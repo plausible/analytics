@@ -2,6 +2,7 @@ defmodule PlausibleE2E.Dashboard.MainGraph do
   @moduledoc false
 
   alias Playwright.{Expect, Locator, Page}
+  require Playwright.Test
 
   def graph_tooltip(page), do: Page.get_by_test_id(page, "graph-tooltip")
   def main_series_line(page), do: Page.get_by_test_id(page, "graph-line-series-1")
