@@ -6,7 +6,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Auth.SSO.Domain.Status
 
-    alias Plasusible.Test.Support.DNSServer
+    alias Plausible.Test.Support.DNSServer
     alias Plausible.Auth.SSO
     alias Plausible.Auth.SSO.Domain.Verification.Worker
 

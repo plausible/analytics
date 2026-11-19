@@ -149,7 +149,7 @@ defmodule Plausible.TestUtils do
     """
     def fail_sso_checks(domain) do
       {:ok, port} =
-        Plasusible.Test.Support.DNSServer.start("plausible-sso-verification=something-else")
+        Plausible.Test.Support.DNSServer.start("plausible-sso-verification=something-else")
 
       Plausible.Test.Support.DNS.stub_dns(%{domain => {[{10, 0, 0, 1}], []}})
 

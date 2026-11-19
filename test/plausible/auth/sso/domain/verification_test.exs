@@ -7,7 +7,7 @@ defmodule Plausible.Auth.SSO.Domain.VerificationTest do
   on_ee do
     use Plausible.Test.Support.DNS
 
-    alias Plasusible.Test.Support.DNSServer
+    alias Plausible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Verification
     alias Plausible.Test.Support.TLSServer
     alias Plug.Conn

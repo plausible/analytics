@@ -1,4 +1,4 @@
-defmodule Plasusible.Test.Support.DNSServer do
+defmodule Plausible.Test.Support.DNSServer do
   @moduledoc """
   A simple DNS server that responds to TXT queries with fixed sample values.
   """
