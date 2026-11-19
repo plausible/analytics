@@ -157,6 +157,10 @@
     }
   }
 
+  .input-text {
+    @apply text-base;
+  }
+
   .input-sm {
     @apply px-3 h-9;
   }
