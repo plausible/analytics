@@ -142,17 +142,85 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
                 ], ~p"/settings/connected-apps/#{unnamed_grant.id}"}
              ]
     end
+
+    test "lists revoked and expired grants without a revoke button with include_revoked=true",
+         %{conn: conn, user: user, team: team} do
+      now = NaiveDateTime.utc_now(:second)
+
+      live_grant =
+        insert(:oauth_grant, client_name: "live grant", user: user, team: team, inserted_at: now)
+
+      insert(:oauth_grant,
+        client_name: "revoked grant",
+        user: user,
+        team: team,
+        revoked_at: now,
+        inserted_at: NaiveDateTime.add(now, -1, :day)
+      )
+
+      insert(:oauth_grant,
+        client_name: "expired grant",
+        user: user,
+        team: team,
+        refresh_token_expires_at: NaiveDateTime.add(now, -1, :day),
+        inserted_at: NaiveDateTime.add(now, -2, :day)
+      )
+
+      conn = get(conn, ~p"/settings/connected-apps?include_revoked=true")
+
+      assert html = html_response(conn, 200)
+
+      assert [
+               {[[live | _] | _], live_path},
+               {[[revoked | _] | _], nil},
+               {[[expired | _] | _], nil}
+             ] = table_rows(html)
+
+      assert live =~ "live grant"
+      assert live_path == ~p"/settings/connected-apps/#{live_grant.id}"
+      assert revoked =~ "revoked grant"
+      assert expired =~ "expired grant"
+    end
+
+    test "shows the requested page", %{conn: conn, user: user, team: team} do
+      now = NaiveDateTime.utc_now(:second)
+      page_size = Plausible.OAuth.list_grants(user).page_size
+
+      for i <- 0..page_size do
+        insert(:oauth_grant,
+          client_name: "grant #{i}",
+          user: user,
+          team: team,
+          inserted_at: NaiveDateTime.add(now, -i, :hour)
+        )
+      end
+
+      conn = get(conn, ~p"/settings/connected-apps?page=2")
+
+      assert [{[[name | _] | _], _}] = conn |> html_response(200) |> table_rows()
+      assert name == "grant #{page_size}"
+    end
+
+    for page <- ["abc", "0", "99999999999999999999"] do
+      test "shows a valid page for page=#{page}", %{conn: conn, user: user, team: team} do
+        insert(:oauth_grant, client_name: "first grant", user: user, team: team)
+
+        conn = get(conn, ~p"/settings/connected-apps?page=#{unquote(page)}")
+
+        assert html_response(conn, 200) =~ "first grant"
+      end
+    end
   end
 
-  # Each row's cells and the path its revoke button deletes. A cell with
+  # Each row's cells and the path its revoke form submits to. A cell with
   # several lines (spans) is a list of their texts.
   defp table_rows(html) do
     html
     |> find("tbody tr")
     |> Enum.map(fn row ->
-      delete_link_url = text_of_attr(row, "a[data-method=delete]", "data-to")
+      revoke_path = text_of_attr(row, "form", "action")
       cells = row |> find("td") |> Enum.map(&cell_contents/1)
-      {cells, delete_link_url}
+      {cells, revoke_path}
     end)
   end
 

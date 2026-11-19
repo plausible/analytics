@@ -22,6 +22,7 @@ defmodule Plausible.OAuth do
   @refresh_token_ttl_seconds 30 * 24 * 3600
   @refresh_grace_period_seconds 60
   @last_used_precision_seconds 300
+  @grants_page_size 20
 
   @roles_with_oauth Membership.roles!([:owner, :admin, :editor, :billing, :viewer])
 
@@ -363,24 +364,79 @@ defmodule Plausible.OAuth do
   end
 
   @doc """
-  Lists the grants a user can still use, across all of their teams, with the
-  team preloaded. Revoked grants and grants whose refresh token has expired
-  are left out, since neither can be used anymore.
+  Lists a page of the user's grants, across all of their teams, with the
+  team preloaded.
 
   Most recently used grants come first; never used ones are ordered by
   when they were connected.
+
+  Options:
+
+    * `:include_revoked` - when `false` (the default), revoked grants and
+      grants whose refresh token has expired are left out, since neither can
+      be used anymore. When `true`, they are included.
+    * `:page` - the page number, starting at 1 (the default). A page after
+      the last one returns the last page.
   """
-  @spec list_grants(Plausible.Auth.User.t()) :: [Grant.t()]
-  def list_grants(user) do
-    Repo.all(
+  @spec list_grants(Plausible.Auth.User.t(), include_revoked: boolean(), page: pos_integer()) ::
+          %{
+            entries: [Grant.t()],
+            page_number: pos_integer(),
+            page_size: pos_integer(),
+            total_entries: non_neg_integer(),
+            total_pages: pos_integer()
+          }
+  def list_grants(user, opts \\ []) do
+    query = from(g in Grant, where: g.user_id == ^user.id)
+
+    query =
+      if Keyword.get(opts, :include_revoked, false) do
+        query
+      else
+        from(g in query, where: is_nil(g.revoked_at) and g.refresh_token_expires_at > ^now())
+      end
+
+    total_entries = Repo.aggregate(query, :count)
+    total_pages = max(1, ceil(total_entries / @grants_page_size))
+    page_number = min(Keyword.get(opts, :page, 1), total_pages)
+
+    entries =
+      Repo.all(
+        from(g in query,
+          inner_join: t in assoc(g, :team),
+          order_by: [desc_nulls_last: g.last_used_at, desc: g.inserted_at, desc: g.id],
+          limit: ^@grants_page_size,
+          offset: ^((page_number - 1) * @grants_page_size),
+          preload: [team: t]
+        )
+      )
+
+    %{
+      entries: entries,
+      page_number: page_number,
+      page_size: @grants_page_size,
+      total_entries: total_entries,
+      total_pages: total_pages
+    }
+  end
+
+  @doc """
+  Counts the user's grants: `:active` ones, which can still be used, and
+  `:all` of them, including revoked and expired ones.
+  """
+  @spec count_grants(Plausible.Auth.User.t()) :: %{
+          active: non_neg_integer(),
+          all: non_neg_integer()
+        }
+  def count_grants(user) do
+    Repo.one(
       from(g in Grant,
-        inner_join: t in assoc(g, :team),
-        where:
-          g.user_id == ^user.id and
-            is_nil(g.revoked_at) and
-            g.refresh_token_expires_at > ^now(),
-        order_by: [desc_nulls_last: g.last_used_at, desc: g.inserted_at, desc: g.id],
-        preload: [team: t]
+        where: g.user_id == ^user.id,
+        select: %{
+          active:
+            filter(count(g.id), is_nil(g.revoked_at) and g.refresh_token_expires_at > ^now()),
+          all: count(g.id)
+        }
       )
     )
   end
