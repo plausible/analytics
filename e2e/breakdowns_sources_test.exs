@@ -1,8 +1,6 @@
 defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BreakdownsHelpers
-
   test "sources breakdown", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
 
@@ -43,8 +41,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
 
     Test.step "sources tab" do
       sources_tab_button = tab_button(report, "Sources")
-      scroll_to_end(report)
-      expect_active(sources_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(sources_tab_button, "data-active", "true")
 
       expect_headers(report, ["Source", "Visitors"])
 
@@ -66,7 +64,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "sources modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Sources")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Sources"))
 
       expect_headers(modal(page), ["Source", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -87,7 +85,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       row_link(report, "DuckDuckGo") |> Locator.click!()
       Expect.to_have_url!(page, ~r/f=is,source,DuckDuckGo/)
 
-      expect_active(tab_button(report, "Top referrers"))
+      Expect.to_have_attribute!(tab_button(report, "Top referrers"), "data-active", "true")
 
       # Move mouse away from report rows
       tab_button(report, "Top referrers") |> Locator.hover!()
@@ -100,7 +98,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "referrers modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Referrer drilldown")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Referrer drilldown")
+      )
 
       expect_headers(modal(page), ["Referrer", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -108,7 +109,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
 
       close_modal_button(page) |> Locator.click!()
 
-      remove_filter(page, "Source is DuckDuckGo")
+      Page.get_by_role(page, :button, name: "Remove filter: Source is DuckDuckGo")
+      |> Locator.click!()
     end
 
     # Tests against values from Plausible.Google.API.Mock
@@ -116,7 +118,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       row_link(report, "Google") |> Locator.click!()
       Expect.to_have_url!(page, ~r/f=is,source,Google/)
 
-      expect_active(tab_button(report, "Search terms"))
+      Expect.to_have_attribute!(tab_button(report, "Search terms"), "data-active", "true")
 
       # Move mouse away from report rows
       tab_button(report, "Search terms") |> Locator.hover!()
@@ -130,19 +132,22 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "search-terms modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Google search terms")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Google search terms")
+      )
 
       expect_headers(modal(page), ["Search term", "Visitors", "Impressions", "CTR", "Position"])
 
       close_modal_button(page) |> Locator.click!()
     end
 
-    remove_filter(page, "Source is Google")
+    Page.get_by_role(page, :button, name: "Remove filter: Source is Google") |> Locator.click!()
 
     Test.step "channels tab" do
       channels_tab_button = tab_button(report, "Channels")
       Locator.click!(channels_tab_button)
-      expect_active(channels_tab_button)
+      Expect.to_have_attribute!(channels_tab_button, "data-active", "true")
 
       expect_headers(report, ["Channel", "Visitors"])
 
@@ -157,7 +162,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "channels modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Acquisition channels")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Acquisition channels")
+      )
 
       expect_headers(modal(page), ["Channel", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -172,7 +180,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       tab_button(report, "Campaigns") |> Locator.click!()
       dropdown(report) |> Locator.get_by_role(:button, name: "UTM mediums") |> Locator.click!()
 
-      expect_active(tab_button(report, "UTM mediums"))
+      Expect.to_have_attribute!(tab_button(report, "UTM mediums"), "data-active", "true")
 
       expect_headers(report, ["UTM medium", "Visitors"])
 
@@ -185,7 +193,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "UTM mediums modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "UTM mediums")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "UTM mediums"))
 
       expect_headers(modal(page), [
         "UTM medium",
@@ -205,7 +213,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       tab_button(report, "UTM mediums") |> Locator.click!()
       dropdown(report) |> Locator.get_by_role(:button, name: "UTM sources") |> Locator.click!()
 
-      expect_active(tab_button(report, "UTM sources"))
+      Expect.to_have_attribute!(tab_button(report, "UTM sources"), "data-active", "true")
 
       expect_headers(report, ["UTM source", "Visitors"])
 
@@ -218,7 +226,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "UTM sources modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "UTM sources")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "UTM sources"))
 
       expect_headers(modal(page), [
         "UTM source",
@@ -238,7 +246,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       tab_button(report, "UTM sources") |> Locator.click!()
       dropdown(report) |> Locator.get_by_role(:button, name: "UTM campaigns") |> Locator.click!()
 
-      expect_active(tab_button(report, "UTM campaigns"))
+      Expect.to_have_attribute!(tab_button(report, "UTM campaigns"), "data-active", "true")
 
       expect_headers(report, ["UTM campaign", "Visitors"])
 
@@ -250,7 +258,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "UTM campaigns modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "UTM campaigns")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "UTM campaigns"))
 
       expect_headers(modal(page), [
         "UTM campaign",
@@ -270,7 +278,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       tab_button(report, "UTM campaigns") |> Locator.click!()
       dropdown(report) |> Locator.get_by_role(:button, name: "UTM contents") |> Locator.click!()
 
-      expect_active(tab_button(report, "UTM contents"))
+      Expect.to_have_attribute!(tab_button(report, "UTM contents"), "data-active", "true")
 
       expect_headers(report, ["UTM content", "Visitors"])
 
@@ -282,7 +290,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "UTM contents modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "UTM contents")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "UTM contents"))
 
       expect_headers(modal(page), [
         "UTM content",
@@ -302,7 +310,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
       tab_button(report, "UTM contents") |> Locator.click!()
       dropdown(report) |> Locator.get_by_role(:button, name: "UTM terms") |> Locator.click!()
 
-      expect_active(tab_button(report, "UTM terms"))
+      Expect.to_have_attribute!(tab_button(report, "UTM terms"), "data-active", "true")
 
       expect_headers(report, ["UTM term", "Visitors"])
 
@@ -314,7 +322,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSourcesTest do
     Test.step "UTM terms modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "UTM terms")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "UTM terms"))
 
       expect_headers(modal(page), ["UTM term", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -329,8 +337,6 @@ end
 
 defmodule PlausibleE2E.Dashboard.BreakdownsSearchTermsTest do
   use PlausibleE2E.Case, async: true
-
-  import PlausibleE2E.BreakdownsHelpers
 
   # Tests against values from Plausible.Google.API.Mock
   test "sources breakdown - search terms failure modes", %{page: page, request: request} do
@@ -354,8 +360,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSearchTermsTest do
         wait_until: :commit
       )
 
-      scroll_to_end(report)
-      expect_active(search_terms_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(search_terms_tab_button, "data-active", "true")
 
       Expect.to_be_visible!(Locator.get_by_text(report, "No data yet"))
     end
@@ -365,8 +371,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSearchTermsTest do
         wait_until: :commit
       )
 
-      scroll_to_end(report)
-      expect_active(search_terms_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(search_terms_tab_button, "data-active", "true")
 
       Expect.to_be_visible!(
         Locator.get_by_text(report, "Unable to fetch keyword data from Search Console")
@@ -382,8 +388,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsSearchTermsTest do
         wait_until: :commit
       )
 
-      scroll_to_end(report)
-      expect_active(search_terms_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(search_terms_tab_button, "data-active", "true")
 
       Expect.to_be_visible!(
         Locator.get_by_text(report, "The site is not connected to Google Search Keywords")

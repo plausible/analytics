@@ -1,30 +1,52 @@
 defmodule PlausibleE2E.Dashboard.BehavioursFunnelsTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BehavioursHelpers
-
-  defp pv(user_id, path, minutes_ago),
-    do: %{
-      user_id: user_id,
-      name: "pageview",
-      pathname: path,
-      timestamp: %{minutesAgo: minutes_ago}
-    }
+  defp get_report(page), do: Page.get_by_test_id(page, "report-behaviours")
 
   test "funnels", %{page: page, request: request} do
-    report = report(page)
+    report = get_report(page)
     %{domain: domain} = setup_site(page: page, request: request)
 
     populate_stats(
       request: request,
       domain: domain,
       events: [
-        pv(123, "/products", 60),
-        pv(123, "/cart", 55),
-        pv(123, "/checkout", 50),
-        pv(124, "/products", 55),
-        pv(124, "/cart", 50),
-        pv(125, "/products", 50)
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: 60}
+        },
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: 55}
+        },
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/checkout",
+          timestamp: %{minutesAgo: 50}
+        },
+        %{
+          user_id: 124,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: 55}
+        },
+        %{
+          user_id: 124,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: 50}
+        },
+        %{
+          user_id: 125,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: 50}
+        }
       ]
     )
 
@@ -47,13 +69,15 @@ defmodule PlausibleE2E.Dashboard.BehavioursFunnelsTest do
 
     Test.step "rendering funnels" do
       Locator.click!(funnels_tab_button)
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
       dropdown(report)
       |> Locator.get_by_role(:button, name: "Shopping 11 Funnel")
       |> Locator.click!()
 
-      funnels_tab_button |> tab_button("Funnels") |> expect_active()
+      funnels_tab_button
+      |> tab_button("Funnels")
+      |> Expect.to_have_attribute!("data-active", "true")
 
       report |> Locator.get_by_role(:heading) |> Expect.to_have_text!("Shopping 11 Funnel")
 
@@ -104,7 +128,7 @@ defmodule PlausibleE2E.Dashboard.BehavioursFunnelsTest do
   end
 
   test "funnels - comparisons", %{page: page, request: request} do
-    report = report(page)
+    report = get_report(page)
     %{domain: domain} = setup_site(page: page, request: request)
 
     thirty_days = 30 * 24 * 60
@@ -114,17 +138,72 @@ defmodule PlausibleE2E.Dashboard.BehavioursFunnelsTest do
       request: request,
       domain: domain,
       events: [
-        pv(120, "/products", thirty_days + 60),
-        pv(120, "/cart", thirty_days + 55),
-        pv(120, "/checkout", thirty_days + 50),
-        pv(121, "/products", thirty_days + 55),
-        pv(121, "/cart", thirty_days + 50),
-        pv(123, "/products", yesterday + 60),
-        pv(123, "/cart", yesterday + 55),
-        pv(123, "/checkout", yesterday + 50),
-        pv(124, "/products", yesterday + 55),
-        pv(124, "/cart", yesterday + 50),
-        pv(125, "/products", yesterday + 50)
+        %{
+          user_id: 120,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: thirty_days + 60}
+        },
+        %{
+          user_id: 120,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: thirty_days + 55}
+        },
+        %{
+          user_id: 120,
+          name: "pageview",
+          pathname: "/checkout",
+          timestamp: %{minutesAgo: thirty_days + 50}
+        },
+        %{
+          user_id: 121,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: thirty_days + 55}
+        },
+        %{
+          user_id: 121,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: thirty_days + 50}
+        },
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: yesterday + 60}
+        },
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: yesterday + 55}
+        },
+        %{
+          user_id: 123,
+          name: "pageview",
+          pathname: "/checkout",
+          timestamp: %{minutesAgo: yesterday + 50}
+        },
+        %{
+          user_id: 124,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: yesterday + 55}
+        },
+        %{
+          user_id: 124,
+          name: "pageview",
+          pathname: "/cart",
+          timestamp: %{minutesAgo: yesterday + 50}
+        },
+        %{
+          user_id: 125,
+          name: "pageview",
+          pathname: "/products",
+          timestamp: %{minutesAgo: yesterday + 50}
+        }
       ]
     )
 
@@ -145,13 +224,15 @@ defmodule PlausibleE2E.Dashboard.BehavioursFunnelsTest do
 
     Test.step "rendering funnels" do
       Locator.click!(funnels_tab_button)
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
       dropdown(report)
       |> Locator.get_by_role(:button, name: "Shopping Funnel")
       |> Locator.click!()
 
-      funnels_tab_button |> tab_button("Funnels") |> expect_active()
+      funnels_tab_button
+      |> tab_button("Funnels")
+      |> Expect.to_have_attribute!("data-active", "true")
 
       # enable compare
       Keyboard.press!(Page.keyboard(page), "x")

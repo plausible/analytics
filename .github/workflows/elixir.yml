@@ -237,9 +237,9 @@ jobs:
         env:
           MIX_TEST_PARTITION: ${{ matrix.shardIndex }}
         run: |
-          mix test test/e2e_pw --partitions ${{ matrix.shardTotal }} ||
-            { [ $? -eq 2 ] && mix test test/e2e_pw --failed; } ||
-            { [ $? -eq 2 ] && mix test test/e2e_pw --failed; }
+          mix test e2e --partitions ${{ matrix.shardTotal }} ||
+            { [ $? -eq 2 ] && mix test e2e --failed; } ||
+            { [ $? -eq 2 ] && mix test e2e --failed; }
 
       - name: Upload E2E test results to GitHub Actions Artifacts
         if: ${{ !cancelled() }}

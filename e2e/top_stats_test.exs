@@ -1,9 +1,8 @@
 defmodule PlausibleE2E.Dashboard.TopStatsTest do
   use PlausibleE2E.Case, async: true
 
-  defp press(page, key), do: Keyboard.press!(Page.keyboard(page), key)
-
-  # ChronoUnit.DAYS truncation
+  # The js-joda calls of the original (ZonedDateTime, ChronoUnit, DateTimeFormatter).
+  # truncatedTo(ChronoUnit.DAYS)
   defp start_of_day(dt), do: %{dt | hour: 0, minute: 0, second: 0}
   defp minus_days(dt, n), do: DateTime.add(dt, -n * 86_400, :second)
   defp minus_hours(dt, n), do: DateTime.add(dt, -n * 3_600, :second)
@@ -58,7 +57,7 @@ defmodule PlausibleE2E.Dashboard.TopStatsTest do
     Expect.to_be_visible!(domain3_link)
     # keybind should work when dropdown closed
     Locator.click!(switcher_button)
-    press(page, "3")
+    Keyboard.press!(Page.keyboard(page), "3")
 
     Expect.to_have_url!(page, "/#{domain3}")
     Expect.to_have_text!(switcher_button, domain3)
@@ -67,7 +66,7 @@ defmodule PlausibleE2E.Dashboard.TopStatsTest do
     Locator.click!(switcher_button)
     Expect.to_be_visible!(domain1_link)
     # keybind should work when dropdown open
-    press(page, "1")
+    Keyboard.press!(Page.keyboard(page), "1")
 
     Expect.to_have_url!(page, "/#{domain1}")
     Expect.to_have_text!(switcher_button, domain1)
@@ -190,16 +189,16 @@ defmodule PlausibleE2E.Dashboard.TopStatsTest do
     visitors = Page.locator(page, "#visitors")
 
     for expected <- expected_counts do
-      press(page, expected.key)
+      Keyboard.press!(Page.keyboard(page), expected.key)
       Expect.to_have_text!(visitors, "#{expected.value}")
     end
 
     # Realtime
-    press(page, "r")
+    Keyboard.press!(Page.keyboard(page), "r")
     Expect.to_have_text!(visitors, "1")
 
     # All time
-    press(page, "a")
+    Keyboard.press!(Page.keyboard(page), "a")
     Expect.to_have_text!(visitors, "#{length(events)}")
   end
 

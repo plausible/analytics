@@ -1,8 +1,6 @@
 defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BreakdownsHelpers
-
   test "pages breakdown", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
 
@@ -26,8 +24,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
 
     Test.step "top pages tab" do
       pages_tab_button = tab_button(report, "Top pages")
-      scroll_to_end(report)
-      expect_active(pages_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(pages_tab_button, "data-active", "true")
 
       expect_headers(report, ["Page", "Visitors"])
 
@@ -42,7 +40,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
     Test.step "entry pages tab" do
       entry_pages_tab_button = tab_button(report, "Entry pages")
       Locator.click!(entry_pages_tab_button)
-      expect_active(entry_pages_tab_button)
+      Expect.to_have_attribute!(entry_pages_tab_button, "data-active", "true")
 
       expect_headers(report, ["Entry page", "Unique entrances"])
 
@@ -55,7 +53,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
     Test.step "Entry pages modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Entry pages")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Entry pages"))
 
       expect_headers(modal(page), [
         "Entry page",
@@ -75,7 +73,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
     Test.step "exit pages tab" do
       exit_pages_tab_button = tab_button(report, "Exit pages")
       Locator.click!(exit_pages_tab_button)
-      expect_active(exit_pages_tab_button)
+      Expect.to_have_attribute!(exit_pages_tab_button, "data-active", "true")
 
       expect_headers(report, ["Exit page", "Unique exits"])
 
@@ -90,7 +88,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
     Test.step "Exit pages modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Exit pages")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Exit pages"))
 
       expect_headers(modal(page), ["Exit page", ~r/Unique exits/, ~r/Total exits/, ~r/Exit rate/])
 
@@ -103,10 +101,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesTest do
 
     Test.step "exit pages modal with an event filter applied" do
       Page.goto!(page, "/" <> domain <> "?f=is,page,/page1", wait_until: :commit)
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Exit pages")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Exit pages"))
 
       expect_headers(modal(page), ["Exit page", ~r/Unique exits/, ~r/Total exits/])
 
@@ -123,8 +121,6 @@ end
 
 defmodule PlausibleE2E.Dashboard.BreakdownsPagesModalTest do
   use PlausibleE2E.Case, async: true
-
-  import PlausibleE2E.BreakdownsHelpers
 
   test "pages breakdown modal", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
@@ -144,12 +140,12 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesModalTest do
     report = Page.get_by_test_id(page, "report-pages")
 
     pages_tab_button = tab_button(report, "Top pages")
-    scroll_to_end(report)
-    expect_active(pages_tab_button)
+    report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+    Expect.to_have_attribute!(pages_tab_button, "data-active", "true")
 
     details_link(report) |> Locator.click!()
 
-    expect_modal_heading(modal(page), "Top pages")
+    Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Top pages"))
 
     expect_headers(modal(page), [
       "Page",
@@ -230,8 +226,6 @@ end
 defmodule PlausibleE2E.Dashboard.BreakdownsPagesGoalFilterTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BreakdownsHelpers
-
   test "pages breakdown with a pageview goal filter applied", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
 
@@ -265,8 +259,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesGoalFilterTest do
       Page.goto!(page, "/" <> domain <> "?f=is,goal,create_site", wait_until: :commit)
 
       pages_tab_button = tab_button(report, "Conversion pages")
-      scroll_to_end(report)
-      expect_active(pages_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(pages_tab_button, "data-active", "true")
 
       expect_headers(report, ["Page", "Conversions", "CR"])
 
@@ -278,7 +272,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesGoalFilterTest do
     Test.step "details modal after custom goal filter applied" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Conversion pages")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Conversion pages")
+      )
 
       expect_headers(modal(page), ["Page", ~r/Total visitors/, ~r/Conversions/, ~r/CR/])
 
@@ -293,8 +290,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesGoalFilterTest do
       Page.goto!(page, "/" <> domain <> "?f=is,goal,purchase", wait_until: :commit)
 
       pages_tab_button = tab_button(report, "Conversion pages")
-      scroll_to_end(report)
-      expect_active(pages_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(pages_tab_button, "data-active", "true")
 
       expect_headers(report, ["Page", "Conversions", "CR"])
 
@@ -306,7 +303,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesGoalFilterTest do
     Test.step "details modal after revenue goal filter applied" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Conversion pages")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Conversion pages")
+      )
 
       expect_headers(modal(page), [
         "Page",
@@ -328,8 +328,6 @@ end
 
 defmodule PlausibleE2E.Dashboard.BreakdownsPagesUrlModeTest do
   use PlausibleE2E.Case, async: true
-
-  import PlausibleE2E.BreakdownsHelpers
 
   test "pages breakdown - URL mode", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
@@ -354,7 +352,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesUrlModeTest do
     end
 
     Test.step "top pages in URL mode" do
-      expect_active(tab_button(report, "Top pages"))
+      Expect.to_have_attribute!(tab_button(report, "Top pages"), "data-active", "true")
 
       expect_headers(report, ["URL", "Visitors"])
       expect_rows(report, ["blog.example.com/post", "docs.example.com/api"])
@@ -371,8 +369,10 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesUrlModeTest do
 
       Expect.to_be_visible!(Page.get_by_role(page, :button, name: "Remove filter: Page is /post"))
 
-      remove_filter(page, "Hostname is blog.example.com")
-      remove_filter(page, "Page is /post")
+      Page.get_by_role(page, :button, name: "Remove filter: Hostname is blog.example.com")
+      |> Locator.click!()
+
+      Page.get_by_role(page, :button, name: "Remove filter: Page is /post") |> Locator.click!()
     end
 
     Test.step "entry pages in URL mode" do
@@ -387,7 +387,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesUrlModeTest do
     Test.step "entry pages modal in URL mode" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Entry pages")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Entry pages"))
 
       expect_headers(modal(page), [
         "URL",
@@ -412,7 +412,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsPagesUrlModeTest do
     Test.step "exit pages modal in URL mode" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Exit pages")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Exit pages"))
 
       expect_headers(modal(page), ["URL", ~r/Unique exits/, ~r/Total exits/, ~r/Exit rate/])
 

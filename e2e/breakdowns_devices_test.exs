@@ -1,10 +1,6 @@
 defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BreakdownsHelpers
-
-  @modal_headers [~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/]
-
   test "devices breakdown", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
 
@@ -46,8 +42,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     browsers_tab_button = tab_button(report, "Browsers")
 
     Test.step "browsers tab" do
-      scroll_to_end(report)
-      expect_active(browsers_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(browsers_tab_button, "data-active", "true")
 
       expect_headers(report, ["Browser", "Visitors"])
 
@@ -61,9 +57,9 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     Test.step "browsers modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Browsers")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Browsers"))
 
-      expect_headers(modal(page), ["Browser" | @modal_headers])
+      expect_headers(modal(page), ["Browser", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
       expect_rows(modal(page), ["Chrome", "Firefox", "Safari"])
 
@@ -77,7 +73,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
 
       Expect.to_have_url!(page, ~r/f=is,browser,Firefox/)
 
-      expect_active(browsers_tab_button)
+      Expect.to_have_attribute!(browsers_tab_button, "data-active", "true")
 
       expect_headers(report, ["Browser version", "Visitors"])
 
@@ -89,9 +85,17 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     Test.step "browser versions modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Browser versions")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Browser versions")
+      )
 
-      expect_headers(modal(page), ["Browser version" | @modal_headers])
+      expect_headers(modal(page), [
+        "Browser version",
+        ~r/Visitors/,
+        ~r/Bounce rate/,
+        ~r/Visit duration/
+      ])
 
       expect_rows(modal(page), ["98"])
 
@@ -99,14 +103,15 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
 
       close_modal_button(page) |> Locator.click!()
 
-      remove_filter(page, "Browser is Firefox")
+      Page.get_by_role(page, :button, name: "Remove filter: Browser is Firefox")
+      |> Locator.click!()
     end
 
     os_tab_button = tab_button(report, "Operating systems")
 
     Test.step "operating systems tab" do
       Locator.click!(os_tab_button)
-      expect_active(os_tab_button)
+      Expect.to_have_attribute!(os_tab_button, "data-active", "true")
 
       expect_headers(report, ["Operating system", "Visitors"])
 
@@ -120,9 +125,17 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     Test.step "operating systems modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Operating systems")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Operating systems")
+      )
 
-      expect_headers(modal(page), ["Operating system" | @modal_headers])
+      expect_headers(modal(page), [
+        "Operating system",
+        ~r/Visitors/,
+        ~r/Bounce rate/,
+        ~r/Visit duration/
+      ])
 
       expect_rows(modal(page), ["MacOS", "Windows", "iOS"])
 
@@ -136,7 +149,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
 
       Expect.to_have_url!(page, ~r/f=is,os,Windows/)
 
-      expect_active(os_tab_button)
+      Expect.to_have_attribute!(os_tab_button, "data-active", "true")
 
       expect_headers(report, ["Operating system version", "Visitors"])
 
@@ -148,9 +161,17 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     Test.step "operating system versions modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Operating system versions")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Operating system versions")
+      )
 
-      expect_headers(modal(page), ["Operating system version" | @modal_headers])
+      expect_headers(modal(page), [
+        "Operating system version",
+        ~r/Visitors/,
+        ~r/Bounce rate/,
+        ~r/Visit duration/
+      ])
 
       expect_rows(modal(page), ["11"])
 
@@ -158,13 +179,14 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
 
       close_modal_button(page) |> Locator.click!()
 
-      remove_filter(page, "Operating system is Windows")
+      Page.get_by_role(page, :button, name: "Remove filter: Operating system is Windows")
+      |> Locator.click!()
     end
 
     Test.step "devices tab" do
       devices_tab_button = tab_button(report, "Devices")
       Locator.click!(devices_tab_button)
-      expect_active(devices_tab_button)
+      Expect.to_have_attribute!(devices_tab_button, "data-active", "true")
 
       expect_headers(report, ["Device", "Visitors"])
 
@@ -177,9 +199,9 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesTest do
     Test.step "devices modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Devices")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Devices"))
 
-      expect_headers(modal(page), ["Device" | @modal_headers])
+      expect_headers(modal(page), ["Device", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
       expect_rows(modal(page), ["Desktop", "Mobile"])
 
@@ -192,16 +214,6 @@ end
 
 defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
   use PlausibleE2E.Case, async: true
-
-  import PlausibleE2E.BreakdownsHelpers
-
-  @revenue_headers [
-    ~r/Total visitors/,
-    ~r/Conversions/,
-    ~r/CR/,
-    ~r/Revenue/,
-    ~r/Average/
-  ]
 
   test "devices breakdown with a revenue goal filter applied", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
@@ -260,7 +272,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
 
     Test.step "browsers report shows conversions for revenue goal" do
       tab_button(report, "Browsers") |> Locator.click!()
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
       expect_headers(report, ["Browser", "Conversions", "CR"])
 
@@ -273,9 +285,16 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
     Test.step "browsers details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Browsers")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Browsers"))
 
-      expect_headers(modal(page), ["Browser" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Browser",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), ["Chrome", "Firefox"])
 
@@ -300,9 +319,19 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
     Test.step "browser versions details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Browser versions")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Browser versions")
+      )
 
-      expect_headers(modal(page), ["Browser version" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Browser version",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), ["14.0.7"])
 
@@ -310,7 +339,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
 
       close_modal_button(page) |> Locator.click!()
 
-      remove_filter(page, "Browser is Chrome")
+      Page.get_by_role(page, :button, name: "Remove filter: Browser is Chrome")
+      |> Locator.click!()
     end
 
     Test.step "operating systems report shows conversions for revenue goal" do
@@ -327,9 +357,19 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
     Test.step "operating systems details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Operating systems")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Operating systems")
+      )
 
-      expect_headers(modal(page), ["Operating system" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Operating system",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), ["MacOS", "Windows"])
 
@@ -354,9 +394,19 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
     Test.step "operating system versions details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Operating system versions")
+      Expect.to_be_visible!(
+        modal(page)
+        |> Locator.get_by_role(:heading, name: "Operating system versions")
+      )
 
-      expect_headers(modal(page), ["Operating system version" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Operating system version",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), ["11"])
 
@@ -364,7 +414,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
 
       close_modal_button(page) |> Locator.click!()
 
-      remove_filter(page, "Operating system is Windows")
+      Page.get_by_role(page, :button, name: "Remove filter: Operating system is Windows")
+      |> Locator.click!()
     end
 
     Test.step "devices report shows conversions for revenue goal" do
@@ -381,9 +432,16 @@ defmodule PlausibleE2E.Dashboard.BreakdownsDevicesRevenueTest do
     Test.step "devices details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Devices")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Devices"))
 
-      expect_headers(modal(page), ["Device" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Device",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), ["Desktop", "Mobile"])
 

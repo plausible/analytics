@@ -1,10 +1,9 @@
 defmodule PlausibleE2E.Case do
   @moduledoc """
-  Case template of the browser suite in `test/e2e_pw`, a port of the Playwright specs in `e2e/`.
+  Case template of the browser suite in `e2e/`: `Playwright.Case` (a `context` and `page` per test)
+  plus Playwright Test's `request` fixture and the helpers of the suite.
 
-  `Playwright.Case` gives every test a `context` and `page`; this adds Playwright Test's
-  `request` fixture and the helpers of `e2e/tests/fixtures.ts` and `e2e/tests/test-utils.ts`.
-  Run with `MIX_ENV=e2e_test mix test test/e2e_pw`.
+  Run with `mix test.e2e`.
   """
   use ExUnit.CaseTemplate
 

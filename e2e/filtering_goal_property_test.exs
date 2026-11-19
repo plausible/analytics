@@ -1,9 +1,9 @@
 defmodule PlausibleE2E.Dashboard.FilteringGoalPropertyTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.FilteringHelpers
-
   describe "goal filtering tests" do
+    defp goal_filter_button(page), do: filter_item_button(page, "Goal")
+
     test "filtering by goals", %{page: page, request: request} do
       %{domain: domain} = setup_site(page: page, request: request)
 
@@ -23,19 +23,19 @@ defmodule PlausibleE2E.Dashboard.FilteringGoalPropertyTest do
 
       Test.step "single goal filter" do
         Locator.click!(filter_button(page))
-        Locator.click!(filter_item_button(page, "Goal"))
+        Locator.click!(goal_filter_button(page))
 
         pick_filter_value(page, search: "page1", value: "Visit /page1")
         close_filter_editor(page)
 
         Expect.to_be_visible!(filter_pill(page, "Goal is Visit /page1"))
 
-        expect_url(page, ~r|f=is,goal,Visit%20/page1|)
+        Expect.to_have_url!(page, ~r|f=is,goal,Visit%20/page1|)
       end
 
       Test.step "multiple goal filters" do
         Locator.click!(filter_button(page))
-        Locator.click!(filter_item_button(page, "Goal"))
+        Locator.click!(goal_filter_button(page))
 
         Expect.to_be_visible!(filter_pill(page, "Goal is"))
 
@@ -47,8 +47,8 @@ defmodule PlausibleE2E.Dashboard.FilteringGoalPropertyTest do
         Expect.to_be_visible!(filter_pill(page, "Goal is Visit /page1"))
         Expect.to_be_visible!(filter_pill(page, "Goal is not Visit /page2"))
 
-        expect_url(page, ~r|f=is,goal,Visit%20/page1|)
-        expect_url(page, ~r|f=has_not_done,goal,Visit%20/page2|)
+        Expect.to_have_url!(page, ~r|f=is,goal,Visit%20/page1|)
+        Expect.to_have_url!(page, ~r|f=has_not_done,goal,Visit%20/page2|)
       end
     end
   end
@@ -90,7 +90,7 @@ defmodule PlausibleE2E.Dashboard.FilteringGoalPropertyTest do
 
         Expect.to_be_visible!(filter_pill(page, "Property 'logged_in' is false"))
 
-        expect_url(page, ~r/f=is,props:logged_in,false/)
+        Expect.to_have_url!(page, ~r/f=is,props:logged_in,false/)
       end
 
       Test.step "multiple property filters" do
@@ -112,8 +112,8 @@ defmodule PlausibleE2E.Dashboard.FilteringGoalPropertyTest do
 
         Expect.to_be_visible!(filter_pill(page, "Property 'browser_language' is not en_US"))
 
-        expect_url(page, ~r/f=is,props:logged_in,false/)
-        expect_url(page, ~r/f=is_not,props:browser_language,en_US/)
+        Expect.to_have_url!(page, ~r/f=is,props:logged_in,false/)
+        Expect.to_have_url!(page, ~r/f=is_not,props:browser_language,en_US/)
       end
     end
   end

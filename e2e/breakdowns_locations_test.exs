@@ -1,8 +1,6 @@
 defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BreakdownsHelpers
-
   test "locations breakdown", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
 
@@ -38,8 +36,8 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
 
     Test.step "map tab" do
       map_tab_button = tab_button(report, "Map")
-      scroll_to_end(report)
-      expect_active(map_tab_button)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
+      Expect.to_have_attribute!(map_tab_button, "data-active", "true")
 
       # NOTE: We only check that the map is there
       report |> Locator.locator("svg path.country") |> Locator.first() |> Expect.to_be_visible!()
@@ -48,7 +46,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
     Test.step "countries tab" do
       countries_tab_button = tab_button(report, "Countries")
       Locator.click!(countries_tab_button)
-      expect_active(countries_tab_button)
+      Expect.to_have_attribute!(countries_tab_button, "data-active", "true")
 
       expect_headers(report, ["Country", "Visitors"])
 
@@ -61,7 +59,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
     Test.step "countries modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Countries")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Countries"))
 
       expect_headers(modal(page), ["Country", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -86,14 +84,15 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
       row_link(report, "Estonia") |> Locator.click!()
       Expect.to_have_url!(page, ~r/f=is,country,EE/)
 
-      expect_active(regions_tab_button)
+      Expect.to_have_attribute!(regions_tab_button, "data-active", "true")
 
-      remove_filter(page, "Country is Estonia")
+      Page.get_by_role(page, :button, name: "Remove filter: Country is Estonia")
+      |> Locator.click!()
     end
 
     Test.step "regions tab" do
       Locator.click!(regions_tab_button)
-      expect_active(regions_tab_button)
+      Expect.to_have_attribute!(regions_tab_button, "data-active", "true")
 
       expect_headers(report, ["Region", "Visitors"])
 
@@ -107,7 +106,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
     Test.step "regions modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Regions")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Regions"))
 
       expect_headers(modal(page), ["Region", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -132,14 +131,15 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
       row_link(report, "Harjumaa") |> Locator.click!()
       Expect.to_have_url!(page, ~r/f=is,region,EE-37/)
 
-      expect_active(cities_tab_button)
+      Expect.to_have_attribute!(cities_tab_button, "data-active", "true")
 
-      remove_filter(page, "Region is Harjumaa")
+      Page.get_by_role(page, :button, name: "Remove filter: Region is Harjumaa")
+      |> Locator.click!()
     end
 
     Test.step "cities tab" do
       Locator.click!(cities_tab_button)
-      expect_active(cities_tab_button)
+      Expect.to_have_attribute!(cities_tab_button, "data-active", "true")
 
       expect_headers(report, ["City", "Visitors"])
 
@@ -153,7 +153,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsTest do
     Test.step "cities modal" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Cities")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Cities"))
 
       expect_headers(modal(page), ["City", ~r/Visitors/, ~r/Bounce rate/, ~r/Visit duration/])
 
@@ -176,16 +176,6 @@ end
 
 defmodule PlausibleE2E.Dashboard.BreakdownsLocationsRevenueTest do
   use PlausibleE2E.Case, async: true
-
-  import PlausibleE2E.BreakdownsHelpers
-
-  @revenue_headers [
-    ~r/Total visitors/,
-    ~r/Conversions/,
-    ~r/CR/,
-    ~r/Revenue/,
-    ~r/Average/
-  ]
 
   test "locations breakdown with a revenue goal filter applied", %{page: page, request: request} do
     %{domain: domain} = setup_site(page: page, request: request)
@@ -237,7 +227,7 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsRevenueTest do
 
     Test.step "countries report shows conversions for revenue goal" do
       tab_button(report, "Countries") |> Locator.click!()
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
       expect_headers(report, ["Country", "Conversions", "CR"])
 
@@ -250,9 +240,16 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsRevenueTest do
     Test.step "countries details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Countries")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Countries"))
 
-      expect_headers(modal(page), ["Country" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Country",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), [~r/Anonymous VPN Service/, ~r/Estonia/])
 
@@ -282,9 +279,16 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsRevenueTest do
     Test.step "regions details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Regions")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Regions"))
 
-      expect_headers(modal(page), ["Region" | @revenue_headers])
+      expect_headers(modal(page), [
+        "Region",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), [~r/Harjumaa/])
 
@@ -306,9 +310,16 @@ defmodule PlausibleE2E.Dashboard.BreakdownsLocationsRevenueTest do
     Test.step "cities details modal includes revenue columns" do
       details_link(report) |> Locator.click!()
 
-      expect_modal_heading(modal(page), "Cities")
+      Expect.to_be_visible!(modal(page) |> Locator.get_by_role(:heading, name: "Cities"))
 
-      expect_headers(modal(page), ["City" | @revenue_headers])
+      expect_headers(modal(page), [
+        "City",
+        ~r/Total visitors/,
+        ~r/Conversions/,
+        ~r/CR/,
+        ~r/Revenue/,
+        ~r/Average/
+      ])
 
       expect_rows(modal(page), [~r/Tallinn/])
 

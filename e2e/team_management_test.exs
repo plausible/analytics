@@ -26,8 +26,6 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
     close_flash_message(page)
   end
 
-  defp expect_dialogs(dialogs, n), do: assert(length(Agent.get(dialogs, & &1)) == n)
-
   test "lowering your own role asks for confirmation", %{page: page, request: request} do
     %{user: user} = setup_site(page: page, request: request)
     create_team(page)
@@ -44,7 +42,6 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
 
     trigger = Page.get_by_role(page, :button, name: "Role for #{user.email}:")
     options = Page.get_by_role(page, :listbox, name: "Role for #{user.email}:")
-    viewer = fn -> Locator.get_by_role(options, :option, name: ~r/^Viewer/) end
 
     {:ok, dialogs} = Agent.start_link(fn -> [] end)
 
@@ -55,8 +52,6 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
       end)
     end
 
-    key = fn k -> Keyboard.press!(Page.keyboard(page), k) end
-
     Expect.to_be_enabled!(trigger)
     Expect.to_contain_text!(trigger, "Owner")
 
@@ -64,45 +59,52 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
       answer_next_dialog.(false)
 
       Locator.click!(trigger)
-      Locator.click!(viewer.())
+      Locator.click!(Locator.get_by_role(options, :option, name: ~r/^Viewer/))
 
-      expect_dialogs(dialogs, 1)
+      assert length(Agent.get(dialogs, & &1)) == 1
       assert Agent.get(dialogs, &hd/1) =~ "You're about to lower your own role"
       Expect.to_contain_text!(trigger, "Owner")
       has_no_flash_message(page)
 
       # Close the listbox that remained open because the option selection click didn't
       # go through -- our confirmation dialog prevented it from bubbling up to Prima.
-      key.("Escape")
+      Keyboard.press!(Page.keyboard(page), "Escape")
     end
 
     Test.step "lower your own role, but cancel the confirmation dialog (keyboard)" do
       answer_next_dialog.(false)
 
       Locator.focus!(trigger)
-      key.("ArrowUp")
-      Expect.to_have_attribute!(viewer.(), "data-focus")
-      key.("Enter")
+      Keyboard.press!(Page.keyboard(page), "ArrowUp")
 
-      expect_dialogs(dialogs, 2)
+      Expect.to_have_attribute!(
+        Locator.get_by_role(options, :option, name: ~r/^Viewer/),
+        "data-focus"
+      )
+
+      Keyboard.press!(Page.keyboard(page), "Enter")
+
+      assert length(Agent.get(dialogs, & &1)) == 2
       Expect.to_contain_text!(trigger, "Owner")
       has_no_flash_message(page)
 
-      key.("Escape")
+      # Close the listbox that remained open because the option selection click didn't
+      # go through -- our confirmation dialog prevented it from bubbling up to Prima.
+      Keyboard.press!(Page.keyboard(page), "Escape")
     end
 
     Test.step "lower your own role and confirm (mouse)" do
       answer_next_dialog.(true)
 
       Locator.click!(trigger)
-      Locator.click!(viewer.())
+      Locator.click!(Locator.get_by_role(options, :option, name: ~r/^Viewer/))
 
       # The change reaches the server, which rejects it: the other owner has only
       # been invited so far.
       has_flash_message(page, "The team has to have at least one owner")
 
       # asked once: phoenix_html must not ask again as the confirmed click bubbles up
-      expect_dialogs(dialogs, 3)
+      assert length(Agent.get(dialogs, & &1)) == 3
 
       # Known bug, to be fixed soon: the trigger keeps showing the rejected role
       # until the page is reloaded. Once fixed, the reload won't be necessary.
@@ -116,14 +118,24 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
       answer_next_dialog.(true)
 
       Locator.focus!(trigger)
-      key.("ArrowUp")
-      Expect.to_have_attribute!(viewer.(), "data-focus")
-      key.("Enter")
+      Keyboard.press!(Page.keyboard(page), "ArrowUp")
 
+      Expect.to_have_attribute!(
+        Locator.get_by_role(options, :option, name: ~r/^Viewer/),
+        "data-focus"
+      )
+
+      Keyboard.press!(Page.keyboard(page), "Enter")
+
+      # The change reaches the server, which rejects it: the other owner has only
+      # been invited so far.
       has_flash_message(page, "The team has to have at least one owner")
 
-      expect_dialogs(dialogs, 4)
+      # asked once: phoenix_html must not ask again as the confirmed click bubbles up
+      assert length(Agent.get(dialogs, & &1)) == 4
 
+      # Known bug, to be fixed soon: the trigger keeps showing the rejected role
+      # until the page is reloaded. Once fixed, the reload won't be necessary.
       Page.reload!(page)
       expect_live_view_connected(page)
 
@@ -155,7 +167,7 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
 
     Expect.to_have_attribute!(trigger, "aria-expanded", "false")
     Expect.to_contain_text!(trigger, "Viewer")
-    expect_dialogs(dialogs, 0)
+    assert Agent.get(dialogs, & &1) == []
     has_no_flash_message(page)
   end
 end

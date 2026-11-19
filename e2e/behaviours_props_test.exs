@@ -1,10 +1,12 @@
 defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.BehavioursHelpers
+  @last_30min_pill "last 30min"
+
+  defp get_report(page), do: Page.get_by_test_id(page, "report-behaviours")
 
   test "props breakdown", %{page: page, request: request} do
-    report = report(page)
+    report = get_report(page)
     %{domain: domain} = setup_site(page: page, request: request)
 
     populate_stats(
@@ -69,13 +71,15 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
 
     Test.step "listing props" do
       Locator.click!(props_tab_button)
-      scroll_to_end(report)
+      report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
       dropdown(report)
       |> Locator.get_by_role(:button, name: "browser_language")
       |> Locator.click!()
 
-      props_tab_button |> tab_button("Properties") |> expect_active()
+      props_tab_button
+      |> tab_button("Properties")
+      |> Expect.to_have_attribute!("data-active", "true")
 
       expect_headers(report, ["browser_language", "Visitors", "Events", "%"])
 
@@ -104,7 +108,10 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
       expect_dropdown_closed(report)
       report |> details_link() |> Locator.click!()
 
-      expect_modal_heading(page, "Custom property breakdown")
+      page
+      |> modal()
+      |> Locator.get_by_role(:heading, name: "Custom property breakdown")
+      |> Expect.to_be_visible!()
 
       expect_headers(modal(page), ["browser_language", ~r/Visitors/, ~r/Events/, ~r/%/])
 
@@ -112,7 +119,7 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
 
       expect_metric_values(modal(page), "en_US", ["2", "2", "66.7%"])
 
-      close_modal(page)
+      page |> close_modal_button() |> Locator.click!()
     end
 
     Test.step "clicking goal opens props" do
@@ -120,11 +127,13 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
       # the JS doesn't await this click
       Locator.click!(goals_tab_button)
 
-      expect_active(goals_tab_button)
+      Expect.to_have_attribute!(goals_tab_button, "data-active", "true")
 
       row_link(report, "Visit /page") |> Locator.click!()
 
-      props_tab_button |> tab_button("Properties") |> expect_active()
+      props_tab_button
+      |> tab_button("Properties")
+      |> Expect.to_have_attribute!("data-active", "true")
 
       expect_headers(report, ["browser_language", "Visitors", "Events", "CR"])
 
@@ -135,7 +144,7 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
     end
 
     Page.goto!(page, "/" <> domain <> "?period=realtime", wait_until: :commit)
-    scroll_to_end(report)
+    report |> Locator.get_by_test_id("report-end") |> Locator.scroll_into_view_if_needed!()
 
     Test.step "realtime props index breakdown displays stats from last 5min" do
       Locator.click!(props_tab_button)
@@ -144,7 +153,7 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
       |> Locator.get_by_role(:button, name: "browser_language")
       |> Locator.click!()
 
-      Expect.to_be_hidden!(Locator.get_by_text(report, last_30min_pill()))
+      Expect.to_be_hidden!(Locator.get_by_text(report, @last_30min_pill))
 
       expect_headers(report, ["browser_language", "Visitors", "Events", "%"])
 
@@ -155,12 +164,15 @@ defmodule PlausibleE2E.Dashboard.BehavioursPropsTest do
     Test.step "realtime props details modal displays stats from last 5min" do
       report |> details_link() |> Locator.click!()
 
-      expect_modal_heading(page, "Custom property breakdown")
+      page
+      |> modal()
+      |> Locator.get_by_role(:heading, name: "Custom property breakdown")
+      |> Expect.to_be_visible!()
 
       expect_rows(modal(page), ["en_US", "es"])
       expect_metric_values(modal(page), "en_US", ["1", "1", "50%"])
 
-      close_modal(page)
+      page |> close_modal_button() |> Locator.click!()
     end
   end
 end

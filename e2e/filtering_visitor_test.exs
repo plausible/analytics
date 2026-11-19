@@ -1,8 +1,6 @@
 defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.FilteringHelpers
-
   describe "location filtering tests" do
     defp open_location_filter(page, item), do: open_filter_submenu_item(page, "Location", item)
 
@@ -34,7 +32,7 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Country is Estonia"))
 
-        expect_url(page, ~r/f=is,country,EE/)
+        Expect.to_have_url!(page, ~r/f=is,country,EE/)
       end
 
       Test.step "filtering by region" do
@@ -46,8 +44,8 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Region is Harjumaa"))
 
-        expect_url(page, ~r/f=is,region,EE-37/)
-        expect_url(page, ~r/f=is,country,EE/)
+        Expect.to_have_url!(page, ~r/f=is,region,EE-37/)
+        Expect.to_have_url!(page, ~r/f=is,country,EE/)
       end
 
       Test.step "filtering by city" do
@@ -59,14 +57,16 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "City is Tallinn"))
 
-        expect_url(page, ~r/f=is,city,588409/)
-        expect_url(page, ~r/f=is,region,EE-37/)
-        expect_url(page, ~r/f=is,country,EE/)
+        Expect.to_have_url!(page, ~r/f=is,city,588409/)
+        Expect.to_have_url!(page, ~r/f=is,region,EE-37/)
+        Expect.to_have_url!(page, ~r/f=is,country,EE/)
       end
     end
   end
 
   describe "screen size filtering tests" do
+    defp screen_size_filter_button(page), do: filter_item_button(page, "Screen size")
+
     test "filtering by screen size", %{page: page, request: request} do
       %{domain: domain} = setup_site(page: page, request: request)
 
@@ -82,7 +82,7 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
       Page.goto!(page, "/" <> domain, wait_until: :commit)
 
       Locator.click!(filter_button(page))
-      Locator.click!(filter_item_button(page, "Screen size"))
+      Locator.click!(screen_size_filter_button(page))
 
       # When testing via test.e2e.ui, it shows there are no
       # suggestions found but there are 2 pageview in the top stats.
@@ -93,7 +93,7 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
       Expect.to_be_visible!(filter_pill(page, "Screen size is Mobile"))
 
-      expect_url(page, ~r/f=is,screen,Mobile/)
+      Expect.to_have_url!(page, ~r/f=is,screen,Mobile/)
     end
   end
 
@@ -123,7 +123,7 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Browser is Chrome"))
 
-        expect_url(page, ~r/f=is,browser,Chrome/)
+        Expect.to_have_url!(page, ~r/f=is,browser,Chrome/)
       end
 
       Test.step "filtering by browser version" do
@@ -135,8 +135,8 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Browser version is 14.0.7"))
 
-        expect_url(page, ~r/f=is,browser_version,14\.0\.7/)
-        expect_url(page, ~r/f=is,browser,Chrome/)
+        Expect.to_have_url!(page, ~r/f=is,browser_version,14\.0\.7/)
+        Expect.to_have_url!(page, ~r/f=is,browser,Chrome/)
       end
     end
   end
@@ -175,7 +175,7 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Operating system is Windows"))
 
-        expect_url(page, ~r/f=is,os,Windows/)
+        Expect.to_have_url!(page, ~r/f=is,os,Windows/)
       end
 
       Test.step "filtering by operating system version" do
@@ -187,8 +187,8 @@ defmodule PlausibleE2E.Dashboard.FilteringVisitorTest do
 
         Expect.to_be_visible!(filter_pill(page, "Operating system version is 11"))
 
-        expect_url(page, ~r/f=is,os_version,11/)
-        expect_url(page, ~r/f=is,os,Windows/)
+        Expect.to_have_url!(page, ~r/f=is,os_version,11/)
+        Expect.to_have_url!(page, ~r/f=is,os,Windows/)
       end
     end
   end

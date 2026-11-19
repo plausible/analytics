@@ -1,3 +1,38 @@
+defmodule PlausibleE2E.Dashboard.TeamSetup do
+  @moduledoc "The helpers in the middle of team-setup.spec.ts."
+  import PlausibleE2E.Utils
+
+  alias Playwright.{Expect, Locator, Page}
+
+  def new_user do
+    user_id = random_id()
+
+    %{
+      name: "User #{user_id}",
+      email: "email-#{user_id}@example.com",
+      password: "VeryStrongVerySecret"
+    }
+  end
+
+  def create_team_in_onboarding(page, team_name) do
+    Expect.to_have_url!(page, ~r/\/team\/setup\?flow=register/)
+    expect_live_view_connected(page)
+
+    name_input = Page.locator(page, ~s|input[name="team[name]"]|)
+    Locator.clear!(name_input)
+    Locator.fill!(name_input, team_name)
+
+    Page.get_by_role(page, :button, name: "Create team") |> Locator.click!()
+  end
+
+  def expect_current_team_on_sites_page(page, team_name) do
+    Page.goto!(page, "/sites", wait_until: :commit)
+    expect_live_view_connected(page)
+
+    Expect.to_have_text!(Page.get_by_role(page, :heading, level: 2), team_name)
+  end
+end
+
 defmodule PlausibleE2E.Dashboard.TeamSetupEnterTest do
   use PlausibleE2E.Case, async: true
 
@@ -81,19 +116,18 @@ defmodule PlausibleE2E.Dashboard.TeamSetupRowsTest do
     row1 = Page.locator(page, "#member-row-1")
     row2 = Page.locator(page, "#member-row-2")
     row3 = Page.locator(page, "#member-row-3")
-    email = fn row -> Locator.locator(row, ~s|input[type="email"]|) end
 
-    email.(row1) |> Locator.fill!("row1@example.com")
+    Locator.locator(row1, ~s|input[type="email"]|) |> Locator.fill!("row1@example.com")
     row1 |> Locator.get_by_role(:button, name: "Role") |> Locator.click!()
     row1 |> Locator.get_by_role(:option, name: "Admin") |> Locator.click!()
 
     Locator.click!(add_another)
-    email.(row2) |> Locator.fill!("row2@example.com")
+    Locator.locator(row2, ~s|input[type="email"]|) |> Locator.fill!("row2@example.com")
     row2 |> Locator.get_by_role(:button, name: "Role") |> Locator.click!()
     row2 |> Locator.get_by_role(:option, name: "Editor") |> Locator.click!()
 
     Locator.click!(add_another)
-    email.(row3) |> Locator.fill!("row3@example.com")
+    Locator.locator(row3, ~s|input[type="email"]|) |> Locator.fill!("row3@example.com")
     row3 |> Locator.get_by_role(:button, name: "Role") |> Locator.click!()
     row3 |> Locator.get_by_role(:option, name: "Billing") |> Locator.click!()
 
@@ -102,10 +136,10 @@ defmodule PlausibleE2E.Dashboard.TeamSetupRowsTest do
     Expect.to_have_count!(visible_rows, 2)
     Expect.to_be_hidden!(row2)
 
-    Expect.to_have_value!(email.(row1), "row1@example.com")
+    Expect.to_have_value!(Locator.locator(row1, ~s|input[type="email"]|), "row1@example.com")
     Expect.to_have_text!(Locator.get_by_test_id(row1, "role"), "Admin")
 
-    Expect.to_have_value!(email.(row3), "row3@example.com")
+    Expect.to_have_value!(Locator.locator(row3, ~s|input[type="email"]|), "row3@example.com")
     Expect.to_have_text!(Locator.get_by_test_id(row3, "role"), "Billing")
 
     Locator.click!(add_another)
@@ -113,7 +147,7 @@ defmodule PlausibleE2E.Dashboard.TeamSetupRowsTest do
     Expect.to_have_count!(visible_rows, 3)
     Expect.to_have_attribute!(Locator.nth(visible_rows, 2), "id", "member-row-2")
 
-    Expect.to_have_value!(email.(row2), "")
+    Expect.to_have_value!(Locator.locator(row2, ~s|input[type="email"]|), "")
     Expect.to_have_text!(Locator.get_by_test_id(row2, "role"), "Viewer")
   end
 end

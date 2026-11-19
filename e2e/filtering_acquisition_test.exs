@@ -1,9 +1,9 @@
 defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
   use PlausibleE2E.Case, async: true
 
-  import PlausibleE2E.FilteringHelpers
-
   describe "hostname filtering tests" do
+    defp hostname_filter_button(page), do: filter_item_button(page, "Hostname")
+
     test "filtering by hostname", %{page: page, request: request} do
       %{domain: domain} = setup_site(page: page, request: request)
 
@@ -19,14 +19,14 @@ defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
       Page.goto!(page, "/" <> domain, wait_until: :commit)
 
       Locator.click!(filter_button(page))
-      Locator.click!(filter_item_button(page, "Hostname"))
+      Locator.click!(hostname_filter_button(page))
 
       pick_filter_value(page, search: "one", value: "one.example.com")
       close_filter_editor(page)
 
       Expect.to_be_visible!(filter_pill(page, "Hostname is one.example.com"))
 
-      expect_url(page, ~r/f=is,hostname,one.example.com/)
+      Expect.to_have_url!(page, ~r/f=is,hostname,one.example.com/)
     end
   end
 
@@ -57,11 +57,12 @@ defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
 
         Expect.to_be_visible!(filter_pill(page, "Source is Google"))
 
-        expect_url(page, ~r/f=is,source,Google/)
+        Expect.to_have_url!(page, ~r/f=is,source,Google/)
 
-        remove_filter(page, "Source is Google")
+        Page.get_by_role(page, :button, name: "Remove filter: Source is Google")
+        |> Locator.click!()
 
-        expect_no_url(page, ~r/f=is,source,Google/)
+        Expect.not_to_have_url!(page, ~r/f=is,source,Google/)
       end
 
       Test.step "filtering by channel" do
@@ -73,11 +74,12 @@ defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
 
         Expect.to_be_visible!(filter_pill(page, "Channel is Paid Search"))
 
-        expect_url(page, ~r/f=is,channel,Paid%20Search/)
+        Expect.to_have_url!(page, ~r/f=is,channel,Paid%20Search/)
 
-        remove_filter(page, "Channel is Paid Search")
+        Page.get_by_role(page, :button, name: "Remove filter: Channel is Paid Search")
+        |> Locator.click!()
 
-        expect_no_url(page, ~r/f=is,channel,Paid%20Search/)
+        Expect.not_to_have_url!(page, ~r/f=is,channel,Paid%20Search/)
       end
 
       Test.step "filtering by referrer URL" do
@@ -89,11 +91,14 @@ defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
 
         Expect.to_be_visible!(filter_pill(page, "Referrer URL is https://theguardian.com"))
 
-        expect_url(page, ~r|f=is,referrer,https://theguardian\.com|)
+        Expect.to_have_url!(page, ~r|f=is,referrer,https://theguardian\.com|)
 
-        remove_filter(page, "Referrer URL is https://theguardian.com")
+        Page.get_by_role(page, :button,
+          name: "Remove filter: Referrer URL is https://theguardian.com"
+        )
+        |> Locator.click!()
 
-        expect_no_url(page, ~r|f=is,referrer,https://theguardian\.com|)
+        Expect.not_to_have_url!(page, ~r|f=is,referrer,https://theguardian\.com|)
       end
     end
 
@@ -137,11 +142,11 @@ defmodule PlausibleE2E.Dashboard.FilteringAcquisitionTest do
 
           Expect.to_be_visible!(filter_pill(page, pill_name))
 
-          expect_url(page, url)
+          Expect.to_have_url!(page, url)
 
-          remove_filter(page, pill_name)
+          Page.get_by_role(page, :button, name: "Remove filter: #{pill_name}") |> Locator.click!()
 
-          expect_no_url(page, url)
+          Expect.not_to_have_url!(page, url)
         end
       end
     end

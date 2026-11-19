@@ -59,7 +59,9 @@ defmodule Plausible.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :e2e_test, :dev],
+  defp elixirc_paths(:e2e_test), do: ["lib", "test/support", "extra/lib", "e2e/support"]
+
+  defp elixirc_paths(env) when env in [:test, :dev],
     do: ["lib", "test/support", "extra/lib"]
 
   defp elixirc_paths(env) when env in [:ce_test, :ce_dev],
@@ -78,8 +80,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
-      {:playwright, "~> 1.65.0-rc.2",
-       hex: :playwright_ex, only: [:dev, :test, :ce_test, :ce_dev, :e2e_test]},
+      {:playwright, "~> 1.65.0-rc.2", hex: :playwright_ex, only: [:dev, :e2e_test]},
       {:ecto_ch, "~> 0.11"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
@@ -202,7 +203,7 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "test test/e2e_pw"
+        "test e2e"
       ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
