@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-BAEBF428.js"></script>
+    <script src="dist/sidebar_items-8ADF7EFD.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -246,7 +246,7 @@ Must</p></div>
     </a>
     <h1 class="signature" translate="no">fetch(client_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L19" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L20" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -261,7 +261,9 @@ Must</p></div>
 
       </div>
 
-<p>Fetches the document at <code class="inline">client_id</code> and validates it.</p><p>The <code class="inline">client_id</code> is validated first, so an invalid one costs no DNS lookup.</p>
+<p>Fetches the document at <code class="inline">client_id</code> and validates it.</p><p>The <code class="inline">client_id</code> is validated first, so an invalid one costs no DNS lookup.
+The document must be served directly at the <code class="inline">client_id</code> URL; redirects are
+not followed.</p>
   </section>
 </section>
 <section class="detail" id="redirect_uri_registered?/2">
@@ -272,7 +274,7 @@ Must</p></div>
     </a>
     <h1 class="signature" translate="no">redirect_uri_registered?(redirect_uri, registered)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L213" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L214" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -305,7 +307,7 @@ case-insensitively (RFC 3986 sections 3.1 and 3.2.2), nothing else is.</p>
     </a>
     <h1 class="signature" translate="no">validate_client_id(url)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L39" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L40" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -334,7 +336,7 @@ Must</p><ul><li>use <code class="inline">https</code> scheme</li><li>have path c
     </a>
     <h1 class="signature" translate="no">validate_client_name(name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L173" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L174" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -360,7 +362,7 @@ Must</p><ul><li>use <code class="inline">https</code> scheme</li><li>have path c
     </a>
     <h1 class="signature" translate="no">validate_document(doc, client_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L103" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L104" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -392,7 +394,7 @@ Must</p><ul><li>use <code class="inline">https</code> scheme</li><li>have path c
     </a>
     <h1 class="signature" translate="no">validate_redirect_uris(redirect_uris)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L136" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L137" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -419,7 +421,7 @@ Must</p><ul><li>use <code class="inline">https</code> scheme</li><li>have path c
     </a>
     <h1 class="signature" translate="no">validate_self_reference(doc, client_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L114" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth/cimd.ex#L115" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

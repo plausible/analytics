@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-BAEBF428.js"></script>
+    <script src="dist/sidebar_items-8ADF7EFD.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -172,12 +172,20 @@ hostnames reaching internal, private or local network space</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(opts)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get/2" data-no-tooltip translate="no">get(url, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Performs a GET request against arbitrary URL, refusing to connect to (or be
-redirected to) a restricted address</p></div>
+        <div class="summary-synopsis"><p>Performs a GET request against arbitrary URL, refusing to connect to a
+restricted address.</p></div>
 
     </div>
 
@@ -187,7 +195,7 @@ redirected to) a restricted address</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Resolves bare hostname or literal IP and returns its address(es), 
+        <div class="summary-synopsis"><p>Resolves bare hostname or literal IP and returns its address(es),
 only if all are allowed</p></div>
 
     </div>
@@ -229,7 +237,7 @@ only if all are allowed</p></div>
   | :invalid_host
   | :dns_resolution_failed
   | :restricted_address
-  | :too_many_redirects</pre>
+  | :redirect_not_followed</pre>
 
       </div>
 
@@ -248,6 +256,26 @@ only if all are allowed</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">child_spec(opts)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ssrf.ex#L27" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="get/2">
 
     <span id="get/1"></span>
@@ -258,7 +286,7 @@ only if all are allowed</p></div>
     </a>
     <h1 class="signature" translate="no">get(url, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ssrf.ex#L50" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ssrf.ex#L69" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -276,8 +304,9 @@ only if all are allowed</p></div>
 
       </div>
 
-<p>Performs a GET request against arbitrary URL, refusing to connect to (or be
-redirected to) a restricted address</p>
+<p>Performs a GET request against arbitrary URL, refusing to connect to a
+restricted address.</p><p>Does not follow redirects: a redirect is <code class="inline">{:error, :redirect_not_followed}</code>.</p><p>Retries transient failures twice, a second apart.</p><p>Each attempt has 5s to connect and <code class="inline">:request_timeout</code> ms to respond, which
+can overrun by up to <code class="inline">:receive_timeout</code>.</p><p>Provide the option <code class="inline">:cacerts</code> when testing against mock https server. It replaces the system CA store.</p>
   </section>
 </section>
 <section class="detail" id="resolve_host/1">
@@ -288,7 +317,7 @@ redirected to) a restricted address</p>
     </a>
     <h1 class="signature" translate="no">resolve_host(host)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ssrf.ex#L30" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ssrf.ex#L40" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -304,7 +333,7 @@ redirected to) a restricted address</p>
 
       </div>
 
-<p>Resolves bare hostname or literal IP and returns its address(es), 
+<p>Resolves bare hostname or literal IP and returns its address(es),
 only if all are allowed</p>
   </section>
 </section>
