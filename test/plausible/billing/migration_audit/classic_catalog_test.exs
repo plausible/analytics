@@ -156,6 +156,30 @@ defmodule Plausible.Billing.MigrationAudit.ClassicCatalogTest do
 
       refute inspect(result) =~ "secret"
     end
+
+    test "reads is_recurring as returned by Paddle: 0 or 1" do
+      modifiers = [
+        %{
+          "modifier_id" => 1,
+          "subscription_id" => 1,
+          "amount" => "-1.0",
+          "currency" => "USD",
+          "is_recurring" => 1
+        },
+        %{
+          "modifier_id" => 2,
+          "subscription_id" => 1,
+          "amount" => "-2.0",
+          "currency" => "USD",
+          "is_recurring" => 0
+        }
+      ]
+
+      assert {:ok, %{modifiers: result}} =
+               ClassicCatalog.audit(today: @today, plans: [], modifiers: modifiers)
+
+      assert {result.recurring, result.one_time, result.recurrence_unknown} == {1, 1, 0}
+    end
   end
 
   describe "fetching" do
