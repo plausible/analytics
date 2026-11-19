@@ -53,13 +53,15 @@ defmodule Plausible.MixProject do
     [
       preferred_envs: [
         "test.e2e": :e2e_test,
-        "test.e2e.ui": :e2e_test
+        "e2e.setup": :e2e_test
       ]
     ]
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :e2e_test, :dev],
+  defp elixirc_paths(:e2e_test), do: ["lib", "test/support", "extra/lib", "e2e/support"]
+
+  defp elixirc_paths(env) when env in [:test, :dev],
     do: ["lib", "test/support", "extra/lib"]
 
   defp elixirc_paths(env) when env in [:ce_test, :ce_dev],
@@ -78,6 +80,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
+      {:playwright, "~> 1.65.0-rc.2", hex: :playwright_ex, only: [:dev, :e2e_test]},
       {:ecto_ch, "~> 0.11"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
@@ -194,13 +197,7 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
-      "e2e.setup": [
-        "cmd npm install --prefix ./e2e",
-        "cmd npm exec playwright install --with-deps chromium --prefix ./e2e"
-      ],
-      # accepts Playwright CLI arguments (https://playwright.dev/docs/test-cli), for example
-      # mix test.e2e --ui
-      # mix test.e2e --debug segments.spec.ts
+      "e2e.setup": ["playwright.install chromium --with-deps"],
       "test.e2e": [
         "tailwind default",
         "esbuild default",
@@ -209,7 +206,7 @@ defmodule Plausible.MixProject do
         "ecto.migrate",
         "clean_postgres",
         "clean_clickhouse",
-        "cmd npm run --prefix ./e2e test -- "
+        "test e2e"
       ],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],

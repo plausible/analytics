@@ -44,7 +44,12 @@ case Mix.env() do
 
   :e2e_test ->
     IO.puts("Test mode: End-to-End Tests")
-    ExUnit.configure(exclude: [:test], include: [:e2e])
+    # Shorter test timeout when running tests in local dev env.
+    ExUnit.configure(
+      exclude: [:test],
+      include: [:e2e],
+      timeout: if(System.get_env("CI"), do: 30_000, else: 15_000)
+    )
 
   _ ->
     IO.puts("Test mode: Enterprise Edition")

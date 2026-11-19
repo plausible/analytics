@@ -186,17 +186,15 @@ jobs:
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             e2e-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
-      - name: Cache E2E dependencies and Playwright browsers
+      # mix.lock pins the playwright_ex driver and so the browser revisions
+      - name: Cache Playwright driver and browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: playwright-cache
         with:
           path: |
-            e2e/node_modules
+            ~/.cache/playwright
             ~/.cache/ms-playwright
-            ~/.cache/ms-playwright-github
-          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-${{ runner.os }}-${{ hashFiles('mix.lock') }}
 
       - name: Check for changes in tracker/**
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -228,58 +226,29 @@ jobs:
       - run: mix download_country_database
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
-      - name: Install E2E dependencies
-        run: npm --prefix ./e2e ci
-
-      - name: Check format
-        run: npm --prefix ./e2e run check-format
-
-      - name: Check types
-        run: npm --prefix ./e2e run typecheck
-
       - name: Install E2E Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: ./e2e
-        run: npx playwright install --with-deps chromium
+        run: mix playwright.install chromium --with-deps
 
-      - name: Run E2E Playwright tests
-        run: npm --prefix ./e2e test -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+      # Up to two retries of the failed tests, as the `retries: 2` of Playwright Test. The retries
+      # don't use --partitions: it would split the failed tests again, and the ones that fall
+      # into another partition would be skipped.
+      - name: Run E2E tests
+        env:
+          MIX_TEST_PARTITION: ${{ matrix.shardIndex }}
+        run: |
+          mix test e2e --partitions ${{ matrix.shardTotal }} ||
+            { [ $? -eq 2 ] && mix test e2e --failed; } ||
+            { [ $? -eq 2 ] && mix test e2e --failed; }
 
-      - name: Upload E2E blob report to GitHub Actions Artifacts
+      - name: Upload E2E test results to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-blob-report-${{ matrix.shardIndex }}
-          path: e2e/blob-report
+          name: e2e-test-results-${{ matrix.shardIndex }}
+          path: test-results
           retention-days: 1
-
-  merge-sharded-e2e-test-report:
-    if: ${{ !cancelled() }}
-    needs: [e2e]
-    timeout-minutes: 15
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24.22.1
-          cache: 'npm'
-          cache-dependency-path: e2e/package-lock.json
-      - name: Install dependencies
-        run: npm --prefix ./e2e ci
-
-      - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          path: all-e2e-blob-reports
-          pattern: e2e-blob-report-*
-          merge-multiple: true
-
-      - name: Merge into list report
-        working-directory: ./e2e
-        run: npx playwright merge-reports --reporter list ../all-e2e-blob-reports
+          if-no-files-found: ignore
 
   static:
     name: Static checks (format, credo, dialyzer)

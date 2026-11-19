@@ -69,9 +69,9 @@ To run a command for the CE variant, set the env variable `MIX_ENV` to one of `c
 
 #### End to end tests
 
-1. Run `npm --prefix e2e install` to install the required dependencies.
-2. Run `npx --prefix e2e playwright install` to install the browsers.
-3. Run `mix test.e2e` to run the tests, `mix test.e2e --ui` for more manual control over runs.
+1. Run `MIX_ENV=e2e_test mix e2e.setup` to install the browsers.
+2. Run `mix test.e2e` to run the tests, or `MIX_ENV=e2e_test mix test e2e/segments_test.exs` for a single file.
+   To watch the browser, set `launch_options: [headless: false]` in the `:playwright, :test` config of `config/e2e_test.exs`, or run with `PWDEBUG=1`.
 
 #### Backend unit tests
 
