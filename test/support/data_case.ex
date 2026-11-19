@@ -39,6 +39,7 @@ defmodule Plausible.DataCase do
     end
 
     Plausible.Test.Support.Sandbox.allow_salts_process()
+    Plausible.Test.Support.TLSServer.use_real_ip_check()
 
     :ok
   end

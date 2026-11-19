@@ -14,6 +14,10 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   # roughly around 34h, given the snooze back-off
   @max_snoozes 14
 
+  # Backstop so a deliberately slow domain can't hold a queue slot forever.
+  @impl Oban.Worker
+  def timeout(_job), do: :timer.minutes(2)
+
   @spec cancel(String.t()) :: :ok
   def cancel(domain) do
     {:ok, job} =

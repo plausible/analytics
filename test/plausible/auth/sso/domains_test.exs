@@ -8,7 +8,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     use Oban.Testing, repo: Plausible.Repo
     use Plausible.Test.Support.DNS
 
-    alias Plasusible.Test.Support.DNSServer
+    alias Plausible.Test.Support.DNSServer
     alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Teams

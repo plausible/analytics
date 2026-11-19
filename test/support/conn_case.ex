@@ -42,6 +42,7 @@ defmodule PlausibleWeb.ConnCase do
     end
 
     Plausible.Test.Support.Sandbox.allow_salts_process()
+    Plausible.Test.Support.TLSServer.use_real_ip_check()
 
     conn = Phoenix.ConnTest.build_conn() |> Plausible.TestUtils.prepare_conn()
     {:ok, conn: conn}

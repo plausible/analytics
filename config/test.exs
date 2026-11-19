@@ -31,6 +31,8 @@ config :plausible,
 config :plausible,
   dns_lookup_impl: Plausible.DnsLookup.Mock
 
+config :plausible, ssrf_ip_check: Plausible.IP.Tools.Mock
+
 config :plausible, Plausible.Cache, enabled: false
 
 config :ex_money, api_module: Plausible.ExchangeRateMock

@@ -1,9 +1,13 @@
 defmodule Plausible.SSRFTest do
   use ExUnit.Case, async: true
-  use Plausible.TestUtils
   use Plausible.Test.Support.DNS
 
   alias Plausible.SSRF
+  alias Plausible.Test.Support.TLSServer
+
+  setup do
+    TLSServer.use_real_ip_check()
+  end
 
   describe "resolve_host/1" do
     test "rejects bare single-label hosts (no dot)" do
@@ -75,123 +79,287 @@ defmodule Plausible.SSRFTest do
       end)
 
       assert {:ok, %Req.Response{status: 200, body: "ok"}} =
-               SSRF.get("http://93.184.216.34/", plug: {Req.Test, __MODULE__})
+               SSRF.get("https://93.184.216.34/", plug: {Req.Test, __MODULE__})
     end
 
-    test "resolves via DNS, fetches, and pins the Host header to the original hostname" do
-      stub_dns(%{"good.example" => {[{93, 184, 216, 34}], []}})
+    test "refuses plain http" do
+      expect_no_dns_lookup()
 
-      Req.Test.stub(__MODULE__, fn conn ->
-        assert {"host", "good.example"} in conn.req_headers
-        Plug.Conn.send_resp(conn, 200, "hello")
-      end)
-
-      assert {:ok, %Req.Response{status: 200, body: "hello"}} =
-               SSRF.get("http://good.example/", plug: {Req.Test, __MODULE__})
+      assert SSRF.get("http://good.example/") == {:error, :invalid_url}
     end
 
-    test "rejects a host whose DNS answer is a private address, without ever reaching the plug" do
-      stub_dns(%{"evil.example" => {[{127, 0, 0, 1}], []}})
+    test "refuses a host whose DNS answer is a private address" do
+      stub_dns(%{"evil.example" => {[{169, 254, 169, 254}], []}})
 
-      Req.Test.stub(__MODULE__, fn _conn ->
-        raise "should never be called"
-      end)
-
-      assert SSRF.get("http://evil.example/", plug: {Req.Test, __MODULE__}) ==
-               {:error, :restricted_address}
-    end
-
-    test "follows a redirect to a still-public host, re-validating before following" do
-      stub_dns(%{
-        "good.example" => {[{93, 184, 216, 34}], []},
-        "still-good.example" => {[{93, 184, 216, 35}], []}
-      })
-
-      Req.Test.stub(__MODULE__, fn conn ->
-        case conn.request_path do
-          "/start" ->
-            conn
-            |> Plug.Conn.put_resp_header("location", "http://still-good.example/final")
-            |> Plug.Conn.send_resp(302, "")
-
-          "/final" ->
-            Plug.Conn.send_resp(conn, 200, "done")
-        end
-      end)
-
-      assert {:ok, %Req.Response{status: 200, body: "done"}} =
-               SSRF.get("http://good.example/start", plug: {Req.Test, __MODULE__})
-    end
-
-    test "rejects a redirect to a host whose DNS answer is a private address" do
-      stub_dns(%{
-        "good.example" => {[{93, 184, 216, 34}], []},
-        "internal.example" => {[{169, 254, 169, 254}], []}
-      })
-
-      Req.Test.stub(__MODULE__, fn conn ->
-        case conn.request_path do
-          "/start" ->
-            conn
-            |> Plug.Conn.put_resp_header("location", "http://internal.example/steal-secrets")
-            |> Plug.Conn.send_resp(302, "")
-
-          "/steal-secrets" ->
-            raise "should never be called - redirect target must be rejected before follow-up"
-        end
-      end)
-
-      assert SSRF.get("http://good.example/start", plug: {Req.Test, __MODULE__}) ==
-               {:error, :restricted_address}
-    end
-
-    test "gives up after exceeding the redirect budget" do
-      stub_dns(%{"loopy.example" => {[{93, 184, 216, 34}], []}})
-
-      Req.Test.stub(__MODULE__, fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("location", "http://loopy.example/")
-        |> Plug.Conn.send_resp(302, "")
-      end)
-
-      assert SSRF.get("http://loopy.example/", plug: {Req.Test, __MODULE__}, max_redirects: 2) ==
-               {:error, :too_many_redirects}
+      assert SSRF.get("https://evil.example/") == {:error, :restricted_address}
     end
   end
 
-  describe "pool_max_idle_time" do
-    test "an idle Finch pool is reaped after pool_max_idle_time, instead of lingering forever" do
-      # This exercises the same finch pool options shape
-      # SSRF.do_request/3 builds, via a real Finch pool - it can't be driven
-      # through SSRF.get/2 itself because the only network target reachable
-      # from a test is loopback, which SSRF.resolve_host/1 correctly (and
-      # by design) rejects as a restricted address.
+  # Real HTTPS server on loopback. `TLSServer.allow_loopback/0` lets only
+  # 127.0.0.1 through, so every other address rule still applies.
+  describe "get/2 against a local server" do
+    test "resolves via DNS and sends the hostname in the Host header" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
       test_pid = self()
-      bypass = Bypass.open()
 
-      handler_id = "ssrf-pool-idle-test-#{System.unique_integer()}"
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port ->
+            send(test_pid, {:host, Plug.Conn.get_req_header(conn, "host")})
+            Plug.Conn.send_resp(conn, 200, "hello")
+          end
+        )
 
-      :telemetry.attach(
-        handler_id,
-        [:finch, :pool_max_idle_time_exceeded],
-        fn _event, _measurements, metadata, _config ->
-          if metadata.port == bypass.port, do: send(test_pid, :pool_reaped)
-        end,
-        nil
-      )
+      assert {:ok, %Req.Response{status: 200, body: "hello"}} =
+               get(ca, "https://good.example:#{port}/")
 
-      on_exit(fn -> :telemetry.detach(handler_id) end)
-
-      Bypass.expect_once(bypass, "GET", "/", fn conn -> Plug.Conn.send_resp(conn, 200, "ok") end)
-
-      assert {:ok, %Req.Response{status: 200}} =
-               Req.request(
-                 method: :get,
-                 url: "http://localhost:#{bypass.port}/",
-                 finch: [conn_opts: [hostname: "localhost"], pool_max_idle_time: 50]
-               )
-
-      assert_receive :pool_reaped, 2000
+      assert_received {:host, ["good.example"]}
     end
+
+    test "gives up on a response that keeps trickling in" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port ->
+            conn = Plug.Conn.send_chunked(conn, 200)
+
+            Stream.repeatedly(fn -> Process.sleep(50) end)
+            |> Enum.reduce_while(conn, fn _, conn ->
+              case Plug.Conn.chunk(conn, ".") do
+                {:ok, conn} -> {:cont, conn}
+                {:error, _} -> {:halt, conn}
+              end
+            end)
+          end
+        )
+
+      {microseconds, result} =
+        :timer.tc(fn ->
+          get(ca, "https://good.example:#{port}/",
+            request_timeout: 200,
+            receive_timeout: 100,
+            retry: false
+          )
+        end)
+
+      assert {:error, %Req.TransportError{reason: :timeout}} = result
+      assert microseconds < 500_000
+    end
+
+    test "retries a transient failure twice, then returns it" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      test_pid = self()
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port ->
+            send(test_pid, :called)
+            Plug.Conn.send_resp(conn, 503, "")
+          end
+        )
+
+      assert {:ok, %Req.Response{status: 503}} =
+               get(ca, "https://good.example:#{port}/", retry_delay: 0)
+
+      for _ <- 1..3, do: assert_received(:called)
+      refute_received :called
+    end
+
+    test "ignores the server's Retry-After" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      test_pid = self()
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port ->
+            send(test_pid, :called)
+
+            conn
+            |> Plug.Conn.put_resp_header("retry-after", "3600")
+            |> Plug.Conn.send_resp(503, "")
+          end
+        )
+
+      {microseconds, result} =
+        :timer.tc(fn -> get(ca, "https://good.example:#{port}/", max_retries: 1) end)
+
+      assert {:ok, %Req.Response{status: 503}} = result
+      assert microseconds < 3_000_000
+
+      for _ <- 1..2, do: assert_received(:called)
+    end
+
+    test "follows no redirect" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+      test_pid = self()
+
+      for status <- [301, 302, 303, 307, 308] do
+        {ca, port} =
+          TLSServer.start(
+            cert_host: "good.example",
+            handler: fn conn, port ->
+              case conn.request_path do
+                "/start" ->
+                  conn
+                  |> Plug.Conn.put_resp_header("location", "https://good.example:#{port}/final")
+                  |> Plug.Conn.send_resp(status, "")
+
+                "/final" ->
+                  send(test_pid, :followed)
+                  Plug.Conn.send_resp(conn, 200, "done")
+              end
+            end
+          )
+
+        assert get(ca, "https://good.example:#{port}/start") ==
+                 {:error, :redirect_not_followed}
+      end
+
+      refute_received :followed
+    end
+
+    # Req would follow on either option, past the address checks.
+    test "follows no redirect even when asked to" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+      test_pid = self()
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, port ->
+            case conn.request_path do
+              "/start" ->
+                conn
+                |> Plug.Conn.put_resp_header("location", "https://good.example:#{port}/final")
+                |> Plug.Conn.send_resp(302, "")
+
+              "/final" ->
+                send(test_pid, :followed)
+                Plug.Conn.send_resp(conn, 200, "done")
+            end
+          end
+        )
+
+      for opt <- [follow_redirects: true, redirect: true] do
+        assert get(ca, "https://good.example:#{port}/start", [opt]) ==
+                 {:error, :redirect_not_followed}
+      end
+
+      refute_received :followed
+    end
+
+    test "returns a 3xx without a Location" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port -> Plug.Conn.send_resp(conn, 302, "body") end
+        )
+
+      assert {:ok, %Req.Response{status: 302, body: "body"}} =
+               get(ca, "https://good.example:#{port}/")
+    end
+  end
+
+  describe "certificate checks" do
+    # Control: without it, the test below would pass on any connection failure.
+    test "accepts a certificate issued for the requested hostname" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "good.example",
+          handler: fn conn, _port -> Plug.Conn.send_resp(conn, 200, "ok") end
+        )
+
+      assert {:ok, %Req.Response{status: 200, body: "ok"}} =
+               get(ca, "https://good.example:#{port}/")
+    end
+
+    test "refuses a certificate issued for another hostname" do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{"good.example" => {[{127, 0, 0, 1}], []}})
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: "impostor.test",
+          handler: fn conn, _port -> Plug.Conn.send_resp(conn, 200, "ok") end
+        )
+
+      assert {:error, %Req.TransportError{reason: {:tls_alert, {alert, _detail}}}} =
+               get(ca, "https://good.example:#{port}/")
+
+      assert alert in [:handshake_failure, :bad_certificate, :certificate_unknown]
+    end
+  end
+
+  describe "get/2 pools" do
+    setup do
+      TLSServer.allow_loopback()
+
+      stub_dns(%{
+        "good.example" => {[{127, 0, 0, 1}], []},
+        "other.example" => {[{127, 0, 0, 1}], []}
+      })
+
+      {ca, port} =
+        TLSServer.start(
+          cert_host: ["good.example", "other.example"],
+          handler: fn conn, _port -> Plug.Conn.send_resp(conn, 200, "ok") end
+        )
+
+      {:ok, ca: ca, port: port}
+    end
+
+    test "requests to one hostname share a pool", %{ca: ca, port: port} do
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/foo")
+      pid = pool_pid!(port, "good.example")
+
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/bar")
+      assert pool_pid!(port, "good.example") == pid
+    end
+
+    test "hostnames on one address get pools of their own", %{ca: ca, port: port} do
+      assert {:ok, _} = get(ca, "https://good.example:#{port}/")
+      assert {:ok, _} = get(ca, "https://other.example:#{port}/")
+
+      assert pool_pid!(port, "good.example") != pool_pid!(port, "other.example")
+    end
+  end
+
+  defp pool_pid!(port, host) do
+    pool = %Finch.Pool{scheme: :https, host: "127.0.0.1", port: port, tag: host}
+    assert {:ok, pid} = Finch.find_pool(SSRF.Finch, pool)
+    pid
+  end
+
+  defp get(ca, url, opts \\ []) do
+    SSRF.get(url, [cacerts: [ca]] ++ opts)
   end
 end
