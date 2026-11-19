@@ -195,6 +195,7 @@ defmodule PlausibleWeb.Router do
         get "/funnel", E2EController, :get_funnel
         post "/goal", E2EController, :create_goal
         put "/verification", E2EController, :put_verification_scenario
+        post "/oauth-grant", E2EController, :create_oauth_grant
       end
     end
   end

@@ -133,6 +133,16 @@ defmodule PlausibleWeb.E2EController do
       send_resp(conn, 200, Jason.encode!(funnel_data))
     end
 
+    def create_oauth_grant(conn, %{"email" => email}) do
+      user = Plausible.Repo.get_by!(Plausible.Auth.User, email: email)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+
+      Plausible.Factory.insert(:oauth_grant, user: user, team: team, access_token: token)
+
+      send_resp(conn, 200, Jason.encode!(%{"access_token" => token}))
+    end
+
     def put_verification_scenario(conn, %{"domain" => domain, "scenario" => scenario} = params) do
       opts = [
         slowdown: params["options"]["slowdown"] || 0,
