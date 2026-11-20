@@ -24,6 +24,7 @@ defmodule PlausibleWeb.APITraceAttributesTest do
       assert attributes["plausible.team.id"] == api_key.team_id
       assert attributes["plausible.credential.type"] == "api_key"
       assert attributes["plausible.credential.id"] == api_key.id
+      assert attributes["plausible.credential.label"] == api_key.key_prefix
       assert attributes["plausible.site.id"] == site.id
     end
 
@@ -77,6 +78,7 @@ defmodule PlausibleWeb.APITraceAttributesTest do
         assert attributes["plausible.team.id"] == api_key.team_id
         assert attributes["plausible.credential.type"] == "api_key"
         assert attributes["plausible.credential.id"] == api_key.id
+        assert attributes["plausible.credential.label"] == api_key.key_prefix
       end
     end
   end

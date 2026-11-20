@@ -59,16 +59,20 @@ defmodule Plausible.OpenTelemetry do
   end
 
   def add_credential_attributes(credential) do
+    {type, label} = credential_type_and_label(credential)
+
     Tracer.set_attributes([
       {"plausible.user.id", credential.user_id},
-      {"plausible.credential.type", credential_type(credential)},
-      {"plausible.credential.id", credential.id}
+      {"plausible.credential.type", type},
+      {"plausible.credential.id", credential.id},
+      {"plausible.credential.label", label}
     ])
 
     if credential.team_id, do: Tracer.set_attribute("plausible.team.id", credential.team_id)
   end
 
-  defp credential_type(%Plausible.Auth.ApiKey{}), do: "api_key"
+  defp credential_type_and_label(%Plausible.Auth.ApiKey{} = api_key),
+    do: {"api_key", api_key.key_prefix}
 
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
   def resource_attributes(runtime_metadata) do
