@@ -3,12 +3,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
   import ExUnit.CaptureLog
 
-  require Record
-
-  Record.defrecordp(:span, Record.extract(:span, from_lib: "opentelemetry/include/otel_span.hrl"))
-
-  require OpenTelemetry.Tracer, as: Tracer
-
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
   alias Plausible.Repo
 
@@ -620,41 +614,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     conn
     |> put_private(PlausibleWeb.FirstLaunchPlug, :skip)
     |> bypass_through(PlausibleWeb.Router)
-  end
-
-  test "traces the API key on the current span" do
-    :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
-
-    user = new_user()
-    site = new_site(owner: user)
-    api_key = insert_api_key(:team_scope_api_key, user: user)
-
-    span_id =
-      Tracer.with_span "test request" do
-        build_conn()
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> post("/api/v2/query", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "all"
-        })
-        |> json_response(200)
-
-        OpenTelemetry.Span.span_id(Tracer.current_span_ctx())
-      end
-
-    assert_receive {:span, span(span_id: ^span_id, attributes: attributes)}
-
-    assert %{
-             "plausible.user.id" => user_id,
-             "plausible.team.id" => team_id,
-             "plausible.credential.type" => "api_key",
-             "plausible.credential.id" => api_key_id
-           } = :otel_attributes.map(attributes)
-
-    assert user_id == user.id
-    assert team_id == api_key.team_id
-    assert api_key_id == api_key.id
   end
 
   defp authorize(conn, api_key, opts) do

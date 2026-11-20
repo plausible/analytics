@@ -215,6 +215,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
                  feature: feature,
                  allow_consolidated_views: conn.private[:allow_consolidated_views]
                ) do
+          Plausible.OpenTelemetry.add_site_attributes(site, api_key)
           {:ok, assign(conn, :site, site)}
         end
 
