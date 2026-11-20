@@ -14,7 +14,6 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.Stats.JSONSchema.Utils
   alias Plausible.Teams.Membership
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
-  alias OpenTelemetry.Tracer
 
   require Logger
 
@@ -202,7 +201,7 @@ defmodule PlausibleWeb.MCP.MCPController do
 
     case Map.fetch(@tools_by_name, name) do
       {:ok, spec} ->
-        Tracer.set_attribute("plausible.tool", name)
+        Plausible.OpenTelemetry.add_tool_attribute(name)
 
         case call_tool(conn, spec, params) do
           {:ok, value} ->
