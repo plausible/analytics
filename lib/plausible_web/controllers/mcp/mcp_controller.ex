@@ -13,6 +13,7 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.Stats.{Query, QueryError}
   alias Plausible.Stats.JSONSchema.Utils
   alias Plausible.Teams.Membership
+  alias PlausibleWeb.MCP.Span, as: MCPSpan
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
   require Logger
@@ -72,6 +73,7 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   @tools Enum.map(@tool_specs, &Map.take(&1, @public_fields))
   @tools_by_name Map.new(@tool_specs, &{&1.name, &1})
+  @tool_names Map.keys(@tools_by_name)
 
   @doc """
   Answers a single JSON-RPC request (https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#sending-messages).
@@ -79,11 +81,13 @@ defmodule PlausibleWeb.MCP.MCPController do
   def handle(conn, _params) do
     case message(conn.body_params) do
       {:ok, message, method, id} ->
-        if legacy?(conn, message) do
-          handle_legacy_request(conn, message, method, id)
-        else
-          handle_request(conn, message, method, id)
-        end
+        MCPSpan.with_span(conn, message, @tool_names, fn ->
+          if legacy?(conn, message) do
+            handle_legacy_request(conn, message, method, id)
+          else
+            handle_request(conn, message, method, id)
+          end
+        end)
 
       {:notification, message} ->
         if legacy?(conn, message),
@@ -345,6 +349,7 @@ defmodule PlausibleWeb.MCP.MCPController do
         {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
 
       site ->
+        Plausible.OpenTelemetry.add_site_attributes(site)
         {:ok, Repo.preload(site, [:owners, :completed_imports])}
     end
   end
@@ -450,6 +455,8 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp send_json(conn, status, body) do
     conn
+    # Read by `MCPSpan` to record the outcome
+    |> put_private(:mcp_response, body)
     |> put_status(status)
     |> json(body)
   end

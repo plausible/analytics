@@ -74,6 +74,15 @@ defmodule Plausible.OpenTelemetry do
   defp credential_type_and_label(%Plausible.Auth.ApiKey{} = api_key),
     do: {"api_key", api_key.key_prefix}
 
+  def add_oauth_grant_attributes(%Plausible.OAuth.Grant{} = grant) do
+    Tracer.set_attributes([
+      {"plausible.user.id", grant.user_id},
+      {"plausible.team.id", grant.team_id},
+      {"plausible.oauth.grant.id", grant.id},
+      {"plausible.oauth.client.id", grant.client_id}
+    ])
+  end
+
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
   def resource_attributes(runtime_metadata) do
     [

@@ -40,6 +40,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
       |> assign(:current_team, grant.team)
       |> assign(:current_team_role, role)
       |> assign(:oauth_scopes, grant.scopes)
+      |> assign(:oauth_grant, grant)
     else
       {:error, :missing_token} ->
         conn
