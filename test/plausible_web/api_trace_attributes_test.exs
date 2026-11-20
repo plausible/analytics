@@ -83,6 +83,56 @@ defmodule PlausibleWeb.APITraceAttributesTest do
     end
   end
 
+  describe "MCP" do
+    test "traces the OAuth credential" do
+      user = new_user()
+      site = new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team_of(user),
+          access_token: token,
+          client_name: "Claude"
+        )
+
+      attributes =
+        trace(fn ->
+          build_conn()
+          |> put_req_header("authorization", "Bearer #{token}")
+          |> put_req_header("mcp-protocol-version", "2026-07-28")
+          |> put_req_header("mcp-method", "tools/call")
+          |> put_req_header("mcp-name", "query_stats")
+          |> post("/mcp", %{
+            "jsonrpc" => "2.0",
+            "id" => 1,
+            "method" => "tools/call",
+            "params" => %{
+              "name" => "query_stats",
+              "arguments" => %{
+                "site_id" => site.domain,
+                "metrics" => ["visitors"],
+                "date_range" => "all"
+              },
+              "_meta" => %{
+                "io.modelcontextprotocol/protocolVersion" => "2026-07-28",
+                "io.modelcontextprotocol/clientCapabilities" => %{}
+              }
+            }
+          })
+          |> json_response(200)
+        end)
+
+      assert attributes["plausible.user.id"] == user.id
+      assert attributes["plausible.team.id"] == grant.team_id
+      assert attributes["plausible.credential.type"] == "oauth_grant"
+      assert attributes["plausible.credential.id"] == grant.id
+      assert attributes["plausible.credential.label"] == "Claude"
+      assert attributes["plausible.site.id"] == site.id
+    end
+  end
+
   defp trace_query(api_key, site, status) do
     trace(fn ->
       build_conn()

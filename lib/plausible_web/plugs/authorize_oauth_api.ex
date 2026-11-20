@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
 
     with {:ok, raw_token} <- get_bearer_token(conn),
          {:ok, grant, role} <- OAuth.find_access_token(raw_token, resource),
+         Plausible.OpenTelemetry.add_credential_attributes(grant),
          # Recorded before the rate limit, so a valid token that is being
          # throttled still shows as used in the connected apps view.
          :ok <- OAuth.touch_grant(grant),
@@ -40,7 +41,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
       |> assign(:current_team, grant.team)
       |> assign(:current_team_role, role)
       |> assign(:oauth_scopes, grant.scopes)
-      |> assign(:oauth_grant, grant)
     else
       {:error, :missing_token} ->
         conn

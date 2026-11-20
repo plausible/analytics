@@ -74,6 +74,9 @@ defmodule Plausible.OpenTelemetry do
   defp credential_type_and_label(%Plausible.Auth.ApiKey{} = api_key),
     do: {"api_key", api_key.key_prefix}
 
+  defp credential_type_and_label(%Plausible.OAuth.Grant{} = grant),
+    do: {"oauth_grant", Plausible.OAuth.Grant.label(grant)}
+
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
   def resource_attributes(runtime_metadata) do
     [
