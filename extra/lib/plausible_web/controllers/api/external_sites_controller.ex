@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
 
   def index(conn, params) do
+    OpenTelemetry.Tracer.set_attribute("plausible.tool", "list_sites")
     user = conn.assigns.current_user
     team = conn.assigns.current_team || Teams.get(params["team_id"])
 

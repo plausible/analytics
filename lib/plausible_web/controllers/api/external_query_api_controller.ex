@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   alias Plausible.Stats.{Query, QueryError}
 
   def query(conn, params) do
+    OpenTelemetry.Tracer.set_attribute("plausible.tool", "query_stats")
     site = Repo.preload(conn.assigns.site, :owners)
 
     case Query.parse_and_build(site, params,
