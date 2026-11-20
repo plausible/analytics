@@ -35,6 +35,12 @@ defmodule Plausible.OpenTelemetry do
     end
   end
 
+  def add_site_attributes(site, credential) do
+    add_site_attributes(site)
+
+    if is_nil(credential.team_id), do: Tracer.set_attribute("plausible.team.id", site.team_id)
+  end
+
   def add_user_attributes(user) do
     case user do
       %Plausible.Auth.User{} = user ->
@@ -51,6 +57,22 @@ defmodule Plausible.OpenTelemetry do
         :ignore
     end
   end
+
+  def add_credential_attributes(credential) do
+    {type, label} = credential_type_and_label(credential)
+
+    Tracer.set_attributes([
+      {"plausible.user.id", credential.user_id},
+      {"plausible.credential.type", type},
+      {"plausible.credential.id", credential.id},
+      {"plausible.credential.label", label}
+    ])
+
+    if credential.team_id, do: Tracer.set_attribute("plausible.team.id", credential.team_id)
+  end
+
+  defp credential_type_and_label(%Plausible.Auth.ApiKey{} = api_key),
+    do: {"api_key", api_key.key_prefix}
 
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
   def resource_attributes(runtime_metadata) do
