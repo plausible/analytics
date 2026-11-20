@@ -63,6 +63,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
+         Plausible.OpenTelemetry.add_credential_attributes(api_key),
          :ok <- RateLimit.check_rate_limit(limit_key, hourly_limit) do
       conn
       |> assign(:current_credential, api_key)
@@ -144,7 +145,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
              feature: Plausible.Billing.Feature.StatsAPI,
              allow_consolidated_views: conn.private[:allow_consolidated_views]
            ) do
-      Plausible.OpenTelemetry.add_site_attributes(site)
+      Plausible.OpenTelemetry.add_site_attributes(site, api_key)
       site = Plausible.Repo.preload(site, :completed_imports)
       {:ok, assign(conn, :site, site)}
     end
