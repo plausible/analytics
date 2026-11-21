@@ -1,7 +1,7 @@
 defmodule PlausibleE2E.Utils do
   @moduledoc "Port of e2e/tests/test-utils.ts."
 
-  import ExUnit.Assertions
+  import Playwright.Test.Assertions
 
   alias Playwright.{Expect, Locator, Page}
 

@@ -80,7 +80,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.3"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test, :e2e_test]},
-      {:playwright, "~> 1.65.0-rc.2", hex: :playwright_ex, only: [:dev, :e2e_test]},
+      {:playwright, "~> 1.65.0-rc.3", hex: :playwright_ex, only: [:dev, :e2e_test]},
       {:ecto_ch, "~> 0.11"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},

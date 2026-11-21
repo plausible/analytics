@@ -4,7 +4,7 @@ defmodule PlausibleE2E.Fixtures do
   object, `page` and `request` among them. A user is `%{name:, email:, password:}`.
   """
 
-  import ExUnit.Assertions
+  import Playwright.Test.Assertions
   import PlausibleE2E.Utils
 
   alias Playwright.{APIRequestContext, APIResponse, Expect, Locator, Page}

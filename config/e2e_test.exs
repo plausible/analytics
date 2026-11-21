@@ -20,8 +20,8 @@ config :plausible, Oban, testing: :manual
 
 config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)
 
-# Browser suite in e2e/ (playwright_ex). The app runs in the test VM. The device and
-# base_url are set in runtime.exs.
+# Browser suite in e2e/ (playwright_ex). The app runs in the test VM. The base_url is set in
+# runtime.exs, the project (`chromium`, Desktop Chrome) in e2e/support/case.ex.
 config :playwright, :test,
   # Collect trace when retrying the failed test
   trace: :on_first_retry

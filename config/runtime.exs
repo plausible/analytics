@@ -17,14 +17,10 @@ end
 if config_env() == :e2e_test do
   Envy.load(["config/.env.e2e_test"])
 
-  config :playwright,
-         :test,
-         Playwright.device("Desktop Chrome") ++
-           [
-             base_url: System.fetch_env!("BASE_URL"),
-             # Sets single TZ for all envs where the tests run
-             timezone_id: "UTC"
-           ]
+  config :playwright, :test,
+    base_url: System.fetch_env!("BASE_URL"),
+    # Sets single TZ for all envs where the tests run
+    timezone_id: "UTC"
 end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
