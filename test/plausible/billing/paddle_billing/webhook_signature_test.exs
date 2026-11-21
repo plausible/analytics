@@ -50,6 +50,13 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignatureTest do
     assert :ok = verify("#{ts};h1=#{String.duplicate("a", 64)};#{h1}")
   end
 
+  test "rejects more than two signatures" do
+    [ts, h1] = String.split(header(), ";")
+    other = "h1=#{String.duplicate("a", 64)}"
+    assert :ok = verify("#{ts};#{other};#{h1}")
+    assert {:error, :malformed_header} = verify("#{ts};#{other};#{other};#{h1}")
+  end
+
   test "rejects a timestamp outside the tolerance, in both directions" do
     assert {:error, :stale_timestamp} = verify(header(@now - 6))
     assert {:error, :future_timestamp} = verify(header(@now + 6))

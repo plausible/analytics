@@ -4,7 +4,7 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
 
   The header looks like `ts=1671552777;h1=<hex>`. The signature is an
   HMAC-SHA256 of `"<ts>:<raw body>"` with the notification destination's secret.
-  The header can carry more than one `h1` while the secret is being rotated.
+  The header can carry up to two `h1` values while the secret is being rotated.
 
   See https://developer.paddle.com/webhooks/signature-verification
   """
@@ -35,9 +35,11 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
 
   @spec sign(binary(), integer(), binary()) :: binary()
   def sign(raw_body, ts, secret) do
-    :hmac
-    |> :crypto.mac(:sha256, secret, "#{ts}:#{raw_body}")
-    |> Base.encode16(case: :lower)
+    raw_body |> digest(ts, secret) |> Base.encode16(case: :lower)
+  end
+
+  defp digest(raw_body, ts, secret) do
+    :crypto.mac(:hmac, :sha256, secret, "#{ts}:#{raw_body}")
   end
 
   defp parse_header(header) when is_binary(header) do
@@ -54,9 +56,10 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
 
     with {_, ts} <- List.keyfind(pairs, "ts", 0),
          {ts, ""} <- Integer.parse(ts),
-         [_ | _] = signatures <-
-           for({"h1", s} <- pairs, s =~ ~r/\A[0-9a-f]{64}\z/, do: s) do
-      {:ok, ts, signatures}
+         signatures when length(signatures) in 1..2 <- for({"h1", s} <- pairs, do: s),
+         digests = Enum.map(signatures, &decode_digest/1),
+         true <- Enum.all?(digests) do
+      {:ok, ts, digests}
     else
       _ -> {:error, :malformed_header}
     end
@@ -64,10 +67,19 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
 
   defp parse_header(_), do: {:error, :malformed_header}
 
-  defp check_signature(raw_body, ts, signatures, secret) do
-    expected = sign(raw_body, ts, secret)
+  defp decode_digest(<<hex::binary-size(64)>>) do
+    case Base.decode16(hex, case: :lower) do
+      {:ok, <<_::binary-size(32)>> = digest} -> digest
+      _ -> nil
+    end
+  end
 
-    if Enum.any?(signatures, &Plug.Crypto.secure_compare(&1, expected)) do
+  defp decode_digest(_), do: nil
+
+  defp check_signature(raw_body, ts, digests, secret) do
+    expected = digest(raw_body, ts, secret)
+
+    if Enum.any?(digests, &Plug.Crypto.secure_compare(&1, expected)) do
       :ok
     else
       {:error, :invalid_signature}
