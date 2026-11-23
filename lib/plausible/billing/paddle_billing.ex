@@ -9,4 +9,10 @@ defmodule Plausible.Billing.PaddleBilling do
   mocks in dev, test and e2e environments.
   """
   def api(), do: Application.fetch_env!(:plausible, :paddle_billing_api)
+
+  @doc """
+  Returns the secret key of the notification destination, used to verify
+  webhook signatures.
+  """
+  def webhook_secret(), do: Application.get_env(:plausible, :paddle_billing)[:webhook_secret]
 end
