@@ -6,8 +6,19 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
   HMAC-SHA256 of `"<ts>:<raw body>"` with the notification destination's secret.
   The header can carry up to two `h1` values while the secret is being rotated.
 
+  Used as a plug, it responds with 400 and halts when the request signature
+  is invalid.
+
   See https://developer.paddle.com/webhooks/signature-verification
   """
+
+  @behaviour Plug
+
+  require Logger
+
+  import Plug.Conn
+
+  alias Plausible.Billing.PaddleBilling
 
   @tolerance_seconds 5
 
@@ -17,6 +28,27 @@ defmodule Plausible.Billing.PaddleBilling.WebhookSignature do
           | :invalid_signature
           | :stale_timestamp
           | :future_timestamp
+
+  @impl Plug
+  def init(opts), do: opts
+
+  @impl Plug
+  def call(conn, _opts) do
+    signature = conn |> get_req_header("paddle-signature") |> List.first()
+
+    case verify(
+           PlausibleWeb.RawBodyReader.raw_body(conn),
+           signature,
+           PaddleBilling.webhook_secret()
+         ) do
+      :ok ->
+        conn
+
+      {:error, reason} ->
+        Logger.error("Rejected Paddle Billing webhook: #{reason}")
+        conn |> send_resp(400, "") |> halt()
+    end
+  end
 
   @spec verify(binary(), binary() | nil, binary() | nil, keyword()) :: :ok | {:error, error()}
   def verify(raw_body, header, secret, opts \\ [])
