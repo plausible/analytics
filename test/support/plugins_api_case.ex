@@ -20,6 +20,7 @@ defmodule PlausibleWeb.PluginsAPICase do
       import Plausible.Factory
 
       import OpenApiSpex.TestAssertions
+      import Plausible.AssertMatches
 
       alias PlausibleWeb.Router.Helpers, as: Routes
       alias PlausibleWeb.Plugins.API.Schemas

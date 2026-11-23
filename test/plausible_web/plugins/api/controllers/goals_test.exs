@@ -841,11 +841,20 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert page2.meta.pagination.links.next
       assert page2.meta.pagination.links.prev
 
-      assert ^page1 =
-               initial_conn
-               |> get(page2.meta.pagination.links.prev.url)
-               |> json_response(200)
-               |> assert_schema("Goal.ListResponse", spec())
+      assert_matches %{
+                       goals: ^page1.goals,
+                       meta: %{
+                         pagination: %{
+                           has_next_page: true,
+                           has_prev_page: false,
+                           links: ^strict_map(%{next: %{url: ^any(:string, ~r/after=.+/)}})
+                         }
+                       }
+                     } =
+                       initial_conn
+                       |> get(page2.meta.pagination.links.prev.url)
+                       |> json_response(200)
+                       |> assert_schema("Goal.ListResponse", spec())
     end
   end
 
