@@ -7,6 +7,27 @@ defmodule Plausible.Billing.PaddleBilling.SubscriptionEvent do
 
   alias Plausible.Billing.Subscription.Status
 
+  import Ecto.Changeset
+
+  @fields [
+    :billing_event_id,
+    :billing_subscription_id,
+    :billing_customer_id,
+    :billing_product_id,
+    :billing_price_id,
+    :next_bill_amount,
+    :next_bill_date,
+    :last_bill_date,
+    :currency_code,
+    :status,
+    :original_event_type,
+    :original_event,
+    :occurred_at,
+    :team_id
+  ]
+
+  @required_fields @fields -- [:last_bill_date]
+
   @event_types [:"subscription.created", :"subscription.updated"]
 
   schema "billing_subscription_events" do
@@ -29,5 +50,11 @@ defmodule Plausible.Billing.PaddleBilling.SubscriptionEvent do
     belongs_to :team, Plausible.Teams.Team
 
     timestamps()
+  end
+
+  def changeset(event, attrs) do
+    event
+    |> cast(attrs, @fields)
+    |> validate_required(@required_fields)
   end
 end
