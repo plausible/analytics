@@ -126,7 +126,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
 
       assert table_rows(html) == [
                {[
-                  [named_grant.client_name, "Client ID: #{named_grant.client_id}"],
+                  [named_grant.client_name, named_grant.client_id],
                   "My personal sites",
                   TextHelpers.format_date(yesterday),
                   "About 5 hours ago",
@@ -180,6 +180,18 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       assert live_path == ~p"/settings/connected-apps/#{live_grant.id}"
       assert revoked =~ "revoked grant"
       assert expired =~ "expired grant"
+    end
+
+    test "shows the app's favicon, taken from its client_id host", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      insert(:oauth_grant, user: user, team: team, client_id: "https://claude.ai/oauth/metadata")
+
+      conn = get(conn, ~p"/settings/connected-apps")
+
+      assert html_response(conn, 200) =~ "/favicon/sources/claude.ai?"
     end
 
     test "shows the requested page", %{conn: conn, user: user, team: team} do

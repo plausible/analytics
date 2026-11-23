@@ -63,21 +63,26 @@
           <% expired? =
             NaiveDateTime.before?(grant.refresh_token_expires_at, NaiveDateTime.utc_now()) %>
           <.td max_width="max-w-0" class="w-full" title={grant.client_id}>
-            <div class="flex items-center gap-x-1">
-              <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
-              <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
-                Revoked
-              </.pill>
-              <.pill :if={expired?} color={:gray} class="shrink-0 !py-0.5 !px-1.5">
-                Expired
-              </.pill>
+            <div class="flex items-center gap-x-3">
+              <PlausibleWeb.Live.Sites.favicon domain={URI.parse(grant.client_id).host} />
+              <div class="min-w-0">
+                <div class="flex items-center gap-x-1">
+                  <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
+                  <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
+                    Revoked
+                  </.pill>
+                  <.pill :if={expired?} color={:gray} class="shrink-0 !py-0.5 !px-1.5">
+                    Expired
+                  </.pill>
+                </div>
+                <span
+                  :if={grant.client_name}
+                  class="block truncate text-xs text-gray-500 dark:text-gray-400"
+                >
+                  {grant.client_id}
+                </span>
+              </div>
             </div>
-            <span
-              :if={grant.client_name}
-              class="block truncate text-xs text-gray-500 dark:text-gray-400"
-            >
-              Client ID: {grant.client_id}
-            </span>
           </.td>
           <.td hide_on_mobile text={Plausible.Teams.name(grant.team)} max_width="max-w-40" />
           <.td
