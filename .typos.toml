@@ -36,7 +36,9 @@ extend-ignore-re = [
 	"taht",
 	"Taht",
 	"linz",
-	"Linz"
+	"Linz",
+	# Paddle entity IDs (random characters)
+	"\\b(ctm|sub|pri|pro|txn|add|evt|ntf)_[0-9a-z]{26}\\b"
 ]
 
 [default.extend-words]
