@@ -9,6 +9,22 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
 
   alias Plausible.Billing.Subscription.Status
 
+  import Ecto.Changeset
+
+  @required_fields [
+    :billing_subscription_id,
+    :billing_customer_id,
+    :billing_product_id,
+    :billing_price_id,
+    :billing_interval,
+    :next_bill_amount,
+    :next_bill_date,
+    :currency_code,
+    :status
+  ]
+
+  @optional_fields [:last_bill_date]
+
   schema "billing_subscriptions" do
     field :billing_subscription_id, :string
     field :billing_customer_id, :string
@@ -24,5 +40,16 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
     belongs_to :team, Plausible.Teams.Team
 
     timestamps()
+  end
+
+  @spec fields() :: [atom()]
+  def fields(), do: @required_fields ++ @optional_fields
+
+  def changeset(subscription, attrs) do
+    subscription
+    |> cast(attrs, fields())
+    |> validate_required(@required_fields)
+    |> unique_constraint(:billing_subscription_id)
+    |> unique_constraint(:team_id)
   end
 end
