@@ -16,6 +16,8 @@ if Mix.env() != :e2e_test do
   FunWithFlags.enable(:annotations)
 
   Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
+
+  :ok = :telemetry.detach({OpentelemetryPhoenix, :endpoint_start})
 end
 
 # warn about minio if it's included in tests but not running
