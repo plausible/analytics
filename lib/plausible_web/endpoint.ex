@@ -75,7 +75,8 @@ defmodule PlausibleWeb.Endpoint do
   plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Phoenix.json_library()
+    json_decoder: Phoenix.json_library(),
+    body_reader: {PlausibleWeb.RawBodyReader, :read_body, []}
   )
 
   plug(Sentry.PlugContext, body_scrubber: {__MODULE__, :scrub_sentry_body})
