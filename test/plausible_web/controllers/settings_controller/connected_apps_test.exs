@@ -195,6 +195,28 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       assert expired =~ "expired grant"
     end
 
+    test "labels a revoked and expired grant only as revoked", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+
+      insert(:oauth_grant,
+        client_name: "revoked and expired grant",
+        user: user,
+        team: team,
+        revoked_at: NaiveDateTime.add(now, -2, :day),
+        refresh_token_expires_at: NaiveDateTime.add(now, -1, :day)
+      )
+
+      conn = get(conn, ~p"/settings/connected-apps?include_revoked=true")
+
+      assert [{[labels | _], nil}] = conn |> html_response(200) |> table_rows()
+      assert "Revoked" in labels
+      refute "Expired" in labels
+    end
+
     test "shows the app's favicon, taken from its client_id host", %{
       conn: conn,
       user: user,

@@ -71,7 +71,11 @@
                   <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
                     Revoked
                   </.pill>
-                  <.pill :if={expired?} color={:gray} class="shrink-0 !py-0.5 !px-1.5">
+                  <.pill
+                    :if={expired? and is_nil(grant.revoked_at)}
+                    color={:gray}
+                    class="shrink-0 !py-0.5 !px-1.5"
+                  >
                     Expired
                   </.pill>
                 </div>
