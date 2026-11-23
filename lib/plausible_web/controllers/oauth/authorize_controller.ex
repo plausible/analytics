@@ -33,7 +33,9 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   @unverified_request_message "This authorization request has expired or could not be verified. Return to the application and start again."
 
   @doc """
-  Renders the consent form if it's valid authorization request. If not, it redirects with an error or renders a local error page.
+  Renders the consent form if it's valid authorization request.
+  If not, it renders an error page, with a link back to the application when the redirect_uri is valid.
+  Valid doesn't mean it's trusted.
   """
   def authorize_form(conn, params) do
     with :ok <- rate_limit(conn),
@@ -41,7 +43,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
       render_consent_form(conn, request)
     else
       {:error, {:rate_limit, _}} -> render_error_page(conn, @rate_limited_message, 429)
-      {:redirect_error, request, error} -> redirect_error(conn, request, error)
+      {:redirect_error, request, error} -> render_confirm_redirect(conn, request, error)
       {:render_error, message} -> render_error_page(conn, message)
     end
   end
@@ -49,7 +51,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   @doc """
   Handles the user's approve/deny application form submit, turning it into an
   [authorization response](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-response).
-  It redirects with a code if the approve succeeds. In other cases, it redirects with an error or renders a local error page.
+  It redirects with a code if the approve succeeds. A denial renders a page with a link back to the application. A failed approve still redirects with an error.
   """
   def authorize(conn, params) do
     user = conn.assigns.current_user
@@ -71,7 +73,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
   end
 
   defp do_authorize(conn, _user, request, _params) do
-    redirect_back(conn, request, error: "access_denied")
+    render_confirm_redirect(conn, request, "access_denied", 200)
   end
 
   defp approve(conn, user, team, request) do
@@ -152,10 +154,35 @@ defmodule PlausibleWeb.OAuth.AuthorizeController do
     |> render("oauth_error.html", legacy_layout?: false, message: message)
   end
 
-  defp redirect_error(conn, %{redirect_uri: redirect_uri, state: state}, error) do
-    redirect(conn,
-      external: AuthorizationResponse.redirect_url(redirect_uri, error: error, state: state)
+  # Renders page that asks user to confirm navigating outside Plausible.
+  # See [authorization server as open redirector](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-server-as-ope).
+  defp render_confirm_redirect(conn, request, error, status \\ 400) do
+    redirect_url =
+      AuthorizationResponse.redirect_url(request.redirect_uri, error: error, state: request.state)
+
+    {heading, message} =
+      case error do
+        "access_denied" ->
+          {"Access denied", "You denied the application access to your account."}
+
+        _ ->
+          {"Authorization error", "The application sent an invalid authorization request."}
+      end
+
+    conn
+    |> put_status(status)
+    |> render("oauth_error_confirm_redirect.html",
+      legacy_layout?: false,
+      heading: heading,
+      message: message,
+      redirect_url: redirect_url,
+      redirect_target_hint: redirect_target_hint(redirect_url)
     )
+  end
+
+  # The query carries `state` and the error, which only clutter the warning.
+  defp redirect_target_hint(redirect_url) do
+    URI.to_string(%{URI.parse(redirect_url) | query: nil}) <> "?…"
   end
 
   defp redirect_back(conn, request, params) do
