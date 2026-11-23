@@ -70,21 +70,31 @@ defmodule PlausibleWeb.Live.Components.Pagination do
 
     ~H"""
     <.link
+      :if={@active?}
       patch={@uri}
-      phx-click={@active? && JS.dispatch("scroll-to-top")}
+      phx-click={JS.dispatch("scroll-to-top")}
       class={[
         "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md",
-        if @active? do
-          "active button "
-        else
-          "inactive border-gray-300 text-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-600 hover:shadow-none hover:bg-gray-300 cursor-not-allowed"
-        end,
+        "active button",
         @class
       ]}
     >
       <span :if={@type == :prev}>← Previous</span>
       <span :if={@type == :next}>Next →</span>
     </.link>
+    <a
+      :if={not @active?}
+      role="link"
+      aria-disabled="true"
+      class={[
+        "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md",
+        "inactive border-gray-300 text-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed",
+        @class
+      ]}
+    >
+      <span :if={@type == :prev}>← Previous</span>
+      <span :if={@type == :next}>Next →</span>
+    </a>
     """
   end
 end
