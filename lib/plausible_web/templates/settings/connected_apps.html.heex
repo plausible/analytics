@@ -121,22 +121,14 @@
       </.table>
     <% end %>
 
-    <%!-- the pagination nav brings its own padding and border, made for the /sites page --%>
-    <div
+    <PlausibleWeb.Components.NumberedPagination.render
       :if={@grants.total_pages > 1}
-      class="mt-6 [&>nav]:p-0 [&>nav]:border-0"
-    >
-      <PlausibleWeb.Live.Components.Pagination.pagination
-        uri={
-          URI.new!(
-            ~p"/settings/connected-apps?#{if @include_revoked, do: [include_revoked: true], else: []}"
-          )
-        }
-        page_number={@grants.page_number}
-        total_pages={@grants.total_pages}
-      >
-        Page {@grants.page_number} of {@grants.total_pages}
-      </PlausibleWeb.Live.Components.Pagination.pagination>
-    </div>
+      class="mt-6"
+      href={
+        ~p"/settings/connected-apps?#{if @include_revoked, do: [include_revoked: true], else: []}"
+      }
+      page_number={@grants.page_number}
+      total_pages={@grants.total_pages}
+    />
   </.tile>
 </.settings_tiles>
