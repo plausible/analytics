@@ -99,3 +99,5 @@ plausible-report.xml
 plausible_db*
 
 .claude
+
+.envrc.local
