@@ -32,6 +32,19 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       assert Repo.reload!(grant).revoked_at
     end
 
+    test "redirects back to the given page and view", %{conn: conn, user: user, team: team} do
+      grant = insert(:oauth_grant, user: user, team: team)
+
+      conn =
+        delete(conn, ~p"/settings/connected-apps/#{grant.id}", %{
+          "page" => "2",
+          "include_revoked" => "true"
+        })
+
+      assert redirected_to(conn, 302) ==
+               "/settings/connected-apps?include_revoked=true&page=2#connected-apps"
+    end
+
     test "user can't revoke a grant that doesn't belong to them", %{conn: conn, team: team} do
       other_user = add_member(team, role: :editor)
       grant = insert(:oauth_grant, user: other_user, team: team)
@@ -211,6 +224,29 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
 
       assert [{[[name | _] | _], _}] = conn |> html_response(200) |> table_rows()
       assert name == "grant #{page_size}"
+    end
+
+    test "the revoke form includes hidden inputs for page and include_revoked", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      page_size = Plausible.OAuth.list_grants(user).page_size
+
+      for _ <- 0..page_size do
+        insert(:oauth_grant, user: user, team: team)
+      end
+
+      conn = get(conn, ~p"/settings/connected-apps?include_revoked=true&page=2")
+
+      html = html_response(conn, 200)
+
+      assert element_exists?(html, ~s(tbody form input[type=hidden][name=page][value="2"]))
+
+      assert element_exists?(
+               html,
+               ~s(tbody form input[type=hidden][name=include_revoked][value=true])
+             )
     end
 
     for page <- ["abc", "0", "99999999999999999999"] do

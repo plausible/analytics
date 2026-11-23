@@ -103,6 +103,13 @@
               action={~p"/settings/connected-apps/#{grant.id}"}
               method="delete"
             >
+              <input
+                :if={@grants.page_number > 1}
+                type="hidden"
+                name="page"
+                value={@grants.page_number}
+              />
+              <input :if={@include_revoked} type="hidden" name="include_revoked" value="true" />
               <.button
                 type="submit"
                 theme="ghost"
