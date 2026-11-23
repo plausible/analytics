@@ -12,6 +12,19 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## v3.2.2 - 2026-11-23
+
+### Added
+
+### Removed
+
+### Changed
+
+### Fixed
+
+- Plugins API pagination cursors are now signed by the server, unsigned or modified cursors are rejected
+- Pending invitation ids are no longer exposed to editors in site people settings
+
 ## v3.2.1 - 2026-05-12
 
 ### Added
