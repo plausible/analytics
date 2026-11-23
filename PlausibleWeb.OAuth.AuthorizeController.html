@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-E7929B60.js"></script>
+    <script src="dist/sidebar_items-DF07507C.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -170,7 +170,7 @@ hasn't been tampered with in between rendering the screen and submitting the app
 
         <div class="summary-synopsis"><p>Handles the user's approve/deny application form submit, turning it into an
 <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-response">authorization response</a>.
-It redirects with a code if the approve succeeds. In other cases, it redirects with an error or renders a local error page.</p></div>
+It redirects with a code if the approve succeeds. A denial renders a page with a link back to the application. A failed approve still redirects with an error.</p></div>
 
     </div>
 
@@ -180,7 +180,9 @@ It redirects with a code if the approve succeeds. In other cases, it redirects w
 
       </div>
 
-        <div class="summary-synopsis"><p>Renders the consent form if it's valid authorization request. If not, it redirects with an error or renders a local error page.</p></div>
+        <div class="summary-synopsis"><p>Renders the consent form if it's valid authorization request.
+If not, it renders an error page, with a link back to the application when the redirect_uri is valid.
+Valid doesn't mean it's trusted.</p></div>
 
     </div>
 
@@ -205,7 +207,7 @@ It redirects with a code if the approve succeeds. In other cases, it redirects w
     </a>
     <h1 class="signature" translate="no">authorize(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/oauth/authorize_controller.ex#L54" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/oauth/authorize_controller.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -216,7 +218,7 @@ It redirects with a code if the approve succeeds. In other cases, it redirects w
 
 <p>Handles the user's approve/deny application form submit, turning it into an
 <a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1#name-authorization-response">authorization response</a>.
-It redirects with a code if the approve succeeds. In other cases, it redirects with an error or renders a local error page.</p>
+It redirects with a code if the approve succeeds. A denial renders a page with a link back to the application. A failed approve still redirects with an error.</p>
   </section>
 </section>
 <section class="detail" id="authorize_form/2">
@@ -227,7 +229,7 @@ It redirects with a code if the approve succeeds. In other cases, it redirects w
     </a>
     <h1 class="signature" translate="no">authorize_form(conn, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/oauth/authorize_controller.ex#L38" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/oauth/authorize_controller.ex#L40" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -236,7 +238,9 @@ It redirects with a code if the approve succeeds. In other cases, it redirects w
 
   <section class="docstring">
 
-<p>Renders the consent form if it's valid authorization request. If not, it redirects with an error or renders a local error page.</p>
+<p>Renders the consent form if it's valid authorization request.
+If not, it renders an error page, with a link back to the application when the redirect_uri is valid.
+Valid doesn't mean it's trusted.</p>
   </section>
 </section>
 
