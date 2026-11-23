@@ -6,6 +6,10 @@ if config_env() in [:dev, :test, :load] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
+if config_env() == :dev do
+  Envy.load([".envrc.local"])
+end
+
 if config_env() == :ce_dev do
   Envy.load(["config/.env.dev", "config/.env.ce_dev"])
 end
@@ -265,6 +269,10 @@ sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 paddle_classic_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 paddle_classic_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 paddle_billing_api_key = get_var_from_path_or_env(config_dir, "PADDLE_BILLING_API_KEY")
+
+paddle_billing_webhook_secret =
+  get_var_from_path_or_env(config_dir, "PADDLE_BILLING_WEBHOOK_SECRET")
+
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
@@ -622,7 +630,9 @@ config :plausible, :paddle_classic,
   vendor_auth_code: paddle_classic_auth_code,
   vendor_id: paddle_classic_vendor_id
 
-config :plausible, :paddle_billing, api_key: paddle_billing_api_key
+config :plausible, :paddle_billing,
+  api_key: paddle_billing_api_key,
+  webhook_secret: paddle_billing_webhook_secret
 
 config :plausible, :google,
   client_id: google_cid,
