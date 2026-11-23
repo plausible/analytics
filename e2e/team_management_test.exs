@@ -48,7 +48,7 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
     answer_next_dialog = fn accept ->
       Page.once(page, :dialog, fn dialog ->
         Agent.update(dialogs, &(&1 ++ [Dialog.message(dialog)]))
-        if accept, do: Dialog.accept(dialog), else: Dialog.dismiss(dialog)
+        if accept, do: Dialog.accept!(dialog), else: Dialog.dismiss!(dialog)
       end)
     end
 
@@ -159,7 +159,7 @@ defmodule PlausibleE2E.Dashboard.TeamManagementTest do
 
     Page.on(page, :dialog, fn dialog ->
       Agent.update(dialogs, &(&1 ++ [Dialog.message(dialog)]))
-      Dialog.dismiss(dialog)
+      Dialog.dismiss!(dialog)
     end)
 
     Locator.click!(trigger)

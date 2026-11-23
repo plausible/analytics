@@ -236,15 +236,14 @@ defmodule PlausibleE2E.Dashboard.CsvExportTest do
     Page.get_by_test_id(page, "dashboard-options-menu") |> Locator.click!()
     Page.get_by_text(page, "Export stats") |> Locator.wait_for!(state: :visible)
 
-    [result, _] =
-      Promise.all([
-        Promise.race([
-          Page.wait_for_event(page, :download),
-          Page.wait_for_event(page, :page_error)
-        ]),
-        Promise.async(fn -> Page.get_by_text(page, "Export stats") |> Locator.click!() end)
+    race =
+      Promise.race([
+        Page.wait_for_event(page, :download),
+        Page.wait_for_event(page, :page_error)
       ])
-      |> Promise.await!()
+
+    Page.get_by_text(page, "Export stats") |> Locator.click!()
+    result = Promise.await!(race)
 
     download =
       case result do

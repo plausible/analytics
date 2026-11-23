@@ -13,19 +13,15 @@ defmodule PlausibleE2E.Case do
     do: [Playwright.Test.parameters([name: "chromium"] ++ Playwright.device("Desktop Chrome"))]
 
   using opts do
+    opts = Keyword.put_new(opts, :parameterize, quote(do: PlausibleE2E.Case.projects()))
+
     quote do
-      use Playwright.Case, [parameterize: PlausibleE2E.Case.projects()] ++ unquote(opts)
+      use Playwright.Case, unquote(opts)
 
       import PlausibleE2E.Fixtures
       import PlausibleE2E.Utils
 
-      alias Playwright.{
-        APIRequest,
-        APIRequestContext,
-        APIResponse,
-        Dialog,
-        Promise
-      }
+      alias Playwright.{APIRequest, Dialog, Promise}
 
       @moduletag :e2e
 
