@@ -201,6 +201,8 @@ defmodule PlausibleWeb.MCP.MCPController do
 
     case Map.fetch(@tools_by_name, name) do
       {:ok, spec} ->
+        Plausible.OpenTelemetry.add_tool_attribute(name)
+
         case call_tool(conn, spec, params) do
           {:ok, value} ->
             {200, success_response(id, %{content: [text_content(value)], isError: false})}
@@ -345,6 +347,7 @@ defmodule PlausibleWeb.MCP.MCPController do
         {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
 
       site ->
+        Plausible.OpenTelemetry.add_site_attributes(site)
         {:ok, Repo.preload(site, [:owners, :completed_imports])}
     end
   end

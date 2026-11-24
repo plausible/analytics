@@ -1009,19 +1009,26 @@ if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file
 end
 
-if otlp_endpoint do
-  config :opentelemetry,
-    resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
-    span_processor: :batch,
-    traces_exporter: :otlp
+cond do
+  otlp_endpoint ->
+    config :opentelemetry,
+      resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
+      span_processor: :batch,
+      traces_exporter: :otlp
 
-  config :opentelemetry_exporter,
-    otlp_protocol: :grpc,
-    otlp_endpoint: otlp_endpoint
-else
-  config :opentelemetry,
-    sampler: :always_off,
-    traces_exporter: :none
+    config :opentelemetry_exporter,
+      otlp_protocol: :grpc,
+      otlp_endpoint: otlp_endpoint
+
+  config_env() in [:test, :ce_test] ->
+    config :opentelemetry,
+      traces_exporter: :none,
+      processors: [{:otel_simple_processor, %{}}]
+
+  true ->
+    config :opentelemetry,
+      sampler: :always_off,
+      traces_exporter: :none
 end
 
 beam_metrics_enabled? = get_bool_from_path_or_env(config_dir, "BEAM_METRICS_ENABLED", false)

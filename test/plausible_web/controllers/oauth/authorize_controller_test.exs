@@ -125,7 +125,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     assert conn |> get_authorize(params) |> html_response(400) =~ "Authorization error"
   end
 
-  test "redirects back with an error for an unsupported response_type", %{
+  test "shows the confirm redirect page with an error for an unsupported response_type", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                    }) = URI.decode_query(qs)
   end
 
-  test "redirects back with an error when PKCE is missing", %{
+  test "shows the confirm redirect page with an error when PKCE is missing", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -160,7 +160,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -190,7 +190,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                      URI.decode_query(qs)
   end
 
-  test "redirects back with an error when resource is omitted", %{
+  test "shows the confirm redirect page with an error when resource is omitted", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -202,7 +202,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                      URI.decode_query(qs)
   end
 
-  test "redirects back with an error when resource is blank", %{
+  test "shows the confirm redirect page with an error when resource is blank", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -223,7 +223,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                      URI.decode_query(qs)
   end
 
-  test "redirects back with invalid_target for an unknown resource", %{
+  test "shows the confirm redirect page with invalid_target for an unknown resource", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -244,7 +244,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                      URI.decode_query(qs)
   end
 
-  test "redirects back with an error for an unsupported scope", %{
+  test "shows the confirm redirect page with an error for an unsupported scope", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -265,7 +265,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
 
     conn = get_authorize(conn, params)
 
-    location = redirected_to(conn, 302)
+    location = conn |> html_response(400) |> return_url()
     [base, qs] = String.split(location, "?")
 
     assert base == valid_params["redirect_uri"]
@@ -480,7 +480,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
                    } = Plausible.Repo.one!(Plausible.OAuth.AuthorizationCode)
   end
 
-  test "denying redirects back with access_denied and issues no code", %{
+  test "denying shows the confirm redirect page with access_denied and issues no code", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -497,17 +497,21 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
         "action" => "deny"
       })
 
-    [base, qs] = String.split(redirected_to(conn, 302), "?")
+    html = html_response(conn, 200)
+    [base, qs] = String.split(return_url(html), "?")
 
     assert base == valid_params["redirect_uri"]
 
     assert_matches ^strict_map(%{"error" => "access_denied", "state" => "xyz-state"}) =
                      URI.decode_query(qs)
 
+    assert text_of_element(html, "[data-test-id=redirect-target-hint]") ==
+             valid_params["redirect_uri"] <> "?…"
+
     assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
-  test "redirects with access_denied if no action in submitted", %{
+  test "shows the confirm redirect page with access_denied if no action is submitted", %{
     conn: conn,
     valid_params: valid_params,
     valid_doc: valid_doc
@@ -523,7 +527,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
         "team" => selected_team(html)
       })
 
-    assert redirected_to(conn, 302) =~ "error=access_denied"
+    assert conn |> html_response(200) |> return_url() =~ "error=access_denied"
     assert Plausible.Repo.aggregate(Plausible.OAuth.AuthorizationCode, :count) == 0
   end
 
@@ -761,4 +765,7 @@ defmodule PlausibleWeb.OAuth.AuthorizeControllerTest do
     do:
       text_of_attr(html, "select#team option[selected]", "value") ||
         text_of_attr(html, "input[name=team]", "value")
+
+  defp return_url(html),
+    do: text_of_attr(html, "a[data-test-id=return-to-client]", "href")
 end
