@@ -226,7 +226,7 @@ does not carry <code class="inline">scope</code>. See <a href="https://modelcont
     </a>
     <h1 class="signature" translate="no">challenge(resource, scope)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_oauth_api.ex#L82" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/authorize_oauth_api.ex#L83" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -248,7 +248,7 @@ does not carry <code class="inline">scope</code>. See <a href="https://modelcont
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">challenge</span><span class="p" data-group-id="2404561012-1">(</span><span class="nc">Plausible.OAuth.ProtectedResources</span><span class="o">.</span><span class="n">mcp</span><span class="p" data-group-id="2404561012-2">(</span><span class="p" data-group-id="2404561012-2">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sites:read:*&quot;</span><span class="p" data-group-id="2404561012-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">challenge</span><span class="p" data-group-id="3869661792-1">(</span><span class="nc">Plausible.OAuth.ProtectedResources</span><span class="o">.</span><span class="n">mcp</span><span class="p" data-group-id="3869661792-2">(</span><span class="p" data-group-id="3869661792-2">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sites:read:*&quot;</span><span class="p" data-group-id="3869661792-1">)</span><span class="w">
 </span><span class="s">~s(Bearer resource_metadata=&quot;http://localhost:8000/.well-known/oauth-protected-resource/mcp&quot;, scope=&quot;sites:read:*&quot;, error=&quot;insufficient_scope&quot;)</span></code></pre>
   </section>
 </section>
