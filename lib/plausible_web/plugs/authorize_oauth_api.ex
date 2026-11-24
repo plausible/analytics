@@ -43,11 +43,15 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
       |> assign(:oauth_scopes, grant.scopes)
     else
       {:error, :missing_token} ->
+        Plausible.OpenTelemetry.add_error_attribute(:missing_api_key)
+
         conn
         |> put_resp_header("www-authenticate", challenge(resource))
         |> H.unauthorized("unauthorized")
 
       {:error, :invalid_token} ->
+        Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
+
         conn
         |> put_resp_header(
           "www-authenticate",
@@ -56,6 +60,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
         |> H.unauthorized("invalid_token")
 
       {:error, :rate_limit, _message} ->
+        Plausible.OpenTelemetry.add_error_attribute(:rate_limit)
+
         H.too_many_requests(conn, "too_many_requests")
     end
   end

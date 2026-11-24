@@ -145,6 +145,32 @@ defmodule PlausibleWeb.APITraceAttributesTest do
 
       refute Map.has_key?(attributes, "plausible.tool")
     end
+
+    @tag :capture_log
+    test "traces the credential and error code on rate-limited requests" do
+      user = new_user(team: [hourly_api_request_limit: 0])
+      token = Plausible.OAuth.Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes = trace_tool_call(token, "list_sites", 429, %{})
+
+      assert attributes["plausible.credential.id"] == grant.id
+      assert attributes["plausible.error.code"] == :rate_limit
+    end
+
+    test "traces the same error code as the Stats API for an invalid query" do
+      user = new_user()
+      site = new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes =
+        trace_tool_call(token, "query_stats", 200, query_params(site, %{"filters" => [["bad"]]}))
+
+      assert attributes["plausible.error.code"] == :failed_schema_validation
+    end
   end
 
   defp trace_tool_call(token, name, status, arguments) do

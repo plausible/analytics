@@ -328,13 +328,21 @@ defmodule PlausibleWeb.MCP.MCPController do
       # rather than by `text_content/1`.
       {:ok, site |> Plausible.Stats.query(query) |> Jason.encode!()}
     else
-      {:error, %QueryError{message: message}} -> {:error, message}
-      {:error, message} -> {:error, message}
+      {:error, %QueryError{code: code, message: message}} ->
+        Plausible.OpenTelemetry.add_error_attribute(code)
+        {:error, message}
+
+      {:error, message} ->
+        {:error, message}
     end
   end
 
   defp validate_arguments(arguments) when is_map(arguments), do: :ok
-  defp validate_arguments(_arguments), do: {:error, "Tool arguments must be an object"}
+
+  defp validate_arguments(_arguments) do
+    Plausible.OpenTelemetry.add_error_attribute(:failed_schema_validation)
+    {:error, "Tool arguments must be an object"}
+  end
 
   # Looks the site up within the grant's team only, the same set list_sites returns.
   defp find_site(conn, domain) when is_binary(domain) do
@@ -344,6 +352,7 @@ defmodule PlausibleWeb.MCP.MCPController do
            domain
          ) do
       nil ->
+        Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
         {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
 
       site ->
@@ -352,13 +361,16 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp find_site(_conn, _domain),
-    do: {:error, "Missing site_id. Use list_sites to see the sites you can query."}
+  defp find_site(_conn, _domain) do
+    Plausible.OpenTelemetry.add_error_attribute(:missing_site_id)
+    {:error, "Missing site_id. Use list_sites to see the sites you can query."}
+  end
 
   defp require_scope(conn, scope) do
     if scope in (conn.assigns[:oauth_scopes] || []) do
       :ok
     else
+      Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
       {:error, :insufficient_scope, scope}
     end
   end
@@ -369,6 +381,8 @@ defmodule PlausibleWeb.MCP.MCPController do
     if role in roles do
       :ok
     else
+      Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
+
       {:error,
        "Your role in this team (#{role}) does not permit this action. It requires one of: " <>
          Enum.map_join(roles, ", ", &to_string/1)}
@@ -382,6 +396,8 @@ defmodule PlausibleWeb.MCP.MCPController do
          not Plausible.Teams.locked?(conn.assigns.current_team) do
       :ok
     else
+      Plausible.OpenTelemetry.add_error_attribute(:site_locked)
+
       {:error,
        "This team is locked due to missing active subscription. In order to use this tool, the team owner should subscribe to a suitable plan."}
     end
