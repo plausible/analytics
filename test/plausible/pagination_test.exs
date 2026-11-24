@@ -56,9 +56,25 @@ defmodule Plausible.PaginationTest do
 
     page_before = page2.metadata.before
 
-    assert ^page1 =
-             Pagination.paginate(q, %{"limit" => 3, "before" => page_before},
-               cursor_fields: [id: :desc]
-             )
+    assert_matches %{entries: ^page1.entries, metadata: %{before: nil, after: ^any(:string)}} =
+                     Pagination.paginate(q, %{"limit" => 3, "before" => page_before},
+                       cursor_fields: [id: :desc]
+                     )
+  end
+
+  test "invalid cursor", %{query: q} do
+    page1 = Pagination.paginate(q, %{"limit" => 3}, cursor_fields: [id: :desc])
+
+    for cursor <- [
+          "foo",
+          page1.metadata.after <> "x",
+          Phoenix.Token.sign(PlausibleWeb.Endpoint, "other", "foo"),
+          ["foo"]
+        ],
+        key <- ["after", "before"] do
+      assert_raise ArgumentError, fn ->
+        Pagination.paginate(q, %{"limit" => 3, key => cursor}, cursor_fields: [id: :desc])
+      end
+    end
   end
 end
