@@ -273,9 +273,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
               email: invitation.team_invitation.email,
               status: "invited"
             })
-
-          {:error, :disposable_email} ->
-            H.bad_request(conn, "Disposable email addresses are not allowed")
         end
       end
     else
