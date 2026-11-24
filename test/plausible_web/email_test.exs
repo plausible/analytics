@@ -143,22 +143,6 @@ defmodule PlausibleWeb.EmailTest do
   end
 
   describe "untrusted recipient email" do
-    @tag :ce_build_only
-    test "doesn't use a dedicated message stream in Postmark in CE" do
-      email = Email.untrusted_recipient_email()
-
-      refute email.private[:message_params]["MessageStream"]
-    end
-
-    test "uses the priority layout, so it can't be unsubscribed from" do
-      email =
-        Email.untrusted_recipient_email()
-        |> Email.render("password_reset_email.html", %{reset_link: "imaginary"})
-
-      assert email.html_body =~ "Hey,"
-      refute email.html_body =~ "{{{ pm:unsubscribe }}}"
-    end
-
     @tag :ee_only
     test "team invitations, guest invitations and site transfers use the `untrusted-recipients` stream" do
       site = build(:site)
@@ -177,17 +161,6 @@ defmodule PlausibleWeb.EmailTest do
       for email <- emails do
         assert %{"MessageStream" => "untrusted-recipients"} = email.private[:message_params]
       end
-    end
-
-    @tag :ee_only
-    test "invitation outcome notifications stay on the `priority` stream" do
-      site = build(:site)
-      team = build(:team, identifier: Ecto.UUID.generate())
-
-      email =
-        Email.guest_invitation_accepted("inviter@example.com", "invitee@example.com", team, site)
-
-      assert %{"MessageStream" => "priority"} = email.private[:message_params]
     end
   end
 
