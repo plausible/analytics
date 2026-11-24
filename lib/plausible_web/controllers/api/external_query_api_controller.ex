@@ -18,7 +18,9 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
         results = Plausible.Stats.query(site, query)
         json(conn, results)
 
-      {:error, %QueryError{message: message}} ->
+      {:error, %QueryError{code: code, message: message}} ->
+        Plausible.OpenTelemetry.add_error_attribute(code)
+
         conn
         |> put_status(400)
         |> json(%{error: message})

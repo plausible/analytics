@@ -62,6 +62,10 @@ defmodule Plausible.OpenTelemetry do
     Tracer.set_attribute("plausible.tool", tool)
   end
 
+  def add_error_attribute(code) do
+    Tracer.set_attribute("plausible.error.code", code)
+  end
+
   def add_credential_attributes(credential) do
     {type, label} = credential_type_and_label(credential)
 

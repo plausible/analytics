@@ -311,6 +311,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :unavailable_for_consolidated_view}) do
+    Plausible.OpenTelemetry.add_error_attribute(:unavailable_for_consolidated_view)
+
     H.bad_request(
       conn,
       "This operation is unavailable for a consolidated view"
@@ -318,6 +320,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :missing_api_key}) do
+    Plausible.OpenTelemetry.add_error_attribute(:missing_api_key)
+
     H.unauthorized(
       conn,
       "Missing API key. Please use a valid Plausible API key as a Bearer Token."
@@ -325,6 +329,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, "stats:read:" <> _, {:error, :invalid_api_key}) do
+    Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
+
     H.unauthorized(
       conn,
       "Invalid API key or site ID. Please make sure you're using a valid API key with access to the site you've requested."
@@ -332,6 +338,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :invalid_api_key}) do
+    Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
+
     H.unauthorized(
       conn,
       "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
@@ -339,6 +347,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :rate_limit, message}) do
+    Plausible.OpenTelemetry.add_error_attribute(:rate_limit)
+
     H.too_many_requests(
       conn,
       message
@@ -346,6 +356,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :missing_site_id}) do
+    Plausible.OpenTelemetry.add_error_attribute(:missing_site_id)
+
     H.bad_request(
       conn,
       "Missing site ID. Please provide the required site_id parameter with your request."
@@ -353,6 +365,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, scope, {:error, :upgrade_required}) do
+    Plausible.OpenTelemetry.add_error_attribute(:upgrade_required)
+
     feature =
       case scope do
         "sites:provision:" <> _ ->
@@ -366,6 +380,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp send_error(conn, _, {:error, :site_locked}) do
+    Plausible.OpenTelemetry.add_error_attribute(:site_locked)
+
     H.payment_required(
       conn,
       "This Plausible site is locked due to missing active subscription. In order to access it, the site owner should subscribe to a suitable plan"
