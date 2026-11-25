@@ -22,22 +22,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Read .tool-versions
-        uses: marocchino/tool-versions-action@4219f2e6bfdb4cce482b78f71ad9663e64f4d247 # v2.0.0
+        uses: marocchino/tool-versions-action@v2.0.0
         id: versions
 
       - name: Set up Elixir
-        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        uses: erlef/setup-beam@v1.24.1
         with:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
 
       - name: Restore Elixir dependencies cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache@v6.1.0
         with:
           path: |
             deps
@@ -53,7 +53,7 @@ jobs:
         run: mix docs
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        uses: peaceiris/actions-gh-pages@v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./doc
