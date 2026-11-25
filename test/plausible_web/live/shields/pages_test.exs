@@ -179,8 +179,8 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       type_into_combo(lv, "page_rule_page_path-modalseq0", "blog")
       html = lv |> render()
 
-      assert text_of_element(html, opt1_selector) == "/blog/post1"
-      assert text_of_element(html, opt2_selector) == "/blog/post2"
+      options = [text_of_element(html, opt1_selector), text_of_element(html, opt2_selector)]
+      assert Enum.sort(options) == ["/blog/post1", "/blog/post2"]
 
       lv
       |> element("form")

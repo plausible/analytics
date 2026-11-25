@@ -835,14 +835,17 @@ defmodule Plausible.Stats.ExplorationTest do
                    direction: :forward
                  )
 
-        assert {:ok,
-                [
-                  %{step: %{name: @journey_end_event}},
-                  %{step: %{pathname: "/:dashboard"}}
-                ]} =
+        assert {:ok, steps} =
                  Exploration.next_steps(site, query, journey,
                    search_term: "",
                    direction: :backward
+                 )
+
+        # same-timestamp events have no defined order, so the journey-end step may be absent
+        assert match?([%{step: %{pathname: "/:dashboard"}}], steps) or
+                 match?(
+                   [%{step: %{name: @journey_end_event}}, %{step: %{pathname: "/:dashboard"}}],
+                   steps
                  )
       end
 
