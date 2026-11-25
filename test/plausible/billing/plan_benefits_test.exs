@@ -13,7 +13,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Google Analytics import",
                "Goals and custom events",
                "Saved Segments",
-               "Annotations"
+               "Annotations",
+               "AI integration (300 MCP calls/hr)"
              ]
     end
   end
@@ -47,6 +48,21 @@ defmodule Plausible.Billing.PlanBenefitsTest do
              ]
     end
 
+    test "returns v4 Growth plan benefits (with empty Starter benefits)" do
+      assert PlanBenefits.for_growth(get_10k_plan(4, :growth), []) == [
+               "Up to 10 sites",
+               "Up to 3 team members",
+               "Team Management",
+               "No retention limit",
+               "Saved Segments",
+               "Annotations",
+               "AI integration (300 MCP calls/hr)",
+               "Goals and custom events",
+               "Shared Links",
+               "Embedded Dashboards"
+             ]
+    end
+
     for generation <- [1, 2, 3] do
       test "returns v#{generation} Growth plan benefits (with empty Starter benefits)" do
         growth_plan = get_10k_plan(unquote(generation), :growth)
@@ -60,7 +76,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                  "Annotations",
                  "Goals and custom events",
                  "Custom Properties",
-                 "Stats API (600 requests per hour)",
+                 "Stats API",
+                 "600 API/MCP calls/hr",
                  "Data Studio Connector",
                  "Shared Links",
                  "Embedded Dashboards"
@@ -80,7 +97,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Up to 10 sites",
                "Up to 10 team members",
                "Custom Properties",
-               "Stats API (600 requests per hour)",
+               "Stats API",
+               "600 API/MCP calls/hr",
                "Data Studio Connector",
                "Ecommerce revenue attribution",
                "Funnels and user journeys",
@@ -100,7 +118,8 @@ defmodule Plausible.Billing.PlanBenefitsTest do
                "Custom Properties",
                "Ecommerce revenue attribution",
                "Funnels and user journeys",
-               "Stats API (600 requests per hour)",
+               "Stats API",
+               "600 API/MCP calls/hr",
                "Data Studio Connector",
                "Shared Segments",
                "Shared Annotations",
@@ -144,7 +163,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
       assert PlanBenefits.for_enterprise(v5_business_benefits) == [
                "Everything in Business",
                "10+ sites and team members",
-               "600+ Stats API requests per hour",
+               "600+ API/MCP calls/hr",
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
@@ -164,7 +183,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
       assert PlanBenefits.for_enterprise(v4_business_benefits) == [
                "Everything in Business",
                "50+ sites and 10+ team members",
-               "600+ Stats API requests per hour",
+               "600+ API/MCP calls/hr",
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
@@ -184,7 +203,7 @@ defmodule Plausible.Billing.PlanBenefitsTest do
       assert PlanBenefits.for_enterprise(v3_business_benefits) == [
                "Everything in Business",
                "50+ sites",
-               "600+ Stats API requests per hour",
+               "600+ API/MCP calls/hr",
                "Sites API",
                "Single Sign-On (SSO)",
                "Managed Proxy",
