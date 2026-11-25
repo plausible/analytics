@@ -256,17 +256,20 @@ defmodule PlausibleWeb.SettingsController do
     )
   end
 
-  def revoke_connected_app(conn, %{"id" => id}) do
+  def revoke_connected_app(conn, %{"id" => id} = params) do
+    query = Map.take(params, ["page", "include_revoked"])
+    redirect_path = ~p"/settings/connected-apps?#{query}" <> "#connected-apps"
+
     case Plausible.OAuth.revoke_user_grant(conn.assigns.current_user, id) do
       :ok ->
         conn
         |> put_flash(:success, "Access revoked successfully")
-        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+        |> redirect(to: redirect_path)
 
       {:error, :not_found} ->
         conn
         |> put_flash(:error, "Could not find connected app to revoke")
-        |> redirect(to: ~p"/settings/connected-apps#connected-apps")
+        |> redirect(to: redirect_path)
     end
   end
 
