@@ -315,7 +315,7 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
         "id" => "pri_other",
         "product_id" => "pro_other",
         "unit_price" => %{"amount" => "9000", "currency_code" => "USD"},
-        "billing_cycle" => %{"interval" => "month", "frequency" => 1}
+        "billing_cycle" => %{"interval" => "year", "frequency" => 1}
       }
 
       assert {:ok, :applied} =
@@ -323,7 +323,7 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
                  items: [item(%{"price" => price})],
                  next_billed_at: "2027-11-10T10:00:00.000000Z",
                  current_billing_period: %{
-                   "starts_at" => "2026-12-10T10:00:00.000000Z",
+                   "starts_at" => "2026-11-10T10:00:00.000000Z",
                    "ends_at" => "2027-11-10T10:00:00.000000Z"
                  }
                )
@@ -333,7 +333,8 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       assert subscription.billing_product_id == "pro_other"
       assert subscription.next_bill_amount == "90.00"
       assert subscription.next_bill_date == ~D[2027-11-10]
-      assert subscription.last_bill_date == ~D[2026-12-10]
+      assert subscription.last_bill_date == ~D[2026-11-10]
+      assert Plans.subscription_interval(subscription) == "yearly"
     end
 
     test "moves accept_traffic_until along with the next bill date", %{team: team} do
