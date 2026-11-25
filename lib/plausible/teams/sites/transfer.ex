@@ -59,13 +59,12 @@ defmodule Plausible.Teams.Sites.Transfer do
   """
   @spec initiate(Site.t(), Auth.User.t(), String.t(), NaiveDateTime.t()) ::
           {:ok, Teams.SiteTransfer.t()}
-          | {:error, Ecto.Changeset.t() | :permission_denied | :disposable_email}
+          | {:error, Ecto.Changeset.t() | :permission_denied}
   def initiate(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
     site = Repo.preload(site, :team)
 
     Repo.transaction(fn ->
       with :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, initiator),
-           :ok <- Teams.Invitations.ensure_not_disposable_email(invitee_email),
            {:ok, site_transfer} <-
              create_site_transfer(site, initiator, invitee_email, now) do
         invitee = Auth.find_user_by(email: invitee_email)

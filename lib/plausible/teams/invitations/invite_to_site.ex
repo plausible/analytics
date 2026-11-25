@@ -12,7 +12,6 @@ defmodule Plausible.Teams.Invitations.InviteToSite do
   @type invite_error() ::
           Ecto.Changeset.t()
           | :already_a_member
-          | :disposable_email
           | {:over_limit, non_neg_integer()}
           | :permission_denied
 
@@ -35,7 +34,6 @@ defmodule Plausible.Teams.Invitations.InviteToSite do
   defp do_invite(site, inviter, invitee_email, role) do
     with site <- Repo.preload(site, [:owners, :team]),
          :ok <- Teams.TeamRolePermissions.ensure_can_manage_team(site.team, inviter),
-         :ok <- Teams.Invitations.ensure_not_disposable_email(invitee_email),
          :ok <- Teams.Invitations.check_team_member_limit(site.team, role, invitee_email),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Teams.Invitations.ensure_new_membership(site, invitee, role),
