@@ -7,6 +7,7 @@ if config_env() in [:dev, :test, :load] do
 end
 
 if config_env() == :dev do
+  # git-ignored env var overrides, useful for temporarily storing e.g. dev API keys
   Envy.load([".envrc.local"])
 end
 
