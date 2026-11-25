@@ -35,11 +35,7 @@ defmodule PlausibleWeb.Api.RateLimit do
     end
   end
 
-  @doc """
-  Checks a request against the given hourly limit.
-  """
-  @spec check_hourly(String.t(), pos_integer()) :: :ok | {:error, :rate_limit_hourly}
-  def check_hourly(limit_key, hourly_limit) do
+  defp check_hourly(limit_key, hourly_limit) do
     case Plausible.RateLimit.check_rate(limit_key, to_timeout(hour: 1), hourly_limit) do
       {:allow, _} -> :ok
       {:deny, _} -> {:error, :rate_limit_hourly}
