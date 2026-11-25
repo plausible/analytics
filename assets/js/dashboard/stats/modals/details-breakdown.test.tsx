@@ -39,10 +39,13 @@ function buildResponse(
   }
 }
 
-function buildFullPage(offset: number) {
+function buildFullPage(offset: number, dimensionCount = 1) {
   return Array.from({ length: PAGINATION_LIMIT }, (_, i) => {
     return {
-      dimensions: [`/page-${offset + i}`],
+      dimensions: [
+        ...Array(dimensionCount - 1).fill(domain),
+        `/page-${offset + i}`
+      ],
       metrics: PAGES_DETAILED_METRICS.map((_metric) => 1)
     }
   })
@@ -63,7 +66,10 @@ function setupQueryHandler({ delay = false } = {}) {
         )
       }
 
-      const results = buildFullPage(body.pagination?.offset || 0)
+      const results = buildFullPage(
+        body.pagination?.offset || 0,
+        body.dimensions.length
+      )
       return {
         status: 200,
         ok: true,
@@ -242,6 +248,33 @@ test('clicking a column header cycles sort direction', async () => {
       ['event:page', 'asc']
     ]
   })
+})
+
+test('sorting Top pages by URL does not change the Entry pages by URL sort', async () => {
+  localStorage.clear()
+  const { requestBodies } = setupQueryHandler({ delay: true })
+
+  const renderDetails = (breakdownReportKey: BreakdownReportKey) =>
+    render(
+      <TestContextProviders siteOptions={{ domain }}>
+        <PagesDetails breakdownReportKey={breakdownReportKey} />
+      </TestContextProviders>
+    )
+
+  const topPages = renderDetails(BreakdownReportKey.pagesWithHostname)
+  await settle()
+  act(() => fireEvent.click(screen.getByRole('button', { name: /visitors/i })))
+  await expectAndAwaitLoading()
+  expect(requestBodies.at(-1)!.order_by![0]).toEqual(['visitors', 'asc'])
+  topPages.unmount()
+
+  renderDetails(BreakdownReportKey.entryPagesWithHostname)
+  await settle()
+  expect(requestBodies.at(-1)!.dimensions).toEqual([
+    'visit:entry_page_hostname',
+    'visit:entry_page'
+  ])
+  expect(requestBodies.at(-1)!.order_by![0]).toEqual(['visitors', 'desc'])
 })
 
 test('toggling sort back to the original direction gets results from cache', async () => {
