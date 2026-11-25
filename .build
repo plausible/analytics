@@ -17,7 +17,6 @@ Plausible.Audit.LiveContext.html
 Plausible.Audit.Repo.html
 Plausible.Audit.html
 Plausible.Auth.ApiKey.html
-Plausible.Auth.DisposableEmail.html
 Plausible.Auth.EmailActivationCode.html
 Plausible.Auth.EmailVerification.html
 Plausible.Auth.Password.html
@@ -643,8 +642,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-37A8050E.js
-dist/sidebar_items-64037308.js
+dist/search_data-67A1E797.js
+dist/sidebar_items-4C731DED.js
 index.html
 readme.html
 search.html
