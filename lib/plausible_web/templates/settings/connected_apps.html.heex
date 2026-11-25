@@ -52,57 +52,107 @@
     <% else %>
       <.table rows={@grants.entries}>
         <:thead>
-          <.th>Application</.th>
+          <.th hide_on_mobile>Application</.th>
           <.th hide_on_mobile>Team</.th>
           <.th hide_on_mobile>Connected</.th>
           <.th hide_on_mobile><span class="whitespace-nowrap">Last used</span></.th>
-          <.th invisible>Actions</.th>
+          <.th invisible hide_on_mobile>Actions</.th>
         </:thead>
 
         <:tbody :let={grant}>
           <% expired? =
             NaiveDateTime.before?(grant.refresh_token_expires_at, NaiveDateTime.utc_now()) %>
           <.td max_width="max-w-0" class="w-full" title={grant.client_id}>
-            <div class="flex items-center gap-x-3">
-              <PlausibleWeb.Live.Sites.favicon domain={URI.parse(grant.client_id).host} />
-              <div class="min-w-0">
-                <div class="flex items-center gap-x-1">
-                  <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
-                  <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
-                    Revoked
-                  </.pill>
-                  <.pill
-                    :if={expired? and is_nil(grant.revoked_at)}
-                    color={:gray}
-                    class="shrink-0 !py-0.5 !px-1.5"
+            <div x-data="{ open: false }">
+              <div class="flex items-center gap-x-3 min-h-9" x-on:click="open = !open">
+                <PlausibleWeb.Live.Sites.favicon domain={URI.parse(grant.client_id).host} />
+                <div data-testid="name-cell" class="min-w-0 flex-1">
+                  <div class="flex items-center gap-x-1">
+                    <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
+                    <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
+                      Revoked
+                    </.pill>
+                    <.pill
+                      :if={expired? and is_nil(grant.revoked_at)}
+                      color={:gray}
+                      class="shrink-0 !py-0.5 !px-1.5"
+                    >
+                      Expired
+                    </.pill>
+                  </div>
+                  <span
+                    :if={grant.client_name}
+                    class="block truncate text-xs text-gray-500 dark:text-gray-400"
                   >
-                    Expired
-                  </.pill>
+                    {grant.client_id}
+                  </span>
                 </div>
-                <span
-                  :if={grant.client_name}
-                  class="block truncate text-xs text-gray-500 dark:text-gray-400"
+                <.button
+                  theme="ghost"
+                  size="sm"
+                  icon?={true}
+                  class="md:hidden shrink-0"
+                  aria-label={"Show details for #{Plausible.OAuth.Grant.label(grant)}"}
+                  x-bind:aria-expanded="open"
                 >
-                  {grant.client_id}
-                </span>
+                  <Heroicons.chevron_down x-show="!open" class="size-4" />
+                  <Heroicons.chevron_up x-show="open" x-cloak class="size-4" />
+                </.button>
+              </div>
+              <div
+                data-testid="mobile-details"
+                x-show="open"
+                x-cloak
+                class="md:hidden mt-3 flex flex-col gap-3 text-xs whitespace-normal"
+              >
+                <dl class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
+                  <dt class="text-gray-500 dark:text-gray-400">Team:</dt>
+                  <dd class="break-words min-w-0">{Plausible.Teams.name(grant.team)}</dd>
+                  <dt class="text-gray-500 dark:text-gray-400">Connected:</dt>
+                  <dd>{PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}</dd>
+                  <dt class="text-gray-500 dark:text-gray-400">Last used:</dt>
+                  <dd>
+                    {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(
+                      grant.last_used_at
+                    )}
+                  </dd>
+                </dl>
+                <.button
+                  :if={is_nil(grant.revoked_at) and not expired?}
+                  type="submit"
+                  form={"revoke-grant-#{grant.id}"}
+                  theme="danger"
+                  size="sm"
+                  class="self-start"
+                  data-confirm={"Are you sure you want to revoke access for #{Plausible.OAuth.Grant.label(grant)}? The application will need to be authorized again to reconnect."}
+                >
+                  Revoke
+                </.button>
               </div>
             </div>
           </.td>
-          <.td hide_on_mobile text={Plausible.Teams.name(grant.team)} max_width="max-w-40" />
           <.td
             hide_on_mobile
+            data-testid="team-cell"
+            text={Plausible.Teams.name(grant.team)}
+            max_width="max-w-40"
+          />
+          <.td
+            hide_on_mobile
+            data-testid="connected-cell"
             title={Calendar.strftime(grant.inserted_at, "%Y-%m-%d %H:%M:%S UTC")}
           >
             {PlausibleWeb.TextHelpers.format_date(grant.inserted_at)}
           </.td>
-          <.td hide_on_mobile>
+          <.td hide_on_mobile data-testid="last-used-cell">
             {PlausibleWeb.TextHelpers.humanize_last_used_with_5_minute_precision(
               grant.last_used_at
             )}
           </.td>
-          <.td actions>
+          <.td actions hide_on_mobile>
             <.form
               :if={is_nil(grant.revoked_at) and not expired?}
+              id={"revoke-grant-#{grant.id}"}
               for={%{}}
               action={~p"/settings/connected-apps/#{grant.id}"}
               method="delete"

@@ -138,21 +138,20 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       refute html =~ other_user_grant.client_name
 
       assert table_rows(html) == [
-               {[
-                  [named_grant.client_name, named_grant.client_id],
-                  "My personal sites",
-                  TextHelpers.format_date(yesterday),
-                  "About 5 hours ago",
-                  # delete cell has no text
-                  ""
-                ], ~p"/settings/connected-apps/#{named_grant.id}"},
-               {[
-                  named_grant.client_id,
-                  "My personal sites",
-                  TextHelpers.format_date(now),
-                  "Never",
-                  ""
-                ], ~p"/settings/connected-apps/#{unnamed_grant.id}"}
+               %{
+                 name: "#{named_grant.client_name} #{named_grant.client_id}",
+                 team: "My personal sites",
+                 connected: TextHelpers.format_date(yesterday),
+                 last_used: "About 5 hours ago",
+                 revoke_path: ~p"/settings/connected-apps/#{named_grant.id}"
+               },
+               %{
+                 name: unnamed_grant.client_id,
+                 team: "My personal sites",
+                 connected: TextHelpers.format_date(now),
+                 last_used: "Never",
+                 revoke_path: ~p"/settings/connected-apps/#{unnamed_grant.id}"
+               }
              ]
     end
 
@@ -184,9 +183,9 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       assert html = html_response(conn, 200)
 
       assert [
-               {[[live | _] | _], live_path},
-               {[[revoked | _] | _], nil},
-               {[[expired | _] | _], nil}
+               %{name: live, revoke_path: live_path},
+               %{name: revoked, revoke_path: nil},
+               %{name: expired, revoke_path: nil}
              ] = table_rows(html)
 
       assert live =~ "live grant"
@@ -203,7 +202,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
       now = NaiveDateTime.utc_now(:second)
 
       insert(:oauth_grant,
-        client_name: "revoked and expired grant",
+        client_name: "Claude",
         user: user,
         team: team,
         revoked_at: NaiveDateTime.add(now, -2, :day),
@@ -212,9 +211,35 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
 
       conn = get(conn, ~p"/settings/connected-apps?include_revoked=true")
 
-      assert [{[labels | _], nil}] = conn |> html_response(200) |> table_rows()
-      assert "Revoked" in labels
-      refute "Expired" in labels
+      assert [%{name: name, revoke_path: nil}] = conn |> html_response(200) |> table_rows()
+      assert name =~ "Revoked"
+      refute name =~ "Expired"
+    end
+
+    test "shows the details of each grant for mobile", %{conn: conn, user: user, team: team} do
+      now = NaiveDateTime.utc_now(:second)
+
+      insert(:oauth_grant,
+        user: user,
+        team: team,
+        inserted_at: now,
+        last_used_at: NaiveDateTime.add(now, -5, :hour)
+      )
+
+      container =
+        conn
+        |> get(~p"/settings/connected-apps")
+        |> html_response(200)
+        |> find(~s([data-testid="mobile-details"]))
+
+      details_text = text(container)
+
+      assert String.contains?(details_text, "Team: My personal sites")
+      assert String.contains?(details_text, "Connected: #{TextHelpers.format_date(now)}")
+      assert String.contains?(details_text, "Last used: About 5 hours ago")
+      assert String.contains?(details_text, "Revoke")
+
+      assert "md:hidden" in String.split(text_of_attr(container, "class"))
     end
 
     test "shows the app's favicon, taken from its client_id host", %{
@@ -244,8 +269,8 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
 
       conn = get(conn, ~p"/settings/connected-apps?page=2")
 
-      assert [{[[name | _] | _], _}] = conn |> html_response(200) |> table_rows()
-      assert name == "grant #{page_size}"
+      assert [%{name: name}] = conn |> html_response(200) |> table_rows()
+      assert name =~ "grant #{page_size}"
     end
 
     test "the revoke form includes hidden inputs for page and include_revoked", %{
@@ -282,25 +307,17 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
     end
   end
 
-  # Each row's cells and the path its revoke form submits to. A cell with
-  # several lines (spans) is a list of their texts.
   defp table_rows(html) do
     html
     |> find("tbody tr")
     |> Enum.map(fn row ->
-      revoke_path = text_of_attr(row, "form", "action")
-      cells = row |> find("td") |> Enum.map(&cell_contents/1)
-      {cells, revoke_path}
+      %{
+        name: text_of_element(row, ~s([data-testid="name-cell"])),
+        team: text_of_element(row, ~s([data-testid="team-cell"])),
+        connected: text_of_element(row, ~s([data-testid="connected-cell"])),
+        last_used: text_of_element(row, ~s([data-testid="last-used-cell"])),
+        revoke_path: text_of_attr(row, "form", "action")
+      }
     end)
-  end
-
-  defp cell_contents(cell) do
-    spans = cell |> find("span") |> Enum.to_list()
-
-    if length(spans) > 1 do
-      Enum.map(spans, &text/1)
-    else
-      text(cell)
-    end
   end
 end

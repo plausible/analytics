@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:icon?, :boolean, default: false)
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
-  attr(:rest, :global, include: ~w(name))
+  attr(:rest, :global, include: ~w(name form))
 
   slot(:inner_block)
 
