@@ -146,7 +146,7 @@ defmodule PlausibleWeb.SettingsController.ConnectedAppsTest do
                  revoke_path: ~p"/settings/connected-apps/#{named_grant.id}"
                },
                %{
-                 name: unnamed_grant.client_id,
+                 name: "Unnamed app #{unnamed_grant.client_id}",
                  team: "My personal sites",
                  connected: TextHelpers.format_date(now),
                  last_used: "Never",

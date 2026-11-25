@@ -68,7 +68,7 @@
                 <PlausibleWeb.Live.Sites.favicon domain={URI.parse(grant.client_id).host} />
                 <div data-testid="name-cell" class="min-w-0 flex-1">
                   <div class="flex items-center gap-x-1">
-                    <span class="truncate font-medium">{Plausible.OAuth.Grant.label(grant)}</span>
+                    <span class="truncate font-medium">{grant.client_name || "Unnamed app"}</span>
                     <.pill :if={grant.revoked_at} color={:red} class="shrink-0 !py-0.5 !px-1.5">
                       Revoked
                     </.pill>
@@ -80,10 +80,7 @@
                       Expired
                     </.pill>
                   </div>
-                  <span
-                    :if={grant.client_name}
-                    class="block truncate text-xs text-gray-500 dark:text-gray-400"
-                  >
+                  <span class="block truncate text-xs text-gray-500 dark:text-gray-400">
                     {grant.client_id}
                   </span>
                 </div>
