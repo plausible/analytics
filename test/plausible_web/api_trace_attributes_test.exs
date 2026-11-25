@@ -48,6 +48,34 @@ defmodule PlausibleWeb.APITraceAttributesTest do
       refute Map.has_key?(attributes, "plausible.team.id")
     end
 
+    test "traces the error code of a site the API key cannot access" do
+      user = new_user()
+      api_key = insert(:api_key, user: user, team: team_of(user))
+
+      attributes = trace_query(api_key, new_site(), 401)
+
+      assert attributes["plausible.error.code"] == :site_not_found
+    end
+
+    test "traces the error code of a site that does not exist" do
+      user = new_user()
+      api_key = insert(:api_key, user: user, team: team_of(user))
+
+      attributes = trace_query(api_key, %{domain: "missing.example.com"}, 401)
+
+      assert attributes["plausible.error.code"] == :site_not_found
+    end
+
+    test "traces the error code of an invalid query" do
+      user = new_user()
+      site = new_site(owner: user)
+      api_key = insert(:api_key, user: user, team: team_of(user))
+
+      attributes = trace_query(api_key, site, 400, %{"filters" => [["bad"]]})
+
+      assert attributes["plausible.error.code"] == :failed_schema_validation
+    end
+
     @tag :capture_log
     test "traces the credential on rate-limited requests" do
       user = new_user(team: [hourly_api_request_limit: 0])
@@ -58,6 +86,7 @@ defmodule PlausibleWeb.APITraceAttributesTest do
 
       assert attributes["plausible.user.id"] == user.id
       assert attributes["plausible.credential.id"] == api_key.id
+      assert attributes["plausible.error.code"] == :rate_limit
     end
   end
 
@@ -81,6 +110,21 @@ defmodule PlausibleWeb.APITraceAttributesTest do
         assert attributes["plausible.credential.id"] == api_key.id
         assert attributes["plausible.credential.label"] == api_key.key_prefix
         assert attributes["plausible.tool"] == "list_sites"
+      end
+
+      test "traces the error code of an API key without the required scope" do
+        user = new_user()
+        api_key = insert(:api_key, user: user, team: team_of(user), scopes: ["stats:read:*"])
+
+        attributes =
+          trace(fn ->
+            build_conn()
+            |> put_req_header("authorization", "Bearer #{api_key.key}")
+            |> post("/api/v1/sites", %{"domain" => "new.example.com"})
+            |> json_response(401)
+          end)
+
+        assert attributes["plausible.error.code"] == :insufficient_scope
       end
     end
   end
@@ -125,6 +169,43 @@ defmodule PlausibleWeb.APITraceAttributesTest do
 
       refute Map.has_key?(attributes, "plausible.tool")
     end
+
+    @tag :capture_log
+    test "traces the credential and error code on rate-limited requests" do
+      user = new_user(team: [hourly_api_request_limit: 0])
+      token = Plausible.OAuth.Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes = trace_tool_call(token, "list_sites", 429, %{})
+
+      assert attributes["plausible.credential.id"] == grant.id
+      assert attributes["plausible.error.code"] == :rate_limit
+    end
+
+    test "traces the same error code as the Stats API for an invalid query" do
+      user = new_user()
+      site = new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes =
+        trace_tool_call(token, "query_stats", 200, query_params(site, %{"filters" => [["bad"]]}))
+
+      assert attributes["plausible.error.code"] == :failed_schema_validation
+    end
+
+    test "traces the same error code as the Stats API for a site the grant cannot access" do
+      user = new_user()
+      new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes = trace_tool_call(token, "query_stats", 200, query_params(new_site(), %{}))
+
+      assert attributes["plausible.error.code"] == :site_not_found
+    end
   end
 
   defp trace_tool_call(token, name, status, arguments) do
@@ -151,17 +232,20 @@ defmodule PlausibleWeb.APITraceAttributesTest do
     end)
   end
 
-  defp trace_query(api_key, site, status) do
+  defp trace_query(api_key, site, status, params \\ %{}) do
     trace(fn ->
       build_conn()
       |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> post("/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all"
-      })
+      |> post("/api/v2/query", query_params(site, params))
       |> json_response(status)
     end)
+  end
+
+  defp query_params(site, params) do
+    Map.merge(
+      %{"site_id" => site.domain, "metrics" => ["visitors"], "date_range" => "all"},
+      params
+    )
   end
 
   defp trace(request) do

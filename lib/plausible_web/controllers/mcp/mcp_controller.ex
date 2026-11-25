@@ -208,14 +208,15 @@ defmodule PlausibleWeb.MCP.MCPController do
             {200, success_response(id, %{content: [text_content(value)], isError: false})}
 
           {:error, :insufficient_scope, scope} ->
-            {403, %{error: "insufficient_scope"},
-             [
-               {"www-authenticate", AuthorizeOAuthAPI.challenge(@resource, scope)}
-             ]}
+            Plausible.OpenTelemetry.add_error_attribute(:insufficient_scope)
 
-          # A role is not something re-authorizing can change, so this stays a
-          # tool error: the user has to ask an admin, and the model should say so.
-          {:error, message} ->
+            {403, %{error: "insufficient_scope"},
+             [{"www-authenticate", AuthorizeOAuthAPI.challenge(@resource, scope)}]}
+
+          # Re-authorizing cannot fix these errors, so they stay tool errors
+          # that the model can relay to the user.
+          {:error, code, message} ->
+            Plausible.OpenTelemetry.add_error_attribute(code)
             {200, success_response(id, %{content: [text_content(message)], isError: true})}
         end
 
@@ -328,13 +329,15 @@ defmodule PlausibleWeb.MCP.MCPController do
       # rather than by `text_content/1`.
       {:ok, site |> Plausible.Stats.query(query) |> Jason.encode!()}
     else
-      {:error, %QueryError{message: message}} -> {:error, message}
-      {:error, message} -> {:error, message}
+      {:error, %QueryError{code: code, message: message}} -> {:error, code, message}
+      {:error, _code, _message} = error -> error
     end
   end
 
   defp validate_arguments(arguments) when is_map(arguments), do: :ok
-  defp validate_arguments(_arguments), do: {:error, "Tool arguments must be an object"}
+
+  defp validate_arguments(_arguments),
+    do: {:error, :failed_schema_validation, "Tool arguments must be an object"}
 
   # Looks the site up within the grant's team only, the same set list_sites returns.
   defp find_site(conn, domain) when is_binary(domain) do
@@ -344,7 +347,8 @@ defmodule PlausibleWeb.MCP.MCPController do
            domain
          ) do
       nil ->
-        {:error, "Site #{domain} not found. Use list_sites to see the sites you can query."}
+        {:error, :site_not_found,
+         "Site #{domain} not found. Use list_sites to see the sites you can query."}
 
       site ->
         Plausible.OpenTelemetry.add_site_attributes(site)
@@ -352,8 +356,9 @@ defmodule PlausibleWeb.MCP.MCPController do
     end
   end
 
-  defp find_site(_conn, _domain),
-    do: {:error, "Missing site_id. Use list_sites to see the sites you can query."}
+  defp find_site(_conn, _domain) do
+    {:error, :missing_site_id, "Missing site_id. Use list_sites to see the sites you can query."}
+  end
 
   defp require_scope(conn, scope) do
     if scope in (conn.assigns[:oauth_scopes] || []) do
@@ -369,20 +374,18 @@ defmodule PlausibleWeb.MCP.MCPController do
     if role in roles do
       :ok
     else
-      {:error,
+      {:error, :insufficient_role,
        "Your role in this team (#{role}) does not permit this action. It requires one of: " <>
          Enum.map_join(roles, ", ", &to_string/1)}
     end
   end
 
-  # Like a role, a lock is not something re-authorizing can change,
-  # so it is a tool error naming what the team has to do.
   defp maybe_require_unlocked_team(conn, spec) do
     if Map.get(spec, :can_be_used_with_locked_team?, false) or
          not Plausible.Teams.locked?(conn.assigns.current_team) do
       :ok
     else
-      {:error,
+      {:error, :site_locked,
        "This team is locked due to missing active subscription. In order to use this tool, the team owner should subscribe to a suitable plan."}
     end
   end
