@@ -66,12 +66,27 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
          Plausible.OpenTelemetry.add_credential_attributes(api_key),
-         :ok <- RateLimit.check_rate_limit(limit_key, hourly_limit) do
+         :ok <- check_rate_limit(limit_key, hourly_limit) do
       conn
       |> assign(:current_credential, api_key)
       |> authorize(api_key, requested_scope)
     else
       error -> send_error(conn, requested_scope, error)
+    end
+  end
+
+  defp check_rate_limit(limit_key, hourly_limit) do
+    case RateLimit.check_burst_and_hourly(limit_key, hourly_limit) do
+      :ok ->
+        :ok
+
+      {:error, :rate_limit_hourly} ->
+        {:error, :rate_limit_hourly,
+         "Too many API requests. The limit is #{hourly_limit} per hour. Please contact us to request more capacity."}
+
+      {:error, :rate_limit_burst} ->
+        {:error, :rate_limit_burst,
+         "Too many API requests in a short period of time. The limit is #{RateLimit.burst_request_limit()} per #{RateLimit.burst_period_seconds()} seconds. Please throttle your requests."}
     end
   end
 
@@ -346,7 +361,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     )
   end
 
-  defp render_error(conn, _, {:error, :rate_limit, message}) do
+  defp render_error(conn, _, {:error, code, message})
+       when code in [:rate_limit_hourly, :rate_limit_burst] do
     H.too_many_requests(
       conn,
       message

@@ -86,7 +86,24 @@ defmodule PlausibleWeb.APITraceAttributesTest do
 
       assert attributes["plausible.user.id"] == user.id
       assert attributes["plausible.credential.id"] == api_key.id
-      assert attributes["plausible.error.code"] == :rate_limit
+      assert attributes["plausible.error.code"] == :rate_limit_hourly
+    end
+
+    @tag :capture_log
+    test "traces the error code on burst-limited requests" do
+      patch_env(PlausibleWeb.Api.RateLimit,
+        legacy_per_user_hourly_request_limit: 600,
+        burst_request_limit: 0,
+        burst_period_seconds: 10
+      )
+
+      user = new_user()
+      site = new_site(owner: user)
+      api_key = insert(:api_key, user: user, team: team_of(user))
+
+      attributes = trace_query(api_key, site, 429)
+
+      assert attributes["plausible.error.code"] == :rate_limit_burst
     end
   end
 
@@ -178,10 +195,53 @@ defmodule PlausibleWeb.APITraceAttributesTest do
       grant =
         insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
 
-      attributes = trace_tool_call(token, "list_sites", 429, %{})
+      attributes = trace_tool_call(token, "list_sites", 200, %{})
 
       assert attributes["plausible.credential.id"] == grant.id
-      assert attributes["plausible.error.code"] == :rate_limit
+      assert attributes["plausible.error.code"] == :rate_limit_hourly
+    end
+
+    @tag :capture_log
+    test "traces the error code on burst-limited tool calls" do
+      patch_env(PlausibleWeb.Api.RateLimit,
+        legacy_per_user_hourly_request_limit: 600,
+        burst_request_limit: 0,
+        burst_period_seconds: 10
+      )
+
+      user = new_user()
+      new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes = trace_tool_call(token, "list_sites", 200, %{})
+
+      assert attributes["plausible.error.code"] == :rate_limit_burst
+    end
+
+    @tag :capture_log
+    test "traces the error code on burst-limited requests that are not tool calls" do
+      patch_env(PlausibleWeb.Api.RateLimit,
+        legacy_per_user_hourly_request_limit: 600,
+        burst_request_limit: 0,
+        burst_period_seconds: 10
+      )
+
+      user = new_user()
+      new_site(owner: user)
+      token = Plausible.OAuth.Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      attributes =
+        trace(fn ->
+          build_conn()
+          |> put_req_header("authorization", "Bearer #{token}")
+          |> put_req_header("mcp-protocol-version", "2025-11-25")
+          |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "ping"})
+          |> json_response(429)
+        end)
+
+      assert attributes["plausible.error.code"] == :rate_limit_burst
     end
 
     test "traces the same error code as the Stats API for an invalid query" do

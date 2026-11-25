@@ -327,8 +327,8 @@ defmodule Plausible.OAuth do
   end
 
   @doc """
-  Looks up the grant a raw access token belongs to, preloading the bound user, team,
-  and their current role in the team. Returns the grant and role.
+  Looks up the grant a raw access token belongs to, preloading the bound user, team
+  with its subscription, and their current role in the team. Returns the grant and role.
 
   The argument `resource` is the protected resource the token is supposed to be for. A token issued
   for a different resource is not found.
@@ -346,6 +346,7 @@ defmodule Plausible.OAuth do
       from(g in Grant,
         inner_join: u in assoc(g, :user),
         inner_join: t in assoc(g, :team),
+        left_join: s in assoc(t, :subscription),
         inner_join: tm in Membership,
         on: tm.team_id == g.team_id and tm.user_id == g.user_id,
         where:
@@ -353,7 +354,7 @@ defmodule Plausible.OAuth do
             g.resource == ^resource_url and
             g.access_token_expires_at > ^now() and
             is_nil(g.revoked_at),
-        preload: [user: u, team: t],
+        preload: [user: u, team: {t, subscription: s}],
         select: {g, tm.role}
       )
 

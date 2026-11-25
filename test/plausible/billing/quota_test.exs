@@ -602,6 +602,53 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
+  on_ee do
+    describe "mcp_hourly_request_limit/1" do
+      for {name, plan_id} <- [
+            {"v5 starter", @v5_10m_starter_plan_id},
+            {"v5 growth", @v5_10m_growth_plan_id},
+            {"v4 growth", @v4_1m_plan_id}
+          ] do
+        test "returns 300 for a #{name} plan that does not include Stats API access" do
+          team = new_user() |> subscribe_to_plan(unquote(plan_id)) |> team_of()
+
+          assert Plausible.Teams.Billing.mcp_hourly_request_limit(team) == 300
+        end
+      end
+
+      for {name, plan_id} <- [
+            {"v3 growth", @v3_plan_id},
+            {"v5 business", @v5_10m_business_plan_id},
+            {"free_10k", "free_10k"}
+          ] do
+        test "returns the team.hourly_api_request_limit on a #{name} plan that includes Stats API access" do
+          team = new_user() |> subscribe_to_plan(unquote(plan_id)) |> team_of()
+
+          assert Plausible.Teams.Billing.mcp_hourly_request_limit(team) ==
+                   team.hourly_api_request_limit
+        end
+      end
+
+      test "returns the team.hourly_api_request_limit for a trial" do
+        {:ok, team} = new_user() |> Plausible.Teams.get_or_create()
+
+        assert Plausible.Teams.Billing.mcp_hourly_request_limit(team) ==
+                 team.hourly_api_request_limit
+      end
+
+      test "returns the hourly_api_request_limit of an enterprise plan" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(hourly_api_request_limit: 10_000)
+          |> team_of()
+          |> Ecto.Changeset.change(hourly_api_request_limit: 10_000)
+          |> Repo.update!()
+
+        assert Plausible.Teams.Billing.mcp_hourly_request_limit(team) == 10_000
+      end
+    end
+  end
+
   describe "allowed_features_for/1" do
     on_ee do
       test "users with expired trials have no access to subscription features" do

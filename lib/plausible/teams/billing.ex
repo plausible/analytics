@@ -716,6 +716,30 @@ defmodule Plausible.Teams.Billing do
     |> Enum.uniq()
   end
 
+  @mcp_hourly_request_limit_without_stats_api 300
+
+  @doc """
+  Returns how many MCP tool calls the team can make per hour. MCP tool calls
+  and Stats API requests share one budget.
+
+  Teams on a plan without the Stats API get a lower limit. All other teams get
+  the same limit as for the Stats API.
+  """
+  @spec mcp_hourly_request_limit(Teams.Team.t()) :: pos_integer()
+  def mcp_hourly_request_limit(team) do
+    team = Teams.with_subscription(team)
+
+    case Plans.get_subscription_plan(team.subscription) do
+      %Plan{features: features} ->
+        if StatsAPI in features,
+          do: team.hourly_api_request_limit,
+          else: @mcp_hourly_request_limit_without_stats_api
+
+      _enterprise_free_10k_or_no_plan ->
+        team.hourly_api_request_limit
+    end
+  end
+
   defp active_subscription_query(team) do
     from(s in Plausible.Billing.Subscription,
       where:
