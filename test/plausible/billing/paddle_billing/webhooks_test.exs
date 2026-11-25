@@ -151,25 +151,6 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       refute Repo.reload!(team).locked
     end
 
-    test "locks a team with sites once the paid period is over" do
-      user = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
-      team = team_of(user)
-      new_site(owner: user)
-
-      assert {:ok, :applied} =
-               created(team,
-                 status: "canceled",
-                 next_billed_at: nil,
-                 canceled_at: "2026-01-10T10:00:00.000000Z",
-                 current_billing_period: %{
-                   "starts_at" => "2025-12-10T10:00:00.000000Z",
-                   "ends_at" => "2026-01-10T10:00:00.000000Z"
-                 }
-               )
-
-      assert Repo.reload!(team).locked
-    end
-
     test "sets the API request limit from the enterprise plan", %{team: team} do
       insert(:enterprise_plan,
         team: team,
@@ -466,6 +447,25 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       subscription = Teams.with_subscription(team).subscription
       assert subscription.status == Status.deleted()
       assert subscription.next_bill_date == ~D[2026-11-20]
+    end
+
+    test "locks a team with sites once the paid period is over", %{user: user, team: team} do
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
+      |> Repo.update!()
+
+      new_site(owner: user)
+
+      assert {:ok, :applied} =
+               updated(
+                 occurred_at: "2026-11-11T10:00:00.000000Z",
+                 status: "canceled",
+                 next_billed_at: nil,
+                 current_billing_period: nil,
+                 canceled_at: "2026-11-11T10:00:00.000000Z"
+               )
+
+      assert Repo.reload!(team).locked
     end
 
     test "falls back to the event date when a paused subscription has no dates", %{team: team} do
