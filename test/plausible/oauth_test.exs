@@ -675,7 +675,7 @@ defmodule Plausible.OAuthTest do
 
       newest = insert(:oauth_grant, user: user, team: team, inserted_at: now)
 
-      assert [first, second, third] = OAuth.list_grants(user)
+      assert [first, second, third] = OAuth.list_grants(user).entries
       assert first.id == newest.id
       assert second.id == older.id
       assert second.team.id == other_team.id
@@ -706,7 +706,7 @@ defmodule Plausible.OAuthTest do
           last_used_at: NaiveDateTime.add(now, -1, :hour)
         )
 
-      assert [first, second, third] = OAuth.list_grants(user)
+      assert [first, second, third] = OAuth.list_grants(user).entries
       assert first.id == used_recently.id
       assert second.id == used_long_ago.id
       assert third.id == never_used.id
@@ -716,14 +716,83 @@ defmodule Plausible.OAuthTest do
       insert(:oauth_grant, user: user, team: team, revoked_at: past())
       insert(:oauth_grant, user: user, team: team, refresh_token_expires_at: past())
 
-      assert OAuth.list_grants(user) == []
+      assert OAuth.list_grants(user).entries == []
     end
 
     test "leaves out other users' grants", %{user: user, team: team} do
       other_user = add_member(team, role: :editor)
       insert(:oauth_grant, user: other_user, team: team)
 
-      assert OAuth.list_grants(user) == []
+      assert OAuth.list_grants(user).entries == []
+    end
+
+    test "includes revoked and expired grants with include_revoked: true", %{
+      user: user,
+      team: team
+    } do
+      now = NaiveDateTime.utc_now(:second)
+
+      live = insert(:oauth_grant, user: user, team: team, inserted_at: now)
+
+      revoked =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          revoked_at: past(),
+          inserted_at: NaiveDateTime.add(now, -1, :day)
+        )
+
+      expired =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          refresh_token_expires_at: past(),
+          inserted_at: NaiveDateTime.add(now, -2, :day)
+        )
+
+      other_user = add_member(team, role: :editor)
+      insert(:oauth_grant, user: other_user, team: team, revoked_at: past())
+
+      assert OAuth.list_grants(user, include_revoked: true).entries |> Enum.map(& &1.id) ==
+               [live.id, revoked.id, expired.id]
+    end
+
+    test "paginates the grants", %{user: user, team: team} do
+      now = NaiveDateTime.utc_now(:second)
+      page_size = OAuth.list_grants(user).page_size
+
+      grant_ids =
+        for i <- 0..page_size do
+          insert(:oauth_grant,
+            user: user,
+            team: team,
+            inserted_at: NaiveDateTime.add(now, -i, :hour)
+          ).id
+        end
+
+      page_1 = OAuth.list_grants(user, page: 1)
+      page_2 = OAuth.list_grants(user, page: 2)
+
+      assert Enum.map(page_1.entries ++ page_2.entries, & &1.id) == grant_ids
+      assert page_1.total_entries == page_size + 1
+      assert page_1.total_pages == 2
+
+      page_after_last = OAuth.list_grants(user, page: 3)
+      assert page_after_last.page_number == 2
+      assert Enum.map(page_after_last.entries, & &1.id) == Enum.map(page_2.entries, & &1.id)
+    end
+  end
+
+  describe "count_grants/1" do
+    test "counts the user's active grants and all of them", %{user: user, team: team} do
+      insert(:oauth_grant, user: user, team: team)
+      insert(:oauth_grant, user: user, team: team, revoked_at: past())
+      insert(:oauth_grant, user: user, team: team, refresh_token_expires_at: past())
+
+      other_user = add_member(team, role: :editor)
+      insert(:oauth_grant, user: other_user, team: team)
+
+      assert OAuth.count_grants(user) == %{active: 1, all: 3}
     end
   end
 
