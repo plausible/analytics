@@ -53,6 +53,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   # API key.
   @implicit_scopes ["stats:read:*", "sites:read:*"]
 
+  @access_denied_errors [:invalid_api_key, :site_not_found, :insufficient_scope]
+
   def init(opts) do
     opts
   end
@@ -189,7 +191,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     if found? do
       :ok
     else
-      {:error, :invalid_api_key}
+      {:error, :insufficient_scope}
     end
   end
 
@@ -246,7 +248,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         {:ok, site}
 
       nil ->
-        {:error, :invalid_api_key}
+        {:error, :site_not_found}
     end
   end
 
@@ -269,7 +271,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         :ok
 
       api_key.team_id && api_key.team_id != site.team_id ->
-        {:error, :invalid_api_key}
+        {:error, :site_not_found}
 
       Teams.locked?(team) ->
         {:error, :site_locked}
@@ -281,7 +283,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         :ok
 
       true ->
-        {:error, :invalid_api_key}
+        {:error, :site_not_found}
     end
   end
 
@@ -310,63 +312,55 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp send_error(conn, _, {:error, :unavailable_for_consolidated_view}) do
-    Plausible.OpenTelemetry.add_error_attribute(:unavailable_for_consolidated_view)
+  defp send_error(conn, requested_scope, error) do
+    error |> elem(1) |> Plausible.OpenTelemetry.add_error_attribute()
+    render_error(conn, requested_scope, error)
+  end
 
+  defp render_error(conn, _, {:error, :unavailable_for_consolidated_view}) do
     H.bad_request(
       conn,
       "This operation is unavailable for a consolidated view"
     )
   end
 
-  defp send_error(conn, _, {:error, :missing_api_key}) do
-    Plausible.OpenTelemetry.add_error_attribute(:missing_api_key)
-
+  defp render_error(conn, _, {:error, :missing_api_key}) do
     H.unauthorized(
       conn,
       "Missing API key. Please use a valid Plausible API key as a Bearer Token."
     )
   end
 
-  defp send_error(conn, "stats:read:" <> _, {:error, :invalid_api_key}) do
-    Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
-
+  defp render_error(conn, "stats:read:" <> _, {:error, code})
+       when code in @access_denied_errors do
     H.unauthorized(
       conn,
       "Invalid API key or site ID. Please make sure you're using a valid API key with access to the site you've requested."
     )
   end
 
-  defp send_error(conn, _, {:error, :invalid_api_key}) do
-    Plausible.OpenTelemetry.add_error_attribute(:invalid_api_key)
-
+  defp render_error(conn, _, {:error, code}) when code in @access_denied_errors do
     H.unauthorized(
       conn,
       "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
     )
   end
 
-  defp send_error(conn, _, {:error, :rate_limit, message}) do
-    Plausible.OpenTelemetry.add_error_attribute(:rate_limit)
-
+  defp render_error(conn, _, {:error, :rate_limit, message}) do
     H.too_many_requests(
       conn,
       message
     )
   end
 
-  defp send_error(conn, _, {:error, :missing_site_id}) do
-    Plausible.OpenTelemetry.add_error_attribute(:missing_site_id)
-
+  defp render_error(conn, _, {:error, :missing_site_id}) do
     H.bad_request(
       conn,
       "Missing site ID. Please provide the required site_id parameter with your request."
     )
   end
 
-  defp send_error(conn, scope, {:error, :upgrade_required}) do
-    Plausible.OpenTelemetry.add_error_attribute(:upgrade_required)
-
+  defp render_error(conn, scope, {:error, :upgrade_required}) do
     feature =
       case scope do
         "sites:provision:" <> _ ->
@@ -379,9 +373,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     feature_payment_error(conn, feature)
   end
 
-  defp send_error(conn, _, {:error, :site_locked}) do
-    Plausible.OpenTelemetry.add_error_attribute(:site_locked)
-
+  defp render_error(conn, _, {:error, :site_locked}) do
     H.payment_required(
       conn,
       "This Plausible site is locked due to missing active subscription. In order to access it, the site owner should subscribe to a suitable plan"
