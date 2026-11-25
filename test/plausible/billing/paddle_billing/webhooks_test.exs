@@ -429,7 +429,30 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       assert Teams.with_subscription(team).subscription.status == Status.active()
     end
 
-    test "treats a canceled subscription as deleted, valid until the cancellation date", %{
+    test "keeps a subscription deleted, valid until the date, once a scheduled cancellation takes effect",
+         %{team: team} do
+      cancel = %{"action" => "cancel", "effective_at" => "2026-12-10T10:00:00Z"}
+      updated(occurred_at: "2026-11-11T10:00:00.000000Z", scheduled_change: cancel)
+
+      assert {:ok, :applied} =
+               updated(
+                 occurred_at: "2026-12-10T10:00:05.000000Z",
+                 status: "canceled",
+                 next_billed_at: nil,
+                 current_billing_period: nil,
+                 scheduled_change: nil,
+                 canceled_at: "2026-12-10T10:00:00.000000Z"
+               )
+
+      subscription = Teams.with_subscription(team).subscription
+      assert subscription.status == Status.deleted()
+      assert subscription.next_bill_date == ~D[2026-12-10]
+
+      event = Repo.one!(from e in SubscriptionEvent, order_by: [desc: e.id], limit: 1)
+      assert event.status == Status.deleted()
+    end
+
+    test "treats an immediate cancellation as deleted, valid until the cancellation date", %{
       team: team
     } do
       assert {:ok, :applied} =
@@ -443,9 +466,6 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       subscription = Teams.with_subscription(team).subscription
       assert subscription.status == Status.deleted()
       assert subscription.next_bill_date == ~D[2026-11-20]
-
-      event = Repo.one!(from e in SubscriptionEvent, order_by: [desc: e.id], limit: 1)
-      assert event.status == Status.deleted()
     end
 
     test "falls back to the event date when a paused subscription has no dates", %{team: team} do
