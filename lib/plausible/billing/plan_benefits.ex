@@ -2,6 +2,7 @@ defmodule Plausible.Billing.PlanBenefits do
   @moduledoc false
 
   alias Plausible.Billing.Plan
+  alias Plausible.Billing.Feature.StatsAPI
 
   @doc """
   This function takes a starter plan and returns a list representing
@@ -16,7 +17,7 @@ defmodule Plausible.Billing.PlanBenefits do
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(starter_plan))
-    |> Kernel.++(benefits_available_on_lowest_plan())
+    |> Kernel.++(benefits_available_on_lowest_plan(starter_plan))
   end
 
   @doc """
@@ -37,7 +38,7 @@ defmodule Plausible.Billing.PlanBenefits do
     ])
     |> Kernel.++(
       if(lowest_plan?,
-        do: ["No retention limit" | benefits_available_on_lowest_plan()],
+        do: ["No retention limit" | benefits_available_on_lowest_plan(growth_plan)],
         else: []
       )
     )
@@ -105,7 +106,7 @@ defmodule Plausible.Billing.PlanBenefits do
     [
       "Everything in Business",
       sites_and_team_members,
-      "600+ Stats API requests per hour",
+      "600+ API/MCP calls/hr",
       "Sites API",
       "Single Sign-On (SSO)",
       "Managed Proxy",
@@ -115,8 +116,10 @@ defmodule Plausible.Billing.PlanBenefits do
     ]
   end
 
-  defp benefits_available_on_lowest_plan do
-    ["Saved Segments", "Annotations"]
+  defp benefits_available_on_lowest_plan(%Plan{} = plan) do
+    if StatsAPI in plan.features,
+      do: ["Saved Segments", "Annotations"],
+      else: ["Saved Segments", "Annotations", "AI integration (300 MCP calls/hr)"]
   end
 
   defp team_member_limit_benefit(%Plan{} = plan) do
@@ -137,7 +140,7 @@ defmodule Plausible.Billing.PlanBenefits do
     Enum.flat_map(plan.features, fn feature_mod ->
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
-        :stats_api -> ["Stats API (600 requests per hour)", "Data Studio Connector"]
+        :stats_api -> ["Stats API", "600 API/MCP calls/hr", "Data Studio Connector"]
         :shared_links -> ["Shared Links", "Embedded Dashboards"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]
