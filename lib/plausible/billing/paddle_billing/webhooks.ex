@@ -278,15 +278,17 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
     cancellation_effective_at =
       if status == Status.deleted(), do: get_in(data, ["scheduled_change", "effective_at"])
 
-    [
-      cancellation_effective_at,
-      data["next_billed_at"],
-      get_in(data, ["current_billing_period", "ends_at"]),
-      data["paused_at"],
-      data["canceled_at"]
-    ]
-    |> Enum.find_value(&to_date/1)
-    |> Kernel.||(NaiveDateTime.to_date(occurred_at))
+    Enum.find_value(
+      [
+        cancellation_effective_at,
+        data["next_billed_at"],
+        get_in(data, ["current_billing_period", "ends_at"]),
+        data["paused_at"],
+        data["canceled_at"]
+      ],
+      NaiveDateTime.to_date(occurred_at),
+      &to_date/1
+    )
   end
 
   # `unit_price.amount` is in the lowest denomination of the currency. When the
