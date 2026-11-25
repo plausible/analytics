@@ -128,6 +128,25 @@ defmodule Plausible.MailerTest do
       assert_delivered_email(priority_email)
     end
 
+    test "does not send an untrusted-recipients-stream e-mail to a suppressed address" do
+      address = "bounced@example.com"
+
+      {:ok, _} =
+        Plausible.EmailSuppressions.create_from_bounce(%{
+          email: address,
+          reason: :hard_bounce,
+          source: :webhook
+        })
+
+      site = build(:site)
+      inviter = build(:user)
+      email = PlausibleWeb.Email.existing_user_invitation(address, site, inviter)
+
+      assert {:error, :suppressed} = Plausible.Mailer.send(email)
+
+      refute_delivered_email(email)
+    end
+
     test "crashes rather than silently under-checking when `to` has more than one address" do
       email =
         Bamboo.Email.new_email(

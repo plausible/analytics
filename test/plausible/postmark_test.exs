@@ -5,6 +5,9 @@ defmodule Plausible.PostmarkTest do
 
   alias Plausible.Postmark
 
+  @streams ["outbound", "priority", "untrusted-recipients"]
+  @delete_paths Enum.map(@streams, &"/message-streams/#{&1}/suppressions/delete")
+
   describe "suppressing_reason/1" do
     test "maps known permanently-bad bounce types" do
       assert Postmark.suppressing_reason("HardBounce") == {:ok, :hard_bounce}
@@ -26,10 +29,7 @@ defmodule Plausible.PostmarkTest do
       Req.Test.stub(Postmark, fn conn ->
         assert conn.method == "POST"
 
-        assert conn.request_path in [
-                 "/message-streams/outbound/suppressions/delete",
-                 "/message-streams/priority/suppressions/delete"
-               ]
+        assert conn.request_path in @delete_paths
 
         conn = Plug.Conn.fetch_query_params(conn)
         {:ok, body, _conn} = Plug.Conn.read_body(conn)
@@ -71,19 +71,19 @@ defmodule Plausible.PostmarkTest do
       assert {:error, {stream, "SpamComplaint suppressions cannot be deleted"}} =
                Postmark.delete_suppression("a@example.com")
 
-      assert stream in ["outbound", "priority"]
+      assert stream in @streams
     end
 
-    test "returns an error on a non-200 response from either stream" do
+    test "returns an error on a non-200 response from any stream" do
       Req.Test.stub(Postmark, fn conn ->
         case conn.request_path do
-          "/message-streams/outbound/suppressions/delete" ->
+          "/message-streams/priority/suppressions/delete" ->
+            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+
+          _other_stream ->
             Req.Test.json(conn, %{
               "Suppressions" => [%{"EmailAddress" => "a@example.com", "Status" => "Deleted"}]
             })
-
-          "/message-streams/priority/suppressions/delete" ->
-            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
         end
       end)
 
@@ -103,10 +103,7 @@ defmodule Plausible.PostmarkTest do
       test_pid = self()
 
       Req.Test.stub(Postmark, fn conn ->
-        assert conn.request_path in [
-                 "/message-streams/outbound/suppressions/delete",
-                 "/message-streams/priority/suppressions/delete"
-               ]
+        assert conn.request_path in @delete_paths
 
         conn = Plug.Conn.fetch_query_params(conn)
         {:ok, body, conn} = Plug.Conn.read_body(conn)
@@ -125,7 +122,7 @@ defmodule Plausible.PostmarkTest do
                "b@example.com"
              ]
 
-      for stream <- ["outbound", "priority"] do
+      for stream <- @streams do
         path = "/message-streams/#{stream}/suppressions/delete"
         assert_received {:request, ^path, body}
 
@@ -156,11 +153,11 @@ defmodule Plausible.PostmarkTest do
 
       assert Postmark.delete_suppressions(emails) |> length() == 51
 
-      # 51 emails, chunked at 50, on each of the 2 streams = 4 requests total
-      assert_received {:chunk_size, 50}
-      assert_received {:chunk_size, 50}
-      assert_received {:chunk_size, 1}
-      assert_received {:chunk_size, 1}
+      # 51 emails, chunked at 50, on each stream = 2 requests per stream
+      for _stream <- @streams do
+        assert_received {:chunk_size, 50}
+        assert_received {:chunk_size, 1}
+      end
     end
 
     test "still confirms addresses Postmark refused (e.g. a spam complaint), only logging it" do
@@ -186,13 +183,13 @@ defmodule Plausible.PostmarkTest do
     test "does not confirm a chunk whose call errored outright on any stream" do
       Req.Test.stub(Postmark, fn conn ->
         case conn.request_path do
-          "/message-streams/outbound/suppressions/delete" ->
+          "/message-streams/priority/suppressions/delete" ->
+            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
+
+          _other_stream ->
             Req.Test.json(conn, %{
               "Suppressions" => [%{"EmailAddress" => "a@example.com", "Status" => "Deleted"}]
             })
-
-          "/message-streams/priority/suppressions/delete" ->
-            conn |> Plug.Conn.put_status(500) |> Req.Test.json(%{"Message" => "boom"})
         end
       end)
 
