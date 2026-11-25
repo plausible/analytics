@@ -207,9 +207,17 @@ defmodule PlausibleWeb.MCP.MCPController do
           {:ok, value} ->
             {200, success_response(id, %{content: [text_content(value)], isError: false})}
 
-          {:error, code, detail} ->
+          {:error, :insufficient_scope, scope} ->
+            Plausible.OpenTelemetry.add_error_attribute(:insufficient_scope)
+
+            {403, %{error: "insufficient_scope"},
+             [{"www-authenticate", AuthorizeOAuthAPI.challenge(@resource, scope)}]}
+
+          # Re-authorizing cannot fix these errors, so they stay tool errors
+          # that the model can relay to the user.
+          {:error, code, message} ->
             Plausible.OpenTelemetry.add_error_attribute(code)
-            tool_error(id, code, detail)
+            {200, success_response(id, %{content: [text_content(message)], isError: true})}
         end
 
       :error ->
@@ -219,17 +227,6 @@ defmodule PlausibleWeb.MCP.MCPController do
 
   defp dispatch(_conn, id, _method, _message) do
     {404, error_response(id, -32_601, "Method not found")}
-  end
-
-  defp tool_error(_id, :insufficient_scope, scope) do
-    {403, %{error: "insufficient_scope"},
-     [{"www-authenticate", AuthorizeOAuthAPI.challenge(@resource, scope)}]}
-  end
-
-  # Re-authorizing cannot fix these errors, so they stay tool errors
-  # that the model can relay to the user.
-  defp tool_error(id, _code, message) do
-    {200, success_response(id, %{content: [text_content(message)], isError: true})}
   end
 
   defp cacheable(result) do
