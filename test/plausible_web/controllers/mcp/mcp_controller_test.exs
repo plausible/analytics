@@ -924,52 +924,6 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
              }
     end
 
-    @tag :ee_only
-    test "is available on a plan without the Stats API", %{conn: conn} do
-      user = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])
-      site = new_site(owner: user)
-      token = Token.generate(:access).raw
-      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
-
-      resp =
-        call_query_stats(conn, token, %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => ["2021-01-01", "2021-01-31"]
-        })
-        |> json_response(200)
-        |> decode_text_content()
-
-      assert resp == %{
-               "jsonrpc" => "2.0",
-               "id" => 1,
-               "result" => %{
-                 "content" => [
-                   %{
-                     "type" => "text",
-                     "text" => %{
-                       "results" => [%{"metrics" => [0], "dimensions" => []}],
-                       "meta" => %{},
-                       "query" => %{
-                         "site_id" => site.domain,
-                         "metrics" => ["visitors"],
-                         "date_range" => ["2021-01-01T00:00:00Z", "2021-01-31T23:59:59Z"],
-                         "filters" => [],
-                         "dimensions" => [],
-                         "order_by" => [["visitors", "desc"]],
-                         "include" => %{},
-                         "pagination" => %{"offset" => 0, "limit" => 10_000}
-                       }
-                     }
-                   }
-                 ],
-                 "isError" => false,
-                 "resultType" => "complete",
-                 "_meta" => @expected_meta
-               }
-             }
-    end
-
     test "a grant lacking stats:read is 403, challenging for the scope it needs", %{
       conn: conn,
       user: user,
@@ -1047,6 +1001,361 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
                  }
                }
       end
+    end
+  end
+
+  describe "tools/call query_stats - feature access" do
+    @describetag :ee_only
+
+    setup :insert_token
+
+    test "is available on a plan without the Stats API", %{conn: conn} do
+      user = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])
+      site = new_site(owner: user)
+      token = Token.generate(:access).raw
+      insert(:oauth_grant, user: user, team: team_of(user), access_token: token)
+
+      resp =
+        call_query_stats(conn, token, %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => ["2021-01-01", "2021-01-31"]
+        })
+        |> json_response(200)
+        |> decode_text_content()
+
+      assert resp == %{
+               "jsonrpc" => "2.0",
+               "id" => 1,
+               "result" => %{
+                 "content" => [
+                   %{
+                     "type" => "text",
+                     "text" => %{
+                       "results" => [%{"metrics" => [0], "dimensions" => []}],
+                       "meta" => %{},
+                       "query" => %{
+                         "site_id" => site.domain,
+                         "metrics" => ["visitors"],
+                         "date_range" => ["2021-01-01T00:00:00Z", "2021-01-31T23:59:59Z"],
+                         "filters" => [],
+                         "dimensions" => [],
+                         "order_by" => [["visitors", "desc"]],
+                         "include" => %{},
+                         "pagination" => %{"offset" => 0, "limit" => 10_000}
+                       }
+                     }
+                   }
+                 ],
+                 "isError" => false,
+                 "resultType" => "complete",
+                 "_meta" => @expected_meta
+               }
+             }
+    end
+
+    test "refuses a custom property breakdown on a plan without custom properties", %{
+      conn: conn,
+      user: user,
+      token: t
+    } do
+      site = user |> subscribe_to_starter_plan() |> then(&new_site(owner: &1))
+
+      resp =
+        call_query_stats(conn, t, %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:author"]
+        })
+        |> json_response(200)
+
+      assert %{
+               "isError" => true,
+               "content" => [
+                 %{
+                   "type" => "text",
+                   "text" =>
+                     "The owner of this site does not have access to the custom properties feature."
+                 }
+               ]
+             } = resp["result"]
+    end
+
+    test "refuses a custom property filter on a plan without custom properties", %{
+      conn: conn,
+      user: user,
+      token: t
+    } do
+      site = user |> subscribe_to_starter_plan() |> then(&new_site(owner: &1))
+
+      resp =
+        call_query_stats(conn, t, %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [["is", "event:props:author", ["John"]]]
+        })
+        |> json_response(200)
+
+      assert %{
+               "isError" => true,
+               "content" => [
+                 %{
+                   "type" => "text",
+                   "text" =>
+                     "The owner of this site does not have access to the custom properties feature."
+                 }
+               ]
+             } = resp["result"]
+    end
+
+    test "refuses revenue metrics on a plan without revenue goals", %{
+      conn: conn,
+      user: user,
+      token: t
+    } do
+      site = user |> subscribe_to_starter_plan() |> then(&new_site(owner: &1))
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+
+      resp =
+        call_query_stats(conn, t, %{
+          "site_id" => site.domain,
+          "metrics" => ["total_revenue"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Purchase"]]]
+        })
+        |> json_response(200)
+
+      assert %{
+               "isError" => true,
+               "content" => [
+                 %{
+                   "type" => "text",
+                   "text" =>
+                     "The owner of this site does not have access to the revenue metrics feature."
+                 }
+               ]
+             } = resp["result"]
+    end
+  end
+
+  describe "rate limiting (hourly)" do
+    setup [:insert_token, :avoid_hour_change]
+
+    test "refuses a tool call once the team's hourly limit is spent", %{team: team, token: t} do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 1) |> Plausible.Repo.update!()
+
+      [first, refused] = for _ <- 1..2, do: call_list_sites(t)
+
+      assert first["result"]["isError"] == false
+      assert refused["result"]["isError"] == true
+
+      assert [%{"type" => "text", "text" => message}] = refused["result"]["content"]
+
+      assert message =~
+               ~r/^Your team reached its hourly request limit \(1 per hour\)\. The limit resets in \d+ minutes?\.$/
+    end
+
+    test "a refused request still records when the grant was last used", %{
+      user: user,
+      team: team
+    } do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 0) |> Plausible.Repo.update!()
+
+      ten_minutes_ago = :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-10, :minute)
+      token = Token.generate(:access).raw
+
+      grant =
+        insert(:oauth_grant,
+          user: user,
+          team: team,
+          access_token: token,
+          last_used_at: ten_minutes_ago
+        )
+
+      assert call_list_sites(token)["result"]["isError"] == true
+
+      assert %{last_used_at: last_used_at} = Plausible.Repo.reload!(grant)
+      assert NaiveDateTime.after?(last_used_at, ten_minutes_ago)
+    end
+
+    test "the rate limit is independent of team.hourly_api_request_limit for a plan without Stats API access",
+         %{user: user, team: team, token: t} do
+      subscribe_to_plan(user, "910427")
+
+      assert {:error, :upgrade_required} =
+               Plausible.Billing.Feature.StatsAPI.check_availability(team)
+
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 0) |> Plausible.Repo.update!()
+
+      assert call_list_sites(t)["result"]["isError"] == false
+    end
+
+    test "tool calls spend the same hourly limit as Stats API requests", %{
+      user: user,
+      team: team,
+      token: t
+    } do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 1) |> Plausible.Repo.update!()
+      api_key = insert(:api_key, user: user, team: team, scopes: ["stats:read:*"])
+
+      build_conn()
+      |> put_req_header("authorization", "Bearer #{api_key.key}")
+      |> get(~p"/api/v1/stats/aggregate", %{"site_id" => "no-such-site.example"})
+
+      assert call_list_sites(t)["result"]["isError"] == true
+    end
+
+    test "requests other than tool calls do not spend the hourly limit", %{
+      team: team,
+      token: t
+    } do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 1) |> Plausible.Repo.update!()
+
+      for _ <- 1..3 do
+        build_conn()
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", @version)
+        |> put_req_header("mcp-method", "tools/list")
+        |> post("/mcp", @tools_list_request)
+
+        build_conn()
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> post("/mcp", %{
+          "jsonrpc" => "2.0",
+          "id" => 0,
+          "method" => "initialize",
+          "params" => %{"protocolVersion" => "2025-11-25", "capabilities" => %{}}
+        })
+
+        build_conn()
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "method" => "notifications/initialized"})
+
+        build_conn()
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "ping"})
+      end
+
+      assert call_list_sites(t)["result"]["isError"] == false
+    end
+
+    test "unknown tool calls spend the hourly limit", %{team: team, token: t} do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 1) |> Plausible.Repo.update!()
+
+      build_conn()
+      |> put_req_header("authorization", "Bearer " <> t)
+      |> put_req_header("mcp-protocol-version", @version)
+      |> put_req_header("mcp-method", "tools/call")
+      |> put_req_header("mcp-name", "made_up_tool")
+      |> post("/mcp", %{
+        "jsonrpc" => "2.0",
+        "id" => 1,
+        "method" => "tools/call",
+        "params" => %{"name" => "made_up_tool", "arguments" => %{}, "_meta" => @valid_client_meta}
+      })
+
+      assert call_list_sites(t)["result"]["isError"] == true
+    end
+
+    test "refuses a legacy tool call with a tool error", %{team: team, token: t} do
+      team |> Ecto.Changeset.change(hourly_api_request_limit: 0) |> Plausible.Repo.update!()
+
+      resp =
+        build_conn()
+        |> put_req_header("authorization", "Bearer " <> t)
+        |> put_req_header("mcp-protocol-version", "2025-11-25")
+        |> post("/mcp", %{
+          "jsonrpc" => "2.0",
+          "id" => 1,
+          "method" => "tools/call",
+          "params" => %{"name" => "list_sites", "arguments" => %{}}
+        })
+        |> json_response(200)
+
+      assert %{
+               "isError" => true,
+               "content" => [
+                 %{"type" => "text", "text" => "Your team reached its hourly request limit" <> _}
+               ]
+             } = resp["result"]
+    end
+
+    test "refused tool calls spend the hourly limit", %{
+      user: user,
+      team: team,
+      token: t
+    } do
+      site = new_site(owner: user)
+
+      team
+      |> Ecto.Changeset.change(hourly_api_request_limit: 1, locked: true)
+      |> Plausible.Repo.update!()
+
+      locked_resp =
+        build_conn()
+        |> call_query_stats(t, %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all"
+        })
+        |> json_response(200)
+
+      assert [%{"text" => "This team is locked" <> _}] = locked_resp["result"]["content"]
+
+      assert [%{"text" => "Your team reached its hourly request limit (1 per hour)." <> _}] =
+               call_list_sites(t)["result"]["content"]
+    end
+  end
+
+  describe "rate limiting (burst)" do
+    # The burst limit uses fixed 10-second windows, so the counter can reset
+    # during a test. A test that expects a refusal makes 2 * limit + 1 requests.
+    # Then at least one request is refused, even if the counter resets.
+
+    setup :insert_token
+
+    test "refuses a tool call over the burst limit with a tool error", %{token: t} do
+      patch_env(PlausibleWeb.Api.RateLimit,
+        legacy_per_user_hourly_request_limit: 600,
+        burst_request_limit: 2,
+        burst_period_seconds: 10
+      )
+
+      {allowed, rest} = Enum.split(for(_ <- 1..5, do: call_list_sites(t)), 2)
+
+      assert Enum.all?(allowed, &(&1["result"]["isError"] == false))
+      assert refused = Enum.find(rest, & &1["result"]["isError"])
+
+      assert refused["result"]["content"] == [
+               %{
+                 "type" => "text",
+                 "text" =>
+                   "Too many requests in a short time. The limit is 2 per 10 seconds. Try again in a few seconds."
+               }
+             ]
+    end
+
+    test "refuses other requests over the burst limit with a plain 429", %{token: t} do
+      patch_env(PlausibleWeb.Api.RateLimit,
+        legacy_per_user_hourly_request_limit: 600,
+        burst_request_limit: 2,
+        burst_period_seconds: 10
+      )
+
+      responses =
+        for _ <- 1..5 do
+          build_conn()
+          |> put_req_header("authorization", "Bearer " <> t)
+          |> put_req_header("mcp-protocol-version", "2025-11-25")
+          |> post("/mcp", %{"jsonrpc" => "2.0", "id" => 1, "method" => "ping"})
+        end
+
+      assert refused = Enum.find(responses, &(&1.status == 429))
+      assert json_response(refused, 429) == %{"error" => "too_many_requests"}
     end
   end
 
@@ -1396,6 +1705,22 @@ defmodule PlausibleWeb.MCP.MCPControllerTest do
     insert(:oauth_grant, user: user, team: team, access_token: token)
 
     {:ok, token: token}
+  end
+
+  defp avoid_hour_change(_context) do
+    ms_to_next_hour = :timer.hours(1) - rem(System.system_time(:millisecond), :timer.hours(1))
+    if ms_to_next_hour < :timer.seconds(5), do: Process.sleep(ms_to_next_hour + 100)
+    :ok
+  end
+
+  defp call_list_sites(token) do
+    build_conn()
+    |> put_req_header("authorization", "Bearer " <> token)
+    |> put_req_header("mcp-protocol-version", @version)
+    |> put_req_header("mcp-method", "tools/call")
+    |> put_req_header("mcp-name", "list_sites")
+    |> post("/mcp", @list_sites_request)
+    |> json_response(200)
   end
 
   defp call_query_stats(conn, token, arguments) do

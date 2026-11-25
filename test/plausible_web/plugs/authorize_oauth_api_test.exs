@@ -85,30 +85,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPITest do
       assert %Grant{last_used_at: last_used_at} = Plausible.Repo.reload!(grant)
       assert NaiveDateTime.after?(last_used_at, ten_minutes_ago)
     end
-
-    test "sets last_used_at even if the request itself will be rate limited", %{
-      user: user,
-      team: team
-    } do
-      team =
-        team |> Ecto.Changeset.change(hourly_api_request_limit: 0) |> Plausible.Repo.update!()
-
-      ten_minutes_ago = :second |> NaiveDateTime.utc_now() |> NaiveDateTime.add(-10, :minute)
-      access_token = Token.generate(:access).raw
-
-      grant =
-        insert(:oauth_grant,
-          user: user,
-          team: team,
-          access_token: access_token,
-          last_used_at: ten_minutes_ago
-        )
-
-      assert authorize(bypassed_conn(), access_token).halted
-
-      assert %Grant{last_used_at: last_used_at} = Plausible.Repo.reload!(grant)
-      assert NaiveDateTime.after?(last_used_at, ten_minutes_ago)
-    end
   end
 
   test "assigns the role the user currently holds, not the one they had", %{
@@ -229,37 +205,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPITest do
 
     assert conn.halted
     assert_matches ^strict_map(%{"error" => "invalid_token"}) = json_response(conn, 401)
-  end
-
-  test "halts once the team's hourly request limit is spent, spends the same limit as Stats / Sites API keys",
-       %{user: user, team: team} do
-    team = team |> Ecto.Changeset.change(hourly_api_request_limit: 1) |> Plausible.Repo.update!()
-
-    stats_api_key = insert(:api_key, user: user, team: team, scopes: ["stats:read:*"])
-    access_token = Token.generate(:access).raw
-    insert(:oauth_grant, user: user, team: team, access_token: access_token)
-
-    conn_within_limit = authorize(bypassed_conn(), access_token)
-    refute conn_within_limit.halted
-
-    conn_oauth_over_limit = authorize(bypassed_conn(), access_token)
-
-    assert conn_oauth_over_limit.halted
-
-    assert_matches ^strict_map(%{"error" => "too_many_requests"}) =
-                     json_response(conn_oauth_over_limit, 429)
-
-    conn_api_over_limit =
-      build_conn()
-      |> put_req_header("authorization", "Bearer #{stats_api_key.key}")
-      |> get(~p"/api/v1/stats/aggregate", %{"site_id" => "no-such-site.example"})
-
-    assert conn_api_over_limit.halted
-
-    assert_matches ^strict_map(%{
-                     "error" =>
-                       "Too many API requests. The limit is 1 per hour. Please contact us to request more capacity."
-                   }) = json_response(conn_api_over_limit, 429)
   end
 
   defp bypassed_conn() do

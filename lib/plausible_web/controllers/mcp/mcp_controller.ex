@@ -13,6 +13,8 @@ defmodule PlausibleWeb.MCP.MCPController do
   alias Plausible.Stats.{Query, QueryError}
   alias Plausible.Stats.JSONSchema.Utils
   alias Plausible.Teams.Membership
+  alias PlausibleWeb.Api.Helpers, as: H
+  alias PlausibleWeb.MCP.RateLimit
   alias PlausibleWeb.Plugs.AuthorizeOAuthAPI
 
   require Logger
@@ -34,8 +36,48 @@ defmodule PlausibleWeb.MCP.MCPController do
       :error ->
         conn
 
+      {:ok, _message, "tools/call", id} ->
+        conn
+        |> AuthorizeOAuthAPI.call(resource: @resource)
+        |> check_tool_call_rate_limit(id)
+
       _request_or_notification ->
-        AuthorizeOAuthAPI.call(conn, resource: @resource)
+        conn
+        |> AuthorizeOAuthAPI.call(resource: @resource)
+        |> check_burst_limit()
+    end
+  end
+
+  # A tool error lets the model tell the user why the call failed.
+  defp check_tool_call_rate_limit(%Plug.Conn{halted: true} = conn, _id), do: conn
+
+  defp check_tool_call_rate_limit(conn, id) do
+    case RateLimit.check_tool_call(conn.assigns.current_team) do
+      :ok ->
+        conn
+
+      {:error, reason, message} ->
+        Plausible.OpenTelemetry.add_error_attribute(reason)
+
+        conn
+        |> send_json(
+          200,
+          success_response(id, %{content: [text_content(message)], isError: true})
+        )
+        |> halt()
+    end
+  end
+
+  defp check_burst_limit(%Plug.Conn{halted: true} = conn), do: conn
+
+  defp check_burst_limit(conn) do
+    case RateLimit.check_burst(conn.assigns.current_team) do
+      :ok ->
+        conn
+
+      {:error, :rate_limit_burst} ->
+        Plausible.OpenTelemetry.add_error_attribute(:rate_limit_burst)
+        H.too_many_requests(conn, "too_many_requests")
     end
   end
 

@@ -21,7 +21,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
   alias Plausible.OAuth
   alias Plausible.OAuth.ProtectedResources
   alias PlausibleWeb.Api.Helpers, as: H
-  alias PlausibleWeb.Api.RateLimit
   use PlausibleWeb.VerifiedRoutes
 
   def init(opts), do: opts
@@ -32,10 +31,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
     with {:ok, raw_token} <- get_bearer_token(conn),
          {:ok, grant, role} <- OAuth.find_access_token(raw_token, resource),
          Plausible.OpenTelemetry.add_credential_attributes(grant),
-         # Recorded before the rate limit, so a valid token that is being
-         # throttled still shows as used in the connected apps view.
-         :ok <- OAuth.touch_grant(grant),
-         :ok <- check_rate_limit(grant.team) do
+         :ok <- OAuth.touch_grant(grant) do
       conn
       |> assign(:current_user, grant.user)
       |> assign(:current_team, grant.team)
@@ -58,11 +54,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
           challenge(resource) <> ~s(, error="invalid_token")
         )
         |> H.unauthorized("invalid_token")
-
-      {:error, :rate_limit, _message} ->
-        Plausible.OpenTelemetry.add_error_attribute(:rate_limit)
-
-        H.too_many_requests(conn, "too_many_requests")
     end
   end
 
@@ -71,10 +62,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeOAuthAPI do
       "Bearer " <> token -> {:ok, String.trim(token)}
       _ -> {:error, :missing_token}
     end
-  end
-
-  defp check_rate_limit(team) do
-    RateLimit.check_rate_limit(RateLimit.limit_key(team), team.hourly_api_request_limit)
   end
 
   @doc """

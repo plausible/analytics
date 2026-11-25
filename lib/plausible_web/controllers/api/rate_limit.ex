@@ -25,44 +25,39 @@ defmodule PlausibleWeb.Api.RateLimit do
       |> Keyword.fetch!(:burst_period_seconds)
 
   @doc """
-  Checks a request against both limits.
-
-  The message in `{:error, :rate_limit, message}` is meant to be shown to the
-  caller.
+  Checks a request against the given hourly limit, and a fixed burst limit.
   """
-  @spec check_rate_limit(String.t(), pos_integer()) :: :ok | {:error, :rate_limit, String.t()}
-  def check_rate_limit(limit_key, hourly_limit) do
-    with :ok <- check_hourly_limit(limit_key, hourly_limit) do
-      check_burst_limit(limit_key)
+  @spec check_burst_and_hourly(String.t(), pos_integer()) ::
+          :ok | {:error, :rate_limit_hourly | :rate_limit_burst}
+  def check_burst_and_hourly(limit_key, hourly_limit) do
+    with :ok <- check_hourly(limit_key, hourly_limit) do
+      check_burst(limit_key)
     end
   end
 
-  defp check_hourly_limit(limit_key, hourly_limit) do
+  @doc """
+  Checks a request against the given hourly limit.
+  """
+  @spec check_hourly(String.t(), pos_integer()) :: :ok | {:error, :rate_limit_hourly}
+  def check_hourly(limit_key, hourly_limit) do
     case Plausible.RateLimit.check_rate(limit_key, to_timeout(hour: 1), hourly_limit) do
-      {:allow, _} ->
-        :ok
-
-      {:deny, _} ->
-        {:error, :rate_limit,
-         "Too many API requests. The limit is #{hourly_limit} per hour. Please contact us to request more capacity."}
+      {:allow, _} -> :ok
+      {:deny, _} -> {:error, :rate_limit_hourly}
     end
   end
 
-  defp check_burst_limit(limit_key) do
-    burst_period_seconds = burst_period_seconds()
-    burst_request_limit = burst_request_limit()
-
+  @doc """
+  Checks a request against the fixed burst limit.
+  """
+  @spec check_burst(String.t()) :: :ok | {:error, :rate_limit_burst}
+  def check_burst(limit_key) do
     case Plausible.RateLimit.check_rate(
            limit_key,
-           to_timeout(second: burst_period_seconds),
-           burst_request_limit
+           to_timeout(second: burst_period_seconds()),
+           burst_request_limit()
          ) do
-      {:allow, _} ->
-        :ok
-
-      {:deny, _} ->
-        {:error, :rate_limit,
-         "Too many API requests in a short period of time. The limit is #{burst_request_limit} per #{burst_period_seconds} seconds. Please throttle your requests."}
+      {:allow, _} -> :ok
+      {:deny, _} -> {:error, :rate_limit_burst}
     end
   end
 end
