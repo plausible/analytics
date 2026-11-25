@@ -39,6 +39,54 @@ defmodule Plausible.Billing.SubscriptionTest do
     end
   end
 
+  describe "many Billing subscriptions of a team" do
+    setup do
+      {:ok, team: new_team() |> set_billing_customer_id("ctm_1")}
+    end
+
+    test "the latest one is the current subscription", %{team: team} do
+      insert(:billing_subscription,
+        team: team,
+        billing_customer_id: "ctm_1",
+        billing_subscription_id: "sub_old",
+        status: :deleted,
+        inserted_at: ~N[2026-01-01 00:00:00]
+      )
+
+      insert(:billing_subscription,
+        team: team,
+        billing_customer_id: "ctm_1",
+        billing_subscription_id: "sub_new",
+        status: :active,
+        inserted_at: ~N[2026-02-01 00:00:00]
+      )
+
+      assert %Subscription{type: :billing, billing_subscription_id: "sub_new"} =
+               Teams.with_subscription(team).subscription
+    end
+
+    test "a deleted subscription can live next to an active one", %{team: team} do
+      insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: :deleted)
+      insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: :active)
+
+      assert Repo.aggregate(
+               from(s in PaddleBilling.Subscription, where: s.team_id == ^team.id),
+               :count
+             ) ==
+               2
+    end
+
+    test "only one subscription can be live", %{team: team} do
+      insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: :active)
+
+      for status <- [:active, :past_due, :paused] do
+        assert_raise Ecto.ConstraintError, ~r/billing_subscriptions_live_team_id_index/, fn ->
+          insert(:billing_subscription, team: team, billing_customer_id: "ctm_1", status: status)
+        end
+      end
+    end
+  end
+
   describe "Teams.delete/1" do
     test "removes every Classic and Billing subscription and event of the team" do
       team = new_team() |> set_billing_customer_id("ctm_1")
