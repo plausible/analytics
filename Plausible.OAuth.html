@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-4C731DED.js"></script>
+    <script src="dist/sidebar_items-A898080D.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -223,6 +223,17 @@ authorize-time.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#count_grants/1" data-no-tooltip translate="no">count_grants(user)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Counts the user's grants: <code class="inline">:active</code> ones, which can still be used, and
+<code class="inline">:all</code> of them, including revoked and expired ones.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#create_authorization_code/3" data-no-tooltip translate="no">create_authorization_code(user, team, attrs)</a>
 
       </div>
@@ -255,13 +266,12 @@ scopes, resource, user and team.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_grants/1" data-no-tooltip translate="no">list_grants(user)</a>
+        <a href="#list_grants/2" data-no-tooltip translate="no">list_grants(user, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Lists the grants a user can still use, across all of their teams, with the
-team preloaded. Revoked grants and grants whose refresh token has expired
-are left out, since neither can be used anymore.</p></div>
+        <div class="summary-synopsis"><p>Lists a page of the user's grants, across all of their teams, with the
+team preloaded.</p></div>
 
     </div>
 
@@ -345,7 +355,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">presented_grant()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L101" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L102" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -376,7 +386,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">presented_refresh()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L185" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L186" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -406,7 +416,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">token_response()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L28" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L29" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -450,7 +460,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">access_token_ttl_seconds()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L37" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L38" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -476,7 +486,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">after_user_removed_from_team(team, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L459" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L515" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -503,7 +513,7 @@ settings view. Refreshing tokens records it too, see <a href="#refresh_token/2">
     </a>
     <h1 class="signature" translate="no">consume_authorization_code(code, presented)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L110" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L111" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -528,6 +538,36 @@ verifier, as required by
 can only ever be redeemed once.</p><p>To redeem the code, the user must still have a role in the team.</p>
   </section>
 </section>
+<section class="detail" id="count_grants/1">
+
+  <div class="detail-header">
+    <a href="#count_grants/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">count_grants(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L431" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> count_grants(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: %{
+  active: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  all: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
+}</pre>
+
+      </div>
+
+<p>Counts the user's grants: <code class="inline">:active</code> ones, which can still be used, and
+<code class="inline">:all</code> of them, including revoked and expired ones.</p>
+  </section>
+</section>
 <section class="detail" id="create_authorization_code/3">
 
   <div class="detail-header">
@@ -536,7 +576,7 @@ can only ever be redeemed once.</p><p>To redeem the code, the user must still ha
     </a>
     <h1 class="signature" translate="no">create_authorization_code(user, team, attrs)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L61" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L62" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -573,7 +613,7 @@ where the raw value exists.</p>
     </a>
     <h1 class="signature" translate="no">find_access_token(raw_access, resource)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L341" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L342" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -605,7 +645,7 @@ for a different resource is not found.</p><p>Expired, revoked, wrong resource, i
     </a>
     <h1 class="signature" translate="no">issue_token(auth_code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L152" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L153" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -626,15 +666,17 @@ scopes, resource, user and team.</p><p>Issues an access and a refresh token toge
 once here and only their hashes are kept.</p>
   </section>
 </section>
-<section class="detail" id="list_grants/1">
+<section class="detail" id="list_grants/2">
+
+    <span id="list_grants/1"></span>
 
   <div class="detail-header">
-    <a href="#list_grants/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#list_grants/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">list_grants(user)</h1>
+    <h1 class="signature" translate="no">list_grants(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L374" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L389" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -645,14 +687,25 @@ once here and only their hashes are kept.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> list_grants(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: [<a href="Plausible.OAuth.Grant.html#t:t/0">Plausible.OAuth.Grant.t</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> list_grants(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
+  include_revoked: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
+  page: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
+) :: %{
+  entries: [<a href="Plausible.OAuth.Grant.html#t:t/0">Plausible.OAuth.Grant.t</a>()],
+  page_number: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
+  page_size: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
+  total_entries: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  total_pages: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
+}</pre>
 
       </div>
 
-<p>Lists the grants a user can still use, across all of their teams, with the
-team preloaded. Revoked grants and grants whose refresh token has expired
-are left out, since neither can be used anymore.</p><p>Most recently used grants come first; never used ones are ordered by
-when they were connected.</p>
+<p>Lists a page of the user's grants, across all of their teams, with the
+team preloaded.</p><p>Most recently used grants come first; never used ones are ordered by
+when they were connected.</p><p>Options:</p><ul><li><code class="inline">:include_revoked</code> - when <code class="inline">false</code> (the default), revoked grants and
+grants whose refresh token has expired are left out, since neither can
+be used anymore. When <code class="inline">true</code>, they are included.</li><li><code class="inline">:page</code> - the page number, starting at 1 (the default). A page after
+the last one returns the last page.</li></ul>
   </section>
 </section>
 <section class="detail" id="refresh_grace_period_seconds/0">
@@ -663,7 +716,7 @@ when they were connected.</p>
     </a>
     <h1 class="signature" translate="no">refresh_grace_period_seconds()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L44" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -689,7 +742,7 @@ when they were connected.</p>
     </a>
     <h1 class="signature" translate="no">refresh_token(raw_refresh, presented)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L193" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L194" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -724,7 +777,7 @@ later, it means the token leaked, and the whole grant is revoked.</p>
     </a>
     <h1 class="signature" translate="no">refresh_token_ttl_seconds()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L40" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L41" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -750,7 +803,7 @@ later, it means the token leaked, and the whole grant is revoked.</p>
     </a>
     <h1 class="signature" translate="no">revoke_grant(grant)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L444" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L500" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -778,7 +831,7 @@ an already-revoked grant keeps its original <code class="inline">revoked_at</cod
     </a>
     <h1 class="signature" translate="no">revoke_user_grant(user, grant_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L395" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L451" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -807,7 +860,7 @@ user's live grants, including one that is already revoked.</p>
     </a>
     <h1 class="signature" translate="no">touch_grant(grant, now \\ now())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L421" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/oauth.ex#L477" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
