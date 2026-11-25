@@ -9,6 +9,7 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
 
   require Plausible.Billing.Subscription.Status
 
+  alias Plausible.Billing.PaddleBilling
   alias Plausible.Billing.PaddleBilling.{SubscriptionEvent, WebhookFailure, Webhooks}
   alias Plausible.Billing.Plans
   alias Plausible.Billing.Subscription.Status
@@ -112,15 +113,31 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       assert stored.status == Status.active()
     end
 
-    test "replaces the previous subscription of the team", %{team: team} do
+    test "keeps the cancelled subscription of the team when it subscribes again", %{team: team} do
       created(team)
+      updated(scheduled_change: %{"action" => "cancel", "effective_at" => "2026-12-10T10:00:00Z"})
 
-      assert {:ok, :applied} = created(team, id: "sub_second", customer_id: "ctm_second")
+      assert {:ok, :applied} = created(team, id: "sub_second")
 
-      assert %{billing_subscription_id: "sub_second", billing_customer_id: "ctm_second"} =
+      assert %{billing_subscription_id: "sub_second", status: Status.active()} =
                Teams.with_subscription(team).subscription
 
-      assert Repo.reload!(team).billing_customer_id == "ctm_second"
+      assert Repo.aggregate(
+               from(s in PaddleBilling.Subscription, where: s.team_id == ^team.id),
+               :count
+             ) ==
+               2
+    end
+
+    test "rejects a second live subscription for the team", %{team: team} do
+      created(team)
+
+      assert {:error, {:invalid_subscription, _}} = created(team, id: "sub_second")
+
+      assert %{billing_subscription_id: @subscription_id} =
+               Teams.with_subscription(team).subscription
+
+      assert Repo.exists?(WebhookFailure)
     end
 
     test "takes the interval from the price's billing cycle", %{team: team} do
@@ -467,6 +484,39 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
                )
 
       assert Repo.reload!(team).locked
+    end
+
+    test "updates a replaced subscription without affecting the team", %{team: team} do
+      Plausible.Test.Support.Sentry.setup(self())
+
+      updated(
+        occurred_at: "2026-11-11T10:00:00.000000Z",
+        scheduled_change: %{"action" => "cancel", "effective_at" => "2026-12-10T10:00:00Z"}
+      )
+
+      assert_email_delivered_with(subject: "Where did Plausible fall short?")
+
+      assert {:ok, :applied} = created(team, id: "sub_second")
+
+      assert {:ok, :applied} =
+               updated(
+                 occurred_at: "2026-12-10T10:00:05.000000Z",
+                 status: "canceled",
+                 next_billed_at: nil,
+                 current_billing_period: nil,
+                 scheduled_change: nil,
+                 canceled_at: "2026-12-10T10:00:00.000000Z"
+               )
+
+      assert %{billing_subscription_id: "sub_second", status: Status.active()} =
+               Teams.with_subscription(team).subscription
+
+      old = Repo.get_by!(PaddleBilling.Subscription, billing_subscription_id: @subscription_id)
+      assert old.status == Status.deleted()
+      assert old.next_bill_date == ~D[2026-12-10]
+
+      refute_email_delivered_with(subject: "Where did Plausible fall short?")
+      assert [] = Sentry.Test.pop_sentry_reports()
     end
 
     test "falls back to the event date when a paused subscription has no dates", %{team: team} do

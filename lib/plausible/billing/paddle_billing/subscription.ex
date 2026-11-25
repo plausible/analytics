@@ -2,7 +2,8 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
   @moduledoc """
   Schema representing Paddle Billing subscription.
 
-  Only at most a single subscription can exist per team, at all times.
+  A team has at most one live (active, past due or paused) subscription at a time.
+  Cancelled subscriptions are kept, so their later events still find them.
   """
 
   use Ecto.Schema
@@ -50,6 +51,6 @@ defmodule Plausible.Billing.PaddleBilling.Subscription do
     |> cast(attrs, fields())
     |> validate_required(@required_fields)
     |> unique_constraint(:billing_subscription_id)
-    |> unique_constraint(:team_id)
+    |> unique_constraint(:team_id, name: :billing_subscriptions_live_team_id_index)
   end
 end

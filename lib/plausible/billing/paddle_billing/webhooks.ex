@@ -183,13 +183,24 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
   defp apply_subscription(kind, existing, team, attrs) do
     link_customer(team, attrs.billing_customer_id)
 
-    subscription = upsert_subscription(kind, existing, team, attrs)
+    with {:ok, subscription} <- upsert_subscription(kind, existing, team, attrs) do
+      if current?(team, subscription) do
+        subscription
+        |> SubscriptionState.apply_subscription_state()
+        |> maybe_notify_cancellation(kind, existing, subscription)
+      end
 
-    subscription
-    |> SubscriptionState.apply_subscription_state()
-    |> maybe_notify_cancellation(kind, existing, subscription)
+      {:ok, :applied}
+    end
+  end
 
-    {:ok, :applied}
+  # A team that subscribed again keeps its earlier subscription, which still
+  # receives events. Those must not change the state of the team.
+  defp current?(team, subscription) do
+    case Repo.preload(team, :subscription, force: true).subscription do
+      %{type: :billing, id: id} -> id == subscription.id
+      _ -> false
+    end
   end
 
   defp link_customer(team, customer_id) do
@@ -201,18 +212,25 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
   defp upsert_subscription(:created, _existing, team, attrs) do
     %Subscription{team_id: team.id}
     |> Subscription.changeset(attrs)
-    |> Repo.insert!(
+    |> Repo.insert(
       on_conflict: {:replace, Subscription.fields() ++ [:updated_at]},
-      conflict_target: :team_id,
+      conflict_target: :billing_subscription_id,
       returning: true
     )
+    |> wrap_changeset_error()
   end
 
   defp upsert_subscription(:updated, existing, _team, attrs) do
     existing
     |> Subscription.changeset(attrs)
-    |> Repo.update!()
+    |> Repo.update()
+    |> wrap_changeset_error()
   end
+
+  defp wrap_changeset_error({:ok, subscription}), do: {:ok, subscription}
+
+  defp wrap_changeset_error({:error, changeset}),
+    do: {:error, {:invalid_subscription, changeset.errors}}
 
   defp maybe_notify_cancellation(
          team,
