@@ -582,7 +582,8 @@ defmodule Plausible.EmailSuppressionsTest do
 
         assert conn.request_path in [
                  "/message-streams/outbound/suppressions/delete",
-                 "/message-streams/priority/suppressions/delete"
+                 "/message-streams/priority/suppressions/delete",
+                 "/message-streams/untrusted-recipients/suppressions/delete"
                ]
 
         Req.Test.json(conn, %{

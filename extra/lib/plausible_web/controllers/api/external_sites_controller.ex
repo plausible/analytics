@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
 
   def index(conn, params) do
+    Plausible.OpenTelemetry.add_tool_attribute("list_sites")
     user = conn.assigns.current_user
     team = conn.assigns.current_team || Teams.get(params["team_id"])
 
@@ -272,9 +273,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
               email: invitation.team_invitation.email,
               status: "invited"
             })
-
-          {:error, :disposable_email} ->
-            H.bad_request(conn, "Disposable email addresses are not allowed")
         end
       end
     else
