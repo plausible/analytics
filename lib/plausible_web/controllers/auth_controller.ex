@@ -315,14 +315,14 @@ defmodule PlausibleWeb.AuthController do
       |> UserAuth.log_in_user(user, redirect_path)
     else
       {:error, :wrong_password} ->
-        Auth.log_failed_login_attempt("wrong password for #{email}")
+        Auth.log_failed_login_attempt("wrong password for #{email}", conn)
 
         conn
         |> put_flash(:login_error, "Incorrect email or password. Please try again.")
         |> render_login_form()
 
       {:error, :user_not_found} ->
-        Auth.log_failed_login_attempt("user not found for #{email}")
+        Auth.log_failed_login_attempt("user not found for #{email}", conn)
         Plausible.Auth.Password.dummy_calculation()
 
         conn
@@ -330,7 +330,7 @@ defmodule PlausibleWeb.AuthController do
         |> render_login_form()
 
       {:error, {:rate_limit, _}} ->
-        Auth.log_failed_login_attempt("too many login attempts for #{email}")
+        Auth.log_failed_login_attempt("too many login attempts for #{email}", conn)
 
         render_error(
           conn,
@@ -505,7 +505,10 @@ defmodule PlausibleWeb.AuthController do
           |> UserAuth.log_in_user(user, params["return_to"])
 
         {:error, :invalid_code} ->
-          Auth.log_failed_login_attempt("wrong 2FA verification code provided for #{user.email}")
+          Auth.log_failed_login_attempt(
+            "wrong 2FA verification code provided for #{user.email}",
+            conn
+          )
 
           render(conn, "verify_2fa.html",
             legacy_layout?: false,
@@ -539,7 +542,10 @@ defmodule PlausibleWeb.AuthController do
           UserAuth.log_in_user(conn, user)
 
         {:error, :invalid_code} ->
-          Auth.log_failed_login_attempt("wrong 2FA recovery code provided for #{user.email}")
+          Auth.log_failed_login_attempt(
+            "wrong 2FA recovery code provided for #{user.email}",
+            conn
+          )
 
           render(conn, "verify_2fa_recovery_code.html",
             legacy_layout?: false,
@@ -560,7 +566,7 @@ defmodule PlausibleWeb.AuthController do
           {:ok, user}
         else
           {:error, {:rate_limit, _}} ->
-            Auth.log_failed_login_attempt("too many login attempts for #{user.email}")
+            Auth.log_failed_login_attempt("too many login attempts for #{user.email}", conn)
 
             conn
             |> TwoFactor.Session.clear_2fa_user()

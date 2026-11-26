@@ -147,10 +147,10 @@ defmodule Plausible.Auth do
     end
   end
 
-  @spec log_failed_login_attempt(String.t()) :: :ok
-  def log_failed_login_attempt(message) do
+  @spec log_failed_login_attempt(String.t(), Plug.Conn.t()) :: :ok
+  def log_failed_login_attempt(message, conn) do
     if Application.get_env(:plausible, :log_failed_login_attempts) do
-      Logger.warning("[login] #{message}")
+      Logger.warning("[login] #{message} source_ip=#{inspect(PlausibleWeb.RemoteIP.get(conn))}")
     end
 
     :ok
