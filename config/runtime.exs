@@ -270,10 +270,6 @@ google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 postmark_webhook_username = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_USERNAME")
 postmark_webhook_password = get_var_from_path_or_env(config_dir, "POSTMARK_WEBHOOK_PASSWORD")
-help_scout_app_id = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_ID")
-help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SECRET")
-help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
-help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
 otlp_endpoint =
   get_var_from_path_or_env(config_dir, "OTLP_ENDPOINT")
@@ -629,12 +625,6 @@ config :plausible, :google,
   client_secret: google_secret,
   api_url: "https://www.googleapis.com",
   reporting_api_url: "https://analyticsreporting.googleapis.com"
-
-config :plausible, Plausible.HelpScout,
-  app_id: help_scout_app_id,
-  app_secret: help_scout_app_secret,
-  signature_key: help_scout_signature_key,
-  vault_key: help_scout_vault_key
 
 config :plausible, Plausible.Postmark,
   api_key: postmark_api_key,
