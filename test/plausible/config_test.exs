@@ -457,6 +457,41 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "socket_dir in hostname with port" do
+      env = [
+        {"DATABASE_URL", "postgresql://postgres:postgres@%2Frun%2Fpostgresql:5433/plausible_db"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db",
+               port: 5433,
+               username: "postgres",
+               password: "postgres"
+             ]
+    end
+
+    test "socket_dir in query with port" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db?host=/run/postgresql&port=5433"}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db",
+               port: 5433
+             ]
+    end
+
+    test "socket_dir in query with invalid port" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db?host=/run/postgresql&port=socket"}]
+
+      assert_raise ArgumentError, ~r/includes an invalid port: socket/, fn ->
+        runtime_config(env)
+      end
+    end
+
     test "socket_dir missing" do
       env = [{"DATABASE_URL", "postgresql:///plausible_db"}]
       assert_raise ArgumentError, ~r/doesn't include host info/, fn -> runtime_config(env) end
