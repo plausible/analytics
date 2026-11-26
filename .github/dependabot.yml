@@ -24,7 +24,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/tracker"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
