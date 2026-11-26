@@ -150,8 +150,6 @@ Plausible.Google.GA4.HTTP.html
 Plausible.Google.GA4.ReportRequest.html
 Plausible.Google.HTTP.html
 Plausible.HTTPClient.html
-Plausible.HelpScout.Vault.html
-Plausible.HelpScout.html
 Plausible.Helpers.JSON.html
 Plausible.IP.Tools.Registry.html
 Plausible.IP.Tools.html
@@ -457,8 +455,6 @@ PlausibleWeb.FirstLaunchPlug.html
 PlausibleWeb.Flows.html
 PlausibleWeb.GoogleAnalyticsController.html
 PlausibleWeb.GoogleAnalyticsView.html
-PlausibleWeb.HelpScoutController.html
-PlausibleWeb.HelpScoutView.html
 PlausibleWeb.InvitationController.html
 PlausibleWeb.LayoutView.JWT.html
 PlausibleWeb.LayoutView.html
@@ -644,8 +640,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-7CA9E0BB.js
-dist/sidebar_items-3BBDA7BD.js
+dist/search_data-28B29238.js
+dist/sidebar_items-3EE76620.js
 index.html
 readme.html
 search.html
