@@ -85,6 +85,12 @@ defmodule Plausible.ApiRequestLogTest do
                  recorded_entries(team)
       end
 
+      test "records team 0 when the team is not known", %{api_key: api_key} do
+        :ok = ApiRequestLog.record(entry_attrs(nil, api_key, []))
+
+        assert [%Entry{team_id: 0}] = recorded_entries_of(api_key)
+      end
+
       test "records nothing when the flag is off for the user", %{
         user: user,
         team: team,
@@ -131,7 +137,7 @@ defmodule Plausible.ApiRequestLogTest do
 
     defp entry_attrs(team, credential, overrides) do
       Enum.into(overrides, %{
-        team_id: team.id,
+        team_id: team && team.id,
         credential: credential,
         interface: :rest,
         operation: "POST /api/v2/query",
@@ -152,6 +158,13 @@ defmodule Plausible.ApiRequestLogTest do
       WriteBuffer.flush()
 
       from(e in Entry, where: e.team_id == ^team.id)
+      |> Plausible.ClickhouseRepo.all()
+    end
+
+    defp recorded_entries_of(api_key) do
+      WriteBuffer.flush()
+
+      from(e in Entry, where: e.credential_type == "api_key" and e.credential_id == ^api_key.id)
       |> Plausible.ClickhouseRepo.all()
     end
   end

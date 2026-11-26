@@ -238,6 +238,37 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
         assert [%Entry{status: 200, billable: false}] = recorded_entries(team)
       end
 
+      @tag :capture_log
+      test "with team 0 for a legacy API key on another team's site", %{site: site} do
+        other_user = new_user()
+        FunWithFlags.enable(:record_api_requests, for_actor: other_user)
+        api_key = insert(:api_key, user: other_user)
+
+        conn =
+          api_key
+          |> api_conn()
+          |> get("/api/v1/stats/aggregate", v1_aggregate(site))
+
+        assert json_response(conn, 401)
+
+        assert [%Entry{team_id: 0, status: 401, billable: false}] =
+                 recorded_entries_of(api_key)
+      end
+
+      test "with team 0 for a legacy API key without a site", %{user: user} do
+        api_key = insert(:api_key, user: user)
+
+        conn =
+          api_key
+          |> api_conn()
+          |> get("/api/v1/sites")
+
+        assert json_response(conn, 200)
+
+        assert [%Entry{team_id: 0, operation: "GET /api/v1/sites", status: 200}] =
+                 recorded_entries_of(api_key)
+      end
+
       test "with an empty user agent when the header is missing", %{
         site: site,
         team: team,
@@ -271,34 +302,6 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
         assert conn |> get("/api/v1/stats/aggregate", v1_aggregate(site)) |> json_response(429)
 
         assert [%Entry{status: 200}] = recorded_entries(team)
-      end
-
-      @tag :capture_log
-      test "for a legacy API key on another team's site", %{site: site, team: team} do
-        other_user = new_user()
-        FunWithFlags.enable(:record_api_requests, for_actor: other_user)
-        api_key = insert(:api_key, user: other_user)
-
-        conn =
-          api_key
-          |> api_conn()
-          |> get("/api/v1/stats/aggregate", v1_aggregate(site))
-
-        assert json_response(conn, 401)
-        assert recorded_entries(team) == []
-        assert recorded_entries_of(api_key) == []
-      end
-
-      test "for a legacy API key without a site", %{user: user, team: team} do
-        api_key = insert(:api_key, user: user)
-
-        conn =
-          api_key
-          |> api_conn()
-          |> get("/api/v1/sites")
-
-        assert json_response(conn, 200)
-        assert recorded_entries(team) == []
       end
 
       test "for the dashboard and the docs query", %{user: user, site: site, team: team} do

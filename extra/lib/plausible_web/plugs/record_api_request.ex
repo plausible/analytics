@@ -5,8 +5,8 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
 
   The request is recorded under the team of `:current_credential`. A
   legacy key has no team, so it uses the team of the verified `:site`.
-  Without a team, nothing is recorded. A 2xx is billable, unless a super
-  admin made it.
+  Without a team, the request is recorded with team `0`. A 2xx is
+  billable, unless a super admin made it.
 
   Recording is best-effort. A failure is logged and never changes the
   response.
@@ -26,20 +26,16 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
   end
 
   defp record(%{assigns: %{current_credential: credential}} = conn) do
-    team_id = team_id(conn, credential)
-
-    if team_id do
-      ApiRequestLog.record(%{
-        team_id: team_id,
-        credential: credential,
-        interface: :rest,
-        operation: operation(conn),
-        status: conn.status,
-        billable: conn.status in 200..299 and not Auth.super_admin?(credential.user_id),
-        request_id: conn |> get_resp_header("x-request-id") |> List.first(),
-        user_agent: conn |> get_req_header("user-agent") |> List.first("")
-      })
-    end
+    ApiRequestLog.record(%{
+      team_id: team_id(conn, credential),
+      credential: credential,
+      interface: :rest,
+      operation: operation(conn),
+      status: conn.status,
+      billable: conn.status in 200..299 and not Auth.super_admin?(credential.user_id),
+      request_id: conn |> get_resp_header("x-request-id") |> List.first(),
+      user_agent: conn |> get_req_header("user-agent") |> List.first("")
+    })
 
     conn
   rescue
