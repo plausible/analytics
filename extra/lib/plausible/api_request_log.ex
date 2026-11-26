@@ -8,16 +8,17 @@ defmodule Plausible.ApiRequestLog do
 
   alias Plausible.ApiRequestLog.Entry
   alias Plausible.ApiRequestLog.WriteBuffer
-  alias Plausible.Teams.Team
+  alias Plausible.Auth.User
 
   @doc """
   Records one API request. Writes are batched and asynchronous.
 
-  Does nothing when the `:record_api_requests` flag is off for the team.
+  Does nothing when the `:record_api_requests` flag is off for the user who
+  owns the credential.
   """
   @spec record(Entry.attrs()) :: :ok
-  def record(%{team_id: team_id} = attrs) do
-    if FunWithFlags.enabled?(:record_api_requests, for: %Team{id: team_id}) do
+  def record(attrs) do
+    if FunWithFlags.enabled?(:record_api_requests, for: %User{id: attrs.credential.user_id}) do
       attrs
       |> Entry.new()
       |> WriteBuffer.insert()

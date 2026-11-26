@@ -14,7 +14,8 @@ defmodule Plausible.ApiRequestLog.Entry do
   @type t() :: %__MODULE__{}
 
   @type attrs() :: %{
-          team_id: pos_integer(),
+          team_id: pos_integer() | nil,
+          site_id: pos_integer() | nil,
           credential: ApiKey.t() | Grant.t(),
           interface: :rest | :mcp,
           operation: String.t(),
@@ -29,8 +30,11 @@ defmodule Plausible.ApiRequestLog.Entry do
     # When the request was recorded
     field :timestamp, :utc_datetime
 
-    # The team that the request belongs to
+    # The team that the request belongs to, or `0` when the team is not known
     field :team_id, Ch, type: "UInt64"
+
+    # The site that the request was made for, or `0` when there is no site
+    field :site_id, Ch, type: "UInt64"
 
     # The user who owns the credential
     field :user_id, Ch, type: "UInt64"
@@ -72,7 +76,8 @@ defmodule Plausible.ApiRequestLog.Entry do
 
     %__MODULE__{
       timestamp: DateTime.utc_now(:second),
-      team_id: attrs.team_id,
+      team_id: attrs.team_id || 0,
+      site_id: attrs.site_id || 0,
       user_id: attrs.credential.user_id,
       credential_type: credential_type,
       credential_id: attrs.credential.id,
