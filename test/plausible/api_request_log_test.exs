@@ -12,18 +12,25 @@ defmodule Plausible.ApiRequestLogTest do
       user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
       api_key = insert(:api_key, user: user, team: team)
+      site = new_site(owner: user)
       FunWithFlags.enable(:record_api_requests, for_actor: user)
 
-      {:ok, user: user, team: team, api_key: api_key}
+      {:ok, user: user, team: team, site: site, api_key: api_key}
     end
 
     describe "record/1" do
-      test "records a request made with an API key", %{user: user, team: team, api_key: api_key} do
+      test "records a request made with an API key", %{
+        user: user,
+        team: team,
+        site: site,
+        api_key: api_key
+      } do
         before_record = DateTime.utc_now(:second)
 
         :ok =
           ApiRequestLog.record(%{
             team_id: team.id,
+            site_id: site.id,
             credential: api_key,
             interface: :rest,
             operation: "POST /api/v2/query",
@@ -37,6 +44,7 @@ defmodule Plausible.ApiRequestLogTest do
                          %Entry{
                            timestamp: timestamp,
                            team_id: ^team.id,
+                           site_id: ^site.id,
                            user_id: ^user.id,
                            credential_type: "api_key",
                            credential_id: ^api_key.id,
@@ -83,6 +91,12 @@ defmodule Plausible.ApiRequestLogTest do
 
         assert [%Entry{credential_label: "https://client.example.com/oauth-metadata"}] =
                  recorded_entries(team)
+      end
+
+      test "records site 0 when the request has no site", %{team: team, api_key: api_key} do
+        :ok = ApiRequestLog.record(entry_attrs(team, api_key, site_id: nil))
+
+        assert [%Entry{site_id: 0}] = recorded_entries(team)
       end
 
       test "records team 0 when the team is not known", %{api_key: api_key} do
@@ -138,6 +152,7 @@ defmodule Plausible.ApiRequestLogTest do
     defp entry_attrs(team, credential, overrides) do
       Enum.into(overrides, %{
         team_id: team && team.id,
+        site_id: nil,
         credential: credential,
         interface: :rest,
         operation: "POST /api/v2/query",

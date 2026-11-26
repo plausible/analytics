@@ -46,6 +46,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
                  %Entry{
                    timestamp: timestamp,
                    team_id: team_id,
+                   site_id: site_id,
                    user_id: user_id,
                    credential_type: "api_key",
                    credential_id: credential_id,
@@ -61,6 +62,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
         assert DateTime.compare(timestamp, started_at) != :lt
         assert team_id == team.id
+        assert site_id == site.id
         assert user_id == user.id
         assert credential_id == api_key.id
         assert credential_label == api_key.key_prefix
@@ -111,7 +113,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
         conn = get(conn, "/api/v1/stats/aggregate", v1_aggregate(other_site))
 
         assert json_response(conn, 401)
-        assert [%Entry{status: 401, billable: false}] = recorded_entries(team)
+        assert [%Entry{status: 401, billable: false, site_id: 0}] = recorded_entries(team)
       end
 
       test "with the route of a Stats API v1 request, without the query string", %{
@@ -139,8 +141,15 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
         assert json_response(conn, 200)
 
-        assert [%Entry{operation: "DELETE /api/v1/sites/goals/:goal_id", status: 200}] =
-                 recorded_entries(team)
+        site_id = site.id
+
+        assert [
+                 %Entry{
+                   operation: "DELETE /api/v1/sites/goals/:goal_id",
+                   status: 200,
+                   site_id: ^site_id
+                 }
+               ] = recorded_entries(team)
       end
 
       test "under the site's team for a legacy API key of a team member", %{
@@ -251,11 +260,11 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
         assert json_response(conn, 401)
 
-        assert [%Entry{team_id: 0, status: 401, billable: false}] =
+        assert [%Entry{team_id: 0, site_id: 0, status: 401, billable: false}] =
                  recorded_entries_of(api_key)
       end
 
-      test "with team 0 for a legacy API key without a site", %{user: user} do
+      test "with team 0 and site 0 for a legacy API key without a site", %{user: user} do
         api_key = insert(:api_key, user: user)
 
         conn =
@@ -265,7 +274,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
         assert json_response(conn, 200)
 
-        assert [%Entry{team_id: 0, operation: "GET /api/v1/sites", status: 200}] =
+        assert [%Entry{team_id: 0, site_id: 0, operation: "GET /api/v1/sites", status: 200}] =
                  recorded_entries_of(api_key)
       end
 
