@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
     setup %{user: user} do
       team = team_of(user)
       api_key = insert(:api_key, user: user, team: team)
-      FunWithFlags.enable(:record_api_requests, for_actor: team)
+      FunWithFlags.enable(:record_api_requests, for_actor: user)
 
       conn =
         api_key
@@ -106,16 +106,12 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
         conn: conn,
         team: team
       } do
-        other_user = new_user()
-        other_site = new_site(owner: other_user)
-        other_team = team_of(other_user)
-        FunWithFlags.enable(:record_api_requests, for_actor: other_team)
+        other_site = new_site(owner: new_user())
 
         conn = get(conn, "/api/v1/stats/aggregate", v1_aggregate(other_site))
 
         assert json_response(conn, 401)
         assert [%Entry{status: 401, billable: false}] = recorded_entries(team)
-        assert recorded_entries(other_team) == []
       end
 
       test "with the route of a Stats API v1 request, without the query string", %{
@@ -193,6 +189,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
       @tag :capture_log
       test "under the site's team for a legacy API key of a guest", %{site: site, team: team} do
         guest = add_guest(site, role: :viewer)
+        FunWithFlags.enable(:record_api_requests, for_actor: guest)
         api_key = insert(:api_key, user: guest)
 
         conn =
@@ -214,6 +211,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
       } do
         super_admin = new_user()
         patch_env(:super_admin_user_ids, [super_admin.id])
+        FunWithFlags.enable(:record_api_requests, for_actor: super_admin)
         api_key = insert(:api_key, user: super_admin)
 
         conn =
@@ -277,7 +275,9 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
       @tag :capture_log
       test "for a legacy API key on another team's site", %{site: site, team: team} do
-        api_key = insert(:api_key, user: new_user())
+        other_user = new_user()
+        FunWithFlags.enable(:record_api_requests, for_actor: other_user)
+        api_key = insert(:api_key, user: other_user)
 
         conn =
           api_key
@@ -310,8 +310,13 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
         assert recorded_entries(team) == []
       end
 
-      test "when the flag is off for the team", %{conn: conn, site: site, team: team} do
-        FunWithFlags.clear(:record_api_requests, for_actor: team)
+      test "when the flag is off for the user", %{
+        conn: conn,
+        user: user,
+        site: site,
+        team: team
+      } do
+        FunWithFlags.clear(:record_api_requests, for_actor: user)
 
         assert conn |> post("/api/v2/query", v2_query(site)) |> json_response(200)
         assert recorded_entries(team) == []

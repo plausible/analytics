@@ -12,7 +12,7 @@ defmodule Plausible.ApiRequestLogTest do
       user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
       api_key = insert(:api_key, user: user, team: team)
-      FunWithFlags.enable(:record_api_requests, for_actor: team)
+      FunWithFlags.enable(:record_api_requests, for_actor: user)
 
       {:ok, user: user, team: team, api_key: api_key}
     end
@@ -85,8 +85,12 @@ defmodule Plausible.ApiRequestLogTest do
                  recorded_entries(team)
       end
 
-      test "records nothing when the flag is off for the team", %{team: team, api_key: api_key} do
-        FunWithFlags.clear(:record_api_requests, for_actor: team)
+      test "records nothing when the flag is off for the user", %{
+        user: user,
+        team: team,
+        api_key: api_key
+      } do
+        FunWithFlags.clear(:record_api_requests, for_actor: user)
 
         :ok = ApiRequestLog.record(entry_attrs(team, api_key, []))
 
