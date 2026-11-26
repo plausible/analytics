@@ -34,6 +34,7 @@ defmodule Plausible.ApiRequestLogTest do
             credential: api_key,
             interface: :rest,
             operation: "POST /api/v2/query",
+            tool: "query_stats",
             status: 200,
             billable: true,
             request_id: "F-request-id",
@@ -51,6 +52,7 @@ defmodule Plausible.ApiRequestLogTest do
                            credential_label: ^api_key.key_prefix,
                            interface: "rest",
                            operation: "POST /api/v2/query",
+                           tool: "query_stats",
                            status: 200,
                            billable: true,
                            request_id: "F-request-id",
@@ -91,6 +93,15 @@ defmodule Plausible.ApiRequestLogTest do
 
         assert [%Entry{credential_label: "https://client.example.com/oauth-metadata"}] =
                  recorded_entries(team)
+      end
+
+      test "records an empty tool when the request used no tool", %{
+        team: team,
+        api_key: api_key
+      } do
+        :ok = ApiRequestLog.record(entry_attrs(team, api_key, tool: nil))
+
+        assert [%Entry{tool: ""}] = recorded_entries(team)
       end
 
       test "records site 0 when the request has no site", %{team: team, api_key: api_key} do
@@ -156,6 +167,7 @@ defmodule Plausible.ApiRequestLogTest do
         credential: credential,
         interface: :rest,
         operation: "POST /api/v2/query",
+        tool: nil,
         status: 200,
         billable: true,
         request_id: "F-request-id",
