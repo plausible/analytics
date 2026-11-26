@@ -53,6 +53,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
                    credential_label: credential_label,
                    interface: "rest",
                    operation: "POST /api/v2/query",
+                   tool: "query_stats",
                    status: 200,
                    billable: true,
                    request_id: ^request_id,
@@ -127,6 +128,26 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
 
         assert [%Entry{operation: "GET /api/v1/stats/aggregate", status: 200, billable: true}] =
                  recorded_entries(team)
+      end
+
+      test "with the tool of a Sites API list request", %{conn: conn, team: team} do
+        assert conn |> get("/api/v1/sites") |> json_response(200)
+
+        assert [%Entry{operation: "GET /api/v1/sites", tool: "list_sites", status: 200}] =
+                 recorded_entries(team)
+      end
+
+      @tag :capture_log
+      test "with the tool of a request that fails authorization", %{conn: conn, team: team} do
+        conn = post(conn, "/api/v2/query", v2_query(new_site(owner: new_user())))
+
+        assert json_response(conn, 401)
+        assert [%Entry{tool: "query_stats", status: 401}] = recorded_entries(team)
+      end
+
+      test "with an empty tool for a route without one", %{conn: conn, site: site, team: team} do
+        assert conn |> get("/api/v1/stats/aggregate", v1_aggregate(site)) |> json_response(200)
+        assert [%Entry{tool: ""}] = recorded_entries(team)
       end
 
       test "with the route pattern of a Sites API request", %{user: user, site: site, team: team} do

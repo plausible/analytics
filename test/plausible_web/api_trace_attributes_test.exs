@@ -66,6 +66,18 @@ defmodule PlausibleWeb.APITraceAttributesTest do
       assert attributes["plausible.error.code"] == :site_not_found
     end
 
+    test "traces the tool of a request that fails authorization" do
+      attributes =
+        trace(fn ->
+          build_conn()
+          |> put_req_header("authorization", "Bearer invalid")
+          |> post("/api/v2/query", query_params(new_site(), %{}))
+          |> json_response(401)
+        end)
+
+      assert attributes["plausible.tool"] == "query_stats"
+    end
+
     test "traces the error code of an invalid query" do
       user = new_user()
       site = new_site(owner: user)

@@ -342,7 +342,7 @@ defmodule PlausibleWeb.Router do
     } do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
-    post "/query", ExternalQueryApiController, :query
+    post "/query", ExternalQueryApiController, :query, assigns: %{tool: "query_stats"}
   end
 
   scope "/api/docs", PlausibleWeb.Api do
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Router do
       scope assigns: %{api_scope: "sites:read:*"} do
         pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
-        get "/", ExternalSitesController, :index
+        get "/", ExternalSitesController, :index, assigns: %{tool: "list_sites"}
         get "/teams", ExternalSitesController, :teams_index
 
         scope assigns: %{api_context: :site} do

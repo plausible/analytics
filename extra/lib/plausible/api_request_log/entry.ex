@@ -19,6 +19,7 @@ defmodule Plausible.ApiRequestLog.Entry do
           credential: ApiKey.t() | Grant.t(),
           interface: :rest | :mcp,
           operation: String.t(),
+          tool: String.t() | nil,
           status: non_neg_integer(),
           billable: boolean(),
           request_id: String.t(),
@@ -56,6 +57,10 @@ defmodule Plausible.ApiRequestLog.Entry do
     # `tools/call list_sites`.
     field :operation, Ch, type: "LowCardinality(String)"
 
+    # The capability that the request used, shared by REST and MCP, for
+    # example `query_stats`. Empty when the request did not use a tool.
+    field :tool, Ch, type: "LowCardinality(String)"
+
     # The HTTP status of the response
     field :status, Ch, type: "UInt16"
 
@@ -84,6 +89,7 @@ defmodule Plausible.ApiRequestLog.Entry do
       credential_label: credential_label,
       interface: Atom.to_string(interface),
       operation: attrs.operation,
+      tool: attrs.tool || "",
       status: attrs.status,
       billable: attrs.billable,
       request_id: truncate_utf8(attrs.request_id, @plug_request_id_max_bytes),

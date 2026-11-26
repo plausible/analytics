@@ -33,6 +33,7 @@ defmodule PlausibleWeb.Plugs.RecordApiRequest do
       credential: credential,
       interface: :rest,
       operation: operation(conn),
+      tool: conn.assigns[:tool],
       status: conn.status,
       billable: conn.status in 200..299 and not Auth.super_admin?(credential.user_id),
       request_id: conn |> get_resp_header("x-request-id") |> List.first(),

@@ -26,6 +26,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   ## Assigns
 
+  The plug reads `:tool` from the route assigns, when set, and adds it to
+  the trace before the access checks.
+
     * `:current_credential` - the API key. Set before the access checks, so
       error responses from this plug also carry it.
     * `:current_user` and `:current_team` - set only when access is granted.
@@ -62,6 +65,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   def call(conn, _opts) do
     requested_scope = Map.fetch!(conn.assigns, :api_scope)
     context = conn.assigns[:api_context]
+
+    if tool = conn.assigns[:tool] do
+      Plausible.OpenTelemetry.add_tool_attribute(tool)
+    end
 
     with {:ok, token} <- get_bearer_token(conn),
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
