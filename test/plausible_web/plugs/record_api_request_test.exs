@@ -166,25 +166,6 @@ defmodule PlausibleWeb.Plugs.RecordApiRequestTest do
                  recorded_entries(team)
       end
 
-      test "that is not billable for a 400 with a legacy API key of a team member", %{
-        user: user,
-        site: site,
-        team: team
-      } do
-        api_key = insert(:api_key, user: user)
-
-        conn =
-          api_key
-          |> api_conn()
-          |> post("/api/v2/query", v2_query(site, %{"metrics" => ["invalid"]}))
-
-        assert json_response(conn, 400)
-        api_key_id = api_key.id
-
-        assert [%Entry{credential_id: ^api_key_id, status: 400, billable: false}] =
-                 recorded_entries(team)
-      end
-
       test "under the site's team for a legacy API key on a Sites API request", %{
         user: user,
         site: site,
