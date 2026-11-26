@@ -516,6 +516,53 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
     }
   end
 
+  describe "locking" do
+    test "events of a team share one lock, whatever their subscription", %{team: team} do
+      assert advisory_locks() == 0
+
+      assert {:ok, :applied} = created(team)
+      assert advisory_locks() == 1
+
+      assert {:ok, :applied} = updated(status: "past_due")
+      assert {:ok, :applied} = created(team, id: "sub_second")
+      assert advisory_locks() == 1
+    end
+
+    test "events of different teams take different locks", %{team: team} do
+      {:ok, other_team} = Teams.get_or_create(new_user())
+
+      created(team)
+      created(other_team, id: "sub_other")
+
+      assert advisory_locks() == 2
+    end
+
+    test "no lock is needed for a team that doesn't exist yet" do
+      event =
+        subscription_event("subscription.created",
+          data: %{custom_data: %{"user_id" => new_user().id}}
+        )
+
+      assert {:ok, :applied} = Webhooks.subscription_created(event)
+      assert advisory_locks() == 0
+    end
+
+    test "no lock is taken for a subscription that doesn't exist" do
+      assert {:error, :subscription_not_found} = updated(id: "sub_unknown")
+      assert advisory_locks() == 0
+    end
+
+    # Locks last until the end of the transaction, which is the test's transaction.
+    defp advisory_locks() do
+      %{rows: [[count]]} =
+        Repo.query!(
+          "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid()"
+        )
+
+      count
+    end
+  end
+
   defp custom_data(team), do: %{"team_id" => team.id}
 
   defp created(team, data \\ []) do

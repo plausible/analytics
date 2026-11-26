@@ -12,6 +12,10 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
       (`team_id`, or `user_id` for a new "My Personal Sites" team) and links it
       to the Paddle customer. `subscription.updated` finds the subscription by id.
 
+  Events of one team are processed one at a time, under an advisory lock on the
+  team. Without it, two events handled at once could not see each other, and
+  the older one could overwrite the newer state.
+
   A subscription with a scheduled cancellation is stored as `:deleted`, with
   `next_bill_date` set to the moment the cancellation takes effect. This
   matches how Classic cancellations behave: access lasts until that date.
@@ -65,9 +69,10 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
   end
 
   defp process(kind, %{"event_id" => event_id, "data" => %{} = data} = event) do
-    with :ok <- check_not_seen(event_id),
-         {:ok, occurred_at} <- parse_datetime(event["occurred_at"]),
+    with {:ok, occurred_at} <- parse_datetime(event["occurred_at"]),
          {:ok, attrs} <- subscription_attrs(data, occurred_at),
+         :ok <- lock_team(kind, data, attrs),
+         :ok <- check_not_seen(event_id),
          {:ok, existing} <- find_existing(kind, attrs.billing_subscription_id),
          {:ok, team} <- resolve_team(kind, existing, data),
          :ok <- record_event(event, attrs, team, occurred_at) do
@@ -80,6 +85,26 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
   end
 
   defp process(_kind, _event), do: {:error, :invalid_event}
+
+  defp lock_team(kind, data, attrs) do
+    if team_id = team_id_to_lock(kind, data, attrs) do
+      Repo.query!("SELECT pg_advisory_xact_lock(hashtext($1))", ["paddle_billing_team:#{team_id}"])
+    end
+
+    :ok
+  end
+
+  defp team_id_to_lock(:created, %{"custom_data" => %{"team_id" => team_id}}, _attrs),
+    do: parse_id(team_id)
+
+  defp team_id_to_lock(:created, _data, _attrs), do: nil
+
+  defp team_id_to_lock(:updated, _data, attrs) do
+    case Repo.get_by(Subscription, billing_subscription_id: attrs.billing_subscription_id) do
+      %Subscription{team_id: team_id} -> team_id
+      nil -> nil
+    end
+  end
 
   defp check_not_seen(event_id) do
     if Repo.exists?(from e in SubscriptionEvent, where: e.billing_event_id == ^event_id) do
