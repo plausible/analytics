@@ -24,10 +24,15 @@ updates:
   - package-ecosystem: "npm"
     directory: "/tracker"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
+    groups:
+      tracker-dev:
+        dependency-type: "development"
+      tracker-prod:
+        dependency-type: "production"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
