@@ -1361,6 +1361,24 @@ defmodule Plausible.Billing.QuotaTest do
                :traffic_exceeded_sustained
     end
 
+    test "does not crash for a subscription whose plan is unknown" do
+      user = new_user()
+      subscribe_to_plan(user, "unknown-plan")
+      team = team_of(user)
+
+      usage = %{
+        monthly_pageviews: %{
+          current_cycle: %{total: 5000},
+          last_cycle: %{total: 5000},
+          penultimate_cycle: %{total: 5000}
+        },
+        sites: 1,
+        team_members: 1
+      }
+
+      assert Plausible.Billing.Quota.usage_notification_type(team, usage) == nil
+    end
+
     test "returns :traffic_exceeded_sustained when last and current cycles both exceeded" do
       user = new_user() |> subscribe_to_growth_plan()
       team = team_of(user)

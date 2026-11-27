@@ -227,7 +227,8 @@ defmodule Plausible.Billing.Quota do
     team_member_usage = usage.team_members
 
     pageview_notification =
-      if not Plausible.Teams.on_trial?(team) and has_billing_cycles?(pageview_usage) do
+      if not Plausible.Teams.on_trial?(team) and has_billing_cycles?(pageview_usage) and
+           pageview_limit != :unlimited do
         pageview_cycle_usage_notification_type(pageview_usage, pageview_limit)
       end
 

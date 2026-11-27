@@ -60,13 +60,24 @@ defmodule Plausible.Billing.SubscriptionState do
       |> PaddleClassic.Subscription.changeset(attrs)
       |> Repo.update!()
 
-    for recipient <- subscription.team.owners ++ subscription.team.billing_members do
+    notify_cancellation(subscription.team)
+
+    updated
+  end
+
+  @doc """
+  Sends the cancellation email to the team's owners and billing members.
+  """
+  def notify_cancellation(team) do
+    team = Repo.preload(team, [:owners, :billing_members])
+
+    for recipient <- team.owners ++ team.billing_members do
       recipient
       |> PlausibleWeb.Email.cancellation_email()
       |> Plausible.Mailer.send()
     end
 
-    updated
+    :ok
   end
 
   @doc """
