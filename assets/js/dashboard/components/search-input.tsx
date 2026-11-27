@@ -106,7 +106,7 @@ export const SearchInput = ({
           ref={searchRef}
           type="text"
           placeholder=" "
-          className="peer flex-1 min-w-0 border-none bg-transparent px-3 py-1.5 text-sm dark:text-gray-100 focus:outline-none focus:ring-0"
+          className="peer flex-1 min-w-0 border-none bg-transparent px-3 py-1.5 text-base dark:text-gray-100 focus:outline-none focus:ring-0"
           value={value}
           onChange={handleInputChange}
         />

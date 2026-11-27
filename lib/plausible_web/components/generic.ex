@@ -1110,7 +1110,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="input-base input-md w-full max-w-80 pl-8 dark:text-gray-300 dark:placeholder:text-gray-400"
+              class="input-base input-md input-text w-full max-w-80 pl-8 dark:text-gray-300 dark:placeholder:text-gray-400"
               placeholder="Press / to search"
               x-ref="filter_text"
               phx-debounce={200}

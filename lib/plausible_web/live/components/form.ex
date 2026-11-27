@@ -20,8 +20,8 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   # Base and sizes are defined as component classes in assets/css/app.css,
   # sharing the size scale with the `button` component. Update there only.
-  @input_class "input-base input-md"
-  @multiline_input_class "input-base input-md input-multiline"
+  @input_class "input-base input-md input-text"
+  @multiline_input_class "input-base input-md input-multiline input-text"
 
   # Base and sizes are defined as component classes in assets/css/app.css and
   # mirrored by the React `Checkbox` component in
