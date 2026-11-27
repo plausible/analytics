@@ -104,6 +104,43 @@ defmodule Plausible.Shield.HostnameRuleCacheTest do
     end
   end
 
+  describe "removed rules" do
+    test "a removed rule leaves the cache on the next full refresh, other rules stay", %{
+      test: test
+    } do
+      {:ok, _} = start_test_cache(test)
+      cache_opts = [force?: true, cache_name: test]
+      site = insert(:site)
+
+      {:ok, removed} = Shields.add_hostname_rule(site, %{"hostname" => "a.example.com"})
+      {:ok, kept} = Shields.add_hostname_rule(site, %{"hostname" => "b.example.com"})
+      :ok = HostnameRuleCache.refresh_all(cache_name: test)
+      assert [_, _] = HostnameRuleCache.get(site.domain, cache_opts)
+
+      :ok = Shields.remove_hostname_rule(site, removed.id)
+      :ok = HostnameRuleCache.refresh_all(cache_name: test)
+
+      assert %{id: kept_id} = HostnameRuleCache.get(site.domain, cache_opts)
+      assert kept_id == kept.id
+      assert HostnameRuleCache.size(test) == 1
+    end
+
+    test "removing the last rule empties the cache on the next full refresh", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      site = insert(:site)
+
+      {:ok, rule} = Shields.add_hostname_rule(site, %{"hostname" => "a.example.com"})
+      :ok = HostnameRuleCache.refresh_all(cache_name: test)
+      assert HostnameRuleCache.get(site.domain, force?: true, cache_name: test)
+
+      :ok = Shields.remove_hostname_rule(site, rule.id)
+      :ok = HostnameRuleCache.refresh_all(cache_name: test)
+
+      refute HostnameRuleCache.get(site.domain, force?: true, cache_name: test)
+      assert HostnameRuleCache.size(test) == 0
+    end
+  end
+
   test "get_from_source", %{test: test} do
     {:ok, _} = start_test_cache(test)
 

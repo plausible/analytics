@@ -88,11 +88,21 @@ defmodule Plausible.CacheTest do
       assert :item1 == ExampleCache.get("item1", cache_name: test, force?: true)
     end
 
-    test "merging no new items leaves the old cache intact", %{test: test} do
+    test "merging no new items removes stale items", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
       :ok = ExampleCache.merge_items([{"item1", :item1}], cache_name: test)
       :ok = ExampleCache.merge_items([], cache_name: test)
+
+      refute ExampleCache.get("item1", cache_name: test, force?: true)
+      assert ExampleCache.size(test) == 0
+    end
+
+    test "merging no new items optionally leaves the old cache intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = ExampleCache.merge_items([{"item1", :item1}], cache_name: test)
+      :ok = ExampleCache.merge_items([], cache_name: test, delete_stale_items?: false)
       assert :item1 == ExampleCache.get("item1", cache_name: test, force?: true)
     end
 
@@ -136,6 +146,42 @@ defmodule Plausible.CacheTest do
 
       assert :changed == ExampleCache.get("item1", cache_name: test, force?: true)
       assert :item2 == ExampleCache.get("item2", cache_name: test, force?: true)
+    end
+
+    test "merging removes stale objects stored under a key in a bag cache", %{test: test} do
+      {:ok, _} = start_test_cache(test, ets_options: [:bag])
+      opts = [cache_name: test, force?: true]
+
+      :ok =
+        ExampleCache.merge_items([{"key1", :a}, {"key1", :b}, {"key2", :c}], cache_name: test)
+
+      assert Enum.sort(ExampleCache.get("key1", opts)) == [:a, :b]
+
+      :ok = ExampleCache.merge_items([{"key1", :b}, {"key1", :d}], cache_name: test)
+
+      assert Enum.sort(ExampleCache.get("key1", opts)) == [:b, :d]
+      refute ExampleCache.get("key2", opts)
+      assert ExampleCache.size(test) == 2
+    end
+
+    test "merging no new items empties a bag cache", %{test: test} do
+      {:ok, _} = start_test_cache(test, ets_options: [:bag])
+
+      :ok = ExampleCache.merge_items([{"key1", :a}, {"key1", :b}], cache_name: test)
+      :ok = ExampleCache.merge_items([], cache_name: test)
+
+      assert ExampleCache.size(test) == 0
+    end
+
+    test "merging optionally leaves stale objects in a bag cache intact", %{test: test} do
+      {:ok, _} = start_test_cache(test, ets_options: [:bag])
+
+      :ok = ExampleCache.merge_items([{"key1", :a}], cache_name: test)
+
+      :ok =
+        ExampleCache.merge_items([{"key1", :b}], cache_name: test, delete_stale_items?: false)
+
+      assert Enum.sort(ExampleCache.get("key1", cache_name: test, force?: true)) == [:a, :b]
     end
 
     test "put puts into local cache, overwriting as appropriate", %{test: test} do
@@ -377,8 +423,8 @@ defmodule Plausible.CacheTest do
     apply(m, f, a)
   end
 
-  defp start_test_cache(cache_name) do
-    %{start: {m, f, a}} = ExampleCache.child_spec(cache_name: cache_name)
+  defp start_test_cache(cache_name, opts \\ []) do
+    %{start: {m, f, a}} = ExampleCache.child_spec([cache_name: cache_name] ++ opts)
     apply(m, f, a)
   end
 end
