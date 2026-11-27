@@ -71,7 +71,7 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
   defp process(kind, %{"event_id" => event_id, "data" => %{} = data} = event) do
     with {:ok, occurred_at} <- parse_datetime(event["occurred_at"]),
          {:ok, attrs} <- subscription_attrs(data, occurred_at),
-         :ok <- lock_team(kind, data, attrs),
+         :ok <- lock_team_or_user(kind, data, attrs),
          :ok <- check_not_seen(event_id),
          {:ok, existing} <- find_existing(kind, attrs.billing_subscription_id),
          {:ok, team} <- resolve_team(kind, existing, data),
@@ -86,22 +86,31 @@ defmodule Plausible.Billing.PaddleBilling.Webhooks do
 
   defp process(_kind, _event), do: {:error, :invalid_event}
 
-  defp lock_team(kind, data, attrs) do
-    if team_id = team_id_to_lock(kind, data, attrs) do
-      Repo.query!("SELECT pg_advisory_xact_lock(hashtext($1))", ["paddle_billing_team:#{team_id}"])
+  defp lock_team_or_user(kind, data, attrs) do
+    if lock_id = id_to_lock(kind, data, attrs) do
+      Repo.query!("SELECT pg_advisory_xact_lock(hashtext($1))", [lock_id])
     end
 
     :ok
   end
 
-  defp team_id_to_lock(:created, %{"custom_data" => %{"team_id" => team_id}}, _attrs),
-    do: parse_id(team_id)
+  defp id_to_lock(:created, %{"custom_data" => %{"team_id" => team_id}}, _attrs) do
+    if team_id = parse_id(team_id) do
+      "paddle_billing_team:#{parse_id(team_id)}"
+    end
+  end
 
-  defp team_id_to_lock(:created, _data, _attrs), do: nil
+  defp id_to_lock(:created, %{"custom_data" => %{"user_id" => user_id}}, _attrs) do
+    if user_id = parse_id(user_id) do
+      "paddle_billing_user:#{parse_id(user_id)}"
+    end
+  end
 
-  defp team_id_to_lock(:updated, _data, attrs) do
+  defp id_to_lock(:created, _data, _attrs), do: nil
+
+  defp id_to_lock(:updated, _data, attrs) do
     case Repo.get_by(Subscription, billing_subscription_id: attrs.billing_subscription_id) do
-      %Subscription{team_id: team_id} -> team_id
+      %Subscription{team_id: team_id} -> "paddle_billing_team:#{team_id}"
       nil -> nil
     end
   end

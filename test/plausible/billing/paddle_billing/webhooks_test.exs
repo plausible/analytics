@@ -537,14 +537,14 @@ defmodule Plausible.Billing.PaddleBilling.WebhooksTest do
       assert advisory_locks() == 2
     end
 
-    test "no lock is needed for a team that doesn't exist yet" do
+    test "a user-based lock is acquired for a created event without a team yet" do
       event =
         subscription_event("subscription.created",
           data: %{custom_data: %{"user_id" => new_user().id}}
         )
 
       assert {:ok, :applied} = Webhooks.subscription_created(event)
-      assert advisory_locks() == 0
+      assert advisory_locks() == 1
     end
 
     test "no lock is taken for a subscription that doesn't exist" do
